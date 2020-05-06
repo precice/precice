@@ -32,27 +32,70 @@ int main(int argc, char **argv)
 
   int meshID     = interface.getMeshID(meshName);
   int dimensions = interface.getDimensions();
+  std::string dataWriteName; 
+  std::string dataReadName;
+  int N = 3;            // Number of vertices
 
-  std::vector<double> vertex(dimensions, 0);
-  int                 vertexID = interface.setMeshVertex(meshID, vertex.data());
+  if (solverName == "SolverOne"){
+    dataWriteName="Forces";
+    dataReadName="Velocities";
+  }
+  if (solverName == "SolverTwo"){
+    dataReadName="Forces";
+    dataWriteName="Velocities";
+  }
+  const int readDataID = interface.getDataID(dataReadName,meshID);
+  const int writeDataID = interface.getDataID(dataWriteName,meshID);
+
+  double vertexPos[N * dimensions];
+  double readData[N * dimensions];
+  double writeData[N * dimensions];
+  int vertexIDs[N];
+
+  for (int i = 0; i < N; i++){
+    for (int j = 0; j < dimensions; j++) {
+      vertexPos[j + N*i]=i;
+      readData[j + N*i] = i;
+      writeData[j + N*i] = i;
+    }
+    vertexIDs[i] = i;
+    std::cout << "DUMMY: Vertex: " << vertexPos[i*N + 0] << " ; " << vertexPos[i*N + 1] << " ; " << vertexPos[i*N + 2] << "\n";
+    std::cout << "DUMMY: Read Data: " << readData[i*N + 0] << " ; " << readData[i*N + 1] << " ; " << readData[i*N + 2] << "\n";
+    std::cout << "DUMMY: Write Data: " << writeData[i*N + 0] << " ; " << writeData[i*N + 1] << " ; " << writeData[i*N + 2] << "\n";
+  }
+  interface.setMeshVertices(meshID,N,vertexPos,vertexIDs);
 
   double dt = interface.initialize();
 
   while (interface.isCouplingOngoing()) {
 
     if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
+      interface.writeBlockVectorData(writeDataID,N,vertexIDs,writeData);
+      for (int i = 0; i < N; i++){
+        std::cout << "DUMMY: Write Data: " << writeData[i*N + 0] << " ; " << writeData[i*N + 1] << " ; " << writeData[i*N + 2] << "\n";
+      }
       std::cout << "DUMMY: Writing iteration checkpoint\n";
       interface.markActionFulfilled(actionWriteIterationCheckpoint());
     }
 
+
     dt = interface.advance(dt);
 
     if (interface.isActionRequired(actionReadIterationCheckpoint())) {
-      std::cout << "DUMMY: Writing iteration checkpoint\n";
+      interface.readBlockVectorData(readDataID,N,vertexIDs,readData);
+      for (int i = 0; i < N; i++){
+        std::cout << "DUMMY: Read Data: " << readData[i*N + 0] << " ; " << readData[i*N + 1] << " ; " << readData[i*N + 2] << "\n";
+      }
+      std::cout << "DUMMY: Reading iteration checkpoint\n";
       interface.markActionFulfilled(actionReadIterationCheckpoint());
     } else {
       std::cout << "DUMMY: Advancing in time\n";
     }
+
+    for (int i = 0; i < N*dimensions; i++){
+      writeData[i] = readData[i] + 1;
+    }
+
   }
 
   interface.finalize();

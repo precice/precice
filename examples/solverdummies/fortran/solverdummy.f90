@@ -2,9 +2,12 @@ PROGRAM main
   IMPLICIT NONE
   CHARACTER*512                   :: config
   CHARACTER*50                    :: participantName, meshName, writeInitialData, readItCheckp, writeItCheckp
-  INTEGER                         :: rank, commsize, ongoing, dimensions, meshID, vertexID, bool
+  CHARACTER*50                    :: DataReadName, DataWriteName
+  INTEGER                         :: rank, commsize, ongoing, dimensions, meshID, bool, N, i,j
+  INTEGER                         :: DataRead_ID, DataWrite_ID
   REAL                            :: dtlimit
-  REAL, DIMENSION(:), ALLOCATABLE :: vertex
+  DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: vertex, DataWrite, DataRead
+  INTEGER, DIMENSION(:), ALLOCATABLE :: vertexID
       
   ! Constants in f90 have to be prefilled with blanks to be compatible with preCICE
   writeInitialData(1:50)='                                                  '
@@ -20,17 +23,43 @@ PROGRAM main
   CALL getarg(2, participantName)
   CALL getarg(3, meshName)
 
+  IF(participantName .eq. 'SolverOne') THEN  
+    DataWriteName = 'Forces'
+    DataReadName = 'Velocities'
+  ENDIF
+  IF(participantName .eq. 'SolverTwo') THEN  
+    DataWriteName = 'Velocities'
+    DataReadName = 'Forces'
+  ENDIF
+
   rank = 0
   commsize = 1
+  dtlimit = 1
+  N = 3             !Number of vertices
   CALL precicef_create(participantName, config, rank, commsize)
 
   ! Allocate dummy mesh with only one vertex 
   CALL precicef_get_dims(dimensions)
-  ALLOCATE(vertex(dimensions))
-  vertex = 0
+  ALLOCATE(vertex(N*dimensions))
+  ALLOCATE(vertexID(N))
+  ALLOCATE(DataRead(N*dimensions))
+  ALLOCATE(DataWrite(N*dimensions))
   CALL precicef_get_mesh_id(meshName, meshID)
-  CALL precicef_set_vertex(meshID, vertex, vertexID)  
-  DEALLOCATE(vertex)    
+
+  do i = 1,N,1
+    do j = 1,dimensions,1
+      vertex((i - 1)*dimensions + j ) = i-1
+      DataRead((i - 1)*dimensions + j ) = i-1
+      DataWrite((i - 1)*dimensions + j ) = i-1
+    enddo
+    vertexID(i) = i-1
+  enddo
+
+  CALL precicef_set_vertices(meshID, N, vertex, vertexID)  
+  DEALLOCATE(vertex)
+  
+  CALL precicef_get_data_id(DataReadName,meshID,DataRead_ID)
+  CALL precicef_get_data_id(DataWriteName,meshID,DataWrite_ID)
         
   CALL precicef_initialize(dtlimit)            
 
@@ -45,6 +74,7 @@ PROGRAM main
   
     CALL precicef_action_required(writeItCheckp, bool)
     IF (bool.EQ.1) THEN
+      CALL precicef_write_bvdata(DataWrite_ID, N, vertexID, DataWrite)
       WRITE (*,*) 'DUMMY: Writing iteration checkpoint'
       CALL precicef_mark_action_fulfilled(writeItCheckp)
     ENDIF
@@ -54,11 +84,16 @@ PROGRAM main
 
     CALL precicef_action_required(readItCheckp, bool)
     IF (bool.EQ.1) THEN
+      CALL precicef_read_bvdata(DataRead_ID, N, vertexID, DataRead)
       WRITE (*,*) 'DUMMY: Reading iteration checkpoint'
       CALL precicef_mark_action_fulfilled(readItCheckp)
     ELSE
       WRITE (*,*) 'DUMMY: Advancing in time'
     ENDIF
+
+    WRITE (*,*) 'DataRead: ', DataRead
+
+    DataWrite = DataRead + 1
     
   ENDDO
   
