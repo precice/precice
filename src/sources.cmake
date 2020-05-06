@@ -178,13 +178,13 @@ target_sources(precice
     src/math/geometry.hpp
     src/math/la.hpp
     src/math/math.hpp
+    src/mesh/BoundingBox.cpp
+    src/mesh/BoundingBox.hpp
     src/mesh/Data.cpp
     src/mesh/Data.hpp
     src/mesh/Edge.cpp
     src/mesh/Edge.hpp
     src/mesh/Filter.hpp
-    src/mesh/BoundingBox.hpp
-    src/mesh/BoundingBox.cpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
     src/mesh/Quad.cpp
@@ -201,7 +201,6 @@ target_sources(precice
     src/mesh/config/DataConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
-    src/mesh/impl/RTree.hpp
     src/mesh/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
