@@ -40,14 +40,15 @@ target_sources(testprecice
     src/math/tests/BarycenterTest.cpp
     src/math/tests/DifferencesTest.cpp
     src/math/tests/GeometryTest.cpp
+    src/mesh/tests/BoundingBoxTest.cpp
     src/mesh/tests/DataConfigurationTest.cpp
     src/mesh/tests/EdgeTest.cpp
     src/mesh/tests/MeshTest.cpp
     src/mesh/tests/QuadTest.cpp
+    src/mesh/tests/RTreeAdapterTests.cpp
     src/mesh/tests/RTreeTests.cpp
     src/mesh/tests/TriangleTest.cpp
     src/mesh/tests/VertexTest.cpp
-    src/mesh/tests/BoundingBoxTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
     src/precice/tests/ParallelTests.cpp
