@@ -25,6 +25,20 @@ WatchPoint::WatchPoint(
   PRECICE_ASSERT(_mesh);
   PRECICE_ASSERT(_point.size() == _mesh->getDimensions(), _point.size(),
                  _mesh->getDimensions());
+
+  io::TXTTableWriter::DataType vectorType = _mesh->getDimensions() == 2
+                                                ? io::TXTTableWriter::VECTOR2D
+                                                : io::TXTTableWriter::VECTOR3D;
+  _txtWriter.addData("Time", io::TXTTableWriter::DOUBLE);
+  _txtWriter.addData("Coordinate", vectorType);
+  for (size_t i = 0; i < _mesh->data().size(); i++) {
+    _dataToExport.push_back(_mesh->data()[i]);
+    if (_dataToExport[i]->getDimensions() > 1) {
+      _txtWriter.addData(_dataToExport[i]->getName(), vectorType);
+    } else {
+      _txtWriter.addData(_dataToExport[i]->getName(), io::TXTTableWriter::DOUBLE);
+    }
+  }
 }
 
 const mesh::PtrMesh &WatchPoint::mesh() const
@@ -36,10 +50,8 @@ void WatchPoint::initialize()
 {
   PRECICE_TRACE();
   // Clear to allow reinitialization
-  _txtWriter.reset();
   _weights.clear();
   _vertices.clear();
-  _dataToExport.clear();
 
   // Find closest vertex
   if (_mesh->vertices().size() > 0) {
@@ -107,20 +119,6 @@ void WatchPoint::initialize()
         _weights.push_back(findTriangle.getProjectionPointParameter(1));
         _weights.push_back(findTriangle.getProjectionPointParameter(2));
       }
-    }
-  }
-
-  io::TXTTableWriter::DataType vectorType = _mesh->getDimensions() == 2
-                                                ? io::TXTTableWriter::VECTOR2D
-                                                : io::TXTTableWriter::VECTOR3D;
-  _txtWriter.addData("Time", io::TXTTableWriter::DOUBLE);
-  _txtWriter.addData("Coordinate", vectorType);
-  for (size_t i = 0; i < _mesh->data().size(); i++) {
-    _dataToExport.push_back(_mesh->data()[i]);
-    if (_dataToExport[i]->getDimensions() > 1) {
-      _txtWriter.addData(_dataToExport[i]->getName(), vectorType);
-    } else {
-      _txtWriter.addData(_dataToExport[i]->getName(), io::TXTTableWriter::DOUBLE);
     }
   }
 }
