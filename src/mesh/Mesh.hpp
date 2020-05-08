@@ -192,7 +192,7 @@ public:
   void computeBoundingBox();
 
   /// Computes if a quad is convex and returns and ordered set of vertices.
-  void computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) const;
+  void computeQuadConvexityFromPoints(std::array<int,4> &hull) const;
 
   /// Computes if a quad is convex and returns and ordered set of vertices.
   //void computeQuadEdgeOrder(Vertex &verticesOne, Vertex &verticesTwo, Vertex &verticesThree, Vertex &verticesFour) const;

@@ -515,10 +515,8 @@ BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexity)
   hull[1] = v1.getID();
   hull[2] = v2.getID();
   hull[3] = v3.getID();
-  int startID = 0;
 
-  mesh.computeQuadConvexityFromPoints(hull, startID);
-  BOOST_TEST(startID == 0);
+  mesh.computeQuadConvexityFromPoints(hull);
   BOOST_TEST(hull[0] ==  v3.getID());
   BOOST_TEST(hull[1] ==  v2.getID());
   BOOST_TEST(hull[2] ==  v1.getID());
@@ -549,10 +547,8 @@ BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
   hull[1] = v1.getID();
   hull[2] = v2.getID();
   hull[3] = v3.getID();
-  int startID = 0;
 
-  mesh.computeQuadConvexityFromPoints(hull, startID);
-  BOOST_TEST(startID == 0);
+  mesh.computeQuadConvexityFromPoints(hull);
   BOOST_TEST(hull[0] ==  v0.getID());
   BOOST_TEST(hull[1] ==  v3.getID());
   BOOST_TEST(hull[2] ==  v1.getID());

@@ -466,7 +466,7 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
   return os;
 }
 
-void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) const
+void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull) const
 {
 
   PRECICE_INFO("Entering compute quad: ");
@@ -474,7 +474,7 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
   // These are store in vx and vy. For now keep same valiues
   Eigen::Vector3d coords[4];
 
-  // Normal of the plane of three points
+  // Normal of the plane of first three points in the list of vertices
   Eigen::Vector3d e_1 = vertices()[hull[1]].getCoords() - vertices()[hull[0]].getCoords();
   Eigen::Vector3d e_2 = vertices()[hull[2]].getCoords() - vertices()[hull[0]].getCoords();
   Eigen::Vector3d normalPlane = e_1.cross(e_2);
@@ -491,6 +491,12 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
   PRECICE_INFO("Vertex IDs are: " << hull[0] << " " << hull[1] << " " << hull[2] << " " << hull[3]);
   PRECICE_INFO("X coordinates are: " << coords[0][0] << " " << coords[1][0] << " " << coords[2][0] << " " << coords[3][0]);
   PRECICE_INFO("Y coordinates are: " << coords[0][1] << " " << coords[1][1] << " " << coords[2][1] << " " << coords[3][1]);
+
+  /*
+  For the convex hull, the most left hand point regarding the x coordinate is chosen as the starting point. 
+  The algorithm moves in an anti-clockwise position, finding the most right hand coordinate from the 
+  previous most right hand point.
+  */
   
   //First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift wrapping algorithm
   int idLowestPoint = 0;
@@ -502,7 +508,7 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
 
   // Found starting point. Add this as the first vertex in the convex hull.
   // current is the origin point => hull[0]
-  int validVertexIDCounter = 0;           // Counts number of times a valid vertex is found
+  int validVertexIDCounter = 0;           // Counts number of times a valid vertex is found. Must be 4 for a valid quad.
   int currentVertex = idLowestPoint;      // current valid vertex 
   int nextVertex = 0;                     // Next potential valid vertex
   do
@@ -510,17 +516,9 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
     // Add current point to result
     hull[validVertexIDCounter]=currentVertex;
     
-    // Search for a point 'nextVertex' such that orientation(p, x,
-    // nextVertex) is clockwise for all points 'x'. The idea
-    // is to keep track of last visited most clock-
-    // wise point in nextVertex. If any point 'i' is more clock-
-    // wise than nextVertex, then update nextVertex.
     nextVertex = (currentVertex + 1)%4;              // remainder resets loop through vector of points
     for (int i = 0; i < 4; i++)
     {
-      // If i is more counter-clockwise than nextVertex, then
-      // update nextVertex
-
       double y1 = coords[currentVertex][1] - coords[nextVertex][1];
       double y2 = coords[currentVertex][1] - coords[i][1];
       double x1 = coords[currentVertex][0] - coords[nextVertex][0];
@@ -528,11 +526,10 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
       double val = y2 * x1 - y1 * x2;
 
       if (val > 0){
-        nextVertex = i; 	// clock or counterclock wise
-          //PRECICE_INFO("Changeing nextVertex");
+        nextVertex = i;
       }
     }
-    // Now nextVertex is the most counter-clockwise with respect to current
+    // Now nextVertex is the most anti-clockwise with respect to current
     // Set current as nextVertex for next iteration, so that nextVertex is added to
     // result 'hull'
     currentVertex = nextVertex;
@@ -541,44 +538,41 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull, int startID) 
 
   if (validVertexIDCounter < 4){
     //Error, quad is invalid
-    PRECICE_INFO("Invalid Quad. Hull: " << hull);
+    PRECICE_DEBUG("Invalid Quad. Hull: " << validVertexIDCounter);
   } else {
-    PRECICE_INFO("Valid Quad. Hull: " << hull);
+    PRECICE_DEBUG("Valid Quad. Hull: " << validVertexIDCounter);
   }
 
   //Ordering of quad is hull 0-1-2-3-0
-
-  // Need to check shortest diagonal
-  Eigen::VectorXd distance1(_dimensions),distance2(_dimensions);
-
-  distance1 = vertices()[hull[0]].getCoords() - vertices()[hull[2]].getCoords();
-  distance2 = vertices()[hull[1]].getCoords() - vertices()[hull[3]].getCoords();
-  PRECICE_INFO("Distance 1: " << distance1.norm() << " and Distance 2: " << distance2.norm());
-    
-  if (distance1.norm() > distance2.norm()){
-    startID = 1;
-  }
 }
 
 void Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList, std::array<int,4> &vertexList) const
 {
+  /*
+  The first edge in the list is treated as the first edge (edge[0]). An edge that does not share a vertex
+  with the frist edge is the 3rd edge (edge[2]). The edge that shares the first vertex with the first
+  edge (shares vertex[0] with edge[0]) is the 4th edge (edge[3]) as long as it does not share
+  the other vertex with edge[0] (then there is a duplicated edge). The edge sharing vertex[1] and not
+  vertex[0] is the 2nd edge (edge[1]). This also provides the vertex ordering to determine the diagonal, 
+  but not convexity.
+  */
 
   int edgeOrder[4];
-  edgeOrder[0] = 0;
+  //edgeOrder[0] = edgeList[0];   //Will order the edges in edgeList in order that they form a closed quad
 
+  // The first two vertices are the points on the first edge in edgeList. The other edges are built around this
   vertexList[0] = edges()[edgeList[0]].vertex(0).getID();
   vertexList[1] = edges()[edgeList[0]].vertex(1).getID();
 
-  for (int j = 1; j < 4; j++){  // looping thorugh edges 2, 3 and 4
+  for (int j = 1; j < 4; j++){  // looping thorugh edges 2, 3 and 4 in edgeList
 
     int ID1 = edges()[edgeList[j]].vertex(0).getID();
     int ID2 = edges()[edgeList[j]].vertex(1).getID();
 
     if (ID1 != vertexList[0] && ID2 != vertexList[0] && ID1 != vertexList[1] && ID2 != vertexList[1] ){
         // Doesnt match any point on edge 1, therefore must be edge 3 for the reordered set
-        //edgeOrder[2] = j;
         edgeOrder[2] = edgeList[j];
-      } else if ((ID1 == vertexList[0] || ID2 == vertexList[0]) && (ID1 != vertexList[1] || ID2 != vertexList[1])){
+      } else if ((ID1 == vertexList[0] || ID2 == vertexList[0]) && (ID1 != vertexList[1] && ID2 != vertexList[1])){
         // One of the vertices matches V0, and does not match V1, must be edge 4 (connected V3 to V0)
         edgeOrder[3] = edgeList[j];
         if (ID1 == vertexList[0]){
@@ -586,7 +580,7 @@ void Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList, std::array<int,4> &
         }else{
           vertexList[3] = edges()[edgeList[j]].vertex(0).getID();
         }
-      }else if((ID1 == vertexList[1] || ID2 == vertexList[1]) && (ID1 != vertexList[0] || ID2 != vertexList[0])){
+      }else if((ID1 == vertexList[1] || ID2 == vertexList[1]) && (ID1 != vertexList[0] && ID2 != vertexList[0])){
         // Must be edge 2, as it matches V1 and not V0
         edgeOrder[1] = edgeList[j];
         if (ID1 == vertexList[1]){
@@ -597,47 +591,12 @@ void Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList, std::array<int,4> &
       }
     }
 
-    edgeList[0] = edgeOrder[0];
+    //edgeList[0] = edgeOrder[0];
     edgeList[1] = edgeOrder[1];
     edgeList[2] = edgeOrder[2];
     edgeList[3] = edgeOrder[3];
 
-/*
-    vertices[0] = &mesh->edges()[edgeList[0]].vertex(0);
-  vertices[1] = &mesh->edges()[edgeList[0]].vertex(1);
-
-  for (int j = 1; j < 4; j++){  // looping thorugh edges 2, 3 and 4
-
-    int ID1 = mesh->edges()[e[j]->getID()].vertex(0).getID();
-    int ID2 = mesh->edges()[e[j]->getID()].vertex(1).getID();
-
-    if (ID1 != vertices[0]->getID() && ID2 != vertices[0]->getID() && ID1 != vertices[1]->getID() && ID2 != vertices[1]->getID() ){
-        // Doesnt match any point on edge 1, therefore must be edge 3 for the reordered set
-        edgeOrder[2] = j;
-      } else if ((ID1 == vertices[0]->getID() || ID2 == vertices[0]->getID()) && ID1 != vertices[1]->getID() || ID2 != vertices[1]->getID()){
-        // One of the vertices matches V0, and does not match V1, must be edge 4 (connected V3 to V0)
-        edgeOrder[3] = j;
-        if (ID1 == vertices[0]->getID()){
-          vertices[3] = &mesh->edges()[e[j]->getID()].vertex(1);
-        }else{
-          vertices[3] = &mesh->edges()[e[j]->getID()].vertex(0);
-        }
-      }else if((ID1 == vertices[1]->getID() || ID2 == vertices[1]->getID()) && ID1 != vertices[0]->getID() || ID2 != vertices[0]->getID()){
-        // Must be edge 2, as it matches V1 and not V0
-        edgeOrder[1] = j;
-        if (ID1 == vertices[1]->getID()){
-          vertices[2] = &mesh->edges()[e[j]->getID()].vertex(1);
-        }else{
-          vertices[2] = &mesh->edges()[e[j]->getID()].vertex(0);
-        }
-      }
-    }
-*/
-
-
-
 }
   
-
 } // namespace mesh
 } // namespace precice
