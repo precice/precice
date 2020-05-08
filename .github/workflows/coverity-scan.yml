@@ -1,7 +1,7 @@
 name: coverity-scan
 on:
   schedule:
-    - cron: '0 3 * * 7'
+    - cron: '0 3 * * SAT'
 
 jobs:
   latest:
