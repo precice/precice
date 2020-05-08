@@ -94,10 +94,10 @@ public:
   bool willDataBeExchanged(double lastSolverTimestepLength) const override final;
 
   /**
-   * @brief getter for _hasDataBeenExchanged
-   * @returns true, if data has been exchanged in last call of advance().
+   * @brief getter for _hasDataBeenReceived
+   * @returns true, if data has been received in last call of advance().
    */
-  bool hasDataBeenExchanged() const override final;
+  bool hasDataBeenReceived() const override final;
 
   /**
    * @brief getter for _time
@@ -276,10 +276,9 @@ protected:
   }
 
   /**
-   * @brief Sets flag to determine whether data has been exchanged in the last coupling iteration.
-   * @param hasDataBeenExchanged
+   * @brief Used to set flag after data has been received using receiveData().
    */
-  void setHasDataBeenExchanged(bool hasDataBeenExchanged);
+  void checkDataHasBeenReceived();
 
   /**
    * @brief Setter for _timeWindows
@@ -470,8 +469,8 @@ private:
   /// True, if this participant has to receive initialized data.
   bool _receivesInitializedData = false;
 
-  /// True, if data has been exchanged between solvers.
-  bool _hasDataBeenExchanged = false;
+  /// True, if data has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
+  bool _hasDataBeenReceived = false;
 
   /// True, if coupling has been initialized.
   bool _isInitialized = false;

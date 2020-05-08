@@ -44,7 +44,7 @@ void runSimpleExplicitCoupling(
 
   if (participantName == std::string("Participant0")) {
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -67,7 +67,7 @@ void runSimpleExplicitCoupling(
         Eigen::VectorXd value = dataValues1.segment(vertex.getID() * 3, 3);
         BOOST_TEST(testing::equals(value, valueData1));
       }
-      BOOST_TEST(cplScheme.hasDataBeenExchanged());
+      BOOST_TEST(cplScheme.hasDataBeenReceived());
       // Increment data values, to test if send/receive operations are also
       // correct in following timesteps.
       valueData0 += 1.0;
@@ -84,7 +84,7 @@ void runSimpleExplicitCoupling(
     BOOST_TEST(cplScheme.getNextTimestepMaxLength() > 0.0);
   } else if (participantName == std::string("Participant1")) {
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     double value = dataValues0(vertex.getID());
     BOOST_TEST(testing::equals(value, valueData0));
     valueData0 += 1.0;
@@ -106,7 +106,7 @@ void runSimpleExplicitCoupling(
       if (cplScheme.isCouplingOngoing()) {
         // The participant not starting the coupled simulation does neither
         // receive nor send data in the last call to advance
-        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        BOOST_TEST(cplScheme.hasDataBeenReceived());
         double value = dataValues0[vertex.getID()];
         BOOST_TEST(testing::equals(value, valueData0));
       }
@@ -149,7 +149,7 @@ void runExplicitCouplingWithSubcycling(
     cplScheme.initialize(0.0, 1);
     double dtDesired = cplScheme.getNextTimestepMaxLength() / 2.0;
     double dtUsed    = dtDesired;
-    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
     BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
@@ -178,7 +178,7 @@ void runExplicitCouplingWithSubcycling(
           Eigen::VectorXd value = dataValues1.segment(vertex.getID() * 3, 3);
           BOOST_TEST(testing::equals(value, valueData1));
         }
-        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        BOOST_TEST(cplScheme.hasDataBeenReceived());
         // Increment data values, to test if send/receive operations are also
         // correct in following timesteps.
         valueData0 += 1.0;
@@ -199,7 +199,7 @@ void runExplicitCouplingWithSubcycling(
     // Start coupling
     cplScheme.initialize(0.0, 1);
     // Validate current coupling status
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues0(vertex.getID()), valueData0));
     valueData0 += 1.0;
     BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
@@ -220,9 +220,9 @@ void runExplicitCouplingWithSubcycling(
       if (cplScheme.isCouplingOngoing()) {
         // The participant not starting the coupled simulation does neither
         // receive nor send data in the last call to advance
-        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        BOOST_TEST(cplScheme.hasDataBeenReceived());
         BOOST_TEST(testing::equals(dataValues0(vertex.getID()), valueData0));
-        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        BOOST_TEST(cplScheme.hasDataBeenReceived());
       }
       valueData0 += 1.0;
       valueData1 += Eigen::VectorXd::Constant(3, 1.0);
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
       BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
       BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
       if (cplScheme.isCouplingOngoing()) {
-        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        BOOST_TEST(cplScheme.hasDataBeenReceived());
       }
     }
     cplScheme.finalize();
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
       BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
       BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
       if (cplScheme.isCouplingOngoing()) {
-        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        BOOST_TEST(cplScheme.hasDataBeenReceived());
       }
     }
     cplScheme.finalize();
@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.initializeData();
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues0(0), 0.0));
     BOOST_TEST(testing::equals(dataValues1(0), 1.0));
     dataValues2(0) = 2.0;
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues1(0) = 1.0;
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
     dataValues2(0) = 3.0;
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     cplScheme.initializeData();
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues0(0), 0.0));
     BOOST_TEST(testing::equals(dataValues1(0), 1.0));
     dataValues2(0) = 2.0;
@@ -553,12 +553,12 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues1(0) = 1.0;
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     cplScheme.initializeData();
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(dataValues2(0), 3.0));
     dataValues0(0) = 4.0;
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());

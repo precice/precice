@@ -188,7 +188,7 @@ void BaseCouplingScheme::initializeData()
   PRECICE_CHECK(not(_sendsInitializedData && isActionRequired(constants::actionWriteInitialData())),
                 "InitialData has to be written to preCICE before calling initializeData().");
 
-  _hasDataBeenExchanged = false;
+  _hasDataBeenReceived = false;
 
   exchangeInitialData();
 }
@@ -200,7 +200,7 @@ void BaseCouplingScheme::advance()
   PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
   PRECICE_CHECK((not _receivesInitializedData && not _sendsInitializedData) || (_initializeDataHasBeenCalled),
                 "initializeData() needs to be called before advance if data has to be initialized.");
-  _hasDataBeenExchanged = false;
+  _hasDataBeenReceived  = false;
   _isTimeWindowComplete = false;
 
   PRECICE_ASSERT(_couplingMode != Undefined);
@@ -243,7 +243,7 @@ void BaseCouplingScheme::advance()
       _isTimeWindowComplete = true;
     }
     if (isCouplingOngoing()) {
-      PRECICE_ASSERT(_hasDataBeenExchanged);
+      PRECICE_ASSERT(_hasDataBeenReceived);
     }
     _computedTimeWindowPart = 0.0; // reset window
   }
@@ -348,15 +348,15 @@ bool BaseCouplingScheme::willDataBeExchanged(
   return not math::greater(remainder, 0.0, _eps);
 }
 
-bool BaseCouplingScheme::hasDataBeenExchanged() const
+bool BaseCouplingScheme::hasDataBeenReceived() const
 {
-  return _hasDataBeenExchanged;
+  return _hasDataBeenReceived;
 }
 
-void BaseCouplingScheme::setHasDataBeenExchanged(
-    bool hasDataBeenExchanged)
+void BaseCouplingScheme::checkDataHasBeenReceived()
 {
-  _hasDataBeenExchanged = hasDataBeenExchanged;
+  PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
+  _hasDataBeenReceived = true;
 }
 
 double BaseCouplingScheme::getTime() const

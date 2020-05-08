@@ -80,7 +80,7 @@ void SerialCouplingScheme::initializeImplementation()
     PRECICE_DEBUG("Receiving data");
     receiveAndSetTimeWindowSize();
     receiveData(getM2N(), getReceiveData());
-    setHasDataBeenExchanged(true);
+    checkDataHasBeenReceived();
   }
 }
 
@@ -90,7 +90,7 @@ void SerialCouplingScheme::exchangeInitialData()
     PRECICE_ASSERT(not sendsInitializedData(), "First participant cannot send data during initialization.");
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      setHasDataBeenExchanged(true);
+      checkDataHasBeenReceived();
     }
   } else { // second participant
     PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
@@ -102,7 +102,7 @@ void SerialCouplingScheme::exchangeInitialData()
       receiveAndSetTimeWindowSize();
       // This receive replaces the receive in initialize().
       receiveData(getM2N(), getReceiveData());
-      setHasDataBeenExchanged(true);
+      checkDataHasBeenReceived();
     }
   }
 }
@@ -123,7 +123,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     }
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
-    setHasDataBeenExchanged(true);
+    checkDataHasBeenReceived();
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
@@ -139,7 +139,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
       }
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
-      setHasDataBeenExchanged(true);
+      checkDataHasBeenReceived();
     }
   }
 

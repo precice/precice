@@ -111,7 +111,7 @@ public:
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   /// actually, this only means that data has been received, data is always sent
-  virtual bool hasDataBeenExchanged() const = 0;
+  virtual bool hasDataBeenReceived() const = 0;
 
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;

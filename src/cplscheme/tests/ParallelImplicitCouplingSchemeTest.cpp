@@ -293,16 +293,16 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  int         sendDataIndex    = -1;
-  int         receiveDataIndex = -1;
+  int         sendDataIndex              = -1;
+  int         receiveDataIndex           = -1;
   bool        dataRequiresInitialization = false;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex    = 0;
-    receiveDataIndex = 1;
+    sendDataIndex              = 0;
+    receiveDataIndex           = 1;
     dataRequiresInitialization = true;
   } else {
-    sendDataIndex    = 1;
-    receiveDataIndex = 0;
+    sendDataIndex              = 1;
+    receiveDataIndex           = 0;
     dataRequiresInitialization = true;
   }
 
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     mesh->data(dataID0)->values() = Eigen::VectorXd::Constant(1, 4.0);
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     cplScheme.initializeData();
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     auto &values = mesh->data(dataID1)->values();
     BOOST_TEST(testing::equals(values, Eigen::Vector3d(1.0, 2.0, 3.0)), values);
 
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     BOOST_TEST(testing::equals(values(0), 0.0), values);
     cplScheme.initializeData();
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(values(0), 4.0), values);
 
     while (cplScheme.isCouplingOngoing()) {

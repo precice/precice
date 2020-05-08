@@ -67,7 +67,7 @@ void MultiCouplingScheme::exchangeInitialData()
     for (size_t i = 0; i < _m2ns.size(); i++) {
       receiveData(_m2ns[i], _receiveDataVector[i]);
     }
-    setHasDataBeenExchanged(true);
+    checkDataHasBeenReceived();
     // second participant has to save values for extrapolation
     for (DataMap &receiveData : _receiveDataVector) {
       updateOldValues(receiveData);
@@ -93,7 +93,7 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   for (size_t i = 0; i < _m2ns.size(); i++) {
     receiveData(_m2ns[i], _receiveDataVector[i]);
   }
-  setHasDataBeenExchanged(true);
+  checkDataHasBeenReceived();
 
   PRECICE_DEBUG("Perform acceleration (only second participant)...");
   bool convergence = accelerate();

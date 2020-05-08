@@ -108,18 +108,18 @@ bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimestepL
   return willBeExchanged;
 }
 
-bool CompositionalCouplingScheme::hasDataBeenExchanged() const
+bool CompositionalCouplingScheme::hasDataBeenReceived() const
 {
   PRECICE_TRACE();
-  bool hasBeenExchanged = false;
+  bool hasBeenReceived = false;
   // Question: Does it suffice to only check the active ones?
   for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
     if (not it->onHold) {
-      hasBeenExchanged |= it->scheme->hasDataBeenExchanged();
+      hasBeenReceived |= it->scheme->hasDataBeenReceived();
     }
   }
-  PRECICE_DEBUG("return " << hasBeenExchanged);
-  return hasBeenExchanged;
+  PRECICE_DEBUG("return " << hasBeenReceived);
+  return hasBeenReceived;
 }
 
 double CompositionalCouplingScheme::getTime() const

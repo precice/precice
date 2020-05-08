@@ -90,7 +90,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool hasDataBeenExchanged() const override final
+  virtual bool hasDataBeenReceived() const override final
   {
     PRECICE_ASSERT(false);
     return false;
