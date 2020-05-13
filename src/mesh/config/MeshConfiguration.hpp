@@ -69,6 +69,7 @@ private:
   const std::string ATTR_NAME;
   const std::string ATTR_FLIP_NORMALS;
   const std::string TAG_DATA;
+  const std::string TAG_PATCH;
   const std::string ATTR_SIDE_INDEX;
 
   int _dimensions;
@@ -78,6 +79,9 @@ private:
 
   /// Configured meshes.
   std::vector<PtrMesh> _meshes;
+
+  /// patchName of mesh.
+  std::vector<std::string> _patchNames;
 
   /// to check later if all meshes that any coupling scheme needs are actually used by the participants
   std::map<std::string, std::vector<std::string>> _neededMeshes;

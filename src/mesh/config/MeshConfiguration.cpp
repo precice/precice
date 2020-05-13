@@ -15,10 +15,12 @@ MeshConfiguration::MeshConfiguration(
       ATTR_NAME("name"),
       ATTR_FLIP_NORMALS("flip-normals"),
       TAG_DATA("use-data"),
+      TAG_PATCH("use-patch"),
       ATTR_SIDE_INDEX("side"),
       _dimensions(0),
       _dataConfig(config),
       _meshes(),
+      _patchNames(),
       _neededMeshes(),
       _meshIdManager(new utils::ManageUniqueIDs())
 {
@@ -45,6 +47,13 @@ MeshConfiguration::MeshConfiguration(
   attrName.setDocumentation("Name of the data set.");
   subtagData.addAttribute(attrName);
   tag.addSubtag(subtagData);
+
+  XMLTag subtagPatch(*this, TAG_PATCH, XMLTag::OCCUR_ARBITRARY);
+  doc = "Assigns a patch name that is used by the mesh.";
+  subtagPatch.setDocumentation(doc);
+  attrName.setDocumentation("Name of the patch.");
+  subtagPatch.addAttribute(attrName);
+  tag.addSubtag(subtagPatch);
 
   parent.addSubtag(tag);
 }
@@ -84,6 +93,12 @@ void MeshConfiguration::xmlTagCallback(
              << "configuration of mesh \"" << _meshes.back()->getName() << "\"";
       throw std::runtime_error{stream.str()};
     }
+  } else if (tag.getName() == TAG_PATCH) {
+    std::string name  = tag.getStringAttributeValue(ATTR_NAME);
+    bool        found = false;
+    PRECICE_INFO("Found patch name: " << _patchNames);
+        _meshes.back()->createPatch(name);    //No check for if the name already exists.
+        found = true;
   }
 }
 
