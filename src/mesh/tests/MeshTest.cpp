@@ -494,5 +494,28 @@ BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
   }
 }
 
+BOOST_AUTO_TEST_CASE(ResizeDataGrow)
+{
+  PRECICE_TEST(1_rank);
+  precice::mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
+  const auto& values = mesh.createData("Data", 1)->values();
+
+  // Create mesh
+  mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
+  mesh.createVertex(Vector3d(1.0, 0.0, 1.0));
+
+  BOOST_TEST(mesh.vertices().size() == 2);
+  mesh.allocateDataValues();
+  BOOST_TEST(values.size() == 2);
+
+  mesh.createVertex(Vector3d(1.0, 1.0, 1.0));
+  mesh.createVertex(Vector3d(2.0, 0.0, 2.0));
+  mesh.createVertex(Vector3d(2.0, 0.0, 2.1));
+
+  BOOST_TEST(mesh.vertices().size() == 5);
+  mesh.allocateDataValues();
+  BOOST_TEST(values.size() == 5);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh
