@@ -92,9 +92,9 @@ int Mesh::getDimensions() const
   return _dimensions;
 }
 
-int Mesh::getTotalPatches()
+std::vector<std::string> Mesh::getTotalPatches()
 {
-  return 1;
+  return _patchNames;
 }
 
 Edge &Mesh::createEdge(
@@ -161,6 +161,11 @@ PtrData &Mesh::createData(
   PtrData data(new Data(name, id, dimension));
   _data.push_back(data);
   return _data.back();
+}
+
+void Mesh::createPatch(const std::string &name)
+{
+  _patchNames.push_back(name);
 }
 
 const Mesh::DataContainer &Mesh::data() const

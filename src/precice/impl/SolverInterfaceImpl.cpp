@@ -645,6 +645,19 @@ void SolverInterfaceImpl::setMeshVertexPatch(
     vertices[VertexID].setPatchID(patchID);
 }
 
+void SolverInterfaceImpl::setMeshVertexPatchName(
+      int           meshID, 
+      int           VertexID, 
+      std::string           patchName)
+{
+    PRECICE_TRACE(meshID);
+    PRECICE_REQUIRE_MESH_MODIFY(meshID);
+    MeshContext & context = _accessor->meshContext(meshID);
+    mesh::PtrMesh mesh(context.mesh);
+    auto &vertices = mesh->vertices();
+    vertices[VertexID].setPatchName(patchName);
+}
+
 int SolverInterfaceImpl::getMeshVertexPatch(
     int           meshID,
     int           vertexID)

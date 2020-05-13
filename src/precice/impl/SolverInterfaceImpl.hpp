@@ -255,6 +255,11 @@ public:
       int           meshID,
       int           vertexID);
 
+  void setMeshVertexPatchName(
+      int           meshID, 
+      int           VertexID, 
+      std::string   patchName);
+
   /**
    * @brief Gets spatial positions of vertices for given IDs.
    *

@@ -139,8 +139,21 @@ void MappingConfiguration::xmlTagCallback(
     double        solverRtol     = 1e-9;
     bool          xDead = false, yDead = false, zDead = false;
     bool          useLU         = false;
+    int           fromPatchID = -1;
+    int           toPatchID = -1;
     Polynomial    polynomial    = Polynomial::ON;
     Preallocation preallocation = Preallocation::TREE;
+
+    mesh::PtrMesh     fromMeshName(_meshConfig->getMesh(fromMesh));
+    mesh::PtrMesh     toMeshName(_meshConfig->getMesh(toMesh));
+    std::vector<std::string>  totalFromPatches = fromMeshName->getTotalPatches();   // How many patches to create a mapping for
+    std::vector<std::string>  totalToPatches = toMeshName->getTotalPatches();   // How many patches to create a mapping for
+
+    PRECICE_INFO("All from patches: " << totalFromPatches);
+    PRECICE_INFO("All to patches: " << totalToPatches);
+    PRECICE_INFO("Number of patches: " << totalFromPatches.size());
+
+    
 
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)) {
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -190,7 +203,8 @@ void MappingConfiguration::xmlTagCallback(
                                                         dir, type, constraint,
                                                         fromMesh, toMesh, timing,
                                                         shapeParameter, supportRadius, solverRtol,
-                                                        xDead, yDead, zDead,
+                                                        xDead, yDead, zDead, 
+                                                        fromPatchID, toPatchID,
                                                         useLU,
                                                         polynomial, preallocation);
     checkDuplicates(configuredMapping);
@@ -223,6 +237,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     bool                             yDead,
     bool                             zDead,
     bool                             useLU,
+    int                              fromPatchID,
+    int                              toPatchID,
     Polynomial                       polynomial,
     Preallocation                    preallocation) const
 {
@@ -231,7 +247,12 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
-  int               totalPatches = fromMesh->getTotalPatches();   // How many patches to create a mapping for
+  std::vector<std::string>  totalFromPatches = fromMesh->getTotalPatches();   // How many patches to create a mapping for
+  std::vector<std::string>  totalToPatches = toMesh->getTotalPatches();   // How many patches to create a mapping for
+  PRECICE_INFO("All from patches: " << totalFromPatches);
+  PRECICE_INFO("All to patches: " << totalToPatches);
+  PRECICE_INFO("Number of patches: " << totalFromPatches.size());
+  
   PRECICE_CHECK(fromMesh.get() != nullptr, "Mesh \"" << fromMeshName << "\" not defined at creation of mapping!");
   PRECICE_CHECK(toMesh.get() != nullptr, "Mesh \"" << toMeshName << "\" not defined at creation of mapping!");
   // Having a list of the patches associated with the mesh, and configure a mapping per patch.

@@ -149,6 +149,8 @@ private:
       bool                             yDead,
       bool                             zDead,
       bool                             useLU,
+      int                              fromPatchID,
+      int                              toPatchID,
       Polynomial                       polynomial,
       Preallocation                    preallocation) const;
 

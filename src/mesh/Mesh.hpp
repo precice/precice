@@ -162,6 +162,8 @@ public:
       const std::string &name,
       int                dimension);
 
+  void createPatch(const std::string &name);
+
   const DataContainer &data() const;
 
   const PtrData &data(int dataID) const;
@@ -177,7 +179,7 @@ public:
   int getID() const;
 
   /// Returns the base ID of the mesh.
-  int getTotalPatches();
+  std::vector<std::string> getTotalPatches();
 
   /// Returns true if the given vertexID is valid
   bool isValidVertexID(int vertexID) const;
@@ -276,6 +278,9 @@ private:
 
   /// The ID of this mesh.
   int _id;
+
+  // Vector of patchNames for the mesh
+  std::vector<std::string> _patchNames; 
 
   /// Holds vertices, edges, and triangles.
   VertexContainer   _vertices;
