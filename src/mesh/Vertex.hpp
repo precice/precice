@@ -49,7 +49,7 @@ public:
   void setPatchName(std::string patchName);
 
   /// Returns the name of the patch of the vertex
-  void getPatchName() const;
+  std::string getPatchName() const;
 
   /// Returns the coordinates of the vertex.
   const Eigen::VectorXd &getCoords() const;
@@ -155,7 +155,7 @@ inline int Vertex::getPatchID() const
  return _patchid;
 }
 
-inline int Vertex::getPatchName() const
+inline std::string Vertex::getPatchName() const
 {
  return _patchname;
 }
