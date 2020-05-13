@@ -45,6 +45,12 @@ public:
   /// Sets the patchID of a vertex
   void setPatchID(int patchid);
 
+  /// Sets the name of the patch of that vertex
+  void setPatchName(std::string patchName);
+
+  /// Returns the name of the patch of the vertex
+  void getPatchName() const;
+
   /// Returns the coordinates of the vertex.
   const Eigen::VectorXd &getCoords() const;
 
@@ -76,6 +82,8 @@ private:
 
   /// Patch id that a vertex belongs to
   int _patchid = 0;
+
+  std::string _patchname;
 
   /// Coordinates of the vertex.
   Eigen::VectorXd _coords;
@@ -145,6 +153,11 @@ inline int Vertex::getID() const
 inline int Vertex::getPatchID() const
 {
  return _patchid;
+}
+
+inline int Vertex::getPatchName() const
+{
+ return _patchname;
 }
 
 inline const Eigen::VectorXd &Vertex::getCoords() const

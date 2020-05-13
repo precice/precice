@@ -49,6 +49,11 @@ void Vertex::setPatchID(int patchid)
   _patchid = patchid;
 }
 
+void Vertex::setPatchName(std::string patchname)
+{
+  _patchname = patchname;
+}
+
 std::ostream &operator<<(std::ostream &os, Vertex const &v)
 {
   return os << "POINT (" << v.getCoords().transpose().format(utils::eigenio::wkt()) << ')';
