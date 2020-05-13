@@ -96,7 +96,6 @@ void MeshConfiguration::xmlTagCallback(
   } else if (tag.getName() == TAG_PATCH) {
     std::string name  = tag.getStringAttributeValue(ATTR_NAME);
     bool        found = false;
-    PRECICE_INFO("Found patch name: " << _patchNames);
         _meshes.back()->createPatch(name);    //No check for if the name already exists.
         found = true;
   }
