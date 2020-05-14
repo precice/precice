@@ -15,11 +15,15 @@ namespace mapping {
 
 NearestNeighborMapping::NearestNeighborMapping(
     Constraint constraint,
+    int        fromPatchID,
+    int        toPatchID,
     int        dimensions)
     : Mapping(constraint, dimensions)
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  _fromPatchID = fromPatchID;
+  _toPatchID = toPatchID;
 }
 
 void NearestNeighborMapping::computeMapping()
@@ -29,13 +33,19 @@ void NearestNeighborMapping::computeMapping()
   PRECICE_ASSERT(input().get() != nullptr);
   PRECICE_ASSERT(output().get() != nullptr);
 
+  //Input mesh is fromMesh, and output mesh is toMesh. Both should have same patch name, and therefore does not matter
+  // which one send patch name to rtree, both are the same.
   const std::string     baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
+  PRECICE_INFO("From patch name in NN: " << getFromPatchID());
+  PRECICE_INFO("To patch name in NN: " << getToPatchID());
+  int fromPatchID = getFromPatchID();
+  int toPatchID = getToPatchID();
 
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = mesh::rtree::getVertexRTree(input());
+    auto                  rtree = mesh::rtree::getVertexRTree(input(),toPatchID);
     e2.stop();
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
@@ -44,7 +54,7 @@ void NearestNeighborMapping::computeMapping()
     for (size_t i = 0; i < verticesSize; i++) {
       const Eigen::VectorXd &coords = outputVertices[i].getCoords();
       int outputPatchID = outputVertices[i].getPatchID();
-      PRECICE_INFO("outputID = " << outputPatchID);
+      //PRECICE_INFO("outputID = " << outputPatchID);
       // Search for the output vertex inside the input mesh and add index to _vertexIndices
       // rtree will only have vertices with a specific patch number
       rtree->query(boost::geometry::index::nearest(coords, 1),
@@ -67,7 +77,7 @@ void NearestNeighborMapping::computeMapping()
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Compute conservative mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = mesh::rtree::getVertexRTree(output());
+    auto                  rtree = mesh::rtree::getVertexRTree(output(), fromPatchID);
     e2.stop();
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);

@@ -16,7 +16,7 @@ public:
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimensions Dimensionality of the meshes
    */
-  NearestNeighborMapping(Constraint constraint, int dimensions);
+  NearestNeighborMapping(Constraint constraint, int fromPatchID, int toPatchID, int dimensions);
 
   /// Destructor, empty.
   virtual ~NearestNeighborMapping() {}
@@ -29,6 +29,16 @@ public:
 
   /// Removes a computed mapping.
   virtual void clear() override;
+
+  int getFromPatchID() const
+  {
+    return _fromPatchID;
+  }
+
+  int getToPatchID() const
+  {
+    return _toPatchID;
+  }
 
   /// Maps input data to output data from input mesh to output mesh.
   virtual void map(
@@ -43,6 +53,10 @@ private:
 
   /// Flag to indicate whether computeMapping() has been called.
   bool _hasComputedMapping = false;
+
+  int _fromPatchID;
+
+  int _toPatchID;
 
   /// Computed output vertex indices to map data from input vertices to.
   std::vector<int> _vertexIndices;
