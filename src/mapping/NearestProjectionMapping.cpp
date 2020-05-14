@@ -113,7 +113,8 @@ void NearestProjectionMapping::computeMapping()
       if (not found) {
         if (!indexVertices) {
           precice::utils::Event e3(baseEvent + ".getIndexOnVertices", precice::syncMode);
-          indexVertices = mesh::rtree::getVertexRTree(search_space);
+          int z = 0;
+          indexVertices = mesh::rtree::getVertexRTree(search_space, z);
         }
         // Search for the origin inside the destination meshes vertices
         indexVertices->query(bg::index::nearest(coords, 1),
@@ -190,7 +191,8 @@ void NearestProjectionMapping::computeMapping()
       if (not found) {
         if (!indexVertices) {
           precice::utils::Event e4(baseEvent + ".getIndexOnVertices", precice::syncMode);
-          indexVertices = mesh::rtree::getVertexRTree(search_space);
+          int z = 0;
+          indexVertices = mesh::rtree::getVertexRTree(search_space,z);
         }
         // Search for the vertex inside the destination meshes vertices
         indexVertices->query(bg::index::nearest(coords, 1),

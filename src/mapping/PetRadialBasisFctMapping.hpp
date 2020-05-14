@@ -71,6 +71,7 @@ public:
       bool                           xDead,
       bool                           yDead,
       bool                           zDead,
+      int                            fromPatchID,
       double                         solverRtol    = 1e-9,
       Polynomial                     polynomial    = Polynomial::SEPARATE,
       Preallocation                  preallocation = Preallocation::TREE);
@@ -193,6 +194,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
     bool                           xDead,
     bool                           yDead,
     bool                           zDead,
+    int                            fromPatchID,
     double                         solverRtol,
     Polynomial                     polynomial,
     Preallocation                  preallocation)
@@ -824,7 +826,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
       preCICE is fully functional, but performance for large cases is degraded."
 #endif
   ) {
-    auto rtree    = mesh::rtree::getVertexRTree(filterMesh);
+    int z = 0;
+    auto rtree    = mesh::rtree::getVertexRTree(filterMesh,z);
     namespace bgi = boost::geometry::index;
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
@@ -881,7 +884,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
     bb[d].first -= _basisFunction.getSupportRadius();
     bb[d].second += _basisFunction.getSupportRadius();
   }
-  auto rtree = mesh::rtree::getVertexRTree(mesh);
+  int z = 0;
+  auto rtree = mesh::rtree::getVertexRTree(mesh,z);
   rtree->query(boost::geometry::index::within(bb),
                boost::make_function_output_iterator([&mesh](size_t idx) {
                  mesh->vertices()[idx].tag();
@@ -1346,7 +1350,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
   std::tie(n, std::ignore) = _matrixC.getLocalSize();
   std::vector<PetscInt> d_nnz(n), o_nnz(n);
 
-  auto tree = mesh::rtree::getVertexRTree(inMesh);
+  int z = 0;
+  auto tree = mesh::rtree::getVertexRTree(inMesh,z);
 
   double const supportRadius = _basisFunction.getSupportRadius();
 
@@ -1444,7 +1449,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
 
   PetscInt       ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt const outputSize    = _matrixA.getLocalSize().first;
-  auto           tree          = mesh::rtree::getVertexRTree(inMesh);
+  int z = 0;
+  auto           tree          = mesh::rtree::getVertexRTree(inMesh,z);
   double const   supportRadius = _basisFunction.getSupportRadius();
 
   std::tie(ownerRangeABegin, ownerRangeAEnd)       = _matrixA.ownerRange();
