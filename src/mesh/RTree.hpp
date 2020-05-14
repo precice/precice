@@ -185,7 +185,7 @@ public:
   /*
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
    */
-  static vertex_traits::Ptr getVertexRTree(const PtrMesh &mesh);
+  static vertex_traits::Ptr getVertexRTree(const PtrMesh &mesh, int toPatchID);
 
   static edge_traits::Ptr getEdgeRTree(const PtrMesh &mesh);
 

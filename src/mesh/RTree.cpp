@@ -19,11 +19,11 @@ rtree::MeshIndices &rtree::cacheEntry(int meshID)
   return result.first->second;
 }
 
-rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh &mesh)
+rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh &mesh, int toPatchID)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
-  int patchID = mesh->getTotalPatches();      //This actually needs to be the patch number, but totalPatches will suffice for intial testing
+  //int patchID = mesh->getTotalPatches();      //This actually needs to be the patch number, but totalPatches will suffice for intial testing
   if (cache.vertices) {
     return cache.vertices;
   }
@@ -36,7 +36,6 @@ rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh &mesh)
 
   for (int i = 0; i < mesh->vertices().size(); i++){
     int vertexPatchID = mesh->vertices()[i].getPatchID();
-    PRECICE_INFO("PatchID: " << vertexPatchID);
   }
   // If not using a patchVertexContainer, then check if patchID matches, then add the vertex if it does.
   // This slows down this process, but NN with boost remains O(NlogN). This is a larger savings.
