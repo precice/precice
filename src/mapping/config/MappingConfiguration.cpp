@@ -139,8 +139,8 @@ void MappingConfiguration::xmlTagCallback(
     double        solverRtol     = 1e-9;
     bool          xDead = false, yDead = false, zDead = false;
     bool          useLU         = false;
-    int           fromPatchID = -1;
-    int           toPatchID = -1;
+    int           fromPatchID = 0;
+    int           toPatchID = 0;
     Polynomial    polynomial    = Polynomial::ON;
     Preallocation preallocation = Preallocation::TREE;
 
@@ -152,8 +152,25 @@ void MappingConfiguration::xmlTagCallback(
     PRECICE_INFO("All from patches: " << totalFromPatches);
     PRECICE_INFO("All to patches: " << totalToPatches);
     PRECICE_INFO("Number of patches: " << totalFromPatches.size());
+    int totalPatchesOnMesh = totalFromPatches.size();
 
-    
+    if (totalPatchesOnMesh == 0)
+    {
+      totalPatchesOnMesh = 1;
+      totalToPatches.push_back("default");
+      totalFromPatches.push_back("default");
+    }
+    PRECICE_INFO("Number of patches: " << totalPatchesOnMesh);
+
+
+    for (int i = 0; i < totalPatchesOnMesh; i++)
+    {
+      fromPatchID = i;
+      for (int j = 0; j < totalPatchesOnMesh; j++)
+      {
+        if (totalToPatches[j] == totalFromPatches[i])
+          toPatchID = j;
+      }
 
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)) {
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -199,16 +216,20 @@ void MappingConfiguration::xmlTagCallback(
         preallocation = Preallocation::OFF;
     }
 
+
     ConfiguredMapping configuredMapping = createMapping(context,
                                                         dir, type, constraint,
                                                         fromMesh, toMesh, timing,
                                                         shapeParameter, supportRadius, solverRtol,
                                                         xDead, yDead, zDead, 
-                                                        fromPatchID, toPatchID,
                                                         useLU,
+                                                        fromPatchID, toPatchID,
                                                         polynomial, preallocation);
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
+
+    }
+    PRECICE_INFO("Number of Mappings: " << _mappings.size());
   }
 }
 
@@ -247,29 +268,20 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
-  std::vector<std::string>  totalFromPatches = fromMesh->getTotalPatches();   // How many patches to create a mapping for
-  std::vector<std::string>  totalToPatches = toMesh->getTotalPatches();   // How many patches to create a mapping for
-  PRECICE_INFO("All from patches: " << totalFromPatches);
-  PRECICE_INFO("All to patches: " << totalToPatches);
-  PRECICE_INFO("Number of patches: " << totalFromPatches.size());
+  //std::vector<std::string>  totalFromPatches = fromMesh->getTotalPatches();   // How many patches to create a mapping for
+  //std::vector<std::string>  totalToPatches = toMesh->getTotalPatches();   // How many patches to create a mapping for
   
+  PRECICE_INFO("fromMesh patch: " << fromPatchID << " -> and toMesh patch: " << toPatchID);
   PRECICE_CHECK(fromMesh.get() != nullptr, "Mesh \"" << fromMeshName << "\" not defined at creation of mapping!");
   PRECICE_CHECK(toMesh.get() != nullptr, "Mesh \"" << toMeshName << "\" not defined at creation of mapping!");
-  // Having a list of the patches associated with the mesh, and configure a mapping per patch.
-  /*
-  for (i = patch Start; i < patch End; i++)
-    configuredMapping.fromPatch = fromPatch;
-    configuredMapping.toPatch   = toPatch;
-    configuredMapping.timing   = timing;
-    int dimensions             = fromMesh->getDimensions();
-    ...
-    ...
-    ...
-  */
+
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh   = toMesh;
   configuredMapping.timing   = timing;
   int dimensions             = fromMesh->getDimensions();
+
+  configuredMapping.fromPatchID = fromPatchID;
+  configuredMapping.toPatchID = toPatchID;
 
   if (direction == VALUE_WRITE) {
     configuredMapping.direction = WRITE;
@@ -290,7 +302,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
   if (type == VALUE_NEAREST_NEIGHBOR) {
     configuredMapping.mapping = PtrMapping(
-        new NearestNeighborMapping(constraintValue, dimensions));
+        new NearestNeighborMapping(constraintValue, fromPatchID, toPatchID, dimensions));
     configuredMapping.isRBF = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_PROJECTION) {
@@ -372,35 +384,35 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
-                                                         xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                         xDead, yDead, zDead, fromPatchID, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_MULTIQUADRICS) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<Multiquadrics>(constraintValue, dimensions, Multiquadrics(shapeParameter),
-                                                      xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                      xDead, yDead, zDead, fromPatchID, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<InverseMultiquadrics>(constraintValue, dimensions, InverseMultiquadrics(shapeParameter),
-                                                             xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                             xDead, yDead, zDead, fromPatchID, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_VOLUME_SPLINES) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
-                                                      xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                      xDead, yDead, zDead, fromPatchID, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_GAUSSIAN) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<Gaussian>(constraintValue, dimensions, Gaussian(shapeParameter),
-                                                 xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                 xDead, yDead, zDead, fromPatchID, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_CTPS_C2) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius),
-                                                                  xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                                  xDead, yDead, zDead, fromPatchID, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<CompactPolynomialC0>(constraintValue, dimensions, CompactPolynomialC0(supportRadius),
-                                                            xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                            xDead, yDead, zDead, fromPatchID, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(supportRadius),
-                                                            xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+                                                            xDead, yDead, zDead, fromPatchID, solverRtol, polynomial, preallocation));
     } else {
       PRECICE_ERROR("Unknown mapping type!");
     }
@@ -418,10 +430,10 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
     // Check same patch as well
     bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
-    PRECICE_CHECK(!sameFromMesh, "There cannot be two mappings from mesh \""
-                                     << mapping.fromMesh->getName() << "\"");
-    PRECICE_CHECK(!sameToMesh, "There cannot be two mappings to mesh \""
-                                   << mapping.toMesh->getName() << "\"");
+    //PRECICE_CHECK(!sameFromMesh, "There cannot be two mappings from mesh \""
+    //                                 << mapping.fromMesh->getName() << "\"");
+    //PRECICE_CHECK(!sameToMesh, "There cannot be two mappings to mesh \""
+    //                               << mapping.toMesh->getName() << "\"");
   }
 }
 

@@ -648,7 +648,7 @@ void SolverInterfaceImpl::setMeshVertexPatch(
 void SolverInterfaceImpl::setMeshVertexPatchName(
       int           meshID, 
       int           VertexID, 
-      std::string           patchName)
+      std::string   patchName)
 {
     PRECICE_TRACE(meshID);
     PRECICE_REQUIRE_MESH_MODIFY(meshID);

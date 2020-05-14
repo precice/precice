@@ -59,6 +59,10 @@ public:
     Timing timing;
     /// true for RBF mapping
     bool isRBF;
+
+    int fromPatchID;
+
+    int toPatchID;
   };
 
   MappingConfiguration(
