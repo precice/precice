@@ -142,8 +142,25 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       inMesh  = input();
       outMesh = output();
     }
+
+    std::vector<int> ownedInputVertices;
+    std::vector<int> ownedOutputVertices;
+
+    for(auto vertex : inMesh->vertices()){
+      if(vertex.isOwner()){
+        ownedInputVertices.push_back(vertex.getID());
+      }
+    }
+
+    for(auto vertex : outMesh->vertices()){
+      if(vertex.isOwner()){
+        ownedOutputVertices.push_back(vertex.getID());
+      }
+    }
+
     com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*inMesh, 0);
     com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*outMesh,0);
+  
   } else { 
 
     mesh::PtrMesh inMesh;
@@ -170,9 +187,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     for(int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave){
       mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveInMesh, rankSlave);
-      if(!slaveInMesh.vertices().empty()){ 
+      if(!slaveInMesh.vertices().empty()){
         globalInMesh.addMesh(slaveInMesh);
       }
+
       mesh::Mesh slaveOutMesh(outMesh->getName(), outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveOutMesh, rankSlave);
       if(!slaveOutMesh.vertices().empty()){
@@ -180,8 +198,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
     }
 
-    int inputSize      = (int) globalInMesh.vertices().size();
-    int outputSize     = (int) globalOutMesh.vertices().size();
+    int inputSize      = (int) globalInMesh.vertices().size();  //globalInMesh.vertices().size();
+    int outputSize     = (int) globalOutMesh.vertices().size(); //globalOutMesh.vertices().size();
     PRECICE_DEBUG("Size of input mesh: " << inputSize);
     PRECICE_DEBUG("Size of output mesh: " << outputSize);
     
@@ -205,10 +223,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         difference = globalInMesh.vertices()[i].getCoords();
         difference -= globalInMesh.vertices()[j].getCoords();
         matrixCLU(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
-      }
-      matrixCLU(i, inputSize) = 1.0;
-      for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-        matrixCLU(i, inputSize + 1 + dim) = reduceVector(globalInMesh.vertices()[i].getCoords())[dim];
+        matrixCLU(i, inputSize) = 1.0;
+        for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
+          matrixCLU(i, inputSize + 1 + dim) = reduceVector(globalInMesh.vertices()[i].getCoords())[dim];
+        }
       }
     }
     // Copy values of upper right part of C to lower left part
