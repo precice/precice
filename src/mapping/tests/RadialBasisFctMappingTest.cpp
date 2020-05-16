@@ -437,7 +437,6 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                   globalIndexOffsets[context.rank]);
 }
 
-
 /// Test with a homogenous distribution of mesh amoung ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {

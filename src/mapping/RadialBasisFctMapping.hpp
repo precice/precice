@@ -290,13 +290,31 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
   // Gather input data
   if(utils::MasterSlave::isSlave()){
     
-    auto & localInData = input()->data(inputDataID)->values();
-    auto & localOutData = output()->data(outputDataID)->values();
-    std::vector<double> inValues(localInData.data(), localInData.data() + localInData.size());
-    std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
+    if(getConstraint() == CONSISTENT){
+      std::vector<double> inValues;
+      
+      for(auto vertex : input()->vertices()){
+        if(vertex.isOwner()){
+          inValues.push_back(input()->data(inputDataID)->values()[vertex.getID()]);
+        }
+      }
     
-    utils::MasterSlave::_communication->send(inValues, 0);
-    utils::MasterSlave::_communication->send(outValues, 0);
+      auto & localOutData = output()->data(outputDataID)->values();
+      std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
+    
+      utils::MasterSlave::_communication->send(inValues, 0);
+      utils::MasterSlave::_communication->send(outValues, 0);
+    }
+    if(getConstraint() == CONSERVATIVE){    
+      auto & localInData = input()->data(inputDataID)->values();
+      std::vector<double> inValues(localInData.data(), localInData.data() + localInData.size());
+
+      auto & localOutData = output()->data(outputDataID)->values();
+      std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
+    
+      utils::MasterSlave::_communication->send(inValues, 0);
+      utils::MasterSlave::_communication->send(outValues, 0);
+    }
   
   }
   else {
@@ -304,14 +322,24 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
     std::vector<double> globalInValues;
     std::vector<double> globalOutValues;
     
-    // Eigen::VectorXd to std::vector conversion
-    auto & localInData = input()->data(inputDataID)->values();
-    auto & localOutData = output()->data(outputDataID)->values();
+    if(getConstraint() == CONSISTENT){
+      std::vector<double> localInData;
+    
+      for(auto vertex : input()->vertices()){
+        if(vertex.isOwner()){
+          localInData.push_back(input()->data(inputDataID)->values()[vertex.getID()]);
+        }
+      }
+      auto & localOutData = output()->data(outputDataID)->values();
 
-    if(not (localInData.size() == 0)){
+      globalInValues.insert(globalInValues.begin(), localInData.begin(), localInData.end());
+      globalOutValues.insert(globalOutValues.begin(), localOutData.data(), localOutData.data() + localOutData.size());
+    } else {
+
+      auto & localInData = input()->data(inputDataID)->values();
+      auto & localOutData = output()->data(outputDataID)->values();
+
       globalInValues.insert(globalInValues.begin(), localInData.data(), localInData.data() + localInData.size());
-    }
-    if(not (localOutData.size() == 0)){
       globalOutValues.insert(globalOutValues.begin(), localOutData.data(), localOutData.data() + localOutData.size());
     }
 
@@ -322,16 +350,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
       for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
         std::vector<double> slaveInData;
         utils::MasterSlave::_communication->receive(slaveInData, rank);
-        if(!slaveInData.empty()){
-          globalInValues.insert(globalInValues.end(), slaveInData.begin(), slaveInData.end());
-        }
+        globalInValues.insert(globalInValues.end(), slaveInData.begin(), slaveInData.end());
 
         std::vector<double> slaveOutData;
         utils::MasterSlave::_communication->receive(slaveOutData, rank);
         outValuesSize.push_back(slaveOutData.size());
-        if(!slaveOutData.empty()){
-          globalOutValues.insert(globalOutValues.end(), slaveOutData.begin(), slaveOutData.end());
-        }
+        globalOutValues.insert(globalOutValues.end(), slaveOutData.begin(), slaveOutData.end());
       }
     }
 
@@ -366,6 +390,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
         }
       }
       mappingIndex++;
+      
+      if(utils::MasterSlave::isMaster()){
+        std::vector<double> sendValues(outputValues.data(), outputValues.data() + outputValues.size());
+        utils::MasterSlave::_communication->broadcast(sendValues);
+      }
+      else{
+        output()->data(outputDataID)->values() = outputValues;
+      }
+
     } else { // Map consistent
       PRECICE_DEBUG("Map consistent");
       Eigen::VectorXd p(_matrixA.cols());   // rows == n
@@ -388,35 +421,41 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
           outputValues(i * valueDim + dim) = out[i];
         }
       }
-    }
 
-    if(outValuesSize.at(0) != 0){
+      if(outValuesSize.at(0) != 0){
         Eigen::Map<Eigen::VectorXd> masterValues(outputValues.data(), outValuesSize.at(0));
         output()->data(outputDataID)->values() = masterValues;
-    }
+      }
 
-    int beginPoint = outValuesSize.at(0);
-    
-    if(utils::MasterSlave::isMaster()){
-      for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
-        std::vector<double> sendValues(outputValues.data() + beginPoint, outputValues.data() + beginPoint + outValuesSize.at(rank));
-        utils::MasterSlave::_communication->send(sendValues, rank);
-        beginPoint += outValuesSize.at(rank);
-      } 
-    }
-
-    output()->data(outputDataID)->values() = outputValues;
-    
-    if(utils::MasterSlave::isMaster()){
-      std::vector<double> sendValues(outputValues.data(), outputValues.data() + outputValues.size());
-      utils::MasterSlave::_communication->broadcast(sendValues);
+      int beginPoint = outValuesSize.at(0);
+      
+      if(utils::MasterSlave::isMaster()){
+        for(int rank = 1; rank < utils::MasterSlave::getSize(); ++rank){
+          std::vector<double> sendValues(outputValues.data() + beginPoint, outputValues.data() + beginPoint + outValuesSize.at(rank));
+          utils::MasterSlave::_communication->send(sendValues, rank);
+          beginPoint += outValuesSize.at(rank);
+        } 
+      }
     }
   }
 
   if(utils::MasterSlave::isSlave()){
-    std::vector<double> receivedValues;
-    utils::MasterSlave::_communication->receive(receivedValues, 0);
-    output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
+    if(getConstraint() == CONSISTENT){
+      std::vector<double> receivedValues;
+      utils::MasterSlave::_communication->receive(receivedValues, 0);
+      output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
+    }
+    else{
+      std::vector<double> receivedValues;
+      utils::MasterSlave::_communication->broadcast(receivedValues, 0);
+      int i = 0;
+      for(auto vertex : output()->vertices()){
+        if(vertex.isOwner()){
+          output()->data(outputDataID)->values()[vertex.getID()] = receivedValues.at(i);
+          ++i;
+        }
+      }
+    }
   }
 }
 
