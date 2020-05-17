@@ -813,7 +813,7 @@ void testTagging(const TestContext &context,
                                                                                    << " is tagged, but should not be.");
   }
 }
-/*
+
 BOOST_AUTO_TEST_CASE(testTagFirstRound)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())
@@ -845,7 +845,7 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   // For conservative just swap meshes.
   testTagging(context, outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
 }
-*/
+
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
 BOOST_AUTO_TEST_SUITE(Serial)

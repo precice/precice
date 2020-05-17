@@ -7,6 +7,7 @@
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "mesh/Filter.hpp"
+#include "mesh/RTree.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/QR>
@@ -530,22 +531,72 @@ Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::reduceVector(
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
-  PRECICE_CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
-                "RBF mapping is not supported for a participant in master mode, use petrbf instead");
+  PRECICE_TRACE();
+  mesh::PtrMesh filterMesh, otherMesh;
+  if (getConstraint() == CONSISTENT) {
+    filterMesh = input();  // remote
+    otherMesh  = output(); // local
+  } else if (getConstraint() == CONSERVATIVE) {
+    filterMesh = output(); // remote
+    otherMesh  = input();  // local
+  }
 
-  // Master will hold complete mesh
-  // Depends on consistent, conservative -> output or input 
-  // Check integration cases and get use cases and implement accordingly
+  if (otherMesh->vertices().empty())
+    return; // Ranks not at the interface should never hold interface vertices
 
-  // Or copy the Petsc ones -> safest change DO THIS OPTION
+  // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
+
+  if(_basisFunction.hasCompactSupport()){
+
+    auto rtree    = mesh::rtree::getVertexRTree(filterMesh);
+    namespace bgi = boost::geometry::index;
+    auto bb       = otherMesh->getBoundingBox();
+    // Enlarge by support radius
+    bb.expandBy(_basisFunction.getSupportRadius());
+    rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(filterMesh->vertices()[i]); }), 
+      boost::make_function_output_iterator([&filterMesh](size_t idx) {
+        filterMesh->vertices()[idx].tag();
+    }));
+  } else {
+    for (auto &vert : filterMesh->vertices())
+      vert.tag();
+  }
 
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
-  PRECICE_CHECK(not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster(),
-                "RBF mapping is not supported for a participant in master mode, use petrbf instead");
+  PRECICE_TRACE();
+  namespace bgi = boost::geometry::index;
+
+  if (not _basisFunction.hasCompactSupport())
+    return; // Tags should not be changed
+
+  mesh::PtrMesh mesh; // The mesh we want to filter
+
+  if (getConstraint() == CONSISTENT)
+    mesh = input();
+  else if (getConstraint() == CONSERVATIVE)
+    mesh = output();
+
+  mesh::BoundingBox bb(mesh->getDimensions());
+
+  // Construct bounding box around all owned vertices
+  for (mesh::Vertex &v : mesh->vertices()) {
+    if (v.isOwner()) {
+      PRECICE_ASSERT(v.isTagged()); // Should be tagged from the first round
+      bb.expandBy(v);
+    }
+  }
+  // Enlarge bb by support radius
+  bb.expandBy(_basisFunction.getSupportRadius());
+  auto rtree = mesh::rtree::getVertexRTree(mesh);
+
+  rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(mesh->vertices()[i]); }), 
+    boost::make_function_output_iterator([&mesh](size_t idx) {
+      mesh->vertices()[idx].tag();
+    }));
 }
 
 } // namespace mapping
