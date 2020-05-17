@@ -301,7 +301,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
       // Input mesh and data is distributed
       std::vector<double> inValues;
       // Filter input data
-      for(auto vertex : input()->vertices()){
+      for(const auto & vertex : input()->vertices()){
         if(vertex.isOwner()){
           inValues.push_back(input()->data(inputDataID)->values()[vertex.getID()]);
         }
@@ -329,7 +329,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
     // Store ownership information for scattering data
     std::vector<int> outDataOwnership(output()->vertices().size(), -1);
     int i = 0;
-    for(auto vertex : output()->vertices()){
+    for(const auto & vertex : output()->vertices()){
       if(vertex.isOwner()){
         outDataOwnership.at(i) = utils::MasterSlave::getRank();
       }
@@ -351,7 +351,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
       std::vector<double> localInData;
     
       // Filter mesh
-      for(auto vertex : input()->vertices()){
+      for(const auto & vertex : input()->vertices()){
         if(vertex.isOwner()){
           localInData.push_back(input()->data(inputDataID)->values()[vertex.getID()]);
         }
@@ -371,7 +371,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
 
       // Store ownership information for scattering data
       int i = 0;
-      for(auto vertex : output()->vertices()){
+      for(const auto & vertex : output()->vertices()){
         if(vertex.isOwner()){
           outDataOwnership.at(i) = utils::MasterSlave::getRank();
         }
