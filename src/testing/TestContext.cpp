@@ -37,7 +37,6 @@ TestContext::~TestContext() noexcept
 
   // Reset static ids and counters
   mesh::Data::resetDataCount();
-  impl::Participant::resetParticipantCount();
 
   // Reset communicators
   Par::resetCommState();

@@ -28,12 +28,12 @@ FILES=$(find . -type f -name \*.hpp -or -name \*.h -or -name \*.cpp -or -name \*
 echo "Formatting $(echo "$FILES" | wc -l) files"
 if command -v parallel > /dev/null ; then
     echo "Using GNU parallel"
-    echo "$FILES" | parallel "clang-format-8 -style=file -i {} ; echo -n ."
+    echo "$FILES" | parallel --bar "${BINARY} -style=file -i {}"
 else
     echo "Install GNU parallel to format in parallel."
     for cfile in $FILES
     do
-        clang-format-8 -style=file -i $cfile
+        ${BINARY} -style=file -i $cfile
         echo -n "."
     done
 fi
