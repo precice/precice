@@ -25,6 +25,12 @@ Based on PR #123
 See [FindBoost](https://cmake.org/cmake/help/latest/module/FindBoost.html)
 -->
 
+**Review Information**
+
+<!-- 
+Briefly describe what reviewers should focus on when looking at your code.
+-->
+
 **TODO**
 
 * [ ] I added a changelog file with this PR number in `docs/changelog/` if there are noteworthy changes.
