@@ -31,7 +31,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Update documentation (all)
   * [ ] Update markdown configuration reference in wiki
 * [ ] Approve the PR with at least two reviews (all)
-* [ ] Merge PR to master ( use `git merge --no-ff hotfix-N` )
+* [ ] Merge PR to master ( use `git merge --no-ff release-N` )
 * [ ] Tag release on master `vN` and verify by running `git describe --tags`
 * [ ] Merge back to develop and verify by running `git describe --tags`
 * [ ] Push master and push the `vN` tag
@@ -43,31 +43,35 @@ Only the release manager should update this post (even tickboxes, due to race co
 
 ## Regression Tests
 
-Run all these tests manually on your system. If you succeed, please write a comment with the revisions of the components that you used below. Example: https://github.com/precice/precice/pull/507#issuecomment-530432289
+Run all these tests manually on your system. If you succeed, please write a comment with the revisions of the components that you used below. Example: https://github.com/precice/precice/pull/507#issuecomment-530432289 and update the table.
 
-* [ ] SU2 / CalculiX [flap_perp](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp/SU2-CalculiX)
-* [ ] OpenFOAM / OpenFOAM [flow_over_plate](https://github.com/precice/openfoam-adapter/tree/master/tutorials/CHT/flow-over-plate)
-* [ ] OpenFOAM / OpenFOAM - NP mapping in OpenFOAM [flow_over_plate](https://github.com/precice/openfoam-adapter/tree/master/tutorials/CHT/flow-over-plate)
-* [ ] OpenFOAM / CalculiX FSI [flap perp](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp/OpenFOAM-CalculiX)
-* [ ] OpenFOAM / CalculiX FSI - NP mapping in CalculiX [3D_Tube](https://github.com/precice/tutorials/tree/develop/FSI/3D_Tube/OpenFOAM-CalculiX)
-* [ ] OpenFOAM / CalculiX / OpenFOAM CHT [heat_exchanger](https://github.com/precice/tutorials/tree/develop/CHT/heat_exchanger/buoyantSimpleFoam-CalculiX)
-* [ ] OpenFOAM / deal.II [flap_perp_2D](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp_2D/OpenFOAM-deal.II)
-* [ ] OpenFOAM / FEniCS [flap_perp](https://github.com/precice/tutorials/tree/master/FSI/flap_perp/OpenFOAM-FEniCS)
-* [ ] OpenFOAM / FEniCS [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-fenics)
-* [ ] OpenFOAM / Nutils [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-nutils)
-* [ ] FEniCS / FEniCS [partitioned-heat](https://github.com/precice/tutorials/tree/master/HT/partitioned-heat/fenics-fenics)
-* [ ] MATLAB / MATLAB [ODEs](https://github.com/precice/matlab-bindings/tree/develop/tutorial)
-* [ ] ExaFSA: Ateles / FASTEST
-* [ ] Alya
-* [ ] 1D-ElasticTube [C++](https://github.com/precice/elastictube1d/tree/develop/cxx)
-* [ ] 1D-ElasticTube [Python](https://github.com/precice/elastictube1d/tree/develop/python)
-* [ ] SuperMUC
-* [ ] Solverdummy [C++](https://github.com/precice/precice/tree/develop/tools/solverdummies/cpp)
-* [ ] Solverdummy [C](https://github.com/precice/precice/tree/develop/tools/solverdummies/c)
-* [ ] Solverdummy [Fortran](https://github.com/precice/precice/tree/develop/tools/solverdummies/fortran)
-* [ ] Solverdummy [Fortran 2003](https://github.com/precice/precice/tree/develop/tools/solverdummies/f2003)
-* [ ] Solverdummy [Python](https://github.com/precice/python-bindings/tree/develop/solverdummy)
-* [ ] Solverdummy [MATLAB](https://github.com/precice/matlab-bindings/tree/develop/solverdummy)
+| State | Success | Failure | Skipped |
+| --- | --- | --- | --- |
+| Write | `:o:` | `:x:` | `:fast_forward:` |
+| Read | :o: | :x: | :fast_forward: |
+
+| State | Tester | Test |
+| --- | --- | --- |
+| | | SU2 / CalculiX [flap_perp](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp/SU2-CalculiX) |
+| | | OpenFOAM / OpenFOAM [flow_over_plate](https://github.com/precice/openfoam-adapter/tree/master/tutorials/CHT/flow-over-plate) |
+| | | OpenFOAM / OpenFOAM - NP mapping in OpenFOAM [flow_over_plate](https://github.com/precice/openfoam-adapter/tree/master/tutorials/CHT/flow-over-plate) |
+| | | OpenFOAM / CalculiX FSI [flap perp](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp/OpenFOAM-CalculiX) |
+| | | OpenFOAM / CalculiX FSI - NP mapping in CalculiX [3D_Tube](https://github.com/precice/tutorials/tree/develop/FSI/3D_Tube/OpenFOAM-CalculiX) |
+| | | OpenFOAM / CalculiX / OpenFOAM CHT [heat_exchanger](https://github.com/precice/tutorials/tree/develop/CHT/heat_exchanger/buoyantSimpleFoam-CalculiX) |
+| | | OpenFOAM / deal.II [flap_perp_2D](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp_2D/OpenFOAM-deal.II) |
+| | | OpenFOAM / FEniCS [flap_perp](https://github.com/precice/tutorials/tree/master/FSI/flap_perp/OpenFOAM-FEniCS) |
+| | | OpenFOAM / FEniCS [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-fenics) |
+| | | OpenFOAM / Nutils [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-nutils) |
+| | | FEniCS / FEniCS [partitioned-heat](https://github.com/precice/tutorials/tree/master/HT/partitioned-heat/fenics-fenics) |
+| | | MATLAB / MATLAB [ODEs](https://github.com/precice/matlab-bindings/tree/develop/tutorial) |
+| | | ExaFSA: Ateles / FASTEST |
+| | | Alya |
+| | | 1D-ElasticTube [C++](https://github.com/precice/elastictube1d/tree/develop/cxx) | 
+| | | 1D-ElasticTube [Python](https://github.com/precice/elastictube1d/tree/develop/python) |
+| | | SuperMUC |
+| | | Solverdummy [Fortran 2003](https://github.com/precice/precice/tree/develop/tools/solverdummies/f2003) | 
+| | | Solverdummy [Python](https://github.com/precice/python-bindings/tree/develop/solverdummy) |
+| | | Solverdummy [MATLAB](https://github.com/precice/matlab-bindings/tree/develop/solverdummy) |
 
 
 ## Post-release
