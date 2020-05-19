@@ -10,8 +10,8 @@ namespace cplscheme {
  * @brief A coupling scheme with multiple participants.
  *
  * ! General description
- * A MultiCouplingScheme couples multiple participants. It is a specialization of
- * BaseCouplingScheme.
+ * A MultiCouplingScheme couples multiple participants in a fully implicit fashion.
+ * It is a specialization of BaseCouplingScheme.
  *
  */
 class MultiCouplingScheme : public BaseCouplingScheme {

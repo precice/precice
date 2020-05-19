@@ -275,7 +275,6 @@ void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
   }
 }
 
-// @todo extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
 void BaseCouplingScheme::extrapolateData(DataMap &data)
 {
   if (_extrapolationOrder > 0) {

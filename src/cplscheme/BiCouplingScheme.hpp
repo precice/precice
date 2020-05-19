@@ -68,19 +68,19 @@ protected:
     return _m2n;
   }
 
-  /// TODO
+  /// @brief Receive from coupling partner and return whether coupling scheme has converged
   bool receiveConvergence();
 
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 
-  /// Communication device to the other coupling participant.
+  /// Communication to the other coupling participant.
   m2n::PtrM2N _m2n;
 
-  /// Map from data ID -> all send data with that ID
+  /// All send data as a map "data ID -> data"
   DataMap _sendData;
 
-  /// Map from data ID -> all receive data with that ID
+  /// All receive data as a map "data ID -> data"
   DataMap _receiveData;
 
   /// Implements functionality for setupConvergenceMeasures
