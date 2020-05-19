@@ -381,6 +381,8 @@ double SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
+  resetWrittenData();
+
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
   return _couplingScheme->getNextTimestepMaxLength();

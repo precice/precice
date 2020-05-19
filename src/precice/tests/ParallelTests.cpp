@@ -598,8 +598,6 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
     }
   }
 
-  precice.advance(1.0);
-
   if (context.isNamed("Structure")) {
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.readVectorData(forcesID, vertexIDs[i], data[i + i1].data());
