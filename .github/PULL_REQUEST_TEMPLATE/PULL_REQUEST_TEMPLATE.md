@@ -11,7 +11,7 @@
 **Motivation**
 
 <!--
-Short rational why preCICE need this change.
+Short rational why preCICE need this change. If this is already described in an issue a link to that issue is sufficient.
 -->
 
 **Additional Information**
