@@ -32,7 +32,7 @@ Only the release manager should update this post (even tickboxes, due to race co
   * [ ] Update markdown configuration reference in wiki
 * [ ] Approve the PR with at least two reviews (all)
 * [ ] Merge PR to master ( use `git merge --no-ff hotfix-N` )
-* [ ] Tag hotfix on master `vN` and verify by running `git describe --tags`
+* [ ] Tag release on master `vN` and verify by running `git describe --tags`
 * [ ] Merge back to develop and verify by running `git describe --tags`
 * [ ] Push master and push the `vN` tag
 * [ ] [Draft a new release on GitHub](https://github.com/precice/precice/releases/new)
