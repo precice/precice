@@ -177,11 +177,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     mesh::Mesh globalInMesh("globalInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
     mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
 
-    // Only the inMesh is distributed
-    mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-    mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex& v) { return v.isOwner(); });
-
-    globalInMesh.addMesh(filteredInMesh); 
+    if(utils::MasterSlave::isMaster()){
+      // Only the inMesh is distributed
+      mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex& v) { return v.isOwner(); });
+      globalInMesh.addMesh(filteredInMesh); 
+    }
+    else{ // Serial
+      globalInMesh.addMesh(*inMesh);
+    }
+    
     globalOutMesh.addMesh(*outMesh);
 
     // Receive mesh
@@ -252,6 +257,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
   }
   _hasComputedMapping = true;
+  PRECICE_DEBUG("Compute Mapping is Completed.");
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -351,11 +357,18 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
       // Input mesh and data is distributed
       std::vector<double> localInData;
     
-      // Filter mesh
-      for(const auto & vertex : input()->vertices()){
-        if(vertex.isOwner()){
-          localInData.push_back(input()->data(inputDataID)->values()[vertex.getID()]);
+      if(utils::MasterSlave::isMaster()){
+        // Filter mesh
+        int i = 0;
+        for(const auto & vertex : input()->vertices()){
+          if(vertex.isOwner()){
+            localInData.push_back(input()->data(inputDataID)->values()[i]);
+          }
+          ++i;
         }
+      } else { // Serial case, no filtering
+        localInData.resize(input()->data(inputDataID)->values().size());
+        localInData.insert(localInData.begin(), input()->data(inputDataID)->values().data(), input()->data(inputDataID)->values().data() + input()->data(inputDataID)->values().size()) ;
       }
       // Out data is local
       auto & localOutData = output()->data(outputDataID)->values();
@@ -484,9 +497,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
         }
       }
 
-      Eigen::Map<Eigen::VectorXd> masterValues(outputValues.data(), outValuesSize.at(0));
-      output()->data(outputDataID)->values() = masterValues;
-
+      output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
+      
       // Data scattering to slaves
       int beginPoint = outValuesSize.at(0);
       

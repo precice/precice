@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                    {2, {8}}},
                   globalIndexOffsets[context.rank]);
 }
-
+/*
 /// Test with a homogenous distribution of mesh amoung ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
@@ -752,7 +752,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                    {3, {8}}},
                   context.rank * 2);
 }
-
+*/
 void testTagging(const TestContext &context,
                  MeshSpecification  inMeshSpec,
                  MeshSpecification  outMeshSpec,
@@ -813,7 +813,7 @@ void testTagging(const TestContext &context,
                                                                                    << " is tagged, but should not be.");
   }
 }
-
+/*
 BOOST_AUTO_TEST_CASE(testTagFirstRound)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())
@@ -845,9 +845,9 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   // For conservative just swap meshes.
   testTagging(context, outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END() // Parallel
-
+/*
 BOOST_AUTO_TEST_SUITE(Serial)
 
 void perform2DTestConsistentMapping(Mapping &mapping)
@@ -1434,7 +1434,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Serial
-
+*/
 BOOST_AUTO_TEST_SUITE_END() // RadialBasisFunctionMapping
 BOOST_AUTO_TEST_SUITE_END()
 
