@@ -131,7 +131,7 @@ void testDistributed(const TestContext &    context,
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  Gaussian                           fct(5.0);
+  Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   testDistributed(context, mapping,
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  Gaussian                           fct(5.0);
+  Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   testDistributed(context, mapping,
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  Gaussian                           fct(5.0);
+  Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  ThinPlateSplines                           fct;
+  ThinPlateSplines                        fct;
   RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  ThinPlateSplines                           fct;
+  ThinPlateSplines                        fct;
   RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                      *boost::unit_test::tolerance(1e-7))
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  ThinPlateSplines                           fct;
+  ThinPlateSplines                        fct;
   RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
@@ -771,8 +771,8 @@ void testTagging(const TestContext &context,
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
 
-  Gaussian                           fct(4.5); //Support radius approx. 1
-  Mapping::Constraint                constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
+  Gaussian                        fct(4.5); //Support radius approx. 1
+  Mapping::Constraint             constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
   RadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, false, false, false);
   inMesh->computeBoundingBox();
   outMesh->computeBoundingBox();
@@ -1437,4 +1437,3 @@ BOOST_AUTO_TEST_SUITE_END() // Serial
 */
 BOOST_AUTO_TEST_SUITE_END() // RadialBasisFunctionMapping
 BOOST_AUTO_TEST_SUITE_END()
-
