@@ -259,7 +259,7 @@ void BaseCouplingScheme::setExtrapolationOrder(
 
 void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
-  if (isImplicitCouplingScheme() && _extrapolationOrder > 0) {
+  if (isImplicitCouplingScheme()) {
     // TODO similar to function store(dataMap)
     for (DataMap::value_type &pair : dataMap) {
       if (pair.second->oldValues.cols() == 0) {
