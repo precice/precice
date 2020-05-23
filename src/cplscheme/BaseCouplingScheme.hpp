@@ -312,11 +312,11 @@ protected:
   }
 
   /**
-   * @brief Holds relevant variables to perform a convergence measurement.
-   * @param data TODO
-   * @param couplingData TODO
-   * @param suffices TODO
-   * @param measure TODO
+   * @brief Holds meta information to perform a convergence measurement.
+   * @param data Associated data field
+   * @param couplingData Coupling data history
+   * @param suffices Whether this measure already suffices for convergence
+   * @param measure Link to the actual convergence measure
    */
   struct ConvergenceMeasure {
     mesh::PtrData               data;
@@ -326,24 +326,19 @@ protected:
   };
 
   /**
-   * @brief TODO
+   * @brief Reset all convergence measurements after convergence
    */
   void newConvergenceMeasurements();
 
   /**
-   * @brief TODO
-   * @return TODO
+   * @brief Measure whether coupling scheme has converged or not
+   * @return Whether coupling schem has converged
    */
   bool measureConvergence();
 
   /**
-   * @brief Sets up _dataStorage to store data values of last timestep (@BU or time window?).
-   * @param data TODO
-   *
-   * Every send data has an entry in _dataStorage. Every Entry is a vector
-   * of data values with length according to the total number of values on all
-   * meshes. The ordering of the data values corresponds to that in the meshes
-   * and the ordering of the meshes to that in _couplingData.
+   * @brief Sets up data matrices to store data values from previous iterations and time windows.
+   * @param data Data fields for which data is stored
    */
   void setupDataMatrices(DataMap &data);
 
@@ -357,8 +352,8 @@ protected:
   }
 
   /**
-   * @brief TODO
-   * @param dataMap TODO
+   * @brief Set old coupling data values to current values
+   * @param dataMap Data fields to update
    */
   void updateOldValues(DataMap &dataMap);
 
@@ -376,12 +371,14 @@ protected:
   /**
    * @brief apply acceleration to the current iteration
    * @returns whether this iteration has converged or not
+   *
+   * This function is called from the child classes
    */
   bool accelerate();
 
   /**
-   * @brief TODO
-   * @param data TODO
+   * @brief Extrapolate coupling data from values of previous time windows
+   * @param data Data fields to extrapolate
    */
   void extrapolateData(DataMap &data);
 
@@ -551,21 +548,17 @@ private:
   bool reachedEndOfTimeWindow();
 
   /**
-   * @brief TODO
+   * @brief Initialize txt writers for iterations and convergence tracking
    */
   void initializeTXTWriters();
 
   /**
-   * @brief TODO
+   * @brief Advance txt writers for iterations and convergence tracking
    */
   void advanceTXTWriters();
 
   /**
-   * @brief As the version without parameters, but with changed time window and time.
-   *
-   * This version is used by the ImplicitCouplingScheme at the moment, which
-   * needs to use the last time window in the plotting when the iterations of
-   * a time window are converged.
+   * @brief Prints the coupling state
    *
    * @param timeWindows current number of completed time windows
    * @param time current time
@@ -575,15 +568,15 @@ private:
       double time) const;
 
   /**
-   * @brief TODO
+   * @brief Prints the action state
    * @returns a string representing the required actions.
    */
   std::string printActionsState() const;
 
   /**
    * @brief Needed for setting up convergence measures, implemented in child class
-   * @param convMeasure TODO
-   * @param dataID TODO
+   * @param convMeasure Convergence measure to which the data field is assigned to
+   * @param dataID Data field to be assigned
    */
   virtual void assignDataToConvergenceMeasure(
       ConvergenceMeasure *convMeasure,
