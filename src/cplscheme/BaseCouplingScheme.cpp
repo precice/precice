@@ -260,7 +260,6 @@ void BaseCouplingScheme::setExtrapolationOrder(
 void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
   if (isImplicitCouplingScheme()) {
-    // TODO similar to function store(dataMap)
     for (DataMap::value_type &pair : dataMap) {
       if (pair.second->oldValues.cols() == 0) {
         PRECICE_ASSERT(isExplicitCouplingScheme());
