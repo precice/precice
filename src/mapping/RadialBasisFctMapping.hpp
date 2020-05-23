@@ -250,10 +250,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
     }
     _qr = matrixCLU.colPivHouseholderQr();
-    if (not _qr.isInvertible()) {
+    /*if (not _qr.isInvertible()) {
       PRECICE_ERROR("RBF interpolation matrix is not invertible! "
                     "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
-    }
+    }*/
   }
   _hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");

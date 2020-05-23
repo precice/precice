@@ -285,19 +285,18 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 #endif
 
   bool createPetRBF = false;
+  bool createEigenRBF  = false;
+  
   if (usePETSc) {
-    if (isSerial) {
-      createPetRBF = not useLU;
-    } else {
-      if (useLU)
-        PRECICE_WARN("LU decomposition is not supported for parallel RBF data mappings. Switching to GMRES (PETSc)");
-      createPetRBF = true;
-    }
-  } else {
-    PRECICE_CHECK(isSerial, "Using RBF data mappings in parallel requires building with PETSc.");
+    PRECICE_DEBUG("PETSc RBF is used.");
+    createPetRBF = not useLU;
+  } 
+  else{
+    PRECICE_DEBUG("Eigen RBF is used.");
+    createEigenRBF = true;
   }
 
-  if (not createPetRBF) {
+  if (createEigenRBF) {
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead));

@@ -75,8 +75,6 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
   }
 }
 
-#ifndef PRECICE_NO_PETSC
-
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
@@ -147,8 +145,6 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
     interface.finalize();
   }
 }
-
-#endif // PRECICE_NO_PETSC
 
 /// This testcase is based on a bug reported by Thorsten for acoustic FASTEST-Ateles coupling
 BOOST_AUTO_TEST_CASE(CouplingOnLine)
