@@ -365,6 +365,8 @@ void CouplingSchemeConfiguration::addCouplingScheme(
       // Create a new composition, add the already existing and new scheme, and
       // overwrite the existing scheme with the composition.
       CompositionalCouplingScheme *composition = new CompositionalCouplingScheme();
+      PRECICE_CHECK(nullptr == dynamic_cast<MultiCouplingScheme*>(_couplingSchemes[participantName].get()), "MultiCouplingScheme is not supported as part of a CompositionalCouplingScheme.");
+      PRECICE_CHECK(nullptr == dynamic_cast<CompositionalCouplingScheme*>(_couplingSchemes[participantName].get()), "CompositionalCouplingScheme is not supported as part of a CompositionalCouplingScheme.");
       composition->addCouplingScheme(_couplingSchemes[participantName]);
       composition->addCouplingScheme(cplScheme);
       _couplingSchemes[participantName] = PtrCouplingScheme(composition);
