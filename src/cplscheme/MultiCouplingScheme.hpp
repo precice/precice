@@ -57,6 +57,9 @@ public:
    */
   void checkConfiguration() override;
 
+  /// returns list of all coupling partners
+  std::vector<std::string> getCouplingPartners() const override final;
+
 private:
   /**
    * @brief get CouplingData from _allData using dataID

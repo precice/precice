@@ -42,6 +42,9 @@ public:
       mesh::PtrMesh mesh,
       bool          requiresInitialization);
 
+  /// returns list of all coupling partners
+  std::vector<std::string> getCouplingPartners() const override final;
+
 protected:
   /// Returns all data to be sent.
   DataMap &getSendData()
@@ -82,6 +85,12 @@ private:
 
   /// All receive data as a map "data ID -> data"
   DataMap _receiveData;
+
+  /// First participant name.
+  std::string _firstParticipant = "unknown";
+
+  /// Second participant name.
+  std::string _secondParticipant = "unknown";
 
   /// Implements functionality for setupConvergenceMeasures
   void assignDataToConvergenceMeasure(ConvergenceMeasure *convMeasure, int dataID) override

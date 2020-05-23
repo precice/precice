@@ -18,10 +18,22 @@ BiCouplingScheme::BiCouplingScheme(
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                         secondParticipant, localParticipant, maxIterations, cplMode, dtMethod),
-      _m2n(m2n)
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod),
+      _m2n(m2n),
+      _firstParticipant(firstParticipant),
+      _secondParticipant(secondParticipant)
 {
+  PRECICE_ASSERT(_firstParticipant != _secondParticipant,
+                 "First participant and second participant must have different names.");
+  if (localParticipant == _firstParticipant) {
+    setDoesFirstStep(true);
+  } else if (localParticipant == _secondParticipant) {
+    setDoesFirstStep(false);
+  } else {
+    PRECICE_ERROR("Name of local participant \""
+                      << localParticipant << "\" does not match any "
+                      << "participant specified for the coupling scheme.");
+  }
 }
 
 void BiCouplingScheme::addDataToSend(
@@ -54,6 +66,18 @@ void BiCouplingScheme::addDataToReceive(
   } else {
     PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for receiving.");
   }
+}
+
+std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
+{
+  std::vector<std::string> partnerNames;
+  // Add non-local participant
+  if (doesFirstStep()) {
+    partnerNames.push_back(_secondParticipant);
+  } else {
+    partnerNames.push_back(_firstParticipant);
+  }
+  return partnerNames;
 }
 
 bool BiCouplingScheme::receiveConvergence()

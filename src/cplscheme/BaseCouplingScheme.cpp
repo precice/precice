@@ -21,8 +21,6 @@ BaseCouplingScheme::BaseCouplingScheme(
     int                           maxTimeWindows,
     double                        timeWindowSize,
     int                           validDigits,
-    const std::string &           firstParticipant,
-    const std::string &           secondParticipant,
     const std::string &           localParticipant,
     int                           maxIterations,
     CouplingMode                  cplMode,
@@ -36,8 +34,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterations(1),
       _validDigits(validDigits),
-      _firstParticipant(firstParticipant),
-      _secondParticipant(secondParticipant),
       _localParticipant(localParticipant),
       _eps(std::pow(10.0, -1 * validDigits))
 {
@@ -49,20 +45,9 @@ BaseCouplingScheme::BaseCouplingScheme(
                  "Time window size has to be larger than zero.");
   PRECICE_ASSERT((_validDigits >= 1) && (_validDigits < 17),
                  "Valid digits of time window size has to be between 1 and 16.");
-  PRECICE_ASSERT(_firstParticipant != _secondParticipant,
-                 "First participant and second participant must have different names.");
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
     PRECICE_ASSERT(hasTimeWindowSize(),
                    "Time window size has to be given when the fixed time window size method is used.");
-  }
-  if (localParticipant == _firstParticipant) {
-    _doesFirstStep = true;
-  } else if (localParticipant == _secondParticipant) {
-    _doesFirstStep = false;
-  } else {
-    PRECICE_ERROR("Name of local participant \""
-                  << localParticipant << "\" does not match any "
-                  << "participant specified for the coupling scheme.");
   }
 
   PRECICE_ASSERT((maxIterations > 0) || (maxIterations == -1),
@@ -365,18 +350,6 @@ double BaseCouplingScheme::getTime() const
 int BaseCouplingScheme::getTimeWindows() const
 {
   return _timeWindows;
-}
-
-std::vector<std::string> BaseCouplingScheme::getCouplingPartners() const
-{
-  std::vector<std::string> partnerNames;
-  // Add non-local participant
-  if (doesFirstStep()) {
-    partnerNames.push_back(_secondParticipant);
-  } else {
-    partnerNames.push_back(_firstParticipant);
-  }
-  return partnerNames;
 }
 
 double BaseCouplingScheme::getThisTimeWindowRemainder() const

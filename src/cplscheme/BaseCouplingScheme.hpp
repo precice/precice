@@ -55,8 +55,6 @@ public:
       int                           maxTimeWindows,
       double                        timeWindowSize,
       int                           validDigits,
-      const std::string &           firstParticipant,
-      const std::string &           secondParticipant,
       const std::string &           localParticipant,
       int                           maxIterations,
       CouplingMode                  cplMode,
@@ -124,9 +122,6 @@ public:
    * hasTimeWindowSize().
    */
   double getTimeWindowSize() const override final;
-
-  /// returns list of all coupling partners
-  std::vector<std::string> getCouplingPartners() const override final;
 
   /**
    * @brief Returns the remaining timestep length within the current time window.
@@ -273,6 +268,14 @@ protected:
   bool doesFirstStep() const
   {
     return _doesFirstStep;
+  }
+
+  /**
+   * @brief Setter for _doesFirstStep
+   */
+  void setDoesFirstStep(bool doesFirstStep)
+  {
+    _doesFirstStep = doesFirstStep;
   }
 
   /**
@@ -482,12 +485,6 @@ private:
 
   /// Writes out coupling convergence within all time windows.
   std::shared_ptr<io::TXTTableWriter> _convergenceWriter;
-
-  /// First participant name.
-  std::string _firstParticipant = "unknown";
-
-  /// Second participant name.
-  std::string _secondParticipant = "unknown";
 
   /// Local participant name.
   std::string _localParticipant = "unknown";

@@ -20,12 +20,11 @@ MultiCouplingScheme::MultiCouplingScheme(
     std::vector<m2n::PtrM2N>      m2ns,
     constants::TimesteppingMethod dtMethod,
     int                           maxIterations)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, "neverFirstParticipant",
-                         localParticipant, localParticipant, maxIterations, Implicit, dtMethod),
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, Implicit, dtMethod),
       _m2ns(m2ns)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-  PRECICE_ASSERT(not doesFirstStep(), "MultiCouplingScheme never does the first step, because it is never the first participant");
+  setDoesFirstStep(false);  // MultiCouplingScheme never does the first step, because it is never the first participant
   for (size_t i = 0; i < _m2ns.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;
@@ -45,6 +44,15 @@ void MultiCouplingScheme::checkConfiguration()
                         << getAcceleration()->getDataIDs().size());
     }
   }
+}
+
+std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
+{
+  std::vector<std::string> partnerNames;
+  // Add non-local participant
+  // @todo has to be implemented!
+  PRECICE_ASSERT(false);
+  return partnerNames;
 }
 
 void MultiCouplingScheme::initializeImplementation()
