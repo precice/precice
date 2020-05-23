@@ -385,7 +385,7 @@ double BaseCouplingScheme::getThisTimeWindowRemainder() const
   PRECICE_TRACE();
   double remainder = 0.0;
   if (not math::equals(_timeWindowSize, UNDEFINED_TIME_WINDOW_SIZE)) {
-    remainder = _timeWindowSize - _computedTimeWindowPart;
+    remainder = getNextTimestepMaxLength();
   }
   PRECICE_DEBUG("return " << remainder);
   return remainder;
