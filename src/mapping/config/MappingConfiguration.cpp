@@ -288,15 +288,16 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   bool createEigenRBF  = false;
   
   if (usePETSc) {
-    PRECICE_DEBUG("PETSc RBF is used.");
     createPetRBF = not useLU;
+    createEigenRBF = useLU;
   } 
   else{
-    PRECICE_DEBUG("Eigen RBF is used.");
     createEigenRBF = true;
+    createPetRBF = false;
   }
 
   if (createEigenRBF) {
+    PRECICE_DEBUG("Eigen RBF is used");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead));
@@ -335,6 +336,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 #ifndef PRECICE_NO_PETSC
 
   if (createPetRBF) {
+    PRECICE_DEBUG("PETSc RBF is used.");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),

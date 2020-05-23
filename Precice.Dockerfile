@@ -44,11 +44,11 @@ RUN mkdir /home/precice/precice_build && \
     cmake -DBUILD_SHARED_LIBS=ON \
           -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_INSTALL_PREFIX=/home/precice/precice-install \
-          -DPRECICE_PETScMapping=no \
+          -DPRECICE_PETScMapping=yes \
           -DPRECICE_MPICommunication=yes \
           -DPRECICE_PythonActions=no \
           /home/precice/precice_develop && \
-    make -j 4 && \
+    make -j 10 && \
     make install && \
-    make test
+    ctest -V -R precice.parallel
   
