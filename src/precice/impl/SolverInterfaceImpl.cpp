@@ -254,7 +254,7 @@ double SolverInterfaceImpl::initialize()
 
   timings.insert(action::Action::ALWAYS_POST);
 
-  if (_couplingScheme->hasDataBeenExchanged()) {
+  if (_couplingScheme->hasDataBeenReceived()) {
     timings.insert(action::Action::ON_EXCHANGE_POST);
     mapReadData();
   }
@@ -288,7 +288,7 @@ void SolverInterfaceImpl::initializeData()
   _couplingScheme->initializeData();
   double                           dt = _couplingScheme->getNextTimestepMaxLength();
   std::set<action::Action::Timing> timings;
-  if (_couplingScheme->hasDataBeenExchanged()) {
+  if (_couplingScheme->hasDataBeenReceived()) {
     timings.insert(action::Action::ON_EXCHANGE_POST);
     mapReadData();
   }
@@ -364,7 +364,7 @@ double SolverInterfaceImpl::advance(
 
   timings.clear();
   timings.insert(action::Action::ALWAYS_POST);
-  if (_couplingScheme->hasDataBeenExchanged()) {
+  if (_couplingScheme->hasDataBeenReceived()) {
     timings.insert(action::Action::ON_EXCHANGE_POST);
   }
   if (_couplingScheme->isTimeWindowComplete()) {
@@ -372,7 +372,7 @@ double SolverInterfaceImpl::advance(
   }
   performDataActions(timings, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 
-  if (_couplingScheme->hasDataBeenExchanged()) {
+  if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
   }
 
@@ -380,6 +380,10 @@ double SolverInterfaceImpl::advance(
 
   PRECICE_DEBUG("Handle exports");
   handleExports();
+
+  // deactivated the reset of written data, as it deletes all data that is not communicated
+  // within this cycle in the coupling data. This is not wanted forthe manifold mapping.
+  //resetWrittenData();
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
@@ -473,7 +477,7 @@ bool SolverInterfaceImpl::isCouplingOngoing() const
 bool SolverInterfaceImpl::isReadDataAvailable() const
 {
   PRECICE_TRACE();
-  return _couplingScheme->hasDataBeenExchanged();
+  return _couplingScheme->hasDataBeenReceived();
 }
 
 bool SolverInterfaceImpl::isWriteDataRequired(

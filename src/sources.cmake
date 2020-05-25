@@ -89,6 +89,8 @@ target_sources(precice
     src/com/config/CommunicationConfiguration.hpp
     src/cplscheme/BaseCouplingScheme.cpp
     src/cplscheme/BaseCouplingScheme.hpp
+    src/cplscheme/BiCouplingScheme.cpp
+    src/cplscheme/BiCouplingScheme.hpp
     src/cplscheme/CompositionalCouplingScheme.cpp
     src/cplscheme/CompositionalCouplingScheme.hpp
     src/cplscheme/Constants.cpp
