@@ -78,8 +78,8 @@ private:
   /// true if the mapping along some axis should be ignored
   std::vector<bool> _deadAxis;
 
-  /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
-  Eigen::VectorXd reduceVector(const Eigen::VectorXd &fullVector);
+  void mapConservative(int inputDataID, int outputDataID, int polyparams);
+  void mapConsistent(int inputDataID, int outputDataID, int polyparams);
 
   void setDeadAxis(bool xDead, bool yDead, bool zDead)
   {
@@ -199,62 +199,19 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(slaveOutMesh);
     }
 
-    int inputSize  = (int) globalInMesh.vertices().size();
-    int outputSize = (int) globalOutMesh.vertices().size();
-    PRECICE_DEBUG("Size of input mesh: " << inputSize);
-    PRECICE_DEBUG("Size of output mesh: " << outputSize);
+    _matrixA = buildMatrixA(_basisFunction, globalInMesh, globalOutMesh, _deadAxis);
+    _qr = buildMatrixCLU(_basisFunction, globalInMesh, _deadAxis).colPivHouseholderQr();
 
-    int deadDimensions = 0;
-    for (int d = 0; d < dimensions; d++) {
-      if (_deadAxis[d])
-        deadDimensions += 1;
+    for(auto vertex : globalInMesh.vertices()){
+      PRECICE_DEBUG("Input Mesh:" << vertex);
     }
-    int polyparams = 1 + dimensions - deadDimensions;
-    PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
-    int n = inputSize + polyparams; // Add linear polynom degrees
 
-    // LU Decomposition
-    Eigen::MatrixXd matrixCLU(n, n);
-    matrixCLU.setZero();
-    _matrixA = Eigen::MatrixXd(outputSize, n);
-    _matrixA.setZero();
-    // Fill upper right part (due to symmetry) of _matrixCLU with values
-    Eigen::VectorXd difference(dimensions);
-    for (int i = 0; i < inputSize; ++i) {
-      for (int j = i; j < inputSize; ++j) {
-        difference = globalInMesh.vertices()[i].getCoords();
-        difference -= globalInMesh.vertices()[j].getCoords();
-        matrixCLU(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
-      }
-      matrixCLU(i, inputSize) = 1.0;
-      for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-        matrixCLU(i, inputSize + 1 + dim) = reduceVector(globalInMesh.vertices()[i].getCoords())[dim];
-      }
-    }
-    // Copy values of upper right part of C to lower left part
-    for (int i = 0; i < n; i++) {
-      for (int j = i + 1; j < n; j++) {
-        matrixCLU(j, i) = matrixCLU(i, j);
-      }
-    }
-    // Fill _matrixA with values
-    for (int i = 0; i < outputSize; ++i) {
-      for (int j = 0; j < inputSize; ++j) {
-        difference = globalOutMesh.vertices()[i].getCoords();
-        difference -= globalInMesh.vertices()[j].getCoords();
-        _matrixA(i, j) = _basisFunction.evaluate(reduceVector(difference).norm());
-      }
-      _matrixA(i, inputSize) = 1.0;
-      for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-        _matrixA(i, inputSize + 1 + dim) = reduceVector(globalOutMesh.vertices()[i].getCoords())[dim];
-      }
-    }
-    _qr = matrixCLU.colPivHouseholderQr();
     /*if (not _qr.isInvertible()) {
       PRECICE_ERROR("RBF interpolation matrix is not invertible! "
                     "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
     }*/
   }
+
   _hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
 }
@@ -288,11 +245,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
                  input()->getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
-
-  int valueDim = input()->data(inputDataID)->getDimensions();
-  PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
+  {
+    int valueDim = input()->data(inputDataID)->getDimensions();
+    PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
                  valueDim, output()->data(outputDataID)->getDimensions());
-
+  }
   int deadDimensions = 0;
   for (int d = 0; d < getDimensions(); d++) {
     if (_deadAxis[d])
@@ -300,108 +257,65 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
   }
   int polyparams = 1 + getDimensions() - deadDimensions;
 
-  // Gather input data
+  if(getConstraint() == CONSERVATIVE){
+    mapConservative(inputDataID, outputDataID, polyparams);
+  }
+  else if(getConstraint() == CONSISTENT){
+    mapConsistent(inputDataID, outputDataID, polyparams);
+  }
+
+  if (utils::MasterSlave::isSlave()) {
+    std::vector<double> receivedValues;
+    utils::MasterSlave::_communication->receive(receivedValues, 0);
+    output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
+  }
+      
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDataID, int outputDataID, int polyparams){
+
+    // Gather input data
   if (utils::MasterSlave::isSlave()) {
 
-    if (getConstraint() == CONSISTENT) {
-      // Input mesh and data is distributed
-      std::vector<double> inValues;
-      // Filter input data
-      for (const auto &vertex : input()->vertices()) {
-        if (vertex.isOwner()) {
-          inValues.push_back(input()->data(inputDataID)->values()[vertex.getID()]);
-        }
-      }
-      // Out data is local
-      auto &              localOutData = output()->data(outputDataID)->values();
-      std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
+    // For conservative, data is not filtered
+    auto & localInData = input()->data(inputDataID)->values();
+    auto & localOutData = output()->data(outputDataID)->values();
 
-      // Send data
-      utils::MasterSlave::_communication->send(inValues, 0);
-      utils::MasterSlave::_communication->send(outValues, 0);
-    }
-    if (getConstraint() == CONSERVATIVE) {
-      // For conservative, data is not filtered
-      auto &              localInData = input()->data(inputDataID)->values();
-      std::vector<double> inValues(localInData.data(), localInData.data() + localInData.size());
+    // Send data
+    utils::MasterSlave::_communication->send(localInData.data(), localInData.size(), 0);
+    utils::MasterSlave::_communication->send(localOutData.data(), localOutData.size(), 0);
 
-      auto &              localOutData = output()->data(outputDataID)->values();
-      std::vector<double> outValues(localOutData.data(), localOutData.data() + localOutData.size());
-
-      // Send data
-      utils::MasterSlave::_communication->send(inValues, 0);
-      utils::MasterSlave::_communication->send(outValues, 0);
-    }
-    // Store ownership information for scattering data
-    std::vector<int> outDataOwnership(output()->vertices().size(), -1);
-    int              i = 0;
-    for (const auto &vertex : output()->vertices()) {
-      if (vertex.isOwner()) {
-        outDataOwnership.at(i) = utils::MasterSlave::getRank();
-      }
-      ++i;
-    }
-
+    // Send ownership information for scattering data
+    auto outDataOwnership = output()->getOwnedVertices();
     utils::MasterSlave::_communication->send(outDataOwnership, 0);
 
   } else { // Master or Serial case
     // Global data containers for master
     std::vector<double> globalInValues;
     std::vector<double> globalOutValues;
-    std::vector<int>    outDataOwnership(output()->vertices().size(), -1);
+    std::vector<int>    outDataOwnership;
     std::vector<int>    outValuesSize;
 
-    if (getConstraint() == CONSISTENT) {
-      // Input mesh and data is distributed
-      std::vector<double> localInData;
-
-      if (utils::MasterSlave::isMaster()) {
-        // Filter mesh
-        int i = 0;
-        for (const auto &vertex : input()->vertices()) {
-          if (vertex.isOwner()) {
-            localInData.push_back(input()->data(inputDataID)->values()[i]);
-          }
-          ++i;
-        }
-      } else { // Serial case, no filtering
-        localInData.resize(input()->data(inputDataID)->values().size());
-        localInData.insert(localInData.begin(), input()->data(inputDataID)->values().data(), input()->data(inputDataID)->values().data() + input()->data(inputDataID)->values().size());
-      }
-      // Out data is local
-      auto &localOutData = output()->data(outputDataID)->values();
-
-      globalInValues.insert(globalInValues.begin(), localInData.begin(), localInData.end());
-      globalOutValues.insert(globalOutValues.begin(), localOutData.data(), localOutData.data() + localOutData.size());
-    } else {
+    {
       // For conservative, data is not filtered
-      auto &localInData  = input()->data(inputDataID)->values();
-      auto &localOutData = output()->data(outputDataID)->values();
-
+      const auto &localInData  = input()->data(inputDataID)->values();
+      const auto &localOutData = output()->data(outputDataID)->values();
       globalInValues.insert(globalInValues.begin(), localInData.data(), localInData.data() + localInData.size());
       globalOutValues.insert(globalOutValues.begin(), localOutData.data(), localOutData.data() + localOutData.size());
-
-      // Store ownership information for scattering data
-      int i = 0;
-      for (const auto &vertex : output()->vertices()) {
-        if (vertex.isOwner()) {
-          outDataOwnership.at(i) = utils::MasterSlave::getRank();
-        }
-        ++i;
-      }
+      outValuesSize.push_back(localOutData.size());
     }
 
-    outValuesSize.push_back(output()->data(outputDataID)->values().size());
+    outDataOwnership = output()->getOwnedVertices();
 
     for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
-      std::vector<double> slaveInData;
-      utils::MasterSlave::_communication->receive(slaveInData, rank);
-      globalInValues.insert(globalInValues.end(), slaveInData.begin(), slaveInData.end());
+      std::vector<double> slaveBuffer;
+      utils::MasterSlave::_communication->receive(slaveBuffer, rank);
+      globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
 
-      std::vector<double> slaveOutData;
-      utils::MasterSlave::_communication->receive(slaveOutData, rank);
-      outValuesSize.push_back(slaveOutData.size());
-      globalOutValues.insert(globalOutValues.end(), slaveOutData.begin(), slaveOutData.end());
+      utils::MasterSlave::_communication->receive(slaveBuffer, rank);
+      outValuesSize.push_back(slaveBuffer.size());
+      globalOutValues.insert(globalOutValues.end(), slaveBuffer.begin(), slaveBuffer.end());
 
       std::vector<int> slaveOwnerData;
       utils::MasterSlave::_communication->receive(slaveOwnerData, rank);
@@ -414,128 +328,152 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
     Eigen::Map<Eigen::VectorXd> outputValues(globalOutValues.data(), globalOutValues.size());
 
-    if (getConstraint() == CONSERVATIVE) {
-      //PRECICE_DEBUG("Map conservative");
-      static int      mappingIndex = 0;
-      Eigen::VectorXd Au(_matrixA.cols());  // rows == n
-      Eigen::VectorXd in(_matrixA.rows());  // rows == outputSize
-      Eigen::VectorXd out(_matrixA.cols()); // rows == n
+    Eigen::VectorXd Au(_matrixA.cols());  // rows == n
+    Eigen::VectorXd in(_matrixA.rows());  // rows == outputSize
+    Eigen::VectorXd out(_matrixA.cols()); // rows == n
+    int valueDim = output()->data(outputDataID)->getDimensions();
+    //PRECICE_DEBUG("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
+    PRECICE_DEBUG("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
+    PRECICE_DEBUG("in size=" << in.size() << ", out size=" << out.size());
 
-      //PRECICE_DEBUG("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
-      PRECICE_DEBUG("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
-      PRECICE_DEBUG("in size=" << in.size() << ", out size=" << out.size());
-
-      for (int dim = 0; dim < valueDim; dim++) {
-        for (int i = 0; i < in.size(); i++) { // Fill input data values
-          in[i] = inputValues(i * valueDim + dim);
-        }
-
-        Au  = _matrixA.transpose() * in;
-        out = _qr.solve(Au);
-
-        // Copy mapped data to output data values
-        for (int i = 0; i < out.size() - polyparams; i++) {
-          outputValues(i * valueDim + dim) = out[i];
-        }
-      }
-      mappingIndex++;
-
-      // Data scattering to slaves
-      if (utils::MasterSlave::isMaster()) {
-
-        int beginOffset   = 0;
-        int globalCounter = 0;
-
-        // Filter the data for each rank
-        for (int rank = 0; rank < utils::MasterSlave::getSize(); ++rank) {
-          Eigen::VectorXd rankValues(outValuesSize.at(rank));
-          rankValues.setZero();
-          int localCounter = 0;
-          for (int i = beginOffset; i < (beginOffset + outValuesSize.at(rank)); ++i) {
-            if (outDataOwnership.at(i) == rank) {
-              rankValues[localCounter] = outputValues[globalCounter];
-              ++globalCounter;
-            }
-            ++localCounter;
-          }
-          beginOffset += outValuesSize.at(rank);
-          if (rank == 0) {
-            output()->data(outputDataID)->values() = rankValues;
-          } else {
-            std::vector<double> sendValues(rankValues.data(), rankValues.data() + rankValues.size());
-            utils::MasterSlave::_communication->send(sendValues, rank);
-          }
-        }
-      } else { // Serial
-        output()->data(outputDataID)->values() = outputValues;
+    for (int dim = 0; dim < valueDim; dim++) {
+      for (int i = 0; i < in.size(); i++) { // Fill input data values
+        in[i] = inputValues(i * valueDim + dim);
       }
 
-    } else { // Map consistent
-      PRECICE_DEBUG("Map consistent");
-      Eigen::VectorXd p(_matrixA.cols());   // rows == n
-      Eigen::VectorXd in(_matrixA.cols());  // rows == n
-      Eigen::VectorXd out(_matrixA.rows()); // rows == outputSize
-      in.setZero();
+      Au  = _matrixA.transpose() * in;
+      out = _qr.solve(Au);
 
-      // For every data dimension, perform mapping
-      for (int dim = 0; dim < valueDim; dim++) {
-        // Fill input from input data values (last polyparams entries remain zero)
-        for (int i = 0; i < in.size() - polyparams; i++) {
-          in[i] = inputValues(i * valueDim + dim);
-        }
-
-        p   = _qr.solve(in);
-        out = _matrixA * p;
-
-        // Copy mapped data to ouptut data values
-        for (int i = 0; i < out.size(); i++) {
-          outputValues(i * valueDim + dim) = out[i];
-        }
-      }
-
-      output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
-
-      // Data scattering to slaves
-      int beginPoint = outValuesSize.at(0);
-
-      if (utils::MasterSlave::isMaster()) {
-        for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
-          std::vector<double> sendValues(outputValues.data() + beginPoint, outputValues.data() + beginPoint + outValuesSize.at(rank));
-          utils::MasterSlave::_communication->send(sendValues, rank);
-          beginPoint += outValuesSize.at(rank);
-        }
+      // Copy mapped data to output data values
+      for (int i = 0; i < out.size() - polyparams; i++) {
+        outputValues(i * valueDim + dim) = out[i];
       }
     }
-  }
 
-  if (utils::MasterSlave::isSlave()) {
-    std::vector<double> receivedValues;
-    utils::MasterSlave::_communication->receive(receivedValues, 0);
-    output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
+    // Data scattering to slaves
+    if (utils::MasterSlave::isMaster()) {
+
+      int beginOffset   = 0;
+      int globalCounter = 0;
+
+      // Filter the data for each rank
+      for (int rank = 0; rank < utils::MasterSlave::getSize(); ++rank) {
+        Eigen::VectorXd rankValues(outValuesSize.at(rank));
+        rankValues.setZero();
+        for (int i = beginOffset, localCounter = 0; i < (beginOffset + outValuesSize.at(rank)); ++i, ++localCounter) {
+          if (outDataOwnership.at(i) == rank) {
+            rankValues[localCounter] = outputValues[globalCounter];
+            ++globalCounter;
+          }
+        }
+        beginOffset += outValuesSize.at(rank);
+        if (rank == 0) {
+          output()->data(outputDataID)->values() = rankValues;
+        } else {
+          utils::MasterSlave::_communication->send(rankValues.data(), rankValues.size(), rank);
+        }
+      }
+    } else { // Serial
+      output()->data(outputDataID)->values() = outputValues;
+    }
   }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::reduceVector(
-    const Eigen::VectorXd &fullVector)
-{
-  int deadDimensions = 0;
-  for (int d = 0; d < getDimensions(); d++) {
-    if (_deadAxis[d])
-      deadDimensions += 1;
-  }
-  PRECICE_ASSERT(getDimensions() > deadDimensions, getDimensions(), deadDimensions);
-  Eigen::VectorXd reducedVector(getDimensions() - deadDimensions);
-  int             k = 0;
-  for (int d = 0; d < getDimensions(); d++) {
-    if (not _deadAxis[d]) {
-      reducedVector[k] = fullVector[d];
-      k++;
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputDataID, int outputDataID, int polyparams){
+  // Gather input data
+  if (utils::MasterSlave::isSlave()) {
+    // Input mesh and data is distributed, Out data is local
+    auto localInDataFiltered = input()->getOwnedVertexData(inputDataID);
+    auto & localOutData = output()->data(outputDataID)->values();
+
+    // Send data
+    utils::MasterSlave::_communication->send(localInDataFiltered.data(), localInDataFiltered.size(), 0);
+    utils::MasterSlave::_communication->send(localOutData.data(), localOutData.size(), 0);
+
+    // Send ownership information for scattering data
+    auto outDataOwnership = output()->getOwnedVertices();
+    utils::MasterSlave::_communication->send(outDataOwnership, 0);
+  } else { // Master or Serial case
+    // Global data containers for master
+    std::vector<double> globalInValues;
+    std::vector<double> globalOutValues;
+    std::vector<int>    outDataOwnership;
+    std::vector<int>    outValuesSize;
+
+    // Input mesh and data is distributed
+    if (utils::MasterSlave::isMaster()) {
+      // Filter input mesh, outData is local
+      const auto& localInData = input()->getOwnedVertexData(inputDataID);
+      const auto& localOutData = output()->data(outputDataID)->values();
+      globalInValues.insert(globalInValues.begin(), localInData.data(), localInData.data() + localInData.size());
+      globalOutValues.insert(globalOutValues.begin(), localOutData.data(), localOutData.data() + localOutData.size());
+      outValuesSize.push_back(localOutData.size());
+      
+    } else { // Serial case, no filtering
+      const auto& localInData = input()->data(inputDataID)->values();
+      const auto& localOutData = output()->data(outputDataID)->values();
+      globalInValues.insert(globalInValues.begin(), localInData.data(), localInData.data() + localInData.size());
+      globalOutValues.insert(globalOutValues.begin(), localOutData.data(), localOutData.data() + localOutData.size());
+      outValuesSize.push_back(localOutData.size());
+    }
+
+    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      std::vector<double> slaveBuffer;
+      utils::MasterSlave::_communication->receive(slaveBuffer, rank);
+      globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
+
+      utils::MasterSlave::_communication->receive(slaveBuffer, rank);
+      outValuesSize.push_back(slaveBuffer.size());
+      globalOutValues.insert(globalOutValues.end(), slaveBuffer.begin(), slaveBuffer.end());
+
+      std::vector<int> slaveOwnerData;
+      utils::MasterSlave::_communication->receive(slaveOwnerData, rank);
+      outDataOwnership.insert(outDataOwnership.end(), slaveOwnerData.begin(), slaveOwnerData.end());
+    }
+
+    PRECICE_DEBUG("Input data size: " << globalInValues.size());
+    PRECICE_DEBUG("Output data size" << globalOutValues.size());
+
+    Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
+    Eigen::Map<Eigen::VectorXd> outputValues(globalOutValues.data(), globalOutValues.size());
+    
+    PRECICE_DEBUG("Map consistent");
+    Eigen::VectorXd p(_matrixA.cols());   // rows == n
+    Eigen::VectorXd in(_matrixA.cols());  // rows == n
+    Eigen::VectorXd out(_matrixA.rows()); // rows == outputSize
+    in.setZero();
+    int valueDim = output()->data(outputDataID)->getDimensions();
+    // For every data dimension, perform mapping
+    for (int dim = 0; dim < valueDim; dim++) {
+      // Fill input from input data values (last polyparams entries remain zero)
+      for (int i = 0; i < in.size() - polyparams; i++) {
+        in[i] = inputValues(i * valueDim + dim);
+      }
+
+      p   = _qr.solve(in);
+      out = _matrixA * p;
+
+      // Copy mapped data to ouptut data values
+      for (int i = 0; i < out.size(); i++) {
+        outputValues(i * valueDim + dim) = out[i];
+      }
+    }
+
+    output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
+
+    // Data scattering to slaves
+    int beginPoint = outValuesSize.at(0);
+
+    if (utils::MasterSlave::isMaster()) {
+      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+        utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outValuesSize.at(rank), rank);
+        beginPoint += outValuesSize.at(rank);
+      }
     }
   }
-  return reducedVector;
-}
 
+}
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
@@ -604,6 +542,115 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
                boost::make_function_output_iterator([&mesh](size_t idx) {
                  mesh->vertices()[idx].tag();
                }));
+}
+
+// ------- Non-Member Functions ---------
+Eigen::VectorXd reduceVector(const Eigen::VectorXd &fullVector, std::vector<bool> deadAxis)
+{
+
+  int dimensions = deadAxis.size();
+  int deadDimensions = 0;
+    for (int d = 0; d < dimensions; d++) {
+      if (deadAxis[d])
+        deadDimensions += 1;
+ }
+  
+  PRECICE_ASSERT(dimensions > deadDimensions, dimensions, deadDimensions);
+  Eigen::VectorXd reducedVector(dimensions - deadDimensions);
+  int             k = 0;
+  
+  for (int d = 0; d < dimensions; d++) {
+    if (not deadAxis[d]) {
+      reducedVector[k] = fullVector[d];
+      k++;
+    }
+  }
+  return reducedVector;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh& inputMesh, std::vector<bool> deadAxis)
+{
+  int inputSize = inputMesh.vertices().size();
+  int dimensions = inputMesh.getDimensions();
+
+  int deadDimensions = 0;
+  for (int d = 0; d < dimensions; d++) {
+    if (deadAxis[d])
+      deadDimensions += 1;
+  }
+
+  int polyparams = 1 + dimensions - deadDimensions;
+  PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
+  int n = inputSize + polyparams; // Add linear polynom degrees
+
+  Eigen::MatrixXd matrixCLU(n, n);
+  matrixCLU.setZero();
+
+  for (int i = 0; i < inputSize; ++i) {
+    for (int j = i; j < inputSize; ++j) {
+      const auto& u = inputMesh.vertices()[i].getCoords();
+      const auto& v = inputMesh.vertices()[j].getCoords();
+      matrixCLU(i, j) = basisFunction.evaluate(reduceVector((u - v), deadAxis).norm());
+    }
+    matrixCLU(i, inputSize) = 1.0;
+    
+    const auto reduced = reduceVector(inputMesh.vertices()[i].getCoords(), deadAxis);
+    
+    for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
+      matrixCLU(i, inputSize + 1 + dim) = reduced[dim];
+    }
+  }
+
+  // Copy values of upper right part of C to lower left part
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+        matrixCLU(j, i) = matrixCLU(i, j);
+      }
+  }
+
+  return matrixCLU;
+
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh& inputMesh, const mesh::Mesh& outputMesh, std::vector<bool> deadAxis)
+{
+  int inputSize = inputMesh.vertices().size();
+  int outputSize = outputMesh.vertices().size();
+  int dimensions = inputMesh.getDimensions();
+
+  int deadDimensions = 0;
+  for (int d = 0; d < dimensions; d++) {
+    if (deadAxis[d])
+      deadDimensions += 1;
+  }
+
+  int polyparams = 1 + dimensions - deadDimensions;
+  PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
+  int n = inputSize + polyparams; // Add linear polynom degrees
+
+  Eigen::MatrixXd matrixA(outputSize, n);
+  matrixA.setZero();
+  // Fill _matrixA with values
+
+  for (int i = 0; i < outputSize; ++i) {
+    for (int j = 0; j < inputSize; ++j) {
+      const auto& u = outputMesh.vertices()[i].getCoords();
+      const auto& v = inputMesh.vertices()[j].getCoords();
+      matrixA(i, j) = basisFunction.evaluate(reduceVector((u - v), deadAxis).norm());
+
+    }
+    matrixA(i, inputSize) = 1.0;
+
+    const auto reduced = reduceVector(outputMesh.vertices()[i].getCoords(), deadAxis);
+
+    for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
+      matrixA(i, inputSize + 1 + dim) = reduced[dim];
+
+    }
+  }
+  return matrixA;
 }
 
 } // namespace mapping

@@ -10,6 +10,7 @@
 #include "Triangle.hpp"
 #include "math/math.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace mesh {
@@ -357,6 +358,31 @@ int Mesh::getGlobalNumberOfVertices() const
 void Mesh::setGlobalNumberOfVertices(int num)
 {
   _globalNumberOfVertices = num;
+}
+
+Eigen::VectorXd Mesh::getOwnedVertexData(int dataID){
+    
+  std::vector<double> ownedDataVector;
+  for (const auto &vertex : vertices()) {
+    if (vertex.isOwner()) {
+      ownedDataVector.push_back(data(dataID)->values()[vertex.getID()]);
+    }
+  }
+  Eigen::Map<Eigen::VectorXd> ownedData(ownedDataVector.data(), ownedDataVector.size());
+  
+  return ownedData;
+}
+
+std::vector<int> Mesh::getOwnedVertices(){
+  std::vector<int> ownedVertices(_vertices.size(), -1);
+  int i = 0;
+  for(auto vertex : _vertices){
+    if(vertex.isOwner()){
+      ownedVertices.at(i) = utils::MasterSlave::getRank();
+    }
+    ++i;
+  }
+  return ownedVertices;
 }
 
 void Mesh::addMesh(

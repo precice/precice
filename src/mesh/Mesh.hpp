@@ -217,6 +217,10 @@ public:
 
   void setGlobalNumberOfVertices(int num);
 
+  Eigen::VectorXd getOwnedVertexData(int dataID);
+
+  std::vector<int> getOwnedVertices();
+
   /// Returns a vector of connected ranks
   std::vector<int> &getConnectedRanks()
   {
