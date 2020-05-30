@@ -178,33 +178,32 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
 
     if (utils::MasterSlave::isMaster()) {
-      // Only the inMesh is distributed
-      mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-      mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
-      globalInMesh.addMesh(filteredInMesh);
+      {
+        // Only the inMesh is distributed
+        mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+        mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
+        globalInMesh.addMesh(filteredInMesh);
+        globalOutMesh.addMesh(*outMesh);
+      }
+
+      // Receive mesh
+      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave) {
+        mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+        com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveInMesh, rankSlave);
+        globalInMesh.addMesh(slaveInMesh);
+
+        mesh::Mesh slaveOutMesh(outMesh->getName(), outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+        com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveOutMesh, rankSlave);
+        globalOutMesh.addMesh(slaveOutMesh);
+      }
+
     } else { // Serial
       globalInMesh.addMesh(*inMesh);
-    }
-
-    globalOutMesh.addMesh(*outMesh);
-
-    // Receive mesh
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave) {
-      mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveInMesh, rankSlave);
-      globalInMesh.addMesh(slaveInMesh);
-
-      mesh::Mesh slaveOutMesh(outMesh->getName(), outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveOutMesh, rankSlave);
-      globalOutMesh.addMesh(slaveOutMesh);
+      globalOutMesh.addMesh(*outMesh);
     }
 
     _matrixA = buildMatrixA(_basisFunction, globalInMesh, globalOutMesh, _deadAxis);
     _qr = buildMatrixCLU(_basisFunction, globalInMesh, _deadAxis).colPivHouseholderQr();
-
-    for(auto vertex : globalInMesh.vertices()){
-      PRECICE_DEBUG("Input Mesh:" << vertex);
-    }
 
     /*if (not _qr.isInvertible()) {
       PRECICE_ERROR("RBF interpolation matrix is not invertible! "
@@ -279,15 +278,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
   if (utils::MasterSlave::isSlave()) {
 
     // For conservative, data is not filtered
-    auto & localInData = input()->data(inputDataID)->values();
-    auto & localOutData = output()->data(outputDataID)->values();
+    const auto & localInData = input()->data(inputDataID)->values();
+    const auto & localOutData = output()->data(outputDataID)->values();
 
     // Send data
     utils::MasterSlave::_communication->send(localInData.data(), localInData.size(), 0);
     utils::MasterSlave::_communication->send(localOutData.data(), localOutData.size(), 0);
 
     // Send ownership information for scattering data
-    auto outDataOwnership = output()->getOwnedVertices();
+    auto outDataOwnership = output()->getOwnedVertexIDs();
     utils::MasterSlave::_communication->send(outDataOwnership, 0);
 
   } else { // Master or Serial case
@@ -306,20 +305,23 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       outValuesSize.push_back(localOutData.size());
     }
 
-    outDataOwnership = output()->getOwnedVertices();
+    outDataOwnership = output()->getOwnedVertexIDs();
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    {
       std::vector<double> slaveBuffer;
-      utils::MasterSlave::_communication->receive(slaveBuffer, rank);
-      globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
-
-      utils::MasterSlave::_communication->receive(slaveBuffer, rank);
-      outValuesSize.push_back(slaveBuffer.size());
-      globalOutValues.insert(globalOutValues.end(), slaveBuffer.begin(), slaveBuffer.end());
-
       std::vector<int> slaveOwnerData;
-      utils::MasterSlave::_communication->receive(slaveOwnerData, rank);
-      outDataOwnership.insert(outDataOwnership.end(), slaveOwnerData.begin(), slaveOwnerData.end());
+      
+      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+        utils::MasterSlave::_communication->receive(slaveBuffer, rank);
+        globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
+
+        utils::MasterSlave::_communication->receive(slaveBuffer, rank);
+        outValuesSize.push_back(slaveBuffer.size());
+        globalOutValues.insert(globalOutValues.end(), slaveBuffer.begin(), slaveBuffer.end());
+
+        utils::MasterSlave::_communication->receive(slaveOwnerData, rank);
+        outDataOwnership.insert(outDataOwnership.end(), slaveOwnerData.begin(), slaveOwnerData.end());
+      }
     }
 
     PRECICE_DEBUG("Input data size: " << globalInValues.size());
@@ -385,14 +387,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
   if (utils::MasterSlave::isSlave()) {
     // Input mesh and data is distributed, Out data is local
     auto localInDataFiltered = input()->getOwnedVertexData(inputDataID);
-    auto & localOutData = output()->data(outputDataID)->values();
+    const auto & localOutData = output()->data(outputDataID)->values();
 
     // Send data
     utils::MasterSlave::_communication->send(localInDataFiltered.data(), localInDataFiltered.size(), 0);
     utils::MasterSlave::_communication->send(localOutData.data(), localOutData.size(), 0);
 
     // Send ownership information for scattering data
-    auto outDataOwnership = output()->getOwnedVertices();
+    auto outDataOwnership = output()->getOwnedVertexIDs();
     utils::MasterSlave::_communication->send(outDataOwnership, 0);
   } else { // Master or Serial case
     // Global data containers for master
@@ -410,26 +412,27 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
       globalOutValues.insert(globalOutValues.begin(), localOutData.data(), localOutData.data() + localOutData.size());
       outValuesSize.push_back(localOutData.size());
       
+      std::vector<double> slaveBuffer;
+      std::vector<int> slaveOwnerData;
+
+      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+        utils::MasterSlave::_communication->receive(slaveBuffer, rank);
+        globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
+
+        utils::MasterSlave::_communication->receive(slaveBuffer, rank);
+        outValuesSize.push_back(slaveBuffer.size());
+        globalOutValues.insert(globalOutValues.end(), slaveBuffer.begin(), slaveBuffer.end());
+
+        utils::MasterSlave::_communication->receive(slaveOwnerData, rank);
+        outDataOwnership.insert(outDataOwnership.end(), slaveOwnerData.begin(), slaveOwnerData.end());
+      }
+      
     } else { // Serial case, no filtering
       const auto& localInData = input()->data(inputDataID)->values();
       const auto& localOutData = output()->data(outputDataID)->values();
       globalInValues.insert(globalInValues.begin(), localInData.data(), localInData.data() + localInData.size());
       globalOutValues.insert(globalOutValues.begin(), localOutData.data(), localOutData.data() + localOutData.size());
       outValuesSize.push_back(localOutData.size());
-    }
-
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
-      std::vector<double> slaveBuffer;
-      utils::MasterSlave::_communication->receive(slaveBuffer, rank);
-      globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
-
-      utils::MasterSlave::_communication->receive(slaveBuffer, rank);
-      outValuesSize.push_back(slaveBuffer.size());
-      globalOutValues.insert(globalOutValues.end(), slaveBuffer.begin(), slaveBuffer.end());
-
-      std::vector<int> slaveOwnerData;
-      utils::MasterSlave::_communication->receive(slaveOwnerData, rank);
-      outDataOwnership.insert(outDataOwnership.end(), slaveOwnerData.begin(), slaveOwnerData.end());
     }
 
     PRECICE_DEBUG("Input data size: " << globalInValues.size());
@@ -474,6 +477,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
   }
 
 }
+
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
@@ -504,8 +508,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
                    filterMesh->vertices()[idx].tag();
                  }));
   } else {
-    for (auto &vert : filterMesh->vertices())
-      vert.tag();
+    filterMesh->tagAll();
   }
 }
 
@@ -587,30 +590,26 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
   Eigen::MatrixXd matrixCLU(n, n);
   matrixCLU.setZero();
 
+  //matrixCLU.col(inputSize).array() = 1.0;
+
   for (int i = 0; i < inputSize; ++i) {
     for (int j = i; j < inputSize; ++j) {
       const auto& u = inputMesh.vertices()[i].getCoords();
       const auto& v = inputMesh.vertices()[j].getCoords();
       matrixCLU(i, j) = basisFunction.evaluate(reduceVector((u - v), deadAxis).norm());
     }
-    matrixCLU(i, inputSize) = 1.0;
     
     const auto reduced = reduceVector(inputMesh.vertices()[i].getCoords(), deadAxis);
     
     for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
       matrixCLU(i, inputSize + 1 + dim) = reduced[dim];
     }
+    matrixCLU(i, inputSize) = 1.0;
   }
 
-  // Copy values of upper right part of C to lower left part
-  for (int i = 0; i < n; i++) {
-    for (int j = i + 1; j < n; j++) {
-        matrixCLU(j, i) = matrixCLU(i, j);
-      }
-  }
+  matrixCLU.triangularView<Eigen::Lower>() = matrixCLU.transpose();
 
   return matrixCLU;
-
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -641,14 +640,13 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
       matrixA(i, j) = basisFunction.evaluate(reduceVector((u - v), deadAxis).norm());
 
     }
-    matrixA(i, inputSize) = 1.0;
 
     const auto reduced = reduceVector(outputMesh.vertices()[i].getCoords(), deadAxis);
 
     for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
       matrixA(i, inputSize + 1 + dim) = reduced[dim];
-
     }
+    matrixA(i, inputSize) = 1.0;
   }
   return matrixA;
 }

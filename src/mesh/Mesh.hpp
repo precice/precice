@@ -217,9 +217,14 @@ public:
 
   void setGlobalNumberOfVertices(int num);
 
+  // Get the data of owned vertices for given data ID
   Eigen::VectorXd getOwnedVertexData(int dataID);
 
-  std::vector<int> getOwnedVertices();
+  // Get the IDs of owned vertices
+  std::vector<int> getOwnedVertexIDs();
+
+  // Tag all the vertices
+  void tagAll();
 
   /// Returns a vector of connected ranks
   std::vector<int> &getConnectedRanks()

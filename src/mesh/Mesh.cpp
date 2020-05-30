@@ -373,7 +373,7 @@ Eigen::VectorXd Mesh::getOwnedVertexData(int dataID){
   return ownedData;
 }
 
-std::vector<int> Mesh::getOwnedVertices(){
+std::vector<int> Mesh::getOwnedVertexIDs(){
   std::vector<int> ownedVertices(_vertices.size(), -1);
   int i = 0;
   for(auto vertex : _vertices){
@@ -383,6 +383,13 @@ std::vector<int> Mesh::getOwnedVertices(){
     ++i;
   }
   return ownedVertices;
+}
+
+void Mesh::tagAll()
+{
+  for(auto &vertex : _vertices){
+    vertex.tag();
+  }
 }
 
 void Mesh::addMesh(

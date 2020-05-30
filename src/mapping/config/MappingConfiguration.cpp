@@ -272,6 +272,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   configuredMapping.isRBF = true;
   bool isSerial           = context.size == 1;
   bool usePETSc           = false;
+  RBFType rbfType         = RBFType::EIGEN;
 
 #ifndef PRECICE_NO_PETSC
   // for petsc initialization
@@ -283,20 +284,15 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   delete[] arg;
   usePETSc = true;
 #endif
-
-  bool createPetRBF = false;
-  bool createEigenRBF  = false;
   
-  if (usePETSc) {
-    createPetRBF = not useLU;
-    createEigenRBF = useLU;
+  if (usePETSc && (not useLU)) {
+    rbfType = RBFType::PETSc;
   } 
   else{
-    createEigenRBF = true;
-    createPetRBF = false;
+    rbfType = RBFType::EIGEN;
   }
 
-  if (createEigenRBF) {
+  if (rbfType == RBFType::EIGEN) {
     PRECICE_DEBUG("Eigen RBF is used");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
@@ -335,7 +331,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
 #ifndef PRECICE_NO_PETSC
 
-  if (createPetRBF) {
+  if (rbfType == RBFType::PETSc) {
     PRECICE_DEBUG("PETSc RBF is used.");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
