@@ -274,6 +274,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDataID, int outputDataID, int polyparams){
 
+  PRECICE_TRACE(inputDataID, outputDataID, polyparams);
+
     // Gather input data
   if (utils::MasterSlave::isSlave()) {
 
@@ -383,6 +385,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputDataID, int outputDataID, int polyparams){
+  
+  PRECICE_TRACE(inputDataID, outputDataID, polyparams);
+
   // Gather input data
   if (utils::MasterSlave::isSlave()) {
     // Input mesh and data is distributed, Out data is local
