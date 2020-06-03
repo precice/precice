@@ -164,7 +164,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     PRECICE_ASSERT(_config.type == VALUE_MULTI);
     bool        control         = tag.getBooleanAttributeValue(ATTR_CONTROL);
     std::string participantName = tag.getStringAttributeValue(ATTR_NAME);
-    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), participantName) == _config.participants.end() && participantName.compare(_config.controller) != 0,
+    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), participantName) == _config.participants.end()
+                      && participantName.compare(_config.controller) != 0,
                   "Participant \""
                       << participantName
                       << "\" is provided multiple times to multi coupling scheme. Please make sure that you do not provide the participant multiple times via the <participant name=\""
@@ -194,16 +195,17 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                                                   << "/> tag in the <coupling-scheme:...> of your precice-config.xml");
   } else if (tag.getName() == TAG_TIME_WINDOW_SIZE) {
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
-    _config.validDigits    = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
-    _config.dtMethod       = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD));
-    if (_config.dtMethod == constants::TimesteppingMethod::FIXED_DT) {
+    _config.validDigits = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
+    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),"Valid digits of time window size has to be between 1 and 16.");
+    _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD));
+    if(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
       PRECICE_CHECK(_config.timeWindowSize > 0, "Time window size has to be larger than zero. Please check the <time-window-size "
                                                     << "value=\"" << _config.timeWindowSize << "\" "
                                                     << "valid-digits=\"" << _config.validDigits << "\" "
                                                     << "method=\"" << tag.getStringAttributeValue(ATTR_METHOD) << "\" "
                                                     << "/> tag in the <coupling-scheme:...> of your precice-config.xml");
     } else {
-      PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIRST_PARTICIPANT_SETS_DT);
+      PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE);
       PRECICE_CHECK(_config.timeWindowSize == -1, "Time window size value has to be equal to -1 (default), if method=\"first-participant\" is used. Please check the <time-window-size "
                                                       << "value=\"" << _config.timeWindowSize << "\" "
                                                       << "valid-digits=\"" << _config.validDigits << "\" "
@@ -369,6 +371,7 @@ void CouplingSchemeConfiguration::addCouplingScheme(
       // Create a new composition, add the already existing and new scheme, and
       // overwrite the existing scheme with the composition.
       CompositionalCouplingScheme *composition = new CompositionalCouplingScheme();
+      PRECICE_CHECK(nullptr == dynamic_cast<MultiCouplingScheme*>(_couplingSchemes[participantName].get()), "A Multi Coupling Scheme cannot yet be combined with any other coupling scheme. Try to include all participants within one multi coupling scheme instead.");
       composition->addCouplingScheme(_couplingSchemes[participantName]);
       composition->addCouplingScheme(cplScheme);
       _couplingSchemes[participantName] = PtrCouplingScheme(composition);
@@ -696,6 +699,8 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
 
   addDataToBeExchanged(*scheme, accessor);
 
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -711,6 +716,8 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
+
+  scheme->checkConfiguration();
 
   return PtrCouplingScheme(scheme);
 }
@@ -753,8 +760,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -795,8 +805,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -821,17 +834,20 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
     MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
+    PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
     addMultiDataToBeExchanged(*castedScheme, accessor);
   } else {
     m2n::PtrM2N m2n = _m2nConfig->getM2N(
         accessor, _config.controller);
+
     scheme = new ParallelCouplingScheme(
         _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
         _config.validDigits, accessor, _config.controller,
         accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
     scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
-    addDataToBeExchanged(*scheme, accessor);
+    BiCouplingScheme *castedScheme = dynamic_cast<BiCouplingScheme *>(scheme);
+    addDataToBeExchanged(*castedScheme, accessor);
   }
 
   // Add convergence measures
@@ -858,8 +874,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
       checkIfDataIsExchanged(dataID);
     }
 
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -869,16 +888,16 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
 {
   PRECICE_TRACE(method);
   if (method == VALUE_FIXED) {
-    return constants::FIXED_DT;
+    return constants::FIXED_TIME_WINDOW_SIZE;
   } else if (method == VALUE_FIRST_PARTICIPANT) {
-    return constants::FIRST_PARTICIPANT_SETS_DT;
+    return constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE;
   } else {
     PRECICE_ASSERT(false, "Unknown timestepping method \"" << method << "\"!");
   }
 }
 
 void CouplingSchemeConfiguration::addDataToBeExchanged(
-    BaseCouplingScheme &scheme,
+    BiCouplingScheme &scheme,
     const std::string & accessor) const
 {
   PRECICE_TRACE();
@@ -917,11 +936,11 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                                << "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
     }
 
-    bool initialize = get<4>(tuple);
+    bool requiresInitialization = get<4>(tuple);
     if (from == accessor) {
-      scheme.addDataToSend(data, mesh, initialize);
+      scheme.addDataToSend(data, mesh, requiresInitialization);
     } else if (to == accessor) {
-      scheme.addDataToReceive(data, mesh, initialize);
+      scheme.addDataToReceive(data, mesh, requiresInitialization);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }

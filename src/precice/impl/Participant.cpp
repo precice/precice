@@ -12,23 +12,13 @@
 namespace precice {
 namespace impl {
 
-int Participant::_participantsSize = 0;
-
-void Participant::resetParticipantCount()
-{
-  _participantsSize = 0;
-}
-
 Participant::Participant(
     std::string                 name,
     mesh::PtrMeshConfiguration &meshConfig)
     : _name(std::move(name)),
-      _id(_participantsSize),
       _meshContexts(meshConfig->meshes().size(), nullptr),
       _dataContexts(meshConfig->getDataConfiguration()->data().size() * meshConfig->meshes().size(), nullptr)
-{
-  _participantsSize++;
-}
+{}
 
 Participant::~Participant()
 {
@@ -40,17 +30,11 @@ Participant::~Participant()
   _writeDataContexts.deleteElements();
   _readMappingContexts.deleteElements();
   _writeMappingContexts.deleteElements();
-  _participantsSize--;
 }
 
 const std::string &Participant::getName() const
 {
   return _name;
-}
-
-int Participant::getID() const
-{
-  return _id;
 }
 
 void Participant::addWatchPoint(

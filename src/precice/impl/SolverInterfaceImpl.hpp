@@ -24,7 +24,8 @@ class SolverInterfaceConfiguration;
 // Forward declaration to friend the boost test struct
 namespace PreciceTests {
 namespace Serial {
-struct TestConfiguration;
+struct TestConfigurationPeano;
+struct TestConfigurationComsol;
 }
 } // namespace PreciceTests
 
@@ -624,7 +625,8 @@ private:
   void syncTimestep(double computedTimestepLength);
 
   /// To allow white box tests.
-  friend struct PreciceTests::Serial::TestConfiguration;
+  friend struct PreciceTests::Serial::TestConfigurationPeano;
+  friend struct PreciceTests::Serial::TestConfigurationComsol;
 };
 
 } // namespace impl

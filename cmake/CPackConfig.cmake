@@ -61,7 +61,7 @@ set(CPACK_SOURCE_IGNORE_FILES
 
 # Build dependecy set
 unset(CPACK_DEBIAN_PACKAGE_DEPENDS)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-filesystem-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libeigen3-dev, libxml2-dev")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-filesystem-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2")
 if(PRECICE_PythonActions)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, python3-dev, python3-numpy")
 endif()

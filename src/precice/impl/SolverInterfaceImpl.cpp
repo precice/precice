@@ -42,9 +42,6 @@ using precice::utils::EventRegistry;
 
 namespace precice {
 
-/// Set to true if unit/integration tests are executed
-bool testMode = false;
-
 /// Enabled further inter- and intra-solver synchronisation
 bool syncMode = false;
 
@@ -112,7 +109,7 @@ void SolverInterfaceImpl::configure(
     const std::string &configurationFileName)
 {
   config::Configuration config;
-  utils::Parallel::initializeMPI(nullptr, nullptr);
+  utils::Parallel::initializeManagedMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::current()->rank());
   xml::ConfigurationContext context{
       _accessorName,
@@ -137,7 +134,6 @@ void SolverInterfaceImpl::configure(
   utils::ScopedEventPrefix sep("configure/");
 
   mesh::Data::resetDataCount();
-  Participant::resetParticipantCount();
   _meshLock.clear();
 
   _dimensions = config.getDimensions();
@@ -258,7 +254,7 @@ double SolverInterfaceImpl::initialize()
 
   timings.insert(action::Action::ALWAYS_POST);
 
-  if (_couplingScheme->hasDataBeenExchanged()) {
+  if (_couplingScheme->hasDataBeenReceived()) {
     timings.insert(action::Action::ON_EXCHANGE_POST);
     mapReadData();
   }
@@ -292,7 +288,7 @@ void SolverInterfaceImpl::initializeData()
   _couplingScheme->initializeData();
   double                           dt = _couplingScheme->getNextTimestepMaxLength();
   std::set<action::Action::Timing> timings;
-  if (_couplingScheme->hasDataBeenExchanged()) {
+  if (_couplingScheme->hasDataBeenReceived()) {
     timings.insert(action::Action::ON_EXCHANGE_POST);
     mapReadData();
   }
@@ -368,7 +364,7 @@ double SolverInterfaceImpl::advance(
 
   timings.clear();
   timings.insert(action::Action::ALWAYS_POST);
-  if (_couplingScheme->hasDataBeenExchanged()) {
+  if (_couplingScheme->hasDataBeenReceived()) {
     timings.insert(action::Action::ON_EXCHANGE_POST);
   }
   if (_couplingScheme->isTimeWindowComplete()) {
@@ -376,7 +372,7 @@ double SolverInterfaceImpl::advance(
   }
   performDataActions(timings, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 
-  if (_couplingScheme->hasDataBeenExchanged()) {
+  if (_couplingScheme->hasDataBeenReceived()) {
     mapReadData();
   }
 
@@ -384,6 +380,10 @@ double SolverInterfaceImpl::advance(
 
   PRECICE_DEBUG("Handle exports");
   handleExports();
+
+  // deactivated the reset of written data, as it deletes all data that is not communicated
+  // within this cycle in the coupling data. This is not wanted forthe manifold mapping.
+  //resetWrittenData();
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
@@ -447,17 +447,19 @@ void SolverInterfaceImpl::finalize()
 
   // Stop and print Event logging
   e.stop();
-  if (not precice::testMode and not precice::utils::MasterSlave::isSlave()) {
+
+  // Finalize PETSc and Events first
+  utils::Petsc::finalize();
+  utils::EventRegistry::instance().finalize();
+
+  // Printing requires finalization
+  if (not precice::utils::MasterSlave::isSlave()) {
     utils::EventRegistry::instance().printAll();
   }
 
-  // Tear down MPI and PETSc
-  utils::Petsc::finalize();
+  // Finally clear events and finalize MPI
   utils::EventRegistry::instance().clear();
-  utils::EventRegistry::instance().finalize();
-  if (not precice::testMode) {
-    utils::Parallel::finalizeMPI();
-  }
+  utils::Parallel::finalizeManagedMPI();
 }
 
 int SolverInterfaceImpl::getDimensions() const
@@ -475,7 +477,7 @@ bool SolverInterfaceImpl::isCouplingOngoing() const
 bool SolverInterfaceImpl::isReadDataAvailable() const
 {
   PRECICE_TRACE();
-  return _couplingScheme->hasDataBeenExchanged();
+  return _couplingScheme->hasDataBeenReceived();
 }
 
 bool SolverInterfaceImpl::isWriteDataRequired(
@@ -1414,20 +1416,9 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   PRECICE_TRACE();
 
   Event e("com.initializeMasterSlaveCom", precice::syncMode);
-  //slaves create new communicator with ranks 0 to size-2
-  //therefore, the master uses a rankOffset and the slaves have to call request
-  // with that offset
-  int rankOffset = 1;
-  if (utils::MasterSlave::isMaster()) {
-    PRECICE_INFO("Setting up communication to slaves");
-    utils::MasterSlave::_communication->prepareEstablishment(_accessorName + "Master", _accessorName);
-    utils::MasterSlave::_communication->acceptConnection(_accessorName + "Master", _accessorName, "MasterSlave", utils::MasterSlave::getRank(), rankOffset);
-    utils::MasterSlave::_communication->cleanupEstablishment(_accessorName + "Master", _accessorName);
-  } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
-    utils::MasterSlave::_communication->requestConnection(_accessorName + "Master", _accessorName, "MasterSlave",
-                                                          _accessorProcessRank - rankOffset, _accessorCommunicatorSize - rankOffset);
-  }
+  utils::MasterSlave::_communication->connectMasterSlaves(
+      _accessorName, "MasterSlaves",
+      _accessorProcessRank, _accessorCommunicatorSize);
 }
 
 void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
