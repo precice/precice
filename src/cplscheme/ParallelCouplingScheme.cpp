@@ -23,13 +23,6 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
                        secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
 
-void ParallelCouplingScheme::checkConfiguration()
-{
-  if (isImplicitCouplingScheme()) {
-    PRECICE_CHECK(not getSendData().empty(), "No send data configured. Use explicit scheme for one-way coupling.");
-  }
-}
-
 void ParallelCouplingScheme::initializeImplementation()
 {
   determineInitialSend(getSendData());

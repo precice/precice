@@ -45,6 +45,22 @@ public:
   /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
 
+  /**
+   * @returns true, if coupling scheme has any sendData
+   */
+  bool hasAnySendData() override final
+  {
+    return not getSendData().empty();
+  }
+
+  /**
+   * @returns true, if coupling scheme has sendData with given DataID
+   */
+  bool hasSendData(int dataID)
+  {
+    return getSendData(dataID) != nullptr;
+  }
+
 protected:
   /// Returns all data to be sent.
   DataMap &getSendData()
