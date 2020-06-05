@@ -847,7 +847,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     } else if (to == accessor) {
       scheme.addDataToReceive(data, mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
-        PRECICE_CHECK(not scheme.doesFirstStep(), "In serial coupling only second participant can initialize data and send it.");
+        PRECICE_CHECK(scheme.doesFirstStep(), "In serial coupling only first participant can receive initial data.");
       }
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
