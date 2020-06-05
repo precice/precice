@@ -48,15 +48,6 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 
 void SerialCouplingScheme::initializeImplementation()
 {
-  // Perform checks for initialization of serial coupling.
-  if (anyDataRequiresInitialization(getSendData())) {
-    PRECICE_ASSERT(not doesFirstStep(), "In serial coupling only second participant can initialize data and send it.");
-  }
-
-  if (anyDataRequiresInitialization(getReceiveData())) {
-    PRECICE_ASSERT(doesFirstStep(), "In serial coupling only first participant can receive initial data.");
-  }
-
   // determine whether initial data needs to be communicated
   determineInitialSend(getSendData());
   determineInitialReceive(getReceiveData());

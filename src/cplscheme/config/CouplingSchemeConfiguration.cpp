@@ -943,12 +943,26 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     if (from == accessor) {
       scheme.addDataToSend(data, mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
-        PRECICE_CHECK(not scheme.doesFirstStep(), "In serial coupling only second participant can initialize data and send it.");
+        PRECICE_CHECK(not scheme.doesFirstStep(), "In serial coupling only second participant can initialize data and send it. "
+                                                      << "Please check the <exchange "
+                                                      << "data=\"" << data->getName() << "\" "
+                                                      << "mesh=\"" << mesh->getName() << "\" "
+                                                      << "from=\"" << from << "\" "
+                                                      << "to=\"" << to << "\" "
+                                                      << "initialize=\"" << requiresInitialization << "\" "
+                                                      << "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
       }
     } else if (to == accessor) {
       scheme.addDataToReceive(data, mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
-        PRECICE_CHECK(scheme.doesFirstStep(), "In serial coupling only first participant can receive initial data.");
+        PRECICE_CHECK(scheme.doesFirstStep(), "In serial coupling only first participant can receive initial data. "
+                                                  << "Please check the <exchange "
+                                                  << "data=\"" << data->getName() << "\" "
+                                                  << "mesh=\"" << mesh->getName() << "\" "
+                                                  << "from=\"" << from << "\" "
+                                                  << "to=\"" << to << "\" "
+                                                  << "initialize=\"" << requiresInitialization << "\" "
+                                                  << "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
       }
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
