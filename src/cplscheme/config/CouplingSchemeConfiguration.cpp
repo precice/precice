@@ -732,7 +732,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
-  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured! Use explicit scheme for one-way coupling.");
+  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling."
+                                              << "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, where "
+                                              << "from=\"" << accessor << "\".");
 
   // Add convergence measures
   using std::get;
@@ -782,7 +784,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
-  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling.");
+  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling."
+                                              << "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, where "
+                                              << "from=\"" << accessor << "\".");
 
   // Add convergence measures
   using std::get;
@@ -848,7 +852,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     BiCouplingScheme *castedScheme = dynamic_cast<BiCouplingScheme *>(scheme);
     addDataToBeExchanged(*castedScheme, accessor);
   }
-  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling.");
+  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling."
+                                              << "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, where "
+                                              << "from=\"" << accessor << "\".");
 
   // Add convergence measures
   using std::get;
