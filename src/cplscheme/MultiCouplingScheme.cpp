@@ -33,19 +33,6 @@ MultiCouplingScheme::MultiCouplingScheme(
   }
 }
 
-void MultiCouplingScheme::checkConfiguration()
-{
-  if (isImplicitCouplingScheme()) {
-    bool hasAnySendData = std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](DataMap sendData) { return not sendData.empty(); });
-    PRECICE_CHECK(hasAnySendData, "No send data configured. Use explicit scheme for one-way coupling.");
-    if (not doesFirstStep() && getAcceleration()) {
-      PRECICE_CHECK(getAcceleration()->getDataIDs().size() >= 3,
-                    "For multi coupling, the number of coupling data vectors has to be at least 3, not: "
-                        << getAcceleration()->getDataIDs().size());
-    }
-  }
-}
-
 std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;

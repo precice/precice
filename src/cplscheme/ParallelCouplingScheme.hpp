@@ -42,11 +42,6 @@ public:
       CouplingMode                  cplMode,
       int                           maxIterations = -1);
 
-  /**
-   * @brief performs checks on a configured ParallelCouplingScheme
-   */
-  void checkConfiguration() override;
-
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 

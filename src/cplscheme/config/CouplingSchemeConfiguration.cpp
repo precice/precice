@@ -699,8 +699,6 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
 
   addDataToBeExchanged(*scheme, accessor);
 
-  scheme->checkConfiguration();
-
   return PtrCouplingScheme(scheme);
 }
 
@@ -716,8 +714,6 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
-
-  scheme->checkConfiguration();
 
   return PtrCouplingScheme(scheme);
 }
@@ -736,6 +732,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
+  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured! Use explicit scheme for one-way coupling.");
 
   // Add convergence measures
   using std::get;
@@ -762,8 +759,12 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
-
-  scheme->checkConfiguration();
+  if (scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && not _accelerationConfig->getAcceleration()->getDataIDs().empty()) {
+    int dataID = *(_accelerationConfig->getAcceleration()->getDataIDs().begin());
+    PRECICE_CHECK(not scheme->hasSendData(dataID),
+                  "In case of serial coupling, acceleration can be defined for "
+                      << "data of second participant only!");
+  }
 
   return PtrCouplingScheme(scheme);
 }
@@ -781,6 +782,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
+  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling.");
 
   // Add convergence measures
   using std::get;
@@ -807,9 +809,6 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
-
-  scheme->checkConfiguration();
-
   return PtrCouplingScheme(scheme);
 }
 
@@ -849,6 +848,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     BiCouplingScheme *castedScheme = dynamic_cast<BiCouplingScheme *>(scheme);
     addDataToBeExchanged(*castedScheme, accessor);
   }
+  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling.");
 
   // Add convergence measures
   using std::get;
@@ -876,8 +876,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
 
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
-
-  scheme->checkConfiguration();
+  if (not scheme->doesFirstStep() && _accelerationConfig->getAcceleration()) {
+    PRECICE_CHECK(_accelerationConfig->getAcceleration()->getDataIDs().size() >= 3,
+                  "For multi coupling, the number of coupling data vectors has to be at least 3, not: "
+                      << _accelerationConfig->getAcceleration()->getDataIDs().size());
+  }
 
   return PtrCouplingScheme(scheme);
 }
@@ -939,8 +942,14 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     bool requiresInitialization = get<4>(tuple);
     if (from == accessor) {
       scheme.addDataToSend(data, mesh, requiresInitialization);
+      if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
+        PRECICE_CHECK(not scheme.doesFirstStep(), "In serial coupling only second participant can initialize data and send it.");
+      }
     } else if (to == accessor) {
       scheme.addDataToReceive(data, mesh, requiresInitialization);
+      if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
+        PRECICE_CHECK(not scheme.doesFirstStep(), "In serial coupling only second participant can initialize data and send it.");
+      }
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }

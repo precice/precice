@@ -52,11 +52,6 @@ public:
 
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
 
-  /**
-   * @brief performs checks on a configured SerialCouplingScheme
-   */
-  void checkConfiguration() override;
-
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
