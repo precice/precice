@@ -95,7 +95,7 @@ private:
   std::set<std::string> _uniqueDataNames;  // @todo remove this member and use an appropriate data structure for dataIDs. See https://github.com/precice/precice/issues/766
 
   struct ConfigurationData {
-    std::vector<int>      dataIDs;
+    std::vector<int>      dataIDs;  // @todo use a std::set. dataIDs should be unique. See https://github.com/precice/precice/issues/766
     std::map<int, double> scalings;
     std::string           type;
     double                relaxationFactor           = 0;
