@@ -16,6 +16,8 @@ void precicec_createSolverInterface(
 {
   std::string stringAccessorName(participantName);
   std::string stringConfigFileName(configFileName);
+  if (interface != nullptr)
+    delete interface;
   interface = new precice::SolverInterface(stringAccessorName,
                                            stringConfigFileName,
                                            solverProcessIndex,
@@ -31,6 +33,8 @@ void precicec_createSolverInterface_withCommunicator(
 {
   std::string stringAccessorName(participantName);
   std::string stringConfigFileName(configFileName);
+  if (interface != nullptr)
+    delete interface;
   interface = new precice::SolverInterface(stringAccessorName,
                                            stringConfigFileName,
                                            solverProcessIndex,
@@ -58,8 +62,11 @@ double precicec_advance(double computedTimestepLength)
 
 void precicec_finalize()
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->finalize();
+  if (interface != nullptr)
+  {
+    interface->finalize();
+    delete interface;
+  }
 }
 
 int precicec_getDimensions()
