@@ -92,6 +92,8 @@ private:
 
   impl::PtrPreconditioner _preconditioner;
 
+  std::set<std::string> _uniqueDataNames;  // @todo remove this member and use an appropriate data structure for dataIDs. See https://github.com/precice/precice/issues/766
+
   struct ConfigurationData {
     std::vector<int>      dataIDs;
     std::map<int, double> scalings;
