@@ -139,24 +139,22 @@ public:
  */
 class Gaussian {
 public:
-  Gaussian(const double shape, const double supportRadius = std::numeric_limits<double>::infinity())
-      : _shape(shape),
-        _supportRadius(supportRadius)
+  Gaussian(const double shape)
+      : _shape(shape)
   {
     PRECICE_CHECK(math::greater(_shape, 0.0),
                   "Shape parameter for radial-basis-function gaussian has to be larger than zero!");
-    PRECICE_CHECK(math::greater(_supportRadius, 0.0),
-                  "Support radius for radial-basis-function gaussian has to be larger than zero!");
 
-    _deltaY          = hasCompactSupport() ? evaluate(supportRadius) : 0;
-    double threshold = std::sqrt(-std::log(cutoffThreshold)) / shape;
-    _supportRadius   = std::min(supportRadius, threshold);
+    /// Below that value the function is supposed to be zero. Defines the support radius if not explicitely given
+    constexpr double cutoffThreshold = 1e-9;
+
+    _supportRadius = std::sqrt(-std::log(cutoffThreshold)) / shape;
   }
 
   /// Compact support if supportRadius is not infinity
   bool hasCompactSupport() const
   {
-    return not(_supportRadius == std::numeric_limits<double>::infinity());
+    return true;
   }
 
   double getSupportRadius() const
@@ -169,21 +167,15 @@ public:
     if (radius > _supportRadius)
       return 0.0;
     else
-      return std::exp(-std::pow(_shape * radius, 2.0)) - _deltaY;
+      return std::exp(-std::pow(_shape * radius, 2.0));
   }
 
 private:
   logging::Logger _log{"mapping::Gaussian"};
 
-  /// Below that value the function is supposed to be zero. Defines the support radius if not explicitely given
-  double const cutoffThreshold = 1e-9;
+  double _shape;
 
-  double const _shape;
-
-  /// Either explicitely set (from cutoffThreshold) or computed supportRadius
   double _supportRadius;
-
-  double _deltaY = 0;
 };
 
 /**
