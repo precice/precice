@@ -70,20 +70,14 @@ const RangePreview<Iter> previewRange(Size n, const Eigen::PlainObjectBase<Deriv
 template <typename DerivedLHS, typename DerivedRHS>
 bool componentWiseLess(const Eigen::PlainObjectBase<DerivedLHS> &lhs, const Eigen::PlainObjectBase<DerivedRHS> &rhs)
 {
-  const auto lhs_begin = lhs.data();
-  const auto lhs_end   = lhs.data() + lhs.size();
-  const auto rhs_begin = rhs.data();
-  const auto rhs_end   = rhs.data() + rhs.size();
+  if (lhs.size() != rhs.size()) return false;
 
-  auto mismatch = utils::mismatch(lhs_begin, lhs_end, rhs_begin, rhs_end);
-
-  if (mismatch.first == lhs_end) {
-    return true;
+  for(int i = 0; i < rhs.size(); ++i) {
+    if (lhs[i] != rhs[i]) {
+      return lhs[i] < rhs[i];
+    }
   }
-  if (mismatch.second == rhs_end) {
-    return false;
-  }
-  return *mismatch.first < *mismatch.second;
+  return false;
 }
 
 struct ComponentWiseLess {
