@@ -262,6 +262,22 @@ BOOST_AUTO_TEST_CASE(Contains)
     BOOST_TEST(bb.contains(v1));
     BOOST_TEST(!bb.contains(v2));
   }
+  { // 3D Point
+    BoundingBox bb({0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+    Vertex      v1(Eigen::Vector3d(0.0, 0.0, 0.0), 0);
+    Vertex      v2(Eigen::Vector3d(1.2, -2.0, 1.0), 0);
+
+    BOOST_TEST(bb.contains(v1));
+    BOOST_TEST(!bb.contains(v2));
+  }
+  { // 2D Point
+    BoundingBox bb({0.0, 0.0, 0.0, 0.0});
+    Vertex      v1(Eigen::Vector2d(0.0, 0.0), 0);
+    Vertex      v2(Eigen::Vector2d(1.2, -2.0), 0);
+
+    BOOST_TEST(bb.contains(v1));
+    BOOST_TEST(!bb.contains(v2));
+  }
 } // Contains
 
 BOOST_AUTO_TEST_CASE(EmptyCase)
