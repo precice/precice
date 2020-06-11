@@ -528,7 +528,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixA, MAT_FINAL_ASSEMBLY);
   CHKERRV(ierr);
-  _matrixQ.assemble();
   _matrixV.assemble();
 
   ePostFill.stop();
