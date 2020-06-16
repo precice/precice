@@ -151,7 +151,7 @@ public:
    *
    * @warning
    * Finalize is not the inverse of initialize().
-   * It has to be called after constuction.
+   * Finalize has to be called after construction.
    */
   void finalize();
 
