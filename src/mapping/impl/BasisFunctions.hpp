@@ -148,15 +148,16 @@ public:
     PRECICE_CHECK(math::greater(_supportRadius, 0.0),
                   "Support radius for radial-basis-function gaussian has to be larger than zero!");
 
-    _deltaY          = hasCompactSupport() ? evaluate(supportRadius) : 0;
+    if (supportRadius < std::numeric_limits<double>::infinity()) {
+      _deltaY = evaluate(supportRadius);
+    }
     double threshold = std::sqrt(-std::log(cutoffThreshold)) / shape;
     _supportRadius   = std::min(supportRadius, threshold);
   }
 
-  /// Compact support if supportRadius is not infinity
   bool hasCompactSupport() const
   {
-    return not(_supportRadius == std::numeric_limits<double>::infinity());
+    return true;
   }
 
   double getSupportRadius() const
