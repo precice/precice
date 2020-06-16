@@ -108,6 +108,7 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 SolverInterfaceImpl::~SolverInterfaceImpl()
 {
   if (_state != State::Finalized) {
+    PRECICE_INFO("Implicitly finalizing in destructor");
     finalize();
   }
 }
