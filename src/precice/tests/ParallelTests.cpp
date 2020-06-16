@@ -45,9 +45,6 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup)
   BOOST_TEST(utils::MasterSlave::getSize() == context.size);
   BOOST_TEST(utils::MasterSlave::_communication.use_count() > 0);
   BOOST_TEST(utils::MasterSlave::_communication->isConnected());
-
-  //necessary as this test does not call finalize
-  utils::MasterSlave::_communication = nullptr;
 }
 
 BOOST_AUTO_TEST_CASE(TestFinalize)
