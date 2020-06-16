@@ -199,8 +199,8 @@ void SolverInterfaceImpl::configure(
 double SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(not _couplingScheme->isInitialized(),
-                "initialize() may only be called once.");
+  PRECICE_CHECK(_state == State::Constructed, "initialize() may only be called once.");
+  PRECICE_ASSERT(not _couplingScheme->isInitialized());
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
   Event                    e("initialize", precice::syncMode);
@@ -402,7 +402,7 @@ double SolverInterfaceImpl::advance(
 void SolverInterfaceImpl::finalize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Finalized, "Finalized cannot be called twice.")
+  PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.")
 
   // Events for the solver time, finally stopped here
   auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
@@ -416,7 +416,6 @@ void SolverInterfaceImpl::finalize()
     // PRECICE_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before finalize()");
     PRECICE_DEBUG("Finalize coupling scheme");
     _couplingScheme->finalize();
-    _couplingScheme.reset();
 
     PRECICE_DEBUG("Handle exports");
     for (const io::ExportContext &context : _accessor->exportContexts()) {
@@ -450,17 +449,20 @@ void SolverInterfaceImpl::finalize()
       }
       iter.second.m2n->closeConnection();
     }
-    _m2ns.clear();
-
-    PRECICE_DEBUG("Close master-slave communication");
-    if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-      utils::MasterSlave::_communication->closeConnection();
-      utils::MasterSlave::_communication = nullptr;
-    }
-
-    _participants.clear();
-    _accessor.reset();
   }
+
+  // Release ownership
+  _couplingScheme.reset();
+  _participants.clear();
+  _accessor.reset();
+
+  // Close Connections 
+  PRECICE_DEBUG("Close master-slave communication");
+  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
+    utils::MasterSlave::_communication->closeConnection();
+    utils::MasterSlave::_communication = nullptr;
+  }
+  _m2ns.clear();
 
   // Stop and print Event logging
   e.stop();
