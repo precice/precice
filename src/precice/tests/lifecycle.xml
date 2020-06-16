@@ -29,7 +29,7 @@
          <mapping:nearest-neighbor direction="read" from="MeshOne" to="MeshTwo"
                   constraint="consistent" timing="initial"/>
          <write-data name="DataTwo" mesh="MeshTwo"/>
-         <read-data  name="DataOne"     mesh="MeshTwo"/>
+         <read-data  name="DataOne" mesh="MeshTwo"/>
       </participant>
 
       <m2n:sockets from="SolverOne" to="SolverTwo" />
