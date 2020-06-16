@@ -132,24 +132,20 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
                  getDimensions(), output()->getDimensions());
   int dimensions = getDimensions();
 
-  if (utils::MasterSlave::isSlave()) {
-
     mesh::PtrMesh inMesh;
     mesh::PtrMesh outMesh;
 
-    if (getConstraint() == CONSERVATIVE) {
-      // Output mesh is distributed
-      // Input mesh is local
-      inMesh  = output();
-      outMesh = input();
-    } else { // Consistent
-      // Input mesh is distributed
-      // Output mesh is local
-      inMesh  = input();
-      outMesh = output();
-    }
+  if (getConstraint() == CONSERVATIVE) {
+    inMesh  = output();
+    outMesh = input();
+  } else { // Consistent
+    inMesh  = input();
+    outMesh = output();
+  }
 
-    // Only the inMesh is distributed
+  if (utils::MasterSlave::isSlave()) {
+
+    // Input mesh may have overlaps
     mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
     mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
 
@@ -157,31 +153,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(filteredInMesh, 0);
     com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*outMesh, 0);
 
-  } else {
-
-    mesh::PtrMesh inMesh;
-    mesh::PtrMesh outMesh;
-
-    if (getConstraint() == CONSERVATIVE) {
-      // Output mesh is distributed
-      // Input mesh is local
-      inMesh  = output();
-      outMesh = input();
-    } else { // Consistent
-      // Input mesh is distributed
-      // Output mesh is local
-      inMesh  = input();
-      outMesh = output();
-    }
+  } else { // Parallel Master or Serial
 
     mesh::Mesh globalInMesh("globalInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
     mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
 
     if (utils::MasterSlave::isMaster()) {
       {
-        // Only the inMesh is distributed
+        // Input mesh may have overlaps
         mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-        mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
+        mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });  
         globalInMesh.addMesh(filteredInMesh);
         globalOutMesh.addMesh(*outMesh);
       }
@@ -262,12 +243,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
   else if(getConstraint() == CONSISTENT){
     mapConsistent(inputDataID, outputDataID, polyparams);
   }
-
-  if (utils::MasterSlave::isSlave()) {
-    std::vector<double> receivedValues;
-    utils::MasterSlave::_communication->receive(receivedValues, 0);
-    output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
-  }
       
 }
 
@@ -276,7 +251,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
   PRECICE_TRACE(inputDataID, outputDataID, polyparams);
 
-    // Gather input data
+  // Gather input data
   if (utils::MasterSlave::isSlave()) {
 
     // For conservative, data is not filtered
@@ -291,7 +266,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     auto outDataOwnership = output()->getOwnedVertexIDs();
     utils::MasterSlave::_communication->send(outDataOwnership, 0);
 
-  } else { // Master or Serial case
+  } else { // Parallel Master or Serial case
     // Global data containers for master
     std::vector<double> globalInValues;
     std::vector<double> globalOutValues;
@@ -381,6 +356,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       output()->data(outputDataID)->values() = outputValues;
     }
   }
+  if (utils::MasterSlave::isSlave()) {
+    std::vector<double> receivedValues;
+    utils::MasterSlave::_communication->receive(receivedValues, 0);
+    output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -390,7 +370,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 
   // Gather input data
   if (utils::MasterSlave::isSlave()) {
-    // Input mesh and data is distributed, Out data is local
+    // Input mesh may have overlaps, filter data
     auto localInDataFiltered = input()->getOwnedVertexData(inputDataID);
     const auto & localOutData = output()->data(outputDataID)->values();
 
@@ -410,7 +390,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 
     // Input mesh and data is distributed
     if (utils::MasterSlave::isMaster()) {
-      // Filter input mesh, outData is local
+      // Input mesh may have overlaps, filter data
       const auto& localInData = input()->getOwnedVertexData(inputDataID);
       const auto& localOutData = output()->data(outputDataID)->values();
       globalInValues.insert(globalInValues.begin(), localInData.data(), localInData.data() + localInData.size());
@@ -479,6 +459,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
         beginPoint += outValuesSize.at(rank);
       }
     }
+  }
+  if (utils::MasterSlave::isSlave()) {
+    std::vector<double> receivedValues;
+    utils::MasterSlave::_communication->receive(receivedValues, 0);
+    output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
 
 }
@@ -595,8 +580,6 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
   Eigen::MatrixXd matrixCLU(n, n);
   matrixCLU.setZero();
 
-  //matrixCLU.col(inputSize).array() = 1.0;
-
   for (int i = 0; i < inputSize; ++i) {
     for (int j = i; j < inputSize; ++j) {
       const auto& u = inputMesh.vertices()[i].getCoords();
@@ -636,8 +619,8 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
 
   Eigen::MatrixXd matrixA(outputSize, n);
   matrixA.setZero();
+  
   // Fill _matrixA with values
-
   for (int i = 0; i < outputSize; ++i) {
     for (int j = 0; j < inputSize; ++j) {
       const auto& u = outputMesh.vertices()[i].getCoords();
