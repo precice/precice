@@ -414,7 +414,7 @@ void SolverInterfaceImpl::finalize()
 
   if (_state == State::Initialized) {
 
-    // PRECICE_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before finalize()");
+    PRECICE_ASSERT(_couplingScheme->isInitialized());
     PRECICE_DEBUG("Finalize coupling scheme");
     _couplingScheme->finalize();
 
