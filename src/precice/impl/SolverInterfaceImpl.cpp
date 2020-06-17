@@ -105,6 +105,14 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 {
 }
 
+SolverInterfaceImpl::~SolverInterfaceImpl()
+{
+  if (_state != State::Finalized) {
+    PRECICE_INFO("Implicitly finalizing in destructor");
+    finalize();
+  }
+}
+
 void SolverInterfaceImpl::configure(
     const std::string &configurationFileName)
 {
@@ -192,8 +200,8 @@ void SolverInterfaceImpl::configure(
 double SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(not _couplingScheme->isInitialized(),
-                "initialize() may only be called once.");
+  PRECICE_CHECK(_state == State::Constructed, "initialize() may only be called once.");
+  PRECICE_ASSERT(not _couplingScheme->isInitialized());
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
   Event                    e("initialize", precice::syncMode);
@@ -266,6 +274,8 @@ double SolverInterfaceImpl::initialize()
   solverInitEvent.start(precice::syncMode);
 
   _meshLock.lockAll();
+
+  _state = State::Initialized;
 
   return _couplingScheme->getNextTimestepMaxLength();
 }
@@ -393,6 +403,7 @@ double SolverInterfaceImpl::advance(
 void SolverInterfaceImpl::finalize()
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.")
 
   // Events for the solver time, finally stopped here
   auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
@@ -401,49 +412,58 @@ void SolverInterfaceImpl::finalize()
   Event                    e("finalize"); // no precice::syncMode here as MPI is already finalized at destruction of this event
   utils::ScopedEventPrefix sep("finalize/");
 
-  PRECICE_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before finalize()");
-  PRECICE_DEBUG("Finalize coupling scheme");
-  _couplingScheme->finalize();
+  if (_state == State::Initialized) {
+
+    PRECICE_ASSERT(_couplingScheme->isInitialized());
+    PRECICE_DEBUG("Finalize coupling scheme");
+    _couplingScheme->finalize();
+
+    PRECICE_DEBUG("Handle exports");
+    for (const io::ExportContext &context : _accessor->exportContexts()) {
+      if (context.everyNTimeWindows != -1) {
+        std::ostringstream suffix;
+        suffix << _accessorName << ".final";
+        exportMesh(suffix.str());
+        if (context.triggerSolverPlot) {
+          _couplingScheme->requireAction(std::string("plot-output"));
+        }
+      }
+    }
+    // Apply some final ping-pong to synch solver that run e.g. with a uni-directional coupling only
+    // afterwards close connections
+    PRECICE_DEBUG("Synchronize participants and close communication channels");
+    std::string ping = "ping";
+    std::string pong = "pong";
+    for (auto &iter : _m2ns) {
+      if (not utils::MasterSlave::isSlave()) {
+        if (iter.second.isRequesting) {
+          iter.second.m2n->getMasterCommunication()->send(ping, 0);
+          std::string receive = "init";
+          iter.second.m2n->getMasterCommunication()->receive(receive, 0);
+          PRECICE_ASSERT(receive == pong);
+        } else {
+          std::string receive = "init";
+          iter.second.m2n->getMasterCommunication()->receive(receive, 0);
+          PRECICE_ASSERT(receive == ping);
+          iter.second.m2n->getMasterCommunication()->send(pong, 0);
+        }
+      }
+      iter.second.m2n->closeConnection();
+    }
+  }
+
+  // Release ownership
   _couplingScheme.reset();
+  _participants.clear();
+  _accessor.reset();
 
-  PRECICE_DEBUG("Handle exports");
-  for (const io::ExportContext &context : _accessor->exportContexts()) {
-    if (context.everyNTimeWindows != -1) {
-      std::ostringstream suffix;
-      suffix << _accessorName << ".final";
-      exportMesh(suffix.str());
-      if (context.triggerSolverPlot) {
-        _couplingScheme->requireAction(std::string("plot-output"));
-      }
-    }
-  }
-  // Apply some final ping-pong to synch solver that run e.g. with a uni-directional coupling only
-  // afterwards close connections
-  PRECICE_DEBUG("Synchronize participants and close communication channels");
-  std::string ping = "ping";
-  std::string pong = "pong";
-  for (auto &iter : _m2ns) {
-    if (not utils::MasterSlave::isSlave()) {
-      if (iter.second.isRequesting) {
-        iter.second.m2n->getMasterCommunication()->send(ping, 0);
-        std::string receive = "init";
-        iter.second.m2n->getMasterCommunication()->receive(receive, 0);
-        PRECICE_ASSERT(receive == pong);
-      } else {
-        std::string receive = "init";
-        iter.second.m2n->getMasterCommunication()->receive(receive, 0);
-        PRECICE_ASSERT(receive == ping);
-        iter.second.m2n->getMasterCommunication()->send(pong, 0);
-      }
-    }
-    iter.second.m2n->closeConnection();
-  }
-
+  // Close Connections 
   PRECICE_DEBUG("Close master-slave communication");
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
     utils::MasterSlave::_communication->closeConnection();
     utils::MasterSlave::_communication = nullptr;
   }
+  _m2ns.clear();
 
   // Stop and print Event logging
   e.stop();
@@ -460,6 +480,7 @@ void SolverInterfaceImpl::finalize()
   // Finally clear events and finalize MPI
   utils::EventRegistry::instance().clear();
   utils::Parallel::finalizeManagedMPI();
+  _state = State::Finalized;
 }
 
 int SolverInterfaceImpl::getDimensions() const

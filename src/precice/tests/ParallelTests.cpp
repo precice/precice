@@ -45,9 +45,6 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup)
   BOOST_TEST(utils::MasterSlave::getSize() == context.size);
   BOOST_TEST(utils::MasterSlave::_communication.use_count() > 0);
   BOOST_TEST(utils::MasterSlave::_communication->isConnected());
-
-  //necessary as this test does not call finalize
-  utils::MasterSlave::_communication = nullptr;
 }
 
 BOOST_AUTO_TEST_CASE(TestFinalize)
@@ -74,6 +71,102 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
     interface.finalize();
   }
 }
+
+
+BOOST_AUTO_TEST_SUITE(Lifecycle)
+
+// Test representing the full explicit lifecycle of a SolverInterface
+BOOST_AUTO_TEST_CASE(Full)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+
+  constexpr double y{0};
+  constexpr double z{0};
+  constexpr double x1{1};
+  constexpr double dx{1};
+
+  if(context.isNamed("SolverOne")) {
+    auto meshid = interface.getMeshID("MeshOne");
+    double coords[] = {x1 + dx*context.rank, y, z};
+    auto vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto dataid = interface.getDataID("DataOne", meshid);
+    double data[] = {3.4, 4.5, 5.6};
+    interface.writeVectorData(dataid, vertexid, data);
+  } else {
+    auto meshid = interface.getMeshID("MeshTwo");
+    double coords[] = {x1 + dx*context.rank, y, z};
+    auto vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto dataid = interface.getDataID("DataTwo", meshid);
+    interface.writeScalarData(dataid, vertexid, 7.8);
+  }
+  interface.initialize();
+  BOOST_TEST(interface.isCouplingOngoing());
+  interface.finalize();
+}
+
+// Test representing the full lifecycle of a SolverInterface
+// Finalize is not called explicitly here.
+// The destructor has to cleanup.
+BOOST_AUTO_TEST_CASE(ImplicitFinalize)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+
+  constexpr double y{0};
+  constexpr double z{0};
+  constexpr double x1{1};
+  constexpr double dx{1};
+
+  if(context.isNamed("SolverOne")) {
+    auto meshid = interface.getMeshID("MeshOne");
+    double coords[] = {x1 + dx*context.rank, y, z};
+    auto vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto dataid = interface.getDataID("DataOne", meshid);
+    double data[] = {3.4, 4.5, 5.6};
+    interface.writeVectorData(dataid, vertexid, data);
+  } else {
+    auto meshid = interface.getMeshID("MeshTwo");
+    double coords[] = {x1 + dx*context.rank, y, z};
+    auto vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto dataid = interface.getDataID("DataTwo", meshid);
+    interface.writeScalarData(dataid, vertexid, 7.8);
+  }
+  interface.initialize();
+  BOOST_TEST(interface.isCouplingOngoing());
+}
+
+// Test representing the minimal lifecylce, which consists out of construction only.
+// The destructor has to cleanup correctly.
+BOOST_AUTO_TEST_CASE(ConstructOnly)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+}
+
+// Test representing the minimal lifecylce with explicit finalization.
+// This shows how to manually finalize MPI etc without using the SolverInterface.
+BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+
+  interface.finalize();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 #ifndef PRECICE_NO_PETSC
 

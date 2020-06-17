@@ -88,6 +88,12 @@ public:
       int                accessorCommunicatorSize,
       void *             communicator);
 
+  /** Ensures that finalize() has been called.
+   *
+   * @see finalize()
+   */
+  ~SolverInterfaceImpl();
+
   /**
    * @brief Initializes all coupling data and starts (coupled) simulation.
    *
@@ -127,8 +133,25 @@ public:
   /**
    * @brief Finalizes the coupled simulation.
    *
-   * - Tears down communication means used for coupling.
-   * - Finalizes MPI if initialized in initializeCoupling.
+   * If initialize() has been called:
+   *
+   * - Synchronizes with remote partiticipants
+   * - handles final exports
+   * - cleans up general state
+   *
+   * Always:
+   *
+   * - flushes and finalizes Events
+   * - finalizes managed PETSc
+   * - finalizes managed MPI
+   *
+   * @post Closes MasterSlave communication
+   * @post Finalized managed PETSc
+   * @post Finalized managed MPI
+   *
+   * @warning
+   * Finalize is not the inverse of initialize().
+   * Finalize has to be called after construction.
    */
   void finalize();
 
@@ -516,6 +539,16 @@ private:
   std::vector<impl::PtrParticipant> _participants;
 
   cplscheme::PtrCouplingScheme _couplingScheme;
+
+  /// Represents the various states a solverinterface can be in.
+  enum struct State {
+    Constructed,
+    Initialized,
+    Finalized
+  };
+
+  /// The current State of the solverinterface
+  State _state {State::Constructed};
 
   /// Counts calls to advance for plotting.
   long int _numberAdvanceCalls = 0;
