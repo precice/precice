@@ -8,6 +8,8 @@
 #include "mesh/Vertex.hpp"
 #include "precice/impl/versions.hpp"
 #include "testing/Testing.hpp"
+#include "utils/EigenHelperFunctions.hpp"
+#include <set>
 
 using namespace precice;
 using namespace precice::mesh;
@@ -32,6 +34,11 @@ struct VertexSpecification {
   int                 owner;
   std::vector<double> position;
   std::vector<double> value;
+
+  const Eigen::Map<const Eigen::VectorXd> asEigen() const
+  {
+    return Eigen::Map<const Eigen::VectorXd>{position.data(), static_cast<Eigen::Index>(position.size())};
+  }
 };
 
 /*
@@ -780,8 +787,13 @@ void testTagging(const TestContext &context,
   mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, false, testing::nextMeshID()));
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
+  BOOST_TEST_MESSAGE("Mesh sizes in: "<<inMesh->vertices().size() << " out: " << outMesh->vertices().size());
 
-  Gaussian                           fct(4.5); //Support radius approx. 1
+  Gaussian fct(4.5); //Support radius approx. 1
+  BOOST_TEST_MESSAGE("Basis function has support radius " << fct.getSupportRadius());
+  BOOST_TEST(fct.getSupportRadius() > 1.0);
+  BOOST_TEST(fct.hasCompactSupport());
+
   Mapping::Constraint                constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
   PetRadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, false, false, false);
   inMesh->computeBoundingBox();
@@ -790,41 +802,49 @@ void testTagging(const TestContext &context,
   mapping.setMeshes(inMesh, outMesh);
   mapping.tagMeshFirstRound();
 
-  for (const auto &v : inMesh->vertices()) {
-    auto pos   = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
-                            [meshDimension, &v](const VertexSpecification &spec) {
-                              return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
-                            });
-    bool found = pos != shouldTagFirstRound.end();
-    BOOST_TEST(found >= v.isTagged(),
-               "FirstRound: Vertex " << v << " is tagged, but should not be.");
-    BOOST_TEST(found <= v.isTagged(),
-               "FirstRound: Vertex " << v << " is not tagged, but should be.");
+  const auto& taggedMesh = consistent ? inMesh : outMesh;
+
+  // Expected set of tagged elements for first round
+  std::set<Eigen::VectorXd, utils::ComponentWiseLess> expectedFirst;
+#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
+  for(const auto& vspec: shouldTagFirstRound) {
+    expectedFirst.emplace(vspec.asEigen());
+  }
+
+  for (const auto &v : taggedMesh->vertices()) {
+    bool found = expectedFirst.count(v.getCoords()) != 0;
+    BOOST_TEST((!found || v.isTagged()),
+        "FirstRound: Vertex " << v << " is tagged, but should not be.");
+    BOOST_TEST((found || !v.isTagged()),
+        "FirstRound: Vertex " << v << " is not tagged, but should be.");
+  }
+#else
+  BOOST_TEST_MESSAGE("PETSc < 3.8: all vertices should be tagged in first round.");
+  for (const auto &v : taggedMesh->vertices()) {
+    expectedFirst.emplace(v.getCoords()); // everything should be tagged
+    BOOST_TEST(v.isTagged(), "FirstRound: Vertex " << v << " is not tagged, but should be.");
+  }
+#endif
+
+  // Expected set of tagged elements for second round
+  std::set<Eigen::VectorXd, utils::ComponentWiseLess> expectedSecond(
+      expectedFirst.begin(), expectedFirst.end());
+  for(const auto& vspec: shouldTagSecondRound) {
+    expectedSecond.emplace(vspec.asEigen());
   }
 
   mapping.tagMeshSecondRound();
 
-  for (const auto &v : inMesh->vertices()) {
-    auto posFirst    = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
-                                 [meshDimension, &v](const VertexSpecification &spec) {
-                                   return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
-                                 });
-    bool foundFirst  = posFirst != shouldTagFirstRound.end();
-    auto posSecond   = std::find_if(shouldTagSecondRound.begin(), shouldTagSecondRound.end(),
-                                  [meshDimension, &v](const VertexSpecification &spec) {
-                                    return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
-                                  });
-    bool foundSecond = posSecond != shouldTagSecondRound.end();
-    BOOST_TEST(foundFirst <= v.isTagged(), "SecondRound: Vertex " << v
-                                                                  << " is not tagged, but should be from the first round.");
-    BOOST_TEST(foundSecond <= v.isTagged(), "SecondRound: Vertex " << v
-                                                                   << " is not tagged, but should be.");
-    BOOST_TEST((foundSecond or foundFirst) >= v.isTagged(), "SecondRound: Vertex " << v
-                                                                                   << " is tagged, but should not be.");
+  for (const auto &v : taggedMesh->vertices()) {
+    bool found = expectedSecond.count(v.getCoords()) != 0;
+    BOOST_TEST((!found || v.isTagged()),
+        "SecondRound: Vertex " << v << " is tagged, but should not be.");
+    BOOST_TEST((found || !v.isTagged()),
+        "SecondRound: Vertex " << v << " is not tagged, but should be.");
   }
 }
 
-BOOST_AUTO_TEST_CASE(testTagFirstRound)
+BOOST_AUTO_TEST_CASE(TaggingConsistent)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
   //    *
@@ -852,8 +872,34 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   MeshSpecification shouldTagSecondRound = {
       {0, -1, {2, 0}, {1}}};
   testTagging(context, inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, true);
-  // For conservative just swap meshes.
-  testTagging(context, outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
+}
+
+BOOST_AUTO_TEST_CASE(TaggingConservative)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
+  //    *
+  //    + <-- owned
+  //* * x * *
+  //    *
+  //    *
+  MeshSpecification outMeshSpec = {
+      {0, -1, {0, 0}, {0}}};
+  MeshSpecification inMeshSpec = {
+      {0, -1, {-1, 0}, {1}}, //inside
+      {0, -1, {-2, 0}, {1}}, //outside
+      {0, 0, {1, 0}, {1}},   //inside, owner
+      {0, -1, {2, 0}, {1}},  //outside
+      {0, -1, {0, -1}, {1}}, //inside
+      {0, -1, {0, -2}, {1}}, //outside
+      {0, -1, {0, 1}, {1}},  //inside
+      {0, -1, {0, 2}, {1}}   //outside
+  };
+  MeshSpecification shouldTagFirstRound = {
+      {0, -1, {0, 0}, {1}}
+  };
+  MeshSpecification shouldTagSecondRound = {
+      {0, -1, {0, 0}, {1}}};
+  testTagging(context, inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Parallel

@@ -3,6 +3,31 @@
 
 namespace precice {
 namespace com {
+
+void Communication::connectMasterSlaves(std::string const &participantName,
+                                        std::string const &tag,
+                                        int                rank,
+                                        int                size)
+{
+  if (size == 1) return;
+
+  std::string masterName = participantName + "Master";
+  std::string slaveName  = participantName + "Slave";
+
+  constexpr int rankOffset = 1;
+  int slavesSize = size - rankOffset;
+  if (rank == 0) {
+    PRECICE_INFO("Connecting Master to " << slavesSize << " Slaves");
+    prepareEstablishment(masterName, slaveName);
+    acceptConnection(masterName, slaveName, tag, rank, rankOffset);
+    cleanupEstablishment(masterName, slaveName);
+  } else {
+    int slaveRank = rank - rankOffset;
+    PRECICE_INFO("Connecting Slave #" << slaveRank << " to Master");
+    requestConnection(masterName, slaveName, tag, slaveRank, slavesSize);
+  }
+}
+
 /**
  * @attention This method modifies the input buffer.
  */

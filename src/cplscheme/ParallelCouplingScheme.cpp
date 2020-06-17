@@ -11,7 +11,7 @@ namespace cplscheme {
 ParallelCouplingScheme::ParallelCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
-    double                        timeWindowsSize,
+    double                        timeWindowSize,
     int                           validDigits,
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
@@ -20,235 +20,74 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
     int                           maxIterations)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowsSize, validDigits, firstParticipant,
-                         secondParticipant, localParticipant, m2n, maxIterations, dtMethod)
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
+                       secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
+
+void ParallelCouplingScheme::checkConfiguration()
 {
-  _couplingMode = cplMode;
-  // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
-  PRECICE_ASSERT(_couplingMode != Undefined);
-  if (_couplingMode == Explicit) {
-    PRECICE_ASSERT(maxIterations == 1);
+  if (isImplicitCouplingScheme()) {
+    PRECICE_CHECK(not getSendData().empty(), "No send data configured. Use explicit scheme for one-way coupling.");
   }
 }
 
-void ParallelCouplingScheme::initialize(
-    double startTime,
-    int    startTimeWindow)
+void ParallelCouplingScheme::initializeImplementation()
 {
-  PRECICE_TRACE(startTime, startTimeWindow);
-  PRECICE_ASSERT(not isInitialized());
-  PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
-  PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  setTime(startTime);
-  setTimeWindows(startTimeWindow);
-  if (_couplingMode == Implicit) {
-    PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
-    if (not doesFirstStep()) {         // second participant
-      setupConvergenceMeasures();      // needs _couplingData configured
-      mergeData();                     // merge send and receive data for all pp calls
-      setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
-      if (getAcceleration().get() != nullptr) {
-        getAcceleration()->initialize(getAllData()); // Reserve memory, initialize
-      }
-    }
-
-    requireAction(constants::actionWriteIterationCheckpoint());
-    initializeTXTWriters();
-  }
-
-  for (DataMap::value_type &pair : getSendData()) {
-    if (pair.second->initialize) {
-      setHasToSendInitData(true);
-      break;
-    }
-  }
-  for (DataMap::value_type &pair : getReceiveData()) {
-    if (pair.second->initialize) {
-      setHasToReceiveInitData(true);
-      break;
-    }
-  }
-
-  if (hasToSendInitData()) {
-    requireAction(constants::actionWriteInitialData());
-  }
-
-  setIsInitialized(true);
+  determineInitialSend(getSendData());
+  determineInitialReceive(getReceiveData());
 }
 
-void ParallelCouplingScheme::initializeData()
+void ParallelCouplingScheme::exchangeInitialData()
 {
-  PRECICE_TRACE("initializeData()");
-  PRECICE_CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
-
-  if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    PRECICE_INFO("initializeData is skipped since no data has to be initialized");
-    return;
-  }
-
-  PRECICE_CHECK(not(hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-                "InitialData has to be written to preCICE before calling initializeData()");
-
-  setHasDataBeenExchanged(false);
-
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
-    if (hasToSendInitData()) {
-      sendData(getM2N());
+    if (sendsInitializedData()) {
+      sendData(getM2N(), getSendData());
     }
-    if (hasToReceiveInitData()) {
-      receiveData(getM2N());
-      setHasDataBeenExchanged(true);
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
     }
-  }
-
-  else { // second participant
-    if (hasToReceiveInitData()) {
-      receiveData(getM2N());
-      setHasDataBeenExchanged(true);
-
+  } else { // second participant
+    if (receivesInitializedData()) {
+      receiveData(getM2N(), getReceiveData());
+      checkDataHasBeenReceived();
       // second participant has to save values for extrapolation
-      if (_couplingMode == Implicit) {
-        for (DataMap::value_type &pair : getReceiveData()) {
-          if (pair.second->oldValues.cols() == 0)
-            break;
-          pair.second->oldValues.col(0) = *pair.second->values;
-          // For extrapolation, treat the initial value as old time windows value
-          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
-        }
-      }
+      updateOldValues(getReceiveData());
     }
-    if (hasToSendInitData()) {
-      if (_couplingMode == Implicit) {
-        for (DataMap::value_type &pair : getSendData()) {
-          if (pair.second->oldValues.cols() == 0)
-            break;
-          pair.second->oldValues.col(0) = *pair.second->values;
-          // For extrapolation, treat the initial value as old time windows value
-          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
-        }
-      }
-      sendData(getM2N());
+    if (sendsInitializedData()) {
+      updateOldValues(getSendData());
+      sendData(getM2N(), getSendData());
     }
   }
-
-  // in order to check in advance if initializeData has been called (if necessary)
-  setHasToSendInitData(false);
-  setHasToReceiveInitData(false);
 }
 
-void ParallelCouplingScheme::advance()
+bool ParallelCouplingScheme::exchangeDataAndAccelerate()
 {
-  PRECICE_TRACE(getTimeWindows(), getTime());
-  checkCompletenessRequiredActions();
+  bool convergence = true;
 
-  PRECICE_CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
-                "initializeData() needs to be called before advance if data has to be initialized!");
-
-  setHasDataBeenExchanged(false);
-  setIsTimeWindowComplete(false);
-
-  if (math::equals(getThisTimeWindowRemainder(), 0.0, _eps)) {
-    if (_couplingMode == Explicit) {
-      explicitAdvance();
-    } else if (_couplingMode == Implicit) {
-      implicitAdvance();
-    }
-  } // subcycling complete
-}
-
-void ParallelCouplingScheme::explicitAdvance()
-{
-  setIsTimeWindowComplete(true);
-  setTimeWindows(getTimeWindows() + 1);
-
-  if (doesFirstStep()) {
+  if (doesFirstStep()) { //first participant
     PRECICE_DEBUG("Sending data...");
-    sendDt();
-    sendData(getM2N());
-
+    sendData(getM2N(), getSendData());
     PRECICE_DEBUG("Receiving data...");
-    receiveAndSetDt();
-    receiveData(getM2N());
-    setHasDataBeenExchanged(true);
+    if (isImplicitCouplingScheme()) {
+      convergence = receiveConvergence();
+    }
+    receiveData(getM2N(), getReceiveData());
+    checkDataHasBeenReceived();
   } else { //second participant
     PRECICE_DEBUG("Receiving data...");
-    receiveAndSetDt();
-    receiveData(getM2N());
-    setHasDataBeenExchanged(true);
-
+    receiveData(getM2N(), getReceiveData());
+    checkDataHasBeenReceived();
+    if (isImplicitCouplingScheme()) {
+      PRECICE_DEBUG("Perform acceleration (only second participant)...");
+      convergence = accelerate();
+      sendConvergence(getM2N(), convergence);
+    }
     PRECICE_DEBUG("Sending data...");
-    sendDt();
-    sendData(getM2N());
+    sendData(getM2N(), getSendData());
   }
 
-  //both participants
-  setComputedTimeWindowPart(0.0);
-}
-
-void ParallelCouplingScheme::implicitAdvance()
-{
-  PRECICE_DEBUG("Computed full length of iteration");
-  bool convergence = false;
-  if (doesFirstStep()) { //First participant
-    sendData(getM2N());
-    getM2N()->receive(convergence);
-    if (convergence) {
-      timeWindowCompleted();
-    }
-    receiveData(getM2N());
-  } else { // second participant
-    receiveData(getM2N());
-
-    PRECICE_DEBUG("measure convergence.");
-    convergence = measureConvergence();
-    // Stop, when maximal iteration count (given in config) is reached
-    if (maxIterationsReached())
-      convergence = true;
-
-    if (convergence) {
-      if (getAcceleration().get() != nullptr) {
-        _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
-        getAcceleration()->iterationsConverged(getAllData());
-      }
-      newConvergenceMeasurements();
-      timeWindowCompleted();
-    } else if (getAcceleration().get() != nullptr) {
-      getAcceleration()->performAcceleration(getAllData());
-    }
-
-    // extrapolate new input data for the solver evaluation in time.
-    if (convergence && (getExtrapolationOrder() > 0)) {
-      extrapolateData(getAllData()); // Also stores data
-    } else {                         // Store data for conv. measurement, acceleration, or extrapolation
-      for (DataMap::value_type &pair : getSendData()) {
-        if (pair.second->oldValues.size() > 0) {
-          pair.second->oldValues.col(0) = *pair.second->values;
-        }
-      }
-      for (DataMap::value_type &pair : getReceiveData()) {
-        if (pair.second->oldValues.size() > 0) {
-          pair.second->oldValues.col(0) = *pair.second->values;
-        }
-      }
-    }
-
-    getM2N()->send(convergence);
-
-    sendData(getM2N());
-  }
-
-  // both participants
-  if (not convergence) {
-    PRECICE_DEBUG("No convergence achieved");
-    requireAction(constants::actionReadIterationCheckpoint());
-  } else {
-    PRECICE_DEBUG("Convergence achieved");
-    advanceTXTWriters();
-  }
-  updateTimeAndIterations(convergence);
-  setHasDataBeenExchanged(true);
-  setComputedTimeWindowPart(0.0);
+  return convergence;
 }
 
 void ParallelCouplingScheme::mergeData()

@@ -19,7 +19,7 @@
 namespace precice {
 namespace cplscheme {
 class CompositionalCouplingScheme;
-class BaseCouplingScheme;
+class BiCouplingScheme;
 } // namespace cplscheme
 } // namespace precice
 
@@ -125,7 +125,7 @@ private:
     int                           maxTimeWindows = CouplingScheme::UNDEFINED_TIME_WINDOWS;
     double                        timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
     int                           validDigits    = 16;
-    constants::TimesteppingMethod dtMethod       = constants::FIXED_DT;
+    constants::TimesteppingMethod dtMethod       = constants::FIXED_TIME_WINDOW_SIZE;
     /// Tuples of exchange data, mesh, and participant name.
     typedef std::tuple<mesh::PtrData, mesh::PtrMesh, std::string, std::string, bool> Exchange;
     std::vector<Exchange>                                                            exchanges;
@@ -222,7 +222,7 @@ private:
 
   /// Adds configured exchange data to be sent or received to scheme.
   void addDataToBeExchanged(
-      BaseCouplingScheme &scheme,
+      BiCouplingScheme &scheme,
       const std::string & accessor) const;
 
   /**

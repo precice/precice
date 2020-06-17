@@ -1,5 +1,5 @@
-#include "Petsc.hpp"
 #include <utility>
+#include "Petsc.hpp"
 #include "utils/Parallel.hpp"
 
 #ifndef PRECICE_NO_PETSC
@@ -149,9 +149,10 @@ Vector::Vector(const Vector &v)
   setName(vector, getName(v.vector));
 }
 
-Vector &Vector::operator=(Vector other)
+Vector &Vector::operator=(const Vector &other)
 {
-  swap(other);
+  Vector tmp{other};
+  swap(tmp);
   return *this;
 }
 
@@ -159,6 +160,12 @@ Vector::Vector(Vector &&other)
 {
   vector       = other.vector;
   other.vector = nullptr;
+}
+
+Vector &Vector::operator=(Vector &&other)
+{
+  swap(other);
+  return *this;
 }
 
 Vector::Vector(const std::string &name)
@@ -182,7 +189,7 @@ Vector::~Vector()
   PetscErrorCode ierr = 0;
   PetscBool      petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
-  if (petscIsInitialized) // If PetscFinalize is called before ~Vector
+  if (petscIsInitialized && vector) // If PetscFinalize is called before ~Vector
     ierr = VecDestroy(&vector);
   CHKERRV(ierr);
 }
@@ -381,7 +388,7 @@ Matrix::~Matrix()
   PetscErrorCode ierr = 0;
   PetscBool      petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
-  if (petscIsInitialized) // If PetscFinalize is called before ~Matrix
+  if (petscIsInitialized && matrix) // If PetscFinalize is called before ~Matrix
     ierr = MatDestroy(&matrix);
   CHKERRV(ierr);
 }
@@ -589,7 +596,7 @@ KSPSolver::~KSPSolver()
   PetscErrorCode ierr = 0;
   PetscBool      petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
-  if (petscIsInitialized) // If PetscFinalize is called before ~KSPSolver
+  if (petscIsInitialized && ksp) // If PetscFinalize is called before ~KSPSolver
     ierr = KSPDestroy(&ksp);
   CHKERRV(ierr);
 }

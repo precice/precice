@@ -234,8 +234,11 @@ void ParticipantConfiguration::xmlTagCallback(
       stream << "Safety Factor must be positive or 0";
       throw std::runtime_error{stream.str()};
     }
-    bool          provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
-    mesh::PtrMesh mesh    = _meshConfig->getMesh(name);
+    bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
+    if (_participants.back()->getName() == from) {
+      PRECICE_CHECK(provide, "Participant \"" << context.name << "\" cannot use mesh \"" << name << "\" from itself. Use the \"from\"-field to specify which participant has to communicate the mesh to \"" << context.name << "\".");
+    }
+    mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     if (mesh.get() == nullptr) {
       std::ostringstream stream;
       stream << "Participant \"" << _participants.back()->getName()
