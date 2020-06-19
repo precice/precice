@@ -1,10 +1,10 @@
 #include "precice/SolverInterfaceFASTEST.hpp"
 #include <iostream>
 #include <string>
+#include <memory>
 #include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/SolverInterfaceFortran.hpp"
-#include <memory>
 
 using namespace std;
 
@@ -45,13 +45,17 @@ void precice_fastest_create_(
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   if (isAcousticUsed) {
     implAcoustic.reset(new precice::SolverInterface(stringAccessorNameAcoustic,
+                                                                                          stringConfigFileName,
                                                 stringConfigFileName,
                                                 *solverProcessIndex, *solverProcessSize));
+                                                                                          *solverProcessSize) );
   }
   if (isFluidUsed) {
     implFluid.reset(new precice::SolverInterface(stringAccessorNameFluid,
+                                                                                       stringConfigFileName,
                                              stringConfigFileName,
                                              *solverProcessIndex, *solverProcessSize));
+                                                                                       *solverProcessSize));
   }
   PRECICE_CHECK(implAcoustic != nullptr || implFluid != nullptr, "Either the Fluid interface or the Acoustic"
                                                                  " interface or both need to be used");

@@ -48,7 +48,7 @@ void precicec_createSolverInterface_withCommunicator(
     const char *configFileName,
     int         solverProcessIndex,
     int         solverProcessSize,
-    void *      communicator);
+    void *      communicator = nullptr);
 
 ///@}
 

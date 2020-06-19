@@ -1,12 +1,13 @@
 extern "C" {
 #include "precice/SolverInterfaceC.h"
 }
+#include <memory>
 #include <string>
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 
-static precice::SolverInterface *interface = nullptr;
+static std::unique_ptr<precice::SolverInterface> interface;
 
 void precicec_createSolverInterface(
     const char *participantName,
@@ -16,12 +17,13 @@ void precicec_createSolverInterface(
 {
   std::string stringAccessorName(participantName);
   std::string stringConfigFileName(configFileName);
-  if (interface != nullptr)
-    delete interface;
-  interface = new precice::SolverInterface(stringAccessorName,
-                                           stringConfigFileName,
-                                           solverProcessIndex,
-                                           solverProcessSize);
+
+  PRECICE_ASSERT(interface == nullptr);
+  interface = std::unique_ptr<precice::SolverInterface>( new precice::SolverInterface(stringAccessorName,
+                                                                                     stringConfigFileName,
+                                                                                     solverProcessIndex,
+                                                                                     solverProcessSize )
+                                                        );
 }
 
 void precicec_createSolverInterface_withCommunicator(
@@ -33,13 +35,14 @@ void precicec_createSolverInterface_withCommunicator(
 {
   std::string stringAccessorName(participantName);
   std::string stringConfigFileName(configFileName);
-  if (interface != nullptr)
-    delete interface;
-  interface = new precice::SolverInterface(stringAccessorName,
-                                           stringConfigFileName,
-                                           solverProcessIndex,
-                                           solverProcessSize,
-                                           communicator);
+
+  PRECICE_ASSERT(interface == nullptr);
+  interface = std::unique_ptr<precice::SolverInterface>( new precice::SolverInterface(stringAccessorName,
+                                                                                     stringConfigFileName,
+                                                                                     solverProcessIndex,
+                                                                                     solverProcessSize,
+                                                                                     communicator)
+                                                        );
 }
 
 double precicec_initialize()
@@ -65,7 +68,6 @@ void precicec_finalize()
   if (interface != nullptr)
   {
     interface->finalize();
-    delete interface;
   }
 }
 

@@ -40,11 +40,15 @@ void precicef_create_(
   string stringAccessorName(participantName, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName, lengthConfigFileName);
   string stringConfigFileName(configFileName, strippedLength);
+
+  impl = std::unique_ptr<precice::SolverInterface>( new precice::SolverInterface(stringAccessorName,
   //cout << "Accessor: " << stringAccessorName << "!" << '\n';
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   impl.reset(new precice::SolverInterface(stringAccessorName,
+                                                                                stringConfigFileName,
                                       stringConfigFileName,
                                       *solverProcessIndex, *solverProcessSize));
+                                                                                *solverProcessSize) );
 }
 
 void precicef_initialize_(
