@@ -64,6 +64,7 @@ void precicec_finalize()
   if (interface != nullptr)
   {
     interface->finalize();
+    interface.reset();
   }
 }
 
