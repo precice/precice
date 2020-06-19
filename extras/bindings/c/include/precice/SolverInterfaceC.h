@@ -13,6 +13,23 @@ extern "C" {
 ///@{
 
 /**
+ * @param[in] participantName Name of the participant using the interface. Has to
+ *        match the name given for a participant in the xml configuration file.
+ * @param[in] configurationFileName Name (with path) of the xml configuration file.
+ * @param[in] solverProcessIndex If the solver code runs with several processes,
+ *        each process using preCICE has to specify its index, which has to start
+ *        from 0 and end with solverProcessSize - 1.
+ * @param[in] solverProcessSize The number of solver processes using preCICE.
+ * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
+ */
+void precicec_createSolverInterface_withCommunicator(
+    const char *participantName,
+    const char *configFileName,
+    int         solverProcessIndex,
+    int         solverProcessSize,
+    void *      communicator);
+
+/**
  * @brief Creates the coupling interface and configures it.
  *
  * Has to be called before any other method of this interface.
@@ -32,23 +49,6 @@ void precicec_createSolverInterface(
     const char *configFileName,
     int         solverProcessIndex,
     int         solverProcessSize);
-
-/**
- * @param[in] participantName Name of the participant using the interface. Has to
- *        match the name given for a participant in the xml configuration file.
- * @param[in] configurationFileName Name (with path) of the xml configuration file.
- * @param[in] solverProcessIndex If the solver code runs with several processes,
- *        each process using preCICE has to specify its index, which has to start
- *        from 0 and end with solverProcessSize - 1.
- * @param[in] solverProcessSize The number of solver processes using preCICE.
- * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
- */
-void precicec_createSolverInterface_withCommunicator(
-    const char *participantName,
-    const char *configFileName,
-    int         solverProcessIndex,
-    int         solverProcessSize,
-    void *      communicator = nullptr);
 
 ///@}
 

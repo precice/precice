@@ -9,23 +9,6 @@ extern "C" {
 
 static std::unique_ptr<precice::SolverInterface> interface;
 
-void precicec_createSolverInterface(
-    const char *participantName,
-    const char *configFileName,
-    int         solverProcessIndex,
-    int         solverProcessSize)
-{
-  std::string stringAccessorName(participantName);
-  std::string stringConfigFileName(configFileName);
-
-  PRECICE_ASSERT(interface == nullptr);
-  interface = std::unique_ptr<precice::SolverInterface>( new precice::SolverInterface(stringAccessorName,
-                                                                                     stringConfigFileName,
-                                                                                     solverProcessIndex,
-                                                                                     solverProcessSize )
-                                                        );
-}
-
 void precicec_createSolverInterface_withCommunicator(
     const char *participantName,
     const char *configFileName,
@@ -43,6 +26,19 @@ void precicec_createSolverInterface_withCommunicator(
                                                                                      solverProcessSize,
                                                                                      communicator)
                                                         );
+}
+
+void precicec_createSolverInterface(
+    const char *participantName,
+    const char *configFileName,
+    int         solverProcessIndex,
+    int         solverProcessSize)
+{
+  precicec_createSolverInterface_withCommunicator(participantName,
+                                                  configFileName,
+                                                  solverProcessIndex,
+                                                  solverProcessSize,
+                                                  nullptr );
 }
 
 double precicec_initialize()
