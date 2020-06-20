@@ -721,14 +721,14 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                    {0, {1}},
                    {0, {0}},
                    {0, {0}},
-                   {0, {4}},
+                   {0, {3}},
                    {0, {0}},
                    {0, {0}},
                    {0, {0}},
                    {0, {0}},
                    {1, {0}},
+                   {1, {4}},
                    {1, {2}},
-                   {1, {3}},
                    {1, {0}},
                    {1, {0}},
                    {1, {0}},
@@ -845,6 +845,8 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   // For conservative just swap meshes.
   testTagging(context, outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
 }
+
+
 
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
