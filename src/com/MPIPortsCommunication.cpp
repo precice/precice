@@ -94,7 +94,7 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
                                                      int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
-  PRECICE_ASSERT(requesterCommunicatorSize >= 0, "Requester communicator size has to be positive!");
+  PRECICE_ASSERT(requesterCommunicatorSize >= 0, "Requester communicator size has to be positive.");
   PRECICE_ASSERT(not isConnected());
 
   _isAcceptor = true;
