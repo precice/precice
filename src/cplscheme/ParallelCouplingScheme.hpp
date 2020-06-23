@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BaseCouplingScheme.hpp"
+#include "BiCouplingScheme.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -12,25 +12,27 @@ namespace cplscheme {
  * For more information, look into Benjamin's thesis, Section 3.5. 
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
-class ParallelCouplingScheme : public BaseCouplingScheme {
+class ParallelCouplingScheme : public BiCouplingScheme {
 public:
   /**
- * @brief Constructor.
- *
- * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
- * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
- * @param[in] timeWindowSize Simulation time window size.
- * @param[in] validDigits TODO
- * @param[in] firstParticipant Name of participant starting simulation.
- * @param[in] secondParticipant Name of second participant in coupling.
- * @param[in] localParticipant Name of participant using this coupling scheme.
- * @param[in] m2n Communication object for com. between participants. TODO?
- * TODO add dtMethod, cplMode, maxIterations
- */
+   * @brief Constructor.
+   *
+   * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
+   * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
+   * @param[in] timeWindowSize Simulation time window size.
+   * @param[in] validDigits valid digits for computation of the remainder of a time window
+   * @param[in] firstParticipant Name of participant starting simulation.
+   * @param[in] secondParticipant Name of second participant in coupling.
+   * @param[in] localParticipant Name of participant using this coupling scheme.
+   * @param[in] m2n Communication object for com. between participants.
+   * @param[in] dtMethod Method used for determining the time window size, see https://github.com/precice/precice/wiki/Adapter's-Time-Step-Sizes
+   * @param[in] cplMode Set implicit or explicit coupling
+   * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
+   */
   ParallelCouplingScheme(
       double                        maxTime,
       int                           maxTimeWindows,
-      double                        timeWindowsSize,
+      double                        timeWindowSize,
       int                           validDigits,
       const std::string &           firstParticipant,
       const std::string &           secondParticipant,
@@ -38,30 +40,12 @@ public:
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
-      int                           maxIterations = 1);
+      int                           maxIterations = -1);
 
   /**
- * @brief TODO
- *
- * @param[in] startTime TODO
- * @param[in] startTimeWindow TODO
- */
-  virtual void initialize(double startTime, int startTimeWindow);
-
-  virtual void initializeData();
-
-  virtual void advance();
-
-protected:
-  /// merges send and receive data into one map (for parallel acceleration)
-  virtual void mergeData();
-
-  /// Returns all data (receive and send)
-  DataMap &getAllData()
-  {
-    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-    return _allData;
-  }
+   * @brief performs checks on a configured ParallelCouplingScheme
+   */
+  void checkConfiguration() override;
 
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
@@ -69,9 +53,36 @@ private:
   /// Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;
 
-  virtual void explicitAdvance();
+  /**
+   * @brief Exchanges all data between the participants of the ParallelCouplingScheme and applies acceleration.
+   * @returns true, if iteration converged
+   */
+  bool exchangeDataAndAccelerate() override;
 
-  virtual void implicitAdvance();
+  /**
+   * @brief ParallelCouplingScheme applies acceleration to _allData
+   * @returns DataMap being accelerated
+   */
+  DataMap &getAccelerationData() override
+  {
+    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
+    return _allData;
+  }
+
+  /**
+   * @brief determine whether data has to be sent/received
+   */
+  void initializeImplementation() override;
+
+  /**
+   * @brief merges send and receive data into one map (for parallel acceleration)
+   */
+  void mergeData() override;
+
+  /**
+   * @brief Exchanges data, if it has to be initialized.
+   */
+  void exchangeInitialData() override;
 };
 
 } // namespace cplscheme

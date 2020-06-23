@@ -5,10 +5,11 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
+#include <memory>
 
 using namespace std;
 
-static precice::SolverInterface *impl = nullptr;
+static std::unique_ptr<precice::SolverInterface> impl = nullptr;
 
 static precice::logging::Logger _log("SolverInterfaceFortran");
 
@@ -41,9 +42,9 @@ void precicef_create_(
   string stringConfigFileName(configFileName, strippedLength);
   //cout << "Accessor: " << stringAccessorName << "!" << '\n';
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
-  impl = new precice::SolverInterface(stringAccessorName,
+  impl.reset(new precice::SolverInterface(stringAccessorName,
                                       stringConfigFileName,
-                                      *solverProcessIndex, *solverProcessSize);
+                                      *solverProcessIndex, *solverProcessSize));
 }
 
 void precicef_initialize_(
@@ -70,7 +71,7 @@ void precicef_finalize_()
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->finalize();
-  delete impl;
+  impl.reset();
 }
 
 void precicef_get_dims_(

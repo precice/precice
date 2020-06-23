@@ -90,7 +90,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
 
     if (participantName == std::string("Participant0")) {
       cplScheme->initialize(0.0, 1);
-      BOOST_TEST(not cplScheme->hasDataBeenExchanged());
+      BOOST_TEST(not cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
@@ -109,7 +109,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
         BOOST_TEST(computedTimesteps == cplScheme->getTimeWindows() - 1);
-        BOOST_TEST(cplScheme->hasDataBeenExchanged());
+        BOOST_TEST(cplScheme->hasDataBeenReceived());
       }
       cplScheme->finalize();
       BOOST_TEST(computedTimesteps == 10);
@@ -118,7 +118,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
     } else if (participantName == std::string("Participant1")) {
       cplScheme->initialize(0.0, 1);
-      BOOST_TEST(cplScheme->hasDataBeenExchanged());
+      BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
@@ -137,7 +137,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
         BOOST_TEST(computedTimesteps == cplScheme->getTimeWindows() - 1);
-        BOOST_TEST(cplScheme->hasDataBeenExchanged());
+        BOOST_TEST(cplScheme->hasDataBeenReceived());
       }
       cplScheme->finalize();
       BOOST_TEST(computedTimesteps == 10);
@@ -147,7 +147,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     } else {
       BOOST_TEST(participantName == std::string("Participant2"), participantName);
       cplScheme->initialize(0.0, 1);
-      BOOST_TEST(cplScheme->hasDataBeenExchanged());
+      BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
       while (cplScheme->isCouplingOngoing()) {
@@ -167,7 +167,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
         BOOST_TEST(computedTimesteps == cplScheme->getTimeWindows() - 1);
         if (cplScheme->isCouplingOngoing())
-          BOOST_TEST(cplScheme->hasDataBeenExchanged());
+          BOOST_TEST(cplScheme->hasDataBeenReceived());
       }
       cplScheme->finalize();
       BOOST_TEST(computedTimesteps == 10);

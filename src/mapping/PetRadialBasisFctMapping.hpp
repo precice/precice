@@ -434,6 +434,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // PETSc requires that all diagonal entries are set, even if set to zero.
   _matrixC.assemble(MAT_FLUSH_ASSEMBLY);
   auto zeros = petsc::Vector::allocate(_matrixC);
+  VecZeroEntries(zeros);
+  zeros.assemble();
+  //MatDiagonalSet(_matrixC, zeros, INSERT_VALUES);
   MatDiagonalSet(_matrixC, zeros, ADD_VALUES);
 
   // Begin assembly here, all assembly is ended at the end of this function.
@@ -528,7 +531,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixA, MAT_FINAL_ASSEMBLY);
   CHKERRV(ierr);
-  _matrixQ.assemble();
   _matrixV.assemble();
 
   ePostFill.stop();

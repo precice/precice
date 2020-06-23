@@ -234,8 +234,11 @@ void ParticipantConfiguration::xmlTagCallback(
       stream << "Safety Factor must be positive or 0";
       throw std::runtime_error{stream.str()};
     }
-    bool          provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
-    mesh::PtrMesh mesh    = _meshConfig->getMesh(name);
+    bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
+    if (_participants.back()->getName() == from) {
+      PRECICE_CHECK(provide, "Participant \"" << context.name << "\" cannot use mesh \"" << name << "\" from itself. Use the \"from\"-field to specify which participant has to communicate the mesh to \"" << context.name << "\".");
+    }
+    mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     if (mesh.get() == nullptr) {
       std::ostringstream stream;
       stream << "Participant \"" << _participants.back()->getName()
@@ -499,19 +502,26 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Create watch points
   for (const WatchPointConfig &config : _watchPointConfigs) {
-    mesh::PtrMesh mesh;
+    const impl::MeshContext *meshContext = nullptr;
     for (const impl::MeshContext *context : participant->usedMeshContexts()) {
       if (context->mesh->getName() == config.nameMesh) {
-        mesh = context->mesh;
+        meshContext = context;
       }
     }
-    PRECICE_CHECK(mesh,
+    PRECICE_CHECK(meshContext && meshContext->mesh,
                   "Participant \"" << participant->getName()
                                    << "\" defines watchpoint \"" << config.name
                                    << "\" for mesh \"" << config.nameMesh
-                                   << "\" which is not used by him!");
+                                   << "\" which is not used by the participant. "
+                                   << "Please add a use-mesh node with name=\"" << config.nameMesh << "\".");
+    PRECICE_CHECK(meshContext->provideMesh,
+                  "Participant \"" << participant->getName()
+                                   << "\" defines watchpoint \"" << config.name
+                                   << "\" for the received mesh \"" << config.nameMesh << ", which is not allowed. "
+                                   << "Please move the watchpoint definition to the participant providing mesh \"" << config.nameMesh << "\".");
+
     std::string         filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
-    impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, mesh, filename));
+    impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, meshContext->mesh, filename));
     participant->addWatchPoint(watchPoint);
   }
   _watchPointConfigs.clear();
