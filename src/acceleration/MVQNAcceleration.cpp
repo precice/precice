@@ -1,4 +1,3 @@
-#include "utils/assertion.hpp"
 #ifndef PRECICE_NO_MPI
 
 #include <Eigen/Core>
