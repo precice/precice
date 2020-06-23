@@ -105,8 +105,6 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
 
   const int rank = utils::Parallel::current()->rank();
 
-  ///@todo verify that getRank() makes sense in this case
-  //if (utils::MasterSlave::getRank() == 0) { // only master opens a port
   if (rank == 0) { // only master opens a port
     ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
 
