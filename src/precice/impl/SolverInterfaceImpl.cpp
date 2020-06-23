@@ -1390,9 +1390,9 @@ void SolverInterfaceImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (DataContext &context : _accessor->writeDataContexts()) {
-    context.fromData->values() = Eigen::VectorXd::Zero(context.fromData->values().size());
+    context.fromData->toZero();
     if (context.toData != context.fromData) {
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      context.toData->toZero();
     }
   }
 }
