@@ -58,7 +58,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
     // Which rank is requesting a connection?
     int requesterRank = -1;
     MPI_Recv(&requesterRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-    // Who big is the communicator of the requester
+    // How big is the communicator of the requester
     int requesterCommunicatorSize = -1;
     MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
     // Send the rank of the acceptor (this rank).
