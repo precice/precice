@@ -391,9 +391,7 @@ double SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  // deactivated the reset of written data, as it deletes all data that is not communicated
-  // within this cycle in the coupling data. This is not wanted forthe manifold mapping.
-  //resetWrittenData();
+  resetWrittenData();
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
@@ -1413,9 +1411,9 @@ void SolverInterfaceImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (DataContext &context : _accessor->writeDataContexts()) {
-    context.fromData->values() = Eigen::VectorXd::Zero(context.fromData->values().size());
+    context.fromData->toZero();
     if (context.toData != context.fromData) {
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      context.toData->toZero();
     }
   }
 }
