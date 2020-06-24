@@ -7,7 +7,7 @@ extern "C" {
 #include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 
-static std::unique_ptr<precice::SolverInterface> interface;
+static std::unique_ptr<precice::SolverInterface> interface = nullptr;
 
 void precicec_createSolverInterface_withCommunicator(
     const char *participantName,
@@ -20,12 +20,12 @@ void precicec_createSolverInterface_withCommunicator(
   std::string stringConfigFileName(configFileName);
 
   PRECICE_ASSERT(interface == nullptr);
-  interface = std::unique_ptr<precice::SolverInterface>( new precice::SolverInterface(stringAccessorName,
-                                                                                     stringConfigFileName,
-                                                                                     solverProcessIndex,
-                                                                                     solverProcessSize,
-                                                                                     communicator)
-                                                        );
+  interface.reset( new precice::SolverInterface(stringAccessorName,
+                                               stringConfigFileName,
+                                               solverProcessIndex,
+                                               solverProcessSize,
+                                               communicator)
+                  );
 }
 
 void precicec_createSolverInterface(
