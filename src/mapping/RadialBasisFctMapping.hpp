@@ -254,21 +254,50 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
   if (utils::MasterSlave::isSlave()) {
 
     const auto &localInData  = input()->data(inputDataID)->values();
+
+    int localOutputSize = 0;
+    for(const auto& vertex : output()->vertices()){
+      if(vertex.isOwner()){
+        ++localOutputSize;
+      }
+    }
+
+    localOutputSize *= output()->data(outputDataID)->getDimensions();
+
     utils::MasterSlave::_communication->send(localInData.data(), localInData.size(), 0);
+    utils::MasterSlave::_communication->send(localOutputSize, 0);
+
 
   } else { // Parallel Master or Serial case
 
     std::vector<double> globalInValues;
+    std::vector<double> outputValueSizes;
     {
       const auto &localInData  = input()->data(inputDataID)->values();
       globalInValues.insert(globalInValues.begin(), localInData.data(), localInData.data() + localInData.size());
+
+      int localOutputSize = 0;
+      for(const auto& vertex : output()->vertices()){
+        if(vertex.isOwner()){
+          ++localOutputSize;
+        }
+      }
+
+      localOutputSize *= output()->data(outputDataID)->getDimensions();
+
+      outputValueSizes.push_back(localOutputSize);
     }
 
     {
       std::vector<double> slaveBuffer;
+      int slaveOutputValueSize;
+      int slaveOutputSize;
       for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
-        utils::MasterSlave::_communication->receive(slaveBuffer, rank);
+        utils::MasterSlave::_communication->receive(slaveBuffer, rank);    
         globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
+
+        utils::MasterSlave::_communication->receive(slaveOutputValueSize, rank);
+        outputValueSizes.push_back(slaveOutputValueSize);
       }
     }
 
@@ -301,16 +330,24 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     if (utils::MasterSlave::isMaster()) {
 
       // Filter data
+      int outputCounter = 0;
       for(int i = 0; i < output()->vertices().size(); ++i){
         if(output()->vertices()[i].isOwner()){
           for(int dim = 0; dim < valueDim; ++dim){
-            output()->data(outputDataID)->values()[i*valueDim + dim] = outputValues(i*valueDim + dim);
+            output()->data(outputDataID)->values()[i*valueDim + dim] = outputValues(outputCounter);
+            ++outputCounter;
           }
         }
       }
 
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
-        utils::MasterSlave::_communication->send(outputValues.data(), outputValues.size(), rank);
+      // Data scattering to slaves
+      int beginPoint = outputValueSizes.at(0);
+
+      if (utils::MasterSlave::isMaster()) {
+        for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+          utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outputValueSizes.at(rank), rank);
+          beginPoint += outputValueSizes.at(rank);
+        }
       }
     } else { // Serial
       output()->data(outputDataID)->values() = outputValues;
@@ -322,11 +359,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     
     int valueDim = output()->data(outputDataID)->getDimensions();
 
-    // Filter data
+    int outputCounter = 0;
     for(int i = 0; i < output()->vertices().size(); ++i){
       if(output()->vertices()[i].isOwner()){
         for(int dim = 0; dim < valueDim; ++dim){
-          output()->data(outputDataID)->values()[i*valueDim + dim] = receivedValues.at(i*valueDim + dim);
+          output()->data(outputDataID)->values()[i*valueDim + dim] = receivedValues.at(outputCounter);
+          ++outputCounter;
         }
       }
     }
