@@ -363,10 +363,16 @@ void Mesh::setGlobalNumberOfVertices(int num)
 Eigen::VectorXd Mesh::getOwnedVertexData(int dataID){
     
   std::vector<double> ownedDataVector;
+  int valueDim = data(dataID)->getDimensions();
+  int index = 0;
+
   for (const auto &vertex : vertices()) {
     if (vertex.isOwner()) {
-      ownedDataVector.push_back(data(dataID)->values()[vertex.getID()]);
+      for(int dim = 0; dim < valueDim; ++dim){
+        ownedDataVector.push_back(data(dataID)->values()[index*valueDim + dim]);
+      }
     }
+    ++index;
   }
   Eigen::Map<Eigen::VectorXd> ownedData(ownedDataVector.data(), ownedDataVector.size());
   

@@ -69,13 +69,18 @@ void getDistributedMesh(const TestContext &      context,
       else if (vertex.position.size() == 2) // 2-dimensional
         mesh->createVertex(Eigen::Vector2d(vertex.position.data()));
 
+      int valueDimension = vertex.value.size();
+
       if (vertex.owner == context.rank)
         mesh->vertices().back().setOwner(true);
       else
         mesh->vertices().back().setOwner(false);
 
-      d.conservativeResize(i + 1);
-      d[i] = vertex.value[0]; // only 1-d value here for now
+      d.conservativeResize(i*valueDimension + valueDimension);
+      // Get data in every dimension
+      for(int dim = 0; dim < valueDimension; ++dim){
+        d[i*valueDimension + dim] = vertex.value[dim];
+      }
       i++;
     }
   }
@@ -116,15 +121,14 @@ void testDistributed(const TestContext &    context,
   int index = 0;
   for (auto &referenceVertex : referenceSpec) {
     if (referenceVertex.first == context.rank or referenceVertex.first == -1) {
-      for (auto &point : referenceVertex.second) {
-        // only 1-d here for now
-        BOOST_TEST_INFO("index of vertex is " << index);
-        BOOST_TEST(outData->values()[index] == point);
+      for(int dim = 0; dim < valueDimension; ++dim) {
+        BOOST_TEST_INFO("Index of vertex: " << index << " - Dimension: " << dim);      
+        BOOST_TEST(outData->values()[index*valueDimension + dim] == referenceVertex.second[dim]);
       }
       ++index;
-    }
+    } 
   }
-  BOOST_TEST(outData->values().size() == index);
+  BOOST_TEST(outData->values().size() == index*valueDimension);
 }
 
 /// Test with a homogenous distribution of mesh amoung ranks
@@ -162,6 +166,42 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
                    {2, {6}},
                    {3, {7}},
                    {3, {8}}});
+}
+
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  Gaussian                        fct(5.0);
+  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+
+  testDistributed(context, mapping,
+                  {// Consistent mapping: The inMesh is communicated
+                   {-1, 0, {0, 0}, {1, 4}},
+                   {-1, 0, {0, 1}, {2, 5}},
+                   {-1, 1, {1, 0}, {3, 6}},
+                   {-1, 1, {1, 1}, {4, 7}},
+                   {-1, 2, {2, 0}, {5, 8}},
+                   {-1, 2, {2, 1}, {6, 9}},
+                   {-1, 3, {3, 0}, {7, 10}},
+                   {-1, 3, {3, 1}, {8, 11}}},
+                  {// The outMesh is local, distributed amoung all ranks
+                   {0, -1, {0, 0}, {0, 0}},
+                   {0, -1, {0, 1}, {0, 0}},
+                   {1, -1, {1, 0}, {0, 0}},
+                   {1, -1, {1, 1}, {0, 0}},
+                   {2, -1, {2, 0}, {0, 0}},
+                   {2, -1, {2, 1}, {0, 0}},
+                   {3, -1, {3, 0}, {0, 0}},
+                   {3, -1, {3, 1}, {0, 0}}},
+                  {// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+                   {0, {1, 4}},
+                   {0, {2, 5}},
+                   {1, {3, 6}},
+                   {1, {4, 7}},
+                   {2, {5, 8}},
+                   {2, {6, 9}},
+                   {3, {7, 10}},
+                   {3, {8, 11}}});
 }
 
 /// Using a more heterogenous distributon of vertices and owner
@@ -255,6 +295,62 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
                    {2, {6}},
                    {3, {7}},
                    {3, {8}}},
+                  globalIndexOffsets[context.rank]);
+}
+
+/// Test with a very heterogenous distributed and non-continues ownership
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  Gaussian                        fct(5.0);
+  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
+
+  testDistributed(context, mapping,
+                  {
+                      // Rank 0 has part of the mesh, owns a subpart
+                      {0, 0, {0, 0}, {1, 4}},
+                      {0, 0, {0, 1}, {2, 5}},
+                      {0, 0, {1, 0}, {3, 6}},
+                      {0, -1, {1, 1}, {4, 7}},
+                      {0, -1, {2, 0}, {5, 8}},
+                      {0, -1, {2, 1}, {6, 9}},
+                      // Rank 1 has no vertices
+                      // Rank 2 has the entire mesh, but owns just 3 and 5.
+                      {2, -1, {0, 0}, {1, 4}},
+                      {2, -1, {0, 1}, {2, 5}},
+                      {2, -1, {1, 0}, {3, 6}},
+                      {2, 2, {1, 1}, {4, 7}},
+                      {2, -1, {2, 0}, {5, 8}},
+                      {2, 2, {2, 1}, {6, 9}},
+                      {2, -1, {3, 0}, {7, 10}},
+                      {2, -1, {3, 1}, {8, 11}},
+                      // Rank 3 has the last 4 vertices, owns 4, 6 and 7
+                      {3, 3, {2, 0}, {5, 8}},
+                      {3, -1, {2, 1}, {6, 9}},
+                      {3, 3, {3, 0}, {7, 10}},
+                      {3, 3, {3, 1}, {8, 11}},
+                  },
+                  {// The outMesh is local, rank 1 is empty
+                   {0, -1, {0, 0}, {0, 0}},
+                   {0, -1, {0, 1}, {0, 0}},
+                   {0, -1, {1, 0}, {0, 0}},
+                   {2, -1, {1, 1}, {0, 0}},
+                   {2, -1, {2, 0}, {0, 0}},
+                   {2, -1, {2, 1}, {0, 0}},
+                   {3, -1, {3, 0}, {0, 0}},
+                   {3, -1, {3, 1}, {0, 0}}},
+                  {// Tests for {0, 1, 2} on the first rank,
+                   // second rank (consistent with the outMesh) is empty, ...
+                   {0, {1, 4}},
+                   {0, {2, 5}},
+                   {0, {3, 6}},
+                   {2, {4, 7}},
+                   {2, {5, 8}},
+                   {2, {6, 9}},
+                   {3, {7, 10}},
+                   {3, {8, 11}}},
                   globalIndexOffsets[context.rank]);
 }
 
@@ -497,6 +593,69 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
                    {3, {0}},
                    {3, {7}},
                    {3, {8}}},
+                  context.rank * 2);
+}
+
+/// Test with a homogenous distribution of mesh amoung ranks
+BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  Gaussian                           fct(5.0);
+  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+
+  testDistributed(context, mapping,
+                  {// Conservative mapping: The inMesh is local
+                   {0, -1, {0, 0}, {1, 4}},
+                   {0, -1, {0, 1}, {2, 5}},
+                   {1, -1, {1, 0}, {3, 6}},
+                   {1, -1, {1, 1}, {4, 7}},
+                   {2, -1, {2, 0}, {5, 8}},
+                   {2, -1, {2, 1}, {6, 9}},
+                   {3, -1, {3, 0}, {7, 10}},
+                   {3, -1, {3, 1}, {8, 11}}},
+                  {// The outMesh is distributed
+                   {-1, 0, {0, 0}, {0, 0}},
+                   {-1, 0, {0, 1}, {0, 0}},
+                   {-1, 1, {1, 0}, {0, 0}},
+                   {-1, 1, {1, 1}, {0, 0}},
+                   {-1, 2, {2, 0}, {0, 0}},
+                   {-1, 2, {2, 1}, {0, 0}},
+                   {-1, 3, {3, 0}, {0, 0}},
+                   {-1, 3, {3, 1}, {0, 0}}},
+                  {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                   // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                   {0, {1, 4}},
+                   {0, {2, 5}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {3, 6}},
+                   {1, {4, 7}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {5, 8}},
+                   {2, {6, 9}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {7, 10}},
+                   {3, {8, 11}}},
                   context.rank * 2);
 }
 
@@ -750,6 +909,69 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                    {3, {0}},
                    {3, {7}},
                    {3, {8}}},
+                  context.rank * 2);
+}
+
+/// Tests a non-contigous owner distributed at the outMesh
+BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  Gaussian                           fct(5.0);
+  RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+
+  testDistributed(context, mapping,
+                  {// Conservative mapping: The inMesh is local
+                   {0, -1, {0, 0}, {1, 4}},
+                   {0, -1, {0, 1}, {2, 5}},
+                   {1, -1, {1, 0}, {3, 6}},
+                   {1, -1, {1, 1}, {4, 7}},
+                   {2, -1, {2, 0}, {5, 8}},
+                   {2, -1, {2, 1}, {6, 9}},
+                   {3, -1, {3, 0}, {7, 10}},
+                   {3, -1, {3, 1}, {8, 11}}},
+                  {// The outMesh is distributed and non-contigous
+                   {-1, 0, {0, 0}, {0, 0}},
+                   {-1, 1, {0, 1}, {0, 0}},
+                   {-1, 1, {1, 0}, {0, 0}},
+                   {-1, 0, {1, 1}, {0, 0}},
+                   {-1, 2, {2, 0}, {0, 0}},
+                   {-1, 2, {2, 1}, {0, 0}},
+                   {-1, 3, {3, 0}, {0, 0}},
+                   {-1, 3, {3, 1}, {0, 0}}},
+                  {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                   // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                   {0, {1, 4}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {3, 6}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {4, 7}},
+                   {1, {2, 5}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {5, 8}},
+                   {2, {6, 9}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {7, 10}},
+                   {3, {8, 11}}},
                   context.rank * 2);
 }
 

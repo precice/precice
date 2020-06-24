@@ -303,7 +303,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       // Filter data
       for(int i = 0; i < output()->vertices().size(); ++i){
         if(output()->vertices()[i].isOwner()){
-          output()->data(outputDataID)->values()[i] = outputValues[i];
+          for(int dim = 0; dim < valueDim; ++dim){
+            output()->data(outputDataID)->values()[i*valueDim + dim] = outputValues(i*valueDim + dim);
+          }
         }
       }
 
@@ -318,10 +320,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     std::vector<double> receivedValues;
     utils::MasterSlave::_communication->receive(receivedValues, 0);
     
+    int valueDim = output()->data(outputDataID)->getDimensions();
+
     // Filter data
     for(int i = 0; i < output()->vertices().size(); ++i){
       if(output()->vertices()[i].isOwner()){
-        output()->data(outputDataID)->values()[i] = receivedValues.at(i);
+        for(int dim = 0; dim < valueDim; ++dim){
+          output()->data(outputDataID)->values()[i*valueDim + dim] = receivedValues.at(i*valueDim + dim);
+        }
       }
     }
   }
@@ -359,6 +365,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
       
       int inputSizeCounter = localInData.size();
       int slaveOutDataSize{0};
+      
       std::vector<double> slaveBuffer;
 
       for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
@@ -383,6 +390,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
+
     Eigen::VectorXd outputValues((_matrixA.rows()) * valueDim);
     outputValues.setZero();
 
