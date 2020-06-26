@@ -61,11 +61,9 @@ double precicec_advance(double computedTimestepLength)
 
 void precicec_finalize()
 {
-  if (interface != nullptr)
-  {
-    interface->finalize();
-    interface.reset();
-  }
+  PRECICE_ASSERT(interface != nullptr);
+  interface->finalize();
+  interface.reset();
 }
 
 int precicec_getDimensions()
