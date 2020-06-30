@@ -72,7 +72,6 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
   }
 }
 
-
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 
 // Test representing the full explicit lifecycle of a SolverInterface
@@ -168,11 +167,10 @@ BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-#ifndef PRECICE_NO_PETSC
 
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning)
 {
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
   std::string configFilename = _pathToTests + "globalRBFPartitioning.xml";
 
   if (context.isNamed("SolverOne")) {
@@ -240,8 +238,6 @@ BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
     interface.finalize();
   }
 }
-
-#endif // PRECICE_NO_PETSC
 
 /// This testcase is based on a bug reported by Thorsten for acoustic FASTEST-Ateles coupling
 BOOST_AUTO_TEST_CASE(CouplingOnLine)

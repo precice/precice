@@ -829,8 +829,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
       }));
     
   } else {
-    for (auto &vert : filterMesh->vertices())
-      vert.tag();
+    filterMesh->tagAll();
   }
 }
 
