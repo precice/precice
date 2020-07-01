@@ -3,6 +3,7 @@
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SocketCommunication.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace com {
