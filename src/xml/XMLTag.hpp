@@ -4,9 +4,9 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "XMLAttribute.hpp"
 #include "logging/Logger.hpp"
 #include "xml/ConfigParser.hpp"
+#include "xml/XMLAttribute.hpp"
 
 namespace precice {
 namespace xml {

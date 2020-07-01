@@ -1,7 +1,9 @@
-#include "xml/XMLTag.hpp"
 #include <cctype>
 #include "utils/Helpers.hpp"
 #include "utils/String.hpp"
+#include "utils/TypeNames.hpp"
+#include "utils/assertion.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace xml {
