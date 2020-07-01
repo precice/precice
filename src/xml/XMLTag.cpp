@@ -152,7 +152,7 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
 }
 
 // new readattributes fx
-void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
+void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttributes)
 {
   PRECICE_TRACE();
 

@@ -72,17 +72,17 @@ public:
     return _hasValidation;
   };
 
-  void readValue(std::map<std::string, std::string> &aAttributes);
+  void readValue(const std::map<std::string, std::string> &aAttributes);
 
-  void readValueSpecific(std::string &rawValue, double &value);
+  void readValueSpecific(const std::string &rawValue, double &value);
 
-  void readValueSpecific(std::string &rawValue, int &value);
+  void readValueSpecific(const std::string &rawValue, int &value);
 
-  void readValueSpecific(std::string &rawValue, std::string &value);
+  void readValueSpecific(const std::string &rawValue, std::string &value);
 
-  void readValueSpecific(std::string &rawValue, bool &value);
+  void readValueSpecific(const std::string &rawValue, bool &value);
 
-  void readValueSpecific(std::string &rawValue, Eigen::VectorXd &value);
+  void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value);
 
   //Eigen::VectorXd getAttributeValueAsEigenVectorXd(std::string& rawValue);
 
@@ -164,7 +164,7 @@ XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTR
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aAttributes)
+void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::string> &aAttributes)
 {
   PRECICE_TRACE(_name);
   if (_read) {
@@ -172,14 +172,15 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
     PRECICE_ERROR("Attribute \"" + _name + "\" is defined multiple times");
   }
 
-  if (aAttributes.find(getName()) == aAttributes.end()) {
+  const auto position = aAttributes.find(getName());
+  if (position == aAttributes.end()) {
     if (not _hasDefaultValue) {
       std::cout << "Attribute \"" + _name + "\" missing\n";
       PRECICE_ERROR("Attribute \"" + _name + "\" missing");
     }
     set(_value, _defaultValue);
   } else {
-    readValueSpecific(aAttributes[getName()], _value);
+    readValueSpecific(position->second, _value);
     if (_hasValidation) {
       if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
         std::ostringstream stream;
@@ -203,7 +204,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, double &value)
+void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(const std::string &rawValue, double &value)
 {
   try {
     if (rawValue.find('/') != std::string::npos) {
@@ -220,7 +221,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, double 
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, int &value)
+void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(const std::string &rawValue, int &value)
 {
   try {
     value = std::stoi(rawValue);
@@ -230,19 +231,19 @@ void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, int &va
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, std::string &value)
+void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(const std::string &rawValue, std::string &value)
 {
   value = rawValue;
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, bool &value)
+void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(const std::string &rawValue, bool &value)
 {
   value = precice::utils::convertStringToBool(rawValue);
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, Eigen::VectorXd &value)
+void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
 {
   Eigen::VectorXd vec;
 
