@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "MappingContext.hpp"
 #include "mesh/SharedPointer.hpp"
 

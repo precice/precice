@@ -1,9 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <initializer_list>
+#include <map>
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "logging/Logger.hpp"

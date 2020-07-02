@@ -1,10 +1,13 @@
 #include "ConnectionInfoPublisher.hpp"
+#include <algorithm>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/name_generator.hpp>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <chrono>
+#include <istream>
 #include <thread>
+#include "logging/LogMacros.hpp"
 
 namespace precice {
 namespace com {

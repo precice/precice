@@ -1,12 +1,22 @@
 #include "SolverInterfaceConfiguration.hpp"
+#include <map>
+#include <memory>
+#include <ostream>
+#include <vector>
 #include "ParticipantConfiguration.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-#include "mapping/SharedPointer.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/SharedPointer.hpp"
+#include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
+#include "xml/XMLAttribute.hpp"
 
 namespace precice {
 namespace config {

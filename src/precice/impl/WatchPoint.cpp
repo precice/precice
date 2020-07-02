@@ -1,6 +1,13 @@
-#include <limits>
 #include "WatchPoint.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <limits>
+#include <memory>
+#include <ostream>
+#include <utility>
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
@@ -10,6 +17,7 @@
 #include "query/FindClosestTriangle.hpp"
 #include "query/FindClosestVertex.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace impl {

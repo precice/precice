@@ -1,21 +1,40 @@
 #ifndef PRECICE_NO_MPI
 
-#include "testing/Testing.hpp"
-
-#include "partition/ProvidedPartition.hpp"
-#include "partition/ReceivedPartition.hpp"
-
+#include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 #include "com/CommunicateBoundingBox.hpp"
-#include "com/MPIDirectCommunication.hpp"
-#include "m2n/GatherScatterComFactory.hpp"
+#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
+#include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
-#include "utils/MasterSlave.hpp"
-#include "utils/Parallel.hpp"
+#include "math/constants.hpp"
+#include "mesh/BoundingBox.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Vertex.hpp"
+#include "partition/Partition.hpp"
+#include "partition/ProvidedPartition.hpp"
+#include "partition/ReceivedPartition.hpp"
+#include "precice/impl/versions.hpp"
+#include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
+#include "utils/assertion.hpp"
+
+namespace precice {
+namespace mesh {
+class Edge;
+} // namespace mesh
+} // namespace precice
 
 using namespace precice;
 using namespace partition;

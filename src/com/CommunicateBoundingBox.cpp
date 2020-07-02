@@ -1,6 +1,11 @@
 #include "CommunicateBoundingBox.hpp"
+#include <memory>
+#include <stddef.h>
+#include <utility>
 #include "Communication.hpp"
+#include "logging/LogMacros.hpp"
 #include "mesh/BoundingBox.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace com {
@@ -12,7 +17,7 @@ CommunicateBoundingBox::CommunicateBoundingBox(
 
 void CommunicateBoundingBox::sendBoundingBox(
     const mesh::BoundingBox &bb,
-    int                     rankReceiver)
+    int                      rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
   _communication->send(bb.dataVector(), rankReceiver);
@@ -20,7 +25,7 @@ void CommunicateBoundingBox::sendBoundingBox(
 
 void CommunicateBoundingBox::receiveBoundingBox(
     mesh::BoundingBox &bb,
-    int               rankSender)
+    int                rankSender)
 {
   PRECICE_TRACE(rankSender);
   std::vector<double> receivedData;
@@ -31,7 +36,7 @@ void CommunicateBoundingBox::receiveBoundingBox(
 
 void CommunicateBoundingBox::sendBoundingBoxMap(
     mesh::Mesh::BoundingBoxMap &bbm,
-    int                        rankReceiver)
+    int                         rankReceiver)
 {
 
   PRECICE_TRACE(rankReceiver);
@@ -113,7 +118,7 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
   std::vector<double> receivedData;
 
   for (int i = 0; i < sizeOfReceivingMap; ++i) {
-    _communication->broadcast(receivedData,0);
+    _communication->broadcast(receivedData, 0);
     mesh::BoundingBox tempBB(receivedData);
     bbm.at(i) = std::move(tempBB);
   }

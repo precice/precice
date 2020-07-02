@@ -1,10 +1,19 @@
-#include <utility>
 #include "Petsc.hpp"
+#include <memory>      // FIXME
+#include <mpi.h>       // FIXME
+#include <numeric>     // FIXME
+#include <type_traits> // FIXME
+#include <utility>
+#include <vector> // FIXME
 #include "utils/Parallel.hpp"
-
 #ifndef PRECICE_NO_PETSC
 #include "petsc.h"
 #endif // not PRECICE_NO_PETSC
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
+#include "petscdrawtypes.h"   // FIXME
+#include "petscis.h"          // FIXME
+#include "petscviewertypes.h" // FIXME
 
 namespace precice {
 namespace utils {
@@ -89,7 +98,6 @@ void Petsc::finalize()
 
 #ifndef PRECICE_NO_PETSC
 
-#include <limits>
 #include <random>
 #include <string>
 #include "petscdraw.h"

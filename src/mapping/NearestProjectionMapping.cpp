@@ -1,9 +1,23 @@
 #include "NearestProjectionMapping.hpp"
 #include <Eigen/Core>
+#include <algorithm>
+#include <deque>
+#include <memory>
+#include <ostream>
+#include <unordered_set>
+#include <utility>
+#include "logging/LogMacros.hpp"
+#include "mapping/Mapping.hpp"
+#include "math/differences.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/RTree.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Vertex.hpp"
 #include "query/FindClosest.hpp"
 #include "utils/Event.hpp"
 #include "utils/Statistics.hpp"
+#include "utils/assertion.hpp"
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;

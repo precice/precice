@@ -1,6 +1,11 @@
+#include <memory>
 #include <string>
+#include <vector>
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 
 using namespace precice;

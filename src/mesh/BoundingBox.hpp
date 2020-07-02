@@ -1,10 +1,17 @@
 #pragma once
+#include <Eigen/Core>
+#include <iosfwd>
+#include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/Vertex.hpp"
-#include <vector>
 
 namespace precice {
+namespace logging {
+class Logger;
+} // namespace logging
+
 namespace mesh {
+class Vertex;
 
 /// An axis-aligned bounding box around a (partition of a) mesh
 class BoundingBox {
@@ -30,12 +37,12 @@ public:
 
   /// Special Members
   BoundingBox(const BoundingBox &) = default;
-  BoundingBox(BoundingBox &&) = default;
-  BoundingBox& operator=(const BoundingBox &bb) = default;
-  BoundingBox& operator=(BoundingBox &&bb) = default;
+  BoundingBox(BoundingBox &&)      = default;
+  BoundingBox &operator=(const BoundingBox &bb) = default;
+  BoundingBox &operator=(BoundingBox &&bb) = default;
 
   /// Comparison Operator
-  bool operator==(const BoundingBox& otherBB) const;
+  bool operator==(const BoundingBox &otherBB) const;
 
   /// Check whether the bounding box is at default state or not
   bool empty() const;
@@ -44,7 +51,7 @@ public:
   void expandBy(const BoundingBox &otherBB);
 
   /// Expand bounding box using vertices
-  void expandBy(const Vertex& vertices);
+  void expandBy(const Vertex &vertices);
 
   /// Expand bounding box using value
   void expandBy(double value);
@@ -76,20 +83,19 @@ public:
   int getDimension() const;
 
   /// Print bounds of bounding box, output operator overload
-  void print(std::ostream& out) const;
+  void print(std::ostream &out) const;
 
 private:
   static logging::Logger _log;
 
   /// Number of dimensions
-  int    _dimensions;
+  int _dimensions;
 
   /// Container of min and max points in each dimension
   std::vector<double> _bounds;
-
 };
 
-std::ostream& operator<<(std::ostream&, const BoundingBox&);
+std::ostream &operator<<(std::ostream &, const BoundingBox &);
 
 } // namespace mesh
 } // namespace precice

@@ -1,21 +1,28 @@
 #include <Eigen/Core>
-#include "com/Communication.hpp"
-#include "com/MPIDirectCommunication.hpp"
+#include <algorithm>
+#include <cmath>
+#include <memory>
+#include <string>
+#include <vector>
+#include "com/SharedPointer.hpp"
+#include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
+#include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
-#include "m2n/GatherScatterCommunication.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "utils/Parallel.hpp"
-#include "xml/XMLTag.hpp"
-
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "xml/XMLTag.hpp"
 
 using namespace precice;
 using namespace precice::cplscheme;

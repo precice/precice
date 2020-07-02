@@ -1,11 +1,14 @@
+#include <Eigen/Core>
+#include <iterator>
 #include <sstream>
-
+#include <string>
+#include "logging/Logger.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Quad.hpp"
+#include "mesh/RangeAccessor.hpp"
 #include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-
-#include <vector>
 
 using namespace precice;
 using namespace precice::mesh;

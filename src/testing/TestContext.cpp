@@ -1,16 +1,23 @@
+#include "testing/TestContext.hpp"
+#include <algorithm>
 #include <exception>
 #include <memory>
 #include <numeric>
-
+#include <ostream>
+#include <utility>
+#include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "com/SharedPointer.hpp"
 #include "com/SocketCommunication.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
+#include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/RTree.hpp"
-#include "precice/impl/Participant.hpp"
-#include "testing/TestContext.hpp"
 #include "utils/EventUtils.hpp"
+#include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 

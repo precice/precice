@@ -3,7 +3,9 @@
 #include <boost/asio.hpp>
 #include <deque>
 #include <functional>
+#include <memory>
 #include <mutex>
+#include <string>
 #include "logging/Logger.hpp"
 
 namespace precice {

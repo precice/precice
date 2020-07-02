@@ -1,5 +1,7 @@
 #include "Event.hpp"
+#include <mpi.h>
 #include "EventUtils.hpp"
+#include "logging/LogMacros.hpp"
 
 namespace precice {
 namespace utils {

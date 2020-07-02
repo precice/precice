@@ -1,5 +1,8 @@
 #pragma once
 
+#include <map>
+#include <string>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/MVQNAcceleration.hpp"
 #include "acceleration/SharedPointer.hpp"

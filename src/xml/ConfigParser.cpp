@@ -1,8 +1,15 @@
 #include "ConfigParser.hpp"
+#include <algorithm>
 #include <fstream>
+#include <iterator>
 #include <libxml/SAX.h>
+#include <memory>
 #include <string>
 #include <unordered_set>
+#include <utility>
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace xml {

@@ -2,10 +2,13 @@
 
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
+#include <iosfwd>
 #include <map>
 #include <memory>
+#include <type_traits>
 #include "mesh/Mesh.hpp"
 #include "mesh/Quad.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/impl/RTreeAdapter.hpp"
 
@@ -18,6 +21,14 @@ struct rtree;
 } // namespace testing
 
 namespace mesh {
+class Edge;
+class Quad;
+class Triangle;
+class Vertex;
+namespace impl {
+template <typename Container>
+class VectorIndexable;
+} // namespace impl
 
 /// The RTree box type
 using RTreeBox = boost::geometry::model::box<Eigen::VectorXd>;

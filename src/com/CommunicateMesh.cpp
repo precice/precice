@@ -1,14 +1,20 @@
 #include "CommunicateMesh.hpp"
+#include <Eigen/Core>
+#include <algorithm>
 #include <boost/container/flat_map.hpp>
-#include <future>
+#include <functional>
 #include <map>
+#include <memory>
+#include <ostream>
+#include <stddef.h>
 #include <vector>
 #include "Communication.hpp"
 #include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace com {

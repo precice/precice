@@ -1,14 +1,22 @@
 #ifndef PRECICE_NO_MPI
-#include "testing/Testing.hpp"
-
+#include <Eigen/Core>
+#include <algorithm>
+#include <memory>
+#include <mpi.h>
+#include <string>
+#include <vector>
+#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
+#include "math/constants.hpp"
+#include "mesh/Mesh.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/config/Configuration.hpp"
-#include "precice/impl/Participant.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
-#include "utils/Event.hpp"
+#include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Petsc.hpp"
 
 using namespace precice;
 using testing::TestContext;
@@ -87,18 +95,18 @@ BOOST_AUTO_TEST_CASE(Full)
   constexpr double x1{1};
   constexpr double dx{1};
 
-  if(context.isNamed("SolverOne")) {
-    auto meshid = interface.getMeshID("MeshOne");
-    double coords[] = {x1 + dx*context.rank, y, z};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+  if (context.isNamed("SolverOne")) {
+    auto   meshid   = interface.getMeshID("MeshOne");
+    double coords[] = {x1 + dx * context.rank, y, z};
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
-    auto dataid = interface.getDataID("DataOne", meshid);
+    auto   dataid = interface.getDataID("DataOne", meshid);
     double data[] = {3.4, 4.5, 5.6};
     interface.writeVectorData(dataid, vertexid, data);
   } else {
-    auto meshid = interface.getMeshID("MeshTwo");
-    double coords[] = {x1 + dx*context.rank, y, z};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+    auto   meshid   = interface.getMeshID("MeshTwo");
+    double coords[] = {x1 + dx * context.rank, y, z};
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
     auto dataid = interface.getDataID("DataTwo", meshid);
     interface.writeScalarData(dataid, vertexid, 7.8);
@@ -123,18 +131,18 @@ BOOST_AUTO_TEST_CASE(ImplicitFinalize)
   constexpr double x1{1};
   constexpr double dx{1};
 
-  if(context.isNamed("SolverOne")) {
-    auto meshid = interface.getMeshID("MeshOne");
-    double coords[] = {x1 + dx*context.rank, y, z};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+  if (context.isNamed("SolverOne")) {
+    auto   meshid   = interface.getMeshID("MeshOne");
+    double coords[] = {x1 + dx * context.rank, y, z};
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
-    auto dataid = interface.getDataID("DataOne", meshid);
+    auto   dataid = interface.getDataID("DataOne", meshid);
     double data[] = {3.4, 4.5, 5.6};
     interface.writeVectorData(dataid, vertexid, data);
   } else {
-    auto meshid = interface.getMeshID("MeshTwo");
-    double coords[] = {x1 + dx*context.rank, y, z};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+    auto   meshid   = interface.getMeshID("MeshTwo");
+    double coords[] = {x1 + dx * context.rank, y, z};
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
     auto dataid = interface.getDataID("DataTwo", meshid);
     interface.writeScalarData(dataid, vertexid, 7.8);
@@ -166,7 +174,6 @@ BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning)
 {

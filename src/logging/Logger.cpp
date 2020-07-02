@@ -1,13 +1,13 @@
 #include "Logger.hpp"
-
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
-
-#include <boost/log/attributes/mutable_constant.hpp>
-#include <boost/log/expressions.hpp>
+#include <iosfwd>
+#include <utility>
 
 namespace precice {
 namespace logging {

@@ -2,8 +2,10 @@
 
 #include "GenericTestFunctions.hpp"
 #include "com/MPIPortsCommunication.hpp"
+#include "com/SharedPointer.hpp"
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Parallel.hpp"
 
 using namespace precice;
 using namespace precice::com;

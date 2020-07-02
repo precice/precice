@@ -1,6 +1,8 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>

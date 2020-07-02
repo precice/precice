@@ -1,10 +1,17 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include "BaseCouplingScheme.hpp"
+#include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
+#include "m2n/SharedPointer.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
+struct CouplingData;
 
 /**
  * @brief Abstract base class for coupling schemes with two participants.

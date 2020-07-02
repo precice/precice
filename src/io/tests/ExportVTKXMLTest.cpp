@@ -1,14 +1,23 @@
 #ifndef PRECICE_NO_MPI
 
-#include "com/MPIDirectCommunication.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <string>
+#include "com/SharedPointer.hpp"
+#include "io/Export.hpp"
 #include "io/ExportVTKXML.hpp"
-#include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Triangle.hpp"
-#include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
+
+namespace precice {
+namespace mesh {
+class Edge;
+class Vertex;
+} // namespace mesh
+} // namespace precice
 
 // void ExportVTKXMLTest:: run()
 // {

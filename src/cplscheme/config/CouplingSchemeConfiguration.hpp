@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -36,6 +37,8 @@ struct testParseConfigurationWithRelaxation;
 // ----------------------------------------------------------- CLASS DEFINITION
 namespace precice {
 namespace cplscheme {
+class MultiCouplingScheme;
+
 /// Configuration for coupling schemes.
 class CouplingSchemeConfiguration : public xml::XMLTag::Listener {
 public:
@@ -222,8 +225,8 @@ private:
 
   /// Adds configured exchange data to be sent or received to scheme.
   void addDataToBeExchanged(
-      BiCouplingScheme &scheme,
-      const std::string & accessor) const;
+      BiCouplingScheme & scheme,
+      const std::string &accessor) const;
 
   /**
    * @brief Adds configured exchange data to be sent or received to scheme.

@@ -1,15 +1,28 @@
 #ifndef PRECICE_NO_PETSC
 
 #include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
+#include "logging/Logger.hpp"
+#include "mapping/Mapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
-#include "math/math.hpp"
+#include "mapping/config/MappingConfiguration.hpp"
+#include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/impl/versions.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include <set>
+#include "utils/Petsc.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
@@ -85,10 +98,10 @@ void getDistributedMesh(const TestContext &      context,
       else
         mesh->vertices().back().setOwner(false);
 
-      d.conservativeResize(i*valueDimension + valueDimension);
+      d.conservativeResize(i * valueDimension + valueDimension);
       // Get data in every dimension
-      for(int dim = 0; dim < valueDimension; ++dim){
-        d[i*valueDimension + dim] = vertex.value[dim];
+      for (int dim = 0; dim < valueDimension; ++dim) {
+        d[i * valueDimension + dim] = vertex.value[dim];
       }
       i++;
     }
@@ -130,14 +143,14 @@ void testDistributed(const TestContext &    context,
   int index = 0;
   for (auto &referenceVertex : referenceSpec) {
     if (referenceVertex.first == context.rank or referenceVertex.first == -1) {
-      for(int dim = 0; dim < valueDimension; ++dim) {
-        BOOST_TEST_INFO("Index of vertex: " << index << " - Dimension: " << dim);      
-        BOOST_TEST(outData->values()[index*valueDimension + dim] == referenceVertex.second[dim]);
+      for (int dim = 0; dim < valueDimension; ++dim) {
+        BOOST_TEST_INFO("Index of vertex: " << index << " - Dimension: " << dim);
+        BOOST_TEST(outData->values()[index * valueDimension + dim] == referenceVertex.second[dim]);
       }
       ++index;
-    } 
+    }
   }
-  BOOST_TEST(outData->values().size() == index*valueDimension);
+  BOOST_TEST(outData->values().size() == index * valueDimension);
 }
 
 /// Test with a homogenous distribution of mesh amoung ranks
@@ -180,7 +193,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
-  Gaussian                        fct(5.0);
+  Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   testDistributed(context, mapping,
@@ -307,12 +320,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
                   globalIndexOffsets[context.rank]);
 }
 
-
 /// Test with a very heterogenous distributed and non-continues ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
-  Gaussian                        fct(5.0);
+  Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
@@ -1010,7 +1022,7 @@ void testTagging(const TestContext &context,
   mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, false, testing::nextMeshID()));
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
-  BOOST_TEST_MESSAGE("Mesh sizes in: "<<inMesh->vertices().size() << " out: " << outMesh->vertices().size());
+  BOOST_TEST_MESSAGE("Mesh sizes in: " << inMesh->vertices().size() << " out: " << outMesh->vertices().size());
 
   Gaussian fct(4.5); //Support radius approx. 1
   BOOST_TEST_MESSAGE("Basis function has support radius " << fct.getSupportRadius());
@@ -1025,21 +1037,21 @@ void testTagging(const TestContext &context,
   mapping.setMeshes(inMesh, outMesh);
   mapping.tagMeshFirstRound();
 
-  const auto& taggedMesh = consistent ? inMesh : outMesh;
+  const auto &taggedMesh = consistent ? inMesh : outMesh;
 
   // Expected set of tagged elements for first round
   std::set<Eigen::VectorXd, utils::ComponentWiseLess> expectedFirst;
 #if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
-  for(const auto& vspec: shouldTagFirstRound) {
+  for (const auto &vspec : shouldTagFirstRound) {
     expectedFirst.emplace(vspec.asEigen());
   }
 
   for (const auto &v : taggedMesh->vertices()) {
     bool found = expectedFirst.count(v.getCoords()) != 0;
     BOOST_TEST((!found || v.isTagged()),
-        "FirstRound: Vertex " << v << " is tagged, but should not be.");
+               "FirstRound: Vertex " << v << " is tagged, but should not be.");
     BOOST_TEST((found || !v.isTagged()),
-        "FirstRound: Vertex " << v << " is not tagged, but should be.");
+               "FirstRound: Vertex " << v << " is not tagged, but should be.");
   }
 #else
   BOOST_TEST_MESSAGE("PETSc < 3.8: all vertices should be tagged in first round.");
@@ -1052,7 +1064,7 @@ void testTagging(const TestContext &context,
   // Expected set of tagged elements for second round
   std::set<Eigen::VectorXd, utils::ComponentWiseLess> expectedSecond(
       expectedFirst.begin(), expectedFirst.end());
-  for(const auto& vspec: shouldTagSecondRound) {
+  for (const auto &vspec : shouldTagSecondRound) {
     expectedSecond.emplace(vspec.asEigen());
   }
 
@@ -1061,9 +1073,9 @@ void testTagging(const TestContext &context,
   for (const auto &v : taggedMesh->vertices()) {
     bool found = expectedSecond.count(v.getCoords()) != 0;
     BOOST_TEST((!found || v.isTagged()),
-        "SecondRound: Vertex " << v << " is tagged, but should not be.");
+               "SecondRound: Vertex " << v << " is tagged, but should not be.");
     BOOST_TEST((found || !v.isTagged()),
-        "SecondRound: Vertex " << v << " is not tagged, but should be.");
+               "SecondRound: Vertex " << v << " is not tagged, but should be.");
   }
 }
 
@@ -1118,8 +1130,7 @@ BOOST_AUTO_TEST_CASE(TaggingConservative)
       {0, -1, {0, 2}, {1}}   //outside
   };
   MeshSpecification shouldTagFirstRound = {
-      {0, -1, {0, 0}, {1}}
-  };
+      {0, -1, {0, 0}, {1}}};
   MeshSpecification shouldTagSecondRound = {
       {0, -1, {0, 0}, {1}}};
   testTagging(context, inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
@@ -1226,115 +1237,115 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
 void perform2DTestConsistentMappingVector(Mapping &mapping)
 {
-    int dimensions = 2;
-    using Eigen::Vector2d;
+  int dimensions = 2;
+  using Eigen::Vector2d;
 
-    // Create mesh to map from
-    mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
-    mesh::PtrData inData   = inMesh->createData("InData", 2);
-    int           inDataID = inData->getID();
-    inMesh->createVertex(Vector2d(0.0, 0.0));
-    inMesh->createVertex(Vector2d(1.0, 0.0));
-    inMesh->createVertex(Vector2d(1.0, 1.0));
-    inMesh->createVertex(Vector2d(0.0, 1.0));
-    inMesh->allocateDataValues();
-    addGlobalIndex(inMesh);
+  // Create mesh to map from
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrData inData   = inMesh->createData("InData", 2);
+  int           inDataID = inData->getID();
+  inMesh->createVertex(Vector2d(0.0, 0.0));
+  inMesh->createVertex(Vector2d(1.0, 0.0));
+  inMesh->createVertex(Vector2d(1.0, 1.0));
+  inMesh->createVertex(Vector2d(0.0, 1.0));
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
 
-    auto &values = inData->values();
-    values << 1.0, 4.0, 2.0, 5.0, 2.0, 5.0, 1.0, 4.0;
+  auto &values = inData->values();
+  values << 1.0, 4.0, 2.0, 5.0, 2.0, 5.0, 1.0, 4.0;
 
-    // Create mesh to map to
-    mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
-    mesh::PtrData outData   = outMesh->createData("OutData", 2);
-    int           outDataID = outData->getID();
-    mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
-    outMesh->allocateDataValues();
-    addGlobalIndex(outMesh);
+  // Create mesh to map to
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrData outData   = outMesh->createData("OutData", 2);
+  int           outDataID = outData->getID();
+  mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
 
-    // Setup mapping with mapping coordinates and geometry used
-    mapping.setMeshes(inMesh, outMesh);
-    BOOST_TEST(mapping.hasComputedMapping() == false);
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
 
-    vertex.setCoords(Vector2d(0.0, 0.0));
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-    double value1 = outData->values()[0];
-    double value2 = outData->values()[1];
-    BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(value1 == 1.0);
-    BOOST_TEST(value2 == 4.0);
+  vertex.setCoords(Vector2d(0.0, 0.0));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  double value1 = outData->values()[0];
+  double value2 = outData->values()[1];
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value1 == 1.0);
+  BOOST_TEST(value2 == 4.0);
 
-    vertex.setCoords(Vector2d(0.0, 0.5));
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-    value1 = outData->values()[0];
-    value2 = outData->values()[1];
-    BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(value1 == 1.0);
-    BOOST_TEST(value2 == 4.0);
+  vertex.setCoords(Vector2d(0.0, 0.5));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value1 = outData->values()[0];
+  value2 = outData->values()[1];
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value1 == 1.0);
+  BOOST_TEST(value2 == 4.0);
 
-    vertex.setCoords(Vector2d(0.0, 1.0));
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-    value1 = outData->values()[0];
-    value2 = outData->values()[1];
-    BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(value1 == 1.0);
-    BOOST_TEST(value2 == 4.0);
+  vertex.setCoords(Vector2d(0.0, 1.0));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value1 = outData->values()[0];
+  value2 = outData->values()[1];
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value1 == 1.0);
+  BOOST_TEST(value2 == 4.0);
 
-    vertex.setCoords(Vector2d(1.0, 0.0));
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-    value1 = outData->values()[0];
-    value2 = outData->values()[1];
-    BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(value1 == 2.0);
-    BOOST_TEST(value2 == 5.0);
+  vertex.setCoords(Vector2d(1.0, 0.0));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value1 = outData->values()[0];
+  value2 = outData->values()[1];
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value1 == 2.0);
+  BOOST_TEST(value2 == 5.0);
 
-    vertex.setCoords(Vector2d(1.0, 0.5));
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-    value1 = outData->values()[0];
-    value2 = outData->values()[1];
-    BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(value1 == 2.0);
-    BOOST_TEST(value2 == 5.0);
+  vertex.setCoords(Vector2d(1.0, 0.5));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value1 = outData->values()[0];
+  value2 = outData->values()[1];
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value1 == 2.0);
+  BOOST_TEST(value2 == 5.0);
 
-    vertex.setCoords(Vector2d(1.0, 1.0));
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-    value1 = outData->values()[0];
-    value2 = outData->values()[1];
-    BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(value1 == 2.0);
-    BOOST_TEST(value2 == 5.0);
+  vertex.setCoords(Vector2d(1.0, 1.0));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value1 = outData->values()[0];
+  value2 = outData->values()[1];
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value1 == 2.0);
+  BOOST_TEST(value2 == 5.0);
 
-    vertex.setCoords(Vector2d(0.5, 0.0));
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-    value1 = outData->values()[0];
-    value2 = outData->values()[1];
-    BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(value1 == 1.5);
-    BOOST_TEST(value2 == 4.5);
+  vertex.setCoords(Vector2d(0.5, 0.0));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value1 = outData->values()[0];
+  value2 = outData->values()[1];
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value1 == 1.5);
+  BOOST_TEST(value2 == 4.5);
 
-    vertex.setCoords(Vector2d(0.5, 0.5));
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-    value1 = outData->values()[0];
-    value2 = outData->values()[1];
-    BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(value1 == 1.5);
-    BOOST_TEST(value2 == 4.5);
+  vertex.setCoords(Vector2d(0.5, 0.5));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value1 = outData->values()[0];
+  value2 = outData->values()[1];
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value1 == 1.5);
+  BOOST_TEST(value2 == 4.5);
 
-    vertex.setCoords(Vector2d(0.5, 1.0));
-    mapping.computeMapping();
-    mapping.map(inDataID, outDataID);
-    value1 = outData->values()[0];
-    value2 = outData->values()[1];
-    BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(value1 == 1.5);
-    BOOST_TEST(value2 == 4.5);
+  vertex.setCoords(Vector2d(0.5, 1.0));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  value1 = outData->values()[0];
+  value2 = outData->values()[1];
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(value1 == 1.5);
+  BOOST_TEST(value2 == 4.5);
 }
 
 void perform3DTestConsistentMapping(Mapping &mapping)

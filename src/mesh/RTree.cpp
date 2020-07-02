@@ -1,7 +1,11 @@
-#include "mesh/impl/RTreeAdapter.hpp"
-
-#include <boost/range/irange.hpp>
 #include "mesh/RTree.hpp"
+#include <algorithm>
+#include <boost/range/irange.hpp>
+#include <cstddef>
+#include <utility>
+#include <vector>
+#include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {

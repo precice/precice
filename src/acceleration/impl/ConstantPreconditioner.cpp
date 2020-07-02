@@ -1,4 +1,7 @@
 #include "acceleration/impl/ConstantPreconditioner.hpp"
+#include <algorithm>
+#include "logging/LogMacros.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {

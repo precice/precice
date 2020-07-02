@@ -1,5 +1,8 @@
+#include <Eigen/Core>
 #include "io/TXTReader.hpp"
 #include "io/TXTWriter.hpp"
+#include "logging/Logger.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(IOTests)

@@ -1,26 +1,27 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <cmath>
+#include <map>
+#include <memory>
+#include <utility>
+#include <vector>
+#include "acceleration/Acceleration.hpp"
 #include "acceleration/BaseQNAcceleration.hpp"
 #include "acceleration/IQNILSAcceleration.hpp"
 #include "acceleration/MVQNAcceleration.hpp"
+#include "acceleration/SharedPointer.hpp"
 #include "acceleration/impl/ConstantPreconditioner.hpp"
+#include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/ResidualSumPreconditioner.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
-#include "com/MPIDirectCommunication.hpp"
-#include "com/MPIPortsCommunication.hpp"
 #include "cplscheme/Constants.hpp"
-#include "cplscheme/ParallelCouplingScheme.hpp"
+#include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
-#include "cplscheme/impl/ConvergenceMeasure.hpp"
-#include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
-#include "cplscheme/impl/SharedPointer.hpp"
-#include "m2n/M2N.hpp"
-#include "mapping/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/EigenHelperFunctions.hpp"
-#include "utils/MasterSlave.hpp"
-#include "utils/Parallel.hpp"
-
+#include "mesh/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 
 using namespace precice;
 using namespace precice::cplscheme;

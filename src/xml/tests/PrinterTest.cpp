@@ -1,8 +1,9 @@
+#include <sstream>
+#include <string>
 #include "precice/config/Configuration.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "xml/Printer.hpp"
-
-#include <sstream>
 
 BOOST_AUTO_TEST_SUITE(XML)
 BOOST_AUTO_TEST_SUITE(Printer)

@@ -1,6 +1,22 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <iterator>
+#include <limits>
+#include <list>
+#include <memory>
+#include <set>
+#include <utility>
+#include <vector>
+#include "logging/Logger.hpp"
 #include "math/geometry.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/RTree.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Triangle.hpp"
+#include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;

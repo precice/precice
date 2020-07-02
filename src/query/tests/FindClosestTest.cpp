@@ -1,11 +1,24 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <string>
 #include <vector>
+#include "io/Export.hpp"
 #include "io/ExportVTK.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "query/FindClosest.hpp"
+#include "query/FindClosestEdge.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+
+namespace precice {
+namespace mesh {
+class Triangle;
+} // namespace mesh
+} // namespace precice
 
 using namespace precice;
 using namespace precice::query;

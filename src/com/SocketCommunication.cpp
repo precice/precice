@@ -1,10 +1,13 @@
 #include "SocketCommunication.hpp"
+#include <algorithm>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <sstream>
+#include <utility>
 #include "ConnectionInfoPublisher.hpp"
 #include "SocketRequest.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
 

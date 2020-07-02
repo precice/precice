@@ -1,13 +1,13 @@
 #pragma once
 
+#include <list>
+#include <string>
+#include <vector>
 #include "Constants.hpp"
 #include "CouplingScheme.hpp"
 #include "SharedPointer.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-
-#include <list>
-#include <vector>
 
 namespace precice {
 namespace cplscheme {

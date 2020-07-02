@@ -1,9 +1,11 @@
-#include <cctype>
-#include "utils/Helpers.hpp"
-#include "utils/String.hpp"
-#include "utils/TypeNames.hpp"
-#include "utils/assertion.hpp"
 #include "xml/XMLTag.hpp"
+#include <Eigen/Core>
+#include <ostream>
+#include <utility>
+#include "logging/LogMacros.hpp"
+#include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 
 namespace precice {
 namespace xml {

@@ -1,16 +1,27 @@
 #include "acceleration/BaseQNAcceleration.hpp"
+#include <Eigen/Core>
+#include <cmath>
+#include <memory>
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
+namespace io {
+class TXTReader;
+class TXTWriter;
+} // namespace io
+
 extern bool syncMode;
 namespace acceleration {
 

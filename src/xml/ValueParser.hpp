@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <string>
+#include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "utils/String.hpp"
 

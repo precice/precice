@@ -1,7 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
-#include "com/MPIPortsCommunication.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice {

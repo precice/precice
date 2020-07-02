@@ -1,7 +1,9 @@
 #include <Eigen/Core>
-#include <string>
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/Dimensions.hpp"
+#include "utils/String.hpp"
 
 using namespace precice;
 using namespace precice::utils;

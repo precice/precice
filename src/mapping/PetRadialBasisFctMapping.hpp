@@ -823,11 +823,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
     bb.expandBy(_basisFunction.getSupportRadius());
-    rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(filterMesh->vertices()[i]); }), 
-      boost::make_function_output_iterator([&filterMesh](size_t idx) {
-        filterMesh->vertices()[idx].tag();
-      }));
-    
+    rtree->query(bgi::satisfies([&](size_t const i) { return bb.contains(filterMesh->vertices()[i]); }),
+                 boost::make_function_output_iterator([&filterMesh](size_t idx) {
+                   filterMesh->vertices()[idx].tag();
+                 }));
+
   } else {
     filterMesh->tagAll();
   }
@@ -866,10 +866,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   bb.expandBy(_basisFunction.getSupportRadius());
   auto rtree = mesh::rtree::getVertexRTree(mesh);
 
-  rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(mesh->vertices()[i]); }), 
-    boost::make_function_output_iterator([&mesh](size_t idx) {
-      mesh->vertices()[idx].tag();
-    }));
+  rtree->query(bgi::satisfies([&](size_t const i) { return bb.contains(mesh->vertices()[i]); }),
+               boost::make_function_output_iterator([&mesh](size_t idx) {
+                 mesh->vertices()[idx].tag();
+               }));
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -879,9 +879,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
   const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
   PRECICE_INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
-      << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-      << " to " << output()->getName() << " (ID " << output()->getID() << ") "
-      << "for dimension " << dim << ") with polynomial set to " << polynomialName);
+                          << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+                          << " to " << output()->getName() << " (ID " << output()->getID() << ") "
+                          << "for dimension " << dim << ") with polynomial set to " << polynomialName);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

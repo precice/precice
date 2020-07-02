@@ -1,6 +1,9 @@
+#include <Eigen/Core>
+#include "logging/LogMacros.hpp"
+#include "math/constants.hpp"
+#include "math/differences.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-
-#include "math/math.hpp"
 
 using namespace precice;
 using namespace precice::math;

@@ -1,5 +1,7 @@
 #include "String.hpp"
 #include <boost/algorithm/string/case_conv.hpp>
+#include <memory>
+#include <vector>
 #include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/split.hpp"
 #include "utils/assertion.hpp"

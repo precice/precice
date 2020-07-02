@@ -1,4 +1,5 @@
 #include "RelativeConvergenceMeasure.hpp"
+#include "logging/LogMacros.hpp"
 
 namespace precice {
 namespace cplscheme {
