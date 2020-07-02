@@ -779,29 +779,34 @@ void SolverInterfaceImpl::setMeshQuad(
     e[2] = &mesh->edges()[thirdEdgeID];
     e[3] = &mesh->edges()[fourthEdgeID];
 
-    std::array<int,4>  vertexList;
+    PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID)),
+                  "The four edge ID's are not unique. Please check that the edges that form the quad are correct.");
+
     std::array<int,4>  edgeList;  // A list of edge ID numbers
     edgeList[0] = firstEdgeID;
     edgeList[1] = secondEdgeID;
     edgeList[2] = thirdEdgeID;
     edgeList[3] = fourthEdgeID;
 
-
-    // Write out a list of all vertex ID's that are eventually connected in V0-V1-V2-V3-V0 order to get diagonal distances.
+    // Write out a list of all vertex ID's that are eventually connected in 
+    // V0-V1-V2-V3-V0 order to get diagonal distances.
     mesh::Vertex *vertices[4];
-    mesh->computeQuadEdgeOrder(edgeList,vertexList);  // returns reordered list of edgeList and vertices in order of quad
-    mesh->computeQuadConvexityFromPoints(vertexList);
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
-                                                           vertices[1]->getCoords(), vertices[2]->getCoords(), vertices[3]->getCoords())),
-                  "The coordinates of the vertices must be unique!");
+    // Reorders the edgeList and sets the vertexList order.
+    std::array<int,4> vertexList = mesh->computeQuadEdgeOrder(edgeList);  
+    // Computes vertex order for the convex quad and reorders the variable vertexList
+    PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexList),"Quad is not convex."); 
+    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), 
+                                                           vertices[2]->getCoords(), vertices[3]->getCoords())),
+                  "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle." \
+                  "Please check that the edges that form the quad are correct.");
 
-    // Vertices are now in 0-1-2-3-0 form. Diagonal is either 0-2 or 1-3 
+    // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3 
     Eigen::VectorXd distance1(_dimensions),distance2(_dimensions);
     distance1 = vertices[vertexList[0]]->getCoords() - vertices[vertexList[2]]->getCoords();
     distance2 = vertices[vertexList[1]]->getCoords() - vertices[vertexList[3]]->getCoords();
     
+    // The new edge, e[4], is the shortest diagonal of the quad
     if (distance1.norm() < distance2.norm()){
-      // Diagonal is V1 and V2
       e[4] = &mesh->createUniqueEdge(*vertices[vertexList[0]], *vertices[vertexList[2]]);
       mesh->createTriangle(*e[edgeList[0]], *e[edgeList[1]], *e[4]);
       mesh->createTriangle(*e[edgeList[2]], *e[edgeList[3]], *e[4]);
@@ -835,33 +840,34 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
     vertices[1] = &mesh->vertices()[secondVertexID];
     vertices[2] = &mesh->vertices()[thirdVertexID];
     vertices[3] = &mesh->vertices()[fourthVertexID];
-    std::array<int,4>  hull;
-    hull[0] = firstVertexID;
-    hull[1] = secondVertexID;
-    hull[2] = thirdVertexID;
-    hull[3] = fourthVertexID;
+    std::array<int,4>  vertexList;
+    vertexList[0] = firstVertexID;
+    vertexList[1] = secondVertexID;
+    vertexList[2] = thirdVertexID;
+    vertexList[3] = fourthVertexID;
 
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
-                                                           vertices[1]->getCoords(), vertices[2]->getCoords(), vertices[3]->getCoords() )),
-                  "The first triangles coordinates of the vertices must be unique!");
+    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), 
+                                                           vertices[2]->getCoords(), vertices[3]->getCoords() )),
+                  "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle." \
+                  "Please check that the vertices that form the quad are correct.");
 
-    // Don't assume connectivity. Use gift wrapping algorithm to check quad quality and connectivity.
-    mesh->computeQuadConvexityFromPoints(hull);
+    // Computes vertex order for the convex quad and reorders the variable vertexList
+    PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexList),"Quad is not convex."); 
 
     Eigen::VectorXd distance1(_dimensions),distance2(_dimensions);
 
-    distance1 = vertices[hull[0]]->getCoords() - vertices[hull[2]]->getCoords();
-    distance2 = vertices[hull[1]]->getCoords() - vertices[hull[3]]->getCoords();
-    PRECICE_INFO("Distance 1: " << distance1.norm() << " and Distance 2: " << distance2.norm());
+    distance1 = vertices[vertexList[0]]->getCoords() - vertices[vertexList[2]]->getCoords();
+    distance2 = vertices[vertexList[1]]->getCoords() - vertices[vertexList[3]]->getCoords();
+    PRECICE_DEBUG("Distance 1: " << distance1.norm() << " and Distance 2: " << distance2.norm());
     
-    mesh::Edge *edges[5];
-    edges[0] = &mesh->createUniqueEdge(*vertices[hull[0]], *vertices[hull[1]]);
-    edges[1] = &mesh->createUniqueEdge(*vertices[hull[1]], *vertices[hull[2]]);
-    edges[2] = &mesh->createUniqueEdge(*vertices[hull[2]], *vertices[hull[3]]);
-    edges[3] = &mesh->createUniqueEdge(*vertices[hull[3]], *vertices[hull[0]]);
+    mesh::Edge *edges[5];  // e[0] - e[3] are the 3 edges of the quad. e[4] is the new diagonal edge to split the quad
+    edges[0] = &mesh->createUniqueEdge(*vertices[vertexList[0]], *vertices[vertexList[1]]);
+    edges[1] = &mesh->createUniqueEdge(*vertices[vertexList[1]], *vertices[vertexList[2]]);
+    edges[2] = &mesh->createUniqueEdge(*vertices[vertexList[2]], *vertices[vertexList[3]]);
+    edges[3] = &mesh->createUniqueEdge(*vertices[vertexList[3]], *vertices[vertexList[0]]);
     if (distance1.norm() < distance2.norm()){
       PRECICE_DEBUG("Cut diagonal: 0 and 2");
-      edges[4] = &mesh->createUniqueEdge(*vertices[hull[0]], *vertices[hull[2]]);
+      edges[4] = &mesh->createUniqueEdge(*vertices[vertexList[0]], *vertices[vertexList[2]]);
       mesh->createTriangle(*edges[0], *edges[1], *edges[4]);
       mesh->createTriangle(*edges[2], *edges[3], *edges[4]);
     }else{

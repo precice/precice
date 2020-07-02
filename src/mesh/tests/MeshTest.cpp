@@ -510,17 +510,17 @@ BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexity)
   Vertex &v2 = mesh.createVertex(coords2);
   Vertex &v3 = mesh.createVertex(coords3);
 
-  std::array<int,4>  hull;
-  hull[0] = v0.getID();
-  hull[1] = v1.getID();
-  hull[2] = v2.getID();
-  hull[3] = v3.getID();
+  std::array<int,4>  vertexList;
+  vertexList[0] = v0.getID();
+  vertexList[1] = v1.getID();
+  vertexList[2] = v2.getID();
+  vertexList[3] = v3.getID();
 
-  mesh.computeQuadConvexityFromPoints(hull);
-  BOOST_TEST(hull[0] ==  v3.getID());
-  BOOST_TEST(hull[1] ==  v2.getID());
-  BOOST_TEST(hull[2] ==  v1.getID());
-  BOOST_TEST(hull[3] ==  v0.getID());
+  BOOST_TEST(mesh.computeQuadConvexityFromPoints(vertexList) == 1);
+  BOOST_TEST(vertexList[0] ==  v3.getID());
+  BOOST_TEST(vertexList[1] ==  v2.getID());
+  BOOST_TEST(vertexList[2] ==  v1.getID());
+  BOOST_TEST(vertexList[3] ==  v0.getID());
   
 }
 
@@ -542,17 +542,17 @@ BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
   Vertex &v2 = mesh.createVertex(coords2);
   Vertex &v3 = mesh.createVertex(coords3);
 
-  std::array<int,4>  hull;
-  hull[0] = v0.getID();
-  hull[1] = v1.getID();
-  hull[2] = v2.getID();
-  hull[3] = v3.getID();
+  std::array<int,4>  vertexList;
+  vertexList[0] = v0.getID();
+  vertexList[1] = v1.getID();
+  vertexList[2] = v2.getID();
+  vertexList[3] = v3.getID();
 
-  mesh.computeQuadConvexityFromPoints(hull);
-  BOOST_TEST(hull[0] ==  v0.getID());
-  BOOST_TEST(hull[1] ==  v3.getID());
-  BOOST_TEST(hull[2] ==  v1.getID());
-  BOOST_TEST(hull[3] !=  v2.getID());
+  BOOST_TEST(mesh.computeQuadConvexityFromPoints(vertexList) == 0);
+  BOOST_TEST(vertexList[0] ==  v0.getID());
+  BOOST_TEST(vertexList[1] ==  v3.getID());
+  BOOST_TEST(vertexList[2] ==  v1.getID());
+  BOOST_TEST(vertexList[3] !=  v2.getID());
 
 }
 
@@ -583,19 +583,18 @@ BOOST_AUTO_TEST_CASE(ComputeValidEdgeConnectivity)
 
   BOOST_TEST(mesh.edges().size() == 4);
 
-  std::array<int,4>  vertexList;
   std::array<int,4>  edgeList;
   edgeList[0] = e0.getID();
   edgeList[1] = e1.getID();
   edgeList[2] = e2.getID();
   edgeList[3] = e3.getID();
 
-  mesh.computeQuadEdgeOrder(edgeList,vertexList);
+  std::array<int,4> vertexList = mesh.computeQuadEdgeOrder(edgeList);
 
   BOOST_TEST(edgeList[0] == e0.getID());
   BOOST_TEST(edgeList[1] == e2.getID());
   BOOST_TEST(edgeList[2] == e1.getID());
-  BOOST_TEST(edgeList[3] == e3.getID());
+  BOOST_TEST(edgeList[3] == e3.getID()); 
 
   BOOST_TEST(vertexList[0] == e0.vertex(0).getID());
   BOOST_TEST(vertexList[1] == e0.vertex(1).getID());

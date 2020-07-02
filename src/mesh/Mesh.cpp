@@ -466,36 +466,35 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
   return os;
 }
 
-void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull) const
+bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexList) const
 {
 
-  PRECICE_INFO("Entering compute quad: ");
-  // All points need to be projected into a new plane with only 2 coordinates, x and y. These are used to check the quad.
-  // These are store in vx and vy. For now keep same valiues
+  PRECICE_DEBUG("Computing quad convexity: ");
+  // All points need to be projected into a new plane with only 2 coordinates, x' and y'. These are used to check 
+  // the convexity of the quad. These new coordinates are stored in 'coords'
   Eigen::Vector3d coords[4];
 
   // Normal of the plane of first three points in the list of vertices
-  Eigen::Vector3d e_1 = vertices()[hull[1]].getCoords() - vertices()[hull[0]].getCoords();
-  Eigen::Vector3d e_2 = vertices()[hull[2]].getCoords() - vertices()[hull[0]].getCoords();
-  Eigen::Vector3d normalPlane = e_1.cross(e_2);
-  Eigen::Vector3d diff;
+  Eigen::Vector3d e_1 = vertices()[vertexList[1]].getCoords() - vertices()[vertexList[0]].getCoords();
+  Eigen::Vector3d e_2 = vertices()[vertexList[2]].getCoords() - vertices()[vertexList[0]].getCoords();
+  Eigen::Vector3d normalVector = e_1.cross(e_2);
 
   //Transform Coordinates - coord[0] is the origin
   for (int i = 0; i < 4; i++){
-    diff = vertices()[hull[i]].getCoords() - vertices()[hull[0]].getCoords();
-    coords[i][0] = e_1.dot(diff);
-    coords[i][1] = e_2.dot(diff);
-    coords[i][2] = normalPlane.dot(diff);
+    Eigen::Vector3d distance = vertices()[vertexList[i]].getCoords() - vertices()[vertexList[0]].getCoords();
+    coords[i][0] = e_1.dot(distance);
+    coords[i][1] = e_2.dot(distance);
+    coords[i][2] = normalVector.dot(distance);
   }
 
-  PRECICE_INFO("Vertex IDs are: " << hull[0] << " " << hull[1] << " " << hull[2] << " " << hull[3]);
-  PRECICE_INFO("X coordinates are: " << coords[0][0] << " " << coords[1][0] << " " << coords[2][0] << " " << coords[3][0]);
-  PRECICE_INFO("Y coordinates are: " << coords[0][1] << " " << coords[1][1] << " " << coords[2][1] << " " << coords[3][1]);
+  PRECICE_DEBUG("Vertex IDs are: " << vertexList[0] << " " << vertexList[1] << " " << vertexList[2] << " " << vertexList[3]);
+  PRECICE_DEBUG("X coordinates are: " << coords[0][0] << " " << coords[1][0] << " " << coords[2][0] << " " << coords[3][0]);
+  PRECICE_DEBUG("Y coordinates are: " << coords[0][1] << " " << coords[1][1] << " " << coords[2][1] << " " << coords[3][1]);
 
   /*
-  For the convex hull, the most left hand point regarding the x coordinate is chosen as the starting point. 
+  For the convex hull algorithm, the most left hand point regarding the x coordinate is chosen as the starting point. 
   The algorithm moves in an anti-clockwise position, finding the most right hand coordinate from the 
-  previous most right hand point.
+  previous most right hand point. The algorithm must find 3 other points in order to be a valid quad.
   */
   
   //First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift wrapping algorithm
@@ -514,7 +513,7 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull) const
   do
   {
     // Add current point to result
-    hull[validVertexIDCounter]=currentVertex;
+    vertexList[validVertexIDCounter]=currentVertex;
     
     nextVertex = (currentVertex + 1)%4;              // remainder resets loop through vector of points
     for (int i = 0; i < 4; i++)
@@ -538,15 +537,16 @@ void Mesh::computeQuadConvexityFromPoints(std::array<int,4> &hull) const
 
   if (validVertexIDCounter < 4){
     //Error, quad is invalid
-    PRECICE_DEBUG("Invalid Quad. Hull: " << validVertexIDCounter);
+    PRECICE_DEBUG("Invalid Quad. Number of points in convex hull: " << validVertexIDCounter);
   } else {
-    PRECICE_DEBUG("Valid Quad. Hull: " << validVertexIDCounter);
+    PRECICE_DEBUG("Valid Quad. Number of points in convex hull: " << validVertexIDCounter);
   }
 
   //Ordering of quad is hull 0-1-2-3-0
+  return (validVertexIDCounter == 4);
 }
 
-void Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList, std::array<int,4> &vertexList) const
+std::array<int,4> Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList) const
 {
   /*
   The first edge in the list is treated as the first edge (edge[0]). An edge that does not share a vertex
@@ -557,8 +557,8 @@ void Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList, std::array<int,4> &
   but not convexity.
   */
 
-  int edgeOrder[4];
-  //edgeOrder[0] = edgeList[0];   //Will order the edges in edgeList in order that they form a closed quad
+  int edgeOrder[4]; // Will contain new order of edges to form a closed quad
+  std::array<int,4> vertexList;
 
   // The first two vertices are the points on the first edge in edgeList. The other edges are built around this
   vertexList[0] = edges()[edgeList[0]].vertex(0).getID();
@@ -591,10 +591,11 @@ void Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList, std::array<int,4> &
       }
     }
 
-    //edgeList[0] = edgeOrder[0];
     edgeList[1] = edgeOrder[1];
     edgeList[2] = edgeOrder[2];
     edgeList[3] = edgeOrder[3];
+
+    return vertexList;
 
 }
   
