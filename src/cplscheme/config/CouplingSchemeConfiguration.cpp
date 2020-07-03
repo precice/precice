@@ -60,7 +60,6 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       ATTR_TO("to"),
       ATTR_SUFFICES("suffices"),
       ATTR_CONTROL("control"),
-      ATTR_LEVEL("level"),
       VALUE_SERIAL_EXPLICIT("serial-explicit"),
       VALUE_PARALLEL_EXPLICIT("parallel-explicit"),
       VALUE_SERIAL_IMPLICIT("serial-implicit"),
@@ -181,33 +180,29 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    int         level    = tag.getIntAttributeValue(ATTR_LEVEL);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices, level);
+    addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices);
   } else if (tag.getName() == TAG_REL_CONV_MEASURE) {
     std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    int         level    = tag.getIntAttributeValue(ATTR_LEVEL);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addRelativeConvergenceMeasure(dataName, meshName, limit, suffices, level);
+    addRelativeConvergenceMeasure(dataName, meshName, limit, suffices);
   } else if (tag.getName() == TAG_RES_REL_CONV_MEASURE) {
     std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    int         level    = tag.getIntAttributeValue(ATTR_LEVEL);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices, level);
+    addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices);
   } else if (tag.getName() == TAG_MIN_ITER_CONV_MEASURE) {
     std::string dataName      = tag.getStringAttributeValue(ATTR_DATA);
     std::string meshName      = tag.getStringAttributeValue(ATTR_MESH);
     int         minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
     bool        suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    int         level         = tag.getIntAttributeValue(ATTR_LEVEL);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices, level);
+    addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices);
   } else if (tag.getName() == TAG_EXCHANGE) {
     std::string   nameData            = tag.getStringAttributeValue(ATTR_DATA);
     std::string   nameMesh            = tag.getStringAttributeValue(ATTR_MESH);
@@ -324,6 +319,7 @@ void CouplingSchemeConfiguration::addCouplingScheme(
       // Create a new composition, add the already existing and new scheme, and
       // overwrite the existing scheme with the composition.
       CompositionalCouplingScheme *composition = new CompositionalCouplingScheme();
+      PRECICE_CHECK(nullptr == dynamic_cast<MultiCouplingScheme*>(_couplingSchemes[participantName].get()), "A Multi Coupling Scheme cannot yet be combined with any other coupling scheme. Try to include all participants within one multi coupling scheme instead.");
       composition->addCouplingScheme(_couplingSchemes[participantName]);
       composition->addCouplingScheme(cplScheme);
       _couplingSchemes[participantName] = PtrCouplingScheme(composition);
@@ -518,9 +514,6 @@ void CouplingSchemeConfiguration::addBaseAttributesTagConvergenceMeasure(
   auto attrSuffices = makeXMLAttribute(ATTR_SUFFICES, false)
                           .setDocumentation("If true, suffices to lead to convergence.");
   tag.addAttribute(attrSuffices);
-  auto attrLevel = makeXMLAttribute(ATTR_LEVEL, 0)
-                       .setDocumentation("For multi-level based coupling schemes: Indicates the coarseness level of the associated coupling data for this convergence measure.");
-  tag.addAttribute(attrLevel);
 }
 
 void CouplingSchemeConfiguration::addTagMaxIterations(
@@ -552,7 +545,6 @@ void CouplingSchemeConfiguration::addTagAcceleration(
     _accelerationConfig = acceleration::PtrAccelerationConfiguration(
         new acceleration::AccelerationConfiguration(_meshConfig));
   }
-  _accelerationConfig->setIsAddManifoldMappingTagAllowed(true);
   _accelerationConfig->connectTags(tag);
 }
 
@@ -560,51 +552,47 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
     const std::string &dataName,
     const std::string &meshName,
     double             limit,
-    bool               suffices,
-    int                level)
+    bool               suffices)
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, level, measure));
+  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
 }
 
 void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
     const std::string &dataName,
     const std::string &meshName,
     double             limit,
-    bool               suffices,
-    int                level)
+    bool               suffices)
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(
       new impl::RelativeConvergenceMeasure(limit));
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, level, measure));
+  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
 }
 
 void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
     const std::string &dataName,
     const std::string &meshName,
     double             limit,
-    bool               suffices,
-    int                level)
+    bool               suffices)
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(
       new impl::ResidualRelativeConvergenceMeasure(limit));
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, level, measure));
+  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
 }
 
 void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
     const std::string &dataName,
     const std::string &meshName,
     int                minIterations,
-    bool               suffices,
-    int                level)
+    bool               suffices)
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(
       new impl::MinIterationConvergenceMeasure(minIterations));
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, level, measure));
+  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
 }
 
 mesh::PtrData CouplingSchemeConfiguration::getData(
@@ -637,6 +625,8 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
 
   addDataToBeExchanged(*scheme, accessor);
 
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -652,6 +642,8 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
+
+  scheme->checkConfiguration();
 
   return PtrCouplingScheme(scheme);
 }
@@ -677,12 +669,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
     mesh::PtrData               data       = get<0>(elem);
     bool                        suffices   = get<1>(elem);
     std::string                 neededMesh = get<2>(elem);
-    int                         level      = get<3>(elem);
-    impl::PtrConvergenceMeasure measure    = get<4>(elem);
+    impl::PtrConvergenceMeasure measure    = get<3>(elem);
     _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
     checkIfDataIsExchanged(data->getID());
-    //bool isCoarse = checkIfDataIsCoarse(dataID);
-    scheme->addConvergenceMeasure(data, suffices, level, measure);
+    scheme->addConvergenceMeasure(data, suffices, measure);
   }
 
   // Set relaxation parameters
@@ -693,8 +683,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -718,12 +711,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
     mesh::PtrData               data       = get<0>(elem);
     bool                        suffices   = get<1>(elem);
     std::string                 neededMesh = get<2>(elem);
-    int                         level      = get<3>(elem);
-    impl::PtrConvergenceMeasure measure    = get<4>(elem);
+    impl::PtrConvergenceMeasure measure    = get<3>(elem);
     _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
     checkIfDataIsExchanged(data->getID());
-    //bool isCoarse = checkIfDataIsCoarse(dataID);
-    scheme->addConvergenceMeasure(data, suffices, level, measure);
+    scheme->addConvergenceMeasure(data, suffices, measure);
   }
 
   // Set relaxation parameters
@@ -734,8 +725,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -760,17 +754,20 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
     MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
+    PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
     addMultiDataToBeExchanged(*castedScheme, accessor);
   } else {
     m2n::PtrM2N m2n = _m2nConfig->getM2N(
         accessor, _config.controller);
+
     scheme = new ParallelCouplingScheme(
         _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
         _config.validDigits, accessor, _config.controller,
         accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
     scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
-    addDataToBeExchanged(*scheme, accessor);
+    BiCouplingScheme *castedScheme = dynamic_cast<BiCouplingScheme *>(scheme);
+    addDataToBeExchanged(*castedScheme, accessor);
   }
 
   // Add convergence measures
@@ -779,12 +776,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     mesh::PtrData               data       = get<0>(elem);
     bool                        suffices   = get<1>(elem);
     std::string                 neededMesh = get<2>(elem);
-    int                         level      = get<3>(elem);
-    impl::PtrConvergenceMeasure measure    = get<4>(elem);
+    impl::PtrConvergenceMeasure measure    = get<3>(elem);
     _meshConfig->addNeededMesh(_config.controller, neededMesh);
     checkIfDataIsExchanged(data->getID());
-    // bool isCoarse = checkIfDataIsCoarse(dataID);
-    scheme->addConvergenceMeasure(data, suffices, level, measure);
+    scheme->addConvergenceMeasure(data, suffices, measure);
   }
 
   // Set relaxation parameters
@@ -796,8 +791,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
       checkIfDataIsExchanged(dataID);
     }
 
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -807,16 +805,16 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
 {
   PRECICE_TRACE(method);
   if (method == VALUE_FIXED) {
-    return constants::FIXED_DT;
+    return constants::FIXED_TIME_WINDOW_SIZE;
   } else if (method == VALUE_FIRST_PARTICIPANT) {
-    return constants::FIRST_PARTICIPANT_SETS_DT;
+    return constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE;
   }
   PRECICE_ERROR("Unknown timestepping method \""
                 << method << "\"!");
 }
 
 void CouplingSchemeConfiguration::addDataToBeExchanged(
-    BaseCouplingScheme &scheme,
+    BiCouplingScheme &scheme,
     const std::string & accessor) const
 {
   PRECICE_TRACE();
@@ -837,11 +835,11 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
       throw std::runtime_error{"Participant \"" + to + "\" is not configured for coupling scheme"};
     }
 
-    bool initialize = get<4>(tuple);
+    bool requiresInitialization = get<4>(tuple);
     if (from == accessor) {
-      scheme.addDataToSend(data, mesh, initialize);
+      scheme.addDataToSend(data, mesh, requiresInitialization);
     } else if (to == accessor) {
-      scheme.addDataToReceive(data, mesh, initialize);
+      scheme.addDataToReceive(data, mesh, requiresInitialization);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
@@ -910,50 +908,5 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                     << " and/or the iteration acceleration");
 }
 
-bool CouplingSchemeConfiguration::checkIfDataIsCoarse(
-    int id) const
-{
-  bool isCoarse = false;
-  bool err      = false;
-  // check if acceleration is defined.
-  if (_accelerationConfig->getAcceleration().get() == nullptr)
-    return false;
-
-  // check if id is contained within fine Data IDs
-  const std::vector<int> &fineIDs = _accelerationConfig->getAcceleration()->getDataIDs();
-  isCoarse                        = not utils::contained(id, fineIDs);
-
-  std::cout << " fineIDs = [";
-  for (int i = 0; i < (int) fineIDs.size(); i++) {
-    std::cout << fineIDs.at(i) << ", ";
-  }
-  std::cout << "], id: " << id << '\n';
-
-  // if id is contained within fine data IDs return with isCoarse = false
-  if (not isCoarse)
-    return false;
-
-  if (isCoarse) {
-    if (_accelerationConfig->getCoarseModelOptimizationConfig().get() != nullptr &&
-        _accelerationConfig->getCoarseModelOptimizationConfig()->getAcceleration().get() != nullptr) {
-      const std::vector<int> &coarseIDs = _accelerationConfig->getCoarseModelOptimizationConfig()->getAcceleration()->getDataIDs();
-      isCoarse                          = utils::contained(id, coarseIDs);
-
-      std::cout << " coarseIDs = [";
-      for (auto &coarseID : coarseIDs) {
-        std::cout << coarseID << ", ";
-      }
-      std::cout << "], id: " << id << '\n';
-
-      err = not isCoarse;
-    } else {
-      std::cout << "There is no coarse model optkmaiimization defined.\n";
-      err = true;
-    }
-  }
-  if (err)
-    PRECICE_ERROR("Data ID " << id << " is not contained in the exchange data for the fine model and no coarse model optimization method is defined.");
-  return true;
-}
 } // namespace cplscheme
 } // namespace precice

@@ -32,7 +32,7 @@ DIFFS=""
 if command -v parallel > /dev/null; then
     echo "Using GNU parallel"
     CMD="${BINARY} -style=file --output-replacements-xml {} | grep '<replacement ' > /dev/null && echo {}"
-    DIFFS=$( echo "$FILES" | parallel --group "$CMD" )
+    DIFFS=$( echo "$FILES" | parallel --bar --group "$CMD" )
 else
     echo "Install GNU parallel to format in parallel."
     for cfile in $FILES; do

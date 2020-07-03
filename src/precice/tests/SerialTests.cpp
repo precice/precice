@@ -20,7 +20,6 @@ struct SerialTestFixture : testing::WhiteboxAccessor {
   void reset()
   {
     mesh::Data::resetDataCount();
-    impl::Participant::resetParticipantCount();
   }
 
   SerialTestFixture()
@@ -34,10 +33,11 @@ BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Serial, SerialTestFixture)
 
 /// Test reading of a full features coupling configuration file.
-BOOST_AUTO_TEST_CASE(TestConfiguration)
+BOOST_AUTO_TEST_CASE(TestConfigurationPeano)
 {
   PRECICE_TEST(1_rank);
-  std::string filename = _pathToTests + "/configuration.xml";
+  std::string filename = _pathToTests + "configuration.xml";
+
   // Test configuration for accessor "Peano"
   SolverInterface interfacePeano("Peano", filename, 0, 1);
 
@@ -47,7 +47,6 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
   impl::PtrParticipant peano = impl(interfacePeano)._participants[0];
   BOOST_TEST(peano);
   BOOST_TEST(peano->getName() == "Peano");
-  BOOST_TEST(peano->getID() == 0);
 
   std::vector<impl::MeshContext *> meshContexts = peano->_meshContexts;
   BOOST_TEST(meshContexts.size() == 2);
@@ -55,6 +54,12 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
 
   BOOST_TEST(meshContexts[0]->mesh->getName() == std::string("PeanoNodes"));
   BOOST_TEST(meshContexts[1]->mesh->getName() == std::string("ComsolNodes"));
+}
+
+BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
+{
+  PRECICE_TEST(1_rank);
+  std::string filename = _pathToTests + "configuration.xml";
 
   // Test configuration for accessor "Comsol"
   SolverInterface interfaceComsol("Comsol", filename, 0, 1);
@@ -64,14 +69,98 @@ BOOST_AUTO_TEST_CASE(TestConfiguration)
   impl::PtrParticipant comsol = impl(interfaceComsol)._participants[1];
   BOOST_TEST(comsol);
   BOOST_TEST(comsol->getName() == "Comsol");
-  BOOST_TEST(comsol->getID() == 1);
 
-  meshContexts = comsol->_meshContexts;
+  std::vector<impl::MeshContext *> meshContexts = comsol->_meshContexts;
   BOOST_TEST(meshContexts.size() == 2);
   BOOST_TEST(meshContexts[0] == static_cast<void *>(nullptr));
   BOOST_TEST(meshContexts[1]->mesh->getName() == std::string("ComsolNodes"));
   BOOST_TEST(comsol->_usedMeshContexts.size() == 1);
 }
+
+BOOST_AUTO_TEST_SUITE(Lifecycle)
+
+// Test representing the full explicit lifecycle of a SolverInterface
+BOOST_AUTO_TEST_CASE(Full)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+
+  if(context.isNamed("SolverOne")) {
+    auto meshid = interface.getMeshID("MeshOne");
+    double coords[] = {0.1, 1.2, 2.3};
+    auto vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto dataid = interface.getDataID("DataOne", meshid);
+    double data[] = {3.4, 4.5, 5.6};
+    interface.writeVectorData(dataid, vertexid, data);
+  } else {
+    auto meshid = interface.getMeshID("MeshTwo");
+    double coords[] = {0.12, 1.21, 2.2};
+    auto vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto dataid = interface.getDataID("DataTwo", meshid);
+    interface.writeScalarData(dataid, vertexid, 7.8);
+  }
+  interface.initialize();
+  BOOST_TEST(interface.isCouplingOngoing());
+  interface.finalize();
+}
+
+// Test representing the full lifecycle of a SolverInterface
+// Finalize is not called explicitly here.
+// The destructor has to cleanup.
+BOOST_AUTO_TEST_CASE(ImplicitFinalize)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+
+  if(context.isNamed("SolverOne")) {
+    auto meshid = interface.getMeshID("MeshOne");
+    double coords[] = {0.1, 1.2, 2.3};
+    auto vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto dataid = interface.getDataID("DataOne", meshid);
+    double data[] = {3.4, 4.5, 5.6};
+    interface.writeVectorData(dataid, vertexid, data);
+  } else {
+    auto meshid = interface.getMeshID("MeshTwo");
+    double coords[] = {0.12, 1.21, 2.2};
+    auto vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto dataid = interface.getDataID("DataTwo", meshid);
+    interface.writeScalarData(dataid, vertexid, 7.8);
+  }
+  interface.initialize();
+  BOOST_TEST(interface.isCouplingOngoing());
+}
+
+// Test representing the minimal lifecylce, which consists out of construction only.
+// The destructor has to cleanup correctly.
+BOOST_AUTO_TEST_CASE(ConstructOnly)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+}
+
+// Test representing the minimal lifecylce with explicit finalization.
+// This shows how to manually finalize MPI etc without using the SolverInterface.
+BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+
+  interface.finalize();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 /// Test to run simple "do nothing" coupling between two solvers.
 void runTestExplicit(std::string const &configurationFileName, TestContext const &context)

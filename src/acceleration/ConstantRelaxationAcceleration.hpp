@@ -21,11 +21,6 @@ public:
     return _dataIDs;
   }
 
-  virtual void setDesignSpecification(
-      Eigen::VectorXd &q);
-
-  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap &cplData);
-
   virtual void initialize(DataMap &cplData);
 
   virtual void performAcceleration(DataMap &cplData);
@@ -40,8 +35,6 @@ private:
   double _relaxation;
 
   std::vector<int> _dataIDs;
-
-  Eigen::VectorXd _designSpecification;
 };
 } // namespace acceleration
 } // namespace precice

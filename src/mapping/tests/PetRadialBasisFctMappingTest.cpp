@@ -8,6 +8,8 @@
 #include "mesh/Vertex.hpp"
 #include "precice/impl/versions.hpp"
 #include "testing/Testing.hpp"
+#include "utils/EigenHelperFunctions.hpp"
+#include <set>
 
 using namespace precice;
 using namespace precice::mesh;
@@ -32,6 +34,11 @@ struct VertexSpecification {
   int                 owner;
   std::vector<double> position;
   std::vector<double> value;
+
+  const Eigen::Map<const Eigen::VectorXd> asEigen() const
+  {
+    return Eigen::Map<const Eigen::VectorXd>{position.data(), static_cast<Eigen::Index>(position.size())};
+  }
 };
 
 /*
@@ -71,13 +78,18 @@ void getDistributedMesh(const TestContext &      context,
       else if (vertex.position.size() == 2) // 2-dimensional
         mesh->createVertex(Eigen::Vector2d(vertex.position.data()));
 
+      int valueDimension = vertex.value.size();
+
       if (vertex.owner == context.rank)
         mesh->vertices().back().setOwner(true);
       else
         mesh->vertices().back().setOwner(false);
 
-      d.conservativeResize(i + 1);
-      d[i] = vertex.value[0]; // only 1-d value here for now
+      d.conservativeResize(i*valueDimension + valueDimension);
+      // Get data in every dimension
+      for(int dim = 0; dim < valueDimension; ++dim){
+        d[i*valueDimension + dim] = vertex.value[dim];
+      }
       i++;
     }
   }
@@ -118,15 +130,14 @@ void testDistributed(const TestContext &    context,
   int index = 0;
   for (auto &referenceVertex : referenceSpec) {
     if (referenceVertex.first == context.rank or referenceVertex.first == -1) {
-      for (auto &point : referenceVertex.second) {
-        // only 1-d here for now
-        BOOST_TEST_INFO("index of vertex is " << index);
-        BOOST_TEST(outData->values()[index] == point);
+      for(int dim = 0; dim < valueDimension; ++dim) {
+        BOOST_TEST_INFO("Index of vertex: " << index << " - Dimension: " << dim);      
+        BOOST_TEST(outData->values()[index*valueDimension + dim] == referenceVertex.second[dim]);
       }
       ++index;
-    }
+    } 
   }
-  BOOST_TEST(outData->values().size() == index);
+  BOOST_TEST(outData->values().size() == index*valueDimension);
 }
 
 /// Test with a homogenous distribution of mesh amoung ranks
@@ -164,6 +175,42 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
                    {2, {6}},
                    {3, {7}},
                    {3, {8}}});
+}
+
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  Gaussian                        fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+
+  testDistributed(context, mapping,
+                  {// Consistent mapping: The inMesh is communicated
+                   {-1, 0, {0, 0}, {1, 4}},
+                   {-1, 0, {0, 1}, {2, 5}},
+                   {-1, 1, {1, 0}, {3, 6}},
+                   {-1, 1, {1, 1}, {4, 7}},
+                   {-1, 2, {2, 0}, {5, 8}},
+                   {-1, 2, {2, 1}, {6, 9}},
+                   {-1, 3, {3, 0}, {7, 10}},
+                   {-1, 3, {3, 1}, {8, 11}}},
+                  {// The outMesh is local, distributed amoung all ranks
+                   {0, -1, {0, 0}, {0, 0}},
+                   {0, -1, {0, 1}, {0, 0}},
+                   {1, -1, {1, 0}, {0, 0}},
+                   {1, -1, {1, 1}, {0, 0}},
+                   {2, -1, {2, 0}, {0, 0}},
+                   {2, -1, {2, 1}, {0, 0}},
+                   {3, -1, {3, 0}, {0, 0}},
+                   {3, -1, {3, 1}, {0, 0}}},
+                  {// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+                   {0, {1, 4}},
+                   {0, {2, 5}},
+                   {1, {3, 6}},
+                   {1, {4, 7}},
+                   {2, {5, 8}},
+                   {2, {6, 9}},
+                   {3, {7, 10}},
+                   {3, {8, 11}}});
 }
 
 /// Using a more heterogenous distributon of vertices and owner
@@ -257,6 +304,63 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
                    {2, {6}},
                    {3, {7}},
                    {3, {8}}},
+                  globalIndexOffsets[context.rank]);
+}
+
+
+/// Test with a very heterogenous distributed and non-continues ownership
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  Gaussian                        fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
+
+  testDistributed(context, mapping,
+                  {
+                      // Rank 0 has part of the mesh, owns a subpart
+                      {0, 0, {0, 0}, {1, 4}},
+                      {0, 0, {0, 1}, {2, 5}},
+                      {0, 0, {1, 0}, {3, 6}},
+                      {0, -1, {1, 1}, {4, 7}},
+                      {0, -1, {2, 0}, {5, 8}},
+                      {0, -1, {2, 1}, {6, 9}},
+                      // Rank 1 has no vertices
+                      // Rank 2 has the entire mesh, but owns just 3 and 5.
+                      {2, -1, {0, 0}, {1, 4}},
+                      {2, -1, {0, 1}, {2, 5}},
+                      {2, -1, {1, 0}, {3, 6}},
+                      {2, 2, {1, 1}, {4, 7}},
+                      {2, -1, {2, 0}, {5, 8}},
+                      {2, 2, {2, 1}, {6, 9}},
+                      {2, -1, {3, 0}, {7, 10}},
+                      {2, -1, {3, 1}, {8, 11}},
+                      // Rank 3 has the last 4 vertices, owns 4, 6 and 7
+                      {3, 3, {2, 0}, {5, 8}},
+                      {3, -1, {2, 1}, {6, 9}},
+                      {3, 3, {3, 0}, {7, 10}},
+                      {3, 3, {3, 1}, {8, 11}},
+                  },
+                  {// The outMesh is local, rank 1 is empty
+                   {0, -1, {0, 0}, {0, 0}},
+                   {0, -1, {0, 1}, {0, 0}},
+                   {0, -1, {1, 0}, {0, 0}},
+                   {2, -1, {1, 1}, {0, 0}},
+                   {2, -1, {2, 0}, {0, 0}},
+                   {2, -1, {2, 1}, {0, 0}},
+                   {3, -1, {3, 0}, {0, 0}},
+                   {3, -1, {3, 1}, {0, 0}}},
+                  {// Tests for {0, 1, 2} on the first rank,
+                   // second rank (consistent with the outMesh) is empty, ...
+                   {0, {1, 4}},
+                   {0, {2, 5}},
+                   {0, {3, 6}},
+                   {2, {4, 7}},
+                   {2, {5, 8}},
+                   {2, {6, 9}},
+                   {3, {7, 10}},
+                   {3, {8, 11}}},
                   globalIndexOffsets[context.rank]);
 }
 
@@ -503,6 +607,69 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
                    {3, {0}},
                    {3, {7}},
                    {3, {8}}},
+                  context.rank * 2);
+}
+
+/// Test with a homogenous distribution of mesh amoung ranks
+BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  Gaussian                           fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+
+  testDistributed(context, mapping,
+                  {// Conservative mapping: The inMesh is local
+                   {0, -1, {0, 0}, {1, 4}},
+                   {0, -1, {0, 1}, {2, 5}},
+                   {1, -1, {1, 0}, {3, 6}},
+                   {1, -1, {1, 1}, {4, 7}},
+                   {2, -1, {2, 0}, {5, 8}},
+                   {2, -1, {2, 1}, {6, 9}},
+                   {3, -1, {3, 0}, {7, 10}},
+                   {3, -1, {3, 1}, {8, 11}}},
+                  {// The outMesh is distributed
+                   {-1, 0, {0, 0}, {0, 0}},
+                   {-1, 0, {0, 1}, {0, 0}},
+                   {-1, 1, {1, 0}, {0, 0}},
+                   {-1, 1, {1, 1}, {0, 0}},
+                   {-1, 2, {2, 0}, {0, 0}},
+                   {-1, 2, {2, 1}, {0, 0}},
+                   {-1, 3, {3, 0}, {0, 0}},
+                   {-1, 3, {3, 1}, {0, 0}}},
+                  {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                   // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                   {0, {1, 4}},
+                   {0, {2, 5}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {3, 6}},
+                   {1, {4, 7}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {5, 8}},
+                   {2, {6, 9}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {7, 10}},
+                   {3, {8, 11}}},
                   context.rank * 2);
 }
 
@@ -763,6 +930,69 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                   context.rank * 2);
 }
 
+/// Tests a non-contigous owner distributed at the outMesh
+BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc);
+  Gaussian                           fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+
+  testDistributed(context, mapping,
+                  {// Conservative mapping: The inMesh is local
+                   {0, -1, {0, 0}, {1, 4}},
+                   {0, -1, {0, 1}, {2, 5}},
+                   {1, -1, {1, 0}, {3, 6}},
+                   {1, -1, {1, 1}, {4, 7}},
+                   {2, -1, {2, 0}, {5, 8}},
+                   {2, -1, {2, 1}, {6, 9}},
+                   {3, -1, {3, 0}, {7, 10}},
+                   {3, -1, {3, 1}, {8, 11}}},
+                  {// The outMesh is distributed and non-contigous
+                   {-1, 0, {0, 0}, {0, 0}},
+                   {-1, 1, {0, 1}, {0, 0}},
+                   {-1, 1, {1, 0}, {0, 0}},
+                   {-1, 0, {1, 1}, {0, 0}},
+                   {-1, 2, {2, 0}, {0, 0}},
+                   {-1, 2, {2, 1}, {0, 0}},
+                   {-1, 3, {3, 0}, {0, 0}},
+                   {-1, 3, {3, 1}, {0, 0}}},
+                  {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                   // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                   {0, {1, 4}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {4, 7}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {0, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {2, 5}},
+                   {1, {3, 6}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {1, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {2, {5, 8}},
+                   {2, {6, 9}},
+                   {2, {0, 0}},
+                   {2, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {0, 0}},
+                   {3, {7, 10}},
+                   {3, {8, 11}}},
+                  context.rank * 2);
+}
+
 void testTagging(const TestContext &context,
                  MeshSpecification  inMeshSpec,
                  MeshSpecification  outMeshSpec,
@@ -780,8 +1010,13 @@ void testTagging(const TestContext &context,
   mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, false, testing::nextMeshID()));
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
+  BOOST_TEST_MESSAGE("Mesh sizes in: "<<inMesh->vertices().size() << " out: " << outMesh->vertices().size());
 
-  Gaussian                           fct(4.5); //Support radius approx. 1
+  Gaussian fct(4.5); //Support radius approx. 1
+  BOOST_TEST_MESSAGE("Basis function has support radius " << fct.getSupportRadius());
+  BOOST_TEST(fct.getSupportRadius() > 1.0);
+  BOOST_TEST(fct.hasCompactSupport());
+
   Mapping::Constraint                constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
   PetRadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, false, false, false);
   inMesh->computeBoundingBox();
@@ -790,41 +1025,49 @@ void testTagging(const TestContext &context,
   mapping.setMeshes(inMesh, outMesh);
   mapping.tagMeshFirstRound();
 
-  for (const auto &v : inMesh->vertices()) {
-    auto pos   = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
-                            [meshDimension, &v](const VertexSpecification &spec) {
-                              return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
-                            });
-    bool found = pos != shouldTagFirstRound.end();
-    BOOST_TEST(found >= v.isTagged(),
-               "FirstRound: Vertex " << v << " is tagged, but should not be.");
-    BOOST_TEST(found <= v.isTagged(),
-               "FirstRound: Vertex " << v << " is not tagged, but should be.");
+  const auto& taggedMesh = consistent ? inMesh : outMesh;
+
+  // Expected set of tagged elements for first round
+  std::set<Eigen::VectorXd, utils::ComponentWiseLess> expectedFirst;
+#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
+  for(const auto& vspec: shouldTagFirstRound) {
+    expectedFirst.emplace(vspec.asEigen());
+  }
+
+  for (const auto &v : taggedMesh->vertices()) {
+    bool found = expectedFirst.count(v.getCoords()) != 0;
+    BOOST_TEST((!found || v.isTagged()),
+        "FirstRound: Vertex " << v << " is tagged, but should not be.");
+    BOOST_TEST((found || !v.isTagged()),
+        "FirstRound: Vertex " << v << " is not tagged, but should be.");
+  }
+#else
+  BOOST_TEST_MESSAGE("PETSc < 3.8: all vertices should be tagged in first round.");
+  for (const auto &v : taggedMesh->vertices()) {
+    expectedFirst.emplace(v.getCoords()); // everything should be tagged
+    BOOST_TEST(v.isTagged(), "FirstRound: Vertex " << v << " is not tagged, but should be.");
+  }
+#endif
+
+  // Expected set of tagged elements for second round
+  std::set<Eigen::VectorXd, utils::ComponentWiseLess> expectedSecond(
+      expectedFirst.begin(), expectedFirst.end());
+  for(const auto& vspec: shouldTagSecondRound) {
+    expectedSecond.emplace(vspec.asEigen());
   }
 
   mapping.tagMeshSecondRound();
 
-  for (const auto &v : inMesh->vertices()) {
-    auto posFirst    = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
-                                 [meshDimension, &v](const VertexSpecification &spec) {
-                                   return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
-                                 });
-    bool foundFirst  = posFirst != shouldTagFirstRound.end();
-    auto posSecond   = std::find_if(shouldTagSecondRound.begin(), shouldTagSecondRound.end(),
-                                  [meshDimension, &v](const VertexSpecification &spec) {
-                                    return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
-                                  });
-    bool foundSecond = posSecond != shouldTagSecondRound.end();
-    BOOST_TEST(foundFirst <= v.isTagged(), "SecondRound: Vertex " << v
-                                                                  << " is not tagged, but should be from the first round.");
-    BOOST_TEST(foundSecond <= v.isTagged(), "SecondRound: Vertex " << v
-                                                                   << " is not tagged, but should be.");
-    BOOST_TEST((foundSecond or foundFirst) >= v.isTagged(), "SecondRound: Vertex " << v
-                                                                                   << " is tagged, but should not be.");
+  for (const auto &v : taggedMesh->vertices()) {
+    bool found = expectedSecond.count(v.getCoords()) != 0;
+    BOOST_TEST((!found || v.isTagged()),
+        "SecondRound: Vertex " << v << " is tagged, but should not be.");
+    BOOST_TEST((found || !v.isTagged()),
+        "SecondRound: Vertex " << v << " is not tagged, but should be.");
   }
 }
 
-BOOST_AUTO_TEST_CASE(testTagFirstRound)
+BOOST_AUTO_TEST_CASE(TaggingConsistent)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
   //    *
@@ -852,8 +1095,34 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   MeshSpecification shouldTagSecondRound = {
       {0, -1, {2, 0}, {1}}};
   testTagging(context, inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, true);
-  // For conservative just swap meshes.
-  testTagging(context, outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
+}
+
+BOOST_AUTO_TEST_CASE(TaggingConservative)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::PETSc)
+  //    *
+  //    + <-- owned
+  //* * x * *
+  //    *
+  //    *
+  MeshSpecification outMeshSpec = {
+      {0, -1, {0, 0}, {0}}};
+  MeshSpecification inMeshSpec = {
+      {0, -1, {-1, 0}, {1}}, //inside
+      {0, -1, {-2, 0}, {1}}, //outside
+      {0, 0, {1, 0}, {1}},   //inside, owner
+      {0, -1, {2, 0}, {1}},  //outside
+      {0, -1, {0, -1}, {1}}, //inside
+      {0, -1, {0, -2}, {1}}, //outside
+      {0, -1, {0, 1}, {1}},  //inside
+      {0, -1, {0, 2}, {1}}   //outside
+  };
+  MeshSpecification shouldTagFirstRound = {
+      {0, -1, {0, 0}, {1}}
+  };
+  MeshSpecification shouldTagSecondRound = {
+      {0, -1, {0, 0}, {1}}};
+  testTagging(context, inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Parallel
@@ -953,6 +1222,119 @@ void perform2DTestConsistentMapping(Mapping &mapping)
   value = outData->values()[0];
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
+}
+
+void perform2DTestConsistentMappingVector(Mapping &mapping)
+{
+    int dimensions = 2;
+    using Eigen::Vector2d;
+
+    // Create mesh to map from
+    mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+    mesh::PtrData inData   = inMesh->createData("InData", 2);
+    int           inDataID = inData->getID();
+    inMesh->createVertex(Vector2d(0.0, 0.0));
+    inMesh->createVertex(Vector2d(1.0, 0.0));
+    inMesh->createVertex(Vector2d(1.0, 1.0));
+    inMesh->createVertex(Vector2d(0.0, 1.0));
+    inMesh->allocateDataValues();
+    addGlobalIndex(inMesh);
+
+    auto &values = inData->values();
+    values << 1.0, 4.0, 2.0, 5.0, 2.0, 5.0, 1.0, 4.0;
+
+    // Create mesh to map to
+    mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+    mesh::PtrData outData   = outMesh->createData("OutData", 2);
+    int           outDataID = outData->getID();
+    mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
+    outMesh->allocateDataValues();
+    addGlobalIndex(outMesh);
+
+    // Setup mapping with mapping coordinates and geometry used
+    mapping.setMeshes(inMesh, outMesh);
+    BOOST_TEST(mapping.hasComputedMapping() == false);
+
+    vertex.setCoords(Vector2d(0.0, 0.0));
+    mapping.computeMapping();
+    mapping.map(inDataID, outDataID);
+    double value1 = outData->values()[0];
+    double value2 = outData->values()[1];
+    BOOST_TEST(mapping.hasComputedMapping() == true);
+    BOOST_TEST(value1 == 1.0);
+    BOOST_TEST(value2 == 4.0);
+
+    vertex.setCoords(Vector2d(0.0, 0.5));
+    mapping.computeMapping();
+    mapping.map(inDataID, outDataID);
+    value1 = outData->values()[0];
+    value2 = outData->values()[1];
+    BOOST_TEST(mapping.hasComputedMapping() == true);
+    BOOST_TEST(value1 == 1.0);
+    BOOST_TEST(value2 == 4.0);
+
+    vertex.setCoords(Vector2d(0.0, 1.0));
+    mapping.computeMapping();
+    mapping.map(inDataID, outDataID);
+    value1 = outData->values()[0];
+    value2 = outData->values()[1];
+    BOOST_TEST(mapping.hasComputedMapping() == true);
+    BOOST_TEST(value1 == 1.0);
+    BOOST_TEST(value2 == 4.0);
+
+    vertex.setCoords(Vector2d(1.0, 0.0));
+    mapping.computeMapping();
+    mapping.map(inDataID, outDataID);
+    value1 = outData->values()[0];
+    value2 = outData->values()[1];
+    BOOST_TEST(mapping.hasComputedMapping() == true);
+    BOOST_TEST(value1 == 2.0);
+    BOOST_TEST(value2 == 5.0);
+
+    vertex.setCoords(Vector2d(1.0, 0.5));
+    mapping.computeMapping();
+    mapping.map(inDataID, outDataID);
+    value1 = outData->values()[0];
+    value2 = outData->values()[1];
+    BOOST_TEST(mapping.hasComputedMapping() == true);
+    BOOST_TEST(value1 == 2.0);
+    BOOST_TEST(value2 == 5.0);
+
+    vertex.setCoords(Vector2d(1.0, 1.0));
+    mapping.computeMapping();
+    mapping.map(inDataID, outDataID);
+    value1 = outData->values()[0];
+    value2 = outData->values()[1];
+    BOOST_TEST(mapping.hasComputedMapping() == true);
+    BOOST_TEST(value1 == 2.0);
+    BOOST_TEST(value2 == 5.0);
+
+    vertex.setCoords(Vector2d(0.5, 0.0));
+    mapping.computeMapping();
+    mapping.map(inDataID, outDataID);
+    value1 = outData->values()[0];
+    value2 = outData->values()[1];
+    BOOST_TEST(mapping.hasComputedMapping() == true);
+    BOOST_TEST(value1 == 1.5);
+    BOOST_TEST(value2 == 4.5);
+
+    vertex.setCoords(Vector2d(0.5, 0.5));
+    mapping.computeMapping();
+    mapping.map(inDataID, outDataID);
+    value1 = outData->values()[0];
+    value2 = outData->values()[1];
+    BOOST_TEST(mapping.hasComputedMapping() == true);
+    BOOST_TEST(value1 == 1.5);
+    BOOST_TEST(value2 == 4.5);
+
+    vertex.setCoords(Vector2d(0.5, 1.0));
+    mapping.computeMapping();
+    mapping.map(inDataID, outDataID);
+    value1 = outData->values()[0];
+    value2 = outData->values()[1];
+    BOOST_TEST(mapping.hasComputedMapping() == true);
+    BOOST_TEST(value1 == 1.5);
+    BOOST_TEST(value2 == 4.5);
 }
 
 void perform3DTestConsistentMapping(Mapping &mapping)
@@ -1156,6 +1538,79 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   BOOST_TEST(values.sum() == 3.0);
 }
 
+void perform2DTestConservativeMappingVector(Mapping &mapping)
+{
+  const int    dimensions = 2;
+  const double tolerance  = 1e-6;
+  using Eigen::Vector2d;
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrData inData   = inMesh->createData("InData", 2);
+  int           inDataID = inData->getID();
+  mesh::Vertex &vertex0  = inMesh->createVertex(Vector2d(0, 0));
+  mesh::Vertex &vertex1  = inMesh->createVertex(Vector2d(0, 0));
+  inMesh->allocateDataValues();
+  inData->values() << 1.0, 4.0, 2.0, 5.0;
+  addGlobalIndex(inMesh);
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrData outData   = outMesh->createData("OutData", 2);
+  int           outDataID = outData->getID();
+  outMesh->createVertex(Vector2d(0.0, 0.0));
+  outMesh->createVertex(Vector2d(1.0, 0.0));
+  outMesh->createVertex(Vector2d(1.0, 1.0));
+  outMesh->createVertex(Vector2d(0.0, 1.0));
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  auto &values = outData->values();
+
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  vertex0.setCoords(Vector2d(0.5, 0.0));
+  vertex1.setCoords(Vector2d(0.5, 1.0));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  Eigen::VectorXd refValues(8);
+  refValues << 0.5, 2, 0.5, 2, 1.0, 2.5, 1.0, 2.5;
+  BOOST_TEST(testing::equals(values, refValues, tolerance));
+
+  vertex0.setCoords(Vector2d(0.0, 0.5));
+  vertex1.setCoords(Vector2d(1.0, 0.5));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  refValues << 0.5, 2, 1.0, 2.5, 1.0, 2.5, 0.5, 2;
+  BOOST_TEST(testing::equals(values, refValues, tolerance));
+
+  vertex0.setCoords(Vector2d(0.0, 1.0));
+  vertex1.setCoords(Vector2d(1.0, 0.0));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  refValues << 0.0, 0.0, 2.0, 5.0, 0.0, 0.0, 1.0, 4.0;
+  BOOST_TEST(testing::equals(values, refValues, tolerance));
+
+  vertex0.setCoords(Vector2d(0.0, 0.0));
+  vertex1.setCoords(Vector2d(1.0, 1.0));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  refValues << 1.0, 4.0, 0.0, 0.0, 2.0, 5.0, 0.0, 0.0;
+  BOOST_TEST(testing::equals(values, refValues, tolerance));
+
+  vertex0.setCoords(Vector2d(0.4, 0.5));
+  vertex1.setCoords(Vector2d(0.6, 0.5));
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(values.sum() == 12.0);
+}
+
 void perform3DTestConservativeMapping(Mapping &mapping)
 {
   using Eigen::Vector3d;
@@ -1226,10 +1681,14 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
   Multiquadrics                           fct(1e-3);
   PetRadialBasisFctMapping<Multiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
+  PetRadialBasisFctMapping<Multiquadrics> consistentMap2DVector(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestConsistentMappingVector(consistentMap2DVector);
   PetRadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
   PetRadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
+  PetRadialBasisFctMapping<Multiquadrics> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  perform2DTestConservativeMappingVector(conservativeMap2DVector);
   PetRadialBasisFctMapping<Multiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
   perform3DTestConservativeMapping(conservativeMap3D);
 }

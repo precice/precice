@@ -30,6 +30,11 @@ enum class Preallocation {
   TREE
 };
 
+enum class RBFType {
+  EIGEN,
+  PETSc
+};
+
 /// Performs XML configuration and holds configured mappings.
 class MappingConfiguration : public xml::XMLTag::Listener {
 public:

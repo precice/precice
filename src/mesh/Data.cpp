@@ -1,5 +1,6 @@
 #include "Data.hpp"
 #include "Mesh.hpp"
+#include <algorithm>
 
 namespace precice {
 namespace mesh {
@@ -50,6 +51,13 @@ const std::string &Data::getName() const
 int Data::getID() const
 {
   return _id;
+}
+
+void Data::toZero()
+{
+  auto begin = _values.data();
+  auto end   = begin + _values.size();
+  std::fill(begin, end, 0.0);
 }
 
 int Data::getDimensions() const

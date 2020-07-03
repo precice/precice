@@ -26,7 +26,6 @@ struct SolutionCaching;
 } // namespace MappingTests
 
 namespace precice {
-extern bool testMode;
 extern bool syncMode;
 } // namespace precice
 
@@ -435,6 +434,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // PETSc requires that all diagonal entries are set, even if set to zero.
   _matrixC.assemble(MAT_FLUSH_ASSEMBLY);
   auto zeros = petsc::Vector::allocate(_matrixC);
+  VecZeroEntries(zeros);
+  zeros.assemble();
+  //MatDiagonalSet(_matrixC, zeros, INSERT_VALUES);
   MatDiagonalSet(_matrixC, zeros, ADD_VALUES);
 
   // Begin assembly here, all assembly is ended at the end of this function.
@@ -529,7 +531,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixA, MAT_FINAL_ASSEMBLY);
   CHKERRV(ierr);
-  _matrixQ.assemble();
   _matrixV.assemble();
 
   ePostFill.stop();
@@ -829,17 +830,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     namespace bgi = boost::geometry::index;
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
-    for (int d = 0; d < otherMesh->getDimensions(); d++) {
-      bb[d].first -= _basisFunction.getSupportRadius();
-      bb[d].second += _basisFunction.getSupportRadius();
-    }
-    rtree->query(bgi::within(bb),
-                 boost::make_function_output_iterator([&filterMesh](size_t idx) {
-                   filterMesh->vertices()[idx].tag();
-                 }));
+    bb.expandBy(_basisFunction.getSupportRadius());
+    rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(filterMesh->vertices()[i]); }), 
+      boost::make_function_output_iterator([&filterMesh](size_t idx) {
+        filterMesh->vertices()[idx].tag();
+      }));
+    
   } else {
-    for (auto &vert : filterMesh->vertices())
-      vert.tag();
+    filterMesh->tagAll();
   }
 }
 
@@ -851,6 +849,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
   PRECICE_TRACE();
+  namespace bgi = boost::geometry::index;
 
   if (not _basisFunction.hasCompactSupport())
     return; // Tags should not be changed
@@ -862,45 +861,35 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   else if (getConstraint() == CONSERVATIVE)
     mesh = output();
 
-  mesh::Mesh::BoundingBox bb(mesh->getDimensions(),
-                             std::make_pair(std::numeric_limits<double>::max(),
-                                            std::numeric_limits<double>::lowest()));
+  mesh::BoundingBox bb(mesh->getDimensions());
 
   // Construct bounding box around all owned vertices
   for (mesh::Vertex &v : mesh->vertices()) {
     if (v.isOwner()) {
       PRECICE_ASSERT(v.isTagged()); // Should be tagged from the first round
-      for (int d = 0; d < v.getDimensions(); d++) {
-        bb[d].first  = std::min(v.getCoords()[d], bb[d].first);
-        bb[d].second = std::max(v.getCoords()[d], bb[d].second);
-      }
+      bb.expandBy(v);
     }
   }
-
   // Enlarge bb by support radius
-  for (int d = 0; d < mesh->getDimensions(); d++) {
-    bb[d].first -= _basisFunction.getSupportRadius();
-    bb[d].second += _basisFunction.getSupportRadius();
-  }
+  bb.expandBy(_basisFunction.getSupportRadius());
   auto rtree = mesh::rtree::getVertexRTree(mesh);
-  rtree->query(boost::geometry::index::within(bb),
-               boost::make_function_output_iterator([&mesh](size_t idx) {
-                 mesh->vertices()[idx].tag();
-               }));
+
+  rtree->query(bgi::satisfies([&](size_t const i){ return bb.contains(mesh->vertices()[i]); }), 
+    boost::make_function_output_iterator([&mesh](size_t idx) {
+      mesh->vertices()[idx].tag();
+    }));
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
 {
-  if (not precice::testMode) {
-    const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
-    const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
+  const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
+  const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
-    PRECICE_INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
-                            << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-                            << " to " << output()->getName() << " (ID " << output()->getID() << ") "
-                            << "for dimension " << dim << ") with polynomial set to " << polynomialName);
-  }
+  PRECICE_INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
+      << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+      << " to " << output()->getName() << " (ID " << output()->getID() << ") "
+      << "for dimension " << dim << ") with polynomial set to " << polynomialName);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -917,11 +906,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   auto bbox     = mesh->getBoundingBox();
   auto meshSize = mesh->vertices().size();
 
-  double meshArea = 1;
+  double meshArea = bbox.getArea(_deadAxis);
   // PRECICE_WARN(bbox);
-  for (int d = 0; d < getDimensions(); d++)
-    if (not _deadAxis[d])
-      meshArea *= bbox[d].second - bbox[d].first;
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;
@@ -961,11 +947,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   auto bbox     = mesh->getBoundingBox();
   auto meshSize = mesh->vertices().size();
 
-  double meshArea = 1;
+  double meshArea = bbox.getArea(_deadAxis);
   // PRECICE_WARN(bbox);
-  for (int d = 0; d < getDimensions(); d++)
-    if (not _deadAxis[d])
-      meshArea *= bbox[d].second - bbox[d].first;
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;

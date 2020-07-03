@@ -1,6 +1,7 @@
 #include "xml/Printer.hpp"
 #include <iostream>
 #include <regex>
+#include "utils/TypeNames.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 

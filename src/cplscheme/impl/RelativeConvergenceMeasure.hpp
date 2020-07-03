@@ -51,19 +51,17 @@ public:
 
   virtual void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification)
+      const Eigen::VectorXd &newValues)
   {
     /*
      std::cout<<"\n-------\n";
      std::cout<<"   old val: \n"<<oldValues<<'\n';
      std::cout<<"   new val: \n"<<newValues<<"\n\n";
-     std::cout<<"   design spec: \n"<<designSpecification<<"\n\n";
      std::cout<<"-------\n\n";
 */
 
-    _normDiff      = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
-    _norm          = utils::MasterSlave::l2norm(newValues + designSpecification);
+    _normDiff      = utils::MasterSlave::l2norm(newValues - oldValues);
+    _norm          = utils::MasterSlave::l2norm(newValues);
     _isConvergence = _normDiff <= _norm * _convergenceLimitPercent;
     //      PRECICE_INFO("Relative convergence measure: "
     //                    << "two-norm differences = " << normDiff

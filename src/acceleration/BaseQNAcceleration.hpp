@@ -106,22 +106,6 @@ public:
   virtual void iterationsConverged(DataMap &cplData);
 
   /**
-    * @brief sets the design specification we want to meet for the objective function,
-    *     i. e., we want to solve for argmin_x ||R(x) - q||, with R(x) = H(x) - x
-    *     Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
-    *     with q=0.
-    */
-  virtual void setDesignSpecification(Eigen::VectorXd &q);
-
-  /**
-    * @brief Returns the design specification for the optimization problem.
-    *        Information needed to measure the convergence.
-    *        In case of manifold mapping it also returns the design specification
-    *        for the surrogate model which is updated in every iteration.
-    */
-  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap &cplData);
-
-  /**
     * @brief Exports the current state of the acceleration to a file.
     */
   virtual void exportState(io::TXTWriter &writer);
@@ -283,14 +267,6 @@ private:
 
   /// @brief Difference between solver input and output from last timestep
   Eigen::VectorXd _oldResiduals;
-
-  /**
-    * @brief sets the design specification we want to meet for the objective function,
-    *     i. e., we want to solve for argmin_x ||R(x) - q||, with R(x) = H(x) - x
-    *     Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
-    *     with q=0.
-    */
-  Eigen::VectorXd _designSpecification;
 
   /** @brief backup of the V,W and matrixCols data structures. Needed for the skipping of
    *  initial relaxation, if previous time step converged within one iteration i.e., V and W

@@ -19,7 +19,7 @@
 namespace precice {
 namespace cplscheme {
 class CompositionalCouplingScheme;
-class BaseCouplingScheme;
+class BiCouplingScheme;
 } // namespace cplscheme
 } // namespace precice
 
@@ -106,7 +106,6 @@ private:
   const std::string ATTR_TO;
   const std::string ATTR_SUFFICES;
   const std::string ATTR_CONTROL;
-  const std::string ATTR_LEVEL;
 
   const std::string VALUE_SERIAL_EXPLICIT;
   const std::string VALUE_PARALLEL_EXPLICIT;
@@ -126,14 +125,14 @@ private:
     int                           maxTimeWindows = CouplingScheme::UNDEFINED_TIME_WINDOWS;
     double                        timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
     int                           validDigits    = 16;
-    constants::TimesteppingMethod dtMethod       = constants::FIXED_DT;
+    constants::TimesteppingMethod dtMethod       = constants::FIXED_TIME_WINDOW_SIZE;
     /// Tuples of exchange data, mesh, and participant name.
     typedef std::tuple<mesh::PtrData, mesh::PtrMesh, std::string, std::string, bool> Exchange;
     std::vector<Exchange>                                                            exchanges;
     /// Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<std::tuple<mesh::PtrData, bool, std::string, int, impl::PtrConvergenceMeasure>> convMeasures;
-    int                                                                                         maxIterations      = -1;
-    int                                                                                         extrapolationOrder = 0;
+    std::vector<std::tuple<mesh::PtrData, bool, std::string, impl::PtrConvergenceMeasure>> convMeasures;
+    int                                                                                    maxIterations      = -1;
+    int                                                                                    extrapolationOrder = 0;
 
   } _config;
 
@@ -179,29 +178,25 @@ private:
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
-      bool               suffices,
-      int                level);
+      bool               suffices);
 
   void addRelativeConvergenceMeasure(
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
-      bool               suffices,
-      int                level);
+      bool               suffices);
 
   void addResidualRelativeConvergenceMeasure(
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
-      bool               suffices,
-      int                level);
+      bool               suffices);
 
   void addMinIterationConvergenceMeasure(
       const std::string &dataName,
       const std::string &meshName,
       int                minIterations,
-      bool               suffices,
-      int                level);
+      bool               suffices);
 
   mesh::PtrData getData(
       const std::string &dataName,
@@ -227,7 +222,7 @@ private:
 
   /// Adds configured exchange data to be sent or received to scheme.
   void addDataToBeExchanged(
-      BaseCouplingScheme &scheme,
+      BiCouplingScheme &scheme,
       const std::string & accessor) const;
 
   /**
@@ -240,8 +235,6 @@ private:
 
   void checkIfDataIsExchanged(
       int dataID) const;
-
-  bool checkIfDataIsCoarse(int id) const;
 
   friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;   // For whitebox tests

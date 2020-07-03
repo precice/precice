@@ -50,10 +50,10 @@ BOOST_AUTO_TEST_CASE(ComponentWiseLess)
 
   Eigen::VectorXd c = b;
 
-  BOOST_TEST(componentWiseLess(c, b));
-  BOOST_TEST(componentWiseLess(b, c));
-  BOOST_TEST(cwl(c, b));
-  BOOST_TEST(cwl(b, c));
+  BOOST_TEST(!componentWiseLess(c, b));
+  BOOST_TEST(!componentWiseLess(b, c));
+  BOOST_TEST(!cwl(c, b));
+  BOOST_TEST(!cwl(b, c));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

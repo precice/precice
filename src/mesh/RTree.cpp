@@ -1,4 +1,3 @@
-#include "mesh/impl/RTree.hpp"
 #include "mesh/impl/RTreeAdapter.hpp"
 
 #include <boost/range/irange.hpp>
@@ -11,7 +10,6 @@ namespace bg = boost::geometry;
 
 // Initialize static member
 std::map<int, rtree::MeshIndices> precice::mesh::rtree::_cached_trees;
-std::map<int, PtrPrimitiveRTree>  precice::mesh::rtree::_primitive_trees;
 
 rtree::MeshIndices &rtree::cacheEntry(int meshID)
 {
@@ -86,30 +84,14 @@ rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh &mesh)
   return tree;
 }
 
-PtrPrimitiveRTree rtree::getPrimitiveRTree(const PtrMesh &mesh)
-{
-  PRECICE_ASSERT(mesh, "Empty meshes are not allowed.");
-  auto iter = _primitive_trees.find(mesh->getID());
-  if (iter != _primitive_trees.end()) {
-    return iter->second;
-  }
-  auto treeptr = std::make_shared<PrimitiveRTree>(indexMesh(*mesh));
-  _primitive_trees.emplace(std::piecewise_construct,
-                           std::forward_as_tuple(mesh->getID()),
-                           std::forward_as_tuple(treeptr));
-  return treeptr;
-}
-
 void rtree::clear(Mesh &mesh)
 {
   _cached_trees.erase(mesh.getID());
-  _primitive_trees.erase(mesh.getID());
 }
 
 void rtree::clear()
 {
   _cached_trees.clear();
-  _primitive_trees.clear();
 }
 
 Box3d getEnclosingBox(Vertex const &middlePoint, double sphereRadius)
@@ -127,54 +109,6 @@ Box3d getEnclosingBox(Vertex const &middlePoint, double sphereRadius)
   bg::set<bg::max_corner, 2>(box, bg::get<2>(coords) + sphereRadius);
 
   return box;
-}
-
-PrimitiveRTree indexMesh(const Mesh &mesh)
-{
-  using namespace impl;
-
-  AABBGenerator  gen{mesh};
-  PrimitiveRTree tree;
-  indexPrimitive(tree, gen, mesh.vertices());
-  indexPrimitive(tree, gen, mesh.edges());
-  indexPrimitive(tree, gen, mesh.triangles());
-  indexPrimitive(tree, gen, mesh.quads());
-  return tree;
-}
-
-std::ostream &operator<<(std::ostream &out, Primitive val)
-{
-  switch (val) {
-  case (Primitive::Vertex):
-    out << "Vertex";
-    break;
-  case (Primitive::Edge):
-    out << "Edge";
-    break;
-  case (Primitive::Triangle):
-    out << "Triangle";
-    break;
-  case (Primitive::Quad):
-    out << "Quad";
-    break;
-  }
-  return out;
-}
-
-std::ostream &operator<<(std::ostream &out, PrimitiveIndex val)
-{
-  return out << val.type << ":" << val.index;
-}
-
-bool operator==(const PrimitiveIndex &lhs, const PrimitiveIndex &rhs)
-{
-  return lhs.type == rhs.type && lhs.index == rhs.index;
-}
-
-/// Standard non-equality test for PrimitiveIndex
-bool operator!=(const PrimitiveIndex &lhs, const PrimitiveIndex &rhs)
-{
-  return !(lhs == rhs);
 }
 
 } // namespace mesh
