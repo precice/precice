@@ -606,9 +606,6 @@ void SolverInterfaceImpl::resetMesh(
       context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
       context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
 
-  PRECICE_CHECK(!isStationary, "A mesh with only initial mappings  must not be reseted");
-  PRECICE_CHECK(hasMapping, "A mesh with no mappings must not be reseted");
-
   PRECICE_DEBUG("Clear mesh positions for mesh \"" << context.mesh->getName() << "\"");
   _meshLock.unlock(meshID);
   context.mesh->clear();
@@ -842,9 +839,11 @@ void SolverInterfaceImpl::mapWriteDataFrom(
   PRECICE_VALIDATE_MESH_ID(fromMeshID);
   impl::MeshContext &   context        = _accessor->meshContext(fromMeshID);
   impl::MappingContext &mappingContext = context.fromMappingContext;
-  if (mappingContext.mapping.use_count() == 0) {
-    PRECICE_ERROR("From mesh \"" << context.mesh->getName()
-                                 << "\", there is no mapping defined");
+  if (not mappingContext.mapping) {
+    PRECICE_ERROR("You attempt to \"mapWriteDataFrom\" mesh "
+                  << context.mesh->getName()
+                  << ", but there is no mapping from this mesh configured."
+                     "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
     return;
   }
   if (not mappingContext.mapping->hasComputedMapping()) {
@@ -873,8 +872,10 @@ void SolverInterfaceImpl::mapReadDataTo(
   impl::MeshContext &   context        = _accessor->meshContext(toMeshID);
   impl::MappingContext &mappingContext = context.toMappingContext;
   if (mappingContext.mapping.use_count() == 0) {
-    PRECICE_ERROR("From mesh \"" << context.mesh->getName()
-                                 << "\", there is no mapping defined!");
+    PRECICE_ERROR("You attempt to \"mapReadDataTo\" mesh "
+                  << context.mesh->getName()
+                  << ", but there is no mapping to this mesh configured."
+                     "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
     return;
   }
   if (not mappingContext.mapping->hasComputedMapping()) {
@@ -1450,7 +1451,7 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
       double dt;
       utils::MasterSlave::_communication->receive(dt, rankSlave);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
-                    "Ambiguous timestep length when calling request advance from several processes!");
+                    "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank " << rankSlave << ", the value is " << dt << ", while on rank 0, the value is " << computedTimestepLength << ".");
     }
   }
 }
