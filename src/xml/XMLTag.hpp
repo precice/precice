@@ -4,9 +4,9 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "XMLAttribute.hpp"
 #include "logging/Logger.hpp"
 #include "xml/ConfigParser.hpp"
+#include "xml/XMLAttribute.hpp"
 
 namespace precice {
 namespace xml {
@@ -220,7 +220,7 @@ public:
   void clear();
 
   /// reads all attributes of this tag
-  void readAttributes(std::map<std::string, std::string> &aAttributes);
+  void readAttributes(const std::map<std::string, std::string> &aAttributes);
 
 private:
   mutable logging::Logger _log{"xml::XMLTag"};

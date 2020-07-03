@@ -7,6 +7,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "precice/impl/Participant.hpp"
 #include "xml/XMLTag.hpp"
+#include "utils/networking.hpp"
 
 namespace precice {
 namespace config {

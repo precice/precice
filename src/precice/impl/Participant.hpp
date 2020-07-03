@@ -25,7 +25,8 @@ struct MappingContext;
 // Forward declaration to friend the boost test struct
 namespace PreciceTests {
 namespace Serial {
-struct TestConfiguration;
+struct TestConfigurationPeano;
+struct TestConfigurationComsol;
 }
 } // namespace PreciceTests
 
@@ -41,8 +42,6 @@ public:
     MAPPING_DIRECT
   };
 
-  static void resetParticipantCount();
-
   /**
    * @brief Constructor.
    *
@@ -56,8 +55,6 @@ public:
 
   /// Returns the name of the participant.
   const std::string &getName() const;
-
-  int getID() const;
 
   void addWriteData(
       const mesh::PtrData &data,
@@ -142,11 +139,7 @@ public:
 private:
   logging::Logger _log{"impl::Participant"};
 
-  static int _participantsSize;
-
   std::string _name;
-
-  int _id;
 
   std::vector<PtrWatchPoint> _watchPoints;
 
@@ -189,7 +182,8 @@ private:
   void checkDuplicatedData(const mesh::PtrData &data);
 
   /// To allow white box tests.
-  friend struct PreciceTests::Serial::TestConfiguration;
+  friend struct PreciceTests::Serial::TestConfigurationPeano;
+  friend struct PreciceTests::Serial::TestConfigurationComsol;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS

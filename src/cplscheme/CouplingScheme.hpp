@@ -88,7 +88,7 @@ public:
    *
    * @pre initialize() has been called.
    *
-   * Does not necessarily advances in time.
+   * Does not necessarily advance in time.
    */
   virtual void advance() = 0;
 
@@ -111,19 +111,13 @@ public:
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   /// actually, this only means that data has been received, data is always sent
-  virtual bool hasDataBeenExchanged() const = 0;
+  virtual bool hasDataBeenReceived() const = 0;
 
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;
 
   /// Returns the currently computed time windows of the coupling scheme.
   virtual int getTimeWindows() const = 0;
-
-  /// Returns the maximal time to be computed.
-  virtual double getMaxTime() const = 0;
-
-  /// Returns the maximal time windows to be computed.
-  virtual int getMaxTimeWindows() const = 0;
 
   /// Returns true, if time window size is prescribed by the cpl scheme.
   virtual bool hasTimeWindowSize() const = 0;
@@ -146,9 +140,6 @@ public:
    * returned.
    */
   virtual double getThisTimeWindowRemainder() const = 0;
-
-  /// Returns part of the current timestep that has been computed already.
-  virtual double getComputedTimeWindowPart() const = 0;
 
   /**
    * @brief Returns the maximal length of the next timestep to be computed.

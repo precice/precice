@@ -1,6 +1,7 @@
 #include "DataConfiguration.hpp"
 #include "mesh/Data.hpp"
 #include "xml/XMLAttribute.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {

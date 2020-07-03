@@ -33,7 +33,10 @@ public:
 
   const std::string &filename() const;
 
-  /// Initializes the watch point for exporting point data.
+  /** Initializes the watch point for exporting point data.
+   * 
+   * This can be called repeatedly to reinitialize the WatchPoint.
+   */
   void initialize();
 
   /// Writes one line with data of the watchpoint into the output file.

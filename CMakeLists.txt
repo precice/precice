@@ -1,6 +1,4 @@
 cmake_minimum_required (VERSION 3.10.2)
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/XSDKCompilerDetect.cmake)
-
 project(preCICE VERSION 2.0.2 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
@@ -274,7 +272,7 @@ set_target_properties(precice PROPERTIES
   )
 
 # Setup Boost
-target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
+target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
 target_link_libraries(precice PRIVATE
   Boost::boost
   Boost::filesystem

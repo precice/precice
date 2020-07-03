@@ -46,9 +46,9 @@ target_sources(precice
     src/action/ScaleByAreaAction.hpp
     src/action/ScaleByDtAction.cpp
     src/action/ScaleByDtAction.hpp
+    src/action/SharedPointer.hpp
     src/action/SummationAction.cpp
     src/action/SummationAction.hpp
-    src/action/SharedPointer.hpp
     src/action/config/ActionConfiguration.cpp
     src/action/config/ActionConfiguration.hpp
     src/com/CommunicateBoundingBox.cpp
@@ -89,6 +89,8 @@ target_sources(precice
     src/com/config/CommunicationConfiguration.hpp
     src/cplscheme/BaseCouplingScheme.cpp
     src/cplscheme/BaseCouplingScheme.hpp
+    src/cplscheme/BiCouplingScheme.cpp
+    src/cplscheme/BiCouplingScheme.hpp
     src/cplscheme/CompositionalCouplingScheme.cpp
     src/cplscheme/CompositionalCouplingScheme.hpp
     src/cplscheme/Constants.cpp
@@ -178,6 +180,8 @@ target_sources(precice
     src/math/geometry.hpp
     src/math/la.hpp
     src/math/math.hpp
+    src/mesh/BoundingBox.cpp
+    src/mesh/BoundingBox.hpp
     src/mesh/Data.cpp
     src/mesh/Data.hpp
     src/mesh/Edge.cpp
@@ -199,7 +203,6 @@ target_sources(precice
     src/mesh/config/DataConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
-    src/mesh/impl/RTree.hpp
     src/mesh/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
@@ -270,6 +273,8 @@ target_sources(precice
     src/utils/TypeNames.hpp
     src/utils/algorithm.hpp
     src/utils/assertion.hpp
+    src/utils/networking.cpp
+    src/utils/networking.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
     src/utils/traits.hpp
@@ -277,6 +282,8 @@ target_sources(precice
     src/xml/ConfigParser.hpp
     src/xml/Printer.cpp
     src/xml/Printer.hpp
+    src/xml/ValueParser.cpp
+    src/xml/ValueParser.hpp
     src/xml/XMLAttribute.hpp
     src/xml/XMLTag.cpp
     src/xml/XMLTag.hpp
