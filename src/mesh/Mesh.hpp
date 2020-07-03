@@ -191,11 +191,16 @@ public:
   /// Computes the boundingBox for the vertices.
   void computeBoundingBox();
 
-  /// Computes if a quad is convex and returns an ordered set of vertices.
+  /// Uses a set of four vertices to check if a quad is valid and reorders vertices. Returns true if valid quad.
   bool computeQuadConvexityFromPoints(std::array<int,4> &vertexList) const;
 
-  /// Computes if a quad is convex and returns and ordered set of vertices.
-  //void computeQuadEdgeOrder(Vertex &verticesOne, Vertex &verticesTwo, Vertex &verticesThree, Vertex &verticesFour) const;
+  /**
+   * @brief Computes the ordering of edges to form a quad.
+   *
+   * Receives a set of edges and re-orders them to form a quad. A list
+   * of four unique vertices is returned that form the quad
+   *
+   */
   std::array<int,4> computeQuadEdgeOrder(std::array<int,4> &edgeList) const;
 
   /**

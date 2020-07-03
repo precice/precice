@@ -773,7 +773,7 @@ void SolverInterfaceImpl::setMeshQuad(
     PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), "Given EdgeID is invalid!");
     PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID), "Given EdgeID is invalid!");
     PRECICE_CHECK(mesh->isValidEdgeID(fourthEdgeID), "Given EdgeID is invalid!");
-    mesh::Edge *e[5]; 
+    mesh::Edge *e[5];   //Contains the four edges of the quad and the new diagonal that will be created. 
     e[0] = &mesh->edges()[firstEdgeID];
     e[1] = &mesh->edges()[secondEdgeID];
     e[2] = &mesh->edges()[thirdEdgeID];

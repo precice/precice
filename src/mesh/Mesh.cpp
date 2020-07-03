@@ -468,10 +468,12 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
 
 bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexList) const
 {
-
   PRECICE_DEBUG("Computing quad convexity: ");
-  // All points need to be projected into a new plane with only 2 coordinates, x' and y'. These are used to check 
-  // the convexity of the quad. These new coordinates are stored in 'coords'
+  /*
+    All points need to be projected into a new plane with only 2 coordinates, x' and y'. These are used to check 
+    the convexity of the quad. These new coordinates are stored in 'coords'. Vertices in 2D does not need to
+    be transformed.
+  */
   Eigen::Vector3d coords[4];
 
   // Normal of the plane of first three points in the list of vertices
