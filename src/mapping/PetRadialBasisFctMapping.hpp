@@ -11,6 +11,7 @@
 #include "impl/BasisFunctions.hpp"
 #include "math/math.hpp"
 #include "mesh/RTree.hpp"
+#include "mesh/impl/BBUtils.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
@@ -831,11 +832,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
     bb.expandBy(_basisFunction.getSupportRadius());
-    rtree->query(bgi::satisfies([&](size_t const i) { return bb.contains(filterMesh->vertices()[i]); }),
+    rtree->query(bgi::intersects(toRTreeBox(bb)),
                  boost::make_function_output_iterator([&filterMesh](size_t idx) {
                    filterMesh->vertices()[idx].tag();
                  }));
-
   } else {
     filterMesh->tagAll();
   }
@@ -873,8 +873,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
   auto rtree = mesh::rtree::getVertexRTree(mesh);
-
-  rtree->query(bgi::satisfies([&](size_t const i) { return bb.contains(mesh->vertices()[i]); }),
+  rtree->query(bgi::intersects(toRTreeBox(bb)),
                boost::make_function_output_iterator([&mesh](size_t idx) {
                  mesh->vertices()[idx].tag();
                }));
@@ -1335,7 +1334,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
     // -- PREALLOCATES THE COEFFICIENTS --
     auto search_box = mesh::getEnclosingBox(inVertex, supportRadius);
 
-    tree->query(bg::index::within(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(inVertex, inMesh->vertices()[i]) <= supportRadius; }),
+    tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(inVertex, inMesh->vertices()[i]) <= supportRadius; }),
                 std::back_inserter(results));
 
     // for (mesh::Vertex& vj : inMesh->vertices()) {
@@ -1432,7 +1431,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
     results.clear();
     auto search_box = mesh::getEnclosingBox(oVertex, supportRadius);
 
-    tree->query(bg::index::within(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(oVertex, inMesh->vertices()[i]) <= supportRadius; }),
+    tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(oVertex, inMesh->vertices()[i]) <= supportRadius; }),
                 std::back_inserter(results));
 
     for (auto i : results) {

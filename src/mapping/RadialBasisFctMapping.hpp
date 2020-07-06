@@ -8,6 +8,7 @@
 #include "mesh/RTree.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
+#include "mesh/impl/BBUtils.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/QR>
@@ -487,7 +488,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
     bb.expandBy(_basisFunction.getSupportRadius());
-    rtree->query(bgi::satisfies([&](size_t const i) { return bb.contains(filterMesh->vertices()[i]); }),
+    rtree->query(bgi::intersects(toRTreeBox(bb)),
                  boost::make_function_output_iterator([&filterMesh](size_t idx) {
                    filterMesh->vertices()[idx].tag();
                  }));
@@ -525,7 +526,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   bb.expandBy(_basisFunction.getSupportRadius());
   auto rtree = mesh::rtree::getVertexRTree(mesh);
 
-  rtree->query(bgi::satisfies([&](size_t const i) { return bb.contains(mesh->vertices()[i]); }),
+  rtree->query(bgi::intersects(toRTreeBox(bb)),
                boost::make_function_output_iterator([&mesh](size_t idx) {
                  mesh->vertices()[idx].tag();
                }));
