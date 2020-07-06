@@ -73,6 +73,12 @@ public:
    */
   Eigen::VectorXd center() const;
 
+  /// the min corner of the bounding box
+  Eigen::VectorXd minCorner() const;
+
+  /// the max corner of the bounding box
+  Eigen::VectorXd maxCorner() const;
+
   /// Calculate the area of bounding box
   double getArea(std::vector<bool> deadAxis);
 
