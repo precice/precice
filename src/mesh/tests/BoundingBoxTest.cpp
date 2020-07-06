@@ -136,6 +136,30 @@ BOOST_AUTO_TEST_CASE(CenterOfGravity)
   }
 } // CenterOfGravity
 
+BOOST_AUTO_TEST_CASE(MinMaxCorner)
+{
+  PRECICE_TEST(1_rank);
+  { // 3D
+    BoundingBox bb({0.0, 1.0,
+                    -1.0, 3.0,
+                    2.0, 4.0});
+
+    Eigen::Vector3d compareMin(0.0, -1.0, 2.0);
+    Eigen::Vector3d compareMax(1.0, 3.0, 4.0);
+    BOOST_TEST(compareMin == bb.minCorner());
+    BOOST_TEST(compareMax == bb.maxCorner());
+  }
+  { // 2D
+    BoundingBox bb({-1.0, 3.0,
+                    2.0, 4.0});
+
+    Eigen::Vector2d compareMin(-1.0, 2.0);
+    Eigen::Vector2d compareMax(3.0, 4.0);
+    BOOST_TEST(compareMin == bb.minCorner());
+    BOOST_TEST(compareMax == bb.maxCorner());
+  }
+} // CenterOfGravity
+
 BOOST_AUTO_TEST_CASE(Area)
 {
   PRECICE_TEST(1_rank);

@@ -1,9 +1,9 @@
-#include "BoundingBox.hpp"
 #include <algorithm>
 #include <limits>
 #include <ostream>
 #include <string>
 #include <utility>
+#include "BoundingBox.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/Vertex.hpp"
@@ -71,6 +71,24 @@ Eigen::VectorXd BoundingBox::center() const
     cog[d] = (_bounds[2 * d + 1] - _bounds[2 * d]) / 2.0 + _bounds[2 * d];
   }
   return cog;
+}
+
+Eigen::VectorXd BoundingBox::minCorner() const
+{
+  Eigen::VectorXd min(_dimensions);
+  for (int d = 0; d < _dimensions; d++) {
+    min[d] = _bounds[2 * d];
+  }
+  return min;
+}
+
+Eigen::VectorXd BoundingBox::maxCorner() const
+{
+  Eigen::VectorXd max(_dimensions);
+  for (int d = 0; d < _dimensions; d++) {
+    max[d] = _bounds[2 * d + 1];
+  }
+  return max;
 }
 
 double BoundingBox::getArea(std::vector<bool> deadAxis)
