@@ -1,19 +1,23 @@
 #include "Petsc.hpp"
-#include <memory>      // FIXME
-#include <mpi.h>       // FIXME
-#include <numeric>     // FIXME
-#include <type_traits> // FIXME
-#include <utility>
-#include <vector> // FIXME
-#include "utils/Parallel.hpp"
-#ifndef PRECICE_NO_PETSC
-#include "petsc.h"
-#endif // not PRECICE_NO_PETSC
-#include "logging/LogMacros.hpp"
+
+// A logger is always required
 #include "logging/Logger.hpp"
-#include "petscdrawtypes.h"   // FIXME
-#include "petscis.h"          // FIXME
-#include "petscviewertypes.h" // FIXME
+
+#ifndef PRECICE_NO_PETSC
+#include <memory>
+#include <mpi.h>
+#include <numeric>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "logging/LogMacros.hpp"
+#include "petsc.h"
+#include "petscdrawtypes.h"
+#include "petscis.h"
+#include "petscviewertypes.h"
+#include "utils/Parallel.hpp"
+#endif // not PRECICE_NO_PETSC
 
 namespace precice {
 namespace utils {
