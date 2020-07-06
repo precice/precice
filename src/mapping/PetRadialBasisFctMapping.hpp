@@ -677,8 +677,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         auto sigma = petsc::Vector::allocate(_matrixQ, "sigma", petsc::Vector::LEFT);
         if (not _QRsolver.solveTranspose(tau, sigma)) {
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
-          PRECICE_ERROR("RBF Polynomial linear system has not converged. "
-                        "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
+          PRECICE_ERROR("The polynomial linear system of the RBF mapping from mesh " << input()->getName() << " to mesh "
+                                                                                     << output()->getName() << " has not converged. This means most probably that the mapping problem is not well-posed. "
+                                                                                     << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
+                                                                                     << "by marking perpendicular axes as dead?");
         }
         VecWAXPY(out, -1, sigma, mu);
       } else {
@@ -687,8 +689,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         utils::Event eSolve("map.pet.solveConservative.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
         if (not _solver.solve(au, out)) {
           KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
-          PRECICE_ERROR("RBF linear system has not converged. "
-                        "Try to fix axis-aligned mapping setups by marking perpendicular axes as dead.");
+          PRECICE_ERROR("The linear system of the RBF mapping from mesh " << input()->getName() << " to mesh "
+                                                                          << output()->getName() << " has not converged. This means most probably that the mapping problem is not well-posed. "
+                                                                          << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
+                                                                          << "by marking perpendicular axes as dead?");
         }
         eSolve.addData("Iterations", _solver.getIterationNumber());
         eSolve.stop();
@@ -740,8 +744,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       if (_polynomial == Polynomial::SEPARATE) {
         if (not _QRsolver.solve(in, a)) {
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
-          PRECICE_ERROR("Polynomial QR linear system has not converged. "
-                        "Try to fix axis-aligned mapping setups by marking perpendicular axis as dead.");
+          PRECICE_ERROR("The polynomial QR system of the RBF mapping from mesh " << input()->getName() << " to mesh "
+                                                                                 << output()->getName() << " has not converged. This means most probably that the mapping problem is not well-posed. "
+                                                                                 << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
+                                                                                 << "by marking perpendicular axes as dead?");
         }
         VecScale(a, -1);
         MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
@@ -756,8 +762,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       utils::Event eSolve("map.pet.solveConsistent.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
       if (not _solver.solve(in, p)) {
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
-        PRECICE_ERROR("RBF linear system has not converged. "
-                      "Try to fix axis-aligned mapping setups by marking perpendicular axis as dead.");
+        PRECICE_ERROR("The linear system of the RBF mapping from mesh " << input()->getName() << " to mesh "
+                                                                        << output()->getName() << " has not converged. This means most probably that the mapping problem is not well-posed. "
+                                                                        << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
+                                                                        << "by marking perpendicular axes as dead?");
       }
       eSolve.addData("Iterations", _solver.getIterationNumber());
       eSolve.stop();
