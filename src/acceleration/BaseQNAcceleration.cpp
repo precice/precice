@@ -182,6 +182,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   _residuals = _values;
   _residuals -= _oldValues;
 
+  PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(_residuals), 0.0),
+                "The coupling residual equals zero. There is probably something wrong in your adapter. "
+                "Maybe you always write the same data or you call advance without "
+                "providing new data first or you do not use available read data.");
+
   //if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
@@ -202,6 +207,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
+
+      PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0), "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
+                                                                               "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
+                                                                               "Maybe you always write the same (or only incremented) data or you call advance without "
+                                                                               "providing  new data first.");
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
@@ -413,6 +423,7 @@ void BaseQNAcceleration::applyFilter()
     std::vector<int> delIndices(0);
     _qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
     // start with largest index (as V,W matrices are shrinked and shifted
+
     for (int i = delIndices.size() - 1; i >= 0; i--) {
 
       removeMatrixColumn(delIndices[i]);
@@ -487,7 +498,7 @@ void BaseQNAcceleration::iterationsConverged(
   concatenateCouplingData(cplData);
   updateDifferenceMatrices(cplData);
 
-  if (_matrixCols.front() == 0) { // Did only one iteration
+  if (not _matrixCols.empty() && _matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
 

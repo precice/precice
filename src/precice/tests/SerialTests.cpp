@@ -87,18 +87,18 @@ BOOST_AUTO_TEST_CASE(Full)
 
   SolverInterface interface(context.name, config, context.rank, context.size);
 
-  if(context.isNamed("SolverOne")) {
-    auto meshid = interface.getMeshID("MeshOne");
+  if (context.isNamed("SolverOne")) {
+    auto   meshid   = interface.getMeshID("MeshOne");
     double coords[] = {0.1, 1.2, 2.3};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
-    auto dataid = interface.getDataID("DataOne", meshid);
+    auto   dataid = interface.getDataID("DataOne", meshid);
     double data[] = {3.4, 4.5, 5.6};
     interface.writeVectorData(dataid, vertexid, data);
   } else {
-    auto meshid = interface.getMeshID("MeshTwo");
+    auto   meshid   = interface.getMeshID("MeshTwo");
     double coords[] = {0.12, 1.21, 2.2};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
     auto dataid = interface.getDataID("DataTwo", meshid);
     interface.writeScalarData(dataid, vertexid, 7.8);
@@ -118,18 +118,18 @@ BOOST_AUTO_TEST_CASE(ImplicitFinalize)
 
   SolverInterface interface(context.name, config, context.rank, context.size);
 
-  if(context.isNamed("SolverOne")) {
-    auto meshid = interface.getMeshID("MeshOne");
+  if (context.isNamed("SolverOne")) {
+    auto   meshid   = interface.getMeshID("MeshOne");
     double coords[] = {0.1, 1.2, 2.3};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
-    auto dataid = interface.getDataID("DataOne", meshid);
+    auto   dataid = interface.getDataID("DataOne", meshid);
     double data[] = {3.4, 4.5, 5.6};
     interface.writeVectorData(dataid, vertexid, data);
   } else {
-    auto meshid = interface.getMeshID("MeshTwo");
+    auto   meshid   = interface.getMeshID("MeshTwo");
     double coords[] = {0.12, 1.21, 2.2};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
     auto dataid = interface.getDataID("DataTwo", meshid);
     interface.writeScalarData(dataid, vertexid, 7.8);
@@ -1441,7 +1441,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
     if (context.isNamed("SolverTwo")) {
       int dataID = cplInterface.getDataID("DataOne", meshID);
       // to get convergence in first timestep (everything 0), but not in second timestep
-      Vector2d value{0.0, 0.0 + numberOfAdvanceCalls};
+      Vector2d value{0.0, 2.0 + numberOfAdvanceCalls * numberOfAdvanceCalls};
       cplInterface.writeVectorData(dataID, vertexID, value.data());
     }
     cplInterface.advance(1.0);

@@ -1,4 +1,5 @@
 #include "acceleration/impl/ResidualSumPreconditioner.hpp"
+#include "math/differences.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice {
@@ -38,6 +39,8 @@ void ResidualSumPreconditioner::_update_(bool                   timestepComplete
       sum += norms[k];
       offset += _subVectorSizes[k];
       norms[k] = std::sqrt(norms[k]);
+      PRECICE_CHECK(not math::equals(norms[k], 0.0), "A residual sub-vector in the residual-sum preconditioner became numerically zero. "
+                                                     "Thus, the preconditioner is no longer stable. Please try the value preconditioner instead.");
     }
     sum = std::sqrt(sum);
     PRECICE_ASSERT(sum > 0);

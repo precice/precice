@@ -232,6 +232,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
 void IQNILSAcceleration::specializedIterationsConverged(
     DataMap &cplData)
 {
+  PRECICE_TRACE();
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
