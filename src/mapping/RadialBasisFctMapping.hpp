@@ -192,9 +192,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
                                                                              << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
                                                                              << "by marking perpendicular axes as dead?");
     }
-    _hasComputedMapping = true;
-    PRECICE_DEBUG("Compute Mapping is Completed.");
   }
+  _hasComputedMapping = true;
+  PRECICE_DEBUG("Compute Mapping is Completed.");
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
