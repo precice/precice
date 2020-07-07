@@ -1,4 +1,3 @@
-#include "Mesh.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
@@ -6,9 +5,11 @@
 #include <functional>
 #include <memory>
 #include <ostream>
+#include <type_traits>
 #include <utility>
 #include <vector>
 #include "Edge.hpp"
+#include "Mesh.hpp"
 #include "Quad.hpp"
 #include "RTree.hpp"
 #include "Triangle.hpp"
@@ -204,7 +205,7 @@ void Mesh::allocateDataValues()
 {
   PRECICE_TRACE(_vertices.size());
   const auto expectedCount = _vertices.size();
-  using SizeType           = decltype(expectedCount);
+  using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
   for (PtrData data : _data) {
     const SizeType expectedSize = expectedCount * data->getDimensions();
     const auto     actualSize   = static_cast<SizeType>(data->values().size());
