@@ -1,4 +1,6 @@
+#include <Eigen/Core>
 #include "io/TXTTableWriter.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(IOTests)
@@ -30,7 +32,7 @@ BOOST_AUTO_TEST_CASE(TXTTableWriterTest)
 
   for (int t = 0; t < 10; t++) {
     writer.writeData("Timestep", t);
-    writer.writeData("Importance", t*2);
+    writer.writeData("Importance", t * 2);
   }
   writer.close();
 }

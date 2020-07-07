@@ -1,10 +1,16 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include "BaseCouplingScheme.hpp"
+#include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
+#include "m2n/SharedPointer.hpp"
+#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace cplscheme {
+struct CouplingData;
 
 /**
  * @brief A coupling scheme with multiple participants.

@@ -1,7 +1,12 @@
 #pragma once
 
+#include <string>
 #include "BiCouplingScheme.hpp"
+#include "cplscheme/BaseCouplingScheme.hpp"
+#include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
+#include "m2n/SharedPointer.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {

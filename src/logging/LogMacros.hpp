@@ -1,17 +1,16 @@
 #pragma once
 
+#include <boost/preprocessor/control/if.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/variadic/to_seq.hpp>
-
 #include <boost/vmd/is_empty.hpp>
-
 #include <string>
+
+#include "logging/Tracer.hpp"
 #include "prettyprint/prettyprint.hpp" // so that we can put std::vector et. al. on ostream
 #include "utils/String.hpp"
-
-#include "Tracer.hpp"
 
 #define PRECICE_WARN(message) _log.warning(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
 

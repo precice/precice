@@ -2,6 +2,10 @@
 #ifndef PRECICE_NO_MPI
 
 #include <map>
+#include <mpi.h>
+#include <set>
+#include <stddef.h>
+#include <string>
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"
 

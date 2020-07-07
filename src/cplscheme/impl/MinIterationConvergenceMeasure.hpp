@@ -1,7 +1,11 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <ostream>
+#include <string>
 #include "ConvergenceMeasure.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {

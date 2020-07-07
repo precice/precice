@@ -1,6 +1,11 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <vector>
+#include "logging/Logger.hpp"
 #include "mesh/BoundingBox.hpp"
+#include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Helpers.hpp"
 
 using namespace precice;
 using namespace precice::mesh;

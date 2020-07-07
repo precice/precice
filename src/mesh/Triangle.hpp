@@ -2,8 +2,8 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <array>
 #include <iostream>
-
 #include "math/differences.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/RangeAccessor.hpp"

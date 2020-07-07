@@ -1,10 +1,13 @@
 #include "M2N.hpp"
+#include <utility>
 #include "DistributedComFactory.hpp"
 #include "DistributedCommunication.hpp"
 #include "com/Communication.hpp"
+#include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 using precice::utils::Event;
 

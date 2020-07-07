@@ -1,13 +1,18 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <string>
+#include <vector>
+#include "action/SharedPointer.hpp"
 #include "io/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "partition/ReceivedPartition.hpp"
 #include "precice/impl/Participant.hpp"
-#include "xml/XMLTag.hpp"
+#include "precice/impl/SharedPointer.hpp"
 #include "utils/networking.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace config {

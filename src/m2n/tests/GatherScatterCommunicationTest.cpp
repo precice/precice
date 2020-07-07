@@ -1,15 +1,15 @@
 #ifndef PRECICE_NO_MPI
 
-#include "com/MPIDirectCommunication.hpp"
-#include "m2n/DistributedComFactory.hpp"
-#include "m2n/GatherScatterComFactory.hpp"
+#include <Eigen/Core>
+#include <memory>
+#include <vector>
+#include "com/SharedPointer.hpp"
+#include "m2n/DistributedCommunication.hpp"
 #include "m2n/M2N.hpp"
-#include "m2n/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
-#include "utils/Parallel.hpp"
 
 BOOST_AUTO_TEST_SUITE(M2NTests)
 

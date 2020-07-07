@@ -1,10 +1,24 @@
 #include "MappingConfiguration.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <list>
+#include <memory>
+#include <ostream>
+#include <string.h>
+#include <utility>
+#include "logging/LogMacros.hpp"
+#include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -270,8 +284,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   // the mapping is a RBF mapping
 
   configuredMapping.isRBF = true;
-  bool isSerial           = context.size == 1;
-  bool usePETSc           = false;
+  bool    isSerial        = context.size == 1;
+  bool    usePETSc        = false;
   RBFType rbfType         = RBFType::EIGEN;
 
 #ifndef PRECICE_NO_PETSC
@@ -284,11 +298,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   delete[] arg;
   usePETSc = true;
 #endif
-  
+
   if (usePETSc && (not useLU)) {
     rbfType = RBFType::PETSc;
-  } 
-  else{
+  } else {
     rbfType = RBFType::EIGEN;
   }
 

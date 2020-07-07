@@ -1,6 +1,9 @@
 #pragma once
 
 #include "DistributedComFactory.hpp"
+#include "com/SharedPointer.hpp"
+#include "m2n/DistributedCommunication.hpp"
+#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace m2n {

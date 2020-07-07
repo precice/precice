@@ -1,8 +1,14 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <limits>
+#include <math.h>
+#include <ostream>
+#include <string>
 #include "../CouplingData.hpp"
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
+#include "math/differences.hpp"
 #include "math/math.hpp"
 #include "utils/MasterSlave.hpp"
 

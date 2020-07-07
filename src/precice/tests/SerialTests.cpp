@@ -1,14 +1,24 @@
 #ifndef PRECICE_NO_MPI
-#include "testing/Testing.hpp"
-
+#include <Eigen/Core>
+#include <algorithm>
+#include <deque>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <vector>
+#include "logging/LogMacros.hpp"
+#include "math/constants.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Vertex.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/config/Configuration.hpp"
-#include "precice/impl/DataContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
+#include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
-#include "utils/MasterSlave.hpp"
-#include "utils/Parallel.hpp"
+#include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
 
 using namespace precice;
 using precice::testing::TestContext;
@@ -87,18 +97,18 @@ BOOST_AUTO_TEST_CASE(Full)
 
   SolverInterface interface(context.name, config, context.rank, context.size);
 
-  if(context.isNamed("SolverOne")) {
-    auto meshid = interface.getMeshID("MeshOne");
+  if (context.isNamed("SolverOne")) {
+    auto   meshid   = interface.getMeshID("MeshOne");
     double coords[] = {0.1, 1.2, 2.3};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
-    auto dataid = interface.getDataID("DataOne", meshid);
+    auto   dataid = interface.getDataID("DataOne", meshid);
     double data[] = {3.4, 4.5, 5.6};
     interface.writeVectorData(dataid, vertexid, data);
   } else {
-    auto meshid = interface.getMeshID("MeshTwo");
+    auto   meshid   = interface.getMeshID("MeshTwo");
     double coords[] = {0.12, 1.21, 2.2};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
     auto dataid = interface.getDataID("DataTwo", meshid);
     interface.writeScalarData(dataid, vertexid, 7.8);
@@ -118,18 +128,18 @@ BOOST_AUTO_TEST_CASE(ImplicitFinalize)
 
   SolverInterface interface(context.name, config, context.rank, context.size);
 
-  if(context.isNamed("SolverOne")) {
-    auto meshid = interface.getMeshID("MeshOne");
+  if (context.isNamed("SolverOne")) {
+    auto   meshid   = interface.getMeshID("MeshOne");
     double coords[] = {0.1, 1.2, 2.3};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
-    auto dataid = interface.getDataID("DataOne", meshid);
+    auto   dataid = interface.getDataID("DataOne", meshid);
     double data[] = {3.4, 4.5, 5.6};
     interface.writeVectorData(dataid, vertexid, data);
   } else {
-    auto meshid = interface.getMeshID("MeshTwo");
+    auto   meshid   = interface.getMeshID("MeshTwo");
     double coords[] = {0.12, 1.21, 2.2};
-    auto vertexid = interface.setMeshVertex(meshid, coords);
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
 
     auto dataid = interface.getDataID("DataTwo", meshid);
     interface.writeScalarData(dataid, vertexid, 7.8);

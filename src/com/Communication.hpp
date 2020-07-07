@@ -1,6 +1,11 @@
 #pragma once
 
+#include <set>
+#include <stddef.h>
+#include <string>
+#include <vector>
 #include "Request.hpp"
+#include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {

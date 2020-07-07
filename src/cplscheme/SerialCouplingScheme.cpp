@@ -1,9 +1,17 @@
 #include "SerialCouplingScheme.hpp"
+#include <math.h>
+#include <memory>
+#include <ostream>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/SharedPointer.hpp"
+#include "cplscheme/BaseCouplingScheme.hpp"
+#include "cplscheme/BiCouplingScheme.hpp"
+#include "cplscheme/CouplingScheme.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
-#include "math/math.hpp"
-#include "utils/EigenHelperFunctions.hpp"
-#include "utils/MasterSlave.hpp"
+#include "math/differences.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {

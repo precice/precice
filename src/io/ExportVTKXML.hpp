@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <iosfwd>
 #include <string>
 #include <vector>
 #include "Export.hpp"

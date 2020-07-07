@@ -1,12 +1,21 @@
 #include <Eigen/Core>
+#include <algorithm>
+#include <deque>
+#include <iosfwd>
+#include <memory>
+#include <string>
+#include <vector>
+#include "logging/Logger.hpp"
+#include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Quad.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Helpers.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
@@ -193,7 +202,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
   mesh.computeBoundingBox();
 
   mesh::BoundingBox bBox = mesh.getBoundingBox();
-  auto                    cog  = bBox.center();
+  auto              cog  = bBox.center();
 
   mesh::BoundingBox referenceBox({-1.0, 2.0,
                                   0.0, 4.0});
@@ -226,7 +235,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   mesh.computeBoundingBox();
 
   mesh::BoundingBox bBox = mesh.getBoundingBox();
-  auto                    cog  = bBox.center();
+  auto              cog  = bBox.center();
 
   mesh::BoundingBox referenceBox({-1.0, 3.5,
                                   0.0, 4.0,
@@ -498,7 +507,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataGrow)
 {
   PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
-  const auto& values = mesh.createData("Data", 1)->values();
+  const auto &        values = mesh.createData("Data", 1)->values();
 
   // Create mesh
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -521,7 +530,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
 {
   PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
-  const auto& values = mesh.createData("Data", 1)->values();
+  const auto &        values = mesh.createData("Data", 1)->values();
 
   // Create mesh
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));

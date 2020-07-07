@@ -1,41 +1,65 @@
 #include "SolverInterfaceImpl.hpp"
 #include <Eigen/Core>
+#include <algorithm>
+#include <array>
+#include <deque>
+#include <functional>
+#include <iterator>
+#include <math.h>
+#include <memory>
+#include <ostream>
+#include <tuple>
+#include <utility>
+#include "action/SharedPointer.hpp"
+#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "io/Export.hpp"
 #include "io/ExportContext.hpp"
+#include "io/SharedPointer.hpp"
+#include "logging/LogConfiguration.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mapping/Mapping.hpp"
+#include "mapping/SharedPointer.hpp"
+#include "mapping/config/MappingConfiguration.hpp"
+#include "math/differences.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Triangle.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
-#include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "partition/Partition.hpp"
 #include "partition/ProvidedPartition.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "partition/SharedPointer.hpp"
 #include "precice/config/Configuration.hpp"
 #include "precice/config/ParticipantConfiguration.hpp"
+#include "precice/config/SharedPointer.hpp"
 #include "precice/config/SolverInterfaceConfiguration.hpp"
+#include "precice/impl/DataContext.hpp"
+#include "precice/impl/MappingContext.hpp"
+#include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/ValidationMacros.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/Event.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
+#include "utils/PointerVector.hpp"
 #include "utils/algorithm.hpp"
-
-#include <algorithm>
-#include <utility>
-
-#include "logging/LogConfiguration.hpp"
-#include "logging/Logger.hpp"
+#include "utils/assertion.hpp"
+#include "xml/XMLTag.hpp"
 
 using precice::utils::Event;
 using precice::utils::EventRegistry;
@@ -455,7 +479,7 @@ void SolverInterfaceImpl::finalize()
   _participants.clear();
   _accessor.reset();
 
-  // Close Connections 
+  // Close Connections
   PRECICE_DEBUG("Close master-slave communication");
   if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
     utils::MasterSlave::_communication->closeConnection();

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <ostream>
+#include <string>
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"

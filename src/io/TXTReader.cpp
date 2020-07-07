@@ -1,5 +1,5 @@
 #include "TXTReader.hpp"
-#include "logging/Logger.hpp"
+#include "logging/LogMacros.hpp"
 
 namespace precice {
 namespace io {

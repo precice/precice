@@ -1,6 +1,11 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <memory>
+#include <stddef.h>
 #include <string>
+#include <utility>
+#include <vector>
 #include "SharedPointer.hpp"
 #include "action/SharedPointer.hpp"
 #include "cplscheme/SharedPointer.hpp"
@@ -27,10 +32,14 @@ namespace PreciceTests {
 namespace Serial {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
-}
+} // namespace Serial
 } // namespace PreciceTests
 
 namespace precice {
+namespace utils {
+class ManageUniqueIDs;
+} // namespace utils
+
 namespace impl {
 
 /// Holds coupling state of one participating solver in coupled simulation.

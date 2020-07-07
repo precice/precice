@@ -1,12 +1,17 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
+namespace logging {
+class Logger;
+} // namespace logging
+
 namespace xml {
 class XMLTag; // forward declaration to resolve circular import
 struct ConfigurationContext;

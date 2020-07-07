@@ -1,13 +1,29 @@
 #ifndef PRECICE_NO_MPI
 
+#include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <memory>
 #include <vector>
-#include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
+#include "com/SharedPointer.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "m2n/DistributedCommunication.hpp"
 #include "m2n/PointToPointCommunication.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/MasterSlave.hpp"
+
+namespace precice {
+namespace mesh {
+class Vertex;
+} // namespace mesh
+namespace utils {
+class Parallel;
+} // namespace utils
+} // namespace precice
 
 using precice::testing::TestContext;
 using precice::utils::MasterSlave;

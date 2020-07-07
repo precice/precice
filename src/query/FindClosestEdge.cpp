@@ -1,12 +1,13 @@
 #include "FindClosestEdge.hpp"
+#include <Eigen/Core>
 #include <Eigen/Dense>
 #include <array>
-#include <utility>
+#include "logging/LogMacros.hpp"
 #include "math/barycenter.hpp"
-#include "math/geometry.hpp"
+#include "math/differences.hpp"
 #include "mesh/Edge.hpp"
-#include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace query {

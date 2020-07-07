@@ -1,12 +1,19 @@
 #pragma once
 
+#include <string>
 #include <vector>
 #include "Partition.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/BoundingBox.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 
 namespace precice {
+namespace m2n {
+class M2N;
+} // namespace m2n
+
 namespace partition {
 
 /**

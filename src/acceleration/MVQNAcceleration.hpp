@@ -2,7 +2,10 @@
 
 #pragma once
 
+#include <Eigen/Core>
 #include <deque>
+#include <vector>
+#include "acceleration/Acceleration.hpp"
 #include "acceleration/BaseQNAcceleration.hpp"
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/SVDFactorization.hpp"

@@ -1,6 +1,17 @@
 #include "BiCouplingScheme.hpp"
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <type_traits>
+#include <utility>
+#include "cplscheme/BaseCouplingScheme.hpp"
+#include "cplscheme/CouplingData.hpp"
+#include "cplscheme/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
+#include "mesh/Data.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice {
@@ -31,8 +42,8 @@ BiCouplingScheme::BiCouplingScheme(
     setDoesFirstStep(false);
   } else {
     PRECICE_ERROR("Name of local participant \""
-                      << localParticipant << "\" does not match any "
-                      << "participant specified for the coupling scheme.");
+                  << localParticipant << "\" does not match any "
+                  << "participant specified for the coupling scheme.");
   }
 }
 

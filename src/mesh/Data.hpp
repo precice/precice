@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <stddef.h>
 #include <string>
 #include "logging/Logger.hpp"
 
@@ -80,7 +81,7 @@ public:
    * @brief Returns the type constant of the data set.
    */
   //  DataType getType () const;
-  
+
   /// Sets all values to zero
   void toZero();
 

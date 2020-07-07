@@ -1,8 +1,15 @@
-#include <Eigen/Core>
-
 #include "acceleration/BroydenAcceleration.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <stddef.h>
+#include "acceleration/impl/QRFactorization.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {
