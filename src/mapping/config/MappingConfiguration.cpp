@@ -284,7 +284,6 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   // the mapping is a RBF mapping
 
   configuredMapping.isRBF = true;
-  bool    isSerial        = context.size == 1;
   bool    usePETSc        = false;
   RBFType rbfType         = RBFType::EIGEN;
 
