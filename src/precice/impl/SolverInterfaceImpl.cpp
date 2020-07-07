@@ -625,10 +625,12 @@ void SolverInterfaceImpl::resetMesh(
   PRECICE_TRACE(meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
   impl::MeshContext &context    = _accessor->meshContext(meshID);
+  /*
   bool               hasMapping = context.fromMappingContext.mapping || context.toMappingContext.mapping;
   bool               isStationary =
       context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
       context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
+  */
 
   PRECICE_DEBUG("Clear mesh positions for mesh \"" << context.mesh->getName() << "\"");
   _meshLock.unlock(meshID);
