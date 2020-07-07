@@ -110,6 +110,7 @@ void ConfigParser::MessageProxy(int level, const std::string &mess)
     break;
   case (XML_ERR_WARNING):
     PRECICE_WARN(mess);
+    break;
   default:
     PRECICE_INFO(mess);
   }
