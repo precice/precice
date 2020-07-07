@@ -42,7 +42,7 @@ PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[]
                                                PetscOptionsSetValue)
 {
   return PetscOptionsSetValueImpl(nullptr, name, value);
-};
+}
 
 /**
  * @brief Fix for compatibility with PETSc < 3.7. 
@@ -57,7 +57,7 @@ PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[]
                                                PetscOptionsSetValue)
 {
   return PetscOptionsSetValueImpl(name, value);
-};
+}
 
 } // namespace
 #endif
