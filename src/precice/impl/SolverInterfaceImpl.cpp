@@ -1483,14 +1483,10 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
-  for (MeshContext *context : _accessor->usedMeshContexts()) {
-    if (context->mesh->getName() == meshName) {
-      PRECICE_ASSERT(context->mesh);
-      return *context->mesh;
-    }
-  }
-  PRECICE_ERROR("Participant \"" << _accessorName
-                                 << "\" does not use mesh \"" << meshName << "\"!");
+  const MeshContext *context = _accessor->usedMeshContextByName(meshName);
+  PRECICE_CHECK(context && context->mesh,
+      "Participant \"" << _accessorName << "\" does not use mesh \"" << meshName << "\"!");
+  return *context->mesh;
 }
 
 } // namespace impl

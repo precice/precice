@@ -1,9 +1,9 @@
-#include "SolverInterfaceConfiguration.hpp"
 #include <map>
 #include <memory>
 #include <ostream>
 #include <vector>
 #include "ParticipantConfiguration.hpp"
+#include "SolverInterfaceConfiguration.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
@@ -74,14 +74,8 @@ void SolverInterfaceConfiguration::xmlEndTagCallback(
       for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
         if (participant->getName() == neededMeshes.first) {
           for (const std::string &neededMesh : neededMeshes.second) {
-            bool meshFound = false;
-            for (impl::MeshContext *meshContext : participant->usedMeshContexts()) {
-              if (meshContext->mesh->getName() == neededMesh) {
-                meshFound = true;
-                break;
-              }
-            }
-            PRECICE_CHECK(meshFound,
+            const impl::MeshContext *meshContext = participant->usedMeshContextByName(neededMesh);
+            PRECICE_CHECK(meshContext != nullptr,
                           "The participant " << neededMeshes.first << " needs to use the mesh " << neededMesh << " if he wants to use it in the coupling scheme.");
           }
           participantFound = true;

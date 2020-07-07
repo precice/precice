@@ -517,12 +517,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Create watch points
   for (const WatchPointConfig &config : _watchPointConfigs) {
-    const impl::MeshContext *meshContext = nullptr;
-    for (const impl::MeshContext *context : participant->usedMeshContexts()) {
-      if (context->mesh->getName() == config.nameMesh) {
-        meshContext = context;
-      }
-    }
+    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
+
     PRECICE_CHECK(meshContext && meshContext->mesh,
                   "Participant \"" << participant->getName()
                                    << "\" defines watchpoint \"" << config.name
