@@ -130,7 +130,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
                  input()->getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
-  int dimensions = getDimensions();
 
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
@@ -291,7 +290,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     {
       std::vector<double> slaveBuffer;
       int                 slaveOutputValueSize;
-      int                 slaveOutputSize;
       for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
         utils::MasterSlave::_communication->receive(slaveBuffer, rank);
         globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
@@ -331,7 +329,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
       // Filter data
       int outputCounter = 0;
-      for (int i = 0; i < output()->vertices().size(); ++i) {
+      for (int i = 0; i < static_cast<int>(output()->vertices().size()); ++i) {
         if (output()->vertices()[i].isOwner()) {
           for (int dim = 0; dim < valueDim; ++dim) {
             output()->data(outputDataID)->values()[i * valueDim + dim] = outputValues(outputCounter);
@@ -342,12 +340,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
       // Data scattering to slaves
       int beginPoint = outputValueSizes.at(0);
-
-      if (utils::MasterSlave::isMaster()) {
-        for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
-          utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outputValueSizes.at(rank), rank);
-          beginPoint += outputValueSizes.at(rank);
-        }
+      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+        utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outputValueSizes.at(rank), rank);
+        beginPoint += outputValueSizes.at(rank);
       }
     } else { // Serial
       output()->data(outputDataID)->values() = outputValues;
@@ -360,7 +355,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     int valueDim = output()->data(outputDataID)->getDimensions();
 
     int outputCounter = 0;
-    for (int i = 0; i < output()->vertices().size(); ++i) {
+    for (int i = 0; i < static_cast<int>(output()->vertices().size()); ++i) {
       if (output()->vertices()[i].isOwner()) {
         for (int dim = 0; dim < valueDim; ++dim) {
           output()->data(outputDataID)->values()[i * valueDim + dim] = receivedValues.at(outputCounter);
