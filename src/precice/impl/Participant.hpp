@@ -101,6 +101,18 @@ public:
 
   std::vector<MeshContext *> &usedMeshContexts();
 
+  /** Looks for a used MeshContext for a mesh name.
+   * @param[in] name the name of the \ref Mesh
+   * @return a pointer to the MeshContext or nullptr if it was not found
+   */
+  MeshContext * usedMeshContextByName(const std::string& name);
+
+  /** Looks for a used MeshContext for a mesh name.
+   * @param[in] name the name of the \ref Mesh
+   * @return a pointer to the MeshContext or nullptr if it was not found
+   */
+  MeshContext const * usedMeshContextByName(const std::string& name) const;
+
   void addReadMappingContext(MappingContext *mappingContext);
 
   void addWriteMappingContext(MappingContext *mappingContext);

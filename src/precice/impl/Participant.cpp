@@ -1,10 +1,11 @@
-#include "Participant.hpp"
 #include <algorithm>
 #include <ostream>
 #include <utility>
 #include "DataContext.hpp"
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
+#include "Participant.hpp"
+#include "WatchPoint.hpp"
 #include "action/Action.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
@@ -231,6 +232,24 @@ const std::vector<MeshContext *> &Participant::usedMeshContexts() const
 std::vector<MeshContext *> &Participant::usedMeshContexts()
 {
   return _usedMeshContexts;
+}
+
+MeshContext *Participant::usedMeshContextByName(const std::string &name)
+{
+  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
+                          [&name](MeshContext const *context) {
+                            return context->mesh->getName() == name;
+                          });
+  return (pos == _usedMeshContexts.end()) ? nullptr : *pos;
+}
+
+MeshContext const *Participant::usedMeshContextByName(const std::string &name) const
+{
+  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
+                          [&name](MeshContext const *context) {
+                            return context->mesh->getName() == name;
+                          });
+  return (pos == _usedMeshContexts.end()) ? nullptr : *pos;
 }
 
 void Participant::addAction(
