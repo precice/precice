@@ -765,6 +765,7 @@ void SolverInterfaceImpl::setMeshQuad(
 {
   PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
+  PRECICE_CHECK(_dimensions == 3, "Set Quad's are only possible for 3D cases");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -792,29 +793,35 @@ void SolverInterfaceImpl::setMeshQuad(
     // V0-V1-V2-V3-V0 order to get diagonal distances.
     mesh::Vertex *vertices[4];
     // Reorders the edgeList and sets the vertexList order.
-    std::array<int,4> vertexList = mesh->computeQuadEdgeOrder(edgeList);  
+    std::array<int,4> vertexList = mesh->computeQuadEdgeOrder(edgeList); 
+    
     // Computes vertex order for the convex quad and reorders the variable vertexList
     PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexList),"Quad is not convex."); 
+    vertices[0] = &mesh->vertices()[vertexList[0]];
+    vertices[1] = &mesh->vertices()[vertexList[1]];
+    vertices[2] = &mesh->vertices()[vertexList[2]];
+    vertices[3] = &mesh->vertices()[vertexList[3]];
+ 
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), 
                                                            vertices[2]->getCoords(), vertices[3]->getCoords())),
                   "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle." \
                   "Please check that the edges that form the quad are correct.");
 
-    // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3 
-    Eigen::VectorXd distance1(_dimensions),distance2(_dimensions);
-    distance1 = vertices[vertexList[0]]->getCoords() - vertices[vertexList[2]]->getCoords();
-    distance2 = vertices[vertexList[1]]->getCoords() - vertices[vertexList[3]]->getCoords();
+    // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
+    Eigen::Vector3d distance1(_dimensions),distance2(_dimensions);
+    distance1 = vertices[0]->getCoords() - vertices[2]->getCoords();
+    distance2 = vertices[1]->getCoords() - vertices[3]->getCoords();
     
     // The new edge, e[4], is the shortest diagonal of the quad
     if (distance1.norm() < distance2.norm()){
-      e[4] = &mesh->createUniqueEdge(*vertices[vertexList[0]], *vertices[vertexList[2]]);
+      e[4] = &mesh->createUniqueEdge(*vertices[0], *vertices[2]);
       mesh->createTriangle(*e[edgeList[0]], *e[edgeList[1]], *e[4]);
       mesh->createTriangle(*e[edgeList[2]], *e[edgeList[3]], *e[4]);
     }else{
-      e[4] = &mesh->createUniqueEdge(*vertices[vertexList[1]], *vertices[vertexList[3]]);
+      e[4] = &mesh->createUniqueEdge(*vertices[1], *vertices[3]);
       mesh->createTriangle(*e[edgeList[3]], *e[edgeList[0]], *e[4]);
       mesh->createTriangle(*e[edgeList[1]], *e[edgeList[2]], *e[4]);
-    }
+    }  
   }
 }
 
@@ -827,6 +834,7 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_CHECK(_dimensions == 3, "Set Quad's are only possible for 3D cases");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {

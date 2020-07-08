@@ -468,7 +468,6 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
 
 bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexList) const
 {
-  PRECICE_DEBUG("Computing quad convexity: ");
   /*
     All points need to be projected into a new plane with only 2 coordinates, x' and y'. These are used to check 
     the convexity of the quad. These new coordinates are stored in 'coords'. Vertices in 2D does not need to
@@ -537,6 +536,7 @@ bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexList) const
     validVertexIDCounter++; 
   } while (currentVertex != idLowestPoint);  // While we don't come to first point
 
+
   if (validVertexIDCounter < 4){
     //Error, quad is invalid
     PRECICE_DEBUG("Invalid Quad. Number of points in convex hull: " << validVertexIDCounter);
@@ -558,7 +558,6 @@ std::array<int,4> Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList) const
   vertex[0] is the 2nd edge (edge[1]). This also provides the vertex ordering to determine the diagonal, 
   but not convexity.
   */
-
   int edgeOrder[4]; // Will contain new order of edges to form a closed quad
   std::array<int,4> vertexList;
 
