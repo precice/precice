@@ -2,8 +2,9 @@
 
 #include <Eigen/Core>
 #include <iostream>
-
+#include <utility>
 #include "math/differences.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {

@@ -2,6 +2,9 @@
 
 #include "GenericTestFunctions.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "com/SharedPointer.hpp"
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;

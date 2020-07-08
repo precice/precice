@@ -1,15 +1,20 @@
 #ifndef PRECICE_NO_MPI
 
 #include <Eigen/Core>
-
+#include <algorithm>
+#include <math.h>
+#include <memory>
+#include <ostream>
+#include <stdlib.h>
+#include <string>
+#include <vector>
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "com/Communication.hpp"
-#include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "cplscheme/Constants.hpp"
+#include "com/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/Parallel.hpp"
 
 BOOST_AUTO_TEST_SUITE(AccelerationTests)
 

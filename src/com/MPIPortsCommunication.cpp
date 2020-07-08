@@ -2,7 +2,10 @@
 
 #include "MPIPortsCommunication.hpp"
 #include <boost/filesystem.hpp>
+#include <ostream>
+#include <utility>
 #include "ConnectionInfoPublisher.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {

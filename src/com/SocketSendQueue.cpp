@@ -1,4 +1,11 @@
+#include <algorithm>
+#include <boost/asio.hpp>
+#include <iosfwd>
+#include <new>
+#include <utility>
+
 #include "SocketSendQueue.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -9,7 +16,7 @@ namespace asio = boost::asio;
 SocketSendQueue::~SocketSendQueue()
 {
   PRECICE_ASSERT(_itemQueue.empty(), "The SocketSendQueue is not empty upon destruction. "
-                  "Make sure it always outlives all the requests pushed onto it.");
+                                     "Make sure it always outlives all the requests pushed onto it.");
 }
 
 void SocketSendQueue::dispatch(std::shared_ptr<Socket>      sock,

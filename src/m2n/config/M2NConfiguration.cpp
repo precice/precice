@@ -1,13 +1,21 @@
 #include "M2NConfiguration.hpp"
 #include <list>
+#include <ostream>
+#include <stdexcept>
+#include "com/CommunicationFactory.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/MPISinglePortsCommunicationFactory.hpp"
+#include "com/SharedPointer.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
+#include "utils/networking.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
 namespace precice {
@@ -31,13 +39,12 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
                             "bind it automatically.");
     tag.addAttribute(attrPort);
 
-    auto attrNetwork = makeXMLAttribute("network", "lo")
+    auto attrNetwork = makeXMLAttribute("network", utils::networking::loopbackInterfaceName())
                            .setDocumentation(
                                "Interface name to be used for socket communiation. "
-                               "Default is \"lo\", i.e., the local host loopback. "
+                               "Default is the cannonical name of the loopback interface of your platform. "
                                "Might be different on supercomputing systems, e.g. \"ib0\" "
-                               "for the InfiniBand on SuperMUC. "
-                               "For macOS use \"lo0\". ");
+                               "for the InfiniBand on SuperMUC. ");
     tag.addAttribute(attrNetwork);
 
     auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")

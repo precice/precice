@@ -90,10 +90,10 @@
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_DATA_READ_IMPL(id)                                                                                                                          \
-  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                                                                 \
-  DataContext &context = _accessor->dataContext(id);                                                                                                                \
-  PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataRead(id)),                                                                                           \
+#define PRECICE_REQUIRE_DATA_READ_IMPL(id)                                                                                                                        \
+  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                                                               \
+  DataContext &context = _accessor->dataContext(id);                                                                                                              \
+  PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataRead(id)),                                                                                         \
                 "This participant does not use Data \"" << context.getName() << "\", but attempted to read it. Please extend the configuarion of partiticpant \"" \
                                                         << _accessorName << "\" by defining <read-data mesh=\"" << context.mesh->getName() << "\" name=\"" << context.getName() << "\" />.");
 
@@ -101,10 +101,10 @@
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_DATA_WRITE_IMPL(id)                                                                                                                         \
-  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                                                                 \
-  DataContext &context = _accessor->dataContext(id);                                                                                                                \
-  PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataWrite(id)),                                                                                          \
+#define PRECICE_REQUIRE_DATA_WRITE_IMPL(id)                                                                                                                        \
+  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                                                                \
+  DataContext &context = _accessor->dataContext(id);                                                                                                               \
+  PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataWrite(id)),                                                                                         \
                 "This participant does not use Data \"" << context.getName() << "\", but attempted to write it. Please extend the configuarion of partiticpant \"" \
                                                         << _accessorName << "\" by defining <write-data mesh=\"" << context.mesh->getName() << "\" name=\"" << context.getName() << "\" />.");
 

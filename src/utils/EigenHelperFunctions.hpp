@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <iterator>
 #include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
 
@@ -70,20 +71,15 @@ const RangePreview<Iter> previewRange(Size n, const Eigen::PlainObjectBase<Deriv
 template <typename DerivedLHS, typename DerivedRHS>
 bool componentWiseLess(const Eigen::PlainObjectBase<DerivedLHS> &lhs, const Eigen::PlainObjectBase<DerivedRHS> &rhs)
 {
-  const auto lhs_begin = lhs.data();
-  const auto lhs_end   = lhs.data() + lhs.size();
-  const auto rhs_begin = rhs.data();
-  const auto rhs_end   = rhs.data() + rhs.size();
-
-  auto mismatch = utils::mismatch(lhs_begin, lhs_end, rhs_begin, rhs_end);
-
-  if (mismatch.first == lhs_end) {
-    return true;
-  }
-  if (mismatch.second == rhs_end) {
+  if (lhs.size() != rhs.size())
     return false;
+
+  for (int i = 0; i < rhs.size(); ++i) {
+    if (lhs[i] != rhs[i]) {
+      return lhs[i] < rhs[i];
+    }
   }
-  return *mismatch.first < *mismatch.second;
+  return false;
 }
 
 struct ComponentWiseLess {

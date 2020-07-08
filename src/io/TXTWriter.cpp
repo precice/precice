@@ -1,6 +1,6 @@
 #include "TXTWriter.hpp"
-
 #include <iomanip>
+#include "logging/LogMacros.hpp"
 
 namespace precice {
 namespace io {

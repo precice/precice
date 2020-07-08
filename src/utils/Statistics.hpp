@@ -81,7 +81,7 @@ inline std::ostream &operator<<(std::ostream &out, const DistanceAccumulator &ac
         << " cnt: " << accumulator.count();
   }
   return out;
-};
+}
 
 } // namespace statistics
 } // namespace utils

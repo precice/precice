@@ -1,5 +1,6 @@
 #include "DummyCouplingScheme.hpp"
 #include "../Constants.hpp"
+#include "logging/LogMacros.hpp"
 
 namespace precice {
 namespace cplscheme {

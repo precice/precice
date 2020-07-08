@@ -1,23 +1,34 @@
 #include "CouplingSchemeConfiguration.hpp"
+#include <algorithm>
+#include <list>
+#include <memory>
+#include <ostream>
+#include <stddef.h>
+#include <stdexcept>
+#include <utility>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
+#include "cplscheme/BaseCouplingScheme.hpp"
+#include "cplscheme/BiCouplingScheme.hpp"
 #include "cplscheme/CompositionalCouplingScheme.hpp"
 #include "cplscheme/MultiCouplingScheme.hpp"
 #include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
-#include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
 #include "cplscheme/impl/RelativeConvergenceMeasure.hpp"
 #include "cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp"
-#include "m2n/M2N.hpp"
+#include "logging/LogMacros.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-#include "mesh/config/DataConfiguration.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -319,6 +330,7 @@ void CouplingSchemeConfiguration::addCouplingScheme(
       // Create a new composition, add the already existing and new scheme, and
       // overwrite the existing scheme with the composition.
       CompositionalCouplingScheme *composition = new CompositionalCouplingScheme();
+      PRECICE_CHECK(nullptr == dynamic_cast<MultiCouplingScheme *>(_couplingSchemes[participantName].get()), "A Multi Coupling Scheme cannot yet be combined with any other coupling scheme. Try to include all participants within one multi coupling scheme instead.");
       composition->addCouplingScheme(_couplingSchemes[participantName]);
       composition->addCouplingScheme(cplScheme);
       _couplingSchemes[participantName] = PtrCouplingScheme(composition);
@@ -624,6 +636,8 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
 
   addDataToBeExchanged(*scheme, accessor);
 
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -639,6 +653,8 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
+
+  scheme->checkConfiguration();
 
   return PtrCouplingScheme(scheme);
 }
@@ -678,8 +694,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -717,8 +736,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -743,17 +765,20 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
     MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
+    PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
     addMultiDataToBeExchanged(*castedScheme, accessor);
   } else {
     m2n::PtrM2N m2n = _m2nConfig->getM2N(
         accessor, _config.controller);
+
     scheme = new ParallelCouplingScheme(
         _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
         _config.validDigits, accessor, _config.controller,
         accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
     scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
-    addDataToBeExchanged(*scheme, accessor);
+    BiCouplingScheme *castedScheme = dynamic_cast<BiCouplingScheme *>(scheme);
+    addDataToBeExchanged(*castedScheme, accessor);
   }
 
   // Add convergence measures
@@ -777,8 +802,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
       checkIfDataIsExchanged(dataID);
     }
 
-    scheme->setIterationAcceleration(_accelerationConfig->getAcceleration());
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
+
+  scheme->checkConfiguration();
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -788,17 +816,17 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
 {
   PRECICE_TRACE(method);
   if (method == VALUE_FIXED) {
-    return constants::FIXED_DT;
+    return constants::FIXED_TIME_WINDOW_SIZE;
   } else if (method == VALUE_FIRST_PARTICIPANT) {
-    return constants::FIRST_PARTICIPANT_SETS_DT;
+    return constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE;
   }
   PRECICE_ERROR("Unknown timestepping method \""
                 << method << "\"!");
 }
 
 void CouplingSchemeConfiguration::addDataToBeExchanged(
-    BaseCouplingScheme &scheme,
-    const std::string & accessor) const
+    BiCouplingScheme & scheme,
+    const std::string &accessor) const
 {
   PRECICE_TRACE();
   using std::get;
@@ -818,11 +846,11 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
       throw std::runtime_error{"Participant \"" + to + "\" is not configured for coupling scheme"};
     }
 
-    bool initialize = get<4>(tuple);
+    bool requiresInitialization = get<4>(tuple);
     if (from == accessor) {
-      scheme.addDataToSend(data, mesh, initialize);
+      scheme.addDataToSend(data, mesh, requiresInitialization);
     } else if (to == accessor) {
-      scheme.addDataToReceive(data, mesh, initialize);
+      scheme.addDataToReceive(data, mesh, requiresInitialization);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }

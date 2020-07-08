@@ -1,12 +1,22 @@
 #include "MultiCouplingScheme.hpp"
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <stddef.h>
+#include <type_traits>
+#include <utility>
 #include "acceleration/Acceleration.hpp"
-#include "m2n/M2N.hpp"
+#include "acceleration/SharedPointer.hpp"
+#include "cplscheme/BaseCouplingScheme.hpp"
+#include "cplscheme/CouplingData.hpp"
+#include "cplscheme/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/SharedPointer.hpp"
-#include "math/math.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -17,14 +27,15 @@ MultiCouplingScheme::MultiCouplingScheme(
     double                        timeWindowSize,
     int                           validDigits,
     const std::string &           localParticipant,
-    std::vector<m2n::PtrM2N>      m2n,
+    std::vector<m2n::PtrM2N>      m2ns,
     constants::TimesteppingMethod dtMethod,
     int                           maxIterations)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, "neverFirstParticipant",
-                         localParticipant, localParticipant, m2n::PtrM2N(), maxIterations, dtMethod),
-      _communications(m2n)
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, Implicit, dtMethod),
+      _m2ns(m2ns)
 {
-  for (size_t i = 0; i < _communications.size(); ++i) {
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  setDoesFirstStep(false); // MultiCouplingScheme never does the first step, because it is never the first participant
+  for (size_t i = 0; i < _m2ns.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;
     _receiveDataVector.push_back(receiveMap);
@@ -32,160 +43,88 @@ MultiCouplingScheme::MultiCouplingScheme(
   }
 }
 
-void MultiCouplingScheme::initialize(
-    double startTime,
-    int    startTimeWindow)
+void MultiCouplingScheme::checkConfiguration()
 {
-  PRECICE_TRACE(startTime, startTimeWindow);
-  PRECICE_ASSERT(not isInitialized());
-  PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
-  PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  setTime(startTime);
-  setTimeWindows(startTimeWindow);
-
-  mergeData();                 // merge send and receive data for all pp calls
-  setupConvergenceMeasures();  // needs _couplingData configured
-  setupDataMatrices(_allData); // Reserve memory and initialize data with zero
-  if (getAcceleration().get() != nullptr) {
-    PRECICE_CHECK(getAcceleration()->getDataIDs().size() >= 3,
-                  "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "
-                      << getAcceleration()->getDataIDs().size());
-    getAcceleration()->initialize(_allData); // Reserve memory, initialize
-  }
-
-  requireAction(constants::actionWriteIterationCheckpoint());
-  initializeTXTWriters();
-
-  for (DataMap &dataMap : _sendDataVector) {
-    for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->initialize) {
-        setHasToSendInitData(true);
-        break;
-      }
+  if (isImplicitCouplingScheme()) {
+    bool hasAnySendData = std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](DataMap sendData) { return not sendData.empty(); });
+    PRECICE_CHECK(hasAnySendData, "No send data configured. Use explicit scheme for one-way coupling.");
+    if (not doesFirstStep() && getAcceleration()) {
+      PRECICE_CHECK(getAcceleration()->getDataIDs().size() >= 3,
+                    "For multi coupling, the number of coupling data vectors has to be at least 3, not: "
+                        << getAcceleration()->getDataIDs().size());
     }
   }
-  for (DataMap &dataMap : _receiveDataVector) {
-    for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->initialize) {
-        setHasToReceiveInitData(true);
-        break;
-      }
-    }
-  }
-
-  if (hasToSendInitData()) {
-    requireAction(constants::actionWriteInitialData());
-  }
-
-  setIsInitialized(true);
 }
 
-void MultiCouplingScheme::initializeData()
+std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
 {
-  PRECICE_TRACE();
-  PRECICE_CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
+  std::vector<std::string> partnerNames;
+  // Add non-local participant
+  // @todo has to be implemented!
+  PRECICE_ASSERT(false);
+  return partnerNames;
+}
 
-  if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    PRECICE_INFO("initializeData is skipped since no data has to be initialized");
-    return;
+void MultiCouplingScheme::initializeImplementation()
+{
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+
+  for (DataMap &sendData : _sendDataVector) {
+    determineInitialSend(sendData);
   }
+  for (DataMap &receiveData : _receiveDataVector) {
+    determineInitialReceive(receiveData);
+  }
+}
 
-  PRECICE_CHECK(not(hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-                "InitialData has to be written to preCICE before calling initializeData()");
+void MultiCouplingScheme::exchangeInitialData()
+{
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
-  setHasDataBeenExchanged(false);
-
-  if (hasToReceiveInitData()) {
-    receiveData();
-    setHasDataBeenExchanged(true);
-
+  if (receivesInitializedData()) {
+    for (size_t i = 0; i < _m2ns.size(); i++) {
+      receiveData(_m2ns[i], _receiveDataVector[i]);
+    }
+    checkDataHasBeenReceived();
     // second participant has to save values for extrapolation
-    if (getExtrapolationOrder() > 0) {
-      for (DataMap &dataMap : _receiveDataVector) {
-        for (DataMap::value_type &pair : dataMap) {
-          pair.second->oldValues.col(0) = *pair.second->values;
-          // For extrapolation, treat the initial value as old time window value
-          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
-        }
-      }
+    for (DataMap &receiveData : _receiveDataVector) {
+      updateOldValues(receiveData);
     }
   }
-  if (hasToSendInitData()) {
-    if (getExtrapolationOrder() > 0) {
-      for (DataMap &dataMap : _sendDataVector) {
-        for (DataMap::value_type &pair : dataMap) {
-          pair.second->oldValues.col(0) = *pair.second->values;
-          // For extrapolation, treat the initial value as old time window value
-          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
-        }
-      }
+  if (sendsInitializedData()) {
+    for (DataMap &sendData : _sendDataVector) {
+      updateOldValues(sendData);
     }
-    sendData();
+    for (size_t i = 0; i < _m2ns.size(); i++) {
+      sendData(_m2ns[i], _sendDataVector[i]);
+    }
   }
-
-  // in order to check in advance if initializeData has been called (if necessary)
-  setHasToSendInitData(false);
-  setHasToReceiveInitData(false);
 }
 
-void MultiCouplingScheme::advance()
+bool MultiCouplingScheme::exchangeDataAndAccelerate()
 {
-  PRECICE_TRACE(getTimeWindows(), getTime());
-  checkCompletenessRequiredActions();
+  PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  // @todo implement MultiCouplingScheme for explicit coupling
 
-  PRECICE_CHECK(!hasToReceiveInitData() && !hasToSendInitData(),
-                "initializeData() needs to be called before advance if data has to be initialized!");
+  PRECICE_DEBUG("Computed full length of iteration");
 
-  setHasDataBeenExchanged(false);
-  setIsTimeWindowComplete(false);
-  bool convergence = false;
-  if (math::equals(getThisTimeWindowRemainder(), 0.0, _eps)) {
-    PRECICE_DEBUG("Computed full length of iteration");
+  for (size_t i = 0; i < _m2ns.size(); i++) {
+    receiveData(_m2ns[i], _receiveDataVector[i]);
+  }
+  checkDataHasBeenReceived();
 
-    receiveData();
+  PRECICE_DEBUG("Perform acceleration (only second participant)...");
+  bool convergence = accelerate();
 
-    convergence = measureConvergence();
+  for (m2n::PtrM2N m2n : _m2ns) {
+    sendConvergence(m2n, convergence);
+  }
 
-    // Stop, when maximal iteration count (given in config) is reached
-    if (maxIterationsReached()) {
-      convergence = true;
-    }
-    if (convergence) {
-      if (getAcceleration().get() != nullptr) {
-        getAcceleration()->iterationsConverged(_allData);
-      }
-      newConvergenceMeasurements();
-      timeWindowCompleted();
-    } else if (getAcceleration().get() != nullptr) {
-      getAcceleration()->performAcceleration(_allData);
-    }
+  for (size_t i = 0; i < _m2ns.size(); i++) {
+    sendData(_m2ns[i], _sendDataVector[i]);
+  }
 
-    for (m2n::PtrM2N m2n : _communications) {
-      m2n->send(convergence);
-    }
-
-    if (convergence && (getExtrapolationOrder() > 0)) {
-      extrapolateData(_allData); // Also stores data
-    } else {                     // Store data for conv. measurement, acceleration, or extrapolation
-      for (DataMap::value_type &pair : _allData) {
-        if (pair.second->oldValues.size() > 0) {
-          pair.second->oldValues.col(0) = *pair.second->values;
-        }
-      }
-    }
-    sendData();
-
-    if (not convergence) {
-      PRECICE_DEBUG("No convergence achieved");
-      requireAction(constants::actionReadIterationCheckpoint());
-    } else {
-      PRECICE_DEBUG("Convergence achieved");
-      advanceTXTWriters();
-    }
-    updateTimeAndIterations(convergence);
-    setHasDataBeenExchanged(true);
-    setComputedTimeWindowPart(0.0);
-  } // subcycling complete
+  return convergence;
 }
 
 void MultiCouplingScheme::mergeData()
@@ -213,7 +152,7 @@ void MultiCouplingScheme::addDataToSend(
   } else {
     PRECICE_ERROR("Data \"" << data->getName()
                             << "\" of mesh \"" << mesh->getName() << "\" cannot be "
-                            << "added twice for sending!");
+                            << "added twice for sending.");
   }
 }
 
@@ -231,54 +170,7 @@ void MultiCouplingScheme::addDataToReceive(
   } else {
     PRECICE_ERROR("Data \"" << data->getName()
                             << "\" of mesh \"" << mesh->getName() << "\" cannot be "
-                            << "added twice for receiving!");
-  }
-}
-
-void MultiCouplingScheme::sendData()
-{
-  PRECICE_TRACE();
-
-  for (size_t i = 0; i < _communications.size(); i++) {
-    PRECICE_ASSERT(_communications[i].get() != nullptr);
-    PRECICE_ASSERT(_communications[i]->isConnected());
-
-    for (DataMap::value_type &pair : _sendDataVector[i]) {
-      int size = pair.second->values->size();
-      if (size > 0) {
-        _communications[i]->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
-      }
-    }
-  }
-}
-
-void MultiCouplingScheme::receiveData()
-{
-  PRECICE_TRACE();
-
-  for (size_t i = 0; i < _communications.size(); i++) {
-    PRECICE_ASSERT(_communications[i].get() != nullptr);
-    PRECICE_ASSERT(_communications[i]->isConnected());
-
-    for (DataMap::value_type &pair : _receiveDataVector[i]) {
-      int size = pair.second->values->size();
-      if (size > 0) {
-        _communications[i]->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
-      }
-    }
-  }
-}
-
-void MultiCouplingScheme::setupConvergenceMeasures()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(not doesFirstStep());
-  PRECICE_CHECK(not _convergenceMeasures.empty(),
-                "At least one convergence measure has to be defined for an implicit coupling scheme!");
-  for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-    int dataID               = convMeasure.data->getID();
-    convMeasure.couplingData = getData(dataID);
-    PRECICE_ASSERT(convMeasure.couplingData != nullptr);
+                            << "added twice for receiving.");
   }
 }
 
@@ -291,6 +183,12 @@ CouplingData *MultiCouplingScheme::getData(
     return &(*(iter->second));
   }
   return nullptr;
+}
+
+void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasure *convergenceMeasure, int dataID)
+{
+  convergenceMeasure->couplingData = getData(dataID);
+  PRECICE_ASSERT(convergenceMeasure->couplingData != nullptr);
 }
 
 } // namespace cplscheme

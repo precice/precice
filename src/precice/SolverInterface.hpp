@@ -145,7 +145,7 @@ public:
   /**
    * @brief Finalizes preCICE.
    *
-   * @pre initialize() has been called successfully.
+   * @pre finalize() has not been called.
    *
    * @post Communication channels are closed.
    * @post Meshes and data are deallocated

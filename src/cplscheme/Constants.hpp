@@ -13,8 +13,8 @@ const std::string &actionReadIterationCheckpoint();
 const std::string &actionWriteInitialData();
 
 enum TimesteppingMethod {
-  FIXED_DT,
-  FIRST_PARTICIPANT_SETS_DT
+  FIXED_TIME_WINDOW_SIZE,
+  FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE
 };
 
 } // namespace constants

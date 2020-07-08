@@ -1,13 +1,18 @@
+#ifndef PRECICE_NO_PYTHON
 #include <pthread.h>
 #include <string>
-#ifndef PRECICE_NO_PYTHON
 #include "PythonAction.hpp"
+#include <Eigen/Core>
 #include <Python.h>
+#include <memory>
 #include <numpy/arrayobject.h>
+#include <ostream>
+#include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include <cstdlib>
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace action {

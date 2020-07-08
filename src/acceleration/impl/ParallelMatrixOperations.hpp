@@ -3,9 +3,15 @@
 #ifndef PRECICE_NO_MPI
 
 #include <Eigen/Core>
-
+#include <memory>
+#include <stddef.h>
+#include <string>
+#include <vector>
+#include "com/Communication.hpp"
 #include "com/MPIPortsCommunication.hpp"
+#include "com/Request.hpp"
 #include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"

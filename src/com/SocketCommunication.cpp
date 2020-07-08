@@ -5,9 +5,12 @@
 #include <boost/filesystem.hpp>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 #include "ConnectionInfoPublisher.hpp"
 #include "SocketRequest.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
+#include "utils/networking.hpp"
 
 namespace precice {
 namespace com {
@@ -30,7 +33,7 @@ SocketCommunication::SocketCommunication(unsigned short     portNumber,
 }
 
 SocketCommunication::SocketCommunication(std::string const &addressDirectory)
-    : SocketCommunication(0, false, "lo", addressDirectory)
+    : SocketCommunication(0, false, utils::networking::loopbackInterfaceName(), addressDirectory)
 {
 }
 

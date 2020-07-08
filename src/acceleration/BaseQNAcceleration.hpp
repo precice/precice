@@ -1,10 +1,13 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <algorithm>
 #include <deque>
 #include <fstream>
+#include <map>
 #include <sstream>
-
+#include <string>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
@@ -46,6 +49,11 @@
 // ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
+namespace io {
+class TXTReader;
+class TXTWriter;
+} // namespace io
+
 namespace acceleration {
 
 /**

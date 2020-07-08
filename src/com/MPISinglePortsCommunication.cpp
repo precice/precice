@@ -2,7 +2,11 @@
 
 #include "MPISinglePortsCommunication.hpp"
 #include <boost/filesystem.hpp>
+#include <memory>
+#include <ostream>
+#include <utility>
 #include "ConnectionInfoPublisher.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"

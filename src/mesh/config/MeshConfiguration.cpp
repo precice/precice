@@ -1,8 +1,13 @@
 #include "MeshConfiguration.hpp"
 #include <sstream>
+#include <stdexcept>
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
 namespace precice {

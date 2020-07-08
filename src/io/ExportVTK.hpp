@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <iosfwd>
 #include <string>
 #include "Export.hpp"
 #include "logging/Logger.hpp"
