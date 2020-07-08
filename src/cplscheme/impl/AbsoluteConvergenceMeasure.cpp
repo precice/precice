@@ -1,5 +1,6 @@
 #include "AbsoluteConvergenceMeasure.hpp"
-#include "math/math.hpp"
+#include "logging/LogMacros.hpp"
+#include "math/differences.hpp"
 
 namespace precice {
 namespace cplscheme {

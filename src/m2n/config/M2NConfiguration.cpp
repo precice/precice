@@ -1,14 +1,21 @@
 #include "M2NConfiguration.hpp"
 #include <list>
+#include <ostream>
+#include <stdexcept>
+#include "com/CommunicationFactory.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/MPISinglePortsCommunicationFactory.hpp"
+#include "com/SharedPointer.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
 #include "utils/networking.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
 namespace precice {

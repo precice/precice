@@ -1,9 +1,22 @@
-#include <utility>
 #include "Petsc.hpp"
-#include "utils/Parallel.hpp"
+
+// A logger is always required
+#include "logging/Logger.hpp"
 
 #ifndef PRECICE_NO_PETSC
+#include <memory>
+#include <mpi.h>
+#include <numeric>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "logging/LogMacros.hpp"
 #include "petsc.h"
+#include "petscdrawtypes.h"
+#include "petscis.h"
+#include "petscviewertypes.h"
+#include "utils/Parallel.hpp"
 #endif // not PRECICE_NO_PETSC
 
 namespace precice {
@@ -29,7 +42,7 @@ PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[]
                                                PetscOptionsSetValue)
 {
   return PetscOptionsSetValueImpl(nullptr, name, value);
-};
+}
 
 /**
  * @brief Fix for compatibility with PETSc < 3.7. 
@@ -44,7 +57,7 @@ PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[]
                                                PetscOptionsSetValue)
 {
   return PetscOptionsSetValueImpl(name, value);
-};
+}
 
 } // namespace
 #endif
@@ -89,7 +102,6 @@ void Petsc::finalize()
 
 #ifndef PRECICE_NO_PETSC
 
-#include <limits>
 #include <random>
 #include <string>
 #include "petscdraw.h"

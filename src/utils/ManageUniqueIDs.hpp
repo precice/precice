@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/container/flat_set.hpp>
+#include <functional>
 
 namespace precice {
 namespace utils {

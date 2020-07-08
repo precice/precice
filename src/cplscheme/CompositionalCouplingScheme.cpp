@@ -1,6 +1,12 @@
 #include "CompositionalCouplingScheme.hpp"
+#include <algorithm>
 #include <limits>
+#include <memory>
+#include <ostream>
 #include "Constants.hpp"
+#include "cplscheme/CouplingScheme.hpp"
+#include "cplscheme/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {

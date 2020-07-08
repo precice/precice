@@ -1,21 +1,23 @@
 #ifndef PRECICE_NO_MPI
 
-#include <Eigen/Core>
-#include <fstream>
-#include <sstream>
-
 #include "acceleration/MVQNAcceleration.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <fstream>
+#include <map>
+#include <memory>
+#include <string>
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "com/SocketCommunication.hpp"
 #include "cplscheme/CouplingData.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
+#include "cplscheme/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 using precice::cplscheme::PtrCouplingData;
 

@@ -1,10 +1,24 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <istream>
 #include <iterator>
+#include <memory>
+#include <string>
 #include <vector>
 #include "../impl/WatchPoint.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "mesh/Vertex.hpp"
+#include "precice/impl/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "utils/assertion.hpp"
+
+namespace precice {
+namespace mesh {
+class Vertex;
+} // namespace mesh
+} // namespace precice
 
 using namespace precice;
 
@@ -97,9 +111,24 @@ BOOST_AUTO_TEST_CASE(TimeSeries)
   {
     auto result   = readDoublesFromTXTFile(filename0, 6);
     auto expected = std::vector<double>{
-        0.0, 0.0, 0.0, 1.0, 1.0, 2.0,
-        1.0, 0.0, 0.0, 2.0, 2.0, 3.0,
-        2.0, 0.0, 0.0, 2.0, 2.0, 3.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        2.0,
+        1.0,
+        0.0,
+        0.0,
+        2.0,
+        2.0,
+        3.0,
+        2.0,
+        0.0,
+        0.0,
+        2.0,
+        2.0,
+        3.0,
     };
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
@@ -128,7 +157,6 @@ BOOST_AUTO_TEST_CASE(TimeSeries)
     }
   }
 }
-
 
 BOOST_AUTO_TEST_CASE(Reinitalize)
 {

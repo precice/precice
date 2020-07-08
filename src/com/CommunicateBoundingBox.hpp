@@ -1,9 +1,16 @@
 #pragma once
+#include <map>
+#include <string>
+#include <vector>
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
 
 namespace precice {
+namespace mesh {
+class BoundingBox;
+} // namespace mesh
+
 namespace com {
 
 /// Copies either a bounding box around a mesh partition or complete maps of bounding boxes from a sender to a receiver.
@@ -15,11 +22,11 @@ public:
 
   void sendBoundingBox(
       const mesh::BoundingBox &bb,
-      int                            rankReceiver);
+      int                      rankReceiver);
 
   void receiveBoundingBox(
       mesh::BoundingBox &bb,
-      int                      rankSender);
+      int                rankSender);
 
   void sendBoundingBoxMap(
       mesh::Mesh::BoundingBoxMap &bbm,

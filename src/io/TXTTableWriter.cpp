@@ -1,5 +1,7 @@
 #include "TXTTableWriter.hpp"
+#include <algorithm>
 #include <iomanip>
+#include "logging/LogMacros.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 
@@ -136,8 +138,8 @@ void TXTTableWriter::close()
 /// Resets the table information.
 void TXTTableWriter::reset()
 {
-    _data.clear();
-    _writeIterator = _data.end();
+  _data.clear();
+  _writeIterator = _data.end();
 }
 
 } // namespace io

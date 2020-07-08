@@ -1,14 +1,24 @@
 #ifndef PRECICE_NO_MPI
-#include "testing/Testing.hpp"
-
+#include <Eigen/Core>
+#include <algorithm>
+#include <deque>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <vector>
+#include "logging/LogMacros.hpp"
+#include "math/constants.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Vertex.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/config/Configuration.hpp"
-#include "precice/impl/DataContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
+#include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
-#include "utils/MasterSlave.hpp"
-#include "utils/Parallel.hpp"
+#include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
 
 using namespace precice;
 using precice::testing::TestContext;

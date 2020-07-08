@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iosfwd>
 #include <memory>
 #include <string>
 #include <vector>
@@ -10,6 +11,10 @@
 #endif // not PRECICE_NO_MPI
 
 namespace precice {
+namespace logging {
+class Logger;
+} // namespace logging
+
 namespace utils {
 
 /// Utility class for managing MPI operations.
@@ -122,7 +127,7 @@ public:
 
   /// @name Initialization and Finalization
   /// @{
-  
+
   /**
    * @brief Initializes the MPI environment and manages it.
    *

@@ -1,16 +1,36 @@
 #ifndef PRECICE_NO_MPI
-#include "testing/Testing.hpp"
-
+#include <Eigen/Core>
+#include <algorithm>
+#include <deque>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 #include "com/CommunicateBoundingBox.hpp"
-#include "com/MPIDirectCommunication.hpp"
-#include "com/SocketCommunication.hpp"
-#include "com/SocketCommunicationFactory.hpp"
-#include "m2n/GatherScatterComFactory.hpp"
+#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
+#include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/SharedPointer.hpp"
+#include "math/constants.hpp"
+#include "mesh/BoundingBox.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "partition/Partition.hpp"
 #include "partition/ProvidedPartition.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
+#include "utils/assertion.hpp"
+
+namespace precice {
+namespace mesh {
+class Edge;
+class Vertex;
+} // namespace mesh
+} // namespace precice
 
 using namespace precice;
 using namespace partition;
@@ -360,13 +380,12 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     BOOST_TEST(context.isNamed("NASTIN"));
 
     mesh::Mesh::BoundingBoxMap receivedGlobalBB;
-    mesh::BoundingBox    localBB{dimensions};
+    mesh::BoundingBox          localBB{dimensions};
 
     mesh::Mesh::BoundingBoxMap compareBB;
     compareBB.emplace(0, mesh::BoundingBox({-1, 5, 0, 3}));
     compareBB.emplace(1, mesh::BoundingBox({0, 1, 3.5, 4.5}));
     compareBB.emplace(2, mesh::BoundingBox({2.5, 4.5, 5.5, 7.0}));
-
 
     // we receive other participants communicator size
     int receivedFeedbackSize = 3;
@@ -457,7 +476,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
     BOOST_TEST(context.isNamed("NASTIN"));
 
     mesh::Mesh::BoundingBoxMap receivedGlobalBB;
-    mesh::BoundingBox    localBB{dimensions};
+    mesh::BoundingBox          localBB{dimensions};
 
     mesh::Mesh::BoundingBoxMap compareBB;
     compareBB.emplace(0, mesh::BoundingBox({-1, 5, 0, 3, -1, 5}));

@@ -1,9 +1,9 @@
-#include "testing/Testing.hpp"
-
 #include <algorithm>
+#include <ostream>
 #include <string>
 #include "precice/SolverInterface.hpp"
-#include "precice/impl/versions.hpp"
+#include "testing/Testing.hpp"
+#include "utils/assertion.hpp"
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Versioning)

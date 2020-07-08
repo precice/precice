@@ -1,21 +1,36 @@
 #include "ParticipantConfiguration.hpp"
+#include <algorithm>
+#include <list>
+#include <memory>
+#include <ostream>
+#include <stdexcept>
+#include "action/Action.hpp"
 #include "action/config/ActionConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "com/MPIPortsCommunication.hpp"
+#include "com/SharedPointer.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "io/ExportContext.hpp"
 #include "io/ExportVTK.hpp"
 #include "io/ExportVTKXML.hpp"
 #include "io/SharedPointer.hpp"
+#include "io/config/ExportConfiguration.hpp"
+#include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
+#include "precice/impl/Participant.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/PointerVector.hpp"
+#include "utils/assertion.hpp"
+#include "utils/networking.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
 namespace precice {
@@ -502,12 +517,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Create watch points
   for (const WatchPointConfig &config : _watchPointConfigs) {
-    const impl::MeshContext *meshContext = nullptr;
-    for (const impl::MeshContext *context : participant->usedMeshContexts()) {
-      if (context->mesh->getName() == config.nameMesh) {
-        meshContext = context;
-      }
-    }
+    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
+
     PRECICE_CHECK(meshContext && meshContext->mesh,
                   "Participant \"" << participant->getName()
                                    << "\" defines watchpoint \"" << config.name

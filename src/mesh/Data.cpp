@@ -1,6 +1,6 @@
 #include "Data.hpp"
-#include "Mesh.hpp"
 #include <algorithm>
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {

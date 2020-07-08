@@ -1,6 +1,16 @@
 #include "xml/Printer.hpp"
-#include <iostream>
+#include <Eigen/Core>
+#include <algorithm>
+#include <ctype.h>
+#include <map>
+#include <memory>
 #include <regex>
+#include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
+#include "utils/String.hpp"
 #include "utils/TypeNames.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"

@@ -1,18 +1,19 @@
 #include "EventUtils.hpp"
-
-#include <nlohmann/json.hpp>
-#include <prettyprint/prettyprint.hpp>
-
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
-#include <iostream>
-#include <sstream>
+#include <iterator>
+#include <memory>
+#include <nlohmann/json.hpp>
+#include <ratio>
 #include <string>
+#include <tuple>
 #include <utility>
 #include "TableWriter.hpp"
+#include "utils/Event.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -274,10 +275,10 @@ void EventRegistry::printAll() const
   std::string logFile;
   std::string summaryFile;
   if (applicationName.empty()) {
-    logFile = "Events.json";
+    logFile     = "Events.json";
     summaryFile = "Events-summary.log";
   } else {
-    logFile = applicationName + "-events.json";
+    logFile     = applicationName + "-events.json";
     summaryFile = applicationName + "-events-summary.log";
   }
 

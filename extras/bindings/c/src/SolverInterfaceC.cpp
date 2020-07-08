@@ -3,6 +3,8 @@ extern "C" {
 }
 #include <memory>
 #include <string>
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
@@ -11,7 +13,7 @@ static std::unique_ptr<precice::SolverInterface> impl = nullptr;
 
 static precice::logging::Logger _log("SolverInterfaceC");
 
-static std::string errormsg = "preCICE has not been created properly. Be sure to call \"precicec_createSolverInterface\" or \"precicec_createSolverInterface_withCommunicator\" before any other call to preCICE.";
+static std::string errormsg       = "preCICE has not been created properly. Be sure to call \"precicec_createSolverInterface\" or \"precicec_createSolverInterface_withCommunicator\" before any other call to preCICE.";
 static std::string errormsgCreate = "preCICE has been created already! Be sure to call either \"precicec_createSolverInterface\" or \"precicec_createSolverInterface_withCommunicator\" exactly once.";
 
 void precicec_createSolverInterface_withCommunicator(
@@ -25,12 +27,11 @@ void precicec_createSolverInterface_withCommunicator(
   std::string stringConfigFileName(configFileName);
 
   PRECICE_CHECK(impl == nullptr, errormsgCreate);
-  impl.reset( new precice::SolverInterface(stringAccessorName,
-                                               stringConfigFileName,
-                                               solverProcessIndex,
-                                               solverProcessSize,
-                                               communicator)
-                  );
+  impl.reset(new precice::SolverInterface(stringAccessorName,
+                                          stringConfigFileName,
+                                          solverProcessIndex,
+                                          solverProcessSize,
+                                          communicator));
 }
 
 void precicec_createSolverInterface(
@@ -43,7 +44,7 @@ void precicec_createSolverInterface(
                                                   configFileName,
                                                   solverProcessIndex,
                                                   solverProcessSize,
-                                                  nullptr );
+                                                  nullptr);
 }
 
 double precicec_initialize()

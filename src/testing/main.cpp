@@ -1,14 +1,15 @@
-#include <boost/filesystem.hpp>
 #include <boost/test/tree/test_case_counter.hpp>
 #include <boost/test/tree/traverse.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_parameters.hpp>
 #include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+#include "com/SharedPointer.hpp"
 #include "logging/LogConfiguration.hpp"
-#include "utils/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Petsc.hpp"
 
 namespace precice {
 extern bool syncMode;

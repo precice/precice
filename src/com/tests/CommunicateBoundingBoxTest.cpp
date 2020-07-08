@@ -1,8 +1,15 @@
 #ifndef PRECICE_NO_MPI
+#include <map>
+#include <memory>
+#include <vector>
 #include "com/CommunicateBoundingBox.hpp"
+#include "com/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
+#include "mesh/BoundingBox.hpp"
 #include "mesh/Mesh.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Parallel.hpp"
+#include "utils/MasterSlave.hpp"
 
 using namespace precice;
 using namespace precice::com;
@@ -15,14 +22,14 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
   auto m2n = context.connectMasters("A", "B");
-  
+
   for (int dim = 2; dim <= 3; dim++) {
     std::vector<double> bounds;
     for (int i = 0; i < dim; i++) {
       bounds.push_back(i);
       bounds.push_back(i + 1);
     }
-    mesh::BoundingBox bb(bounds);
+    mesh::BoundingBox      bb(bounds);
     CommunicateBoundingBox comBB(m2n->getMasterCommunication());
 
     if (context.isNamed("A")) {
@@ -45,11 +52,11 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh::BoundingBoxMap bbm;
-    
+
     for (int rank = 0; rank < 3; rank++) {
       std::vector<double> bounds;
       for (int i = 0; i < dim; i++) {
-        bounds.push_back(rank*i);
+        bounds.push_back(rank * i);
         bounds.push_back(i + 1);
       }
       bbm.emplace(rank, mesh::BoundingBox(bounds));
@@ -62,7 +69,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
     } else {
       BOOST_TEST(context.isNamed("B"));
 
-      mesh::BoundingBox    bbCompare(dim);
+      mesh::BoundingBox          bbCompare(dim);
       mesh::Mesh::BoundingBoxMap bbmCompare;
 
       for (int i = 0; i < 3; i++) {
@@ -83,12 +90,12 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
 
   // Build BB/BBMap to communicate
-  int dimension = 3;
+  int                        dimension = 3;
   mesh::Mesh::BoundingBoxMap bbm;
   for (int rank = 0; rank < 3; rank++) {
     std::vector<double> bounds;
     for (int i = 0; i < dimension; i++) {
-      bounds.push_back(rank*i);
+      bounds.push_back(rank * i);
       bounds.push_back(i + 1);
     }
     bbm.emplace(rank, mesh::BoundingBox(bounds));
@@ -100,7 +107,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
     comBB.broadcastSendBoundingBoxMap(bbm);
   } else {
 
-    mesh::BoundingBox    bbCompare{dimension};
+    mesh::BoundingBox          bbCompare{dimension};
     mesh::Mesh::BoundingBoxMap bbmCompare;
 
     for (int i = 0; i < 3; i++) {

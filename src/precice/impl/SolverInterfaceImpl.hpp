@@ -1,6 +1,8 @@
 #pragma once
 
+#include <map>
 #include <set>
+#include <stddef.h>
 #include <string>
 #include <vector>
 #include "action/Action.hpp"
@@ -8,6 +10,7 @@
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "io/Constants.hpp"
+#include "logging/Logger.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/SolverInterface.hpp"
@@ -26,10 +29,17 @@ namespace PreciceTests {
 namespace Serial {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
-}
+} // namespace Serial
 } // namespace PreciceTests
 
 namespace precice {
+namespace cplscheme {
+class CouplingSchemeConfiguration;
+} // namespace cplscheme
+namespace mesh {
+class Mesh;
+} // namespace mesh
+
 namespace impl {
 
 /// Implementation of solver interface.
@@ -548,7 +558,7 @@ private:
   };
 
   /// The current State of the solverinterface
-  State _state {State::Constructed};
+  State _state{State::Constructed};
 
   /// Counts calls to advance for plotting.
   long int _numberAdvanceCalls = 0;

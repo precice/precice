@@ -40,6 +40,7 @@ public:
 private:
   /// Forward declaration of the implementation of the logger
   class LoggerImpl;
+
   /// Pimpl to the logger implementation
   std::unique_ptr<LoggerImpl> _impl;
 };

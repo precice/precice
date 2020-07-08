@@ -1,6 +1,11 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <vector>
+#include "logging/Logger.hpp"
 #include "mesh/BoundingBox.hpp"
+#include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Helpers.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
@@ -128,6 +133,30 @@ BOOST_AUTO_TEST_CASE(CenterOfGravity)
 
     Eigen::Vector2d compareCOG(0.5, 1.5);
     BOOST_TEST(compareCOG == bb.center());
+  }
+} // CenterOfGravity
+
+BOOST_AUTO_TEST_CASE(MinMaxCorner)
+{
+  PRECICE_TEST(1_rank);
+  { // 3D
+    BoundingBox bb({0.0, 1.0,
+                    -1.0, 3.0,
+                    2.0, 4.0});
+
+    Eigen::Vector3d compareMin(0.0, -1.0, 2.0);
+    Eigen::Vector3d compareMax(1.0, 3.0, 4.0);
+    BOOST_TEST(compareMin == bb.minCorner());
+    BOOST_TEST(compareMax == bb.maxCorner());
+  }
+  { // 2D
+    BoundingBox bb({-1.0, 3.0,
+                    2.0, 4.0});
+
+    Eigen::Vector2d compareMin(-1.0, 2.0);
+    Eigen::Vector2d compareMax(3.0, 4.0);
+    BOOST_TEST(compareMin == bb.minCorner());
+    BOOST_TEST(compareMax == bb.maxCorner());
   }
 } // CenterOfGravity
 

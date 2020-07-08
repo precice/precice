@@ -1,5 +1,12 @@
+#include <Eigen/Core>
+#include <iosfwd>
+#include <string>
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/String.hpp"
+#include "utils/algorithm.hpp"
 
 using namespace precice;
 using namespace precice::utils;

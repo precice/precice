@@ -1,15 +1,24 @@
 #include "PointToPointCommunication.hpp"
+#include <algorithm>
 #include <boost/container/flat_map.hpp>
+#include <functional>
 #include <iomanip>
+#include <iostream>
+#include <limits>
+#include <map>
+#include <set>
 #include <thread>
 #include <vector>
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
+#include "com/Request.hpp"
+#include "logging/LogMacros.hpp"
+#include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
-#include "utils/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 using precice::utils::Event;
 

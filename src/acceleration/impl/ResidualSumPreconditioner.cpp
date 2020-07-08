@@ -1,6 +1,10 @@
 #include "acceleration/impl/ResidualSumPreconditioner.hpp"
+#include <algorithm>
+#include <math.h>
+#include "logging/LogMacros.hpp"
 #include "math/differences.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {

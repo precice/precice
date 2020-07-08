@@ -1,15 +1,15 @@
 #include "precice/SolverInterfaceFASTEST.hpp"
 #include <iostream>
+#include <memory>
 #include <string>
+#include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/SolverInterfaceFortran.hpp"
-#include <memory>
 
 using namespace std;
 
 static std::unique_ptr<precice::SolverInterface> implAcoustic = nullptr;
-static std::unique_ptr<precice::SolverInterface> implFluid   = nullptr;
+static std::unique_ptr<precice::SolverInterface> implFluid    = nullptr;
 
 static precice::logging::Logger _log("SolverInterfaceFASTEST");
 
@@ -45,13 +45,13 @@ void precice_fastest_create_(
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   if (isAcousticUsed) {
     implAcoustic.reset(new precice::SolverInterface(stringAccessorNameAcoustic,
-                                                stringConfigFileName,
-                                                *solverProcessIndex, *solverProcessSize));
+                                                    stringConfigFileName,
+                                                    *solverProcessIndex, *solverProcessSize));
   }
   if (isFluidUsed) {
     implFluid.reset(new precice::SolverInterface(stringAccessorNameFluid,
-                                             stringConfigFileName,
-                                             *solverProcessIndex, *solverProcessSize));
+                                                 stringConfigFileName,
+                                                 *solverProcessIndex, *solverProcessSize));
   }
   PRECICE_CHECK(implAcoustic != nullptr || implFluid != nullptr, "Either the Fluid interface or the Acoustic"
                                                                  " interface or both need to be used");

@@ -4,6 +4,10 @@
 #include "utils/Parallel.hpp"
 
 namespace precice {
+namespace logging {
+class Logger;
+} // namespace logging
+
 namespace utils {
 
 /// Utility class for managing PETSc operations.
@@ -37,7 +41,6 @@ private:
 
 #include <string>
 #include <utility>
-
 #include "petscao.h"
 #include "petscis.h"
 #include "petscksp.h"

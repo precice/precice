@@ -1,16 +1,21 @@
-#include "Mesh.hpp"
 #include <Eigen/Core>
-#include <Eigen/Geometry>
 #include <algorithm>
 #include <array>
 #include <boost/container/flat_map.hpp>
+#include <functional>
+#include <memory>
+#include <ostream>
+#include <type_traits>
+#include <utility>
+#include <vector>
 #include "Edge.hpp"
+#include "Mesh.hpp"
 #include "Quad.hpp"
 #include "RTree.hpp"
 #include "Triangle.hpp"
-#include "math/math.hpp"
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace mesh {
@@ -200,13 +205,13 @@ void Mesh::allocateDataValues()
 {
   PRECICE_TRACE(_vertices.size());
   const auto expectedCount = _vertices.size();
-  using SizeType = decltype(expectedCount);
+  using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
   for (PtrData data : _data) {
     const SizeType expectedSize = expectedCount * data->getDimensions();
-    const auto actualSize = static_cast<SizeType>(data->values().size());
+    const auto     actualSize   = static_cast<SizeType>(data->values().size());
     // Shrink Buffer
     if (expectedSize < actualSize) {
-        data->values().resize(expectedSize);
+      data->values().resize(expectedSize);
     }
     // Enlarge Buffer
     if (expectedSize > actualSize) {
@@ -226,7 +231,6 @@ void Mesh::computeBoundingBox()
   }
   _boundingBox = std::move(bb);
   PRECICE_DEBUG("Bounding Box, " << _boundingBox);
-  
 }
 
 void Mesh::computeState()
@@ -360,28 +364,29 @@ void Mesh::setGlobalNumberOfVertices(int num)
   _globalNumberOfVertices = num;
 }
 
-Eigen::VectorXd Mesh::getOwnedVertexData(int dataID){
-    
+Eigen::VectorXd Mesh::getOwnedVertexData(int dataID)
+{
+
   std::vector<double> ownedDataVector;
-  int valueDim = data(dataID)->getDimensions();
-  int index = 0;
+  int                 valueDim = data(dataID)->getDimensions();
+  int                 index    = 0;
 
   for (const auto &vertex : vertices()) {
     if (vertex.isOwner()) {
-      for(int dim = 0; dim < valueDim; ++dim){
-        ownedDataVector.push_back(data(dataID)->values()[index*valueDim + dim]);
+      for (int dim = 0; dim < valueDim; ++dim) {
+        ownedDataVector.push_back(data(dataID)->values()[index * valueDim + dim]);
       }
     }
     ++index;
   }
   Eigen::Map<Eigen::VectorXd> ownedData(ownedDataVector.data(), ownedDataVector.size());
-  
+
   return ownedData;
 }
 
 void Mesh::tagAll()
 {
-  for(auto &vertex : _vertices){
+  for (auto &vertex : _vertices) {
     vertex.tag();
   }
 }

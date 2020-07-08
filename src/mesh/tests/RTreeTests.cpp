@@ -1,6 +1,23 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <iterator>
+#include <limits>
+#include <list>
+#include <memory>
+#include <set>
+#include <utility>
+#include <vector>
+#include "logging/Logger.hpp"
 #include "math/geometry.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/RTree.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Triangle.hpp"
+#include "mesh/Vertex.hpp"
+#include "mesh/impl/BBUtils.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
@@ -68,6 +85,7 @@ PtrMesh vertexMesh3D()
   mesh->createVertex(Eigen::Vector3d(1, 0, 1));
   mesh->createVertex(Eigen::Vector3d(1, 1, 0));
   mesh->createVertex(Eigen::Vector3d(1, 1, 1));
+  mesh->computeBoundingBox();
   return mesh;
 }
 } // namespace
@@ -173,7 +191,7 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEmpty)
       searchVector - Eigen::VectorXd::Constant(3, radius),
       searchVector + Eigen::VectorXd::Constant(3, radius));
 
-  tree->query(bg::index::within(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices()[i]) <= radius; }),
+  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices()[i]) <= radius; }),
               std::back_inserter(results));
 
   BOOST_TEST(results.empty());
@@ -196,7 +214,7 @@ BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
       searchVector - Eigen::VectorXd::Constant(3, radius),
       searchVector + Eigen::VectorXd::Constant(3, radius));
 
-  tree->query(bg::index::within(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices()[i]) <= radius; }),
+  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices()[i]) <= radius; }),
               std::back_inserter(results));
 
   BOOST_TEST(results.size() == 2);
@@ -221,10 +239,28 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
       searchVector - Eigen::VectorXd::Constant(3, radius),
       searchVector + Eigen::VectorXd::Constant(3, radius));
 
-  tree->query(bg::index::within(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices()[i]) <= radius; }),
+  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices()[i]) <= radius; }),
               std::back_inserter(results));
 
   BOOST_TEST(results.size() == 8);
+}
+
+BOOST_AUTO_TEST_CASE(QueryWithBoundingBox)
+{
+  PRECICE_TEST(1_rank);
+  auto mesh = vertexMesh3D();
+
+  auto tree = rtree::getVertexRTree(mesh);
+  BOOST_TEST(tree->size() == 8);
+
+  Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 1, 0));
+
+  std::vector<size_t> results;
+
+  auto search_box = toRTreeBox(mesh->getBoundingBox());
+  tree->query(bg::index::intersects(search_box), std::back_inserter(results));
+
+  BOOST_TEST(results.size() == tree->size());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Vertex

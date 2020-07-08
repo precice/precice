@@ -1,9 +1,13 @@
 #include "CommunicationConfiguration.hpp"
+#include <memory>
+#include <ostream>
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SocketCommunication.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace com {

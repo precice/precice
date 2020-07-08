@@ -1,13 +1,20 @@
-#include "Participant.hpp"
 #include <algorithm>
+#include <ostream>
 #include <utility>
 #include "DataContext.hpp"
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
+#include "Participant.hpp"
 #include "WatchPoint.hpp"
 #include "action/Action.hpp"
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/impl/SharedPointer.hpp"
+#include "utils/ManageUniqueIDs.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace impl {
@@ -18,7 +25,8 @@ Participant::Participant(
     : _name(std::move(name)),
       _meshContexts(meshConfig->meshes().size(), nullptr),
       _dataContexts(meshConfig->getDataConfiguration()->data().size() * meshConfig->meshes().size(), nullptr)
-{}
+{
+}
 
 Participant::~Participant()
 {
@@ -224,6 +232,24 @@ const std::vector<MeshContext *> &Participant::usedMeshContexts() const
 std::vector<MeshContext *> &Participant::usedMeshContexts()
 {
   return _usedMeshContexts;
+}
+
+MeshContext *Participant::usedMeshContextByName(const std::string &name)
+{
+  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
+                          [&name](MeshContext const *context) {
+                            return context->mesh->getName() == name;
+                          });
+  return (pos == _usedMeshContexts.end()) ? nullptr : *pos;
+}
+
+MeshContext const *Participant::usedMeshContextByName(const std::string &name) const
+{
+  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
+                          [&name](MeshContext const *context) {
+                            return context->mesh->getName() == name;
+                          });
+  return (pos == _usedMeshContexts.end()) ? nullptr : *pos;
 }
 
 void Participant::addAction(

@@ -1,4 +1,7 @@
+#include <Eigen/Core>
 #include "../impl/MinIterationConvergenceMeasure.hpp"
+#include "cplscheme/impl/ConvergenceMeasure.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)

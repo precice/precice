@@ -1,4 +1,10 @@
 #include "SocketSendQueue.hpp"
+#include <algorithm>
+#include <boost/asio.hpp>
+#include <iosfwd>
+#include <new>
+#include <utility>
+#include "logging/LogMacros.hpp"
 
 namespace precice {
 namespace com {

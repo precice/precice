@@ -1,11 +1,11 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-
-#include <vector>
 
 // ----------------------------------------------------------- CLASS DEFINITION
 

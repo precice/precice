@@ -1,19 +1,25 @@
 #include "partition/ReceivedPartition.hpp"
+#include <algorithm>
 #include <map>
+#include <memory>
+#include <ostream>
+#include <utility>
 #include <vector>
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
-#include "mesh/Edge.hpp"
+#include "mapping/SharedPointer.hpp"
 #include "mesh/Filter.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "partition/Partition.hpp"
 #include "utils/Event.hpp"
-#include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 using precice::utils::Event;
 
@@ -373,7 +379,7 @@ void ReceivedPartition::compareBoundingBoxes()
 
   // define and initialize remote bounding box map
   mesh::Mesh::BoundingBoxMap remoteBBMap;
-  mesh::BoundingBox    initialBB(_mesh->getDimensions());
+  mesh::BoundingBox          initialBB(_mesh->getDimensions());
 
   for (int remoteRank = 0; remoteRank < numberOfRemoteRanks; remoteRank++) {
     remoteBBMap.emplace(remoteRank, initialBB);

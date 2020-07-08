@@ -1,9 +1,6 @@
 #include "ParallelCouplingScheme.hpp"
-#include "acceleration/Acceleration.hpp"
-#include "m2n/M2N.hpp"
-#include "math/math.hpp"
-#include "utils/EigenHelperFunctions.hpp"
-#include "utils/MasterSlave.hpp"
+#include "cplscheme/BiCouplingScheme.hpp"
+#include "logging/LogMacros.hpp"
 
 namespace precice {
 namespace cplscheme {

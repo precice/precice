@@ -1,13 +1,28 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <list>
+#include <memory>
+#include <string>
+#include "action/Action.hpp"
 #include "action/ScaleByAreaAction.hpp"
 #include "action/ScaleByDtAction.hpp"
+#include "action/SharedPointer.hpp"
 #include "action/config/ActionConfiguration.hpp"
+#include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "xml/XMLTag.hpp"
+
+namespace precice {
+namespace mesh {
+class Vertex;
+} // namespace mesh
+} // namespace precice
 
 using namespace precice;
 

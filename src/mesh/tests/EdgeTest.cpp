@@ -1,6 +1,10 @@
 #include <Eigen/Core>
+#include <iosfwd>
+#include <string>
+#include "logging/Logger.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
