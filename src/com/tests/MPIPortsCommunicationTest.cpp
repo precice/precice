@@ -17,46 +17,44 @@ BOOST_AUTO_TEST_SUITE(MPIPorts,
 
 BOOST_AUTO_TEST_CASE(SendAndReceiveMM)
 {
-  PRECICE_TEST(2_ranks, Require::Events);
+  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
   using namespace precice::testing::com::mastermaster;
-  TestSendAndReceive<MPIPortsCommunication>(context.rank);
+  TestSendAndReceive<MPIPortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(SendAndReceiveMS)
 {
   PRECICE_TEST(2_ranks, Require::Events);
   using namespace precice::testing::com::masterslave;
-  TestSendAndReceive<MPIPortsCommunication>(context.rank);
+  TestSendAndReceive<MPIPortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesMM)
 {
-  PRECICE_TEST(4_ranks, Require::Events);
+  PRECICE_TEST("A"_on(2_ranks), "B"_on(2_ranks), Require::Events);
   using namespace precice::testing::com::mastermaster;
-  TestSendReceiveFourProcesses<MPIPortsCommunication>(context.rank);
+  TestSendReceiveFourProcesses<MPIPortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveTwoProcessesServerClient)
-
 {
-  PRECICE_TEST(2_ranks, Require::Events);
+  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
   using namespace precice::testing::com::serverclient;
-  TestSendReceiveTwoProcessesServerClient<MPIPortsCommunication>(context.rank);
+  TestSendReceiveTwoProcessesServerClient<MPIPortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClient)
-
 {
-  PRECICE_TEST(4_ranks, Require::Events);
+  PRECICE_TEST("A"_on(2_ranks), "B"_on(2_ranks), Require::Events);
   using namespace precice::testing::com::serverclient;
-  TestSendReceiveFourProcessesServerClient<MPIPortsCommunication>(context.rank);
+  TestSendReceiveFourProcessesServerClient<MPIPortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesServerClientV2)
 {
-  PRECICE_TEST(4_ranks, Require::Events);
+  PRECICE_TEST("A"_on(2_ranks), "B"_on(2_ranks), Require::Events);
   using namespace precice::testing::com::serverclient;
-  TestSendReceiveFourProcessesServerClientV2<MPIPortsCommunication>(context.rank);
+  TestSendReceiveFourProcessesServerClientV2<MPIPortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // MPIPortsCommunication
