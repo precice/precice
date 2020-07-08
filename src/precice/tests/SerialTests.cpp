@@ -1451,7 +1451,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
     if (context.isNamed("SolverTwo")) {
       int dataID = cplInterface.getDataID("DataOne", meshID);
       // to get convergence in first timestep (everything 0), but not in second timestep
-      Vector2d value{0.0, 0.0 + numberOfAdvanceCalls};
+      Vector2d value{0.0, 2.0 + numberOfAdvanceCalls * numberOfAdvanceCalls};
       cplInterface.writeVectorData(dataID, vertexID, value.data());
     }
     cplInterface.advance(1.0);
