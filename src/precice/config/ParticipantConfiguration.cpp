@@ -1,9 +1,9 @@
-#include "ParticipantConfiguration.hpp"
 #include <algorithm>
 #include <list>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
+#include "ParticipantConfiguration.hpp"
 #include "action/Action.hpp"
 #include "action/config/ActionConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
@@ -507,7 +507,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         exporter = io::PtrExport(new io::ExportVTK(exportContext.plotNormals));
       }
     } else {
-      PRECICE_ERROR("Unknown export type!");
+      PRECICE_ERROR("Participant " << _participants.back()->getName()
+                                   << " defines an <export/> tag of unknown type \"" << exportContext.type << "\".");
     }
     exportContext.exporter = exporter;
 
