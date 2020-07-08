@@ -9,8 +9,8 @@
 
 using namespace precice;
 
-/// Generic test function that is called from the tests for MPIPortsCommunication,
-/// MPIDirectCommunication and SocketCommunication
+/// Generic test function that is called from the tests for
+/// MPIPortsCommunication, MPIDirectCommunication and SocketCommunication
 
 namespace precice {
 namespace testing {
@@ -24,12 +24,12 @@ namespace mastermaster {
 ///
 
 template <typename T>
-void TestSendAndReceivePrimitiveTypes(int rank)
+void TestSendAndReceivePrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
-    com.acceptConnection("process0", "process1", "", rank);
+  if (context.isNamed("A")) {
+    com.acceptConnection("process0", "process1", "", 0);
     {
       std::string msg("testOne");
       com.send(msg, 0);
@@ -55,7 +55,7 @@ void TestSendAndReceivePrimitiveTypes(int rank)
       BOOST_TEST(msg == false);
     }
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("process0", "process1", "", 0, 1);
     {
       std::string msg;
@@ -90,12 +90,12 @@ void TestSendAndReceivePrimitiveTypes(int rank)
 }
 
 template <typename T>
-void TestSendAndReceiveVectors(int rank)
+void TestSendAndReceiveVectors(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
-    com.acceptConnection("process0", "process1", "", rank);
+  if (context.isNamed("A")) {
+    com.acceptConnection("process0", "process1", "", 0);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
       com.receive(msg.data(), msg.size(), 0);
@@ -124,7 +124,7 @@ void TestSendAndReceiveVectors(int rank)
       com.send(msg, 0);
     }
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("process0", "process1", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(1);
@@ -155,62 +155,55 @@ void TestSendAndReceiveVectors(int rank)
 }
 
 template <typename T>
-void TestSendReceiveFourProcesses(int rank)
+void TestSendReceiveFourProcesses(TestContext const &context)
 {
   T   communication;
   int message = -1;
 
-  switch (rank) {
-  case 0: {
-    communication.acceptConnection("A", "B", "", rank);
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
+      communication.acceptConnection("A", "B", "", 0);
 
-    communication.send(10, 2);
-    communication.receive(message, 2);
-    BOOST_TEST(message == 20);
+      communication.send(10, 0);
+      communication.receive(message, 0);
+      BOOST_TEST(message == 20);
 
-    communication.send(20, 3);
-    communication.receive(message, 3);
-    BOOST_TEST(message == 40);
+      communication.send(20, 1);
+      communication.receive(message, 1);
+      BOOST_TEST(message == 40);
 
-    communication.closeConnection();
-    break;
-  }
-  case 1: {
-    // does not participate
-    break;
-  }
-  case 2: {
-    communication.requestConnection("A", "B", "", rank, 2);
+      communication.closeConnection();
+    }
+  } else {
+    if (context.isMaster()) {
+      communication.requestConnection("A", "B", "", 0, 2);
 
-    communication.receive(message, 0);
-    BOOST_TEST(message == 10);
-    message *= 2;
-    communication.send(message, 0);
+      communication.receive(message, 0);
+      BOOST_TEST(message == 10);
+      message *= 2;
+      communication.send(message, 0);
 
-    communication.closeConnection();
-    break;
-  }
-  case 3: {
-    communication.requestConnection("A", "B", "", rank, 2);
+      communication.closeConnection();
+    } else {
+      communication.requestConnection("A", "B", "", 1, 2);
 
-    communication.receive(message, 0);
-    BOOST_TEST(message == 20);
-    message *= 2;
-    communication.send(message, 0);
+      communication.receive(message, 0);
+      BOOST_TEST(message == 20);
+      message *= 2;
+      communication.send(message, 0);
 
-    communication.closeConnection();
-    break;
-  }
+      communication.closeConnection();
+    }
   }
 }
 
 template <typename T>
-void TestBroadcastPrimitiveTypes(int rank)
+void TestBroadcastPrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
-    com.acceptConnection("process0", "process1", "", rank);
+  if (context.isNamed("A")) {
+    com.acceptConnection("process0", "process1", "", 0);
     {
       double msg = 0.0;
       com.broadcast(msg);
@@ -224,7 +217,7 @@ void TestBroadcastPrimitiveTypes(int rank)
       com.broadcast(msg);
     }
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("process0", "process1", "", 0, 1);
     {
       double msg = 1.0;
@@ -246,12 +239,12 @@ void TestBroadcastPrimitiveTypes(int rank)
 }
 
 template <typename T>
-void TestBroadcastVectors(int rank)
+void TestBroadcastVectors(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
-    com.acceptConnection("process0", "process1", "", rank);
+  if (context.isNamed("A")) {
+    com.acceptConnection("process0", "process1", "", 0);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(3.1415);
       com.broadcast(msg.data(), msg.size());
@@ -269,7 +262,7 @@ void TestBroadcastVectors(int rank)
       com.broadcast(msg.data(), msg.size());
     }
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("process0", "process1", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
@@ -296,11 +289,11 @@ void TestBroadcastVectors(int rank)
 }
 
 template <typename T>
-void TestReducePrimitiveTypes(int rank)
+void TestReducePrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
+  if (context.isNamed("A")) {
     com.acceptConnection("process0", "process1", "", 0);
     {
       int msg = 1;
@@ -325,7 +318,7 @@ void TestReducePrimitiveTypes(int rank)
     }
 
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("process0", "process1", "", 0, 1);
     {
       int msg = 3;
@@ -353,64 +346,72 @@ void TestReducePrimitiveTypes(int rank)
 }
 
 template <typename T>
-void TestReduceVectors(int rank)
+void TestReduceVectors(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
-    com.acceptConnection("process0", "process1", "", rank);
+  if (context.isNamed("A")) {
+    com.acceptConnection("process0", "process1", "", 0);
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
       com.reduceSum(msg.data(), rcv.data(), msg.size());
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
+                                    msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
+                                    rcv_expected.begin(), rcv_expected.end());
     }
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
       com.allreduceSum(msg.data(), rcv.data(), msg.size());
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
+                                    msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
+                                    rcv_expected.begin(), rcv_expected.end());
     }
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("process0", "process1", "", 0, 1);
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
       com.reduceSum(msg.data(), rcv.data(), msg.size(), 0);
       std::vector<double> msg_expected{1, 2, 3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
+                                    msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{0, 0, 0};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
+                                    rcv_expected.begin(), rcv_expected.end());
     }
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
       com.allreduceSum(msg.data(), rcv.data(), msg.size(), 0);
       std::vector<double> msg_expected{1, 2, 3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
+                                    msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
+                                    rcv_expected.begin(), rcv_expected.end());
     }
     com.closeConnection();
   }
 }
 
 template <typename T>
-void TestSendAndReceive(int rank)
+void TestSendAndReceive(TestContext const &context)
 {
-  TestSendAndReceivePrimitiveTypes<T>(rank);
-  TestSendAndReceiveVectors<T>(rank);
-  TestBroadcastPrimitiveTypes<T>(rank);
-  TestBroadcastVectors<T>(rank);
-  TestReducePrimitiveTypes<T>(rank);
-  TestReduceVectors<T>(rank);
+  TestSendAndReceivePrimitiveTypes<T>(context);
+  TestSendAndReceiveVectors<T>(context);
+  TestBroadcastPrimitiveTypes<T>(context);
+  TestBroadcastVectors<T>(context);
+  TestReducePrimitiveTypes<T>(context);
+  TestReduceVectors<T>(context);
 }
 
 } // namespace mastermaster
@@ -423,11 +424,11 @@ namespace masterslave {
 ///
 
 template <typename T>
-void TestSendAndReceivePrimitiveTypes(int rank)
+void TestSendAndReceivePrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
+  if (context.isMaster()) {
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       std::string msg("testOne");
@@ -454,7 +455,7 @@ void TestSendAndReceivePrimitiveTypes(int rank)
       BOOST_TEST(msg == false);
     }
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("Master", "Slave", "", 0, 1);
     {
       std::string msg;
@@ -489,11 +490,11 @@ void TestSendAndReceivePrimitiveTypes(int rank)
 }
 
 template <typename T>
-void TestSendAndReceiveVectors(int rank)
+void TestSendAndReceiveVectors(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
+  if (context.isMaster()) {
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
@@ -523,7 +524,7 @@ void TestSendAndReceiveVectors(int rank)
       com.send(msg, 1);
     }
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("Master", "Slave", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(1);
@@ -554,12 +555,12 @@ void TestSendAndReceiveVectors(int rank)
 }
 
 template <typename T>
-void TestBroadcastPrimitiveTypes(int rank)
+void TestBroadcastPrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
-    com.acceptConnection("Master", "Slave", "", rank, 1);
+  if (context.isMaster()) {
+    com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       double msg = 0.0;
       com.broadcast(msg);
@@ -573,7 +574,7 @@ void TestBroadcastPrimitiveTypes(int rank)
       com.broadcast(msg);
     }
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("Master", "Slave", "", 0, 1);
     {
       double msg = 1.0;
@@ -595,12 +596,12 @@ void TestBroadcastPrimitiveTypes(int rank)
 }
 
 template <typename T>
-void TestBroadcastVectors(int rank)
+void TestBroadcastVectors(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
-    com.acceptConnection("Master", "Slave", "", rank, 1);
+  if (context.isMaster()) {
+    com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(3.1415);
       com.broadcast(msg.data(), msg.size());
@@ -618,7 +619,7 @@ void TestBroadcastVectors(int rank)
       com.broadcast(msg.data(), msg.size());
     }
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("Master", "Slave", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
@@ -645,11 +646,11 @@ void TestBroadcastVectors(int rank)
 }
 
 template <typename T>
-void TestReducePrimitiveTypes(int rank)
+void TestReducePrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
+  if (context.isMaster()) {
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       int msg = 1;
@@ -674,7 +675,7 @@ void TestReducePrimitiveTypes(int rank)
     }
 
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("Master", "Slave", "", 0, 1);
     {
       int msg = 3;
@@ -702,64 +703,72 @@ void TestReducePrimitiveTypes(int rank)
 }
 
 template <typename T>
-void TestReduceVectors(int rank)
+void TestReduceVectors(TestContext const &context)
 {
   T com;
 
-  if (rank == 0) {
-    com.acceptConnection("Master", "Slave", "", rank, 1);
+  if (context.isMaster()) {
+    com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
       com.reduceSum(msg.data(), rcv.data(), msg.size());
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
+                                    msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
+                                    rcv_expected.begin(), rcv_expected.end());
     }
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
       com.allreduceSum(msg.data(), rcv.data(), msg.size());
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
+                                    msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
+                                    rcv_expected.begin(), rcv_expected.end());
     }
     com.closeConnection();
-  } else if (rank == 1) {
+  } else {
     com.requestConnection("Master", "Slave", "", 0, 1);
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
       com.reduceSum(msg.data(), rcv.data(), msg.size(), 0);
       std::vector<double> msg_expected{1, 2, 3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
+                                    msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{0, 0, 0};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
+                                    rcv_expected.begin(), rcv_expected.end());
     }
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
       com.allreduceSum(msg.data(), rcv.data(), msg.size(), 0);
       std::vector<double> msg_expected{1, 2, 3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
+                                    msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
+                                    rcv_expected.begin(), rcv_expected.end());
     }
     com.closeConnection();
   }
 }
 
 template <typename T>
-void TestSendAndReceive(int rank)
+void TestSendAndReceive(TestContext const &context)
 {
-  TestSendAndReceivePrimitiveTypes<T>(rank);
-  TestSendAndReceiveVectors<T>(rank);
-  TestBroadcastPrimitiveTypes<T>(rank);
-  TestBroadcastVectors<T>(rank);
-  TestReducePrimitiveTypes<T>(rank);
-  TestReduceVectors<T>(rank);
+  TestSendAndReceivePrimitiveTypes<T>(context);
+  TestSendAndReceiveVectors<T>(context);
+  TestBroadcastPrimitiveTypes<T>(context);
+  TestBroadcastVectors<T>(context);
+  TestReducePrimitiveTypes<T>(context);
+  TestReduceVectors<T>(context);
 }
 
 } // namespace masterslave
@@ -772,147 +781,144 @@ namespace serverclient {
 /// n Clients connect to the server
 /// The Server and the set of Clients are on different participants
 
-/// Tests connecting two processes using acceptConnectionAsServer and requestConnectionAsClient
+/// Tests connecting two processes using acceptConnectionAsServer and
+/// requestConnectionAsClient
 template <typename T>
-void TestSendReceiveTwoProcessesServerClient(int rank)
+void TestSendReceiveTwoProcessesServerClient(TestContext const &context)
 {
   T   communication;
   int message = 1;
+  BOOST_REQUIRE(context.hasSize(1));
 
-  switch (rank) {
-  case 0: {
-    communication.acceptConnectionAsServer("A", "B", "", rank, 1);
-    communication.send(message, 1);
-    communication.receive(message, 1);
+  if (context.isNamed("A")) {
+    communication.acceptConnectionAsServer("A", "B", "", 0, 1);
+    communication.send(message, 0);
+    communication.receive(message, 0);
     BOOST_TEST(message == 2);
     communication.closeConnection();
-    break;
-  }
-  case 1: {
-    communication.requestConnectionAsClient("A", "B", "", {0}, rank);
+  } else {
+    BOOST_REQUIRE(context.isNamed("B"));
+    communication.requestConnectionAsClient("A", "B", "", {0}, 0);
     communication.receive(message, 0);
     BOOST_TEST(message == 1);
     message = 2;
     communication.send(message, 0);
     communication.closeConnection();
-    break;
-  }
   }
 }
 
 template <typename T>
-void TestSendReceiveFourProcessesServerClient(int rank)
+void TestSendReceiveFourProcessesServerClient(TestContext const &context)
 {
   T   communication;
   int message = -1;
+  BOOST_REQUIRE(context.hasSize(2));
 
-  switch (rank) {
-  case 0: {
-    communication.acceptConnectionAsServer("A", "B", "", rank, 2);
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
+      communication.acceptConnectionAsServer("A", "B", "", context.rank, 2);
 
-    communication.send(10, 2);
-    communication.receive(message, 2);
-    BOOST_TEST(message == 20);
+      communication.send(10, 0);
+      communication.receive(message, 0);
+      BOOST_TEST(message == 20);
 
-    communication.send(20, 3);
-    communication.receive(message, 3);
-    BOOST_TEST(message == 40);
+      communication.send(20, 1);
+      communication.receive(message, 1);
+      BOOST_TEST(message == 40);
 
-    communication.closeConnection();
-    break;
-  }
-  case 1: {
-    // does not accept a connection
-    break;
-  }
-  case 2: {
-    communication.requestConnectionAsClient("A", "B", "", {0}, rank);
+      communication.closeConnection();
+    } else {
+      communication.acceptConnectionAsServer("A", "B", "", context.rank, 0);
+      communication.closeConnection();
+    }
+  } else {
+    BOOST_REQUIRE(context.isNamed("B"));
+    if (context.isMaster()) {
+      communication.requestConnectionAsClient("A", "B", "", {0}, context.rank);
 
-    communication.receive(message, 0);
-    BOOST_TEST(message == 10);
-    message *= 2;
-    communication.send(message, 0);
+      communication.receive(message, 0);
+      BOOST_TEST(message == 10);
+      message *= 2;
+      communication.send(message, 0);
 
-    communication.closeConnection();
-    break;
-  }
-  case 3: {
-    communication.requestConnectionAsClient("A", "B", "", {0}, rank);
+      communication.closeConnection();
+    } else {
+      communication.requestConnectionAsClient("A", "B", "", {0}, context.rank);
 
-    communication.receive(message, 0);
-    BOOST_TEST(message == 20);
-    message *= 2;
-    communication.send(message, 0);
+      communication.receive(message, 0);
+      BOOST_TEST(message == 20);
+      message *= 2;
+      communication.send(message, 0);
 
-    communication.closeConnection();
-    break;
-  }
+      communication.closeConnection();
+    }
   }
 }
 
 template <typename T>
-void TestSendReceiveFourProcessesServerClientV2(int rank)
+void TestSendReceiveFourProcessesServerClientV2(TestContext const &context)
 {
   T   communication;
   int message = -1;
 
-  switch (rank) {
-  case 0: {
-    communication.acceptConnectionAsServer("A", "B", "", rank, 2);
+  BOOST_REQUIRE(context.hasSize(2));
 
-    communication.send(10, 2);
-    communication.receive(message, 2);
-    BOOST_TEST(message == 20);
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
 
-    communication.send(100, 3);
-    communication.receive(message, 3);
-    BOOST_TEST(message == 200);
+      communication.acceptConnectionAsServer("A", "B", "", 0, 2);
 
-    communication.closeConnection();
-    break;
-  }
-  case 1: {
-    communication.acceptConnectionAsServer("A", "B", "", rank, 2);
+      communication.send(10, 0);
+      communication.receive(message, 0);
+      BOOST_TEST(message == 20);
 
-    communication.send(20, 2);
-    communication.receive(message, 2);
-    BOOST_TEST(message == 40);
+      communication.send(100, 1);
+      communication.receive(message, 1);
+      BOOST_TEST(message == 200);
 
-    communication.send(200, 3);
-    communication.receive(message, 3);
-    BOOST_TEST(message == 400);
+      communication.closeConnection();
+    } else {
+      communication.acceptConnectionAsServer("A", "B", "", 1, 2);
 
-    communication.closeConnection();
-    break;
-  }
-  case 2: {
-    communication.requestConnectionAsClient("A", "B", "", {0, 1}, rank);
+      communication.send(20, 0);
+      communication.receive(message, 0);
+      BOOST_TEST(message == 40);
 
-    communication.receive(message, 0);
-    BOOST_TEST(message == 10);
-    communication.send(20, 0);
+      communication.send(200, 1);
+      communication.receive(message, 1);
+      BOOST_TEST(message == 400);
 
-    communication.receive(message, 1);
-    BOOST_TEST(message == 20);
-    communication.send(40, 1);
+      communication.closeConnection();
+    }
 
-    communication.closeConnection();
-    break;
-  }
-  case 3: {
-    communication.requestConnectionAsClient("A", "B", "", {0, 1}, rank);
+  } else {
+    BOOST_REQUIRE(context.isNamed("B"));
 
-    communication.receive(message, 0);
-    BOOST_TEST(message == 100);
-    communication.send(200, 0);
+    if (context.isMaster()) {
+      communication.requestConnectionAsClient("A", "B", "", {0, 1}, 0);
 
-    communication.receive(message, 1);
-    BOOST_TEST(message == 200);
-    communication.send(400, 1);
+      communication.receive(message, 0);
+      BOOST_TEST(message == 10);
+      communication.send(20, 0);
 
-    communication.closeConnection();
-    break;
-  }
+      communication.receive(message, 1);
+      BOOST_TEST(message == 20);
+      communication.send(40, 1);
+
+      communication.closeConnection();
+    } else {
+      communication.requestConnectionAsClient("A", "B", "", {0, 1}, 1);
+
+      communication.receive(message, 0);
+      BOOST_TEST(message == 100);
+      communication.send(200, 0);
+
+      communication.receive(message, 1);
+      BOOST_TEST(message == 200);
+      communication.send(400, 1);
+
+      communication.closeConnection();
+    }
   }
 }
 
