@@ -193,10 +193,12 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   _residuals = _values;
   _residuals -= _oldValues;
 
-  PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(_residuals), 0.0),
-                "The coupling residual equals zero. There is probably something wrong in your adapter. "
-                "Maybe you always write the same data or you call advance without "
-                "providing new data first or you do not use available read data.");
+  if (math::equals(utils::MasterSlave::l2norm(_residuals), 0.0)) {
+    PRECICE_WARN("The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
+                 "Maybe you always write the same data or you call advance without "
+                 "providing new data first or you do not use available read data. "
+                 "Or you just converge much further than actually necessary.");
+  }
 
   //if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
