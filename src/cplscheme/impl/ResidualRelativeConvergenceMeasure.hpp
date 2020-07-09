@@ -7,6 +7,7 @@
 #include "../CouplingData.hpp"
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
+#include "math/differences.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice {
@@ -54,11 +55,6 @@ public:
       _isFirstIteration  = false;
     }
     _isConvergence = _normDiff < _normFirstResidual * _convergenceLimitPercent;
-    //      PRECICE_INFO("Residual Relative convergence measure: "
-    //                    << "two-norm differences = " << normDiff
-    //                    << ", convergence limit = "
-    //                    << _normFirstResidual * _convergenceLimitPercent
-    //                    << ", convergence = " << _isConvergence );
   }
 
   virtual bool isConvergence() const
@@ -71,14 +67,23 @@ public:
   {
     std::ostringstream os;
     os << "residual relative convergence measure: ";
-    os << "two-norm diff = " << _normDiff;
-    os << ", relative limit = " << _normFirstResidual * _convergenceLimitPercent;
+    os << "relative two-norm diff = " << getNormResidual();
+    os << ", limit = " << _convergenceLimitPercent;
+    os << ", normalization = " << _normFirstResidual;
     os << ", conv = ";
     if (_isConvergence)
       os << "true";
     else
       os << "false";
     return os.str();
+  }
+
+  virtual double getNormResidual()
+  {
+    if (math::equals(_normFirstResidual, 0.))
+      return std::numeric_limits<double>::infinity();
+    else
+      return _normDiff / _normFirstResidual;
   }
 
 private:
