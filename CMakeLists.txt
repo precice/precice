@@ -213,7 +213,7 @@ if (PRECICE_PETScMapping)
     unset(ENV{PETSC_DIR})
     unset(ENV{PETSC_ARCH})
   endif()
-  find_package(PETSc 3.6 REQUIRED)
+  find_package(PETSc 3.12 REQUIRED)
   # No validation required as PETSc does this internally
 
   set(PETSC_VERSIONS "")
