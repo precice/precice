@@ -21,6 +21,9 @@
 <a style="text-decoration: none" href="https://github.com/precice/precice/releases/latest" target="_blank">
     <img src="https://img.shields.io/github/release/precice/precice.svg" alt="Release">
 </a>
+<a style="text-decoration: none" href="https://bestpractices.coreinfrastructure.org/projects/3895" target="_blank">
+    <img src="https://bestpractices.coreinfrastructure.org/projects/3895/badge" alt="CII Best Practices">
+</a>
 <a style="text-decoration: none" href="https://travis-ci.org/precice/precice" target="_blank">
     <img src="https://travis-ci.org/precice/precice.svg?branch=develop" alt="Build status">
 </a>
