@@ -92,14 +92,14 @@ add_feature_info(MPICommunication PRECICE_MPICommunication
    This enables the MPI communication back-end which is highly recommended on multi-node systems.
    See the documentation of the CMake module FindMPI to control its functionality.
 
-   Set PRECICE_MPICommunication to enable.
+   This feature can be enabled/disabled by setting the PRECICE_MPICommunication CMake option.
 ")
 add_feature_info(PETScMapping PRECICE_PETScMapping
   "Enables the PETSc-powered radial basic function mappings.
 
    The radial basis function mappings require MPI and PETSc to work in parallel.
 
-   Set PRECICE_PETScMapping to enable.
+   This feature can be enabled/disabled by setting the PRECICE_PETScMapping CMake option.
    Requires MPICommunication.
   ")
 add_feature_info(PythonActions PRECICE_PythonActions
@@ -108,7 +108,7 @@ add_feature_info(PythonActions PRECICE_PythonActions
    preCICE allows to manipulate coupling data at runtime using configurable actions.
    This feature enables the support for user-defined actions written in Python based on numpy.
 
-   Set PRECICE_PythonActions to enable.
+   This feature can be enabled/disabled by setting the PRECICE_PythonActions CMake option.
   ")
 add_feature_info(CBindings PRECICE_ENABLE_C
   "Enables the native Fortran bindings.
@@ -117,7 +117,7 @@ add_feature_info(CBindings PRECICE_ENABLE_C
    This feature enables the compilation and installation of the bindings into the library.
    Note that we strongly recommend to compile with C bindings enabled for compatibility reasons.
 
-   Set PRECICE_ENABLE_C to enable.
+   This feature can be enabled/disabled by setting the PRECICE_ENABLE_C CMake option.
   ")
 add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
   "Enables the native Fortran bindings.
@@ -126,7 +126,7 @@ add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
    This feature enables the compilation and installation of the bindings into the library.
    Note that we strongly recommend to compile with Fortran bindings enabled for compatibility reasons.
 
-   Set PRECICE_ENABLE_FORTRAN to enable.
+   This feature can be enabled/disabled by setting the PRECICE_ENABLE_FORTRAN CMake option.
   ")
 
 feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
