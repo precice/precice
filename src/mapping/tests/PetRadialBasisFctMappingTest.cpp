@@ -376,7 +376,6 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
                   globalIndexOffsets[context.rank]);
 }
 
-#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
 /// Some ranks are empty, does not converge
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
@@ -431,9 +430,6 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
                    {2, {8}}},
                   globalIndexOffsets[context.rank]);
 }
-#else
-#warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConsistent2DV4 deactivated, due to PETSc version < 3.8"
-#endif
 
 // same as 2DV4, but all ranks have vertices
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
@@ -814,7 +810,6 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
                   globalIndexOffsets[context.rank]);
 }
 
-#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
 /// Using meshes of different sizes, outMesh is smaller then inMesh
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                      *boost::unit_test::tolerance(1e-6))
@@ -875,9 +870,6 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                    {3, {7.571428}}}, // Sum is ~36
                   globalIndexOffsets[context.rank]);
 }
-#else
-#warning "Test case MappingTests/PetRadialBasisFunctionMapping/Parallel/DistributedConservative2DV4 deactivated, due to PETSc version < 3.8."
-#endif
 
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
@@ -1041,7 +1033,6 @@ void testTagging(const TestContext &context,
 
   // Expected set of tagged elements for first round
   std::set<Eigen::VectorXd, utils::ComponentWiseLess> expectedFirst;
-#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
   for (const auto &vspec : shouldTagFirstRound) {
     expectedFirst.emplace(vspec.asEigen());
   }
@@ -1053,13 +1044,6 @@ void testTagging(const TestContext &context,
     BOOST_TEST((found || !v.isTagged()),
                "FirstRound: Vertex " << v << " is not tagged, but should be.");
   }
-#else
-  BOOST_TEST_MESSAGE("PETSc < 3.8: all vertices should be tagged in first round.");
-  for (const auto &v : taggedMesh->vertices()) {
-    expectedFirst.emplace(v.getCoords()); // everything should be tagged
-    BOOST_TEST(v.isTagged(), "FirstRound: Vertex " << v << " is not tagged, but should be.");
-  }
-#endif
 
   // Expected set of tagged elements for second round
   std::set<Eigen::VectorXd, utils::ComponentWiseLess> expectedSecond(

@@ -818,15 +818,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
-  if (
-#if PETSC_MAJOR >= 3 and PETSC_MINOR >= 8
-      _basisFunction.hasCompactSupport()
-#else
-      false
-#warning "Mesh filtering deactivated, due to PETSc version < 3.8. \
-      preCICE is fully functional, but performance for large cases is degraded."
-#endif
-  ) {
+  if (_basisFunction.hasCompactSupport()) {
     auto rtree    = mesh::rtree::getVertexRTree(filterMesh);
     namespace bgi = boost::geometry::index;
     auto bb       = otherMesh->getBoundingBox();
