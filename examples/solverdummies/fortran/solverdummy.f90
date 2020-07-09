@@ -24,12 +24,12 @@ PROGRAM main
   CALL getarg(3, meshName)
 
   IF(participantName .eq. 'SolverOne') THEN  
-    DataWriteName = 'Forces'
-    DataReadName = 'Velocities'
+    DataWriteName = 'dataOne'
+    DataReadName = 'dataTwo'
   ENDIF
   IF(participantName .eq. 'SolverTwo') THEN  
-    DataWriteName = 'Velocities'
-    DataReadName = 'Forces'
+    DataWriteName = 'dataTwo'
+    DataReadName = 'dataOne'
   ENDIF
 
   rank = 0
@@ -71,6 +71,17 @@ PROGRAM main
 
   CALL precicef_ongoing(ongoing)
   DO WHILE (ongoing.NE.0)
+
+    CALL precicef_action_required(readItCheckp, bool)
+    IF (bool.EQ.1) THEN
+      CALL precicef_read_bvdata(DataRead_ID, N, vertexID, DataRead)
+      WRITE (*,*) 'DUMMY: Reading iteration checkpoint'
+      CALL precicef_mark_action_fulfilled(readItCheckp)
+    ENDIF
+
+    WRITE (*,*) 'DataRead: ', DataRead
+
+    DataWrite = DataRead + 1
   
     CALL precicef_action_required(writeItCheckp, bool)
     IF (bool.EQ.1) THEN
@@ -79,25 +90,18 @@ PROGRAM main
       CALL precicef_mark_action_fulfilled(writeItCheckp)
     ENDIF
 
+    WRITE (*,*) 'DUMMY: Advancing in time'
     CALL precicef_advance(dtlimit)
+
     CALL precicef_ongoing(ongoing)
 
-    CALL precicef_action_required(readItCheckp, bool)
-    IF (bool.EQ.1) THEN
-      CALL precicef_read_bvdata(DataRead_ID, N, vertexID, DataRead)
-      WRITE (*,*) 'DUMMY: Reading iteration checkpoint'
-      CALL precicef_mark_action_fulfilled(readItCheckp)
-    ELSE
-      WRITE (*,*) 'DUMMY: Advancing in time'
-    ENDIF
-
-    WRITE (*,*) 'DataRead: ', DataRead
-
-    DataWrite = DataRead + 1
-    
   ENDDO
   
   CALL precicef_finalize()
   WRITE (*,*) 'DUMMY: Closing Fortran solver dummy...'
+
+  DEALLOCATE(DataWrite)
+  DEALLOCATE(DataRead)
+  DEALLOCATE(vertexID)
 
 END PROGRAM 
