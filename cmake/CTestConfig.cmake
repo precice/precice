@@ -26,7 +26,7 @@ mark_as_advanced(PRECICE_TEST_WRAPPER_SCRIPT)
 
 
 function(add_precice_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;CANFAIL;MPIPORTS" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
+  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;MPIPORTS" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
   # Check arguments
   if(NOT PAT_NAME)
     message(FATAL_ERROR "Argument NAME not passed")
@@ -65,9 +65,6 @@ function(add_precice_test)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
   endif()
   set(_labels ${PAT_LABELS})
-  if(PAT_CANFAIL)
-    list(APPEND _labels "canfail")
-  endif()
   set_tests_properties(${PAT_FULL_NAME} PROPERTIES LABELS "${_labels}")
 endfunction(add_precice_test)
 
@@ -222,7 +219,7 @@ add_precice_test(
   NAME com.mpiports
   ARGUMENTS "--run_test=CommunicationTests/MPIPorts:CommunicationTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS "mpiports;canfail"
+  LABELS "mpiports"
   MPIPORTS
   )
 add_precice_test(
@@ -244,7 +241,7 @@ add_precice_test(
   NAME m2n.mpiports
   ARGUMENTS "--run_test=M2NTests/MPIPorts:M2NTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS "mpiports;canfail"
+  LABELS "mpiports"
   MPIPORTS
   )
 add_precice_test(
@@ -325,7 +322,7 @@ add_precice_test_run_solverdummies(c fortran)
 # Add a separate target to test only the base
 add_custom_target(
   test_base
-  COMMAND ctest -V -LE canfail
+  COMMAND ctest -V
   DEPENDS testprecice
   WORKING_DIRECTORY ${preCICE_BINARY_DIR}
   USES_TERMINAL
