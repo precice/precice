@@ -102,6 +102,11 @@ public:
       return _normDiff / _norm;
   }
 
+  virtual std::string getAbbreviation() const
+  {
+    return "Rel";
+  }
+
 private:
   logging::Logger _log{"cplscheme::RelativeConvergenceMeasure"};
 

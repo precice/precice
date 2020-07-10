@@ -86,6 +86,11 @@ public:
       return _normDiff / _normFirstResidual;
   }
 
+  virtual std::string getAbbreviation() const
+  {
+    return "Drop";
+  }
+
 private:
   logging::Logger _log{"cplscheme::ResidualRelativeConvergenceMeasure"};
 

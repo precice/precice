@@ -73,6 +73,11 @@ public:
     return _normDiff;
   }
 
+  virtual std::string getAbbreviation() const
+  {
+    return "Abs";
+  }
+
 private:
   logging::Logger _log{"cplscheme::AbsoluteConvergenceMeasure"};
 
