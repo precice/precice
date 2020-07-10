@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <iterator>
+#include <vector>
 #include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
 
