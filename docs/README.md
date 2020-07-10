@@ -24,8 +24,8 @@
 <a style="text-decoration: none" href="https://travis-ci.org/precice/precice" target="_blank">
     <img src="https://travis-ci.org/precice/precice.svg?branch=develop" alt="Build status">
 </a>
-<a style="text-decoration: none" href="https://travis-ci.org/precice/systemtests" target="_blank">
-    <img src="https://img.shields.io/travis/precice/systemtests.svg?label=system%20tests&style=flat" alt="Build status">
+<a style="text-decoration: none" href="https://travis-ci.org/github/precice/systemtests/builds" target="_blank">
+    <img src="https://img.shields.io/badge/system%20tests-check-blue" alt="Build status">
 </a>
 
 **Project Quality**  
