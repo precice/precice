@@ -8,6 +8,7 @@
 #include "mesh/RTree.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include "mesh/impl/BBUtils.hpp"
 
 #include <Eigen/Core>
@@ -533,28 +534,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 }
 
 // ------- Non-Member Functions ---------
-Eigen::VectorXd reduceVector(const Eigen::VectorXd &fullVector, std::vector<bool> deadAxis)
-{
-
-  int dimensions     = deadAxis.size();
-  int deadDimensions = 0;
-  for (int d = 0; d < dimensions; d++) {
-    if (deadAxis[d])
-      deadDimensions += 1;
-  }
-
-  PRECICE_ASSERT(dimensions > deadDimensions, dimensions, deadDimensions);
-  Eigen::VectorXd reducedVector(dimensions - deadDimensions);
-  int             k = 0;
-
-  for (int d = 0; d < dimensions; d++) {
-    if (not deadAxis[d]) {
-      reducedVector[k] = fullVector[d];
-      k++;
-    }
-  }
-  return reducedVector;
-}
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis)
@@ -579,10 +558,10 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
     for (int j = i; j < inputSize; ++j) {
       const auto &u   = inputMesh.vertices()[i].getCoords();
       const auto &v   = inputMesh.vertices()[j].getCoords();
-      matrixCLU(i, j) = basisFunction.evaluate(reduceVector((u - v), deadAxis).norm());
+      matrixCLU(i, j) = basisFunction.evaluate(utils::reduceVector((u - v), deadAxis).norm());
     }
 
-    const auto reduced = reduceVector(inputMesh.vertices()[i].getCoords(), deadAxis);
+    const auto reduced = utils::reduceVector(inputMesh.vertices()[i].getCoords(), deadAxis);
 
     for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
       matrixCLU(i, inputSize + 1 + dim) = reduced[dim];
@@ -620,10 +599,10 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
     for (int j = 0; j < inputSize; ++j) {
       const auto &u = outputMesh.vertices()[i].getCoords();
       const auto &v = inputMesh.vertices()[j].getCoords();
-      matrixA(i, j) = basisFunction.evaluate(reduceVector((u - v), deadAxis).norm());
+      matrixA(i, j) = basisFunction.evaluate(utils::reduceVector((u - v), deadAxis).norm());
     }
 
-    const auto reduced = reduceVector(outputMesh.vertices()[i].getCoords(), deadAxis);
+    const auto reduced = utils::reduceVector(outputMesh.vertices()[i].getCoords(), deadAxis);
 
     for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
       matrixA(i, inputSize + 1 + dim) = reduced[dim];

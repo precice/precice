@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <iterator>
+#include <vector>
 #include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
 
@@ -13,6 +14,9 @@ void shiftSetFirst(Eigen::MatrixXd &A, Eigen::VectorXd &v);
 void appendFront(Eigen::MatrixXd &A, Eigen::VectorXd &v);
 
 void removeColumnFromMatrix(Eigen::MatrixXd &A, int col);
+
+/// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
+Eigen::VectorXd reduceVector(const Eigen::VectorXd &fullVector, const std::vector<bool> &deadAxis);
 
 void append(Eigen::VectorXd &v, double value);
 
