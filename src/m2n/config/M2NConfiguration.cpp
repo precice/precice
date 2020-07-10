@@ -18,6 +18,10 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
+#ifndef PRECICE_NO_MPI
+#include <mpi.h>
+#endif
+
 namespace precice {
 namespace m2n {
 M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
@@ -152,6 +156,9 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
 #ifdef PRECICE_NO_MPI
       throw std::runtime_error{"Communication type \"mpi\" can only be used when preCICE is compiled with argument \"mpi=on\""};
 #else
+#ifdef OMPI_MAJOR_VERSION
+      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
+#endif
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
@@ -160,6 +167,9 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
 #ifdef PRECICE_NO_MPI
       throw std::runtime_error{"Communication type \"mpi-singleports\" can only be used when preCICE is compiled with argument \"mpi=on\""};
 #else
+#ifdef OMPI_MAJOR_VERSION
+      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-singleports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
+#endif
       comFactory = std::make_shared<com::MPISinglePortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
