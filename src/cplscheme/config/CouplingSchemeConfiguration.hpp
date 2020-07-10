@@ -132,10 +132,10 @@ private:
     /// Tuples of exchange data, mesh, and participant name.
     typedef std::tuple<mesh::PtrData, mesh::PtrMesh, std::string, std::string, bool> Exchange;
     std::vector<Exchange>                                                            exchanges;
-    /// Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<std::tuple<mesh::PtrData, bool, std::string, impl::PtrConvergenceMeasure>> convMeasures;
-    int                                                                                    maxIterations      = -1;
-    int                                                                                    extrapolationOrder = 0;
+    /// Tuples of data, suffices, mesh name, convergence measure, and doesLogging.
+    std::vector<std::tuple<mesh::PtrData, bool, std::string, impl::PtrConvergenceMeasure, bool>> convMeasures;
+    int                                                                                          maxIterations      = -1;
+    int                                                                                          extrapolationOrder = 0;
 
   } _config;
 

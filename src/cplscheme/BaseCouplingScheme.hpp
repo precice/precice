@@ -215,7 +215,8 @@ public:
   void addConvergenceMeasure(
       mesh::PtrData               data,
       bool                        suffices,
-      impl::PtrConvergenceMeasure measure);
+      impl::PtrConvergenceMeasure measure,
+      bool                        doesLogging);
 
   /// Set an acceleration technique.
   void setAcceleration(acceleration::PtrAcceleration acceleration);
@@ -332,12 +333,14 @@ protected:
    * @param couplingData Coupling data history
    * @param suffices Whether this measure already suffices for convergence
    * @param measure Link to the actual convergence measure
+   * @param doesLogging Whether this measure is logged in the convergence file
    */
   struct ConvergenceMeasure {
     mesh::PtrData               data;
     CouplingData *              couplingData;
     bool                        suffices;
     impl::PtrConvergenceMeasure measure;
+    bool                        doesLogging;
   };
 
   /**

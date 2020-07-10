@@ -514,13 +514,15 @@ void BaseCouplingScheme::newConvergenceMeasurements()
 void BaseCouplingScheme::addConvergenceMeasure(
     mesh::PtrData               data,
     bool                        suffices,
-    impl::PtrConvergenceMeasure measure)
+    impl::PtrConvergenceMeasure measure,
+    bool                        doesLogging)
 {
   ConvergenceMeasure convMeasure;
   convMeasure.data         = std::move(data);
   convMeasure.couplingData = nullptr;
   convMeasure.suffices     = suffices;
   convMeasure.measure      = std::move(measure);
+  convMeasure.doesLogging  = doesLogging;
   _convergenceMeasures.push_back(convMeasure);
   _firstResiduumNorm.push_back(0);
 }
@@ -545,7 +547,7 @@ bool BaseCouplingScheme::measureConvergence()
 
     convMeasure.measure->measure(oldValues, *convMeasure.couplingData->values);
 
-    if (not utils::MasterSlave::isSlave()) {
+    if (not utils::MasterSlave::isSlave() && convMeasure.doesLogging) {
       std::stringstream sstm;
       sstm << "Res" << convMeasure.measure->getAbbreviation() << "(" << convMeasure.data->getName() << ")";
       _convergenceWriter->writeData(sstm.str(), convMeasure.measure->getNormResidual());
@@ -592,11 +594,15 @@ void BaseCouplingScheme::initializeTXTWriters()
 
     if (not doesFirstStep()) {
       for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-        std::stringstream sstm, sstm2;
+        std::stringstream sstm;
         sstm << "AvgConvRate" << convMeasure.measure->getAbbreviation() << "(" << convMeasure.data->getName() << ")";
-        sstm2 << "Res" << convMeasure.measure->getAbbreviation() << "(" << convMeasure.data->getName() << ")";
         _iterationsWriter->addData(sstm.str(), io::TXTTableWriter::DOUBLE);
-        _convergenceWriter->addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
+
+        if (convMeasure.doesLogging) {
+          std::stringstream sstm2;
+          sstm2 << "Res" << convMeasure.measure->getAbbreviation() << "(" << convMeasure.data->getName() << ")";
+          _convergenceWriter->addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
+        }
       }
       _iterationsWriter->addData("DeletedColumns", io::TXTTableWriter::INT);
     }
