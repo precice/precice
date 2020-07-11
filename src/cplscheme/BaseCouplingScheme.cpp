@@ -524,7 +524,6 @@ void BaseCouplingScheme::addConvergenceMeasure(
   convMeasure.measure      = std::move(measure);
   convMeasure.doesLogging  = doesLogging;
   _convergenceMeasures.push_back(convMeasure);
-  _firstResiduumNorm.push_back(0);
 }
 
 bool BaseCouplingScheme::measureConvergence()
@@ -552,9 +551,6 @@ bool BaseCouplingScheme::measureConvergence()
       sstm << "Res" << convMeasure.measure->getAbbreviation() << "(" << convMeasure.data->getName() << ")";
       _convergenceWriter->writeData(sstm.str(), convMeasure.measure->getNormResidual());
     }
-
-    if (_iterations == 1)
-      _firstResiduumNorm[i] = convMeasure.measure->getNormResidual();
 
     if (not convMeasure.measure->isConvergence()) {
       allConverged = false;
@@ -594,9 +590,6 @@ void BaseCouplingScheme::initializeTXTWriters()
 
     if (not doesFirstStep()) {
       for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-        std::stringstream sstm;
-        sstm << "AvgConvRate" << convMeasure.measure->getAbbreviation() << "(" << convMeasure.data->getName() << ")";
-        _iterationsWriter->addData(sstm.str(), io::TXTTableWriter::DOUBLE);
 
         if (convMeasure.doesLogging) {
           std::stringstream sstm2;
@@ -620,19 +613,6 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter->writeData("Convergence", converged);
 
     if (not doesFirstStep()) {
-      int i = -1;
-      for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-        i++;
-
-        std::stringstream sstm;
-        sstm << "AvgConvRate" << convMeasure.measure->getAbbreviation() << "(" << convMeasure.data->getName() << ")";
-        if (math::equals(_firstResiduumNorm[i], 0.)) {
-          _iterationsWriter->writeData(sstm.str(), std::numeric_limits<double>::infinity());
-        } else {
-          double avgConvRate = _convergenceMeasures[i].measure->getNormResidual() / _firstResiduumNorm[i];
-          _iterationsWriter->writeData(sstm.str(), std::pow(avgConvRate, 1. / (double) _iterations));
-        }
-      }
       _iterationsWriter->writeData("DeletedColumns", _deletedColumnsPPFiltering);
     }
   }

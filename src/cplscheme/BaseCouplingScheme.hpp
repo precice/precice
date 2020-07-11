@@ -458,10 +458,8 @@ private:
   /// Number of total iterations performed.
   int _totalIterations = -1;
 
-  /// TODO
+  /// Number of deleted columns in quasi-Newton matrix V in current timestep
   int _deletedColumnsPPFiltering = 0;
-
-  std::vector<double> _firstResiduumNorm = {0};
 
   /// Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder = 0;
