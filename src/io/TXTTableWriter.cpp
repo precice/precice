@@ -32,7 +32,6 @@ void TXTTableWriter::addData(
   Data data;
   data.name = name;
   data.type = type;
-  PRECICE_ASSERT(not utils::contained(data, _data), data.name, data.type);
   _data.push_back(data);
   if ((type == INT) || (type == DOUBLE)) {
     _outputStream << name << "  ";
