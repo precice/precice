@@ -47,6 +47,16 @@ public:
   {
     return 0;
   }
+
+  virtual int getDroppedColumns()
+  {
+    return 0;
+  }
+
+  virtual int getLSSystemCols()
+  {
+    return 0;
+  }
 };
 } // namespace acceleration
 } // namespace precice

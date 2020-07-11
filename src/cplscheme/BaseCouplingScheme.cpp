@@ -597,7 +597,11 @@ void BaseCouplingScheme::initializeTXTWriters()
           _convergenceWriter->addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
         }
       }
-      _iterationsWriter->addData("DeletedColumns", io::TXTTableWriter::INT);
+      if (getAcceleration()) {
+        _iterationsWriter->addData("QNColumns", io::TXTTableWriter::INT);
+        _iterationsWriter->addData("DeletedQNColumns", io::TXTTableWriter::INT);
+        _iterationsWriter->addData("DroppedQNColumns", io::TXTTableWriter::INT);
+      }
     }
   }
 }
@@ -612,8 +616,10 @@ void BaseCouplingScheme::advanceTXTWriters()
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
 
-    if (not doesFirstStep()) {
-      _iterationsWriter->writeData("DeletedColumns", _deletedColumnsPPFiltering);
+    if (not doesFirstStep() && getAcceleration()) {
+      _iterationsWriter->writeData("QNColumns", getAcceleration()->getLSSystemCols());
+      _iterationsWriter->writeData("DeletedQNColumns", getAcceleration()->getDeletedColumns());
+      _iterationsWriter->writeData("DroppedQNColumns", getAcceleration()->getDroppedColumns());
     }
   }
 }
@@ -664,7 +670,6 @@ bool BaseCouplingScheme::accelerate()
   // coupling iteration converged for current time window. Advance in time.
   if (convergence) {
     if (getAcceleration()) {
-      _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
       getAcceleration()->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
