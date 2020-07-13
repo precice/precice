@@ -49,7 +49,7 @@
       <read-data name="Pressures" mesh="Test-Square" />
     </participant>
 
-    <m2n:sockets from="SolverOne" to="SolverTwo" />
+    <m2n:mpi from="SolverOne" to="SolverTwo" />
 
     <coupling-scheme:serial-explicit>
       <participants first="SolverOne" second="SolverTwo" />
