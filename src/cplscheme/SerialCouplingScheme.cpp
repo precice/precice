@@ -54,30 +54,8 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
   }
 }
 
-void SerialCouplingScheme::checkConfiguration()
-{
-  if (isImplicitCouplingScheme()) {
-    PRECICE_CHECK(not getSendData().empty(), "No send data configured! Use explicit scheme for one-way coupling.");
-    if (doesFirstStep() && getAcceleration() && not getAcceleration()->getDataIDs().empty()) {
-      int dataID = *(getAcceleration()->getDataIDs().begin());
-      PRECICE_CHECK(getSendData(dataID) == nullptr,
-                    "In case of serial coupling, acceleration can be defined for "
-                        << "data of second participant only!");
-    }
-  }
-}
-
 void SerialCouplingScheme::initializeImplementation()
 {
-  // Perform checks for initialization of serial coupling.
-  if (anyDataRequiresInitialization(getSendData())) {
-    PRECICE_CHECK(not doesFirstStep(), "In serial coupling only second participant can initialize data and send it!");
-  }
-
-  if (anyDataRequiresInitialization(getReceiveData())) {
-    PRECICE_CHECK(doesFirstStep(), "In serial coupling only first participant can receive initial data!");
-  }
-
   // determine whether initial data needs to be communicated
   determineInitialSend(getSendData());
   determineInitialReceive(getReceiveData());

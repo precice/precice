@@ -58,13 +58,16 @@ public:
       bool          initialize,
       int           index);
 
-  /**
-   * @brief performs checks on a configured MultiCouplingScheme
-   */
-  void checkConfiguration() override;
-
   /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
+
+  /**
+   * @returns true, if coupling scheme has any sendData
+   */
+  bool hasAnySendData() override final
+  {
+    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](DataMap sendData) { return not sendData.empty(); });
+  }
 
 private:
   /**

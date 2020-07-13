@@ -73,11 +73,6 @@ public:
       constants::TimesteppingMethod dtMethod);
 
   /**
-   * @brief performs checks on configured coupling scheme
-   */
-  virtual void checkConfiguration() = 0;
-
-  /**
    * @brief getter for _isInitialized
    * @returns true, if initialize has been called.
    */
@@ -220,6 +215,20 @@ public:
   /// Set an acceleration technique.
   void setAcceleration(acceleration::PtrAcceleration acceleration);
 
+  /**
+   * @brief Getter for _doesFirstStep
+   * @returns _doesFirstStep
+   */
+  bool doesFirstStep() const
+  {
+    return _doesFirstStep;
+  }
+
+  /**
+   * @returns true, if coupling scheme has any sendData
+   */
+  virtual bool hasAnySendData() = 0;
+
 protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
@@ -271,15 +280,6 @@ protected:
   double getComputedTimeWindowPart()
   {
     return _computedTimeWindowPart;
-  }
-
-  /**
-   * @brief Getter for _doesFirstStep
-   * @returns _doesFirstStep
-   */
-  bool doesFirstStep() const
-  {
-    return _doesFirstStep;
   }
 
   /**
