@@ -141,11 +141,10 @@ void AccelerationConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_DATA) {
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
     auto success = _uniqueDataNames.insert(dataName);
-    if (!success.second) {
+    if (not success.second) {
       PRECICE_ERROR("You have provided a subtag "
-                    << "<data name=\"" << dataName << "\" ... /> more than once on your <acceleration:.../>. "
-                    << "This is probably unintended and might lead to unexpected behavior. "
-                    << "Note that this warning will throw an error in future preCICE versions.");
+                    << "<data name=\"" << dataName << "\" ... /> more than once in your <acceleration:.../>. "
+                    << "Please remove the duplicated entry.");
     }
     _meshName            = callingTag.getStringAttributeValue(ATTR_MESH);
     double scaling       = 1.0;
