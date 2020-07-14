@@ -43,17 +43,20 @@ public:
 
   virtual void importState(io::TXTReader &reader) {}
 
-  virtual int getDeletedColumns()
+  /// Gives the number of QN columns that where filtered out (i.e. deleted) in this time window
+  virtual int getDeletedColumns() const
   {
     return 0;
   }
 
-  virtual int getDroppedColumns()
+  /// Gives the number of QN columns that went out of scope in this time window
+  virtual int getDroppedColumns() const
   {
     return 0;
   }
 
-  virtual int getLSSystemCols()
+  /// Gives the number of current QN columns (LS = least squares)
+  virtual int getLSSystemCols() const
   {
     return 0;
   }
