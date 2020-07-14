@@ -567,8 +567,13 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
-  bool                        doesLogging = true;
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure, doesLogging));
+  ConvergenceMeasureDefintion convMeasureDef;
+  convMeasureDef.data        = getData(dataName, meshName);
+  convMeasureDef.suffices    = suffices;
+  convMeasureDef.meshName    = meshName;
+  convMeasureDef.measure     = std::move(measure);
+  convMeasureDef.doesLogging = true;
+  _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
 void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
@@ -579,8 +584,13 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
-  bool                        doesLogging = true;
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure, doesLogging));
+  ConvergenceMeasureDefintion convMeasureDef;
+  convMeasureDef.data        = getData(dataName, meshName);
+  convMeasureDef.suffices    = suffices;
+  convMeasureDef.meshName    = meshName;
+  convMeasureDef.measure     = std::move(measure);
+  convMeasureDef.doesLogging = true;
+  _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
 void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
@@ -591,8 +601,13 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
-  bool                        doesLogging = true;
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure, doesLogging));
+  ConvergenceMeasureDefintion convMeasureDef;
+  convMeasureDef.data        = getData(dataName, meshName);
+  convMeasureDef.suffices    = suffices;
+  convMeasureDef.meshName    = meshName;
+  convMeasureDef.measure     = std::move(measure);
+  convMeasureDef.doesLogging = true;
+  _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
 void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
@@ -603,8 +618,13 @@ void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(new impl::MinIterationConvergenceMeasure(minIterations));
-  bool                        doesLogging = false;
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure, doesLogging));
+  ConvergenceMeasureDefintion convMeasureDef;
+  convMeasureDef.data        = getData(dataName, meshName);
+  convMeasureDef.suffices    = suffices;
+  convMeasureDef.meshName    = meshName;
+  convMeasureDef.measure     = std::move(measure);
+  convMeasureDef.doesLogging = false;
+  _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
 mesh::PtrData CouplingSchemeConfiguration::getData(
@@ -676,16 +696,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   addDataToBeExchanged(*scheme, accessor);
 
   // Add convergence measures
-  using std::get;
-  for (auto &elem : _config.convMeasures) {
-    mesh::PtrData               data        = get<0>(elem);
-    bool                        suffices    = get<1>(elem);
-    std::string                 neededMesh  = get<2>(elem);
-    impl::PtrConvergenceMeasure measure     = get<3>(elem);
-    bool                        doesLogging = get<4>(elem);
-    _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
-    checkIfDataIsExchanged(data->getID());
-    scheme->addConvergenceMeasure(data, suffices, measure, doesLogging);
+  for (auto &elem : _config.convergenceMeasureDefinitions) {
+    _meshConfig->addNeededMesh(_config.participants[1], elem.meshName);
+    checkIfDataIsExchanged(elem.data->getID());
+    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
@@ -719,16 +733,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   addDataToBeExchanged(*scheme, accessor);
 
   // Add convergence measures
-  using std::get;
-  for (auto &elem : _config.convMeasures) {
-    mesh::PtrData               data        = get<0>(elem);
-    bool                        suffices    = get<1>(elem);
-    std::string                 neededMesh  = get<2>(elem);
-    impl::PtrConvergenceMeasure measure     = get<3>(elem);
-    bool                        doesLogging = get<4>(elem);
-    _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
-    checkIfDataIsExchanged(data->getID());
-    scheme->addConvergenceMeasure(data, suffices, measure, doesLogging);
+  for (auto &elem : _config.convergenceMeasureDefinitions) {
+    _meshConfig->addNeededMesh(_config.participants[1], elem.meshName);
+    checkIfDataIsExchanged(elem.data->getID());
+    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
@@ -785,16 +793,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   }
 
   // Add convergence measures
-  using std::get;
-  for (auto &elem : _config.convMeasures) {
-    mesh::PtrData               data        = get<0>(elem);
-    bool                        suffices    = get<1>(elem);
-    std::string                 neededMesh  = get<2>(elem);
-    impl::PtrConvergenceMeasure measure     = get<3>(elem);
-    bool                        doesLogging = get<4>(elem);
-    _meshConfig->addNeededMesh(_config.controller, neededMesh);
-    checkIfDataIsExchanged(data->getID());
-    scheme->addConvergenceMeasure(data, suffices, measure, doesLogging);
+  for (auto &elem : _config.convergenceMeasureDefinitions) {
+    _meshConfig->addNeededMesh(_config.controller, elem.meshName);
+    checkIfDataIsExchanged(elem.data->getID());
+    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
