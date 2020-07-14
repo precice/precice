@@ -1,10 +1,24 @@
 #include "MappingConfiguration.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <list>
+#include <memory>
+#include <ostream>
+#include <string.h>
+#include <utility>
+#include "logging/LogMacros.hpp"
+#include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -270,8 +284,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   // the mapping is a RBF mapping
 
   configuredMapping.isRBF = true;
-  bool isSerial           = context.size == 1;
-  bool usePETSc           = false;
+  bool    usePETSc        = false;
+  RBFType rbfType         = RBFType::EIGEN;
 
 #ifndef PRECICE_NO_PETSC
   // for petsc initialization
@@ -284,20 +298,14 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   usePETSc = true;
 #endif
 
-  bool createPetRBF = false;
-  if (usePETSc) {
-    if (isSerial) {
-      createPetRBF = not useLU;
-    } else {
-      if (useLU)
-        PRECICE_WARN("LU decomposition is not supported for parallel RBF data mappings. Switching to GMRES (PETSc)");
-      createPetRBF = true;
-    }
+  if (usePETSc && (not useLU)) {
+    rbfType = RBFType::PETSc;
   } else {
-    PRECICE_CHECK(isSerial, "Using RBF data mappings in parallel requires building with PETSc.");
+    rbfType = RBFType::EIGEN;
   }
 
-  if (not createPetRBF) {
+  if (rbfType == RBFType::EIGEN) {
+    PRECICE_DEBUG("Eigen RBF is used");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead));
@@ -335,7 +343,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
 #ifndef PRECICE_NO_PETSC
 
-  if (createPetRBF) {
+  if (rbfType == RBFType::PETSc) {
+    PRECICE_DEBUG("PETSc RBF is used.");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),

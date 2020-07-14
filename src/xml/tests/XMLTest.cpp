@@ -1,5 +1,10 @@
+#include <Eigen/Core>
 #include <string>
+#include <tuple>
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "xml/ValueParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 

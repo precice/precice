@@ -30,16 +30,17 @@ public:
 
   ///@name Logging operations
   ///@{
-  void error(LogLocation loc, const std::string &mess);
-  void warning(LogLocation loc, const std::string &mess);
-  void info(LogLocation loc, const std::string &mess);
-  void debug(LogLocation loc, const std::string &mess);
-  void trace(LogLocation loc, const std::string &mess);
+  void error(LogLocation loc, const std::string &mess) noexcept;
+  void warning(LogLocation loc, const std::string &mess) noexcept;
+  void info(LogLocation loc, const std::string &mess) noexcept;
+  void debug(LogLocation loc, const std::string &mess) noexcept;
+  void trace(LogLocation loc, const std::string &mess) noexcept;
   ///@}
 
 private:
   /// Forward declaration of the implementation of the logger
   class LoggerImpl;
+
   /// Pimpl to the logger implementation
   std::unique_ptr<LoggerImpl> _impl;
 };

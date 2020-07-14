@@ -1,7 +1,9 @@
 #pragma once
 
+#include <string>
 #include "Partition.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace partition {

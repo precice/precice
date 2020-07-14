@@ -1,10 +1,14 @@
 #include "ComputeCurvatureAction.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <memory>
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace action {

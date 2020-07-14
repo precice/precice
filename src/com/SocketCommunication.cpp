@@ -1,10 +1,13 @@
 #include "SocketCommunication.hpp"
+#include <algorithm>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <sstream>
+#include <utility>
 #include "ConnectionInfoPublisher.hpp"
 #include "SocketRequest.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
 
@@ -135,8 +138,14 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
                                                    int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
-  PRECICE_CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
+  PRECICE_ASSERT(requesterCommunicatorSize >= 0, "Requester communicator size has to be positve.");
   PRECICE_ASSERT(not isConnected());
+
+  if (requesterCommunicatorSize == 0) {
+    PRECICE_DEBUG("Accepting no connections.");
+    _isConnected = true;
+    return;
+  }
 
   std::string address;
 

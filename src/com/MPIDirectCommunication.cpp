@@ -1,6 +1,8 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPIDirectCommunication.hpp"
+#include <memory>
+#include "logging/LogMacros.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 

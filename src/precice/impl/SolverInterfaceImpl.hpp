@@ -1,6 +1,8 @@
 #pragma once
 
+#include <map>
 #include <set>
+#include <stddef.h>
 #include <string>
 #include <vector>
 #include "action/Action.hpp"
@@ -8,6 +10,7 @@
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "io/Constants.hpp"
+#include "logging/Logger.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/SolverInterface.hpp"
@@ -26,10 +29,17 @@ namespace PreciceTests {
 namespace Serial {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
-}
+} // namespace Serial
 } // namespace PreciceTests
 
 namespace precice {
+namespace cplscheme {
+class CouplingSchemeConfiguration;
+} // namespace cplscheme
+namespace mesh {
+class Mesh;
+} // namespace mesh
+
 namespace impl {
 
 /// Implementation of solver interface.
@@ -88,6 +98,12 @@ public:
       int                accessorCommunicatorSize,
       void *             communicator);
 
+  /** Ensures that finalize() has been called.
+   *
+   * @see finalize()
+   */
+  ~SolverInterfaceImpl();
+
   /**
    * @brief Initializes all coupling data and starts (coupled) simulation.
    *
@@ -127,8 +143,25 @@ public:
   /**
    * @brief Finalizes the coupled simulation.
    *
-   * - Tears down communication means used for coupling.
-   * - Finalizes MPI if initialized in initializeCoupling.
+   * If initialize() has been called:
+   *
+   * - Synchronizes with remote partiticipants
+   * - handles final exports
+   * - cleans up general state
+   *
+   * Always:
+   *
+   * - flushes and finalizes Events
+   * - finalizes managed PETSc
+   * - finalizes managed MPI
+   *
+   * @post Closes MasterSlave communication
+   * @post Finalized managed PETSc
+   * @post Finalized managed MPI
+   *
+   * @warning
+   * Finalize is not the inverse of initialize().
+   * Finalize has to be called after construction.
    */
   void finalize();
 
@@ -516,6 +549,16 @@ private:
   std::vector<impl::PtrParticipant> _participants;
 
   cplscheme::PtrCouplingScheme _couplingScheme;
+
+  /// Represents the various states a solverinterface can be in.
+  enum struct State {
+    Constructed,
+    Initialized,
+    Finalized
+  };
+
+  /// The current State of the solverinterface
+  State _state{State::Constructed};
 
   /// Counts calls to advance for plotting.
   long int _numberAdvanceCalls = 0;

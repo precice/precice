@@ -1,4 +1,5 @@
 #include "Vertex.hpp"
+#include <Eigen/Core>
 #include "utils/EigenIO.hpp"
 
 namespace precice {

@@ -1,4 +1,5 @@
 #include "precice/impl/DataContext.hpp"
+#include <memory>
 #include "mesh/Data.hpp"
 
 namespace precice {

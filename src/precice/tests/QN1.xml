@@ -32,7 +32,7 @@
          <read-data name="Data1" mesh="MeshTwo" />
       </participant>
 
-      <m2n:sockets from="SolverOne" to="SolverTwo" enforce-gather-scatter="true" />
+      <m2n:sockets from="SolverOne" to="SolverTwo" />
 
       <coupling-scheme:serial-implicit>
          <participants first="SolverOne" second="SolverTwo" />

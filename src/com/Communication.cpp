@@ -1,5 +1,9 @@
 #include "Communication.hpp"
+#include <algorithm>
+#include <memory>
+#include <ostream>
 #include "Request.hpp"
+#include "logging/LogMacros.hpp"
 
 namespace precice {
 namespace com {
@@ -9,13 +13,14 @@ void Communication::connectMasterSlaves(std::string const &participantName,
                                         int                rank,
                                         int                size)
 {
-  if (size == 1) return;
+  if (size == 1)
+    return;
 
   std::string masterName = participantName + "Master";
   std::string slaveName  = participantName + "Slave";
 
   constexpr int rankOffset = 1;
-  int slavesSize = size - rankOffset;
+  int           slavesSize = size - rankOffset;
   if (rank == 0) {
     PRECICE_INFO("Connecting Master to " << slavesSize << " Slaves");
     prepareEstablishment(masterName, slaveName);

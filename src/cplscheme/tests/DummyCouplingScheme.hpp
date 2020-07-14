@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include "../CouplingScheme.hpp"
 #include "logging/Logger.hpp"
 #include "utils/assertion.hpp"

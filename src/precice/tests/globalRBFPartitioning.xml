@@ -21,7 +21,7 @@
          <use-mesh name="MeshTwo" from="SolverTwo" />
          <use-mesh name="MeshOne" provide="yes" />
          <mapping:nearest-neighbor direction="write" from="MeshOne" to="MeshTwo" constraint="conservative" />
-         <mapping:rbf-thin-plate-splines direction="read" from="MeshTwo" to="MeshOne" constraint="consistent" />
+         <mapping:rbf-thin-plate-splines direction="read" from="MeshTwo" to="MeshOne" constraint="consistent" y-dead="true"/>
          <write-data name="Data1" mesh="MeshOne" />
          <read-data name="Data2" mesh="MeshOne" />
       </participant>

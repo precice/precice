@@ -1,8 +1,9 @@
 #pragma once
 
 #include <Eigen/Core>
-
+#include <string>
 #include "acceleration/impl/Preconditioner.hpp"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace acceleration {

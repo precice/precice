@@ -1,12 +1,22 @@
 #include "MultiCouplingScheme.hpp"
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <stddef.h>
+#include <type_traits>
+#include <utility>
 #include "acceleration/Acceleration.hpp"
-#include "m2n/M2N.hpp"
+#include "acceleration/SharedPointer.hpp"
+#include "cplscheme/BaseCouplingScheme.hpp"
+#include "cplscheme/CouplingData.hpp"
+#include "cplscheme/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/SharedPointer.hpp"
-#include "math/math.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -24,7 +34,7 @@ MultiCouplingScheme::MultiCouplingScheme(
       _m2ns(m2ns)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-  setDoesFirstStep(false);  // MultiCouplingScheme never does the first step, because it is never the first participant
+  setDoesFirstStep(false); // MultiCouplingScheme never does the first step, because it is never the first participant
   for (size_t i = 0; i < _m2ns.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;

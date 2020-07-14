@@ -1,7 +1,12 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <memory>
 #include <set>
+#include <string>
+#include <vector>
 #include "Constants.hpp"
 #include "CouplingData.hpp"
 #include "CouplingScheme.hpp"
@@ -12,9 +17,16 @@
 #include "logging/Logger.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
+namespace io {
+class TXTTableWriter;
+} // namespace io
+
 namespace cplscheme {
+struct CouplingData;
 
 /**
  * @brief Abstract base class for standard coupling schemes.

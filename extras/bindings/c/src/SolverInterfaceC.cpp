@@ -1,26 +1,20 @@
 extern "C" {
 #include "precice/SolverInterfaceC.h"
 }
+#include <memory>
 #include <string>
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 
-static precice::SolverInterface *interface = nullptr;
+static std::unique_ptr<precice::SolverInterface> impl = nullptr;
 
-void precicec_createSolverInterface(
-    const char *participantName,
-    const char *configFileName,
-    int         solverProcessIndex,
-    int         solverProcessSize)
-{
-  std::string stringAccessorName(participantName);
-  std::string stringConfigFileName(configFileName);
-  interface = new precice::SolverInterface(stringAccessorName,
-                                           stringConfigFileName,
-                                           solverProcessIndex,
-                                           solverProcessSize);
-}
+static precice::logging::Logger _log("SolverInterfaceC");
+
+static std::string errormsg       = "preCICE has not been created properly. Be sure to call \"precicec_createSolverInterface\" or \"precicec_createSolverInterface_withCommunicator\" before any other call to preCICE.";
+static std::string errormsgCreate = "preCICE has been created already! Be sure to call either \"precicec_createSolverInterface\" or \"precicec_createSolverInterface_withCommunicator\" exactly once.";
 
 void precicec_createSolverInterface_withCommunicator(
     const char *participantName,
@@ -31,47 +25,63 @@ void precicec_createSolverInterface_withCommunicator(
 {
   std::string stringAccessorName(participantName);
   std::string stringConfigFileName(configFileName);
-  interface = new precice::SolverInterface(stringAccessorName,
-                                           stringConfigFileName,
-                                           solverProcessIndex,
-                                           solverProcessSize,
-                                           communicator);
+
+  PRECICE_CHECK(impl == nullptr, errormsgCreate);
+  impl.reset(new precice::SolverInterface(stringAccessorName,
+                                          stringConfigFileName,
+                                          solverProcessIndex,
+                                          solverProcessSize,
+                                          communicator));
+}
+
+void precicec_createSolverInterface(
+    const char *participantName,
+    const char *configFileName,
+    int         solverProcessIndex,
+    int         solverProcessSize)
+{
+  precicec_createSolverInterface_withCommunicator(participantName,
+                                                  configFileName,
+                                                  solverProcessIndex,
+                                                  solverProcessSize,
+                                                  nullptr);
 }
 
 double precicec_initialize()
 {
-  PRECICE_ASSERT(interface != nullptr);
-  return interface->initialize();
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->initialize();
 }
 
 void precicec_initialize_data()
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->initializeData();
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->initializeData();
 }
 
 double precicec_advance(double computedTimestepLength)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  return interface->advance(computedTimestepLength);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->advance(computedTimestepLength);
 }
 
 void precicec_finalize()
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->finalize();
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->finalize();
+  impl.reset();
 }
 
 int precicec_getDimensions()
 {
-  PRECICE_ASSERT(interface != nullptr);
-  return interface->getDimensions();
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->getDimensions();
 }
 
 int precicec_isCouplingOngoing()
 {
-  PRECICE_ASSERT(interface != nullptr);
-  if (interface->isCouplingOngoing()) {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->isCouplingOngoing()) {
     return 1;
   }
   return 0;
@@ -79,8 +89,8 @@ int precicec_isCouplingOngoing()
 
 int precicec_isTimeWindowComplete()
 {
-  PRECICE_ASSERT(interface != nullptr);
-  if (interface->isTimeWindowComplete()) {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->isTimeWindowComplete()) {
     return 1;
   }
   return 0;
@@ -88,8 +98,8 @@ int precicec_isTimeWindowComplete()
 
 int precicec_hasToEvaluateSurrogateModel()
 {
-  PRECICE_ASSERT(interface != nullptr);
-  if (interface->hasToEvaluateSurrogateModel()) {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->hasToEvaluateSurrogateModel()) {
     return 1;
   }
   return 0;
@@ -97,8 +107,8 @@ int precicec_hasToEvaluateSurrogateModel()
 
 int precicec_hasToEvaluateFineModel()
 {
-  PRECICE_ASSERT(interface != nullptr);
-  if (interface->hasToEvaluateFineModel()) {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->hasToEvaluateFineModel()) {
     return 1;
   }
   return 0;
@@ -106,8 +116,8 @@ int precicec_hasToEvaluateFineModel()
 
 int precicec_isReadDataAvailable()
 {
-  PRECICE_ASSERT(interface != nullptr);
-  if (interface->isReadDataAvailable()) {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->isReadDataAvailable()) {
     return 1;
   }
   return 0;
@@ -115,8 +125,8 @@ int precicec_isReadDataAvailable()
 
 int precicec_isWriteDataRequired(double computedTimestepLength)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  if (interface->isWriteDataRequired(computedTimestepLength)) {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->isWriteDataRequired(computedTimestepLength)) {
     return 1;
   }
   return 0;
@@ -124,9 +134,9 @@ int precicec_isWriteDataRequired(double computedTimestepLength)
 
 int precicec_isActionRequired(const char *action)
 {
-  PRECICE_ASSERT(interface != nullptr);
+  PRECICE_CHECK(impl != nullptr, errormsg);
   PRECICE_ASSERT(action != nullptr);
-  if (interface->isActionRequired(std::string(action))) {
+  if (impl->isActionRequired(std::string(action))) {
     return 1;
   }
   return 0;
@@ -134,16 +144,16 @@ int precicec_isActionRequired(const char *action)
 
 void precicec_markActionFulfilled(const char *action)
 {
-  PRECICE_ASSERT(interface != nullptr);
+  PRECICE_CHECK(impl != nullptr, errormsg);
   PRECICE_ASSERT(action != nullptr);
-  interface->markActionFulfilled(std::string(action));
+  impl->markActionFulfilled(std::string(action));
 }
 
 int precicec_hasMesh(const char *meshName)
 {
-  PRECICE_ASSERT(interface != nullptr);
+  PRECICE_CHECK(impl != nullptr, errormsg);
   std::string stringMeshName(meshName);
-  if (interface->hasMesh(stringMeshName)) {
+  if (impl->hasMesh(stringMeshName)) {
     return 1;
   }
   return 0;
@@ -151,31 +161,31 @@ int precicec_hasMesh(const char *meshName)
 
 int precicec_getMeshID(const char *meshName)
 {
-  PRECICE_ASSERT(interface != nullptr);
+  PRECICE_CHECK(impl != nullptr, errormsg);
   std::string stringMeshName(meshName);
-  return interface->getMeshID(stringMeshName);
+  return impl->getMeshID(stringMeshName);
 }
 
 int precicec_hasData(const char *dataName, int meshID)
 {
-  PRECICE_ASSERT(interface != nullptr);
+  PRECICE_CHECK(impl != nullptr, errormsg);
   std::string stringDataName(dataName);
-  return interface->hasData(stringDataName, meshID);
+  return impl->hasData(stringDataName, meshID);
 }
 
 int precicec_getDataID(const char *dataName, int meshID)
 {
-  PRECICE_ASSERT(interface != nullptr);
+  PRECICE_CHECK(impl != nullptr, errormsg);
   std::string stringDataName(dataName);
-  return interface->getDataID(stringDataName, meshID);
+  return impl->getDataID(stringDataName, meshID);
 }
 
 int precicec_setMeshVertex(
     int           meshID,
     const double *position)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  return interface->setMeshVertex(meshID, position);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->setMeshVertex(meshID, position);
 }
 
 void precicec_getMeshVertices(
@@ -184,8 +194,8 @@ void precicec_getMeshVertices(
     const int *ids,
     double *   positions)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->getMeshVertices(meshID, size, ids, positions);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->getMeshVertices(meshID, size, ids, positions);
 }
 
 void precicec_setMeshVertices(
@@ -194,15 +204,15 @@ void precicec_setMeshVertices(
     const double *positions,
     int *         ids)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->setMeshVertices(meshID, size, positions, ids);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshVertices(meshID, size, positions, ids);
 }
 
 int precicec_getMeshVertexSize(
     int meshID)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  return interface->getMeshVertexSize(meshID);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->getMeshVertexSize(meshID);
 }
 
 void precicec_getMeshVertexIDsFromPositions(
@@ -211,8 +221,8 @@ void precicec_getMeshVertexIDsFromPositions(
     const double *positions,
     int *         ids)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
 }
 
 int precicec_setMeshEdge(
@@ -220,8 +230,8 @@ int precicec_setMeshEdge(
     int firstVertexID,
     int secondVertexID)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  return interface->setMeshEdge(meshID, firstVertexID, secondVertexID);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
 }
 
 void precicec_setMeshTriangle(
@@ -230,8 +240,8 @@ void precicec_setMeshTriangle(
     int secondEdgeID,
     int thirdEdgeID)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->setMeshTriangle(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTriangle(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
 }
 
 void precicec_setMeshTriangleWithEdges(
@@ -240,8 +250,8 @@ void precicec_setMeshTriangleWithEdges(
     int secondVertexID,
     int thirdVertexID)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->setMeshTriangleWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshTriangleWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID);
 }
 
 void precicec_setMeshQuad(
@@ -251,8 +261,8 @@ void precicec_setMeshQuad(
     int thirdEdgeID,
     int fourthEdgeID)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->setMeshQuad(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshQuad(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
 }
 
 void precicec_setMeshQuadWithEdges(
@@ -262,8 +272,8 @@ void precicec_setMeshQuadWithEdges(
     int thirdVertexID,
     int fourthVertexID)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
 }
 
 void precicec_writeBlockVectorData(
@@ -272,8 +282,8 @@ void precicec_writeBlockVectorData(
     const int *   valueIndices,
     const double *values)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->writeBlockVectorData(dataID, size, valueIndices, values);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeBlockVectorData(dataID, size, valueIndices, values);
 }
 
 void precicec_writeVectorData(
@@ -281,8 +291,8 @@ void precicec_writeVectorData(
     int           valueIndex,
     const double *dataValue)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->writeVectorData(dataID, valueIndex, dataValue);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeVectorData(dataID, valueIndex, dataValue);
 }
 
 void precicec_writeBlockScalarData(
@@ -291,8 +301,8 @@ void precicec_writeBlockScalarData(
     const int *   valueIndices,
     const double *values)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->writeBlockScalarData(dataID, size, valueIndices, values);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeBlockScalarData(dataID, size, valueIndices, values);
 }
 
 void precicec_writeScalarData(
@@ -300,8 +310,8 @@ void precicec_writeScalarData(
     int    valueIndex,
     double dataValue)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->writeScalarData(dataID, valueIndex, dataValue);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->writeScalarData(dataID, valueIndex, dataValue);
 }
 
 void precicec_readBlockVectorData(
@@ -310,8 +320,8 @@ void precicec_readBlockVectorData(
     const int *valueIndices,
     double *   values)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->readBlockVectorData(dataID, size, valueIndices, values);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->readBlockVectorData(dataID, size, valueIndices, values);
 }
 
 void precicec_readVectorData(
@@ -319,8 +329,8 @@ void precicec_readVectorData(
     int     valueIndex,
     double *dataValue)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->readVectorData(dataID, valueIndex, dataValue);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->readVectorData(dataID, valueIndex, dataValue);
 }
 
 void precicec_readBlockScalarData(
@@ -329,8 +339,8 @@ void precicec_readBlockScalarData(
     const int *valueIndices,
     double *   values)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->readBlockScalarData(dataID, size, valueIndices, values);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->readBlockScalarData(dataID, size, valueIndices, values);
 }
 
 void precicec_readScalarData(
@@ -338,8 +348,8 @@ void precicec_readScalarData(
     int     valueIndex,
     double *dataValue)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->readScalarData(dataID, valueIndex, *dataValue);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->readScalarData(dataID, valueIndex, *dataValue);
 }
 
 const char *precicec_getVersionInformation()
@@ -349,14 +359,14 @@ const char *precicec_getVersionInformation()
 
 void precicec_mapWriteDataFrom(int fromMeshID)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->mapWriteDataFrom(fromMeshID);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->mapWriteDataFrom(fromMeshID);
 }
 
 void precicec_mapReadDataTo(int toMeshID)
 {
-  PRECICE_ASSERT(interface != nullptr);
-  interface->mapReadDataTo(toMeshID);
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->mapReadDataTo(toMeshID);
 }
 
 const char *precicec_actionWriteInitialData()

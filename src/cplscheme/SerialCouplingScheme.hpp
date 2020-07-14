@@ -1,8 +1,11 @@
 #pragma once
 
+#include <string>
 #include "BaseCouplingScheme.hpp"
 #include "BiCouplingScheme.hpp"
+#include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
+#include "m2n/SharedPointer.hpp"
 
 // Forward declaration to friend the boost test struct
 namespace CplSchemeTests {

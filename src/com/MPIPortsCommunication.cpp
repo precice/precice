@@ -2,7 +2,10 @@
 
 #include "MPIPortsCommunication.hpp"
 #include <boost/filesystem.hpp>
+#include <ostream>
+#include <utility>
 #include "ConnectionInfoPublisher.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -47,20 +50,21 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
   conInfo.write(_portName);
   PRECICE_DEBUG("Accept connection at " << _portName);
 
-  size_t peerCurrent               = 0; // Current peer to connect to
-  size_t peerCount                 = 0; // The total count of peers (initialized in the first iteration)
-  size_t requesterCommunicatorSize = 0;
-
+  int peerCount   = -1; // The total count of peers (initialized in the first iteration)
+  int peerCurrent = 0;  // Current peer to connect to
   do {
     // Connection
     MPI_Comm communicator;
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
     PRECICE_DEBUG("Accepted connection at " << _portName << " for peer " << peerCurrent);
 
+    // Which rank is requesting a connection?
     int requesterRank = -1;
-    // Exchange information to which rank I am connected and which communicator size on the other side
     MPI_Recv(&requesterRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+    // How big is the communicator of the requester
+    int requesterCommunicatorSize = -1;
     MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+    // Send the rank of the acceptor (this rank).
     MPI_Send(&acceptorRank, 1, MPI_INT, 0, 42, communicator);
 
     // Initialize the count of peers to connect to
@@ -75,9 +79,13 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
     PRECICE_CHECK(_communicators.count(requesterRank) == 0,
                   "Duplicate request to connect by same rank (" << requesterRank << ")!");
 
-    _communicators[requesterRank] = communicator;
+    _communicators.emplace(requesterRank, communicator);
 
-  } while (++peerCurrent < requesterCommunicatorSize);
+  } while (++peerCurrent < peerCount);
+
+  MPI_Close_port(const_cast<char *>(_portName.c_str()));
+  _portName.clear();
+  PRECICE_DEBUG("Closed Port");
 
   _isConnected = true;
 }
@@ -89,7 +97,7 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
                                                      int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
-  PRECICE_CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
+  PRECICE_ASSERT(requesterCommunicatorSize >= 0, "Requester communicator size has to be positive.");
   PRECICE_ASSERT(not isConnected());
 
   _isAcceptor = true;
@@ -106,12 +114,20 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
     PRECICE_DEBUG("Accepted connection at " << _portName);
 
+    // Receive the rank of requester
     int requesterRank = -1;
-    // Receive the real rank of requester
     MPI_Recv(&requesterRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
     PRECICE_ASSERT(requesterRank >= 0, "Invalid requester rank!");
-    _communicators[requesterRank] = communicator;
+
+    PRECICE_ASSERT(_communicators.count(requesterRank) == 0, "This connection has already been established.");
+
+    _communicators.emplace(requesterRank, communicator);
   }
+
+  MPI_Close_port(const_cast<char *>(_portName.c_str()));
+  _portName.clear();
+  PRECICE_DEBUG("Closed Port");
+
   _isConnected = true;
 }
 
@@ -136,16 +152,20 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
 
   _isConnected = true;
 
-  int acceptorRank = -1;
+  // Send the rank of the requester (this rank)
   MPI_Send(&requesterRank, 1, MPI_INT, 0, 42, communicator);
+  // Send the size of the requester communicator size
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
+  // Receive the rank of the acceptor that we connected to.
+  int acceptorRank = -1;
   MPI_Recv(&acceptorRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
   // @todo The following assertion should always be the case, however the
   // acceleration package currently violates this in order to create a circular
   // intra Communication.
   //
   // PRECICE_ASSERT(acceptorRank == 0, "The acceptor always has to be 0.");
-  _communicators[0] = communicator; // should be acceptorRank
+
+  _communicators.emplace(acceptorRank, communicator);
 }
 
 void MPIPortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
@@ -160,7 +180,7 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string const &  accep
 
   _isAcceptor = false;
 
-  for (auto const &acceptorRank : acceptorRanks) {
+  for (int acceptorRank : acceptorRanks) {
     ConnectionInfoReader conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
     _portName = conInfo.read();
     PRECICE_DEBUG("Request connection to " << _portName);
@@ -168,10 +188,12 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string const &  accep
     MPI_Comm communicator;
     MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
     PRECICE_DEBUG("Requested connection to " << _portName);
-    _communicators[acceptorRank] = communicator;
 
     // Rank 0 is always the peer, because we connected on COMM_SELF
     MPI_Send(&requesterRank, 1, MPI_INT, 0, 42, communicator);
+
+    PRECICE_ASSERT(_communicators.count(acceptorRank) == 0, "This connection has already been established.");
+    _communicators.emplace(acceptorRank, communicator);
   }
   _isConnected = true;
 }
@@ -186,13 +208,9 @@ void MPIPortsCommunication::closeConnection()
   for (auto &communicator : _communicators) {
     MPI_Comm_disconnect(&communicator.second);
   }
+  _communicators.clear();
 
   PRECICE_DEBUG("Disconnected");
-
-  if (_isAcceptor) {
-    MPI_Close_port(const_cast<char *>(_portName.c_str()));
-    PRECICE_DEBUG("Port closed");
-  }
 
   _isConnected = false;
 }

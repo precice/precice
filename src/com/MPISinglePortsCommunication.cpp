@@ -1,8 +1,13 @@
 #ifndef PRECICE_NO_MPI
 
+#include <mpi.h>
 #include "MPISinglePortsCommunication.hpp"
 #include <boost/filesystem.hpp>
+#include <memory>
+#include <ostream>
+#include <utility>
 #include "ConnectionInfoPublisher.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
@@ -27,9 +32,13 @@ size_t MPISinglePortsCommunication::getRemoteCommunicatorSize()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(isConnected());
-  int size = -1;
-  MPI_Comm_remote_size(_communicators[0], &size);
-  return size;
+  if (_global != MPI_COMM_NULL) {
+    int size = -1;
+    MPI_Comm_remote_size(_global, &size);
+    return size;
+  } else {
+    return _initialCommSize;
+  }
 }
 
 void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorName,
@@ -50,19 +59,18 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
   ConnectionInfoWriter conPub(acceptorName, requesterName, tag, _addressDirectory);
   conPub.write(_portName);
 
-  size_t peerCurrent               = 0; // current peer to connect to
-  size_t peerCount                 = 0; // The total count of peers (initialized in the first iteration)
-  size_t requesterCommunicatorSize = 0;
-
+  int peerCurrent = 0;  // current peer to connect to
+  int peerCount   = -1; // The total count of peers (initialized in the first iteration)
   do {
     // Connection
     MPI_Comm communicator;
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
     PRECICE_DEBUG("Accepted connection at " << _portName << " for peer " << peerCurrent);
 
-    int requesterRank = -1;
     // Exchange information to which rank I am connected and which communicator size on the other side
+    int requesterRank = -1;
     MPI_Recv(&requesterRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
+    int requesterCommunicatorSize = -1;
     MPI_Recv(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
     MPI_Send(&acceptorRank, 1, MPI_INT, 0, 42, communicator);
 
@@ -75,13 +83,15 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
                   "Requester communicator size has to be > 0!");
     PRECICE_CHECK(requesterCommunicatorSize == peerCount,
                   "Requester communicator sizes are inconsistent!");
-    PRECICE_CHECK(_communicators.count(requesterRank) == 0,
+    PRECICE_CHECK(_direct.count(requesterRank) == 0,
                   "Duplicate request to connect by same rank (" << requesterRank << ")!");
 
-    _communicators[requesterRank] = communicator;
+    _direct.emplace(requesterRank, communicator);
 
-  } while (++peerCurrent < requesterCommunicatorSize);
+    PRECICE_ASSERT(peerCount > 0);
+  } while (++peerCurrent < peerCount);
 
+  _initialCommSize = peerCount;
   _isConnected = true;
 }
 
@@ -95,21 +105,28 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   PRECICE_ASSERT(not isConnected());
 
-  ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
-
   _isAcceptor = true;
 
-  if (utils::MasterSlave::getRank() == 0) { // only master opens a port
+  const int rank = utils::Parallel::current()->rank();
+
+  if (rank == 0) { // only master opens a port
+    ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
+
+    _portName.reserve(MPI_MAX_PORT_NAME);
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
+
     conInfo.write(_portName);
     PRECICE_DEBUG("Accept connection at " << _portName);
-  }
 
-  MPI_Comm communicator;
-  MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
-                  utils::Parallel::current()->comm, &communicator);
-  PRECICE_DEBUG("Accepted connection at " << _portName);
-  _communicators[0] = communicator; // all comms are the same
+    MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);
+    PRECICE_DEBUG("Accepted connection at " << _portName);
+
+  } else { // Slaves call simply call accept
+
+    // The port is only used on the root rank
+    MPI_Comm_accept(nullptr, MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);
+    PRECICE_DEBUG("Accepted connection");
+  }
 
   _isConnected = true;
 }
@@ -132,13 +149,19 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
   PRECICE_DEBUG("Requested connection to " << _portName);
 
-  _isConnected = true;
-
-  int acceptorRank;
+  // Send the rank of this requester
   MPI_Send(&requesterRank, 1, MPI_INT, 0, 42, communicator);
+  // Send the rank of this requesters communicator size
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
+  // Recevie the acceptorRank, which should always be 0
+  int acceptorRank = -1;
   MPI_Recv(&acceptorRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-  _communicators[0] = communicator; // should be acceptorRank
+  PRECICE_ASSERT(acceptorRank == 0);
+
+  _direct.emplace(acceptorRank, communicator);
+
+  _initialCommSize = requesterCommunicatorSize;
+  _isConnected = true;
 }
 
 void MPISinglePortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
@@ -156,43 +179,61 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string const & 
   _portName = conInfo.read();
   PRECICE_DEBUG("Request connection to " << _portName);
 
-  MPI_Comm communicator;
   MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
-                   utils::Parallel::current()->comm, &communicator);
+                   utils::Parallel::current()->comm, &_global);
   PRECICE_DEBUG("Requested connection to " << _portName);
-  _communicators[0] = communicator; // all comms are the same
-  _isConnected      = true;
+
+  _isConnected = true;
 }
 
 void MPISinglePortsCommunication::closeConnection()
 {
-  PRECICE_TRACE(_communicators.size());
+  PRECICE_TRACE(_direct.size());
 
   if (not isConnected())
     return;
 
-  for (auto &communicator : _communicators) {
-    MPI_Comm_disconnect(&communicator.second);
+  for (auto &kv : _direct) {
+    MPI_Comm_disconnect(&kv.second);
+  }
+  _direct.clear();
+  if (_global != MPI_COMM_NULL) {
+    MPI_Comm_disconnect(&_global);
   }
 
   PRECICE_DEBUG("Disconnected");
 
   if (_isAcceptor and utils::MasterSlave::getRank() == 0) {
     MPI_Close_port(const_cast<char *>(_portName.c_str()));
+    _portName.clear();
     PRECICE_DEBUG("Port closed");
   }
 
+  _initialCommSize = -1;
   _isConnected = false;
 }
 
 MPI_Comm &MPISinglePortsCommunication::communicator(int rank)
 {
-  return _communicators[0];
+  if (_global != MPI_COMM_NULL) {
+    // Always prefer the global communicator
+    return _global;
+  } else {
+    // Use a direct communication if required
+    return _direct.at(rank);
+  }
 }
 
 int MPISinglePortsCommunication::rank(int rank)
 {
-  return rank;
+  if (_global != MPI_COMM_NULL) {
+    // Always prefer the global communicator
+    return rank;
+  } else {
+    // Use a direct communication if required.
+    // In this case the other rank is always 0.
+    return 0;
+  }
 }
 
 void MPISinglePortsCommunication::prepareEstablishment(std::string const &acceptorName,

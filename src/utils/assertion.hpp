@@ -1,16 +1,5 @@
 #pragma once
 
-#include <cassert>
-#include <iostream>
-
-#include <boost/current_function.hpp>
-#include <boost/preprocessor/seq/for_each_i.hpp>
-#include <boost/preprocessor/stringize.hpp>
-#include <boost/preprocessor/variadic/to_seq.hpp>
-
-#include "Parallel.hpp"
-#include "stacktrace.hpp"
-
 #ifdef NDEBUG
 
 #define PRECICE_ASSERT(...) \
@@ -18,6 +7,19 @@
   }
 
 #else
+
+#include <cassert>
+#include <iostream>
+
+#include <boost/current_function.hpp>
+#include <boost/preprocessor/seq/for_each_i.hpp>
+#include <boost/preprocessor/seq/seq.hpp> // SEQ_TAIL
+#include <boost/preprocessor/stringize.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/preprocessor/variadic/to_seq.hpp>
+
+#include "Parallel.hpp"
+#include "stacktrace.hpp"
 
 /// Helper macro, used by assertion.
 #define PRECICE_PRINT_ARGUMENT(r, data, i, elem) \

@@ -1,6 +1,11 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <memory>
+#include <stddef.h>
 #include <string>
+#include <utility>
+#include <vector>
 #include "SharedPointer.hpp"
 #include "action/SharedPointer.hpp"
 #include "cplscheme/SharedPointer.hpp"
@@ -27,10 +32,14 @@ namespace PreciceTests {
 namespace Serial {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
-}
+} // namespace Serial
 } // namespace PreciceTests
 
 namespace precice {
+namespace utils {
+class ManageUniqueIDs;
+} // namespace utils
+
 namespace impl {
 
 /// Holds coupling state of one participating solver in coupled simulation.
@@ -91,6 +100,18 @@ public:
   const std::vector<MeshContext *> &usedMeshContexts() const;
 
   std::vector<MeshContext *> &usedMeshContexts();
+
+  /** Looks for a used MeshContext for a mesh name.
+   * @param[in] name the name of the \ref Mesh
+   * @return a pointer to the MeshContext or nullptr if it was not found
+   */
+  MeshContext * usedMeshContextByName(const std::string& name);
+
+  /** Looks for a used MeshContext for a mesh name.
+   * @param[in] name the name of the \ref Mesh
+   * @return a pointer to the MeshContext or nullptr if it was not found
+   */
+  MeshContext const * usedMeshContextByName(const std::string& name) const;
 
   void addReadMappingContext(MappingContext *mappingContext);
 

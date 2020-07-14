@@ -1,6 +1,9 @@
-#include <Eigen/Core>
+#include <cmath>
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/Statistics.hpp"
+#include "utils/String.hpp"
 
 using namespace precice;
 namespace pu = precice::utils;

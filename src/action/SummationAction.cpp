@@ -1,4 +1,12 @@
 #include "SummationAction.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <memory>
+#include "action/Action.hpp"
+#include "logging/LogMacros.hpp"
+#include "mapping/Mapping.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 
 namespace precice {
 namespace action {

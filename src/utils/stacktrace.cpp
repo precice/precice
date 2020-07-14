@@ -1,5 +1,4 @@
 #include "stacktrace.hpp"
-
 #include <boost/stacktrace.hpp>
 #include <exception>
 #include <sstream>
@@ -10,7 +9,7 @@ std::string getStacktrace()
   std::ostringstream strm;
   try {
     strm << boost::stacktrace::stacktrace();
-  } catch (const std::exception& e) {
+  } catch (const std::exception &e) {
     strm << "Stacktrace failed: " << e.what();
   }
   return strm.str();

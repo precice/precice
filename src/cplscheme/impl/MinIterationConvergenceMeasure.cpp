@@ -1,4 +1,5 @@
 #include "MinIterationConvergenceMeasure.hpp"
+#include "cplscheme/impl/ConvergenceMeasure.hpp"
 
 namespace precice {
 namespace cplscheme {

@@ -1,8 +1,12 @@
 #pragma once
 
+#include <stddef.h>
+#include <string>
+#include <vector>
 #include "DistributedCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace m2n {

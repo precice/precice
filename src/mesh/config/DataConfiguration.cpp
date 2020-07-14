@@ -1,5 +1,8 @@
 #include "DataConfiguration.hpp"
-#include "mesh/Data.hpp"
+#include <ostream>
+#include "logging/LogMacros.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
 namespace precice {

@@ -1,7 +1,11 @@
 #include "xml/XMLTag.hpp"
-#include <cctype>
+#include <Eigen/Core>
+#include <ostream>
+#include <utility>
+#include "logging/LogMacros.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/String.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 
 namespace precice {
 namespace xml {
@@ -152,7 +156,7 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
 }
 
 // new readattributes fx
-void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
+void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttributes)
 {
   PRECICE_TRACE();
 

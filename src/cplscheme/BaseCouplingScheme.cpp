@@ -1,14 +1,20 @@
 #include "BaseCouplingScheme.hpp"
 #include <Eigen/Core>
 #include <limits>
+#include <math.h>
 #include <sstream>
+#include <stddef.h>
+#include <utility>
 #include "acceleration/Acceleration.hpp"
-#include "com/Communication.hpp"
-#include "com/SharedPointer.hpp"
+#include "cplscheme/Constants.hpp"
+#include "cplscheme/CouplingData.hpp"
+#include "cplscheme/CouplingScheme.hpp"
+#include "cplscheme/impl/SharedPointer.hpp"
 #include "impl/ConvergenceMeasure.hpp"
-#include "io/TXTReader.hpp"
-#include "io/TXTWriter.hpp"
-#include "math/math.hpp"
+#include "io/TXTTableWriter.hpp"
+#include "logging/LogMacros.hpp"
+#include "math/differences.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -315,10 +321,11 @@ void BaseCouplingScheme::addComputedTime(
 
   // Check validness
   bool valid = math::greaterEquals(getThisTimeWindowRemainder(), 0.0, _eps);
-  PRECICE_CHECK(valid, "The computed timestep length of "
-                           << timeToAdd << " exceeds the maximum timestep limit of "
-                           << _timeWindowSize - _computedTimeWindowPart + timeToAdd
-                           << " for this time window.");
+  PRECICE_CHECK(valid, "The timestep "
+                       "length given to preCICE in \"advance\" "
+                           << timeToAdd << " exceeds the maximum allowed timestep length " << _timeWindowSize - _computedTimeWindowPart + timeToAdd
+                           << " in the remaining of this time window. Did you restrict your timestep length, \"dt = min(precice_dt, dt)\" ?"
+                           << " For more information, consult the adapter example in the preCICE documentation.");
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
@@ -460,7 +467,7 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
       }
       stream << action;
     }
-    PRECICE_ERROR("Unfulfilled required actions: " << stream.str() << ".");
+    PRECICE_ERROR("The required actions " << stream.str() << " are not fulfilled. Did you forget to call \"markActionFulfilled\"?");
   }
 }
 

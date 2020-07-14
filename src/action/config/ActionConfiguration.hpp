@@ -2,6 +2,7 @@
 
 #include <list>
 #include <string>
+#include <vector>
 #include "action/Action.hpp"
 #include "action/SharedPointer.hpp"
 #include "logging/Logger.hpp"

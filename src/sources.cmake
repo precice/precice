@@ -282,6 +282,8 @@ target_sources(precice
     src/xml/ConfigParser.hpp
     src/xml/Printer.cpp
     src/xml/Printer.hpp
+    src/xml/ValueParser.cpp
+    src/xml/ValueParser.hpp
     src/xml/XMLAttribute.hpp
     src/xml/XMLTag.cpp
     src/xml/XMLTag.hpp
