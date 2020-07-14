@@ -149,6 +149,12 @@ void AccelerationConfiguration::xmlTagCallback(
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_DATA) {
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
+    auto success = _uniqueDataNames.insert(dataName);
+    if (not success.second) {
+      PRECICE_ERROR("You have provided a subtag "
+                    << "<data name=\"" << dataName << "\" ... /> more than once in your <acceleration:.../>. "
+                    << "Please remove the duplicated entry.");
+    }
     _meshName            = callingTag.getStringAttributeValue(ATTR_MESH);
     double scaling       = 1.0;
     if (_config.type == VALUE_IQNILS || _config.type == VALUE_MVQN || _config.type == VALUE_BROYDEN) {
