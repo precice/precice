@@ -535,7 +535,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     PRECICE_CHECK(meshContext->provideMesh,
                   "Participant \"" << participant->getName()
                                    << "\" defines watchpoint \"" << config.name
-                                   << "\" for the received mesh \"" << config.nameMesh << ", which is not allowed. "
+                                   << "\" for the received mesh \"" << config.nameMesh << "\", which is not allowed. "
                                    << "Please move the watchpoint definition to the participant providing mesh \"" << config.nameMesh << "\".");
 
     std::string         filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
