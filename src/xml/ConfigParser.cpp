@@ -1,5 +1,6 @@
 #include "ConfigParser.hpp"
 #include <algorithm>
+#include <exception>
 #include <fstream>
 #include <iterator>
 #include <libxml/SAX.h>
@@ -91,8 +92,8 @@ ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationConte
 
   try {
     connectTags(context, DefTags, SubTags);
-  } catch (const std::string &error) {
-    PRECICE_ERROR(error);
+  } catch (const std::exception &e) {
+    PRECICE_ERROR("And unexpected exception occurred during configuration: " << e.what() << '.');
   }
 }
 
@@ -157,7 +158,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
         });
 
     if (tagPosition == DefTags.end()) {
-      PRECICE_ERROR("Tag <" + expectedName + "> is unknown");
+      PRECICE_ERROR("The configuration contains an unknown tag <" + expectedName + ">.");
     }
 
     auto pDefSubTag = *tagPosition;
@@ -165,7 +166,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 
     if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
       if (usedTags.count(pDefSubTag->_fullName)) {
-        PRECICE_ERROR("Tag <" + pDefSubTag->_fullName + "> is already used");
+        PRECICE_ERROR("Tag <" + pDefSubTag->_fullName + "> is not allowed to occur multiple times.");
       }
       usedTags.emplace(pDefSubTag->_fullName);
     }
