@@ -959,7 +959,6 @@ void SolverInterfaceImpl::writeBlockVectorData(
     const double *values)
 {
   PRECICE_TRACE(fromDataID, size);
-  PRECICE_CHECK(_state != State::Constructed, "writeBlockVectorData(...) can only be called after initialize().");
   PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
@@ -991,7 +990,6 @@ void SolverInterfaceImpl::writeVectorData(
     const double *value)
 {
   PRECICE_TRACE(fromDataID, valueIndex);
-  PRECICE_CHECK(_state != State::Constructed, "writeVectorData(...) can only called after initialize().");
   PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   PRECICE_DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
@@ -1015,8 +1013,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
     const double *values)
 {
   PRECICE_TRACE(fromDataID, size);
-  PRECICE_CHECK(_state != State::Constructed, "writeBlockScalarData(...) can only be called after initialize().");
-  PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarData(...) cannot be called before finalize().");
+  PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
@@ -1042,8 +1039,7 @@ void SolverInterfaceImpl::writeScalarData(
     double value)
 {
   PRECICE_TRACE(fromDataID, valueIndex, value);
-  PRECICE_CHECK(_state != State::Constructed, "writeScalarData(...) can only be called after initialize().");
-  PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called before finalize().");
+  PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data!");
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
@@ -1063,8 +1059,7 @@ void SolverInterfaceImpl::readBlockVectorData(
     double *   values) const
 {
   PRECICE_TRACE(toDataID, size);
-  PRECICE_CHECK(_state != State::Constructed, "readBlockVectorData(...) can only be called after initialize().");
-  PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called before finalize().");
+  PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   if (size == 0)
     return;
@@ -1095,8 +1090,7 @@ void SolverInterfaceImpl::readVectorData(
     double *value) const
 {
   PRECICE_TRACE(toDataID, valueIndex);
-  PRECICE_CHECK(_state != State::Constructed, "readVectorData(...) can only be called after initialize().");
-  PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called before finalize().");
+  PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
   PRECICE_REQUIRE_DATA_READ(toDataID);
@@ -1120,8 +1114,7 @@ void SolverInterfaceImpl::readBlockScalarData(
     double *   values) const
 {
   PRECICE_TRACE(toDataID, size);
-  PRECICE_CHECK(_state != State::Constructed, "readBlockScalarData(...) can only be called after initialize().");
-  PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called before finalize().");
+  PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   if (size == 0)
     return;
@@ -1147,8 +1140,7 @@ void SolverInterfaceImpl::readScalarData(
     double &value) const
 {
   PRECICE_TRACE(toDataID, valueIndex, value);
-  PRECICE_CHECK(_state != State::Constructed, "readScalarData(...) can only be called after initialize().");
-  PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called before finalize().");
+  PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
   PRECICE_REQUIRE_DATA_READ(toDataID);
