@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE(testImplicit)
   }
 }
 
-/// Test simple coupled simulation with coupling iterations.
+/// Test simple coupled simulation with iterations, data initialization and without acceleration
 BOOST_AUTO_TEST_CASE(testImplicitInitData)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
