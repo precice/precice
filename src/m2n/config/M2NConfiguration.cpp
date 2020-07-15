@@ -1,7 +1,7 @@
-#include "M2NConfiguration.hpp"
 #include <list>
 #include <ostream>
 #include <stdexcept>
+#include "M2NConfiguration.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/MPISinglePortsCommunicationFactory.hpp"
@@ -120,7 +120,7 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
       return get<0>(tuple);
     }
   }
-  throw std::runtime_error{std::string{"No m2n communication configured between \""} + from + "\" and \"" + to + "\"!"};
+  PRECICE_ERROR("There was no m2n communication configured between participants \"" + from + "\" and \"" + to + "\". Please add an appropriate \"<m2n />\" tag.");
 }
 
 void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
@@ -154,7 +154,8 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     } else if (tag.getName() == "mpi") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      throw std::runtime_error{"Communication type \"mpi\" can only be used when preCICE is compiled with argument \"mpi=on\""};
+      PRECICE_ERROR("Communication type \"mpi\" can only be used if preCICE was compiled with MPI support enabled. "
+                    "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".")
 #else
 #ifdef OMPI_MAJOR_VERSION
       PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
@@ -165,7 +166,8 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     } else if (tag.getName() == "mpi-singleports") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      throw std::runtime_error{"Communication type \"mpi-singleports\" can only be used when preCICE is compiled with argument \"mpi=on\""};
+      PRECICE_ERROR("Communication type \"mpi-singleports\" can only be used if preCICE was compiled with MPI support enabled. "
+                    "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".")
 #else
 #ifdef OMPI_MAJOR_VERSION
       PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-singleports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
@@ -200,9 +202,7 @@ void M2NConfiguration::checkDuplicates(
     alreadyAdded |= (get<1>(tuple) == from) && (get<2>(tuple) == to);
     alreadyAdded |= (get<2>(tuple) == from) && (get<1>(tuple) == to);
   }
-  if (alreadyAdded) {
-    throw std::runtime_error{std::string{"Multiple communication defined between participant \""} + from + "\" and \"" + to + "\""};
-  }
+  PRECICE_CHECK(alreadyAdded, "Multiple m2n communications between participant \"" + from + "\" and \"" + to + "\" are not allowed. Please remove redundant <m2n /> tags between them.");
 }
 
 } // namespace m2n
