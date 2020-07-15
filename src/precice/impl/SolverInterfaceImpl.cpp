@@ -605,7 +605,8 @@ int SolverInterfaceImpl::getDataID(
   PRECICE_TRACE(dataName, meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
   PRECICE_CHECK(hasData(dataName, meshID),
-                "Data with name \"" << dataName << "\" is not defined on mesh with ID \"" << meshID << "\".");
+                "Data with name \"" << dataName << "\" is not defined on mesh with ID \"" << meshID << "\". "
+                << "Please add \"<use-data = " << dataName << "\" under \"<mesh name = " << meshID << "\".");
   return _dataIDs.at(meshID).at(dataName);
 }
 
@@ -951,7 +952,8 @@ void SolverInterfaceImpl::writeBlockVectorData(
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
   DataContext &context = _accessor->dataContext(fromDataID);
   PRECICE_CHECK(context.fromData->getDimensions() == _dimensions,
-                "You cannot call writeBlockVectorData on the scalar data type " << context.fromData->getName());
+                "You cannot call writeBlockVectorData on the scalar data type " << context.fromData->getName() << ". Use "
+                << "writeBlockScalarData or change the data type for " << context.fromData->getName() << "to vector.");
   PRECICE_ASSERT(context.toData.get() != nullptr);
   auto &valuesInternal = context.fromData->values();
   for (int i = 0; i < size; i++) {
@@ -978,7 +980,8 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
   DataContext &context = _accessor->dataContext(fromDataID);
   PRECICE_CHECK(context.fromData->getDimensions() == _dimensions,
-                "You cannot call writeVectorData on the scalar data type " << context.fromData->getName());
+                "You cannot call writeVectorData on the scalar data type " << context.fromData->getName() << ". Use "
+                << "writeScalarData or change the data type for " << context.fromData->getName() << "to vector.");
   PRECICE_ASSERT(context.toData.get() != nullptr);
   auto &values = context.fromData->values();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size() / context.fromData->getDimensions(), "Value index out of range");
@@ -1003,7 +1006,8 @@ void SolverInterfaceImpl::writeBlockScalarData(
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
   DataContext &context = _accessor->dataContext(fromDataID);
   PRECICE_CHECK(context.fromData->getDimensions() == 1,
-                "You cannot call writeBlockScalarData on the vector data type " << context.fromData->getName());
+                "You cannot call writeBlockScalarData on the vector data type " << context.fromData->getName() << ". Use "
+                << "writeBlockVectorData or change the data type for " << context.fromData->getName() << "to scalar.");
   PRECICE_ASSERT(context.toData.get() != nullptr);
   auto &valuesInternal = context.fromData->values();
   for (int i = 0; i < size; i++) {
@@ -1025,7 +1029,8 @@ void SolverInterfaceImpl::writeScalarData(
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
   DataContext &context = _accessor->dataContext(fromDataID);
   PRECICE_CHECK(context.fromData->getDimensions() == 1,
-                "You cannot call writeScalarData on the vector data type " << context.fromData->getName());
+                "You cannot call writeScalarData on the vector data type " << context.fromData->getName() << ". Use "
+                << "writeVectorData or change the data type for " << context.fromData->getName() << "to scalar.");
   PRECICE_ASSERT(context.toData);
   auto &values = context.fromData->values();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size() / context.fromData->getDimensions(), "Value index out of range");
@@ -1047,7 +1052,8 @@ void SolverInterfaceImpl::readBlockVectorData(
   PRECICE_REQUIRE_DATA_READ(toDataID);
   DataContext &context = _accessor->dataContext(toDataID);
   PRECICE_CHECK(context.toData->getDimensions() == _dimensions,
-                "You cannot call readBlockVectorData on the scalar data type " << context.toData->getName());
+                "You cannot call readBlockVectorData on the scalar data type " << context.toData->getName()<< ". Use "
+                << "readBlockScalarData or change the data type for " << context.fromData->getName() << "to vector.");
   PRECICE_ASSERT(context.fromData.get() != nullptr);
   auto &valuesInternal = context.toData->values();
   for (int i = 0; i < size; i++) {
@@ -1074,7 +1080,8 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_REQUIRE_DATA_READ(toDataID);
   DataContext &context = _accessor->dataContext(toDataID);
   PRECICE_CHECK(context.toData->getDimensions() == _dimensions,
-                "You cannot call readVectorData on the scalar data type " << context.toData->getName());
+                "You cannot call readVectorData on the scalar data type " << context.toData->getName() << ". Use "
+                << "readScalarData or change the data type for " << context.fromData->getName() << "to vector.");
   PRECICE_ASSERT(context.fromData);
   auto &values = context.toData->values();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size() / context.fromData->getDimensions(), "Value index out of range");
@@ -1101,7 +1108,8 @@ void SolverInterfaceImpl::readBlockScalarData(
   PRECICE_REQUIRE_DATA_READ(toDataID);
   DataContext &context = _accessor->dataContext(toDataID);
   PRECICE_CHECK(context.toData->getDimensions() == 1,
-                "You cannot call readBlockScalarData on the vector data type " << context.toData->getName());
+                "You cannot call readBlockScalarData on the vector data type " << context.toData->getName() << ". Use "
+                << "readBlockVectorData or change the data type for " << context.fromData->getName() << "to scalar.");
   PRECICE_ASSERT(context.fromData.get() != nullptr);
   auto &valuesInternal = context.toData->values();
   for (int i = 0; i < size; i++) {
@@ -1122,7 +1130,8 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_REQUIRE_DATA_READ(toDataID);
   DataContext &context = _accessor->dataContext(toDataID);
   PRECICE_CHECK(context.toData->getDimensions() == 1,
-                "You cannot call readScalarData on the vector data type " << context.toData->getName());
+                "You cannot call readScalarData on the vector data type " << context.toData->getName() << ". Use "
+                << "readVectorData or change the data type for " << context.fromData->getName() << "to scalar.");
   PRECICE_ASSERT(context.fromData);
   auto &values = context.toData->values();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size(), "Value index out of range");
