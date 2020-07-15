@@ -252,10 +252,7 @@ void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
   if (isImplicitCouplingScheme()) {
     for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->oldValues.cols() == 0) {
-        PRECICE_ASSERT(isExplicitCouplingScheme());
-        break;
-      }
+      PRECICE_ASSERT(pair.second->oldValues.cols() > 0)
       pair.second->oldValues.col(0) = *pair.second->values;
     }
     for (DataMap::value_type &pair : dataMap) {
