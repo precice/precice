@@ -311,6 +311,11 @@ double SolverInterfaceImpl::initialize()
 void SolverInterfaceImpl::initializeData()
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(_state == State::Initialized, "SolverInterface.initialize() has to be called before SolverInterface.initializeData()");
+  PRECICE_ASSERT(_couplingScheme->isInitialized());
+  PRECICE_CHECK(not(_couplingScheme->sendsInitializedData() && isActionRequired(constants::actionWriteInitialData())),
+                "InitialData has to be written to preCICE by calling an appropriate of the write...Data() functions before calling SolverInterface.initializeData().");
+  PRECICE_CHECK(_state != State::InitializedData, "SolverInterface.initializeData() may only be called once.");
 
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
@@ -320,9 +325,8 @@ void SolverInterfaceImpl::initializeData()
 
   PRECICE_DEBUG("Initialize data");
 
-  PRECICE_CHECK(_couplingScheme->isInitialized(),
-                "initialize() has to be called before initializeData()");
   mapWrittenData();
+
   _couplingScheme->initializeData();
   double                           dt = _couplingScheme->getNextTimestepMaxLength();
   std::set<action::Action::Timing> timings;
@@ -344,6 +348,8 @@ void SolverInterfaceImpl::initializeData()
     }
   }
   solverInitEvent.start(precice::syncMode);
+
+  _state = State::InitializedData;
 }
 
 double SolverInterfaceImpl::advance(
@@ -361,8 +367,11 @@ double SolverInterfaceImpl::advance(
   Event                    e("advance", precice::syncMode);
   utils::ScopedEventPrefix sep("advance/");
 
-  PRECICE_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
+  PRECICE_CHECK(_state == State::Initialized or _state == State::InitializedData, "initialize() has to be called before advance()");
+  PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false");
+  PRECICE_CHECK((not _couplingScheme->receivesInitializedData() && not _couplingScheme->sendsInitializedData()) || (_state == State::InitializedData),
+                "initializeData() needs to be called before advance if data has to be initialized.");
   _numberAdvanceCalls++;
 
 #ifndef NDEBUG
@@ -438,7 +447,7 @@ void SolverInterfaceImpl::finalize()
   Event                    e("finalize"); // no precice::syncMode here as MPI is already finalized at destruction of this event
   utils::ScopedEventPrefix sep("finalize/");
 
-  if (_state == State::Initialized) {
+  if (_state == State::Initialized or _state == State::InitializedData) {
 
     PRECICE_ASSERT(_couplingScheme->isInitialized());
     PRECICE_DEBUG("Finalize coupling scheme");
