@@ -1,9 +1,23 @@
-#include "testing/Testing.hpp"
-
+#include <Eigen/Core>
+#include <algorithm>
+#include <memory>
+#include <ostream>
+#include "mapping/Mapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
-#include "mesh/Edge.hpp"
+#include "math/constants.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
+#include "utils/assertion.hpp"
+
+namespace precice {
+namespace mesh {
+class Edge;
+class Vertex;
+} // namespace mesh
+} // namespace precice
 
 using namespace precice;
 

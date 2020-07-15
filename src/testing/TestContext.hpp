@@ -1,9 +1,12 @@
 #pragma once
 
+#include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
-
 #include "m2n/M2N.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "utils/Parallel.hpp"
 
 namespace precice {

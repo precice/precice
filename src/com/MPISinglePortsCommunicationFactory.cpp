@@ -1,7 +1,7 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPISinglePortsCommunicationFactory.hpp"
-
+#include <memory>
 #include "MPISinglePortsCommunication.hpp"
 #include "com/SharedPointer.hpp"
 

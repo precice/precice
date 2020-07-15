@@ -1,4 +1,9 @@
+#include <memory>
+#include <string>
+#include <vector>
+#include "logging/Logger.hpp"
 #include "mesh/config/DataConfiguration.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "xml/XMLTag.hpp"
 

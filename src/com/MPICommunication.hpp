@@ -3,8 +3,10 @@
 #pragma once
 
 #include <mpi.h>
+#include <string>
 #include <vector>
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {

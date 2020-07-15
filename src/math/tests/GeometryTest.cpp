@@ -1,4 +1,9 @@
+#include <Eigen/Core>
 #include "../geometry.hpp"
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
+#include "math/differences.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;

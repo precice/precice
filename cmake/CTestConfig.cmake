@@ -26,7 +26,7 @@ mark_as_advanced(PRECICE_TEST_WRAPPER_SCRIPT)
 
 
 function(add_precice_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;CANFAIL" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
+  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;MPIPORTS" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
   # Check arguments
   if(NOT PAT_NAME)
     message(FATAL_ERROR "Argument NAME not passed")
@@ -38,6 +38,11 @@ function(add_precice_test)
   # Are direct dependencies fullfilled?
   if( (NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping) )
     message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+    return()
+  endif()
+
+  if(PAT_MPIPORTS AND PRECICE_MPI_OPENMPI)
+    message(STATUS "Test ${PAT_FULL_NAME} - skipped (OpenMPI)")
     return()
   endif()
 
@@ -54,15 +59,12 @@ function(add_precice_test)
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_WDIR}"
-    ENVIRONMENT PRECICE_ROOT=${preCICE_SOURCE_DIR}
+    ENVIRONMENT "PRECICE_ROOT=${preCICE_SOURCE_DIR};OMPI_MCA_rmaps_base_oversubscribe=1"
     )
   if(PAT_TIMEOUT)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
   endif()
   set(_labels ${PAT_LABELS})
-  if(PAT_CANFAIL)
-    list(APPEND _labels "canfail")
-  endif()
   set_tests_properties(${PAT_FULL_NAME} PROPERTIES LABELS "${_labels}")
 endfunction(add_precice_test)
 
@@ -210,14 +212,15 @@ add_precice_test(
   )
 add_precice_test(
   NAME com
-  ARGUMENTS "--run_test=CommunicationTests:\!CommunicationTests/MPIPorts"
+  ARGUMENTS "--run_test=CommunicationTests:\!CommunicationTests/MPIPorts:\!CommunicationTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
   NAME com.mpiports
-  ARGUMENTS "--run_test=CommunicationTests/MPIPorts"
+  ARGUMENTS "--run_test=CommunicationTests/MPIPorts:CommunicationTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS "mpiports;canfail"
+  LABELS "mpiports"
+  MPIPORTS
   )
 add_precice_test(
   NAME cplscheme
@@ -231,14 +234,15 @@ add_precice_test(
   )
 add_precice_test(
   NAME m2n
-  ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPorts"
+  ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPorts:\!M2NTets/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
   NAME m2n.mpiports
-  ARGUMENTS "--run_test=M2NTests/MPIPorts"
+  ARGUMENTS "--run_test=M2NTests/MPIPorts:M2NTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS "mpiports;canfail"
+  LABELS "mpiports"
+  MPIPORTS
   )
 add_precice_test(
   NAME mapping
@@ -318,7 +322,7 @@ add_precice_test_run_solverdummies(c fortran)
 # Add a separate target to test only the base
 add_custom_target(
   test_base
-  COMMAND ctest -V -LE canfail
+  COMMAND ctest -V
   DEPENDS testprecice
   WORKING_DIRECTORY ${preCICE_BINARY_DIR}
   USES_TERMINAL

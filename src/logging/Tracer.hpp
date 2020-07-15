@@ -3,6 +3,8 @@
 
 namespace precice {
 namespace logging {
+class Logger;
+struct LogLocation;
 
 class Tracer {
 public:

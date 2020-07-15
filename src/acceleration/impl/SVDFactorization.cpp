@@ -1,7 +1,8 @@
 #ifndef PRECICE_NO_MPI
 
 #include "acceleration/impl/SVDFactorization.hpp"
-#include "utils/EigenHelperFunctions.hpp"
+#include <Eigen/Core>
+#include <limits>
 #include "utils/MasterSlave.hpp"
 
 namespace precice {

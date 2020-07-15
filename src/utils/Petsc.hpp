@@ -4,6 +4,10 @@
 #include "utils/Parallel.hpp"
 
 namespace precice {
+namespace logging {
+class Logger;
+} // namespace logging
+
 namespace utils {
 
 /// Utility class for managing PETSc operations.
@@ -37,7 +41,6 @@ private:
 
 #include <string>
 #include <utility>
-
 #include "petscao.h"
 #include "petscis.h"
 #include "petscksp.h"
@@ -72,12 +75,17 @@ public:
   /** Copy assignement
    * Destroys the current vector and takes ownership of the other.
    */
-  Vector &operator=(Vector other);
+  Vector &operator=(const Vector &other);
 
   /** Move construction
    * Takes ownership of the other vector.
    */
   Vector(Vector &&other);
+
+  /** Move assignement
+   * Destroys the current vector and takes ownership of the other.
+   */
+  Vector &operator=(Vector &&other);
 
   /** Constructs the object from another Vec
    * Takes ownership of the other Vec
@@ -161,7 +169,8 @@ public:
   explicit Matrix(std::string name = "");
 
   /// Move constructor, use the implicitly declared.
-  Matrix(Matrix &&other) = default;
+  Matrix(Matrix &&) = default;
+  Matrix &operator=(Matrix &&) = default;
 
   ~Matrix();
 

@@ -1,18 +1,27 @@
 #include "acceleration/config/AccelerationConfiguration.hpp"
+#include <algorithm>
+#include <list>
+#include <memory>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/AitkenAcceleration.hpp"
-#include "acceleration/BaseQNAcceleration.hpp"
 #include "acceleration/BroydenAcceleration.hpp"
 #include "acceleration/ConstantRelaxationAcceleration.hpp"
 #include "acceleration/IQNILSAcceleration.hpp"
 #include "acceleration/MVQNAcceleration.hpp"
 #include "acceleration/impl/ConstantPreconditioner.hpp"
+#include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/ResidualPreconditioner.hpp"
 #include "acceleration/impl/ResidualSumPreconditioner.hpp"
 #include "acceleration/impl/ValuePreconditioner.hpp"
+#include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -140,6 +149,12 @@ void AccelerationConfiguration::xmlTagCallback(
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_DATA) {
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
+    auto success = _uniqueDataNames.insert(dataName);
+    if (not success.second) {
+      PRECICE_ERROR("You have provided a subtag "
+                    << "<data name=\"" << dataName << "\" ... /> more than once in your <acceleration:.../>. "
+                    << "Please remove the duplicated entry.");
+    }
     _meshName            = callingTag.getStringAttributeValue(ATTR_MESH);
     double scaling       = 1.0;
     if (_config.type == VALUE_IQNILS || _config.type == VALUE_MVQN || _config.type == VALUE_BROYDEN) {

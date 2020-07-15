@@ -1,6 +1,9 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <limits>
+#include <ostream>
+#include <string>
 #include "../CouplingData.hpp"
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"

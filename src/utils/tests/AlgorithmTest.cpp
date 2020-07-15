@@ -1,5 +1,15 @@
 #include <Eigen/Core>
+#include <algorithm>
+#include <array>
+#include <functional>
+#include <ostream>
+#include <string>
+#include <utility>
+#include <vector>
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "utils/String.hpp"
 #include "utils/algorithm.hpp"
 
 using namespace precice;

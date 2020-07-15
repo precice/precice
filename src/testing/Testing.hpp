@@ -1,6 +1,10 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <boost/test/unit_test.hpp>
+#include <string>
+#include <type_traits>
+#include "math/differences.hpp"
 #include "math/math.hpp"
 #include "testing/TestContext.hpp"
 #include "utils/ManageUniqueIDs.hpp"

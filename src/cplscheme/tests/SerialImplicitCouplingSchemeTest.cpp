@@ -1,22 +1,37 @@
 #include <Eigen/Core>
+#include <algorithm>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <vector>
+#include "acceleration/SharedPointer.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "com/SharedPointer.hpp"
+#include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
+#include "cplscheme/CouplingData.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
-#include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
+#include "cplscheme/impl/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
+#include "m2n/DistributedComFactory.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "xml/XMLTag.hpp"
-
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "xml/XMLTag.hpp"
 
 using namespace precice;
 using namespace precice::cplscheme;
@@ -56,7 +71,7 @@ void runCoupling(
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
@@ -110,7 +125,7 @@ void runCoupling(
       }
       // the first participant always receives new data
       //if(cplScheme.isCouplingOngoing())
-      BOOST_TEST(cplScheme.hasDataBeenExchanged());
+      BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
@@ -120,7 +135,7 @@ void runCoupling(
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
@@ -180,7 +195,7 @@ void runCoupling(
       }
       // only check if data is received
       if (cplScheme.isCouplingOngoing())
-        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
@@ -217,7 +232,7 @@ void runCouplingWithSubcycling(
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
@@ -265,7 +280,7 @@ void runCouplingWithSubcycling(
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
         // If length of global timestep is reached
-        if (cplScheme.hasDataBeenExchanged()) {
+        if (cplScheme.hasDataBeenReceived()) {
           BOOST_TEST(iterationCount <= *iterValidIterations);
           BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
@@ -296,7 +311,7 @@ void runCouplingWithSubcycling(
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
@@ -349,7 +364,7 @@ void runCouplingWithSubcycling(
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
         // If length of global timestep is reached
-        if (cplScheme.hasDataBeenExchanged()) {
+        if (cplScheme.hasDataBeenReceived()) {
           BOOST_TEST(iterationCount <= *iterValidIterations);
           BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
@@ -430,7 +445,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   // Test first order extrapolation
   SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
-                              accessor, globalCom, constants::FIXED_DT,
+                              accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE,
                               BaseCouplingScheme::Implicit, maxIterations);
 
   scheme.addDataToSend(data, mesh, true);
@@ -464,7 +479,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   cplData->oldValues = Eigen::MatrixXd::Zero(cplData->oldValues.rows(), cplData->oldValues.cols());
   //assign(*cplData->values) = 0.0;
   //assign(cplData->oldValues) = 0.0;
-  SerialCouplingScheme scheme2(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_DT, BaseCouplingScheme::Implicit, maxIterations);
+  SerialCouplingScheme scheme2(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations);
 
   scheme2.addDataToSend(data, mesh, false);
   scheme2.setExtrapolationOrder(2);
@@ -541,7 +556,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
-      nameParticipant1, context.name, m2n, constants::FIXED_DT,
+      nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
@@ -638,7 +653,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      context.name, m2n, constants::FIXED_DT,
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
@@ -699,7 +714,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      context.name, m2n, constants::FIXED_DT,
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
@@ -744,25 +759,25 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  int         sendDataIndex    = -1;
-  int         receiveDataIndex = -1;
-  bool        initData         = false;
+  int         sendDataIndex              = -1;
+  int         receiveDataIndex           = -1;
+  bool        dataRequiresInitialization = false;
   if (context.isNamed(nameParticipant0)) {
     sendDataIndex    = 0;
     receiveDataIndex = 1;
   } else {
-    sendDataIndex    = 1;
-    receiveDataIndex = 0;
-    initData         = true;
+    sendDataIndex              = 1;
+    receiveDataIndex           = 0;
+    dataRequiresInitialization = true;
   }
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      context.name, m2n, constants::FIXED_DT,
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, not initData);
+  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, not dataRequiresInitialization);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -777,7 +792,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   if (context.isNamed(nameParticipant0)) {
     cplScheme.initializeData();
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     auto &values = mesh->data(dataID1)->values();
     BOOST_TEST(testing::equals(values, Eigen::Vector3d(1.0, 2.0, 3.0)));
     mesh->data(dataID0)->values() = Eigen::VectorXd::Constant(mesh->data(dataID0)->values().size(), 4.0);
@@ -801,7 +816,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     v << 1.0, 2.0, 3.0;
     mesh->data(dataID1)->values() = v;
     cplScheme.initializeData();
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(values(0), 4.0));
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {

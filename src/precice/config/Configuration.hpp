@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "logging/Logger.hpp"
 #include "logging/config/LogConfiguration.hpp"
 #include "precice/config/SolverInterfaceConfiguration.hpp"

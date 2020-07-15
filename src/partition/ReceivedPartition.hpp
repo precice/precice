@@ -1,12 +1,19 @@
 #pragma once
 
+#include <string>
 #include <vector>
 #include "Partition.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/BoundingBox.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 
 namespace precice {
+namespace m2n {
+class M2N;
+} // namespace m2n
+
 namespace partition {
 
 /**
@@ -49,12 +56,6 @@ private:
   /// Sets _bb to the union with the mesh from fromMapping resp. toMapping, also enlage by _safetyFactor
   void prepareBoundingBox();
 
-  /// Checks whether two bounding boxes are overlapping
-  bool overlapping(mesh::Mesh::BoundingBox const &currentBB, mesh::Mesh::BoundingBox const &receivedBB);
-
-  /// Checks if vertex in contained in _bb
-  bool isVertexInBB(const mesh::Vertex &vertex);
-
   /** Checks whether provided meshes are empty.
    *
    * Empty provided meshes mean that the re-partitioning completely filtered
@@ -72,7 +73,7 @@ private:
 
   GeometricFilter _geometricFilter;
 
-  mesh::Mesh::BoundingBox _bb;
+  mesh::BoundingBox _bb;
 
   int _dimensions;
 

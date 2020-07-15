@@ -1,11 +1,13 @@
-#include <Eigen/Core>
-
 #include "acceleration/ConstantRelaxationAcceleration.hpp"
+#include <Eigen/Core>
+#include <map>
+#include <memory>
+#include <ostream>
 #include "cplscheme/CouplingData.hpp"
-#include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {

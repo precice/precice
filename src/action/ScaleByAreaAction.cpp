@@ -1,7 +1,14 @@
 #include "ScaleByAreaAction.hpp"
+#include <Eigen/Core>
+#include <memory>
+#include "action/Action.hpp"
+#include "logging/LogMacros.hpp"
+#include "mapping/Mapping.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace action {

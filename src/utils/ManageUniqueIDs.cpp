@@ -1,4 +1,5 @@
 #include "utils/ManageUniqueIDs.hpp"
+#include <boost/container/detail/flat_tree.hpp>
 
 namespace precice {
 namespace utils {

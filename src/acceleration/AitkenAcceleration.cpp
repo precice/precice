@@ -1,15 +1,18 @@
+#include "acceleration/AitkenAcceleration.hpp"
 #include <Eigen/Core>
 #include <limits>
-
-#include "acceleration/AitkenAcceleration.hpp"
+#include <map>
+#include <math.h>
+#include <memory>
+#include <ostream>
+#include <stddef.h>
 #include "cplscheme/CouplingData.hpp"
+#include "logging/LogMacros.hpp"
 #include "math/math.hpp"
-#include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {

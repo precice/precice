@@ -1,4 +1,7 @@
+#include <Eigen/Core>
 #include "../impl/AbsoluteConvergenceMeasure.hpp"
+#include "cplscheme/impl/ConvergenceMeasure.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;

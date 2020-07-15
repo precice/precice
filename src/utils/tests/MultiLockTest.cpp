@@ -1,6 +1,10 @@
+#include <map>
 #include <string>
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/MultiLock.hpp"
+#include "utils/String.hpp"
 
 using namespace precice;
 using namespace precice::utils;

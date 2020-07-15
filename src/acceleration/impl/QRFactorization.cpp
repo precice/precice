@@ -1,12 +1,17 @@
+#include "acceleration/impl/QRFactorization.hpp"
+#include <Eigen/Core>
 #include <algorithm> // std::sort
 #include <cmath>
 #include <iostream>
+#include <memory>
+#include <stddef.h>
 #include <vector>
-
-#include "acceleration/BaseQNAcceleration.hpp"
-#include "acceleration/impl/QRFactorization.hpp"
+#include "acceleration/Acceleration.hpp"
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {

@@ -2,10 +2,13 @@
 
 #include <Eigen/Core>
 #include "com/SharedPointer.hpp"
-
 #include "logging/Logger.hpp"
 
 namespace precice {
+namespace logging {
+class Logger;
+} // namespace logging
+
 namespace utils {
 
 /// Utility class for managing Master-Slave operations.
