@@ -672,7 +672,6 @@ int SolverInterfaceImpl::setMeshVertex(
     const double *position)
 {
   PRECICE_TRACE(meshID);
-  PRECICE_CHECK(_state == State::Constructed, "setMeshVertex(...) has to be called before initialize().");
   Eigen::VectorXd internalPosition{
       Eigen::Map<const Eigen::VectorXd>{position, _dimensions}};
   PRECICE_DEBUG("Position = " << internalPosition);
@@ -693,7 +692,6 @@ void SolverInterfaceImpl::setMeshVertices(
     int *         ids)
 {
   PRECICE_TRACE(meshID, size);
-  PRECICE_CHECK(_state == State::Constructed, "setMeshVertices(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext & context = _accessor->meshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
@@ -762,7 +760,6 @@ int SolverInterfaceImpl::setMeshEdge(
     int secondVertexID)
 {
   PRECICE_TRACE(meshID, firstVertexID, secondVertexID);
-  PRECICE_CHECK(_state == State::Constructed, "setMeshEdge(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -785,7 +782,6 @@ void SolverInterfaceImpl::setMeshTriangle(
 {
   PRECICE_TRACE(meshID, firstEdgeID,
                 secondEdgeID, thirdEdgeID);
-  PRECICE_CHECK(_state == State::Constructed, "setMeshTriangle(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -810,7 +806,6 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
-  PRECICE_CHECK(_state == State::Constructed, "setMeshTriangleWithEdges(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -845,7 +840,6 @@ void SolverInterfaceImpl::setMeshQuad(
 {
   PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
-  PRECICE_CHECK(_state == State::Constructed, "setMeshQuad(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -871,7 +865,6 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_CHECK(_state == State::Constructed, "setMeshQuadWithEdges(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
