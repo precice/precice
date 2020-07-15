@@ -317,7 +317,7 @@ void SolverInterfaceImpl::initializeData()
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before initializeData()");
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(not(_couplingScheme->sendsInitializedData() && isActionRequired(constants::actionWriteInitialData())),
-                "InitialData has to be written to preCICE by calling an appropriate write...Data() function before calling initializeData(). "
+                "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initializeData(). "
                 "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
 
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
