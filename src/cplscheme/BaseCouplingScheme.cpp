@@ -138,7 +138,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
       // merge send and receive data for all pp calls
       mergeData();
       // setup convergence measures
-      for (ConvergenceMeasure &convergenceMeasure : _convergenceMeasures) {
+      for (ConvergenceMeasureContext &convergenceMeasure : _convergenceMeasures) {
         int dataID = convergenceMeasure.data->getID();
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
@@ -476,7 +476,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   PRECICE_TRACE();
   PRECICE_DEBUG("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
-  for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
+  for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     if (convMeasure.couplingData->oldValues.cols() < 1) {
       utils::append(convMeasure.couplingData->oldValues,
@@ -505,7 +505,7 @@ void BaseCouplingScheme::setAcceleration(
 void BaseCouplingScheme::newConvergenceMeasurements()
 {
   PRECICE_TRACE();
-  for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
+  for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
     convMeasure.measure->newMeasurementSeries();
   }
@@ -517,7 +517,7 @@ void BaseCouplingScheme::addConvergenceMeasure(
     impl::PtrConvergenceMeasure measure,
     bool                        doesLogging)
 {
-  ConvergenceMeasure convMeasure;
+  ConvergenceMeasureContext convMeasure;
   convMeasure.data         = std::move(data);
   convMeasure.couplingData = nullptr;
   convMeasure.suffices     = suffices;
@@ -538,7 +538,7 @@ bool BaseCouplingScheme::measureConvergence()
     _convergenceWriter->writeData("Iteration", _iterations);
   }
   for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
-    ConvergenceMeasure &convMeasure = _convergenceMeasures[i];
+    ConvergenceMeasureContext &convMeasure = _convergenceMeasures[i];
 
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
@@ -547,9 +547,7 @@ bool BaseCouplingScheme::measureConvergence()
     convMeasure.measure->measure(oldValues, *convMeasure.couplingData->values);
 
     if (not utils::MasterSlave::isSlave() && convMeasure.doesLogging) {
-      std::stringstream sstm;
-      sstm << "Res" << convMeasure.measure->getAbbreviation() << "(" << convMeasure.data->getName() << ")";
-      _convergenceWriter->writeData(sstm.str(), convMeasure.measure->getNormResidual());
+      _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());
     }
 
     if (not convMeasure.measure->isConvergence()) {
@@ -589,12 +587,10 @@ void BaseCouplingScheme::initializeTXTWriters()
     }
 
     if (not doesFirstStep()) {
-      for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
+      for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
 
         if (convMeasure.doesLogging) {
-          std::stringstream sstm2;
-          sstm2 << "Res" << convMeasure.measure->getAbbreviation() << "(" << convMeasure.data->getName() << ")";
-          _convergenceWriter->addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
+          _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
         }
       }
       if (getAcceleration()) {
