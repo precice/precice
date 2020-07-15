@@ -961,6 +961,128 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   }
 }
 
+/// Test that runs on 4 processors.
+BOOST_AUTO_TEST_CASE(testColumnsLogging)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  double           initialRelaxation        = 0.1;
+  int              maxIterationsUsed        = 3;
+  int              timestepsReused          = 1;
+  int              filter                   = BaseQNAcceleration::QR1FILTER;
+  double           singularityLimit         = 0.1;
+  bool             enforceInitialRelaxation = false;
+  std::vector<int> dataIDs;
+  dataIDs.push_back(0);
+  std::vector<double> factors;
+  factors.resize(1.0, 1.0);
+  PtrPreconditioner prec(new ConstantPreconditioner(factors));
+  std::vector<int>  vertexOffsets{2, 3, 3, 4};
+
+  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()));
+  dummyMesh->setVertexOffsets(vertexOffsets);
+
+  IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+                         timestepsReused, filter, singularityLimit, dataIDs, prec);
+
+  Eigen::VectorXd dvalues;
+  Eigen::VectorXd dcol1;
+
+  DataMap data;
+
+  if (context.isMaster()) { // 2 vertices
+    //init displacements
+    Eigen::VectorXd insert(2);
+    insert << 1.0, 1.0;
+    utils::append(dvalues, insert);
+    insert << 0.5, 0.5;
+    utils::append(dcol1, insert);
+  } else if (context.isRank(1)) { //1 vertex
+    Eigen::VectorXd insert(1);
+    insert << 1.0;
+    utils::append(dvalues, insert);
+    insert << 0.5;
+    utils::append(dcol1, insert);
+  } else if (context.isRank(2)) { //no vertices
+  } else {                        //1 vertex
+    Eigen::VectorXd insert(1);
+    insert << 1.0;
+    utils::append(dvalues, insert);
+    insert << 0.5;
+    utils::append(dcol1, insert);
+  }
+
+  PtrCouplingData dpcd(new CouplingData(&dvalues, dummyMesh, false, 1));
+  data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+  acc.initialize(data);
+  dpcd->oldValues.col(0) = dcol1;
+
+  acc.performAcceleration(data);
+
+  Eigen::VectorXd newdvalues1;
+  if (context.isMaster()) {
+    utils::append(newdvalues1, 1.1);
+    utils::append(newdvalues1, 1.0);
+  } else if (context.isRank(1)) {
+    utils::append(newdvalues1, 1.0);
+  } else if (context.isRank(2)) {
+  } else if (context.isRank(3)) {
+    utils::append(newdvalues1, 1.0);
+  }
+  data.begin()->second->values = &newdvalues1;
+
+  acc.performAcceleration(data);
+
+  Eigen::VectorXd newdvalues2;
+  if (context.isMaster()) {
+    utils::append(newdvalues2, 1.0);
+    utils::append(newdvalues2, 2.0);
+  } else if (context.isRank(1)) {
+    utils::append(newdvalues2, 1.0);
+  } else if (context.isRank(2)) {
+  } else if (context.isRank(3)) {
+    utils::append(newdvalues2, 1.0);
+  }
+  data.begin()->second->values = &newdvalues2;
+
+  acc.iterationsConverged(data);
+
+  BOOST_TEST(acc.getLSSystemCols() == 2);
+  BOOST_TEST(acc.getDeletedColumns() == 0);
+  BOOST_TEST(acc.getDroppedColumns() == 0);
+
+  Eigen::VectorXd newdvalues3;
+  if (context.isMaster()) {
+    utils::append(newdvalues3, 1.1);
+    utils::append(newdvalues3, 2.0);
+  } else if (context.isRank(1)) {
+    utils::append(newdvalues3, 1.0);
+  } else if (context.isRank(2)) {
+  } else if (context.isRank(3)) {
+    utils::append(newdvalues3, 1.0);
+  }
+  data.begin()->second->values = &newdvalues3;
+
+  acc.performAcceleration(data);
+
+  Eigen::VectorXd newdvalues4;
+  if (context.isMaster()) {
+    utils::append(newdvalues4, 1.0);
+    utils::append(newdvalues4, 1.0);
+  } else if (context.isRank(1)) {
+    utils::append(newdvalues4, 1.0);
+  } else if (context.isRank(2)) {
+  } else if (context.isRank(3)) {
+    utils::append(newdvalues4, 5.0);
+  }
+  data.begin()->second->values = &newdvalues4;
+
+  acc.iterationsConverged(data);
+
+  BOOST_TEST(acc.getLSSystemCols() == 1);
+  BOOST_TEST(acc.getDeletedColumns() == 1);
+  BOOST_TEST(acc.getDroppedColumns() == 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 

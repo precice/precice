@@ -12,6 +12,7 @@
 #include "CouplingScheme.hpp"
 #include "SharedPointer.hpp"
 #include "acceleration/SharedPointer.hpp"
+#include "impl/ConvergenceMeasure.hpp"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
@@ -210,7 +211,8 @@ public:
   void addConvergenceMeasure(
       mesh::PtrData               data,
       bool                        suffices,
-      impl::PtrConvergenceMeasure measure);
+      impl::PtrConvergenceMeasure measure,
+      bool                        doesLogging);
 
   /// Set an acceleration technique.
   void setAcceleration(acceleration::PtrAcceleration acceleration);
@@ -332,12 +334,19 @@ protected:
    * @param couplingData Coupling data history
    * @param suffices Whether this measure already suffices for convergence
    * @param measure Link to the actual convergence measure
+   * @param doesLogging Whether this measure is logged in the convergence file
    */
-  struct ConvergenceMeasure {
+  struct ConvergenceMeasureContext {
     mesh::PtrData               data;
     CouplingData *              couplingData;
     bool                        suffices;
     impl::PtrConvergenceMeasure measure;
+    bool                        doesLogging;
+
+    std::string logHeader() const
+    {
+      return "Res" + measure->getAbbreviation() + "(" + data->getName() + ")";
+    }
   };
 
   /**
@@ -455,11 +464,6 @@ private:
   /// Number of total iterations performed.
   int _totalIterations = -1;
 
-  /// TODO
-  int _deletedColumnsPPFiltering = 0;
-
-  std::vector<double> _firstResiduumNorm = {0};
-
   /// Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder = 0;
 
@@ -510,7 +514,7 @@ private:
    * Before initialization, only dataID and measure variables are filled. Then,
    * the data is fetched from send and receive data assigned to the cpl scheme.
    */
-  std::vector<ConvergenceMeasure> _convergenceMeasures;
+  std::vector<ConvergenceMeasureContext> _convergenceMeasures;
 
   /// Functions needed for initialize()
 
@@ -588,8 +592,8 @@ private:
    * @param dataID Data field to be assigned
    */
   virtual void assignDataToConvergenceMeasure(
-      ConvergenceMeasure *convMeasure,
-      int                 dataID) = 0;
+      ConvergenceMeasureContext *convMeasure,
+      int                      dataID) = 0;
 
   /**
    * @brief used for storing send/receive data at end of acceleration, if not converged.

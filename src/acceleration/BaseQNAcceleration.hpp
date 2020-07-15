@@ -125,8 +125,20 @@ public:
     */
   virtual void importState(io::TXTReader &reader);
 
-  // delete this:
-  virtual int getDeletedColumns();
+  /// how many QN columns were deleted in this timestep
+  virtual int getDeletedColumns() const;
+
+  /// how many QN columns were dropped (went out of scope) in this timestep
+  virtual int getDroppedColumns() const;
+
+  /** @brief: computes number of cols in least squares system, i.e, number of cols in
+    *  _matrixV, _matrixW, _qrV, etc..
+    *	 This is necessary only for master-slave mode, when some procs do not have
+    *	 any nodes on the coupling interface. In this case, the matrices are not
+    *  constructed and we have no information about the number of cols. This info
+    *  is needed for master-slave communication. Number of its =! _cols in general.
+    */
+  virtual int getLSSystemCols() const;
 
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};
@@ -222,14 +234,6 @@ protected:
   std::ostringstream _infostringstream;
   std::fstream       _infostream;
 
-  /** @brief: computes number of cols in least squares system, i.e, number of cols in
-    *  _matrixV, _matrixW, _qrV, etc..
-    *	 This is necessary only for master-slave mode, when some procs do not have
-    *	 any nodes on the coupling interface. In this case, the matrices are not
-    *  constructed and we have no information about the number of cols. This info
-    *  is needed for master-slave communication. Number of its =! _cols in general.
-    */
-  int getLSSystemCols();
   int getLSSystemRows();
 
   /**
@@ -284,8 +288,11 @@ private:
   Eigen::MatrixXd _matrixWBackup;
   std::deque<int> _matrixColsBackup;
 
-  /// Additional debugging info, is not important for computation:
+  /// Number of filtered out columns in this time window
   int _nbDelCols = 0;
+
+  /// Number of dropped columns in this time window (old time window out of scope)
+  int _nbDropCols = 0;
 };
 } // namespace acceleration
 } // namespace precice
