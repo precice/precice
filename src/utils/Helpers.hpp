@@ -20,7 +20,7 @@ inline bool isTruncated(In in)
 /// Returns true if the argument represents a vaild port
 inline bool isValidPort(int port)
 {
-  return (port > 0) && !utils::isTruncated<unsigned short>(port);
+  return (port >= 0) && !utils::isTruncated<unsigned short>(port);
 }
 
 
