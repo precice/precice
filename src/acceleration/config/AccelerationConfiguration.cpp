@@ -175,7 +175,9 @@ void AccelerationConfiguration::xmlTagCallback(
     if (_config.dataIDs.empty()) {
       std::ostringstream stream;
       stream << "Data with name \"" << dataName << "\" associated to mesh \""
-             << _meshName << "\" not found on configuration of acceleration";
+             << _meshName << "\" not found on configuration of acceleration. Add \"" 
+             << dataName << "\" to the \"<mesh name=" << _meshName << ">\" tag, or change the "
+             << "data name in the acceleration scheme.";
       throw std::runtime_error{stream.str()};
     }
     _neededMeshes.push_back(_meshName);
@@ -204,7 +206,8 @@ void AccelerationConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
 
     if (_config.alwaysBuildJacobian)
-      PRECICE_ERROR("IMVJ can not be in restart mode while parameter always-build-jacobian is set true.");
+      PRECICE_ERROR("IMVJ cannot be in restart mode while parameter always-build-jacobian is set to true. "
+      << "Please remove 'always-build-jacobian' from the configuration file or do not run in restart mode.");
 
 #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
@@ -541,7 +544,7 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tag.addSubtag(tagData);
   } else {
     PRECICE_ERROR("Acceleration of type \""
-                  << tag.getName() << "\" is unknown!");
+                  << tag.getName() << "\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.");
   }
 }
 } // namespace acceleration

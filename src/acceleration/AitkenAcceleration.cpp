@@ -24,14 +24,14 @@ AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
       _aitkenFactor(initialRelaxation)
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
-                "Initial relaxation factor for aitken acceleration has to "
-                    << "be larger than zero and smaller or equal than one!");
+                "Initial relaxation factor for Aitken acceleration has to "
+                    << "be larger than zero and smaller or equal than one. Current initial relaxation is: " << _initialRelaxation);
 }
 
 void AitkenAcceleration::initialize(DataMap &cplData)
 {
   PRECICE_CHECK(utils::contained(*_dataIDs.begin(), cplData),
-                "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization!");
+                "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization.");
   size_t entries = 0;
   if (_dataIDs.size() == 1) {
     entries = cplData[_dataIDs.at(0)]->values->size();
