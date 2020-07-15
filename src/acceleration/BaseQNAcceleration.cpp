@@ -630,17 +630,17 @@ void BaseQNAcceleration::importState(
 {
 }
 
-int BaseQNAcceleration::getDeletedColumns()
+int BaseQNAcceleration::getDeletedColumns() const
 {
   return _nbDelCols;
 }
 
-int BaseQNAcceleration::getDroppedColumns()
+int BaseQNAcceleration::getDroppedColumns() const
 {
   return _nbDropCols;
 }
 
-int BaseQNAcceleration::getLSSystemCols()
+int BaseQNAcceleration::getLSSystemCols() const
 {
   int cols = 0;
   for (int col : _matrixCols) {

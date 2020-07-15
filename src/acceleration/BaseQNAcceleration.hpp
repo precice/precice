@@ -126,10 +126,10 @@ public:
   virtual void importState(io::TXTReader &reader);
 
   /// how many QN columns were deleted in this timestep
-  virtual int getDeletedColumns();
+  virtual int getDeletedColumns() const;
 
   /// how many QN columns were dropped (went out of scope) in this timestep
-  virtual int getDroppedColumns();
+  virtual int getDroppedColumns() const;
 
   /** @brief: computes number of cols in least squares system, i.e, number of cols in
     *  _matrixV, _matrixW, _qrV, etc..
@@ -138,7 +138,7 @@ public:
     *  constructed and we have no information about the number of cols. This info
     *  is needed for master-slave communication. Number of its =! _cols in general.
     */
-  virtual int getLSSystemCols();
+  virtual int getLSSystemCols() const;
 
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};
