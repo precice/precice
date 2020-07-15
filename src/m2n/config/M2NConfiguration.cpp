@@ -202,7 +202,7 @@ void M2NConfiguration::checkDuplicates(
     alreadyAdded |= (get<1>(tuple) == from) && (get<2>(tuple) == to);
     alreadyAdded |= (get<2>(tuple) == from) && (get<1>(tuple) == to);
   }
-  PRECICE_CHECK(alreadyAdded, "Multiple m2n communications between participant \"" + from + "\" and \"" + to + "\" are not allowed. Please remove redundant <m2n /> tags between them.");
+  PRECICE_CHECK(!alreadyAdded, "Multiple m2n communications between participant \"" + from + "\" and \"" + to + "\" are not allowed. Please remove redundant <m2n /> tags between them.");
 }
 
 } // namespace m2n
