@@ -229,6 +229,7 @@ double SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state == State::Constructed, "initialize() may only be called once.");
+  PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
@@ -311,11 +312,13 @@ double SolverInterfaceImpl::initialize()
 void SolverInterfaceImpl::initializeData()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state == State::Initialized, "SolverInterface.initialize() has to be called before SolverInterface.initializeData()");
+  PRECICE_CHECK(_state != State::InitializedData, "initializeData() may only be called once.");
+  PRECICE_CHECK(_state != State::Finalized, "initializeData() cannot be called after finalize().")
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before initializeData()");
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(not(_couplingScheme->sendsInitializedData() && isActionRequired(constants::actionWriteInitialData())),
-                "InitialData has to be written to preCICE by calling an appropriate of the write...Data() functions before calling SolverInterface.initializeData().");
-  PRECICE_CHECK(_state != State::InitializedData, "SolverInterface.initializeData() may only be called once.");
+                "InitialData has to be written to preCICE by calling an appropriate write...Data() function before calling initializeData(). "
+                "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
 
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
@@ -367,9 +370,10 @@ double SolverInterfaceImpl::advance(
   Event                    e("advance", precice::syncMode);
   utils::ScopedEventPrefix sep("advance/");
 
-  PRECICE_CHECK(_state == State::Initialized or _state == State::InitializedData, "initialize() has to be called before advance()");
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
+  PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
   PRECICE_ASSERT(_couplingScheme->isInitialized());
-  PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false");
+  PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
   PRECICE_CHECK((not _couplingScheme->receivesInitializedData() && not _couplingScheme->sendsInitializedData()) || (_state == State::InitializedData),
                 "initializeData() needs to be called before advance if data has to be initialized.");
   _numberAdvanceCalls++;
@@ -439,6 +443,7 @@ void SolverInterfaceImpl::finalize()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.")
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before finalize().")
 
   // Events for the solver time, finally stopped here
   auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
@@ -527,12 +532,16 @@ int SolverInterfaceImpl::getDimensions() const
 bool SolverInterfaceImpl::isCouplingOngoing() const
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isCouplingOngoing().");
+  PRECICE_CHECK(_state != State::Finalized, "isCouplingOngoing() cannot be called after finalize().");
   return _couplingScheme->isCouplingOngoing();
 }
 
 bool SolverInterfaceImpl::isReadDataAvailable() const
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isReadDataAvailable().");
+  PRECICE_CHECK(_state != State::Finalized, "isReadDataAvailable() cannot be called after finalize().");
   return _couplingScheme->hasDataBeenReceived();
 }
 
@@ -540,12 +549,16 @@ bool SolverInterfaceImpl::isWriteDataRequired(
     double computedTimestepLength) const
 {
   PRECICE_TRACE(computedTimestepLength);
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isWriteDataRequired().");
+  PRECICE_CHECK(_state != State::Finalized, "isWriteDataRequired() cannot be called after finalize().");
   return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
 bool SolverInterfaceImpl::isTimeWindowComplete() const
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isTimeWindowComplete().");
+  PRECICE_CHECK(_state != State::Finalized, "isTimeWindowComplete() cannot be called after finalize().");
   return _couplingScheme->isTimeWindowComplete();
 }
 
@@ -553,6 +566,8 @@ bool SolverInterfaceImpl::isActionRequired(
     const std::string &action) const
 {
   PRECICE_TRACE(action, _couplingScheme->isActionRequired(action));
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isActionRequired(...).");
+  PRECICE_CHECK(_state != State::Finalized, "isActionRequired(...) cannot be called after finalize().");
   return _couplingScheme->isActionRequired(action);
 }
 
@@ -560,6 +575,8 @@ void SolverInterfaceImpl::markActionFulfilled(
     const std::string &action)
 {
   PRECICE_TRACE(action);
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before markActionFulfilled(...).");
+  PRECICE_CHECK(_state != State::Finalized, "markActionFulfilled(...) cannot be called after finalize().");
   _couplingScheme->markActionFulfilled(action);
 }
 
@@ -655,6 +672,7 @@ int SolverInterfaceImpl::setMeshVertex(
     const double *position)
 {
   PRECICE_TRACE(meshID);
+  PRECICE_CHECK(_state == State::Constructed, "setMeshVertex(...) has to be called before initialize().");
   Eigen::VectorXd internalPosition{
       Eigen::Map<const Eigen::VectorXd>{position, _dimensions}};
   PRECICE_DEBUG("Position = " << internalPosition);
@@ -675,6 +693,7 @@ void SolverInterfaceImpl::setMeshVertices(
     int *         ids)
 {
   PRECICE_TRACE(meshID, size);
+  PRECICE_CHECK(_state == State::Constructed, "setMeshVertices(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext & context = _accessor->meshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
@@ -743,6 +762,7 @@ int SolverInterfaceImpl::setMeshEdge(
     int secondVertexID)
 {
   PRECICE_TRACE(meshID, firstVertexID, secondVertexID);
+  PRECICE_CHECK(_state == State::Constructed, "setMeshEdge(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -765,6 +785,7 @@ void SolverInterfaceImpl::setMeshTriangle(
 {
   PRECICE_TRACE(meshID, firstEdgeID,
                 secondEdgeID, thirdEdgeID);
+  PRECICE_CHECK(_state == State::Constructed, "setMeshTriangle(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -789,6 +810,7 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
+  PRECICE_CHECK(_state == State::Constructed, "setMeshTriangleWithEdges(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -823,6 +845,7 @@ void SolverInterfaceImpl::setMeshQuad(
 {
   PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
+  PRECICE_CHECK(_state == State::Constructed, "setMeshQuad(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -848,6 +871,7 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_CHECK(_state == State::Constructed, "setMeshQuadWithEdges(...) has to be called before initialize().");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -943,6 +967,8 @@ void SolverInterfaceImpl::writeBlockVectorData(
     const double *values)
 {
   PRECICE_TRACE(fromDataID, size);
+  PRECICE_CHECK(_state != State::Constructed, "writeBlockVectorData(...) has to be called after initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) has to be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
@@ -973,6 +999,8 @@ void SolverInterfaceImpl::writeVectorData(
     const double *value)
 {
   PRECICE_TRACE(fromDataID, valueIndex);
+  PRECICE_CHECK(_state != State::Constructed, "writeVectorData(...) has to be called after initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) has to be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   PRECICE_DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
@@ -995,6 +1023,8 @@ void SolverInterfaceImpl::writeBlockScalarData(
     const double *values)
 {
   PRECICE_TRACE(fromDataID, size);
+  PRECICE_CHECK(_state != State::Constructed, "writeBlockScalarData(...) has to be called after initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarData(...) has to be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
@@ -1020,6 +1050,8 @@ void SolverInterfaceImpl::writeScalarData(
     double value)
 {
   PRECICE_TRACE(fromDataID, valueIndex, value);
+  PRECICE_CHECK(_state != State::Constructed, "writeScalarData(...) has to be called after initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) has to be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data!");
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
@@ -1039,6 +1071,8 @@ void SolverInterfaceImpl::readBlockVectorData(
     double *   values) const
 {
   PRECICE_TRACE(toDataID, size);
+  PRECICE_CHECK(_state != State::Constructed, "readBlockVectorData(...) has to be called after initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) has to be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   if (size == 0)
     return;
@@ -1069,6 +1103,8 @@ void SolverInterfaceImpl::readVectorData(
     double *value) const
 {
   PRECICE_TRACE(toDataID, valueIndex);
+  PRECICE_CHECK(_state != State::Constructed, "readVectorData(...) has to be called after initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) has to be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
   PRECICE_REQUIRE_DATA_READ(toDataID);
@@ -1092,6 +1128,8 @@ void SolverInterfaceImpl::readBlockScalarData(
     double *   values) const
 {
   PRECICE_TRACE(toDataID, size);
+  PRECICE_CHECK(_state != State::Constructed, "readBlockScalarData(...) has to be called after initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) has to be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   if (size == 0)
     return;
@@ -1117,6 +1155,8 @@ void SolverInterfaceImpl::readScalarData(
     double &value) const
 {
   PRECICE_TRACE(toDataID, valueIndex, value);
+  PRECICE_CHECK(_state != State::Constructed, "readScalarData(...) has to be called after initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) has to be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
   PRECICE_REQUIRE_DATA_READ(toDataID);
