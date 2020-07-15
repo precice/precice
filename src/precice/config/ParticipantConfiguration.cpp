@@ -345,8 +345,9 @@ const mesh::PtrData &ParticipantConfiguration::getData(
     }
   }
   PRECICE_ERROR("Participant \"" << _participants.back()->getName()
-                                 << "\" assignes data \"" << nameData << "\" wrongly to mesh \""
-                                 << mesh->getName() << "\"!");
+                                 << "\" asks for data \"" << nameData << "\" from mesh \""
+                                 << mesh->getName() << "\", but this mesh does not use such data. "
+                                 << "Please add a use-data tag with name=\"" << nameData << "\" to this mesh.");
 }
 
 void ParticipantConfiguration::finishParticipantConfiguration(
@@ -363,10 +364,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
                   "Participant \"" << participant->getName() << "\" has mapping"
-                                   << " from mesh \"" << confMapping.fromMesh->getName() << "\" which he does not use!");
+                                   << " from mesh \"" << confMapping.fromMesh->getName() << "\", without using this mesh. "
+                                   << "Please add a use-mesh tag with name=\"" << confMapping.fromMesh->getName() << "\"");
     PRECICE_CHECK(participant->isMeshUsed(toMeshID),
                   "Participant \"" << participant->getName() << "\" has mapping"
-                                   << " to mesh \"" << confMapping.toMesh->getName() << "\" which he does not use!");
+                                   << " to mesh \"" << confMapping.toMesh->getName() << "\", without using this mesh. "
+                                   << "Please add a use-mesh tag with name=\"" << confMapping.toMesh->getName() << "\"");
     if (context.size > 1) {
       if ((confMapping.direction == mapping::MappingConfiguration::WRITE &&
            confMapping.mapping->getConstraint() == mapping::Mapping::CONSISTENT) ||
@@ -382,19 +385,25 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     impl::MeshContext &toMeshContext   = participant->meshContext(toMeshID);
 
     if (confMapping.direction == mapping::MappingConfiguration::READ) {
-      PRECICE_CHECK(toMeshContext.provideMesh, "A read mapping of participant " << participant->getName() << " needs to map TO a provided mesh. "
-                                                                                                             "Mesh \""
-                                                                                << confMapping.toMesh->getName() << "\" is not provided.");
-      PRECICE_CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping of participant \"" << participant->getName() << "\" needs to map FROM a received mesh. "
-                                                                                                                               "Mesh "
-                                                                                                  << confMapping.fromMesh->getName() << " is not received.");
+      PRECICE_CHECK(toMeshContext.provideMesh, "A read mapping of participant \"" 
+                                                << participant->getName() << "\" needs to map TO a provided mesh. Mesh \""
+                                                << confMapping.toMesh->getName() << "\" is not provided. "
+                                                << "Please add a provide=\"yes\" attribute to the participant's use-mesh tag.");
+      PRECICE_CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping of participant \"" 
+                                                                  << participant->getName()
+                                                                  << "\" needs to map FROM a received mesh. Mesh \""
+                                                                  << confMapping.fromMesh->getName() << "\" is not received. "
+                                                                  << "Please add a from=\"(participant)\" attribute to the participant's use-mesh tag.");
     } else {
-      PRECICE_CHECK(fromMeshContext.provideMesh, "A write mapping of participant \"" << participant->getName() << "\" needs to map FROM a provided mesh. "
-                                                                                                                "Mesh \""
-                                                                                   << confMapping.fromMesh->getName() << "\" is not provided.");
-      PRECICE_CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping of participant \"" << participant->getName() << "\" needs to map TO a received mesh. "
-                                                                                                                              "Mesh \""
-                                                                                                 << confMapping.toMesh->getName() << "\" is not received.");
+      PRECICE_CHECK(fromMeshContext.provideMesh, "A write mapping of participant \""
+                                                  << participant->getName() << "\" needs to map FROM a provided mesh. Mesh \""
+                                                  << confMapping.fromMesh->getName() << "\" is not provided. "
+                                                  << "Please add a provide=\"yes\" attribute to the participant's use-mesh tag.");
+      PRECICE_CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping of participant \""
+                                                                  << participant->getName()
+                                                                  << "\" needs to map TO a received mesh. Mesh \""
+                                                                  << confMapping.toMesh->getName() << "\" is not received. "
+                                                                  << "Please add a from=\"(participant)\" attribute to the participant's use-mesh tag.");
     }
 
     if (confMapping.isRBF) {
@@ -452,8 +461,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           }
         }
         PRECICE_CHECK(dataContext.fromData != dataContext.toData,
-                      "The mesh \"" << meshContext.mesh->getName() << "\" needs to use the data \""
-                                    << dataContext.fromData->getName() << "\"! to allow the write mapping");
+                      "Mesh \"" << meshContext.mesh->getName() << "\" needs to use data \""
+                                << dataContext.fromData->getName() << "\" to allow a write mapping to it. "
+                                << "Please add a use-data node with name=\"" << dataContext.fromData->getName() << "\" to this mesh.");
       }
     }
   }
@@ -475,8 +485,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           }
         }
         PRECICE_CHECK(dataContext.toData != dataContext.fromData,
-                      "The mesh \"" << meshContext.mesh->getName() << "\" needs to use the data \""
-                                    << dataContext.toData->getName() << "\"! to allow the read mapping");
+                      "Mesh \"" << meshContext.mesh->getName() << "\" needs to use data \""
+                                << dataContext.toData->getName() << "\" to allow a read mapping to it. "
+                                << "Please add a use-data node with name=\"" << dataContext.toData->getName() << "\" to this mesh.");
       }
     }
   }
