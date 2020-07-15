@@ -25,9 +25,7 @@ ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
 
 void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
 {
-  PRECICE_CHECK(_dataIDs.empty() || utils::contained(*_dataIDs.begin(), cplData),
-                "Data with ID " << *_dataIDs.begin()
-                                << " is not contained in data given at initialization!");
+  checkDataIDs(cplData);
 
   // Append column for old values if not done by coupling scheme yet
   int entries = 0;

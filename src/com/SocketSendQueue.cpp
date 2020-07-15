@@ -1,10 +1,12 @@
-#include "SocketSendQueue.hpp"
 #include <algorithm>
 #include <boost/asio.hpp>
 #include <iosfwd>
 #include <new>
 #include <utility>
+
+#include "SocketSendQueue.hpp"
 #include "logging/LogMacros.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace com {
@@ -13,9 +15,8 @@ namespace asio = boost::asio;
 /// If items are left in the queue upon destruction, something went really wrong.
 SocketSendQueue::~SocketSendQueue()
 {
-  if (not _itemQueue.empty())
-    PRECICE_ERROR("The SocketSendQueue is not empty upon destruction.\n"
-                  "Make sure it always outlives all the requests pushed onto it");
+  PRECICE_ASSERT(_itemQueue.empty(), "The SocketSendQueue is not empty upon destruction. "
+                                     "Make sure it always outlives all the requests pushed onto it.");
 }
 
 void SocketSendQueue::dispatch(std::shared_ptr<Socket>      sock,

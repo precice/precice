@@ -30,8 +30,7 @@ AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
 
 void AitkenAcceleration::initialize(DataMap &cplData)
 {
-  PRECICE_CHECK(utils::contained(*_dataIDs.begin(), cplData),
-                "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization.");
+  checkDataIDs(cplData);
   size_t entries = 0;
   if (_dataIDs.size() == 1) {
     entries = cplData[_dataIDs.at(0)]->values->size();

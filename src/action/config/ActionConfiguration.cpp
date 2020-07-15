@@ -255,10 +255,16 @@ void ActionConfiguration::createAction()
   }
   action::PtrAction action;
   if (_configuredAction.type == NAME_MULTIPLY_BY_AREA) {
+    PRECICE_CHECK(mesh->getDimensions() == 2,
+                  "The action \"" << NAME_MULTIPLY_BY_AREA << "\" is only available for a solverinterface dimensionality of 2. "
+                                                              "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.");
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_MULTIPLY_BY_AREA));
   } else if (_configuredAction.type == NAME_DIVIDE_BY_AREA) {
+    PRECICE_CHECK(mesh->getDimensions() == 2,
+                  "The action \"" << NAME_DIVIDE_BY_AREA << "\" is only available for a solverinterface dimensionality of 2. "
+                                                            "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.");
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
