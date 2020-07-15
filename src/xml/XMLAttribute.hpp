@@ -155,13 +155,13 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
 {
   PRECICE_TRACE(_name);
   if (_read) {
-    PRECICE_ERROR("Attribute \"" + _name + "\" is defined multiple times");
+    PRECICE_ERROR("Attribute \"" + _name + "\" has already been defined. Duplications are not permitted.");
   }
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
     if (not _hasDefaultValue) {
-      PRECICE_ERROR("Attribute \"" + _name + "\" missing");
+      PRECICE_ERROR("Attribute \"" + _name + "\" is required, but was not defined.");
     }
     set(_value, _defaultValue);
   } else {

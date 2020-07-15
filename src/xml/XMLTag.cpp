@@ -155,7 +155,6 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   return result;
 }
 
-// new readattributes fx
 void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttributes)
 {
   PRECICE_TRACE();
@@ -164,7 +163,7 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
     auto name = element.first;
 
     if (not utils::contained(name, _attributes)) {
-      PRECICE_ERROR("Wrong attribute \"" << name << '\"');
+      PRECICE_ERROR("Tag <" << _name << "> contains an unknown attribute named \"" << name << "\".");
     }
   }
 
@@ -284,9 +283,9 @@ void XMLTag::areAllSubtagsConfigured() const
     if ((not configured) && (occurOnce || occurOnceOrMore)) {
 
       if (tag->getNamespace().empty()) {
-        PRECICE_ERROR("Tag <" << tag->getName() << "> is missing");
+        PRECICE_ERROR("Tag <" << tag->getName() << "> was not found but is required to occur at least once.");
       } else {
-        PRECICE_ERROR("Tag <" << tag->getNamespace() << ":...> is missing");
+        PRECICE_ERROR("Tag <" << tag->getNamespace() << ":... > was not found but is required to occur at least once.");
       }
     }
   }
