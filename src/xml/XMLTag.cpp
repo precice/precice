@@ -1,4 +1,3 @@
-#include "xml/XMLTag.hpp"
 #include <Eigen/Core>
 #include <ostream>
 #include <utility>
@@ -6,6 +5,7 @@
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace xml {
@@ -140,10 +140,10 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   // std::map<std::string, XMLAttribute<utils::DynVector> >::const_iterator iter;
   auto iter = _eigenVectorXdAttributes.find(name);
   PRECICE_ASSERT(iter != _eigenVectorXdAttributes.end());
-  PRECICE_CHECK(iter->second.getValue().size() >= dimensions,
-                "Vector attribute \"" << name << "\" of tag <" << getFullName()
-                                      << "> has less dimensions than required (" << iter->second.getValue().size()
-                                      << " instead of " << dimensions << ")!");
+  const auto size = iter->second.getValue().size();
+  PRECICE_CHECK(size == dimensions,
+                "Vector attribute \"" << name << "\" of tag <" << getFullName() << "> is "
+                                      << size << "D, which does not match the dimension of the " << dimensions << "D SolverInterface.");
 
   // Read only first "dimensions" components of the parsed vector values
   Eigen::VectorXd        result(dimensions);
