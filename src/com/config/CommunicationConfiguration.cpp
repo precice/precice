@@ -19,7 +19,7 @@ PtrCommunication CommunicationConfiguration::createCommunication(
     std::string network = tag.getStringAttributeValue("network");
     int         port    = tag.getIntAttributeValue("port");
 
-    PRECICE_CHECK(not utils::isTruncated<unsigned short>(port),
+    PRECICE_CHECK(utils::isValidPort(port),
                   "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
 
     std::string dir = tag.getStringAttributeValue("exchange-directory");
