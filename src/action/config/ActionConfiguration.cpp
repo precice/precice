@@ -207,7 +207,7 @@ int ActionConfiguration::getUsedMeshID() const
       return mesh->getID();
     }
   }
-  PRECICE_ERROR("No mesh ID found!");
+  PRECICE_ERROR("No mesh ID found. Please check that the correct mesh name is used.");
   return -1; // To please compiler
 }
 
@@ -238,19 +238,19 @@ void ActionConfiguration::createAction()
   if (mesh.get() == nullptr) {
     std::ostringstream stream;
     stream << "Data action uses mesh \"" << _configuredAction.mesh
-           << "\" which is not configured";
+           << "\" which is not configured. Please ensure that the correct mesh name is given in <action:python mesh=";
     throw std::runtime_error{stream.str()};
   }
   if ((not _configuredAction.sourceDataVector.empty()) && (sourceDataIDs.empty())) {
     std::ostringstream stream;
     stream << "Data action uses source data \"" << _configuredAction.sourceDataVector.back()
-           << "\" which is not configured";
+           << "\" which is not configured. Please ensure that the source data name is used by the mesh.";
     throw std::runtime_error{stream.str()};
   }
   if ((not _configuredAction.targetData.empty()) && (targetDataID == -1)) {
     std::ostringstream stream;
     stream << "Data action uses target data \"" << _configuredAction.targetData
-           << "\" which is not configured";
+           << "\" which is not configured. Please ensure that the target data name is used by the mesh";
     throw std::runtime_error{stream.str()};
   }
   action::PtrAction action;
@@ -314,7 +314,8 @@ action::Action::Timing ActionConfiguration::getTiming() const
   } else if (_configuredAction.timing == VALUE_ON_TIME_WINDOW_COMPLETE_POST) {
     timing = action::Action::ON_TIME_WINDOW_COMPLETE_POST;
   } else {
-    PRECICE_ERROR("Unknown action timing \"" << _configuredAction.timing << "\"!");
+    PRECICE_ERROR("Unknown action timing \"" << _configuredAction.timing << "\". Valid action timings are "
+    << "regular-prior, regular-post, on-exchange-prior, on-exchange-post, on-time-window-complete-post");
   }
   return timing;
 }
