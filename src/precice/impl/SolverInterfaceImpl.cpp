@@ -175,14 +175,18 @@ void SolverInterfaceImpl::configure(
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useMaster(),
                  "A parallel participant needs a master communication");
   PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useMaster()),
-                "You cannot use a master with a serial participant.");
+                "You cannot use a master communication with a serial participant. "
+                "If you do not know exactly what a master communication is and why you want to use it "
+                "you probably just want to remove the master tag from the preCICE configuration.");
 
   utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
   _participants = config.getParticipantConfiguration()->getParticipants();
   configureM2Ns(config.getM2NConfiguration());
 
-  PRECICE_CHECK(_participants.size() > 1, "At least two participants need to be defined!");
+  PRECICE_CHECK(_participants.size() > 1, "In the preCICE configuration, only one participant is defined. "
+                                          "One participant makes no coupled simulation. Please add at least "
+                                          "another one.");
   configurePartitions(config.getM2NConfiguration());
 
   cplscheme::PtrCouplingSchemeConfiguration cplSchemeConfig =
@@ -624,7 +628,7 @@ void SolverInterfaceImpl::resetMesh(
 {
   PRECICE_TRACE(meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
-  impl::MeshContext &context    = _accessor->meshContext(meshID);
+  impl::MeshContext &context = _accessor->meshContext(meshID);
   /*
   bool               hasMapping = context.fromMappingContext.mapping || context.toMappingContext.mapping;
   bool               isStationary =
@@ -1487,7 +1491,7 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
   PRECICE_TRACE(meshName);
   const MeshContext *context = _accessor->usedMeshContextByName(meshName);
   PRECICE_CHECK(context && context->mesh,
-      "Participant \"" << _accessorName << "\" does not use mesh \"" << meshName << "\"!");
+                "Participant \"" << _accessorName << "\" does not use mesh \"" << meshName << "\"!");
   return *context->mesh;
 }
 
