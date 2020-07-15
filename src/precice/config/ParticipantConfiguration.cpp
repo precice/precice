@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <list>
 #include <memory>
-#include <ostream>
 #include <stdexcept>
 #include "ParticipantConfiguration.hpp"
 #include "action/Action.hpp"
@@ -244,28 +243,19 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string                                   from         = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     partition::ReceivedPartition::GeometricFilter geoFilter    = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
-    if (safetyFactor < 0) {
-      std::ostringstream stream;
-      stream << "Safety Factor must be positive or 0";
-      throw std::runtime_error{stream.str()};
-    }
+    PRECICE_CHECK(safetyFactor >= 0, "Participant \"" << context.name << "\" uses mesh \"" << name << "\" with safety-factor=\"" << safetyFactor << "\". Please use a positive or zero safety-factor instead.")
     bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
     if (_participants.back()->getName() == from) {
       PRECICE_CHECK(provide, "Participant \"" << context.name << "\" cannot use mesh \"" << name << "\" from itself. Use the \"from\"-field to specify which participant has to communicate the mesh to \"" << context.name << "\".");
     }
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
-    if (mesh.get() == nullptr) {
-      std::ostringstream stream;
-      stream << "Participant \"" << _participants.back()->getName()
-             << "\" uses mesh \"" << name << "\" which is not defined";
-      throw std::runtime_error{stream.str()};
-    }
+    PRECICE_CHECK(mesh, "Participant \"" << _participants.back()->getName()
+                            << "\" uses mesh \"" << name << "\" which is not defined. "
+                            << "Please check the use-mesh node with name=\"" << name << "\" or define the mesh.");
     if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SLAVES || safetyFactor != 0.5) && from == "") {
-      std::ostringstream stream;
-      stream << "Participant \"" << _participants.back()->getName()
-             << "\" uses mesh \"" << name << "\" which is not received (no \"from\"), but has a geometric-filter and/or"
-             << " a safety factor defined. This is not valid.";
-      throw std::runtime_error{stream.str()};
+      PRECICE_CHECK(false, "Participant \"" << _participants.back()->getName()
+             << "\" uses mesh \"" << name << "\", which is not received (no \"from\"), but has a geometric-filter and/or"
+             << " a safety factor defined. Please extend the use-mesh tag as follows: <use-mesh name=\"" << name << "\" from=\"(other participant)\" />");
     }
     _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter);
   } else if (tag.getName() == TAG_WRITE) {
@@ -284,7 +274,7 @@ void ParticipantConfiguration::xmlTagCallback(
     mesh::PtrMesh mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh, "Participant "
                             << "\"" << _participants.back()->getName() << "\" has to use "
-                            << "mesh \"" << meshName << "\" in order to read data from it! "
+                            << "mesh \"" << meshName << "\" in order to read data from it. "
                             << "Please add a use-mesh node with name=\"" << meshName << "\".");
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addReadData(data, mesh);
@@ -393,18 +383,18 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     if (confMapping.direction == mapping::MappingConfiguration::READ) {
       PRECICE_CHECK(toMeshContext.provideMesh, "A read mapping of participant " << participant->getName() << " needs to map TO a provided mesh. "
-                                                                                                             "Mesh "
-                                                                                << confMapping.toMesh->getName() << " is not provided.");
-      PRECICE_CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping of participant " << participant->getName() << " needs to map FROM a received mesh. "
+                                                                                                             "Mesh \""
+                                                                                << confMapping.toMesh->getName() << "\" is not provided.");
+      PRECICE_CHECK(not fromMeshContext.receiveMeshFrom.empty(), "A read mapping of participant \"" << participant->getName() << "\" needs to map FROM a received mesh. "
                                                                                                                                "Mesh "
                                                                                                   << confMapping.fromMesh->getName() << " is not received.");
     } else {
-      PRECICE_CHECK(fromMeshContext.provideMesh, "A write mapping of participant " << participant->getName() << " needs to map FROM a provided mesh. "
-                                                                                                                "Mesh "
-                                                                                   << confMapping.fromMesh->getName() << " is not provided.");
-      PRECICE_CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping of participant " << participant->getName() << " needs to map TO a received mesh. "
-                                                                                                                              "Mesh "
-                                                                                                 << confMapping.toMesh->getName() << " is not received.");
+      PRECICE_CHECK(fromMeshContext.provideMesh, "A write mapping of participant \"" << participant->getName() << "\" needs to map FROM a provided mesh. "
+                                                                                                                "Mesh \""
+                                                                                   << confMapping.fromMesh->getName() << "\" is not provided.");
+      PRECICE_CHECK(not toMeshContext.receiveMeshFrom.empty(), "A write mapping of participant \"" << participant->getName() << "\" needs to map TO a received mesh. "
+                                                                                                                              "Mesh \""
+                                                                                                 << confMapping.toMesh->getName() << "\" is not received.");
     }
 
     if (confMapping.isRBF) {
@@ -449,7 +439,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     int fromMeshID = dataContext.mesh->getID();
     PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
                   "Participant \"" << participant->getName() << "\" has to use mesh \""
-                                   << dataContext.mesh->getName() << "\" when writing data to it. "
+                                   << dataContext.mesh->getName() << "\" to be able to write data to it. "
                                    << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\".");
 
     for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
@@ -494,10 +484,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // Add actions
   for (const action::PtrAction &action : _actionConfig->actions()) {
     bool used = _participants.back()->isMeshUsed(action->getMesh()->getID());
-    PRECICE_CHECK(used, "Data action of participant "
+    PRECICE_CHECK(used, "Data action of participant \""
                             << _participants.back()->getName()
                             << "\" uses mesh \"" << action->getMesh()->getName()
-                            << "\" which is not used by the participant. "
+                            << "\", which is not used by the participant. "
                             << "Please add a use-mesh node with name=\"" << action->getMesh()->getName() << "\".");
     _participants.back()->addAction(action);
   }
