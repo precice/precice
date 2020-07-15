@@ -166,6 +166,14 @@ int precicec_getMeshID(const char *meshName)
   return impl->getMeshID(stringMeshName);
 }
 
+void precicec_getMeshIDs(int *ids)
+{
+  size_t i = 0;
+  for (auto const &id : impl->getMeshIDs()) {
+    ids[i++] = id;
+  }
+}
+
 int precicec_hasData(const char *dataName, int meshID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);

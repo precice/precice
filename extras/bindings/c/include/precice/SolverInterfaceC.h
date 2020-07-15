@@ -164,6 +164,13 @@ int precicec_hasMesh(const char *meshName);
 int precicec_getMeshID(const char *meshName);
 
 /**
+ * @brief Returns the ids of all used meshes by this participant.
+ *
+ * @param[out] ids the mesh ids
+ */
+void precicec_getMeshIDs(int *ids);
+
+/**
  * @brief Creates a mesh vertex
  *
  * @param[in] meshID the id of the mesh to add the vertex to.
