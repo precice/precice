@@ -769,7 +769,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
                                               << "from=\"" << accessor << "\".");
 
   // Add convergence measures
-  PRECICE_CHECK(not _config.convMeasures.empty(),
+  PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
   for (auto &elem : _config.convergenceMeasureDefinitions) {
@@ -816,7 +816,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
                                               << "from=\"" << accessor << "\".");
 
   // Add convergence measures
-  PRECICE_CHECK(not _config.convMeasures.empty(),
+  PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
   for (auto &elem : _config.convergenceMeasureDefinitions) {
@@ -879,7 +879,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
                                               << "from=\"" << accessor << "\".");
 
   // Add convergence measures
-  PRECICE_CHECK(not _config.convMeasures.empty(),
+  PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
   for (auto &elem : _config.convergenceMeasureDefinitions) {
