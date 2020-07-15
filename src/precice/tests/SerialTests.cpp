@@ -745,28 +745,33 @@ BOOST_AUTO_TEST_CASE(testImplicit)
 }
 
 /// Test simple coupled simulation with iterations, data initialization and without acceleration
-BOOST_AUTO_TEST_CASE(testImplicitInitData)
+BOOST_AUTO_TEST_CASE(testImplicitWithDataInitialization)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   using namespace precice::constants;
 
-  SolverInterface couplingInterface(context.name, _pathToTests + "implicitInitData.xml", 0, 1);
+  SolverInterface couplingInterface(context.name, _pathToTests + "implicit-data-init.xml", 0, 1);
 
   int dimensions = couplingInterface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
+  double writeValue, expectedReadValue;
 
   if (context.isNamed("SolverOne")) {
     meshName = "MeshOne";
     writeDataName = "Forces";
     readDataName = "Velocities";
+    writeValue = 1;
+    expectedReadValue = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     meshName = "MeshTwo";
     writeDataName = "Velocities";
     readDataName = "Forces";
+    writeValue = 2;
+    expectedReadValue = 1;
   }
   int meshID = couplingInterface.getMeshID(meshName);
   int writeDataID     = couplingInterface.getDataID(writeDataName, meshID);
@@ -776,11 +781,13 @@ BOOST_AUTO_TEST_CASE(testImplicitInitData)
 
   double dt = 0;
   dt = couplingInterface.initialize();
-  std::vector<double> data(dimensions, 0);
+  std::vector<double> writeData(dimensions, writeValue);
+  std::vector<double> readData(dimensions, -1);
   const std::string& cowid = actionWriteInitialData();
 
   if(couplingInterface.isActionRequired(cowid)){
-    couplingInterface.writeVectorData(writeDataID, vertexID, data.data());
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
     couplingInterface.markActionFulfilled(cowid);
   }
 
@@ -790,8 +797,10 @@ BOOST_AUTO_TEST_CASE(testImplicitInitData)
     if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())) {
       couplingInterface.markActionFulfilled(actionWriteIterationCheckpoint());
     }
-    couplingInterface.readVectorData(readDataID, vertexID, data.data());
-    couplingInterface.writeVectorData(writeDataID, vertexID, data.data());
+    couplingInterface.readVectorData(readDataID, vertexID, readData.data());
+    BOOST_TEST(expectedReadValue == readData[0]);
+    BOOST_TEST(expectedReadValue == readData[1]);
+    couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
     dt = couplingInterface.advance(dt);
     if (couplingInterface.isActionRequired(actionReadIterationCheckpoint())) {
       couplingInterface.markActionFulfilled(actionReadIterationCheckpoint());

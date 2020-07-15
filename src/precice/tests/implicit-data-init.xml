@@ -1,11 +1,6 @@
 <?xml version="1.0"?>
 
 <precice-configuration>
-
-  <log>
-    <sink type="stream" output="stdout"  filter= "%Severity% > debug" format="preCICE:%ColorizedSeverity% %Message%" enabled="true" />	
-  </log>
-
   <solver-interface dimensions="2" >
    
     <data:vector name="Forces"  />
@@ -46,7 +41,7 @@
       <min-iteration-convergence-measure min-iterations="5" data="Forces" mesh="MeshOne"/>
       <exchange data="Forces"     mesh="MeshOne" from="SolverOne" to="SolverTwo" />
       <exchange data="Velocities" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="true"/>
-    </coupling-scheme:serial-implicit>                           
+    </coupling-scheme:serial-implicit>
 
   </solver-interface>
 
