@@ -443,7 +443,6 @@ void SolverInterfaceImpl::finalize()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.")
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before finalize().")
 
   // Events for the solver time, finally stopped here
   auto &solverEvent = EventRegistry::instance().getStoredEvent("solver.advance");
