@@ -252,10 +252,9 @@ void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
   if (isImplicitCouplingScheme()) {
     for (DataMap::value_type &pair : dataMap) {
-      PRECICE_ASSERT(pair.second->oldValues.cols() > 0)
+      if (pair.second->oldValues.cols() == 0)
+        break;
       pair.second->oldValues.col(0) = *pair.second->values;
-    }
-    for (DataMap::value_type &pair : dataMap) {
       // For extrapolation, treat the initial value as old time windows value
       utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
     }
