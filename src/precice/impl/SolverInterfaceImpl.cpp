@@ -968,7 +968,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
 {
   PRECICE_TRACE(fromDataID, size);
   PRECICE_CHECK(_state != State::Constructed, "writeBlockVectorData(...) can only be called after initialize().");
-  PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) has to be called before finalize().");
+  PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
