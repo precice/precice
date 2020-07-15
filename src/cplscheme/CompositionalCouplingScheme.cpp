@@ -46,7 +46,7 @@ bool CompositionalCouplingScheme::sendsInitializedData() const
   PRECICE_TRACE();
   bool sendsInitializedData = true;
   for (Scheme scheme : _couplingSchemes) {
-    sendsInitializedData &= scheme.scheme->sendsInitializedData();
+    sendsInitializedData |= scheme.scheme->sendsInitializedData();
   }
   PRECICE_DEBUG("return " << sendsInitializedData);
   return sendsInitializedData;
@@ -57,7 +57,7 @@ bool CompositionalCouplingScheme::receivesInitializedData() const
   PRECICE_TRACE();
   bool receivesInitializedData = true;
   for (Scheme scheme : _couplingSchemes) {
-    receivesInitializedData &= scheme.scheme->receivesInitializedData();
+    receivesInitializedData |= scheme.scheme->receivesInitializedData();
   }
   PRECICE_DEBUG("return " << receivesInitializedData);
   return receivesInitializedData;

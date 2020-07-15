@@ -317,7 +317,7 @@ void SolverInterfaceImpl::initializeData()
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before initializeData()");
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(not(_couplingScheme->sendsInitializedData() && isActionRequired(constants::actionWriteInitialData())),
-                "InitialData has to be written to preCICE by calling an appropriate write...Data() function before calling initializeData(). "
+                "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initializeData(). "
                 "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
 
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
@@ -532,7 +532,7 @@ int SolverInterfaceImpl::getDimensions() const
 bool SolverInterfaceImpl::isCouplingOngoing() const
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isCouplingOngoing().");
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
   PRECICE_CHECK(_state != State::Finalized, "isCouplingOngoing() cannot be called after finalize().");
   return _couplingScheme->isCouplingOngoing();
 }
@@ -960,8 +960,8 @@ void SolverInterfaceImpl::writeBlockVectorData(
     const double *values)
 {
   PRECICE_TRACE(fromDataID, size);
-  PRECICE_CHECK(_state != State::Constructed, "writeBlockVectorData(...) has to be called after initialize().");
-  PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) has to be called before finalize().");
+  PRECICE_CHECK(_state != State::Constructed, "writeBlockVectorData(...) can only be called after initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
