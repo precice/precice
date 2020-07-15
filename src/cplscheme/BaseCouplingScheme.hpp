@@ -82,6 +82,24 @@ public:
   }
 
   /**
+   * @brief Getter for _sendsInitializedData
+   * @returns _sendsInitializedData
+   */
+  bool sendsInitializedData() const override final
+  {
+    return _sendsInitializedData;
+  }
+
+  /**
+   * @brief Getter for _receivesInitializedData
+   * @returns _receivesInitializedData
+   */
+  bool receivesInitializedData() const override final
+  {
+    return _receivesInitializedData;
+  }
+
+  /**
    * @brief Adds newly computed time. Has to be called before every advance.
    * @param timeToAdd time to be added
    */
@@ -306,24 +324,6 @@ protected:
   void setTimeWindows(int timeWindows)
   {
     _timeWindows = timeWindows;
-  }
-
-  /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  bool sendsInitializedData() const
-  {
-    return _sendsInitializedData;
-  }
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  bool receivesInitializedData() const
-  {
-    return _receivesInitializedData;
   }
 
   /**
