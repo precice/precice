@@ -1,12 +1,20 @@
 #include "FindClosest.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <cmath>
 #include <limits>
-#include <utility>
+#include <ostream>
+#include "logging/LogMacros.hpp"
 #include "math/barycenter.hpp"
-#include "math/math.hpp"
+#include "math/differences.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Quad.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "query/FindClosestEdge.hpp"
+#include "query/FindClosestQuad.hpp"
+#include "query/FindClosestTriangle.hpp"
+#include "query/FindClosestVertex.hpp"
 
 namespace precice {
 namespace query {

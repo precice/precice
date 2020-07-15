@@ -4,8 +4,11 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <numeric>
+#include <stddef.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 struct Column {

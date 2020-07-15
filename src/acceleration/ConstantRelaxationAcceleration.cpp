@@ -1,11 +1,13 @@
-#include <Eigen/Core>
-
 #include "acceleration/ConstantRelaxationAcceleration.hpp"
+#include <Eigen/Core>
+#include <map>
+#include <memory>
+#include <ostream>
 #include "cplscheme/CouplingData.hpp"
-#include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {
@@ -32,8 +34,6 @@ void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
   for (auto &elem : _dataIDs) {
     entries += cplData[elem]->values->size();
   }
-  _designSpecification = Eigen::VectorXd::Zero(entries);
-
   for (DataMap::value_type &pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) {
@@ -57,34 +57,5 @@ void ConstantRelaxationAcceleration::performAcceleration(DataMap &cplData)
   }
 }
 
-/*
- * Returns the design specification corresponding to the given coupling data. 
- * 
- * This information is needed for convergence measurements in the coupling scheme.
- */
-std::map<int, Eigen::VectorXd> ConstantRelaxationAcceleration::getDesignSpecification(
-    DataMap &cplData)
-{
-
-  std::map<int, Eigen::VectorXd> designSpecifications;
-  int                            off = 0;
-  for (int id : _dataIDs) {
-    int             size = cplData[id]->values->size();
-    Eigen::VectorXd q    = Eigen::VectorXd::Zero(size);
-    for (int i = 0; i < size; i++) {
-      q(i) = _designSpecification(i + off);
-    }
-    off += size;
-    std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
-    designSpecifications.insert(pair);
-  }
-  return designSpecifications;
-}
-
-void ConstantRelaxationAcceleration::setDesignSpecification(Eigen::VectorXd &q)
-{
-  _designSpecification = q;
-  PRECICE_ERROR("Design specification for constant relaxation is not supported yet.");
-}
 } // namespace acceleration
 } // namespace precice

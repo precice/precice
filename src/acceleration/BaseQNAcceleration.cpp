@@ -1,16 +1,27 @@
 #include "acceleration/BaseQNAcceleration.hpp"
+#include <Eigen/Core>
+#include <cmath>
+#include <memory>
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
+namespace io {
+class TXTReader;
+class TXTWriter;
+} // namespace io
+
 extern bool syncMode;
 namespace acceleration {
 
@@ -99,10 +110,6 @@ void BaseQNAcceleration::initialize(
   _values       = Eigen::VectorXd::Zero(entries);
   _oldValues    = Eigen::VectorXd::Zero(entries);
 
-  // if design specifiaction not initialized yet
-  if (not(_designSpecification.size() > 0)) {
-    _designSpecification = Eigen::VectorXd::Zero(_residuals.size());
-  }
   /**
    *  make dimensions public to all procs,
    *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
@@ -171,51 +178,10 @@ void BaseQNAcceleration::initialize(
 }
 
 /** ---------------------------------------------------------------------------------------------
- *         setDesignSpecification()
- *
- * @brief: sets a design specification for the fine model optimization problem
- *         i.e., x_star = argmin_x || f(x) - q ||
- *  ---------------------------------------------------------------------------------------------
- */
-void BaseQNAcceleration::setDesignSpecification(
-    Eigen::VectorXd &q)
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(q.size() == _residuals.size(), q.size(), _residuals.size());
-  _designSpecification = q;
-}
-
-/** ---------------------------------------------------------------------------------------------
- *         getDesignSpecification()
- *
- * @brief: Returns the design specification corresponding to the given coupling data.
- *         This information is needed for convergence measurements in the coupling scheme.
- *  ---------------------------------------------------------------------------------------------
- */
-std::map<int, Eigen::VectorXd> BaseQNAcceleration::getDesignSpecification(
-    DataMap &cplData)
-{
-  PRECICE_TRACE();
-  std::map<int, Eigen::VectorXd> designSpecifications;
-  int                            off = 0;
-  for (int id : _dataIDs) {
-    int             size = cplData[id]->values->size();
-    Eigen::VectorXd q    = Eigen::VectorXd::Zero(size);
-    for (int i = 0; i < size; i++) {
-      q(i) = _designSpecification(i + off);
-    }
-    off += size;
-    std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
-    designSpecifications.insert(pair);
-  }
-  return designSpecifications;
-}
-
-/** ---------------------------------------------------------------------------------------------
  *         updateDifferenceMatrices()
  *
- * @brief: computes the current coarse and fine model residual, computes the differences and
- *         updates the difference matrices F and C. Also stores the residuals
+ * @brief: computes the current residual and stores it, computes the differences and
+ *         updates the difference matrices F and C.
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::updateDifferenceMatrices(
@@ -226,6 +192,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   // Compute current residual: vertex-data - oldData
   _residuals = _values;
   _residuals -= _oldValues;
+
+  if (math::equals(utils::MasterSlave::l2norm(_residuals), 0.0)) {
+    PRECICE_WARN("The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
+                 "Maybe you always write the same data or you call advance without "
+                 "providing new data first or you do not use available read data. "
+                 "Or you just converge much further than actually necessary.");
+  }
 
   //if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
@@ -247,6 +220,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
+
+      PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0), "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
+                                                                               "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
+                                                                               "Maybe you always write the same (or only incremented) data or you call advance without "
+                                                                               "providing  new data first.");
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
@@ -288,8 +266,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 /** ---------------------------------------------------------------------------------------------
  *         performAcceleration()
  *
- * @brief: performs one iteration of the quasi Newton acceleration. It steers the execution
- *         of fine and coarse model evaluations and also calls the coarse model optimization.
+ * @brief: performs one iteration of the quasi Newton acceleration.
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::performAcceleration(
@@ -335,9 +312,8 @@ void BaseQNAcceleration::performAcceleration(
     _oldResiduals = _residuals; // Store current residual
 
     // Perform constant relaxation
-    // with residual: x_new = x_old + omega * (res-q)
+    // with residual: x_new = x_old + omega * res
     _residuals *= _initialRelaxation;
-    _residuals -= (_designSpecification * _initialRelaxation);
     _residuals += _oldValues;
     _values = _residuals;
 
@@ -363,17 +339,11 @@ void BaseQNAcceleration::performAcceleration(
       _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
     }
 
-    // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
-    PRECICE_ASSERT(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
-    _residuals -= _designSpecification;
-
     /**
      *  === update and apply preconditioner ===
      *
      * The preconditioner is only applied to the matrix V and the columns that are inserted into the
      * QR-decomposition of V.
-     * Note: here, the _residuals are H(x)- x - q, i.e., residual of the fixed-point iteration
-     *       minus the design specification of the optimization problem (!= null if MM is used)
      */
 
     _preconditioner->update(false, _values, _residuals);
@@ -406,8 +376,6 @@ void BaseQNAcceleration::performAcceleration(
      */
     _values = _oldValues + xUpdate + _residuals; // = x^k + delta_x + r^k - q^k
 
-    /// todo maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
-
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
     if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
@@ -434,7 +402,11 @@ void BaseQNAcceleration::performAcceleration(
     }
 
     if (std::isnan(utils::MasterSlave::l2norm(xUpdate))) {
-      PRECICE_ERROR("The coupling iteration in time step " << tSteps << " failed to converge and NaN values occurred throughout the coupling process. ");
+      PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
+                    "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
+                    "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
+                    "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
+                    "filter or increase its threshold (larger epsilon).");
     }
   }
 
@@ -468,6 +440,7 @@ void BaseQNAcceleration::applyFilter()
     std::vector<int> delIndices(0);
     _qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
     // start with largest index (as V,W matrices are shrinked and shifted
+
     for (int i = delIndices.size() - 1; i >= 0; i--) {
 
       removeMatrixColumn(delIndices[i]);
@@ -542,11 +515,7 @@ void BaseQNAcceleration::iterationsConverged(
   concatenateCouplingData(cplData);
   updateDifferenceMatrices(cplData);
 
-  // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
-  PRECICE_ASSERT(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
-  _residuals -= _designSpecification;
-
-  if (_matrixCols.front() == 0) { // Did only one iteration
+  if (not _matrixCols.empty() && _matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
 

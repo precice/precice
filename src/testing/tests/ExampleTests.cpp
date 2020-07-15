@@ -1,6 +1,12 @@
-#include "testing/Testing.hpp"
-
+#include <Eigen/Core>
+#include <memory>
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
+#include "utils/MasterSlave.hpp"
 
 using namespace precice;
 

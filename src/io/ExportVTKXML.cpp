@@ -1,16 +1,23 @@
 #include "ExportVTKXML.hpp"
 #include <Eigen/Core>
+#include <algorithm>
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include <memory>
 #include <string>
 #include "Constants.hpp"
+#include "io/Export.hpp"
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Quad.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace io {

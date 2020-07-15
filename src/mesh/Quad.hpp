@@ -1,12 +1,16 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include "mesh/Edge.hpp"
 #include "mesh/RangeAccessor.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {
+class Vertex;
 
 /// Quadrilateral (or Quadrangle) geometric primitive.
 class Quad {

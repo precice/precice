@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include "math/differences.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace math {

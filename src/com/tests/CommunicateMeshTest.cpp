@@ -1,13 +1,23 @@
 #ifndef PRECICE_NO_MPI
 
+#include <Eigen/Core>
+#include <algorithm>
+#include <memory>
 #include "com/CommunicateMesh.hpp"
-#include "com/MPIDirectCommunication.hpp"
-#include "mesh/Edge.hpp"
+#include "com/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Triangle.hpp"
-#include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Parallel.hpp"
+#include "utils/MasterSlave.hpp"
+
+namespace precice {
+namespace mesh {
+class Edge;
+class Triangle;
+class Vertex;
+} // namespace mesh
+} // namespace precice
 
 using namespace precice;
 using namespace precice::com;

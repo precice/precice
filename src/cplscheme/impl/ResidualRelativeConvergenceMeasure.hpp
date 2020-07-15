@@ -1,6 +1,9 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <limits>
+#include <ostream>
+#include <string>
 #include "../CouplingData.hpp"
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
@@ -43,10 +46,9 @@ public:
 
   virtual void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification)
+      const Eigen::VectorXd &newValues)
   {
-    _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
+    _normDiff = utils::MasterSlave::l2norm(newValues - oldValues);
     if (_isFirstIteration) {
       _normFirstResidual = _normDiff;
       _isFirstIteration  = false;

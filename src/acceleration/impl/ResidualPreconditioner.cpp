@@ -1,5 +1,8 @@
 #include "acceleration/impl/ResidualPreconditioner.hpp"
+#include <stddef.h>
+#include <vector>
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {

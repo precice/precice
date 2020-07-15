@@ -1,10 +1,15 @@
 #pragma once
 
+#include <string>
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
+namespace xml {
+class XMLTag;
+} // namespace xml
+
 namespace com {
 
 /**

@@ -1,9 +1,18 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <string>
+#include "io/Export.hpp"
 #include "io/ExportVTK.hpp"
-#include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Triangle.hpp"
-#include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+
+namespace precice {
+namespace mesh {
+class Edge;
+class Vertex;
+} // namespace mesh
+} // namespace precice
 
 BOOST_AUTO_TEST_SUITE(IOTests)
 

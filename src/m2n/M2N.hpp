@@ -1,13 +1,22 @@
 #pragma once
 
 #include <map>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <vector>
 #include "DistributedComFactory.hpp"
 #include "SharedPointer.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "m2n/DistributedCommunication.hpp"
 #include "mesh/SharedPointer.hpp"
 
 namespace precice {
+namespace mesh {
+class Mesh;
+} // namespace mesh
+
 namespace m2n {
 
 // Forward declaration to friend unit tests which only use the master com

@@ -1,20 +1,21 @@
 #include "LogConfiguration.hpp"
-
-#include <fstream>
-#include <string>
-
-#include <boost/program_options.hpp>
-
+#include <algorithm>
 #include <boost/core/null_deleter.hpp>
-
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/console.hpp>
-
-#include "precice/impl/versions.hpp"
+#include <boost/program_options.hpp>
+#include <deque>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <map>
+#include <sstream>
+#include <string>
+#include <utility>
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 

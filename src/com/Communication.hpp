@@ -1,6 +1,11 @@
 #pragma once
 
+#include <set>
+#include <stddef.h>
+#include <string>
+#include <vector>
 #include "Request.hpp"
+#include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -146,6 +151,19 @@ public:
                                          std::string const &  tag,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) = 0;
+
+  /** Establishes the Master-Slave connection.
+   *
+   * @param[in] participantName Name of the calling participant.
+   * @param[in] tag Tag for establishing this connection
+   * @param[in] rank The current rank in the participant 
+   * @param[in] size Total size of the participant
+   *
+   */
+  void connectMasterSlaves(std::string const &participantName,
+                           std::string const &tag,
+                           int                rank,
+                           int                size);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.

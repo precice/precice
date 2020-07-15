@@ -1,8 +1,11 @@
 #pragma once
 
 #include <chrono>
+#include <iosfwd>
 #include <map>
+#include <stddef.h>
 #include <string>
+#include <utility>
 #include <vector>
 #include "Event.hpp"
 
@@ -91,7 +94,6 @@ private:
   std::chrono::steady_clock::time_point finalizedAtTicks;
 
   bool isFinalized = true;
-  int  rank        = 0;
 };
 
 /// Holds data aggregated from all MPI ranks for one event

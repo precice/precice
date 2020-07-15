@@ -1,12 +1,21 @@
 #include <Eigen/Core>
+#include <algorithm>
+#include <deque>
+#include <iosfwd>
+#include <memory>
+#include <string>
+#include <vector>
+#include "logging/Logger.hpp"
+#include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Quad.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Helpers.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
@@ -192,22 +201,19 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
 
   mesh.computeBoundingBox();
 
-  mesh::Mesh::BoundingBox bBox = mesh.getBoundingBox();
-  auto                    cog  = mesh.getCOG();
+  mesh::BoundingBox bBox = mesh.getBoundingBox();
+  auto              cog  = bBox.center();
 
-  mesh::Mesh::BoundingBox referenceBox = {{-1.0, 2.0},
-                                          {0.0, 4.0}};
+  mesh::BoundingBox referenceBox({-1.0, 2.0,
+                                  0.0, 4.0});
 
   std::vector<double> referenceCOG = {0.5, 2.0};
 
-  BOOST_TEST(bBox.size() == 2);
+  BOOST_TEST(bBox.getDimension() == 2);
   BOOST_TEST(cog.size() == 2);
+  BOOST_TEST(referenceBox == bBox);
 
-  for (size_t d = 0; d < bBox.size(); d++) {
-    BOOST_TEST(referenceBox[d].first == bBox[d].first);
-    BOOST_TEST(referenceBox[d].second == bBox[d].second);
-  }
-  for (size_t d = 0; d < cog.size(); d++) {
+  for (decltype(cog.size()) d = 0; d < cog.size(); d++) {
     BOOST_TEST(referenceCOG[d] == cog[d]);
   }
 }
@@ -228,23 +234,20 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
 
   mesh.computeBoundingBox();
 
-  mesh::Mesh::BoundingBox bBox = mesh.getBoundingBox();
-  auto                    cog  = mesh.getCOG();
+  mesh::BoundingBox bBox = mesh.getBoundingBox();
+  auto              cog  = bBox.center();
 
-  mesh::Mesh::BoundingBox referenceBox = {{-1.0, 3.5},
-                                          {0.0, 4.0},
-                                          {-3.0, 8.0}};
+  mesh::BoundingBox referenceBox({-1.0, 3.5,
+                                  0.0, 4.0,
+                                  -3.0, 8.0});
 
   std::vector<double> referenceCOG = {1.25, 2.0, 2.5};
 
-  BOOST_TEST(bBox.size() == 3);
+  BOOST_TEST(bBox.getDimension() == 3);
   BOOST_TEST(cog.size() == 3);
+  BOOST_TEST(referenceBox == bBox);
 
-  for (size_t d = 0; d < bBox.size(); d++) {
-    BOOST_TEST(referenceBox[d].first == bBox[d].first);
-    BOOST_TEST(referenceBox[d].second == bBox[d].second);
-  }
-  for (size_t d = 0; d < cog.size(); d++) {
+  for (decltype(cog.size()) d = 0; d < cog.size(); d++) {
     BOOST_TEST(referenceCOG[d] == cog[d]);
   }
 }
@@ -498,6 +501,54 @@ BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
   for (const auto &vertex : mesh.vertices()) {
     BOOST_TEST(vertex.getNormal().allFinite());
   }
+}
+
+BOOST_AUTO_TEST_CASE(ResizeDataGrow)
+{
+  PRECICE_TEST(1_rank);
+  precice::mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
+  const auto &        values = mesh.createData("Data", 1)->values();
+
+  // Create mesh
+  mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
+  mesh.createVertex(Vector3d(1.0, 0.0, 1.0));
+
+  BOOST_TEST(mesh.vertices().size() == 2);
+  mesh.allocateDataValues();
+  BOOST_TEST(values.size() == 2);
+
+  mesh.createVertex(Vector3d(1.0, 1.0, 1.0));
+  mesh.createVertex(Vector3d(2.0, 0.0, 2.0));
+  mesh.createVertex(Vector3d(2.0, 0.0, 2.1));
+
+  BOOST_TEST(mesh.vertices().size() == 5);
+  mesh.allocateDataValues();
+  BOOST_TEST(values.size() == 5);
+}
+
+BOOST_AUTO_TEST_CASE(ResizeDataShrink)
+{
+  PRECICE_TEST(1_rank);
+  precice::mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
+  const auto &        values = mesh.createData("Data", 1)->values();
+
+  // Create mesh
+  mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
+  mesh.createVertex(Vector3d(1.0, 0.0, 1.0));
+  mesh.createVertex(Vector3d(1.0, 1.0, 1.0));
+  mesh.createVertex(Vector3d(2.0, 2.0, 2.0));
+
+  BOOST_TEST(mesh.vertices().size() == 4);
+  mesh.allocateDataValues();
+  BOOST_TEST(values.size() == 4);
+
+  mesh.clear();
+  mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
+  mesh.createVertex(Vector3d(1.0, 0.0, 1.0));
+
+  BOOST_TEST(mesh.vertices().size() == 2);
+  mesh.allocateDataValues();
+  BOOST_TEST(values.size() == 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh

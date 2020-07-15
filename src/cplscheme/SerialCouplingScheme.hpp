@@ -1,7 +1,11 @@
 #pragma once
 
+#include <string>
 #include "BaseCouplingScheme.hpp"
+#include "BiCouplingScheme.hpp"
+#include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
+#include "m2n/SharedPointer.hpp"
 
 // Forward declaration to friend the boost test struct
 namespace CplSchemeTests {
@@ -19,7 +23,7 @@ namespace cplscheme {
  * For more information, look into Benjamin's thesis, Section 3.5. 
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
-class SerialCouplingScheme : public BaseCouplingScheme {
+class SerialCouplingScheme : public BiCouplingScheme {
 public:
   /**
  * @brief Constructor.
@@ -27,12 +31,14 @@ public:
  * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
  * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
  * @param[in] timeWindowSize Simulation time window size.
- * @param[in] validDigits TODO
+ * @param[in] validDigits valid digits for computation of the remainder of a time window
  * @param[in] firstParticipant Name of participant starting simulation.
  * @param[in] secondParticipant Name of second participant in coupling.
  * @param[in] localParticipant Name of participant using this coupling scheme.
- * @param[in] m2n Communication object for com. between participants. TODO?
- * TODO add dtMethod, cplMode, maxIterations
+ * @param[in] m2n Communication object for com. between participants.
+ * @param[in] dtMethod Method used for determining the time window size, see https://github.com/precice/precice/wiki/Adapter's-Time-Step-Sizes
+ * @param[in] cplMode Set implicit or explicit coupling
+ * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
  */
   SerialCouplingScheme(
       double                        maxTime,
@@ -45,28 +51,51 @@ public:
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
-      int                           maxIterations = 1);
-
-  /**
-   * @brief TODO
-   *
-   * @param[in] startTime TODO
-   * @param[in] startTimeWindow TODO
-   */
-  virtual void initialize(double startTime, int startTimeWindow);
-
-  virtual void initializeData();
-
-  virtual void advance();
-
-  logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
+      int                           maxIterations = -1);
 
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
 
 private:
-  virtual void explicitAdvance();
+  logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
-  virtual void implicitAdvance();
+  /// Determines, if the time window size is set by the participant.
+  bool _participantSetsTimeWindowSize = false;
+
+  /// Determines, if the time window size is received by the participant.
+  bool _participantReceivesTimeWindowSize = false;
+
+  /// Receives and sets the time window size, if this participant is the one to receive
+  void receiveAndSetTimeWindowSize();
+
+  /**
+   * @brief Exchanges data between the participants of the SerialCouplingSchemes and applies acceleration.
+   * @returns true, if iteration converged
+   */
+  bool exchangeDataAndAccelerate() override;
+
+  /**
+   * @brief SerialCouplingSchemes applies acceleration to send data
+   * @returns DataMap being accelerated
+   */
+  DataMap &getAccelerationData() override
+  {
+    return getSendData();
+  }
+
+  /**
+   * @brief determine whether data has to be sent/received
+   */
+  void initializeImplementation() override;
+
+  /**
+   * @brief noop for SerialCouplingScheme
+   */
+  void mergeData() override{};
+
+  /**
+   * @brief Exchanges data, if it has to be initialized.
+   */
+  void exchangeInitialData() override;
 };
 
 } // namespace cplscheme

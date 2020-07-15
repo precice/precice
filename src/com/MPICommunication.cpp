@@ -1,7 +1,10 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPICommunication.hpp"
+#include <ostream>
+#include <stddef.h>
 #include "MPIRequest.hpp"
+#include "logging/LogMacros.hpp"
 
 template <size_t>
 struct MPI_Select_unsigned_integer_datatype;
