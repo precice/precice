@@ -723,7 +723,16 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
         break;
       }
     }
-    PRECICE_CHECK(j != vsize, "Position " << i << "=" << ids[i] << " unknown!");
+    if (j == vsize) {
+      std::ostringstream err;
+      err << "Unable to find a vertex on mesh \"" << mesh->getName() << "\" at position (";
+      err << posMatrix.col(i)[0] << ", " << posMatrix.col(i)[1];
+      if (_dimensions == 3) {
+        err << ", " << posMatrix.col(i)[2];
+      }
+      err << "). The request failed for query " << i+1 << " out of " << size << '.';
+      PRECICE_ERROR(err.str());
+    }
     ids[i] = j;
   }
 }
@@ -1490,7 +1499,7 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
   const MeshContext *context = _accessor->usedMeshContextByName(meshName);
-  PRECICE_CHECK(context && context->mesh,
+  PRECICE_ASSERT(context && context->mesh,
                 "Participant \"" << _accessorName << "\" does not use mesh \"" << meshName << "\"!");
   return *context->mesh;
 }

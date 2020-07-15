@@ -47,6 +47,10 @@ public:
   {
     return 0;
   }
+
+protected:
+  /// Checks if all dataIDs are contained in cplData
+  void checkDataIDs(DataMap const &cplData) const;
 };
 } // namespace acceleration
 } // namespace precice
