@@ -1,3 +1,4 @@
+#include "partition/ProvidedPartition.hpp"
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -15,7 +16,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
-#include "partition/ProvidedPartition.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -51,7 +51,10 @@ void ProvidedPartition::communicate()
   for (auto &m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
 
-      PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh.");
+      PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh. "
+                                                 "Please either switch two-level initialization off in your m2n definition, or "
+                                                 "adapt your mesh setup such that each provided mesh is only received by maximum one "
+                                                 "participant.");
       twoLevelInitAlreadyUsed = true;
 
       Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);

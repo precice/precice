@@ -172,7 +172,7 @@ CouplingData *MultiCouplingScheme::getData(
   return nullptr;
 }
 
-void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasure *convergenceMeasure, int dataID)
+void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID)
 {
   convergenceMeasure->couplingData = getData(dataID);
   PRECICE_ASSERT(convergenceMeasure->couplingData != nullptr);

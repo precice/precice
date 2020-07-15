@@ -138,7 +138,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
       // merge send and receive data for all pp calls
       mergeData();
       // setup convergence measures
-      for (ConvergenceMeasure &convergenceMeasure : _convergenceMeasures) {
+      for (ConvergenceMeasureContext &convergenceMeasure : _convergenceMeasures) {
         int dataID = convergenceMeasure.data->getID();
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
@@ -294,7 +294,7 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
       utils::shiftSetFirst(pair.second->oldValues, values);
     }
   } else {
-    PRECICE_ERROR("Called extrapolation with order != 1,2.");
+    PRECICE_ASSERT(false, "Extrapolation order is invalid.");
   }
 }
 
@@ -476,7 +476,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   PRECICE_TRACE();
   PRECICE_DEBUG("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
-  for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
+  for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     if (convMeasure.couplingData->oldValues.cols() < 1) {
       utils::append(convMeasure.couplingData->oldValues,
@@ -505,7 +505,7 @@ void BaseCouplingScheme::setAcceleration(
 void BaseCouplingScheme::newConvergenceMeasurements()
 {
   PRECICE_TRACE();
-  for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
+  for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
     convMeasure.measure->newMeasurementSeries();
   }
@@ -514,15 +514,16 @@ void BaseCouplingScheme::newConvergenceMeasurements()
 void BaseCouplingScheme::addConvergenceMeasure(
     mesh::PtrData               data,
     bool                        suffices,
-    impl::PtrConvergenceMeasure measure)
+    impl::PtrConvergenceMeasure measure,
+    bool                        doesLogging)
 {
-  ConvergenceMeasure convMeasure;
+  ConvergenceMeasureContext convMeasure;
   convMeasure.data         = std::move(data);
   convMeasure.couplingData = nullptr;
   convMeasure.suffices     = suffices;
   convMeasure.measure      = std::move(measure);
+  convMeasure.doesLogging  = doesLogging;
   _convergenceMeasures.push_back(convMeasure);
-  _firstResiduumNorm.push_back(0);
 }
 
 bool BaseCouplingScheme::measureConvergence()
@@ -537,7 +538,7 @@ bool BaseCouplingScheme::measureConvergence()
     _convergenceWriter->writeData("Iteration", _iterations);
   }
   for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
-    ConvergenceMeasure &convMeasure = _convergenceMeasures[i];
+    ConvergenceMeasureContext &convMeasure = _convergenceMeasures[i];
 
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
@@ -545,14 +546,9 @@ bool BaseCouplingScheme::measureConvergence()
 
     convMeasure.measure->measure(oldValues, *convMeasure.couplingData->values);
 
-    if (not utils::MasterSlave::isSlave()) {
-      std::stringstream sstm;
-      sstm << "ResNorm(" << convMeasure.data->getName() << ")";
-      _convergenceWriter->writeData(sstm.str(), convMeasure.measure->getNormResidual());
+    if (not utils::MasterSlave::isSlave() && convMeasure.doesLogging) {
+      _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());
     }
-
-    if (_iterations == 1)
-      _firstResiduumNorm[i] = convMeasure.measure->getNormResidual();
 
     if (not convMeasure.measure->isConvergence()) {
       allConverged = false;
@@ -591,14 +587,17 @@ void BaseCouplingScheme::initializeTXTWriters()
     }
 
     if (not doesFirstStep()) {
-      for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-        std::stringstream sstm, sstm2;
-        sstm << "AvgConvRate(" << convMeasure.data->getName() << ")";
-        sstm2 << "ResNorm(" << convMeasure.data->getName() << ")";
-        _iterationsWriter->addData(sstm.str(), io::TXTTableWriter::DOUBLE);
-        _convergenceWriter->addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
+      for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
+
+        if (convMeasure.doesLogging) {
+          _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
+        }
       }
-      _iterationsWriter->addData("DeletedColumns", io::TXTTableWriter::INT);
+      if (getAcceleration()) {
+        _iterationsWriter->addData("QNColumns", io::TXTTableWriter::INT);
+        _iterationsWriter->addData("DeletedQNColumns", io::TXTTableWriter::INT);
+        _iterationsWriter->addData("DroppedQNColumns", io::TXTTableWriter::INT);
+      }
     }
   }
 }
@@ -613,21 +612,10 @@ void BaseCouplingScheme::advanceTXTWriters()
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
 
-    if (not doesFirstStep()) {
-      int i = -1;
-      for (ConvergenceMeasure &convMeasure : _convergenceMeasures) {
-        i++;
-
-        std::stringstream sstm;
-        sstm << "AvgConvRate(" << convMeasure.data->getName() << ")";
-        if (math::equals(_firstResiduumNorm[i], 0.)) {
-          _iterationsWriter->writeData(sstm.str(), std::numeric_limits<double>::infinity());
-        } else {
-          double avgConvRate = _convergenceMeasures[i].measure->getNormResidual() / _firstResiduumNorm[i];
-          _iterationsWriter->writeData(sstm.str(), std::pow(avgConvRate, 1. / (double) _iterations));
-        }
-      }
-      _iterationsWriter->writeData("DeletedColumns", _deletedColumnsPPFiltering);
+    if (not doesFirstStep() && getAcceleration()) {
+      _iterationsWriter->writeData("QNColumns", getAcceleration()->getLSSystemCols());
+      _iterationsWriter->writeData("DeletedQNColumns", getAcceleration()->getDeletedColumns());
+      _iterationsWriter->writeData("DroppedQNColumns", getAcceleration()->getDroppedColumns());
     }
   }
 }
@@ -678,7 +666,6 @@ bool BaseCouplingScheme::accelerate()
   // coupling iteration converged for current time window. Advance in time.
   if (convergence) {
     if (getAcceleration()) {
-      _deletedColumnsPPFiltering = getAcceleration()->getDeletedColumns();
       getAcceleration()->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();

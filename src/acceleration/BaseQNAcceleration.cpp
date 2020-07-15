@@ -68,6 +68,7 @@ void BaseQNAcceleration::initialize(
     DataMap &cplData)
 {
   PRECICE_TRACE(cplData.size());
+  checkDataIDs(cplData);
 
   /*
   std::stringstream sss;
@@ -92,8 +93,6 @@ void BaseQNAcceleration::initialize(
   std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   for (auto &elem : _dataIDs) {
-    PRECICE_CHECK(utils::contained(elem, cplData),
-                  "Data with ID " << elem << " is not contained in data given at initialization!");
     entries += cplData[elem]->values->size();
     subVectorSizes.push_back(cplData[elem]->values->size());
   }
@@ -256,6 +255,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         if (_matrixCols.back() == 0) {
           _matrixCols.pop_back();
         }
+        _nbDropCols++;
       }
     }
     _oldResiduals = _residuals; // Store residuals
@@ -355,6 +355,11 @@ void BaseQNAcceleration::performAcceleration(
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
+    }
+
+    if (_firstIteration) {
+      _nbDelCols  = 0;
+      _nbDropCols = 0;
     }
 
     // apply the configured filter to the LS system
@@ -507,7 +512,6 @@ void BaseQNAcceleration::iterationsConverged(
 
   its = 0;
   tSteps++;
-  _nbDelCols = 0;
 
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
@@ -561,6 +565,7 @@ void BaseQNAcceleration::iterationsConverged(
     }
   } else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
+    _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
     PRECICE_DEBUG("Removing " << toRemove << " cols from least-squares system with " << getLSSystemCols() << " cols");
     PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
@@ -591,7 +596,6 @@ void BaseQNAcceleration::removeMatrixColumn(
 {
   PRECICE_TRACE(columnIndex, _matrixV.cols());
 
-  // debugging information, can be removed
   _nbDelCols++;
 
   PRECICE_ASSERT(_matrixV.cols() > 1);
@@ -625,12 +629,17 @@ void BaseQNAcceleration::importState(
 {
 }
 
-int BaseQNAcceleration::getDeletedColumns()
+int BaseQNAcceleration::getDeletedColumns() const
 {
   return _nbDelCols;
 }
 
-int BaseQNAcceleration::getLSSystemCols()
+int BaseQNAcceleration::getDroppedColumns() const
+{
+  return _nbDropCols;
+}
+
+int BaseQNAcceleration::getLSSystemCols() const
 {
   int cols = 0;
   for (int col : _matrixCols) {

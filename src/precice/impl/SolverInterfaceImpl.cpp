@@ -182,14 +182,18 @@ void SolverInterfaceImpl::configure(
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useMaster(),
                  "A parallel participant needs a master communication");
   PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useMaster()),
-                "You cannot use a master with a serial participant.");
+                "You cannot use a master communication with a serial participant. "
+                "If you do not know exactly what a master communication is and why you want to use it "
+                "you probably just want to remove the master tag from the preCICE configuration.");
 
   utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
   _participants = config.getParticipantConfiguration()->getParticipants();
   configureM2Ns(config.getM2NConfiguration());
 
-  PRECICE_CHECK(_participants.size() > 1, "At least two participants need to be defined!");
+  PRECICE_CHECK(_participants.size() > 1, "In the preCICE configuration, only one participant is defined. "
+                                          "One participant makes no coupled simulation. Please add at least "
+                                          "another one.");
   configurePartitions(config.getM2NConfiguration());
 
   cplscheme::PtrCouplingSchemeConfiguration cplSchemeConfig =
@@ -726,7 +730,16 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
         break;
       }
     }
-    PRECICE_CHECK(j != vsize, "Position " << i << "=" << ids[i] << " unknown!");
+    if (j == vsize) {
+      std::ostringstream err;
+      err << "Unable to find a vertex on mesh \"" << mesh->getName() << "\" at position (";
+      err << posMatrix.col(i)[0] << ", " << posMatrix.col(i)[1];
+      if (_dimensions == 3) {
+        err << ", " << posMatrix.col(i)[2];
+      }
+      err << "). The request failed for query " << i+1 << " out of " << size << '.';
+      PRECICE_ERROR(err.str());
+    }
     ids[i] = j;
   }
 }
@@ -1494,7 +1507,7 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
   const MeshContext *context = _accessor->usedMeshContextByName(meshName);
-  PRECICE_CHECK(context && context->mesh,
+  PRECICE_ASSERT(context && context->mesh,
                 "Participant \"" << _accessorName << "\" does not use mesh \"" << meshName << "\"!");
   return *context->mesh;
 }
