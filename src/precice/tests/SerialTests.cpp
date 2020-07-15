@@ -744,6 +744,62 @@ BOOST_AUTO_TEST_CASE(testImplicit)
   }
 }
 
+/// Test simple coupled simulation with coupling iterations.
+BOOST_AUTO_TEST_CASE(testImplicitInitData)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  using namespace precice::constants;
+
+  SolverInterface couplingInterface(context.name, _pathToTests + "implicitInitData.xml", 0, 1);
+
+  int dimensions = couplingInterface.getDimensions();
+  std::string meshName;
+  std::string writeDataName;
+  std::string readDataName;
+
+  if (context.isNamed("SolverOne")) {
+    meshName = "MeshOne";
+    writeDataName = "Forces";
+    readDataName = "Velocities";
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    meshName = "MeshTwo";
+    writeDataName = "Velocities";
+    readDataName = "Forces";
+  }
+  int meshID = couplingInterface.getMeshID(meshName);
+  int writeDataID     = couplingInterface.getDataID(writeDataName, meshID);
+  int readDataID     = couplingInterface.getDataID(readDataName, meshID);
+  std::vector<double> vertex(dimensions, 0);
+  int                 vertexID = couplingInterface.setMeshVertex(meshID, vertex.data());
+
+  double dt = 0;
+  dt = couplingInterface.initialize();
+  std::vector<double> data(dimensions, 0);
+  const std::string& cowid = actionWriteInitialData();
+
+  if(couplingInterface.isActionRequired(cowid)){
+    couplingInterface.writeVectorData(writeDataID, vertexID, data.data());
+    couplingInterface.markActionFulfilled(cowid);
+  }
+
+  couplingInterface.initializeData();
+
+  while (couplingInterface.isCouplingOngoing()) {
+    if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())) {
+      couplingInterface.markActionFulfilled(actionWriteIterationCheckpoint());
+    }
+    couplingInterface.readVectorData(readDataID, vertexID, data.data());
+    couplingInterface.writeVectorData(writeDataID, vertexID, data.data());
+    dt = couplingInterface.advance(dt);
+    if (couplingInterface.isActionRequired(actionReadIterationCheckpoint())) {
+      couplingInterface.markActionFulfilled(actionReadIterationCheckpoint());
+    }
+  }
+  couplingInterface.finalize();
+}
+
 /// Tests stationary mapping with solver provided meshes.
 void runTestStationaryMappingWithSolverMesh(std::string const &config, int dim, TestContext const &context)
 {
