@@ -99,8 +99,8 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
 
-      PRECICE_CHECK(_sockets.count(requesterRank) == 0,
-                    "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
+      PRECICE_ASSERT(_sockets.count(requesterRank) == 0,
+                     "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
 
       _sockets[requesterRank] = socket;
       // send and receive expect a rank from the acceptor perspective.
@@ -116,9 +116,9 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       }
 
       PRECICE_ASSERT(requesterCommunicatorSize > 0,
-          "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
+                     "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
       PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
-          "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize<< " but should be " << peerCount);
+                     "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize << " but should be " << peerCount);
     } while (++peerCurrent < requesterCommunicatorSize);
 
     acceptor.close();
@@ -152,7 +152,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
   try {
     std::string ipAddress = getIpAddress();
-    PRECICE_CHECK(not ipAddress.empty(), "Network \"" << _networkName << "\" not found for socket connection!");
+    PRECICE_ASSERT(not ipAddress.empty(), "Network \"" << _networkName << "\" not found for socket connection!");
 
     using asio::ip::tcp;
 

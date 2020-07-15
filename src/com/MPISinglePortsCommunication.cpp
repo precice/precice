@@ -1,9 +1,9 @@
 #ifndef PRECICE_NO_MPI
 
-#include <mpi.h>
 #include "MPISinglePortsCommunication.hpp"
 #include <boost/filesystem.hpp>
 #include <memory>
+#include <mpi.h>
 #include <ostream>
 #include <utility>
 #include "ConnectionInfoPublisher.hpp"
@@ -80,11 +80,11 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
     }
 
     PRECICE_ASSERT(requesterCommunicatorSize > 0,
-                  "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
+                   "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
     PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
-                  "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize<< " but should be " << peerCount);
-    PRECICE_CHECK(_direct.count(requesterRank) == 0,
-                  "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
+                   "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize << " but should be " << peerCount);
+    PRECICE_ASSERT(_direct.count(requesterRank) == 0,
+                   "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
 
     _direct.emplace(requesterRank, communicator);
 
@@ -92,7 +92,7 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
   } while (++peerCurrent < peerCount);
 
   _initialCommSize = peerCount;
-  _isConnected = true;
+  _isConnected     = true;
 }
 
 /// requesterCommunicatorSize is not used, since connection is always made on the entire communicator
@@ -161,7 +161,7 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   _direct.emplace(acceptorRank, communicator);
 
   _initialCommSize = requesterCommunicatorSize;
-  _isConnected = true;
+  _isConnected     = true;
 }
 
 void MPISinglePortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
@@ -210,7 +210,7 @@ void MPISinglePortsCommunication::closeConnection()
   }
 
   _initialCommSize = -1;
-  _isConnected = false;
+  _isConnected     = false;
 }
 
 MPI_Comm &MPISinglePortsCommunication::communicator(int rank)
