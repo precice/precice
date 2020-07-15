@@ -20,6 +20,7 @@ In order to get your contributions into the code base as smoothly as possible, p
   Install `clang-format-8` and run `tools/formatting/format-all` to format your code.
 * Submit a pull request to the repository in the preCICE organization.  
   See [Collaboration workflow with pull requests and issues][workflow] and [Creating a pull request][pullrequest]
+* Add an entry for our `CHANGELOG.md` as a file `docs/changelog/123.md`, where `123` your Pull Request number.
 
 ## Taking code from other projects
 We believe in the power of Open Source or Free Software Software to share and reuse code from other projects. However, Free Software is not public domain, and not every code could be reused in every other project.
