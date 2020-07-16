@@ -243,6 +243,18 @@ void ReceivedPartition::compute()
   }
 }
 
+namespace {
+std::string errorMeshFilteredOut(const std::string &meshName)
+{
+  return "The re-partitioning completely filtered out the mesh \"" + meshName +
+         "\" received on this rank at the coupling interface. "
+         "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
+         "Please check your geometry setup again. Small overlaps or gaps are no problem. "
+         "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
+         "of the decomposition strategy might be necessary.";
+}
+} // namespace
+
 void ReceivedPartition::filterByBoundingBox()
 {
   PRECICE_TRACE(_geometricFilter);
@@ -270,13 +282,7 @@ void ReceivedPartition::filterByBoundingBox()
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
 
       if (areProvidedMeshesEmpty()) {
-        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
-                          " received on this rank at the coupling interface. "
-                          "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-                          "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-                          "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
-                          "of the decomposition strategy might be necessary.";
-        PRECICE_CHECK(not _mesh->vertices().empty(), msg);
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
       }
 
     } else { // Master
@@ -305,13 +311,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->addMesh(filteredMesh);
 
       if (areProvidedMeshesEmpty()) {
-        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
-                          " received on this rank at the coupling interface. "
-                          "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-                          "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-                          "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
-                          "of the decomposition strategy might be necessary.";
-        PRECICE_CHECK(not _mesh->vertices().empty(), msg);
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
       }
     }
   } else {
@@ -335,13 +335,7 @@ void ReceivedPartition::filterByBoundingBox()
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
 
       if (areProvidedMeshesEmpty()) {
-        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
-                          " received on this rank at the coupling interface. "
-                          "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-                          "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-                          "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
-                          "of the decomposition strategy might be necessary.";
-        PRECICE_CHECK(not filteredMesh.vertices().empty(), msg);
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
       }
 
       PRECICE_DEBUG("Bounding box filter, filtered from "
