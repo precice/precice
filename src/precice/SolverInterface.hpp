@@ -145,7 +145,7 @@ public:
   /**
    * @brief Finalizes preCICE.
    *
-   * @pre initialize() has been called successfully.
+   * @pre finalize() has not been called.
    *
    * @post Communication channels are closed.
    * @post Meshes and data are deallocated
@@ -246,7 +246,7 @@ public:
    * @brief Returns whether the solver has to evaluate the surrogate model representation.
    *
    * @deprecated
-   * Only necessary for deprecated manifold mapping.
+   * Was necessary for deleted manifold mapping. Always returns false.
    *
    * @returns whether the surrogate model has to be evaluated.
    *
@@ -261,7 +261,7 @@ public:
    * @brief Checks if the solver has to evaluate the fine model representation.
    *
    * @deprecated
-   * Only necessary for deprecated manifold mapping.
+   * Was necessary for deprecated manifold mapping. Always returns true.
    *
    * @returns whether the fine model has to be evaluated.
    *

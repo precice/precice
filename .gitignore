@@ -9,6 +9,8 @@
 .sconsign.dblite
 .sconf_temp
 \#*#
+.vscode
+*.DS_STORE
 core
 build
 GTAGS

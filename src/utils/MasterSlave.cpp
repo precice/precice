@@ -1,8 +1,14 @@
 //#ifndef PRECICE_NO_MPI
 
 #include "MasterSlave.hpp"
-
+#include <Eigen/Core>
+#include <math.h>
+#include <memory>
+#include <ostream>
+#include <string>
 #include "com/Communication.hpp"
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {

@@ -1,19 +1,26 @@
-#include "testing/Testing.hpp"
-
+#include <Eigen/Core>
+#include <algorithm>
+#include <memory>
+#include "logging/LogMacros.hpp"
+#include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
-#include "math/math.hpp"
+#include "math/constants.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(NearestNeighborMapping, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(NearestNeighborMapping)
 
 BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 {
+  PRECICE_TEST(1_rank);
   int dimensions = 2;
   using testing::equals;
 
@@ -94,6 +101,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 
 BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
 {
+  PRECICE_TEST(1_rank);
   int dimensions = 2;
 
   // Create mesh to map from

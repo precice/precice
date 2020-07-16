@@ -7,7 +7,6 @@
 
 int main(int argc, char **argv)
 {
-  std::cout << "Starting SolverDummy...\n";
   int commRank = 0;
   int commSize = 1;
 
@@ -15,8 +14,7 @@ int main(int argc, char **argv)
   using namespace precice::constants;
 
   if (argc != 4) {
-    std::cout << "Usage: ./solverdummy configFile solverName meshName\n";
-    std::cout << '\n';
+    std::cout << "Usage: ./solverdummy configFile solverName meshName\n\n";
     std::cout << "Parameter description\n";
     std::cout << "  configurationFile: Path and filename of preCICE configuration\n";
     std::cout << "  solverName:        SolverDummy participant name in preCICE configuration\n";
@@ -27,18 +25,16 @@ int main(int argc, char **argv)
   std::string configFileName(argv[1]);
   std::string solverName(argv[2]);
   std::string meshName(argv[3]);
-  int         N = 1;
+
+  std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName << "\", participant name \"" << solverName << "\", and mesh name \"" << meshName << "\".\n";
 
   SolverInterface interface(solverName, configFileName, commRank, commSize);
 
-  int                              meshID     = interface.getMeshID(meshName);
-  int                              dimensions = interface.getDimensions();
-  std::vector<std::vector<double>> vertices(N, std::vector<double>(dimensions, 0));
-  std::vector<int>                 dataIndices(N, 0);
+  int meshID     = interface.getMeshID(meshName);
+  int dimensions = interface.getDimensions();
 
-  for (int i = 0; i < N; i++) {
-    dataIndices[i] = interface.setMeshVertex(meshID, vertices[i].data());
-  }
+  std::vector<double> vertex(dimensions, 0);
+  int                 vertexID = interface.setMeshVertex(meshID, vertex.data());
 
   double dt = interface.initialize();
 

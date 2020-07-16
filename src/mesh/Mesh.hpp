@@ -1,10 +1,15 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <boost/signals2.hpp>
 #include <deque>
+#include <iosfwd>
 #include <list>
 #include <map>
+#include <string>
 #include <vector>
+#include "logging/Logger.hpp"
+#include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Quad.hpp"
@@ -13,6 +18,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {
@@ -35,7 +41,6 @@ public:
   using TriangleContainer = std::deque<Triangle>;
   using QuadContainer     = std::deque<Quad>;
   using DataContainer     = std::vector<PtrData>;
-  using BoundingBox       = std::vector<std::pair<double, double>>;
   using BoundingBoxMap    = std::map<int, BoundingBox>;
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
@@ -229,6 +234,12 @@ public:
 
   void setGlobalNumberOfVertices(int num);
 
+  // Get the data of owned vertices for given data ID
+  Eigen::VectorXd getOwnedVertexData(int dataID);
+
+  // Tag all the vertices
+  void tagAll();
+
   /// Returns a vector of connected ranks
   std::vector<int> &getConnectedRanks()
   {
@@ -249,15 +260,7 @@ public:
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
    * computeState() has to be called after setting the mesh.
    */
-  const BoundingBox getBoundingBox() const;
-
-  /**
-   * @brief Returns the Center Of Gravity of the mesh
-   *
-   * Returns a vector of doubles, size d, each dimension computed as
-   * cog =  (max - min) / 2 + min
-   */
-  const std::vector<double> getCOG() const;
+  const BoundingBox &getBoundingBox() const;
 
   bool operator==(const Mesh &other) const;
 

@@ -1,7 +1,11 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <ostream>
+#include <string>
 #include "ConvergenceMeasure.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -18,8 +22,7 @@ public:
 
   virtual void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification)
+      const Eigen::VectorXd &newValues)
   {
     PRECICE_TRACE();
     _currentIteration++;

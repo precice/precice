@@ -1,6 +1,12 @@
-#include "testing/Fixtures.hpp" // include that for the more advanced fixtures, e.g. to build up m2n com
+#include <Eigen/Core>
+#include <memory>
+#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Parallel.hpp" // only required when using something from utils::Parallel
+#include "utils/MasterSlave.hpp"
 
 using namespace precice;
 
@@ -8,9 +14,10 @@ BOOST_AUTO_TEST_SUITE(TestingTests) // Use name of the module, e.g. subdirectory
 
 BOOST_AUTO_TEST_SUITE(Examples) // If your file contains multiple tests, put them in a test suite
 
-/// This test runs independently on all processors. Attention when doing so, the ranks may interfere
+/// This test runs on a single processor.
 BOOST_AUTO_TEST_CASE(SingleProcessor)
 {
+  PRECICE_TEST(1_rank);
   /* Do not use DEBUG, TRACE, INFO calls inside tests, if you need to log a message use
      BOOST_TEST_MESSAGE("I have done that " << whatIHaveDone);
 
@@ -35,6 +42,7 @@ BOOST_AUTO_TEST_CASE(SingleProcessor)
 BOOST_AUTO_TEST_CASE(NumericalTolerance,
                      *boost::unit_test::tolerance(1e-4))
 {
+  PRECICE_TEST(1_rank);
   // Default tolerance is 1e-9, it can be changed for the entire case or even suite
   // using the decorator above
   BOOST_TEST(1.0 == 1.0001);
@@ -47,32 +55,29 @@ BOOST_AUTO_TEST_CASE(NumericalTolerance,
 BOOST_AUTO_TEST_CASE(Deleted,
                      *testing::Deleted())
 {
+  PRECICE_TEST(1_rank);
   BOOST_TEST(false);
 }
 
 /// Test that requires 4 processors.
 /*
- * If less than 4 procs are available, the test is deleted, if more are available, procs > 4 are deleted
+ * If less than 4 procs are available the test will fail.
  */
-BOOST_AUTO_TEST_CASE(FourProcTests,
-                     *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(FourProcTests)
 {
+  PRECICE_TEST(4_ranks);
   // Don't copy over that line, it's for testing the example
-  BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(context.size == 4);
+  BOOST_TEST(context.hasSize(4));
 }
 
 /// Test that runs on 2 processors.
-/*
- * This case is trickier than with 4 procs, because we need to restrict the global communicator on all
- * ranks first, and then test if we execute at the correct ranks.
- */
-BOOST_AUTO_TEST_CASE(TwoProcTests,
-                     *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(TwoProcTests)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2)
-    return;
+  PRECICE_TEST(2_ranks);
 
   // Put your test code here
+  BOOST_TEST(context.hasSize(2));
 }
 
 #ifndef PRECICE_NO_MPI
@@ -81,59 +86,86 @@ BOOST_AUTO_TEST_CASE(TwoProcTests,
  * For some master tests, you might need a master communication. This example shows how to set one up.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
-BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication,
-                     *testing::OnSize(4) * boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication)
 {
+  // The short syntax won't work here. You have to name the context
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())
   // In this test you can use a master communication, here is an example how:
+  BOOST_TEST(context.hasSize(4));
   BOOST_TEST(utils::MasterSlave::_communication->isConnected());
+}
+
+/// Test that requires 2 participants "A" on 1 rank and "B" on 2 ranks
+BOOST_AUTO_TEST_CASE(NamedContexts)
+{
+  PRECICE_TEST("A"_on(1_rank), "B"_on(2_ranks));
+
+  if (context.isNamed("A")) {
+    BOOST_TEST(context.hasSize(1));
+  } else if (context.isNamed("B")) {
+    BOOST_TEST(context.hasSize(2));
+  } else {
+    BOOST_TEST(false);
+  }
 }
 
 /// Tests that requires an m2n communication
 /*
  * For some master tests, you might need an m2n communication (e.g. partition or cplscheme).
- * This example shows how to set up one. Don't use the M2N fixture as a decorator. Otherwise,
- * you cannot access the m2n.
+ * This example shows how to set up one. Call .connectMaster() on the context and pass the participants to be connected.
+ * M2N requires Events, thus you also need to list it as a requirement using Require::Events.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
-BOOST_FIXTURE_TEST_CASE(TwoProcTestsWithM2NCommunication, testing::M2NFixture,
-                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2)
-    return;
+  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  BOOST_TEST(context.hasSize(1));
+  BOOST_TEST(context.isRank(0));
+  BOOST_TEST(context.isMaster());
+
+  auto m2n = context.connectMasters("A", "B");
 
   //This is how you can access the m2n communication
   BOOST_TEST(m2n->getMasterCommunication()->isConnected());
+
+  // Automatically finalizes Events
 }
 
 #endif // PRECICE_NO_MPI
 
+BOOST_AUTO_TEST_CASE(TwoProcTestsWithPETSc)
+{
+  PRECICE_TEST(2_ranks, Require::PETSc); // implies Require::Events
+  BOOST_TEST(context.hasSize(2));
+
+  // Automatically finalizes PETSc and Events
+}
+
 /// Integration tests with two participants.
 /*
  * For integration tests (tests that directly use the preCICE API), often, you need two participants
- * where each participant uses it own "global" communicator, i.e. each participant should not see that
- * he is part of a test. Then, you can use the SplitParticipantsFixture. This gives you two participants
- * with two ranks each (ranks 0,1 for both, not 0,1,2,3). For other settings (e.g. 3-1, or more than two
- * participants), you can easily copy functionality from this fixture. As now all internals, including
- * "utils::Parallel::getProcessRank()" are local, we cannot use this for distinguishing the participants.
- * As a solution, we have an ID "participantID". That's why you cannot use the SplitParticipantsFixture
- * fixture as a decorator, but only the following way:
+ * where each participant uses it own communicator, i.e. each participant should not see that he is
+ * part of a test.
+ * In this case, you can simply create the participants and create a solverinterface.
+ * The context-object is of type TestContext and provides access to the name of the current context and the rank and size of its communicator.  
  */
-BOOST_FIXTURE_TEST_CASE(IntegrationTestsWithTwoParticipants, testing::SplitParticipantsFixture,
-                        *testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(IntegrationTestsWithTwoParticipants)
 {
-  if (participantID == 1) {
+  // As we will use the solverinterface, we do require anything else here.
+  PRECICE_TEST("Solid"_on(2_ranks), "Fluid"_on(2_ranks));
 
-    // Put here your preCICE API code for the first participant
+  if (context.isNamed("Solid")) {
+    // This is the participant Solid
+    BOOST_TEST(context.hasSize(2));
 
-    // Don't copy over that line, it's for testing the example
-    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 2);
+    // You can now create a solverinterface for your first participant
+    // You can use context.name, context.rank, context.size
   } else {
-    BOOST_TEST(participantID == 2);
+    // This is the participant Solid
+    BOOST_TEST(context.hasSize(2));
 
-    // Put here your preCICE API code for the second participant
-
-    // Don't copy over that line, it's for testing the example
-    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 2);
+    // You can now create a solverinterface for your second participant
+    // You can use context.name, context.rank, context.size
   }
 }
 

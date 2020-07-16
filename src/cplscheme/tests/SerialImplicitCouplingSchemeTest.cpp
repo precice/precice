@@ -1,23 +1,37 @@
 #include <Eigen/Core>
+#include <algorithm>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <vector>
+#include "acceleration/SharedPointer.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "com/SharedPointer.hpp"
+#include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
+#include "cplscheme/CouplingData.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
-#include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
+#include "cplscheme/impl/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
+#include "m2n/DistributedComFactory.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "xml/XMLTag.hpp"
-
-#include "testing/Fixtures.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "xml/XMLTag.hpp"
 
 using namespace precice;
 using namespace precice::cplscheme;
@@ -57,7 +71,7 @@ void runCoupling(
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
@@ -111,7 +125,7 @@ void runCoupling(
       }
       // the first participant always receives new data
       //if(cplScheme.isCouplingOngoing())
-      BOOST_TEST(cplScheme.hasDataBeenExchanged());
+      BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
@@ -121,7 +135,7 @@ void runCoupling(
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
@@ -181,7 +195,7 @@ void runCoupling(
       }
       // only check if data is received
       if (cplScheme.isCouplingOngoing())
-        BOOST_TEST(cplScheme.hasDataBeenExchanged());
+        BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
@@ -218,7 +232,7 @@ void runCouplingWithSubcycling(
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-    BOOST_TEST(not cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(not cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
@@ -266,7 +280,7 @@ void runCouplingWithSubcycling(
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
         // If length of global timestep is reached
-        if (cplScheme.hasDataBeenExchanged()) {
+        if (cplScheme.hasDataBeenReceived()) {
           BOOST_TEST(iterationCount <= *iterValidIterations);
           BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
@@ -297,7 +311,7 @@ void runCouplingWithSubcycling(
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
@@ -350,7 +364,7 @@ void runCouplingWithSubcycling(
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
         // If length of global timestep is reached
-        if (cplScheme.hasDataBeenExchanged()) {
+        if (cplScheme.hasDataBeenReceived()) {
           BOOST_TEST(iterationCount <= *iterValidIterations);
           BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
           BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
@@ -389,6 +403,7 @@ BOOST_FIXTURE_TEST_SUITE(SerialImplicitCouplingSchemeTests, SerialImplicitCoupli
 
 BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
 
   std::string path(_pathToTests + "serial-implicit-cplscheme-relax-const-config.xml");
@@ -408,6 +423,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 
 BOOST_AUTO_TEST_CASE(testExtrapolateData)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
 
   PtrMesh mesh(new Mesh("MyMesh", 3, false, testing::nextMeshID()));
@@ -429,7 +445,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   // Test first order extrapolation
   SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
-                              accessor, globalCom, constants::FIXED_DT,
+                              accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE,
                               BaseCouplingScheme::Implicit, maxIterations);
 
   scheme.addDataToSend(data, mesh, true);
@@ -463,7 +479,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   cplData->oldValues = Eigen::MatrixXd::Zero(cplData->oldValues.rows(), cplData->oldValues.cols());
   //assign(*cplData->values) = 0.0;
   //assign(cplData->oldValues) = 0.0;
-  SerialCouplingScheme scheme2(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_DT, BaseCouplingScheme::Implicit, maxIterations);
+  SerialCouplingScheme scheme2(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations);
 
   scheme2.addDataToSend(data, mesh, false);
   scheme2.setExtrapolationOrder(2);
@@ -496,11 +512,12 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 }
 
 /// Test that runs on 2 processors.
-BOOST_FIXTURE_TEST_CASE(testAbsConvergenceMeasureSynchronized, testing::M2NFixture,
-                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
-    return;
+  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = true;
+  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
 
   using namespace mesh;
 
@@ -526,23 +543,20 @@ BOOST_FIXTURE_TEST_CASE(testAbsConvergenceMeasureSynchronized, testing::M2NFixtu
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  std::string nameLocalParticipant("");
   int         sendDataIndex    = -1;
   int         receiveDataIndex = -1;
-  if (utils::Parallel::getProcessRank() == 0) {
-    nameLocalParticipant = nameParticipant0;
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
-  } else if (utils::Parallel::getProcessRank() == 1) {
-    nameLocalParticipant = nameParticipant1;
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
+  if (context.isNamed(nameParticipant0)) {
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
+  } else {
+    sendDataIndex    = 1;
+    receiveDataIndex = 0;
   }
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
-      nameParticipant1, nameLocalParticipant, m2n, constants::FIXED_DT,
+      nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
@@ -550,18 +564,16 @@ BOOST_FIXTURE_TEST_CASE(testAbsConvergenceMeasureSynchronized, testing::M2NFixtu
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
   cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
       new cplscheme::impl::AbsoluteConvergenceMeasure(convergenceLimit1));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, absoluteConvMeasure1);
+  cplScheme.addConvergenceMeasure(mesh->data()[1], false, absoluteConvMeasure1, true);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {5, 5, 5};
-  runCoupling(cplScheme, nameLocalParticipant, meshConfig, validIterations);
+  runCoupling(cplScheme, context.name, meshConfig, validIterations);
 }
 
-BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized,
-                     *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
-    return;
+  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
 
   using namespace mesh;
 
@@ -589,27 +601,22 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized,
 
   std::vector<int> validIterations = {5, 5, 5};
 
-  std::string nameLocalParticipant("");
-  if (utils::Parallel::getProcessRank() == 0) {
-    nameLocalParticipant = "Participant0";
-    utils::Parallel::splitCommunicator(nameLocalParticipant);
+  if (context.isNamed("Participant0")) {
     m2n->requestMasterConnection("Participant1", "Participant0");
-  } else if (utils::Parallel::getProcessRank() == 1) {
-    nameLocalParticipant = "Participant1";
-    utils::Parallel::splitCommunicator(nameLocalParticipant);
+  } else {
     m2n->acceptMasterConnection("Participant1", "Participant0");
   }
 
-  runCoupling(*cplSchemeConfig.getCouplingScheme(nameLocalParticipant),
-              nameLocalParticipant, *meshConfig, validIterations);
-  utils::Parallel::clearGroups();
+  runCoupling(*cplSchemeConfig.getCouplingScheme(context.name),
+              context.name, *meshConfig, validIterations);
 }
 
-BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronized, testing::M2NFixture,
-                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
-    return;
+  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = true;
+  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
@@ -633,23 +640,20 @@ BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronized, testing::M2NF
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  std::string nameLocalParticipant("");
   int         sendDataIndex    = -1;
   int         receiveDataIndex = -1;
-  if (utils::Parallel::getProcessRank() == 0) {
-    nameLocalParticipant = nameParticipant0;
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
-  } else if (utils::Parallel::getProcessRank() == 1) {
-    nameLocalParticipant = nameParticipant1;
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
+  if (context.isNamed(nameParticipant0)) {
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
+  } else {
+    sendDataIndex    = 1;
+    receiveDataIndex = 0;
   }
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, m2n, constants::FIXED_DT,
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
@@ -658,18 +662,19 @@ BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronized, testing::M2NF
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, minIterationConvMeasure1);
+  cplScheme.addConvergenceMeasure(mesh->data()[1], false, minIterationConvMeasure1, true);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {3, 3, 3};
-  runCoupling(cplScheme, nameLocalParticipant, meshConfig, validIterations);
+  runCoupling(cplScheme, context.name, meshConfig, validIterations);
 }
 
-BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling, testing::M2NFixture,
-                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
-    return;
+  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = true;
+  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
@@ -693,26 +698,23 @@ BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling,
   double           timestepLength = 0.1;
   std::string      nameParticipant0("Participant0");
   std::string      nameParticipant1("Participant1");
-  std::string      nameLocalParticipant("");
   int              sendDataIndex    = -1;
   int              receiveDataIndex = -1;
   std::vector<int> validIterations;
-  if (utils::Parallel::getProcessRank() == 0) {
-    nameLocalParticipant = nameParticipant0;
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
-    validIterations      = {3, 3, 3};
-  } else if (utils::Parallel::getProcessRank() == 1) {
-    nameLocalParticipant = nameParticipant1;
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
-    validIterations      = {3, 3, 3};
+  if (context.isNamed(nameParticipant0)) {
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
+    validIterations  = {3, 3, 3};
+  } else {
+    sendDataIndex    = 1;
+    receiveDataIndex = 0;
+    validIterations  = {3, 3, 3};
   }
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, m2n, constants::FIXED_DT,
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
@@ -721,16 +723,17 @@ BOOST_FIXTURE_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling,
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, minIterationConvMeasure1);
+  cplScheme.addConvergenceMeasure(mesh->data()[1], false, minIterationConvMeasure1, true);
   runCouplingWithSubcycling(
-      cplScheme, nameLocalParticipant, meshConfig, validIterations);
+      cplScheme, context.name, meshConfig, validIterations);
 }
 
-BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
-                        *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testInitializeData)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2) // only run test on ranks {0,1}, for other ranks return
-    return;
+  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = true;
+  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -746,7 +749,6 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
   const auto    dataID0 = mesh->createData("Data0", 1)->getID();
   const auto    dataID1 = mesh->createData("Data1", 3)->getID();
-  ;
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -757,43 +759,40 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  std::string nameLocalParticipant("");
-  int         sendDataIndex    = -1;
-  int         receiveDataIndex = -1;
-  bool        initData         = false;
-  if (utils::Parallel::getProcessRank() == 0) {
-    nameLocalParticipant = nameParticipant0;
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
-  } else if (utils::Parallel::getProcessRank() == 1) {
-    nameLocalParticipant = nameParticipant1;
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
-    initData             = true;
+  int         sendDataIndex              = -1;
+  int         receiveDataIndex           = -1;
+  bool        dataRequiresInitialization = false;
+  if (context.isNamed(nameParticipant0)) {
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
+  } else {
+    sendDataIndex              = 1;
+    receiveDataIndex           = 0;
+    dataRequiresInitialization = true;
   }
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, m2n, constants::FIXED_DT,
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, not initData);
+  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, not dataRequiresInitialization);
 
   // Add convergence measures
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, minIterationConvMeasure1);
+  cplScheme.addConvergenceMeasure(mesh->data()[1], false, minIterationConvMeasure1, true);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   cplScheme.initialize(0.0, 1);
 
-  if (nameLocalParticipant == nameParticipant0) {
+  if (context.isNamed(nameParticipant0)) {
     cplScheme.initializeData();
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     auto &values = mesh->data(dataID1)->values();
     BOOST_TEST(testing::equals(values, Eigen::Vector3d(1.0, 2.0, 3.0)));
     mesh->data(dataID0)->values() = Eigen::VectorXd::Constant(mesh->data(dataID0)->values().size(), 4.0);
@@ -808,7 +807,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
       cplScheme.advance();
     }
   } else {
-    BOOST_TEST(nameLocalParticipant == nameParticipant1);
+    BOOST_TEST(context.isNamed(nameParticipant1));
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     auto &values = mesh->data(dataID0)->values();
@@ -817,7 +816,7 @@ BOOST_FIXTURE_TEST_CASE(testInitializeData, testing::M2NFixture,
     v << 1.0, 2.0, 3.0;
     mesh->data(dataID1)->values() = v;
     cplScheme.initializeData();
-    BOOST_TEST(cplScheme.hasDataBeenExchanged());
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(values(0), 4.0));
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {

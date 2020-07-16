@@ -1,20 +1,34 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <string>
 #include <vector>
+#include "io/Export.hpp"
 #include "io/ExportVTK.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "query/FindClosest.hpp"
+#include "query/FindClosestEdge.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+
+namespace precice {
+namespace mesh {
+class Triangle;
+} // namespace mesh
+} // namespace precice
 
 using namespace precice;
 using namespace precice::query;
 
 BOOST_AUTO_TEST_SUITE(QueryTests)
-BOOST_AUTO_TEST_SUITE(FindClosestTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(FindClosestTests)
 
 BOOST_AUTO_TEST_CASE(FindClosestDistanceToVertices)
 {
+  PRECICE_TEST(1_rank);
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh mesh("RootMesh", dim, false, testing::nextMeshID());
     mesh.createVertex(Eigen::VectorXd::Zero(dim));
@@ -38,6 +52,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToVertices)
 
 BOOST_AUTO_TEST_CASE(SignOfShortestDistance)
 {
+  PRECICE_TEST(1_rank);
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh      mesh("Mesh", dim, false, testing::nextMeshID());
     mesh::Vertex &  vertex = mesh.createVertex(Eigen::VectorXd::Zero(dim));
@@ -64,6 +79,7 @@ BOOST_AUTO_TEST_CASE(SignOfShortestDistance)
 
 BOOST_AUTO_TEST_CASE(IndependenceOfSignOfShortestDistance)
 {
+  PRECICE_TEST(1_rank);
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh    mesh("Mesh", dim, false, testing::nextMeshID());
     mesh::Vertex &vertex = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
@@ -96,6 +112,7 @@ BOOST_AUTO_TEST_CASE(IndependenceOfSignOfShortestDistance)
 
 BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges)
 {
+  PRECICE_TEST(1_rank);
   for (int dim = 2; dim <= 3; dim++) {
     // Create mesh consisting of two vertices and an edge
     mesh::Mesh      mesh("Mesh", dim, false, testing::nextMeshID());
@@ -148,6 +165,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges)
 
 BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges3D)
 {
+  PRECICE_TEST(1_rank);
   int dim = 3;
   // Cremeshetry consisting of two vertices and an edge
   mesh::Mesh      mesh("Mesh", dim, false, testing::nextMeshID());
@@ -199,6 +217,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges3D)
 
 BOOST_AUTO_TEST_CASE(FindClosestDistanceToTriangles)
 {
+  PRECICE_TEST(1_rank);
   // Create mesh to query
   mesh::Mesh    mesh("Mesh", 3, true, testing::nextMeshID());
   mesh::Vertex &v0 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -254,6 +273,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToTriangles)
 
 BOOST_AUTO_TEST_CASE(FindClosestDistanceToTrianglesAndVertices)
 {
+  PRECICE_TEST(1_rank);
   int           dim = 2;
   mesh::Mesh    mesh("Mesh", dim, false, testing::nextMeshID());
   mesh::Vertex &vertex1 = mesh.createVertex(Eigen::Vector2d(0.0, 0.0));
@@ -293,6 +313,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToTrianglesAndVertices)
 
 BOOST_AUTO_TEST_CASE(WeigthsOfVertices)
 {
+  PRECICE_TEST(1_rank);
   int dim = 2;
 
   // Create mesh
@@ -345,6 +366,7 @@ BOOST_FIXTURE_TEST_SUITE(InterpolationElements, MeshFixture)
 
 BOOST_AUTO_TEST_CASE(Vertex)
 {
+  PRECICE_TEST(1_rank);
   auto elems = query::generateInterpolationElements(*vinside, *v1);
   BOOST_TEST(elems.size() == 1);
   BOOST_TEST(elems.front().element == v1);
@@ -353,6 +375,7 @@ BOOST_AUTO_TEST_CASE(Vertex)
 
 BOOST_AUTO_TEST_CASE(Edge)
 {
+  PRECICE_TEST(1_rank);
   auto elems = query::generateInterpolationElements(*vinside, *e12);
   BOOST_TEST(elems.size() == 2);
   BOOST_TEST(elems.front().element == v1);
@@ -363,6 +386,7 @@ BOOST_AUTO_TEST_CASE(Edge)
 
 BOOST_AUTO_TEST_CASE(TriangleInside)
 {
+  PRECICE_TEST(1_rank);
   auto elems = query::generateInterpolationElements(*vinside, *t);
   BOOST_TEST(elems.size() == 3);
   std::map<mesh::Vertex const *, double> weights;
@@ -376,6 +400,7 @@ BOOST_AUTO_TEST_CASE(TriangleInside)
 
 BOOST_AUTO_TEST_CASE(TriangleOutside)
 {
+  PRECICE_TEST(1_rank);
   auto elems = query::generateInterpolationElements(*voutside, *t);
   BOOST_TEST(elems.size() == 3);
   std::map<mesh::Vertex const *, double> weights;

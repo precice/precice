@@ -52,7 +52,7 @@
     <coupling-scheme:serial-explicit> 
       <participants first="SolverOne" second="SolverTwo" /> 
       <max-time-windows value="10" />
-      <time-window-length value="1.0" />
+      <time-window-size value="1.0" />
       <exchange data="Forces"     mesh="MeshOne" from="SolverOne" to="SolverTwo" />
       <exchange data="Velocities" mesh="MeshOne" from="SolverTwo" to="SolverOne"/>
     </coupling-scheme:serial-explicit>

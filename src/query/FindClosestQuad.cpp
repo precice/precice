@@ -1,9 +1,11 @@
 #include "FindClosestQuad.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
+#include "logging/LogMacros.hpp"
 #include "math/barycenter.hpp"
-#include "mesh/Mesh.hpp"
+#include "math/differences.hpp"
 #include "mesh/Quad.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace query {

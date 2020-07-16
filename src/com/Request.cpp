@@ -1,4 +1,5 @@
 #include "Request.hpp"
+#include <memory>
 
 namespace precice {
 namespace com {

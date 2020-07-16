@@ -1,5 +1,7 @@
 #include "Tracer.hpp"
-#include <boost/log/attributes/mutable_constant.hpp>
+#include <string>
+#include <utility>
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace logging {

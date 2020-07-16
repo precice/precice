@@ -1,15 +1,15 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPIDirectCommunication.hpp"
+#include <memory>
+#include "logging/LogMacros.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
 namespace com {
 MPIDirectCommunication::MPIDirectCommunication()
-    : _communicator(utils::Parallel::getGlobalCommunicator()),
-      _globalCommunicator(utils::Parallel::getGlobalCommunicator()),
-      _localCommunicator(utils::Parallel::getGlobalCommunicator())
+    : _commState(utils::Parallel::current())
 {
 }
 
@@ -31,26 +31,20 @@ size_t MPIDirectCommunication::getRemoteCommunicatorSize()
 void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
                                               std::string const &requesterName,
                                               std::string const &tag,
-                                              int                acceptorRank)
+                                              int                acceptorRank,
+                                              int                rankOffset)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
+  // MPI Direct Comm only supports MasterSlave connections
+  PRECICE_ASSERT(rankOffset == 1, "MPIDirectCommunication only supports MasterSlave Communications!");
+  setRankOffset(rankOffset);
 
-  utils::Parallel::splitCommunicator(acceptorName);
-
-  PRECICE_CHECK(utils::Parallel::getCommunicatorSize() > 1,
-                "MPI communication direct (i.e. single) can be only used with more than one process in base communicator!");
-
-  _globalCommunicator = utils::Parallel::getGlobalCommunicator();
-  _localCommunicator  = utils::Parallel::getLocalCommunicator();
-  MPI_Intercomm_create(
-      _localCommunicator,
-      0, // Local communicator, local leader rank
-      _globalCommunicator,
-      getLeaderRank(requesterName), // Peer communicator, remote leader rank
-      0,
-      &communicator()); // Tag, intercommunicator to be created
+  _commState   = utils::Parallel::current();
   _isConnected = true;
+
+  PRECICE_ASSERT(acceptorRank == 0, "The Acceptor/Master has to be rank 0!");
+  PRECICE_ASSERT(_commState->rank() == acceptorRank, "The given acceptor rank does not match the communicator rank!");
 }
 
 void MPIDirectCommunication::closeConnection()
@@ -60,7 +54,6 @@ void MPIDirectCommunication::closeConnection()
   if (not isConnected())
     return;
 
-  MPI_Comm_free(&communicator());
   _isConnected = false;
 }
 
@@ -73,129 +66,80 @@ void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
 
-  utils::Parallel::splitCommunicator(requesterName);
-
-  PRECICE_CHECK(utils::Parallel::getCommunicatorSize() > 1,
-                "MPI communication direct (i.e. single) can be only used with more than one process in base communicator!");
-
-  _globalCommunicator = utils::Parallel::getGlobalCommunicator();
-  _localCommunicator  = utils::Parallel::getLocalCommunicator();
-  MPI_Intercomm_create(
-      _localCommunicator,
-      0, // Local communicator, local leader rank
-      _globalCommunicator,
-      getLeaderRank(acceptorName), // Peer communicator, remote leader rank
-      0,
-      &communicator()); // Tag, intercommunicator to be created
+  setRankOffset(0); //rankOffset makes no sense here
+  _commState   = utils::Parallel::current();
   _isConnected = true;
+
+  PRECICE_ASSERT(requesterRank == _commState->rank() - 1);
+  PRECICE_ASSERT(requesterCommunicatorSize + 1 == _commState->size());
 }
 
-int MPIDirectCommunication::getGroupID(std::string const &accessorName)
-{
-  PRECICE_TRACE(accessorName);
-  using Par                                      = utils::Parallel;
-  const std::vector<Par::AccessorGroup> &_groups = Par::getAccessorGroups();
-  for (const Par::AccessorGroup &group : _groups) {
-    if (group.name == accessorName) {
-      PRECICE_DEBUG("return group ID = " << group.id);
-      return group.id;
-    }
-  }
-  PRECICE_ERROR("Unknown accessor name \"" << accessorName << "\"!");
-}
-
-int MPIDirectCommunication::getLeaderRank(std::string const &accessorName)
-{
-  PRECICE_TRACE(accessorName);
-  using Par                                      = utils::Parallel;
-  const std::vector<Par::AccessorGroup> &_groups = Par::getAccessorGroups();
-  for (const Par::AccessorGroup &group : _groups) {
-    if (group.name == accessorName) {
-      PRECICE_DEBUG("return rank = " << group.leaderRank);
-      return group.leaderRank;
-    }
-  }
-  PRECICE_ERROR("Unknown accessor name \"" << accessorName << "\"!");
-}
-
-void MPIDirectCommunication::reduceSum(double *itemsToSend, double *itemsToReceive, int size)
+void MPIDirectCommunication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size)
 {
   PRECICE_TRACE(size);
-  int rank = -1;
-  MPI_Comm_rank(_globalCommunicator, &rank);
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Reduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rank, _globalCommunicator);
+  int rank = _commState->rank();
+  MPI_Reduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rank, _commState->comm);
 }
 
-void MPIDirectCommunication::reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster)
+void MPIDirectCommunication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster)
 {
   PRECICE_TRACE(size);
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Reduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rankMaster, _globalCommunicator);
+  MPI_Reduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rankMaster, _commState->comm);
 }
 
 void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive)
 {
   PRECICE_TRACE();
-  int rank = -1;
-  MPI_Comm_rank(_globalCommunicator, &rank);
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Reduce(&itemToSend, &itemsToReceive, 1, MPI_INT, MPI_SUM, rank, _globalCommunicator);
+  int rank = _commState->rank();
+  MPI_Reduce(&itemToSend, &itemsToReceive, 1, MPI_INT, MPI_SUM, rank, _commState->comm);
 }
 
 void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive, int rankMaster)
 {
   PRECICE_TRACE();
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Reduce(&itemToSend, &itemsToReceive, 1, MPI_INT, MPI_SUM, rankMaster, _globalCommunicator);
+  MPI_Reduce(&itemToSend, &itemsToReceive, 1, MPI_INT, MPI_SUM, rankMaster, _commState->comm);
 }
 
-void MPIDirectCommunication::allreduceSum(double *itemsToSend, double *itemsToReceive, int size)
+void MPIDirectCommunication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size)
 {
   PRECICE_TRACE(size);
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Allreduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _globalCommunicator);
+  MPI_Allreduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _commState->comm);
 }
 
-void MPIDirectCommunication::allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster)
+void MPIDirectCommunication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster)
 {
   PRECICE_TRACE(size);
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Allreduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _globalCommunicator);
+  MPI_Allreduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _commState->comm);
 }
 
 void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToReceive)
 {
   PRECICE_TRACE();
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _globalCommunicator);
+  MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _commState->comm);
 }
 
 void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToReceive, int rankMaster)
 {
   PRECICE_TRACE();
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _globalCommunicator);
+  MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _commState->comm);
 }
 
 void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive)
 {
   PRECICE_TRACE();
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _globalCommunicator);
+  MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _commState->comm);
 }
 
 void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, int rankMaster)
 {
   PRECICE_TRACE();
-  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
-  MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _globalCommunicator);
+  MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _commState->comm);
 }
 
 void MPIDirectCommunication::broadcast(const int *itemsToSend, int size)
 {
   PRECICE_TRACE(size);
-  MPI_Bcast(const_cast<int *>(itemsToSend), size, MPI_INT, MPI_ROOT, _communicator);
+  MPI_Bcast(const_cast<int *>(itemsToSend), size, MPI_INT, 0, _commState->comm);
 }
 
 void MPIDirectCommunication::broadcast(int *itemsToReceive,
@@ -203,7 +147,7 @@ void MPIDirectCommunication::broadcast(int *itemsToReceive,
                                        int  rankBroadcaster)
 {
   PRECICE_TRACE(size);
-  MPI_Bcast(itemsToReceive, size, MPI_INT, rankBroadcaster, _communicator);
+  MPI_Bcast(itemsToReceive, size, MPI_INT, rankBroadcaster, _commState->comm);
 }
 
 void MPIDirectCommunication::broadcast(int itemToSend)
@@ -221,7 +165,7 @@ void MPIDirectCommunication::broadcast(int &itemToReceive, int rankBroadcaster)
 void MPIDirectCommunication::broadcast(const double *itemsToSend, int size)
 {
   PRECICE_TRACE(size);
-  MPI_Bcast(const_cast<double *>(itemsToSend), size, MPI_DOUBLE, MPI_ROOT, _communicator);
+  MPI_Bcast(const_cast<double *>(itemsToSend), size, MPI_DOUBLE, 0, _commState->comm);
 }
 
 void MPIDirectCommunication::broadcast(double *itemsToReceive,
@@ -229,7 +173,7 @@ void MPIDirectCommunication::broadcast(double *itemsToReceive,
                                        int     rankBroadcaster)
 {
   PRECICE_TRACE(size);
-  MPI_Bcast(itemsToReceive, size, MPI_DOUBLE, rankBroadcaster, _communicator);
+  MPI_Bcast(itemsToReceive, size, MPI_DOUBLE, rankBroadcaster, _commState->comm);
 }
 
 void MPIDirectCommunication::broadcast(double itemToSend)
@@ -261,13 +205,20 @@ void MPIDirectCommunication::broadcast(bool &itemToReceive, int rankBroadcaster)
 
 MPI_Comm &MPIDirectCommunication::communicator(int rank)
 {
-  return _communicator;
+  return _commState->comm;
 }
 
 int MPIDirectCommunication::rank(int rank)
 {
+  // Correct _rankOffset if we are on master
   return rank;
 }
+
+int MPIDirectCommunication::adjustRank(int rank) const
+{
+  return rank;
+}
+
 } // namespace com
 } // namespace precice
 

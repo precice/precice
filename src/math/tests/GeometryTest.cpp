@@ -1,14 +1,20 @@
+#include <Eigen/Core>
 #include "../geometry.hpp"
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
+#include "math/differences.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
 using namespace precice::math;
 
 BOOST_AUTO_TEST_SUITE(MathTests)
-BOOST_AUTO_TEST_SUITE(Geometry, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(Geometry)
 
 BOOST_AUTO_TEST_CASE(Collinear)
 {
+  PRECICE_TEST(1_rank);
   // 2D test setup
   Eigen::Vector2d a2D(0, 0);
   Eigen::Vector2d b2D(1, 1);
@@ -33,6 +39,7 @@ BOOST_AUTO_TEST_CASE(Collinear)
 BOOST_AUTO_TEST_CASE(TetraVolume,
                      *boost::unit_test::tolerance(1e-3))
 {
+  PRECICE_TEST(1_rank);
   Eigen::Vector3d a(1, 2, 3);
   Eigen::Vector3d b(3, 2, 1);
   Eigen::Vector3d c(4, 5, 6);
@@ -51,6 +58,7 @@ BOOST_AUTO_TEST_CASE(TetraVolume,
 
 BOOST_AUTO_TEST_CASE(Between)
 {
+  PRECICE_TEST(1_rank);
   for (int dim = 2; dim <= 3; dim++) {
     Eigen::VectorXd a(dim);
     Eigen::VectorXd b(dim);
@@ -82,6 +90,7 @@ BOOST_AUTO_TEST_CASE(Between)
 
 BOOST_AUTO_TEST_CASE(TriangleArea)
 {
+  PRECICE_TEST(1_rank);
   { // 2D
     Eigen::Vector2d a, b, c;
     double          area;
@@ -109,6 +118,7 @@ BOOST_AUTO_TEST_CASE(TriangleArea)
 
 BOOST_AUTO_TEST_CASE(SegmentsIntersect)
 {
+  PRECICE_TEST(1_rank);
   Eigen::Vector2d a(0, 0), b(1, 0), c(0.5, 0), d(0, 0.5);
   BOOST_CHECK(geometry::segmentsIntersect(a, b, c, d, true));
   BOOST_CHECK(!geometry::segmentsIntersect(a, b, c, d, false));
@@ -134,6 +144,7 @@ BOOST_AUTO_TEST_CASE(SegmentsIntersect)
 
 BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
 {
+  PRECICE_TEST(1_rank);
   using Eigen::Vector3d;
   Vector3d planeNormal        = Vector3d::Constant(1.0);
   Vector3d pointOnPlane       = Vector3d::Constant(0.0);
@@ -206,6 +217,7 @@ BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
 
 BOOST_AUTO_TEST_CASE(ProjectVector)
 {
+  PRECICE_TEST(1_rank);
   Eigen::Vector3d vector3D(1.0, 2.0, 3.0);
   Eigen::Vector2d vector2D;
   Eigen::Vector2d vectorExpected(1.0, 2.0);
@@ -224,6 +236,7 @@ BOOST_AUTO_TEST_CASE(ProjectVector)
 
 BOOST_AUTO_TEST_CASE(ContainedInTriangle)
 {
+  PRECICE_TEST(1_rank);
   Eigen::Vector2d triangleVertex0(0.0, 0.0);
   Eigen::Vector2d triangleVertex1(1.0, 0.0);
   Eigen::Vector2d triangleVertex2(0.0, 1.0);
@@ -281,6 +294,7 @@ BOOST_AUTO_TEST_CASE(ContainedInTriangle)
 
 BOOST_AUTO_TEST_CASE(ContainedInHyperrectangle)
 {
+  PRECICE_TEST(1_rank);
   // 2D
   Eigen::Vector2d center2D(0, 0);
   Eigen::Vector2d sidelengths2D(1, 1);

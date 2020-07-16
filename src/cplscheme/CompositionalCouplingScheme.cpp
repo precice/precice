@@ -1,6 +1,12 @@
 #include "CompositionalCouplingScheme.hpp"
+#include <algorithm>
 #include <limits>
+#include <memory>
+#include <ostream>
 #include "Constants.hpp"
+#include "cplscheme/CouplingScheme.hpp"
+#include "cplscheme/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -108,18 +114,18 @@ bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimestepL
   return willBeExchanged;
 }
 
-bool CompositionalCouplingScheme::hasDataBeenExchanged() const
+bool CompositionalCouplingScheme::hasDataBeenReceived() const
 {
   PRECICE_TRACE();
-  bool hasBeenExchanged = false;
+  bool hasBeenReceived = false;
   // Question: Does it suffice to only check the active ones?
   for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++) {
     if (not it->onHold) {
-      hasBeenExchanged |= it->scheme->hasDataBeenExchanged();
+      hasBeenReceived |= it->scheme->hasDataBeenReceived();
     }
   }
-  PRECICE_DEBUG("return " << hasBeenExchanged);
-  return hasBeenExchanged;
+  PRECICE_DEBUG("return " << hasBeenReceived);
+  return hasBeenReceived;
 }
 
 double CompositionalCouplingScheme::getTime() const
@@ -146,28 +152,6 @@ int CompositionalCouplingScheme::getTimeWindows() const
   }
   PRECICE_DEBUG("return " << timeWindows);
   return timeWindows;
-}
-
-double CompositionalCouplingScheme::getMaxTime() const
-{
-  PRECICE_TRACE();
-  double maxTime = 0.0;
-  for (Scheme scheme : _couplingSchemes) {
-    maxTime = std::max(maxTime, scheme.scheme->getMaxTime());
-  }
-  PRECICE_DEBUG("return " << maxTime);
-  return maxTime;
-}
-
-int CompositionalCouplingScheme::getMaxTimeWindows() const
-{
-  PRECICE_TRACE();
-  int maxTimeWindows = 0;
-  for (Scheme scheme : _couplingSchemes) {
-    maxTimeWindows = std::max(maxTimeWindows, scheme.scheme->getMaxTimeWindows());
-  }
-  PRECICE_DEBUG("return " << maxTimeWindows);
-  return maxTimeWindows;
 }
 
 bool CompositionalCouplingScheme::hasTimeWindowSize() const
@@ -207,19 +191,6 @@ double CompositionalCouplingScheme::getThisTimeWindowRemainder() const
   }
   PRECICE_DEBUG("return " << maxRemainder);
   return maxRemainder;
-}
-
-double CompositionalCouplingScheme::getComputedTimeWindowPart() const
-{
-  PRECICE_TRACE();
-  double timeWindowPart = std::numeric_limits<double>::max();
-  for (Scheme scheme : _couplingSchemes) {
-    if (not scheme.onHold) {
-      timeWindowPart = std::min(timeWindowPart, scheme.scheme->getComputedTimeWindowPart());
-    }
-  }
-  PRECICE_DEBUG("return " << timeWindowPart);
-  return timeWindowPart;
 }
 
 double CompositionalCouplingScheme::getNextTimestepMaxLength() const

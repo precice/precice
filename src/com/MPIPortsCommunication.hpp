@@ -2,6 +2,10 @@
 #ifndef PRECICE_NO_MPI
 
 #include <map>
+#include <mpi.h>
+#include <set>
+#include <stddef.h>
+#include <string>
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"
 
@@ -24,7 +28,8 @@ public:
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 std::string const &tag,
-                                int                acceptorRank) override;
+                                int                acceptorRank,
+                                int                rankOffset = 0) override;
 
   virtual void acceptConnectionAsServer(std::string const &acceptorName,
                                         std::string const &requesterName,

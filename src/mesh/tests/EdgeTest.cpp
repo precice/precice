@@ -1,16 +1,21 @@
 #include <Eigen/Core>
+#include <iosfwd>
+#include <string>
+#include "logging/Logger.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
-BOOST_AUTO_TEST_SUITE(EdgeTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(EdgeTests)
 
 BOOST_AUTO_TEST_CASE(Edges)
 {
+  PRECICE_TEST(1_rank);
   Vertex v1(Eigen::Vector3d::Constant(0.0), 0);
   Vertex v2(Eigen::Vector3d::Constant(1.0), 1);
   Edge   edge(v1, v2, 0);
@@ -23,6 +28,7 @@ BOOST_AUTO_TEST_CASE(Edges)
 
 BOOST_AUTO_TEST_CASE(EdgeEquality)
 {
+  PRECICE_TEST(1_rank);
   Vertex v1(Eigen::Vector3d(0, 0, 0), 0);
   Vertex v2(Eigen::Vector3d(0, 0, 1), 0);
   Vertex v3(Eigen::Vector3d(0, 0, 2), 0);
@@ -38,6 +44,7 @@ BOOST_AUTO_TEST_CASE(EdgeEquality)
 
 BOOST_AUTO_TEST_CASE(EdgeWKTPrint)
 {
+  PRECICE_TEST(1_rank);
   Vertex            v1(Eigen::Vector2d(1., 2.), 0);
   Vertex            v2(Eigen::Vector2d(2., 3.), 0);
   Edge              e1(v1, v2, 0);
@@ -56,6 +63,7 @@ BOOST_AUTO_TEST_CASE(EdgeWKTPrint)
 
 BOOST_AUTO_TEST_CASE(EdgeConnectedTo)
 {
+  PRECICE_TEST(1_rank);
   Vertex v1(Eigen::Vector3d(0, 0, 1), 0);
   Vertex v2(Eigen::Vector3d(0, 0, 2), 0);
   Vertex v3(Eigen::Vector3d(0, 0, 3), 0);

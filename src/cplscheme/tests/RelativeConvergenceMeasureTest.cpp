@@ -1,10 +1,13 @@
+#include <Eigen/Core>
 #include "../impl/RelativeConvergenceMeasure.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
 BOOST_AUTO_TEST_CASE(RelativeConvergenceMeasureTest)
 {
+  PRECICE_TEST(1_rank);
   using Eigen::Vector3d;
   double                                               convergenceLimit = 0.1; // 10%
   precice::cplscheme::impl::RelativeConvergenceMeasure measure(convergenceLimit);
@@ -14,15 +17,14 @@ BOOST_AUTO_TEST_CASE(RelativeConvergenceMeasureTest)
   Vector3d oldValues1(2, 2, 2);
   Vector3d oldValues2(2.9, 2.9, 2.9);
   Vector3d newValues(3, 3, 3);
-  Vector3d designSpec(0, 0, 0);
 
-  measure.measure(oldValues0, newValues, designSpec);
+  measure.measure(oldValues0, newValues);
   BOOST_TEST(not measure.isConvergence());
 
-  measure.measure(oldValues1, newValues, designSpec);
+  measure.measure(oldValues1, newValues);
   BOOST_TEST(not measure.isConvergence());
 
-  measure.measure(oldValues2, newValues, designSpec);
+  measure.measure(oldValues2, newValues);
   BOOST_TEST(measure.isConvergence());
 }
 

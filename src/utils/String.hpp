@@ -25,6 +25,14 @@ std::string &checkAppendExtension(std::string &filename, const std::string &exte
  */
 bool convertStringToBool(std::string const &value);
 
+/** Converts a wstring to a string by truncating non-extended ascii characters.
+ *
+ * @param[in] wstr the wide string to convert
+ * @param[in] fill the fill char to replace multibyte characters with
+ * @return the converted string
+ */
+std::string truncate_wstring_to_string(std::wstring wstr, char fill = '#');
+
 /// Turns stream-like code into a std::string.
 #define PRECICE_AS_STRING(message) [&] { \
   std::ostringstream oss;                \

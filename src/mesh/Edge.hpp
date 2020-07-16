@@ -1,10 +1,11 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <array>
 #include <iostream>
-
 #include "math/differences.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {

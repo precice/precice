@@ -9,11 +9,13 @@ target_sources(testprecice
     src/acceleration/test/QRFactorizationTest.cpp
     src/action/tests/PythonActionTest.cpp
     src/action/tests/ScaleActionTest.cpp
+    src/action/tests/SummationActionTest.cpp
     src/com/tests/CommunicateBoundingBoxTest.cpp
     src/com/tests/CommunicateMeshTest.cpp
     src/com/tests/GenericTestFunctions.hpp
     src/com/tests/MPIDirectCommunicationTest.cpp
     src/com/tests/MPIPortsCommunicationTest.cpp
+    src/com/tests/MPISinglePortsCommunicationTest.cpp
     src/com/tests/SocketCommunicationTest.cpp
     src/cplscheme/tests/AbsoluteConvergenceMeasureTest.cpp
     src/cplscheme/tests/CompositionalCouplingSchemeTest.cpp
@@ -23,6 +25,7 @@ target_sources(testprecice
     src/cplscheme/tests/MinIterationConvergenceMeasureTest.cpp
     src/cplscheme/tests/ParallelImplicitCouplingSchemeTest.cpp
     src/cplscheme/tests/RelativeConvergenceMeasureTest.cpp
+    src/cplscheme/tests/ResidualRelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/SerialImplicitCouplingSchemeTest.cpp
     src/io/tests/ExportConfigurationTest.cpp
     src/io/tests/ExportVTKTest.cpp
@@ -39,10 +42,12 @@ target_sources(testprecice
     src/math/tests/BarycenterTest.cpp
     src/math/tests/DifferencesTest.cpp
     src/math/tests/GeometryTest.cpp
+    src/mesh/tests/BoundingBoxTest.cpp
     src/mesh/tests/DataConfigurationTest.cpp
     src/mesh/tests/EdgeTest.cpp
     src/mesh/tests/MeshTest.cpp
     src/mesh/tests/QuadTest.cpp
+    src/mesh/tests/RTreeAdapterTests.cpp
     src/mesh/tests/RTreeTests.cpp
     src/mesh/tests/TriangleTest.cpp
     src/mesh/tests/VertexTest.cpp
@@ -54,7 +59,8 @@ target_sources(testprecice
     src/precice/tests/WatchPointTest.cpp
     src/query/tests/FindClosestTest.cpp
     src/query/tests/FindClosestVertexVisitorTest.cpp
-    src/testing/Fixtures.hpp
+    src/testing/TestContext.cpp
+    src/testing/TestContext.hpp
     src/testing/Testing.cpp
     src/testing/Testing.hpp
     src/testing/main.cpp
