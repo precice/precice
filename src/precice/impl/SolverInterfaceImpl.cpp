@@ -228,8 +228,8 @@ void SolverInterfaceImpl::configure(
 double SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state == State::Constructed, "initialize() may only be called once.");
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
+  PRECICE_CHECK(_state == State::Constructed, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
