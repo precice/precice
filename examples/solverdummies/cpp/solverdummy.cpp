@@ -30,57 +30,67 @@ int main(int argc, char **argv)
 
   SolverInterface interface(solverName, configFileName, commRank, commSize);
 
-  int meshID     = interface.getMeshID(meshName);
-  int dimensions = interface.getDimensions();
-  std::string dataWriteName; 
+  int         meshID     = interface.getMeshID(meshName);
+  int         dimensions = interface.getDimensions();
+  std::string dataWriteName;
   std::string dataReadName;
-  int N = 3;            // Number of vertices
+  int         numberOfVertices = 3;
 
-  if (solverName == "SolverOne"){
-    dataWriteName="dataOne";
-    dataReadName="dataTwo";
+  if (solverName == "SolverOne") {
+    dataWriteName = "dataOne";
+    dataReadName  = "dataTwo";
   }
-  if (solverName == "SolverTwo"){
-    dataReadName="dataOne";
-    dataWriteName="dataTwo";
+  if (solverName == "SolverTwo") {
+    dataReadName  = "dataOne";
+    dataWriteName = "dataTwo";
   }
-  const int readDataID = interface.getDataID(dataReadName,meshID);
-  const int writeDataID = interface.getDataID(dataWriteName,meshID);
+  const int readDataID  = interface.getDataID(dataReadName, meshID);
+  const int writeDataID = interface.getDataID(dataWriteName, meshID);
 
-  std::vector<double> readData(N*dimensions);
-  std::vector<double> writeData(N*dimensions);
-  std::vector<double> vertex(dimensions);
-  std::vector<int> vertexIDs(N);
+  std::vector<double> readData(numberOfVertices * dimensions);
+  std::vector<double> writeData(numberOfVertices * dimensions);
+  std::vector<double> vertices(numberOfVertices * dimensions);
+  std::vector<int>    vertexIDs(numberOfVertices);
 
-  for (int i = 0; i < N; i++){
+  for (int i = 0; i < numberOfVertices; i++) {
     for (int j = 0; j < dimensions; j++) {
-      vertex[j] = i;
-      readData[j + i*dimensions] = i;
-      writeData[j + i*dimensions] = i;
+      vertices[j + numberOfVertices * i]  = i;
+      readData[j + numberOfVertices * i]  = i;
+      writeData[j + numberOfVertices * i] = i;
     }
-    vertexIDs[i] = interface.setMeshVertex(meshID, vertex.data());
   }
+
+  interface.setMeshVertices(meshID, numberOfVertices, vertices.data(), vertexIDs.data());
 
   double dt = interface.initialize();
 
   while (interface.isCouplingOngoing()) {
 
-    interface.readBlockVectorData(readDataID,N,vertexIDs.data(),readData.data());
-    std::cout << "DUMMY: Reading iteration checkpoint\n";
-    interface.markActionFulfilled(actionReadIterationCheckpoint());
+    if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
+      std::cout << "DUMMY: Writing iteration checkpoint\n";
+      interface.markActionFulfilled(actionWriteIterationCheckpoint());
+    }
 
-    for (int i = 0; i < N*dimensions; i++){
+    if (interface.isReadDataAvailable()) {
+      interface.readBlockVectorData(readDataID, numberOfVertices, vertexIDs.data(), readData.data());
+    }
+
+    for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData[i] = readData[i] + 1;
     }
 
-    interface.writeBlockVectorData(writeDataID,N,vertexIDs.data(),writeData.data());
-    std::cout << "DUMMY: Writing iteration checkpoint\n";
-    interface.markActionFulfilled(actionWriteIterationCheckpoint());
+    if (interface.isWriteDataRequired(dt)) {
+      interface.writeBlockVectorData(writeDataID, numberOfVertices, vertexIDs.data(), writeData.data());
+    }
 
     dt = interface.advance(dt);
 
-    std::cout << "DUMMY: Advancing in time\n";
-
+    if (interface.isActionRequired(actionReadIterationCheckpoint())) {
+      std::cout << "DUMMY: Reading iteration checkpoint\n";
+      interface.markActionFulfilled(actionReadIterationCheckpoint());
+    } else {
+      std::cout << "DUMMY: Advancing in time\n";
+    }
   }
 
   interface.finalize();
