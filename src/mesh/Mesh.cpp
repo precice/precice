@@ -466,7 +466,7 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
   return os;
 }
 
-bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexList) const
+bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexIDs) const
 {
   /*
     All points need to be projected into a new plane with only 2 coordinates, x' and y'. These are used to check 
@@ -476,19 +476,19 @@ bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexList) const
   Eigen::Vector3d coords[4];
 
   // Normal of the plane of first three points in the list of vertices
-  Eigen::Vector3d e_1 = vertices()[vertexList[1]].getCoords() - vertices()[vertexList[0]].getCoords();
-  Eigen::Vector3d e_2 = vertices()[vertexList[2]].getCoords() - vertices()[vertexList[0]].getCoords();
+  Eigen::Vector3d e_1 = vertices()[vertexIDs[1]].getCoords() - vertices()[vertexIDs[0]].getCoords();
+  Eigen::Vector3d e_2 = vertices()[vertexIDs[2]].getCoords() - vertices()[vertexIDs[0]].getCoords();
   Eigen::Vector3d normalVector = e_1.cross(e_2);
 
   //Transform Coordinates - coord[0] is the origin
   for (int i = 0; i < 4; i++){
-    Eigen::Vector3d distance = vertices()[vertexList[i]].getCoords() - vertices()[vertexList[0]].getCoords();
+    Eigen::Vector3d distance = vertices()[vertexIDs[i]].getCoords() - vertices()[vertexIDs[0]].getCoords();
     coords[i][0] = e_1.dot(distance);
     coords[i][1] = e_2.dot(distance);
     coords[i][2] = normalVector.dot(distance);
   }
 
-  PRECICE_DEBUG("Vertex IDs are: " << vertexList[0] << " " << vertexList[1] << " " << vertexList[2] << " " << vertexList[3]);
+  PRECICE_DEBUG("Vertex IDs are: " << vertexIDs[0] << " " << vertexIDs[1] << " " << vertexIDs[2] << " " << vertexIDs[3]);
   PRECICE_DEBUG("X coordinates are: " << coords[0][0] << " " << coords[1][0] << " " << coords[2][0] << " " << coords[3][0]);
   PRECICE_DEBUG("Y coordinates are: " << coords[0][1] << " " << coords[1][1] << " " << coords[2][1] << " " << coords[3][1]);
 
@@ -514,7 +514,7 @@ bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexList) const
   do
   {
     // Add current point to result
-    vertexList[validVertexIDCounter]=currentVertex;
+    vertexIDs[validVertexIDCounter]=currentVertex;
     
     nextVertex = (currentVertex + 1)%4;              // remainder resets loop through vector of points
     for (int i = 0; i < 4; i++)
@@ -559,35 +559,35 @@ std::array<int,4> Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList) const
   but not convexity.
   */
   int edgeOrder[4]; // Will contain new order of edges to form a closed quad
-  std::array<int,4> vertexList;
+  std::array<int,4> vertexIDs;
 
   // The first two vertices are the points on the first edge in edgeList. The other edges are built around this
-  vertexList[0] = edges()[edgeList[0]].vertex(0).getID();
-  vertexList[1] = edges()[edgeList[0]].vertex(1).getID();
+  vertexIDs[0] = edges()[edgeList[0]].vertex(0).getID();
+  vertexIDs[1] = edges()[edgeList[0]].vertex(1).getID();
 
   for (int j = 1; j < 4; j++){  // looping thorugh edges 2, 3 and 4 in edgeList
 
     int ID1 = edges()[edgeList[j]].vertex(0).getID();
     int ID2 = edges()[edgeList[j]].vertex(1).getID();
 
-    if (ID1 != vertexList[0] && ID2 != vertexList[0] && ID1 != vertexList[1] && ID2 != vertexList[1] ){
+    if (ID1 != vertexIDs[0] && ID2 != vertexIDs[0] && ID1 != vertexIDs[1] && ID2 != vertexIDs[1] ){
         // Doesnt match any point on edge 1, therefore must be edge 3 for the reordered set
         edgeOrder[2] = edgeList[j];
-      } else if ((ID1 == vertexList[0] || ID2 == vertexList[0]) && (ID1 != vertexList[1] && ID2 != vertexList[1])){
+      } else if ((ID1 == vertexIDs[0] || ID2 == vertexIDs[0]) && (ID1 != vertexIDs[1] && ID2 != vertexIDs[1])){
         // One of the vertices matches V0, and does not match V1, must be edge 4 (connected V3 to V0)
         edgeOrder[3] = edgeList[j];
-        if (ID1 == vertexList[0]){
-          vertexList[3] = edges()[edgeList[j]].vertex(1).getID();
+        if (ID1 == vertexIDs[0]){
+          vertexIDs[3] = edges()[edgeList[j]].vertex(1).getID();
         }else{
-          vertexList[3] = edges()[edgeList[j]].vertex(0).getID();
+          vertexIDs[3] = edges()[edgeList[j]].vertex(0).getID();
         }
-      }else if((ID1 == vertexList[1] || ID2 == vertexList[1]) && (ID1 != vertexList[0] && ID2 != vertexList[0])){
+      }else if((ID1 == vertexIDs[1] || ID2 == vertexIDs[1]) && (ID1 != vertexIDs[0] && ID2 != vertexIDs[0])){
         // Must be edge 2, as it matches V1 and not V0
         edgeOrder[1] = edgeList[j];
-        if (ID1 == vertexList[1]){
-          vertexList[2] = edges()[edgeList[j]].vertex(1).getID();
+        if (ID1 == vertexIDs[1]){
+          vertexIDs[2] = edges()[edgeList[j]].vertex(1).getID();
         }else{
-          vertexList[2] = edges()[edgeList[j]].vertex(0).getID();
+          vertexIDs[2] = edges()[edgeList[j]].vertex(0).getID();
         }
       }
     }
@@ -596,7 +596,7 @@ std::array<int,4> Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList) const
     edgeList[2] = edgeOrder[2];
     edgeList[3] = edgeOrder[3];
 
-    return vertexList;
+    return vertexIDs;
 
 }
   

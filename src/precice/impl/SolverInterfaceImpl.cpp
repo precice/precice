@@ -797,15 +797,15 @@ void SolverInterfaceImpl::setMeshQuad(
     // Write out a list of all vertex ID's that are eventually connected in 
     // V0-V1-V2-V3-V0 order to get diagonal distances.
     mesh::Vertex *vertices[4];
-    // Reorders the edgeList and sets the vertexList order.
-    std::array<int,4> vertexList = mesh->computeQuadEdgeOrder(edgeList); 
+    // Reorders the edgeList and sets the vertexIDs order.
+    std::array<int,4> vertexIDs = mesh->computeQuadEdgeOrder(edgeList); 
     
-    // Computes vertex order for the convex quad and reorders the variable vertexList
-    PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexList),"Quad is not convex."); 
-    vertices[0] = &mesh->vertices()[vertexList[0]];
-    vertices[1] = &mesh->vertices()[vertexList[1]];
-    vertices[2] = &mesh->vertices()[vertexList[2]];
-    vertices[3] = &mesh->vertices()[vertexList[3]];
+    // Computes vertex order for the convex quad and reorders the variable vertexIDs
+    PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexIDs),"Quad is not convex."); 
+    vertices[0] = &mesh->vertices()[vertexIDs[0]];
+    vertices[1] = &mesh->vertices()[vertexIDs[1]];
+    vertices[2] = &mesh->vertices()[vertexIDs[2]];
+    vertices[3] = &mesh->vertices()[vertexIDs[3]];
  
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), 
                                                            vertices[2]->getCoords(), vertices[3]->getCoords())),
@@ -854,34 +854,34 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
     vertices[1] = &mesh->vertices()[secondVertexID];
     vertices[2] = &mesh->vertices()[thirdVertexID];
     vertices[3] = &mesh->vertices()[fourthVertexID];
-    std::array<int,4>  vertexList;
-    vertexList[0] = firstVertexID;
-    vertexList[1] = secondVertexID;
-    vertexList[2] = thirdVertexID;
-    vertexList[3] = fourthVertexID;
+    std::array<int,4>  vertexIDs;
+    vertexIDs[0] = firstVertexID;
+    vertexIDs[1] = secondVertexID;
+    vertexIDs[2] = thirdVertexID;
+    vertexIDs[3] = fourthVertexID;
 
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), 
                                                            vertices[2]->getCoords(), vertices[3]->getCoords() )),
                   "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle." \
                   "Please check that the vertices that form the quad are correct.");
 
-    // Computes vertex order for the convex quad and reorders the variable vertexList
-    PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexList),"Quad is not convex."); 
+    // Computes vertex order for the convex quad and reorders the variable vertexIDs
+    PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexIDs),"Quad is not convex."); 
 
     Eigen::VectorXd distance1(_dimensions),distance2(_dimensions);
 
-    distance1 = vertices[vertexList[0]]->getCoords() - vertices[vertexList[2]]->getCoords();
-    distance2 = vertices[vertexList[1]]->getCoords() - vertices[vertexList[3]]->getCoords();
+    distance1 = vertices[vertexIDs[0]]->getCoords() - vertices[vertexIDs[2]]->getCoords();
+    distance2 = vertices[vertexIDs[1]]->getCoords() - vertices[vertexIDs[3]]->getCoords();
     PRECICE_DEBUG("Distance 1: " << distance1.norm() << " and Distance 2: " << distance2.norm());
     
     mesh::Edge *edges[5];  // e[0] - e[3] are the 3 edges of the quad. e[4] is the new diagonal edge to split the quad
-    edges[0] = &mesh->createUniqueEdge(*vertices[vertexList[0]], *vertices[vertexList[1]]);
-    edges[1] = &mesh->createUniqueEdge(*vertices[vertexList[1]], *vertices[vertexList[2]]);
-    edges[2] = &mesh->createUniqueEdge(*vertices[vertexList[2]], *vertices[vertexList[3]]);
-    edges[3] = &mesh->createUniqueEdge(*vertices[vertexList[3]], *vertices[vertexList[0]]);
+    edges[0] = &mesh->createUniqueEdge(*vertices[vertexIDs[0]], *vertices[vertexIDs[1]]);
+    edges[1] = &mesh->createUniqueEdge(*vertices[vertexIDs[1]], *vertices[vertexIDs[2]]);
+    edges[2] = &mesh->createUniqueEdge(*vertices[vertexIDs[2]], *vertices[vertexIDs[3]]);
+    edges[3] = &mesh->createUniqueEdge(*vertices[vertexIDs[3]], *vertices[vertexIDs[0]]);
     if (distance1.norm() < distance2.norm()){
       PRECICE_DEBUG("Cut diagonal: 0 and 2");
-      edges[4] = &mesh->createUniqueEdge(*vertices[vertexList[0]], *vertices[vertexList[2]]);
+      edges[4] = &mesh->createUniqueEdge(*vertices[vertexIDs[0]], *vertices[vertexIDs[2]]);
       mesh->createTriangle(*edges[0], *edges[1], *edges[4]);
       mesh->createTriangle(*edges[2], *edges[3], *edges[4]);
     }else{
