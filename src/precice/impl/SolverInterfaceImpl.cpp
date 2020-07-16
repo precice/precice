@@ -81,12 +81,19 @@ SolverInterfaceImpl::SolverInterfaceImpl(
       _accessorProcessRank(accessorProcessRank),
       _accessorCommunicatorSize(accessorCommunicatorSize)
 {
-  PRECICE_CHECK(!_accessorName.empty(), "Accessor has to be named!");
-  PRECICE_CHECK(_accessorProcessRank >= 0, "Accessor process index has to be >= 0!");
-  PRECICE_CHECK(_accessorCommunicatorSize >= 0, "Accessor process size has to be >= 0!");
+  PRECICE_CHECK(!_accessorName.empty(), "This participant's name is an empty string. When constructing a preCICE interface "
+                                        "you need to pass the name of the participant as first argument to the constructor.");
+  PRECICE_CHECK(_accessorProcessRank >= 0,
+                "The solver process index needs to be a non-negative number, not: "
+                    << _accessorProcessRank << ". Please check the value given when constructing a preCICE interface.");
+  PRECICE_CHECK(_accessorCommunicatorSize >= 1,
+                "The solver process size needs to be a positive number, not: "
+                    << _accessorCommunicatorSize << ". Please check the value given when constructing a preCICE interface.");
   PRECICE_CHECK(_accessorProcessRank < _accessorCommunicatorSize,
-                "Accessor process index has to be smaller than accessor process "
-                    << "size (given as " << _accessorProcessRank << ")!");
+                "The solver process index, currently: "
+                    << _accessorProcessRank
+                    << " needs to be smaller than the solver process size, currently: " << _accessorCommunicatorSize
+                    << ". Please check the values given when constructing a preCICE interface.");
 
 // Set the global communicator to the passed communicator.
 // This is a noop if preCICE is not configured with MPI.
@@ -108,14 +115,14 @@ SolverInterfaceImpl::SolverInterfaceImpl(
   if (communicator != nullptr) {
     const auto currentRank = utils::Parallel::current()->rank();
     PRECICE_CHECK(_accessorProcessRank == currentRank,
-                  "The passed solverProcessIndex (" << _accessorProcessRank
-                                                    << ") does not match the rank of the passed MPI communicator ("
-                                                    << currentRank << ")");
+                  "The solver process index given in the preCICE interface constructor("
+                      << _accessorProcessRank << ") does not match the rank of the passed MPI communicator ("
+                      << currentRank << ").");
     const auto currentSize = utils::Parallel::current()->size();
     PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
-                  "The passed solverProcessSize (" << _accessorCommunicatorSize
-                                                   << ") does not match the size of the passed MPI communicator ("
-                                                   << currentSize << ")");
+                  "The solver process size given in the preCICE interface constructor("
+                      << _accessorCommunicatorSize << ") does not match the size of the passed MPI communicator ("
+                      << currentSize << ").");
   }
 #endif
 }
@@ -1467,7 +1474,8 @@ PtrParticipant SolverInterfaceImpl::determineAccessingParticipant(
       return participant;
     }
   }
-  PRECICE_ERROR("Accessing participant \"" << _accessorName << "\" is not defined in configuration!");
+  PRECICE_ERROR("This participant's name, which was specified in the constructor of the preCICE interface as \""
+                << _accessorName << "\", is not defined in the preCICE configuration. Please double-check the correct spelling.");
 }
 
 void SolverInterfaceImpl::initializeMasterSlaveCommunication()
