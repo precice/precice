@@ -489,6 +489,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
                     (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values->size(), _extrapolationOrder + 1 - cols));
     }
   }
+  // Storage reservation for acceleration methods happens in Acceleration::initialize
 }
 
 void BaseCouplingScheme::setAcceleration(
