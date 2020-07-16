@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string>
 #include "logging/LogConfiguration.hpp"
+#include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {

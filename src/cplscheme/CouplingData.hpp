@@ -19,8 +19,8 @@ struct CouplingData {
 
   mesh::PtrMesh mesh;
 
-  ///  True, if the data values are initialized by a participant.
-  bool initialize;
+  ///  True, if the data values if this CouplingData requires to be initialized by a participant.
+  bool requiresInitialization;
 
   /// dimension of one data value (scalar=1, or vectorial=interface-dimension)
   int dimension;
@@ -38,11 +38,11 @@ struct CouplingData {
   CouplingData(
       Eigen::VectorXd *values,
       mesh::PtrMesh    mesh,
-      bool             initialize,
+      bool             requiresInitialization,
       int              dimension)
       : values(values),
         mesh(mesh),
-        initialize(initialize),
+        requiresInitialization(requiresInitialization),
         dimension(dimension)
   {
     PRECICE_ASSERT(values != NULL);

@@ -1,8 +1,15 @@
 #include "Parallel.hpp"
+#include <algorithm>
 #include <map>
+#include <memory>
 #include <numeric>
+#include <ostream>
+#include <utility>
+#include <vector>
 #include "assertion.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace utils {
@@ -156,7 +163,7 @@ void Parallel::resetCommState()
 void Parallel::resetManagedMPI()
 {
   _mpiInitializedByPrecice = false;
-  _isInitialized = false;
+  _isInitialized           = false;
 }
 
 void Parallel::pushState(CommStatePtr newState)
@@ -198,7 +205,7 @@ void Parallel::initializeManagedMPI(
     _mpiInitializedByPrecice = true;
     initializeMPI(argc, argv);
   }
-    _isInitialized = true;
+  _isInitialized = true;
 #endif // not PRECICE_NO_MPI
 }
 
@@ -215,8 +222,6 @@ void Parallel::initializeMPI(
 #endif // not PRECICE_NO_MPI
 }
 
-
-
 void Parallel::finalizeManagedMPI()
 {
   PRECICE_TRACE();
@@ -231,10 +236,9 @@ void Parallel::finalizeManagedMPI()
     PRECICE_DEBUG("Finalizing unmanaged MPI");
   }
   _mpiInitializedByPrecice = false;
-  _isInitialized = false;
+  _isInitialized           = false;
 #endif // not PRECICE_NO_MPI
 }
-
 
 void Parallel::finalizeMPI()
 {
@@ -247,7 +251,6 @@ void Parallel::finalizeMPI()
   MPI_Finalize();
 #endif // not PRECICE_NO_MPI
 }
-
 
 void Parallel::registerUserProvidedComm(Communicator comm)
 {

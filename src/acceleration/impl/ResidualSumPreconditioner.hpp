@@ -1,6 +1,11 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <stddef.h>
+#include <string>
+#include <vector>
 #include "acceleration/impl/Preconditioner.hpp"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace acceleration {

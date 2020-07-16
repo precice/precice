@@ -1,16 +1,27 @@
 #include "acceleration/BaseQNAcceleration.hpp"
+#include <Eigen/Core>
+#include <cmath>
+#include <memory>
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
+namespace io {
+class TXTReader;
+class TXTWriter;
+} // namespace io
+
 extern bool syncMode;
 namespace acceleration {
 
@@ -57,6 +68,7 @@ void BaseQNAcceleration::initialize(
     DataMap &cplData)
 {
   PRECICE_TRACE(cplData.size());
+  checkDataIDs(cplData);
 
   /*
   std::stringstream sss;
@@ -81,8 +93,6 @@ void BaseQNAcceleration::initialize(
   std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   for (auto &elem : _dataIDs) {
-    PRECICE_CHECK(utils::contained(elem, cplData),
-                  "Data with ID " << elem << " is not contained in data given at initialization!");
     entries += cplData[elem]->values->size();
     subVectorSizes.push_back(cplData[elem]->values->size());
   }
@@ -182,6 +192,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   _residuals = _values;
   _residuals -= _oldValues;
 
+  if (math::equals(utils::MasterSlave::l2norm(_residuals), 0.0)) {
+    PRECICE_WARN("The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
+                 "Maybe you always write the same data or you call advance without "
+                 "providing new data first or you do not use available read data. "
+                 "Or you just converge much further than actually necessary.");
+  }
+
   //if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
@@ -202,6 +219,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
+
+      PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0), "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
+                                                                               "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
+                                                                               "Maybe you always write the same (or only incremented) data or you call advance without "
+                                                                               "providing  new data first.");
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
@@ -233,6 +255,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         if (_matrixCols.back() == 0) {
           _matrixCols.pop_back();
         }
+        _nbDropCols++;
       }
     }
     _oldResiduals = _residuals; // Store residuals
@@ -334,6 +357,11 @@ void BaseQNAcceleration::performAcceleration(
       _preconditioner->newQRfulfilled();
     }
 
+    if (_firstIteration) {
+      _nbDelCols  = 0;
+      _nbDropCols = 0;
+    }
+
     // apply the configured filter to the LS system
     applyFilter();
 
@@ -379,7 +407,11 @@ void BaseQNAcceleration::performAcceleration(
     }
 
     if (std::isnan(utils::MasterSlave::l2norm(xUpdate))) {
-      PRECICE_ERROR("The coupling iteration in time step " << tSteps << " failed to converge and NaN values occurred throughout the coupling process. ");
+      PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
+                    "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
+                    "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
+                    "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
+                    "filter or increase its threshold (larger epsilon).");
     }
   }
 
@@ -413,6 +445,7 @@ void BaseQNAcceleration::applyFilter()
     std::vector<int> delIndices(0);
     _qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
     // start with largest index (as V,W matrices are shrinked and shifted
+
     for (int i = delIndices.size() - 1; i >= 0; i--) {
 
       removeMatrixColumn(delIndices[i]);
@@ -479,7 +512,6 @@ void BaseQNAcceleration::iterationsConverged(
 
   its = 0;
   tSteps++;
-  _nbDelCols = 0;
 
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
@@ -487,7 +519,7 @@ void BaseQNAcceleration::iterationsConverged(
   concatenateCouplingData(cplData);
   updateDifferenceMatrices(cplData);
 
-  if (_matrixCols.front() == 0) { // Did only one iteration
+  if (not _matrixCols.empty() && _matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
 
@@ -533,6 +565,7 @@ void BaseQNAcceleration::iterationsConverged(
     }
   } else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
+    _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
     PRECICE_DEBUG("Removing " << toRemove << " cols from least-squares system with " << getLSSystemCols() << " cols");
     PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
@@ -563,7 +596,6 @@ void BaseQNAcceleration::removeMatrixColumn(
 {
   PRECICE_TRACE(columnIndex, _matrixV.cols());
 
-  // debugging information, can be removed
   _nbDelCols++;
 
   PRECICE_ASSERT(_matrixV.cols() > 1);
@@ -597,12 +629,17 @@ void BaseQNAcceleration::importState(
 {
 }
 
-int BaseQNAcceleration::getDeletedColumns()
+int BaseQNAcceleration::getDeletedColumns() const
 {
   return _nbDelCols;
 }
 
-int BaseQNAcceleration::getLSSystemCols()
+int BaseQNAcceleration::getDroppedColumns() const
+{
+  return _nbDropCols;
+}
+
+int BaseQNAcceleration::getLSSystemCols() const
 {
   int cols = 0;
   for (int col : _matrixCols) {

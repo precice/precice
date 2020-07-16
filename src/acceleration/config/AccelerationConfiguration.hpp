@@ -1,5 +1,8 @@
 #pragma once
 
+#include <map>
+#include <string>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/MVQNAcceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
@@ -91,6 +94,8 @@ private:
   std::vector<std::string> _neededMeshes;
 
   impl::PtrPreconditioner _preconditioner;
+
+  std::set<std::string> _uniqueDataNames;  
 
   struct ConfigurationData {
     std::vector<int>      dataIDs;

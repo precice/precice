@@ -1,6 +1,4 @@
 cmake_minimum_required (VERSION 3.10.2)
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/XSDKCompilerDetect.cmake)
-
 project(preCICE VERSION 2.0.2 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
@@ -94,14 +92,14 @@ add_feature_info(MPICommunication PRECICE_MPICommunication
    This enables the MPI communication back-end which is highly recommended on multi-node systems.
    See the documentation of the CMake module FindMPI to control its functionality.
 
-   Set PRECICE_MPICommunication to enable.
+   This feature can be enabled/disabled by setting the PRECICE_MPICommunication CMake option.
 ")
 add_feature_info(PETScMapping PRECICE_PETScMapping
   "Enables the PETSc-powered radial basic function mappings.
 
    The radial basis function mappings require MPI and PETSc to work in parallel.
 
-   Set PRECICE_PETScMapping to enable.
+   This feature can be enabled/disabled by setting the PRECICE_PETScMapping CMake option.
    Requires MPICommunication.
   ")
 add_feature_info(PythonActions PRECICE_PythonActions
@@ -110,7 +108,7 @@ add_feature_info(PythonActions PRECICE_PythonActions
    preCICE allows to manipulate coupling data at runtime using configurable actions.
    This feature enables the support for user-defined actions written in Python based on numpy.
 
-   Set PRECICE_PythonActions to enable.
+   This feature can be enabled/disabled by setting the PRECICE_PythonActions CMake option.
   ")
 add_feature_info(CBindings PRECICE_ENABLE_C
   "Enables the native Fortran bindings.
@@ -119,7 +117,7 @@ add_feature_info(CBindings PRECICE_ENABLE_C
    This feature enables the compilation and installation of the bindings into the library.
    Note that we strongly recommend to compile with C bindings enabled for compatibility reasons.
 
-   Set PRECICE_ENABLE_C to enable.
+   This feature can be enabled/disabled by setting the PRECICE_ENABLE_C CMake option.
   ")
 add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
   "Enables the native Fortran bindings.
@@ -128,7 +126,7 @@ add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
    This feature enables the compilation and installation of the bindings into the library.
    Note that we strongly recommend to compile with Fortran bindings enabled for compatibility reasons.
 
-   Set PRECICE_ENABLE_FORTRAN to enable.
+   This feature can be enabled/disabled by setting the PRECICE_ENABLE_FORTRAN CMake option.
   ")
 
 feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
@@ -195,7 +193,16 @@ precice_validate_prettyprint()
 
 # Option: PRECICE_MPICommunication
 if (PRECICE_MPICommunication)
+  set(MPI_DETERMINE_LIBRARY_VERSION ON) # Try to detect the library vendor
+
   find_package(MPI REQUIRED)
+  message(STATUS "MPI Version: ${MPI_CXX_LIBRARY_VERSION_STRING}")
+
+  # We need to disable the MPIPorts tests in case we detect Open MPI
+  if(MPI_CXX_LIBRARY_VERSION_STRING MATCHES "Open MPI")
+    set(PRECICE_MPI_OPENMPI TRUE CACHE BOOL "Is the MPI implementation OpenMPI?" FORCE)
+    mark_as_advanced(PRECICE_MPI_OPENMPI)
+  endif()
 endif()
 
 # Option: PETSC
@@ -206,7 +213,7 @@ if (PRECICE_PETScMapping)
     unset(ENV{PETSC_DIR})
     unset(ENV{PETSC_ARCH})
   endif()
-  find_package(PETSc 3.6 REQUIRED)
+  find_package(PETSc 3.12 REQUIRED)
   # No validation required as PETSc does this internally
 
   set(PETSC_VERSIONS "")
@@ -274,7 +281,7 @@ set_target_properties(precice PROPERTIES
   )
 
 # Setup Boost
-target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES)
+target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
 target_link_libraries(precice PRIVATE
   Boost::boost
   Boost::filesystem

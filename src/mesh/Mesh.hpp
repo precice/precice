@@ -1,19 +1,24 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <boost/signals2.hpp>
 #include <deque>
+#include <iosfwd>
 #include <list>
 #include <map>
+#include <string>
 #include <vector>
+#include "logging/Logger.hpp"
+#include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Quad.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "mesh/BoundingBox.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {
@@ -36,7 +41,7 @@ public:
   using TriangleContainer = std::deque<Triangle>;
   using QuadContainer     = std::deque<Quad>;
   using DataContainer     = std::vector<PtrData>;
-  using BoundingBoxMap    = std::map<int,BoundingBox>;
+  using BoundingBoxMap    = std::map<int, BoundingBox>;
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
   using VertexDistribution = std::map<int, std::vector<int>>;
@@ -216,6 +221,12 @@ public:
   int getGlobalNumberOfVertices() const;
 
   void setGlobalNumberOfVertices(int num);
+
+  // Get the data of owned vertices for given data ID
+  Eigen::VectorXd getOwnedVertexData(int dataID);
+
+  // Tag all the vertices
+  void tagAll();
 
   /// Returns a vector of connected ranks
   std::vector<int> &getConnectedRanks()

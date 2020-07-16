@@ -1,8 +1,14 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <limits>
+#include <math.h>
+#include <ostream>
+#include <string>
 #include "../CouplingData.hpp"
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
+#include "math/differences.hpp"
 #include "math/math.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -63,11 +69,6 @@ public:
     _normDiff      = utils::MasterSlave::l2norm(newValues - oldValues);
     _norm          = utils::MasterSlave::l2norm(newValues);
     _isConvergence = _normDiff <= _norm * _convergenceLimitPercent;
-    //      PRECICE_INFO("Relative convergence measure: "
-    //                    << "two-norm differences = " << normDiff
-    //                    << ", convergence limit = "
-    //                    << normNew * _convergenceLimitPercent
-    //                    << ", convergence = " << _isConvergence );
   }
 
   virtual bool isConvergence() const
@@ -82,8 +83,9 @@ public:
   {
     std::ostringstream os;
     os << "relative convergence measure: ";
-    os << "two-norm diff = " << _normDiff;
-    os << ", relative limit = " << _norm * _convergenceLimitPercent;
+    os << "relative two-norm diff = " << getNormResidual();
+    os << ", limit = " << _convergenceLimitPercent;
+    os << ", normalization = " << _norm;
     os << ", conv = ";
     if (_isConvergence)
       os << "true";
@@ -98,6 +100,11 @@ public:
       return std::numeric_limits<double>::infinity();
     else
       return _normDiff / _norm;
+  }
+
+  virtual std::string getAbbreviation() const
+  {
+    return "Rel";
   }
 
 private:

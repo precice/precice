@@ -1,14 +1,20 @@
-#include "Mesh.hpp"
 #include <Eigen/Core>
-#include <Eigen/Geometry>
 #include <algorithm>
 #include <array>
 #include <boost/container/flat_map.hpp>
+#include <functional>
+#include <memory>
+#include <ostream>
+#include <type_traits>
+#include <utility>
+#include <vector>
 #include "Edge.hpp"
+#include "Mesh.hpp"
 #include "Quad.hpp"
 #include "RTree.hpp"
 #include "Triangle.hpp"
-#include "math/math.hpp"
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -156,12 +162,11 @@ const Mesh::DataContainer &Mesh::data() const
 const PtrData &Mesh::data(
     int dataID) const
 {
-  for (const PtrData &data : _data) {
-    if (data->getID() == dataID) {
-      return data;
-    }
-  }
-  PRECICE_ERROR("Data with ID = " << dataID << " not found in mesh \"" << _name << "\"!");
+  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](PtrData const & ptr){
+      return ptr->getID() == dataID;
+      });
+  PRECICE_ASSERT(iter != _data.end(), "Data with ID = " << dataID << " not found in mesh \"" << _name << "\".");
+  return *iter;
 }
 
 const std::string &Mesh::getName() const
@@ -198,10 +203,18 @@ bool Mesh::isValidEdgeID(int edgeID) const
 void Mesh::allocateDataValues()
 {
   PRECICE_TRACE(_vertices.size());
+  const auto expectedCount = _vertices.size();
+  using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
   for (PtrData data : _data) {
-    int total          = _vertices.size() * data->getDimensions();
-    int leftToAllocate = total - data->values().size();
-    if (leftToAllocate > 0) {
+    const SizeType expectedSize = expectedCount * data->getDimensions();
+    const auto     actualSize   = static_cast<SizeType>(data->values().size());
+    // Shrink Buffer
+    if (expectedSize < actualSize) {
+      data->values().resize(expectedSize);
+    }
+    // Enlarge Buffer
+    if (expectedSize > actualSize) {
+      const auto leftToAllocate = expectedSize - actualSize;
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
     PRECICE_DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
@@ -217,7 +230,6 @@ void Mesh::computeBoundingBox()
   }
   _boundingBox = std::move(bb);
   PRECICE_DEBUG("Bounding Box, " << _boundingBox);
-  
 }
 
 void Mesh::computeState()
@@ -349,6 +361,33 @@ int Mesh::getGlobalNumberOfVertices() const
 void Mesh::setGlobalNumberOfVertices(int num)
 {
   _globalNumberOfVertices = num;
+}
+
+Eigen::VectorXd Mesh::getOwnedVertexData(int dataID)
+{
+
+  std::vector<double> ownedDataVector;
+  int                 valueDim = data(dataID)->getDimensions();
+  int                 index    = 0;
+
+  for (const auto &vertex : vertices()) {
+    if (vertex.isOwner()) {
+      for (int dim = 0; dim < valueDim; ++dim) {
+        ownedDataVector.push_back(data(dataID)->values()[index * valueDim + dim]);
+      }
+    }
+    ++index;
+  }
+  Eigen::Map<Eigen::VectorXd> ownedData(ownedDataVector.data(), ownedDataVector.size());
+
+  return ownedData;
+}
+
+void Mesh::tagAll()
+{
+  for (auto &vertex : _vertices) {
+    vertex.tag();
+  }
 }
 
 void Mesh::addMesh(

@@ -1,7 +1,14 @@
 #include "GatherScatterCommunication.hpp"
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
 #include "com/Communication.hpp"
+#include "logging/LogMacros.hpp"
+#include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace m2n {

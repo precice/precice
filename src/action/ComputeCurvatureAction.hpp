@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "action/Action.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"

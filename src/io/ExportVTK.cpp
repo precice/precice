@@ -3,13 +3,18 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include <iomanip>
-#include <iostream>
+#include <memory>
 #include "Constants.hpp"
+#include "io/Export.hpp"
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Quad.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace io {
@@ -37,7 +42,7 @@ void ExportVTK::doExport(
     fs::create_directories(outfile);
   outfile = outfile / fs::path(name + ".vtk");
   std::ofstream outstream(outfile.string(), std::ios::trunc);
-  PRECICE_CHECK(outstream, "Could not open file \"" << outfile << "\" for VTK export!");
+  PRECICE_CHECK(outstream, "VTK export failed to open destination file \"" << outfile << '"');
 
   initializeWriting(outstream);
   writeHeader(outstream);

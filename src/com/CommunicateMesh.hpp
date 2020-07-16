@@ -1,10 +1,15 @@
 #pragma once
 
+#include <string>
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
 
 namespace precice {
+namespace mesh {
+class Mesh;
+} // namespace mesh
+
 namespace com {
 
 /// Copies a Mesh object from a sender to a receiver.

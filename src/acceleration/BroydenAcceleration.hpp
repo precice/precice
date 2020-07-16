@@ -1,6 +1,11 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <iosfwd>
+#include <vector>
+#include "acceleration/Acceleration.hpp"
 #include "acceleration/BaseQNAcceleration.hpp"
+#include "acceleration/impl/SharedPointer.hpp"
 
 // ----------------------------------------------------------- CLASS DEFINITION
 

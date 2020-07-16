@@ -1,16 +1,23 @@
+#include "testing/TestContext.hpp"
+#include <algorithm>
 #include <exception>
 #include <memory>
 #include <numeric>
-
+#include <ostream>
+#include <utility>
+#include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "com/SharedPointer.hpp"
 #include "com/SocketCommunication.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
+#include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/RTree.hpp"
-#include "precice/impl/Participant.hpp"
-#include "testing/TestContext.hpp"
 #include "utils/EventUtils.hpp"
+#include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 
@@ -37,7 +44,6 @@ TestContext::~TestContext() noexcept
 
   // Reset static ids and counters
   mesh::Data::resetDataCount();
-  impl::Participant::resetParticipantCount();
 
   // Reset communicators
   Par::resetCommState();
@@ -181,13 +187,7 @@ void TestContext::initializeMasterSlave()
   precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
 #endif
 
-  const auto masterName = name + "Master";
-  const auto slavesName = name + "Slaves";
-  if (isMaster()) {
-    masterSlaveCom->acceptConnection(masterName, slavesName, "", rank, 1);
-  } else {
-    masterSlaveCom->requestConnection(masterName, slavesName, "", rank - 1, size - 1);
-  }
+  masterSlaveCom->connectMasterSlaves(name, "", rank, size);
 
   utils::MasterSlave::_communication = std::move(masterSlaveCom);
 }

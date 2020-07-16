@@ -1,11 +1,24 @@
 #include "partition/ProvidedPartition.hpp"
 #include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <utility>
+#include <vector>
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/SharedPointer.hpp"
+#include "mesh/BoundingBox.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/Vertex.hpp"
+#include "partition/Partition.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 using precice::utils::Event;
 
@@ -38,7 +51,10 @@ void ProvidedPartition::communicate()
   for (auto &m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
 
-      PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh.");
+      PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh. "
+                                                 "Please either switch two-level initialization off in your m2n definition, or "
+                                                 "adapt your mesh setup such that each provided mesh is only received by maximum one "
+                                                 "participant.");
       twoLevelInitAlreadyUsed = true;
 
       Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);
@@ -148,7 +164,7 @@ void ProvidedPartition::prepare()
             slaveIds.push_back(i);
           }
         }
-        PRECICE_ASSERT(_mesh->getVertexDistribution().size() == utils::MasterSlave::getSize());
+        PRECICE_ASSERT(_mesh->getVertexDistribution().size() == static_cast<decltype(_mesh->getVertexDistribution().size())>(utils::MasterSlave::getSize()));
       }
     }
   } else if (utils::MasterSlave::isSlave()) {
@@ -227,7 +243,7 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
-    mesh::BoundingBox bb(_mesh->getDimensions());
+    mesh::BoundingBox          bb(_mesh->getDimensions());
     bbm.emplace(0, _mesh->getBoundingBox());
     PRECICE_ASSERT(!bbm.empty(), "The bounding box of the local mesh is invalid!");
 

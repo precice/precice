@@ -1,6 +1,6 @@
-#include "SocketCommunication.hpp"
-
 #include "SocketCommunicationFactory.hpp"
+#include <memory>
+#include "SocketCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "utils/networking.hpp"
 

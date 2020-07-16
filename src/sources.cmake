@@ -5,6 +5,7 @@
 target_sources(precice
     PRIVATE
     ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
+    src/acceleration/Acceleration.cpp
     src/acceleration/Acceleration.hpp
     src/acceleration/AitkenAcceleration.cpp
     src/acceleration/AitkenAcceleration.hpp
@@ -89,6 +90,8 @@ target_sources(precice
     src/com/config/CommunicationConfiguration.hpp
     src/cplscheme/BaseCouplingScheme.cpp
     src/cplscheme/BaseCouplingScheme.hpp
+    src/cplscheme/BiCouplingScheme.cpp
+    src/cplscheme/BiCouplingScheme.hpp
     src/cplscheme/CompositionalCouplingScheme.cpp
     src/cplscheme/CompositionalCouplingScheme.hpp
     src/cplscheme/Constants.cpp
@@ -178,13 +181,13 @@ target_sources(precice
     src/math/geometry.hpp
     src/math/la.hpp
     src/math/math.hpp
+    src/mesh/BoundingBox.cpp
+    src/mesh/BoundingBox.hpp
     src/mesh/Data.cpp
     src/mesh/Data.hpp
     src/mesh/Edge.cpp
     src/mesh/Edge.hpp
     src/mesh/Filter.hpp
-    src/mesh/BoundingBox.hpp
-    src/mesh/BoundingBox.cpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
     src/mesh/Quad.cpp
@@ -201,7 +204,6 @@ target_sources(precice
     src/mesh/config/DataConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
-    src/mesh/impl/RTree.hpp
     src/mesh/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
@@ -281,6 +283,8 @@ target_sources(precice
     src/xml/ConfigParser.hpp
     src/xml/Printer.cpp
     src/xml/Printer.hpp
+    src/xml/ValueParser.cpp
+    src/xml/ValueParser.hpp
     src/xml/XMLAttribute.hpp
     src/xml/XMLTag.cpp
     src/xml/XMLTag.hpp

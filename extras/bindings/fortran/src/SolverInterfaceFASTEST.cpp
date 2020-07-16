@@ -1,14 +1,15 @@
 #include "precice/SolverInterfaceFASTEST.hpp"
 #include <iostream>
+#include <memory>
 #include <string>
+#include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/SolverInterfaceFortran.hpp"
 
 using namespace std;
 
-static precice::SolverInterface *implAcoustic = nullptr;
-static precice::SolverInterface *implFluid    = nullptr;
+static std::unique_ptr<precice::SolverInterface> implAcoustic = nullptr;
+static std::unique_ptr<precice::SolverInterface> implFluid    = nullptr;
 
 static precice::logging::Logger _log("SolverInterfaceFASTEST");
 
@@ -43,14 +44,14 @@ void precice_fastest_create_(
   //cout << "Accessor: " << stringAccessorName << "!" << '\n';
   //cout << "Config  : " << stringConfigFileName << "!" << '\n';
   if (isAcousticUsed) {
-    implAcoustic = new precice::SolverInterface(stringAccessorNameAcoustic,
-                                                stringConfigFileName,
-                                                *solverProcessIndex, *solverProcessSize);
+    implAcoustic.reset(new precice::SolverInterface(stringAccessorNameAcoustic,
+                                                    stringConfigFileName,
+                                                    *solverProcessIndex, *solverProcessSize));
   }
   if (isFluidUsed) {
-    implFluid = new precice::SolverInterface(stringAccessorNameFluid,
-                                             stringConfigFileName,
-                                             *solverProcessIndex, *solverProcessSize);
+    implFluid.reset(new precice::SolverInterface(stringAccessorNameFluid,
+                                                 stringConfigFileName,
+                                                 *solverProcessIndex, *solverProcessSize));
   }
   PRECICE_CHECK(implAcoustic != nullptr || implFluid != nullptr, "Either the Fluid interface or the Acoustic"
                                                                  " interface or both need to be used");
@@ -101,10 +102,10 @@ void precice_fastest_finalize_(
 
   if (*useFluid == 0) {
     implAcoustic->finalize();
-    delete implAcoustic;
+    implAcoustic.reset();
   } else {
     implFluid->finalize();
-    delete implFluid;
+    implFluid.reset();
   }
 }
 

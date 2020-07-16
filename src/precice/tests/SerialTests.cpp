@@ -1,14 +1,24 @@
 #ifndef PRECICE_NO_MPI
-#include "testing/Testing.hpp"
-
+#include <Eigen/Core>
+#include <algorithm>
+#include <deque>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <vector>
+#include "logging/LogMacros.hpp"
+#include "math/constants.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Vertex.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/config/Configuration.hpp"
-#include "precice/impl/DataContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
+#include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
-#include "utils/MasterSlave.hpp"
-#include "utils/Parallel.hpp"
+#include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
 
 using namespace precice;
 using precice::testing::TestContext;
@@ -20,7 +30,6 @@ struct SerialTestFixture : testing::WhiteboxAccessor {
   void reset()
   {
     mesh::Data::resetDataCount();
-    impl::Participant::resetParticipantCount();
   }
 
   SerialTestFixture()
@@ -48,7 +57,6 @@ BOOST_AUTO_TEST_CASE(TestConfigurationPeano)
   impl::PtrParticipant peano = impl(interfacePeano)._participants[0];
   BOOST_TEST(peano);
   BOOST_TEST(peano->getName() == "Peano");
-  BOOST_TEST(peano->getID() == 0);
 
   std::vector<impl::MeshContext *> meshContexts = peano->_meshContexts;
   BOOST_TEST(meshContexts.size() == 2);
@@ -71,7 +79,6 @@ BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
   impl::PtrParticipant comsol = impl(interfaceComsol)._participants[1];
   BOOST_TEST(comsol);
   BOOST_TEST(comsol->getName() == "Comsol");
-  BOOST_TEST(comsol->getID() == 1);
 
   std::vector<impl::MeshContext *> meshContexts = comsol->_meshContexts;
   BOOST_TEST(meshContexts.size() == 2);
@@ -79,6 +86,91 @@ BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
   BOOST_TEST(meshContexts[1]->mesh->getName() == std::string("ComsolNodes"));
   BOOST_TEST(comsol->_usedMeshContexts.size() == 1);
 }
+
+BOOST_AUTO_TEST_SUITE(Lifecycle)
+
+// Test representing the full explicit lifecycle of a SolverInterface
+BOOST_AUTO_TEST_CASE(Full)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+
+  if (context.isNamed("SolverOne")) {
+    auto   meshid   = interface.getMeshID("MeshOne");
+    double coords[] = {0.1, 1.2, 2.3};
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto   dataid = interface.getDataID("DataOne", meshid);
+    double data[] = {3.4, 4.5, 5.6};
+    interface.writeVectorData(dataid, vertexid, data);
+  } else {
+    auto   meshid   = interface.getMeshID("MeshTwo");
+    double coords[] = {0.12, 1.21, 2.2};
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto dataid = interface.getDataID("DataTwo", meshid);
+    interface.writeScalarData(dataid, vertexid, 7.8);
+  }
+  interface.initialize();
+  BOOST_TEST(interface.isCouplingOngoing());
+  interface.finalize();
+}
+
+// Test representing the full lifecycle of a SolverInterface
+// Finalize is not called explicitly here.
+// The destructor has to cleanup.
+BOOST_AUTO_TEST_CASE(ImplicitFinalize)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+
+  if (context.isNamed("SolverOne")) {
+    auto   meshid   = interface.getMeshID("MeshOne");
+    double coords[] = {0.1, 1.2, 2.3};
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto   dataid = interface.getDataID("DataOne", meshid);
+    double data[] = {3.4, 4.5, 5.6};
+    interface.writeVectorData(dataid, vertexid, data);
+  } else {
+    auto   meshid   = interface.getMeshID("MeshTwo");
+    double coords[] = {0.12, 1.21, 2.2};
+    auto   vertexid = interface.setMeshVertex(meshid, coords);
+
+    auto dataid = interface.getDataID("DataTwo", meshid);
+    interface.writeScalarData(dataid, vertexid, 7.8);
+  }
+  interface.initialize();
+  BOOST_TEST(interface.isCouplingOngoing());
+}
+
+// Test representing the minimal lifecylce, which consists out of construction only.
+// The destructor has to cleanup correctly.
+BOOST_AUTO_TEST_CASE(ConstructOnly)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+}
+
+// Test representing the minimal lifecylce with explicit finalization.
+// This shows how to manually finalize MPI etc without using the SolverInterface.
+BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+
+  interface.finalize();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 /// Test to run simple "do nothing" coupling between two solvers.
 void runTestExplicit(std::string const &configurationFileName, TestContext const &context)
@@ -650,6 +742,71 @@ BOOST_AUTO_TEST_CASE(testImplicit)
     couplingInterface.finalize();
     BOOST_TEST(computedTimesteps == 4);
   }
+}
+
+/// Test simple coupled simulation with iterations, data initialization and without acceleration
+BOOST_AUTO_TEST_CASE(testImplicitWithDataInitialization)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  using namespace precice::constants;
+
+  SolverInterface couplingInterface(context.name, _pathToTests + "implicit-data-init.xml", 0, 1);
+
+  int dimensions = couplingInterface.getDimensions();
+  std::string meshName;
+  std::string writeDataName;
+  std::string readDataName;
+  double writeValue, expectedReadValue;
+
+  if (context.isNamed("SolverOne")) {
+    meshName = "MeshOne";
+    writeDataName = "Forces";
+    readDataName = "Velocities";
+    writeValue = 1;
+    expectedReadValue = 2;
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    meshName = "MeshTwo";
+    writeDataName = "Velocities";
+    readDataName = "Forces";
+    writeValue = 2;
+    expectedReadValue = 1;
+  }
+  int meshID = couplingInterface.getMeshID(meshName);
+  int writeDataID     = couplingInterface.getDataID(writeDataName, meshID);
+  int readDataID     = couplingInterface.getDataID(readDataName, meshID);
+  std::vector<double> vertex(dimensions, 0);
+  int                 vertexID = couplingInterface.setMeshVertex(meshID, vertex.data());
+
+  double dt = 0;
+  dt = couplingInterface.initialize();
+  std::vector<double> writeData(dimensions, writeValue);
+  std::vector<double> readData(dimensions, -1);
+  const std::string& cowid = actionWriteInitialData();
+
+  if(couplingInterface.isActionRequired(cowid)){
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
+    couplingInterface.markActionFulfilled(cowid);
+  }
+
+  couplingInterface.initializeData();
+
+  while (couplingInterface.isCouplingOngoing()) {
+    if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())) {
+      couplingInterface.markActionFulfilled(actionWriteIterationCheckpoint());
+    }
+    couplingInterface.readVectorData(readDataID, vertexID, readData.data());
+    BOOST_TEST(expectedReadValue == readData[0]);
+    BOOST_TEST(expectedReadValue == readData[1]);
+    couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
+    dt = couplingInterface.advance(dt);
+    if (couplingInterface.isActionRequired(actionReadIterationCheckpoint())) {
+      couplingInterface.markActionFulfilled(actionReadIterationCheckpoint());
+    }
+  }
+  couplingInterface.finalize();
 }
 
 /// Tests stationary mapping with solver provided meshes.
@@ -1359,7 +1516,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
     if (context.isNamed("SolverTwo")) {
       int dataID = cplInterface.getDataID("DataOne", meshID);
       // to get convergence in first timestep (everything 0), but not in second timestep
-      Vector2d value{0.0, 0.0 + numberOfAdvanceCalls};
+      Vector2d value{0.0, 2.0 + numberOfAdvanceCalls * numberOfAdvanceCalls};
       cplInterface.writeVectorData(dataID, vertexID, value.data());
     }
     cplInterface.advance(1.0);

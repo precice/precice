@@ -1,10 +1,11 @@
-#ifndef PRECICE_NO_MPI
-#include <mpi.h>
-#endif
 #include <Eigen/Core>
-
+#include <math.h>
+#include "acceleration/Acceleration.hpp"
 #include "acceleration/BaseQNAcceleration.hpp"
+#include "acceleration/SharedPointer.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
+#include "cplscheme/Constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(AccelerationTests)

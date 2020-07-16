@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -19,7 +20,7 @@
 namespace precice {
 namespace cplscheme {
 class CompositionalCouplingScheme;
-class BaseCouplingScheme;
+class BiCouplingScheme;
 } // namespace cplscheme
 } // namespace precice
 
@@ -36,6 +37,8 @@ struct testParseConfigurationWithRelaxation;
 // ----------------------------------------------------------- CLASS DEFINITION
 namespace precice {
 namespace cplscheme {
+class MultiCouplingScheme;
+
 /// Configuration for coupling schemes.
 class CouplingSchemeConfiguration : public xml::XMLTag::Listener {
 public:
@@ -115,6 +118,14 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
+  struct ConvergenceMeasureDefintion {
+    mesh::PtrData               data;
+    bool                        suffices;
+    std::string                 meshName;
+    impl::PtrConvergenceMeasure measure;
+    bool                        doesLogging;
+  };
+
   struct Config {
     std::string                   type;
     std::string                   name;
@@ -125,15 +136,13 @@ private:
     int                           maxTimeWindows = CouplingScheme::UNDEFINED_TIME_WINDOWS;
     double                        timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
     int                           validDigits    = 16;
-    constants::TimesteppingMethod dtMethod       = constants::FIXED_DT;
+    constants::TimesteppingMethod dtMethod       = constants::FIXED_TIME_WINDOW_SIZE;
     /// Tuples of exchange data, mesh, and participant name.
     typedef std::tuple<mesh::PtrData, mesh::PtrMesh, std::string, std::string, bool> Exchange;
     std::vector<Exchange>                                                            exchanges;
-    /// Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<std::tuple<mesh::PtrData, bool, std::string, impl::PtrConvergenceMeasure>> convMeasures;
-    int                                                                                    maxIterations      = -1;
-    int                                                                                    extrapolationOrder = 0;
-
+    std::vector<ConvergenceMeasureDefintion>                                         convergenceMeasureDefinitions;
+    int                                                                              maxIterations      = -1;
+    int                                                                              extrapolationOrder = 0;
   } _config;
 
   mesh::PtrMeshConfiguration _meshConfig;
@@ -222,8 +231,8 @@ private:
 
   /// Adds configured exchange data to be sent or received to scheme.
   void addDataToBeExchanged(
-      BaseCouplingScheme &scheme,
-      const std::string & accessor) const;
+      BiCouplingScheme & scheme,
+      const std::string &accessor) const;
 
   /**
    * @brief Adds configured exchange data to be sent or received to scheme.

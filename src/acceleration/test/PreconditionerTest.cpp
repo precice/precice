@@ -1,9 +1,14 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <stddef.h>
+#include <vector>
 #include "acceleration/impl/ConstantPreconditioner.hpp"
+#include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/ResidualPreconditioner.hpp"
 #include "acceleration/impl/ResidualSumPreconditioner.hpp"
-#include "acceleration/impl/SharedPointer.hpp"
 #include "acceleration/impl/ValuePreconditioner.hpp"
-#include "com/MPIDirectCommunication.hpp"
+#include "cplscheme/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(AccelerationTests)

@@ -1,6 +1,11 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <map>
+#include <vector>
+#include "acceleration/Acceleration.hpp"
 #include "acceleration/BaseQNAcceleration.hpp"
+#include "acceleration/impl/SharedPointer.hpp"
 
 namespace precice {
 namespace acceleration {

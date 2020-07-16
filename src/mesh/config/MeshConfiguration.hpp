@@ -2,7 +2,9 @@
 
 #include <list>
 #include <map>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"

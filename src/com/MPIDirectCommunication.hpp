@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include <mpi.h>
+#include <set>
+#include <stddef.h>
 #include <string>
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"

@@ -1,15 +1,23 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <iosfwd>
+#include <string>
 #include <vector>
 #include "FindClosestEdge.hpp"
 #include "FindClosestQuad.hpp"
 #include "FindClosestTriangle.hpp"
 #include "FindClosestVertex.hpp"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace mesh {
 class Mesh;
-}
+class Edge;
+class Quad;
+class Triangle;
+class Vertex;
+} // namespace mesh
 } // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION

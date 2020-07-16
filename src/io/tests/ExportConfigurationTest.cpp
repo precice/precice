@@ -1,4 +1,9 @@
+#include <list>
+#include <string>
+#include "io/ExportContext.hpp"
+#include "io/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "xml/XMLTag.hpp"
 

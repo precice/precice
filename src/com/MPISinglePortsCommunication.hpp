@@ -1,7 +1,12 @@
 #pragma once
 #ifndef PRECICE_NO_MPI
 
+#include <mpi.h>
 #include <map>
+#include <mpi.h>
+#include <set>
+#include <stddef.h>
+#include <string>
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"
 
@@ -76,8 +81,29 @@ private:
 
   std::string _addressDirectory;
 
-  /// Remote rank -> communicator map
-  std::map<int, MPI_Comm> _communicators;
+  /** @brief A map of direct communication channels based on MPI_COMM_SELF on both sides
+   *
+   * These 1-1 connections are used until the has been a @ref _global communicator established.
+   *
+   * These direct connections connect MPI_COMM_SELF on both sides.
+   * The call to establish such a connection is thus not collective.
+   *
+   * These connections are required for the Master-Master and Master-Slaves connections.
+   */
+  std::map<int, MPI_Comm> _direct;
+
+  /** @brief The global inter-communicator that connects all ranks
+   *
+   * Once established, this is the default communicator for all communication.
+   *
+   * The call to establish this communicator is collective over both communicators.
+   * Thus the call to @ref requestConnectionAsClient() and @ref acceptConnectionAsServer() is the
+   * only time window where this global communicator can be established.
+   */
+  MPI_Comm _global = MPI_COMM_NULL;
+
+  /// The communicator size known from acceptConnection and requestConnection
+  int _initialCommSize = -1;
 
   /// Name of the port used for connection.
   std::string _portName = std::string(MPI_MAX_PORT_NAME, '\0');
