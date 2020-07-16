@@ -1,4 +1,3 @@
-#include "partition/ReceivedPartition.hpp"
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -17,6 +16,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
+#include "partition/ReceivedPartition.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -426,11 +426,10 @@ void ReceivedPartition::compareBoundingBoxes()
 
     // send connectionMap to other master
     m2n().getMasterCommunication()->send(connectedRanksList, 0);
-    if (not connectionMap.empty()) {
-      com::CommunicateBoundingBox(m2n().getMasterCommunication()).sendConnectionMap(connectionMap, 0);
-    } else {
-      PRECICE_ERROR("This participant seems to have no mesh partitions for mesh " << _mesh->getName() << " at the coupling interface.");
-    }
+    PRECICE_CHECK(not connectionMap.empty(), "The mesh \"" << _mesh->getName() << "\" of this participant has no partitions at the coupling interface. "
+                                                                                  "Check that both mapped meshes are describing the same geometry. "
+                                                                                  "If you deal with very coarse meshes, consider increasing the safety-factor in the <use-mesh /> tag.");
+    com::CommunicateBoundingBox(m2n().getMasterCommunication()).sendConnectionMap(connectionMap, 0);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
 
