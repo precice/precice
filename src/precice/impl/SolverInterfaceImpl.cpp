@@ -786,6 +786,10 @@ void SolverInterfaceImpl::setMeshTriangle(
     mesh::Edge &e0 = mesh->edges()[firstEdgeID];
     mesh::Edge &e1 = mesh->edges()[secondEdgeID];
     mesh::Edge &e2 = mesh->edges()[thirdEdgeID];
+    PRECICE_CHECK(e0.connectedTo(e1) && e1.connectedTo(e2) && e2.connectedTo(e0),
+                  "setMeshTriangle() was called with Edge IDs ("
+                      << firstEdgeID << ',' << secondEdgeID << ',' << thirdEdgeID
+                      << "), which identify unconnected Edges.");
     mesh->createTriangle(e0, e1, e2);
   }
 }
