@@ -252,13 +252,9 @@ void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
   if (isImplicitCouplingScheme()) {
     for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->oldValues.cols() == 0) {
-        PRECICE_ASSERT(isExplicitCouplingScheme());
+      if (pair.second->oldValues.cols() == 0)
         break;
-      }
       pair.second->oldValues.col(0) = *pair.second->values;
-    }
-    for (DataMap::value_type &pair : dataMap) {
       // For extrapolation, treat the initial value as old time windows value
       utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
     }
@@ -493,6 +489,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
                     (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values->size(), _extrapolationOrder + 1 - cols));
     }
   }
+  // Storage reservation for acceleration methods happens in Acceleration::initialize
 }
 
 void BaseCouplingScheme::setAcceleration(
