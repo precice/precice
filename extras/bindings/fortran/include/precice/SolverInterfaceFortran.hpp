@@ -89,6 +89,8 @@ void precicef_get_dims_(int *dimensions);
 /**
  * @brief See precice::SolverInterface::isOngoing().
  *
+ * Deprecated - Forwards to precicef_is_coupling_ongoing_
+ *
  * Fortran syntax:
  * precicef_ongoing( INTEGER isOngoing )
  *
@@ -96,6 +98,17 @@ void precicef_get_dims_(int *dimensions);
  * OUT: isOngoing(1:true, 0:false)
  */
 void precicef_ongoing_(int *isOngoing);
+
+/**
+ * @brief See precice::SolverInterface::isCouplingOngoing().
+ *
+ * Fortran syntax:
+ * precicef_is_coupling_ongoing( INTEGER isOngoing )
+ *
+ * IN:  -
+ * OUT: isOngoing(1:true, 0:false)
+ */
+void precicef_is_coupling_ongoing_(int *isOngoing);
 
 /**
  * @brief See precice::SolverInterface::isWriteDataRequired().
@@ -159,6 +172,8 @@ void precicef_has_to_evaluate_fine_model_(int *hasToEvaluate);
 /**
  * @brief See precice::SolverInterface::isActionRequired().
  *
+ * Deprecated - Forwards to precicef_is_action_required_
+ *
  * Fortran syntax:
  * precicef_action_required(
  *   CHARACTER action(*),
@@ -168,6 +183,22 @@ void precicef_has_to_evaluate_fine_model_(int *hasToEvaluate);
  * OUT: isRequired(1:true, 0:false)
  */
 void precicef_action_required_(
+    const char *action,
+    int *       isRequired,
+    int         lengthAction);
+
+/**
+ * @brief See precice::SolverInterface::isActionRequired().
+ *
+ * Fortran syntax:
+ * precicef_is_action_required(
+ *   CHARACTER action(*),
+ *   INTEGER   isRequired )
+ *
+ * IN:  action
+ * OUT: isRequired(1:true, 0:false)
+ */
+void precicef_is_action_required_(
     const char *action,
     int *       isRequired,
     int         lengthAction);
