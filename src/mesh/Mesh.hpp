@@ -197,11 +197,11 @@ public:
   /**
    * @brief Computes the ordering of edges to form a quad.
    *
-   * Receives a set of edges and re-orders them to form a quad. A list
-   * of four unique vertices is returned that form the quad
+   * Receives a set of edge IDs and re-orders them to form a quad. A list
+   * of four vertex IDs is returned that form the quad.
    *
    */
-  std::array<int,4> computeQuadEdgeOrder(std::array<int,4> &edgeList) const;
+  std::array<int,4> computeQuadEdgeOrder(std::array<int,4> &edgeIDs) const;
 
   /**
    * @brief Removes all mesh elements and data values (does not remove data).

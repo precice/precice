@@ -771,6 +771,7 @@ void SolverInterfaceImpl::setMeshQuad(
                 fourthEdgeID);
   PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."\
                 " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_ASSERT(_dimensions == 3, _dimensions);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -788,20 +789,22 @@ void SolverInterfaceImpl::setMeshQuad(
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID)),
                   "The four edge ID's are not unique. Please check that the edges that form the quad are correct.");
 
-    std::array<int,4>  edgeList;  // A list of edge ID numbers
-    edgeList[0] = firstEdgeID;
-    edgeList[1] = secondEdgeID;
-    edgeList[2] = thirdEdgeID;
-    edgeList[3] = fourthEdgeID;
+    std::array<int,4>  edgeIDs;  // A list of edge ID numbers
+    edgeIDs[0] = firstEdgeID;
+    edgeIDs[1] = secondEdgeID;
+    edgeIDs[2] = thirdEdgeID;
+    edgeIDs[3] = fourthEdgeID;
 
     // Write out a list of all vertex ID's that are eventually connected in 
     // V0-V1-V2-V3-V0 order to get diagonal distances.
     mesh::Vertex *vertices[4];
-    // Reorders the edgeList and sets the vertexIDs order.
-    std::array<int,4> vertexIDs = mesh->computeQuadEdgeOrder(edgeList); 
+    // Reorders the edgeIDs and sets the vertexIDs order.
+    std::array<int,4> vertexIDs = mesh->computeQuadEdgeOrder(edgeIDs); 
     
     // Computes vertex order for the convex quad and reorders the variable vertexIDs
-    PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexIDs),"Quad is not convex."); 
+    PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexIDs),"Quad is not convex. " \
+                  "Please check that the adapter send the four correct vertices or that the interface is composed of quads. "\
+                  "A mix of triangles and quads are not supported."); 
     vertices[0] = &mesh->vertices()[vertexIDs[0]];
     vertices[1] = &mesh->vertices()[vertexIDs[1]];
     vertices[2] = &mesh->vertices()[vertexIDs[2]];
@@ -810,7 +813,8 @@ void SolverInterfaceImpl::setMeshQuad(
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), 
                                                            vertices[2]->getCoords(), vertices[3]->getCoords())),
                   "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle." \
-                  "Please check that the edges that form the quad are correct.");
+                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "\
+                  "is composed of quads. A mix of triangles and quads are not supported.");
 
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
     Eigen::Vector3d distance1(_dimensions),distance2(_dimensions);
@@ -820,12 +824,12 @@ void SolverInterfaceImpl::setMeshQuad(
     // The new edge, e[4], is the shortest diagonal of the quad
     if (distance1.norm() < distance2.norm()){
       e[4] = &mesh->createUniqueEdge(*vertices[0], *vertices[2]);
-      mesh->createTriangle(*e[edgeList[0]], *e[edgeList[1]], *e[4]);
-      mesh->createTriangle(*e[edgeList[2]], *e[edgeList[3]], *e[4]);
+      mesh->createTriangle(*e[edgeIDs[0]], *e[edgeIDs[1]], *e[4]);
+      mesh->createTriangle(*e[edgeIDs[2]], *e[edgeIDs[3]], *e[4]);
     }else{
       e[4] = &mesh->createUniqueEdge(*vertices[1], *vertices[3]);
-      mesh->createTriangle(*e[edgeList[3]], *e[edgeList[0]], *e[4]);
-      mesh->createTriangle(*e[edgeList[1]], *e[edgeList[2]], *e[4]);
+      mesh->createTriangle(*e[edgeIDs[3]], *e[edgeIDs[0]], *e[4]);
+      mesh->createTriangle(*e[edgeIDs[1]], *e[edgeIDs[2]], *e[4]);
     }  
   }
 }
@@ -841,6 +845,7 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
                 secondVertexID, thirdVertexID, fourthVertexID);
   PRECICE_CHECK(_dimensions == 3, "setMeshQuadWithEdges is only possible for 3D cases."\
               " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_ASSERT(_dimensions == 3,
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -863,7 +868,8 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), 
                                                            vertices[2]->getCoords(), vertices[3]->getCoords() )),
                   "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle." \
-                  "Please check that the vertices that form the quad are correct.");
+                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "\
+                  "is composed of quads. A mix of triangles and quads are not supported.");
 
     // Computes vertex order for the convex quad and reorders the variable vertexIDs
     PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexIDs),"Quad is not convex."); 

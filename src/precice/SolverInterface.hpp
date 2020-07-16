@@ -497,8 +497,7 @@ public:
    * @param[in] fourthEdgeID ID of the forth edge of the Quad
    * 
    * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID and fourthEdgeID were added to the mesh with the ID meshID.
-   
-   * @warning Quads are not fully implemented yet.
+   * 
    */
   void setMeshQuad(
       int meshID,

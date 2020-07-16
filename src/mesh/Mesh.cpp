@@ -482,10 +482,10 @@ bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexIDs) const
 
   //Transform Coordinates - coord[0] is the origin
   for (int i = 0; i < 4; i++){
-    Eigen::Vector3d distance = vertices()[vertexIDs[i]].getCoords() - vertices()[vertexIDs[0]].getCoords();
-    coords[i][0] = e_1.dot(distance);
-    coords[i][1] = e_2.dot(distance);
-    coords[i][2] = normalVector.dot(distance);
+    Eigen::Vector3d euclideanDistance = vertices()[vertexIDs[i]].getCoords() - vertices()[vertexIDs[0]].getCoords();
+    coords[i][0] = e_1.dot(euclideanDistance);
+    coords[i][1] = e_2.dot(euclideanDistance);
+    coords[i][2] = normalVector.dot(euclideanDistance);
   }
 
   PRECICE_DEBUG("Vertex IDs are: " << vertexIDs[0] << " " << vertexIDs[1] << " " << vertexIDs[2] << " " << vertexIDs[3]);
@@ -548,11 +548,11 @@ bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexIDs) const
   return (validVertexIDCounter == 4);
 }
 
-std::array<int,4> Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList) const
+std::array<int,4> Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeIDs) const
 {
   /*
   The first edge in the list is treated as the first edge (edge[0]). An edge that does not share a vertex
-  with the frist edge is the 3rd edge (edge[2]). The edge that shares the first vertex with the first
+  with the first edge is the 3rd edge (edge[2]). The edge that shares the first vertex with the first
   edge (shares vertex[0] with edge[0]) is the 4th edge (edge[3]) as long as it does not share
   the other vertex with edge[0] (then there is a duplicated edge). The edge sharing vertex[1] and not
   vertex[0] is the 2nd edge (edge[1]). This also provides the vertex ordering to determine the diagonal, 
@@ -561,40 +561,40 @@ std::array<int,4> Mesh::computeQuadEdgeOrder(std::array<int,4> &edgeList) const
   int edgeOrder[4]; // Will contain new order of edges to form a closed quad
   std::array<int,4> vertexIDs;
 
-  // The first two vertices are the points on the first edge in edgeList. The other edges are built around this
-  vertexIDs[0] = edges()[edgeList[0]].vertex(0).getID();
-  vertexIDs[1] = edges()[edgeList[0]].vertex(1).getID();
+  // The first two vertices are the points on the first edge in edgeIDs. The other edges are built around this
+  vertexIDs[0] = edges()[edgeIDs[0]].vertex(0).getID();
+  vertexIDs[1] = edges()[edgeIDs[0]].vertex(1).getID();
 
-  for (int j = 1; j < 4; j++){  // looping thorugh edges 2, 3 and 4 in edgeList
+  for (int j = 1; j < 4; j++){  // looping through edges 2, 3 and 4 in edgeIDs
 
-    int ID1 = edges()[edgeList[j]].vertex(0).getID();
-    int ID2 = edges()[edgeList[j]].vertex(1).getID();
+    int ID1 = edges()[edgeIDs[j]].vertex(0).getID();
+    int ID2 = edges()[edgeIDs[j]].vertex(1).getID();
 
     if (ID1 != vertexIDs[0] && ID2 != vertexIDs[0] && ID1 != vertexIDs[1] && ID2 != vertexIDs[1] ){
         // Doesnt match any point on edge 1, therefore must be edge 3 for the reordered set
-        edgeOrder[2] = edgeList[j];
+        edgeOrder[2] = edgeIDs[j];
       } else if ((ID1 == vertexIDs[0] || ID2 == vertexIDs[0]) && (ID1 != vertexIDs[1] && ID2 != vertexIDs[1])){
         // One of the vertices matches V0, and does not match V1, must be edge 4 (connected V3 to V0)
-        edgeOrder[3] = edgeList[j];
+        edgeOrder[3] = edgeIDs[j];
         if (ID1 == vertexIDs[0]){
-          vertexIDs[3] = edges()[edgeList[j]].vertex(1).getID();
+          vertexIDs[3] = edges()[edgeIDs[j]].vertex(1).getID();
         }else{
-          vertexIDs[3] = edges()[edgeList[j]].vertex(0).getID();
+          vertexIDs[3] = edges()[edgeIDs[j]].vertex(0).getID();
         }
       }else if((ID1 == vertexIDs[1] || ID2 == vertexIDs[1]) && (ID1 != vertexIDs[0] && ID2 != vertexIDs[0])){
         // Must be edge 2, as it matches V1 and not V0
-        edgeOrder[1] = edgeList[j];
+        edgeOrder[1] = edgeIDs[j];
         if (ID1 == vertexIDs[1]){
-          vertexIDs[2] = edges()[edgeList[j]].vertex(1).getID();
+          vertexIDs[2] = edges()[edgeIDs[j]].vertex(1).getID();
         }else{
-          vertexIDs[2] = edges()[edgeList[j]].vertex(0).getID();
+          vertexIDs[2] = edges()[edgeIDs[j]].vertex(0).getID();
         }
       }
     }
 
-    edgeList[1] = edgeOrder[1];
-    edgeList[2] = edgeOrder[2];
-    edgeList[3] = edgeOrder[3];
+    edgeIDs[1] = edgeOrder[1];
+    edgeIDs[2] = edgeOrder[2];
+    edgeIDs[3] = edgeOrder[3];
 
     return vertexIDs;
 
