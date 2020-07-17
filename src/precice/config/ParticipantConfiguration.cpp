@@ -472,7 +472,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     int toMeshID = dataContext.mesh->getID();
     PRECICE_CHECK(participant->isMeshUsed(toMeshID),
                   "Participant \"" << participant->getName() << "\" has to use mesh \""
-                                   << dataContext.mesh->getName() << "\" in order to write data to it. "
+                                   << dataContext.mesh->getName() << "\" in order to read data from it. "
                                    << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\".");
 
     for (impl::MappingContext &mappingContext : participant->readMappingContexts()) {
