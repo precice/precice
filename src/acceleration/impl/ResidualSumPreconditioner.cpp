@@ -43,15 +43,16 @@ void ResidualSumPreconditioner::_update_(bool                   timestepComplete
       sum += norms[k];
       offset += _subVectorSizes[k];
       norms[k] = std::sqrt(norms[k]);
-      PRECICE_CHECK(not math::equals(norms[k], 0.0), "A residual sub-vector in the residual-sum preconditioner became numerically zero. "
-                                                     "Thus, the preconditioner is no longer stable. Please try the value preconditioner instead.");
     }
     sum = std::sqrt(sum);
     PRECICE_ASSERT(sum > 0);
+    PRECICE_CHECK(not math::equals(sum, 0.0), "All residual sub-vectors in the residual-sum preconditioner are numerically zero."
+                                              "Your simulation got probably unstable, e.g. produces NAN values.");
 
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       _residualSum[k] += norms[k] / sum;
-      PRECICE_ASSERT(_residualSum[k] > 0);
+      PRECICE_CHECK(not math::equals(_residualSum[k], 0.0), "A sub-vector in the residual-sum preconditioner became numerically zero. "
+                                                            "Thus, the preconditioner is no longer stable. Please try the value preconditioner instead.");
     }
 
     offset = 0;
