@@ -506,6 +506,7 @@ void BaseCouplingScheme::newConvergenceMeasurements()
 void BaseCouplingScheme::addConvergenceMeasure(
     mesh::PtrData               data,
     bool                        suffices,
+    bool                        strict,
     impl::PtrConvergenceMeasure measure,
     bool                        doesLogging)
 {
@@ -513,6 +514,7 @@ void BaseCouplingScheme::addConvergenceMeasure(
   convMeasure.data         = std::move(data);
   convMeasure.couplingData = nullptr;
   convMeasure.suffices     = suffices;
+  convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
   convMeasure.doesLogging  = doesLogging;
   _convergenceMeasures.push_back(convMeasure);
@@ -524,6 +526,7 @@ bool BaseCouplingScheme::measureConvergence()
   PRECICE_ASSERT(not doesFirstStep());
   bool allConverged = true;
   bool oneSuffices  = false;
+  bool oneStrict    = false;
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::MasterSlave::isSlave()) {
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
@@ -544,19 +547,23 @@ bool BaseCouplingScheme::measureConvergence()
 
     if (not convMeasure.measure->isConvergence()) {
       allConverged = false;
+      if (convMeasure.strict) {
+        oneStrict = true;
+      }
     } else if (convMeasure.suffices == true) {
       oneSuffices = true;
     }
+
     PRECICE_INFO(convMeasure.measure->printState());
   }
 
   if (allConverged) {
     PRECICE_INFO("All converged");
-  } else if (oneSuffices) {
+  } else if (oneSuffices && not oneStrict) { //strict overrules suffices
     PRECICE_INFO("Sufficient measure converged");
   }
 
-  return allConverged || oneSuffices;
+  return allConverged || (oneSuffices && not oneStrict);
 }
 
 void BaseCouplingScheme::initializeTXTWriters()
