@@ -1662,7 +1662,9 @@ BOOST_AUTO_TEST_CASE(testSummationActionTwoSources)
   testSummationAction(configFile, context);
  }
 
-void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::string configFile)
+ 
+
+void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
 {
   using Eigen::Vector3d;
 
@@ -1759,32 +1761,29 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
   }
 }
 
+
 /**
  * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges from a quad to a triangle
  *
  */
-BOOST_AUTO_TEST_CASE(testQuadMappingNearestProjectionExplicitEdges,
-                     *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testQuadMappingNearestProjectionExplicitEdges)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2)
-    return;
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   bool              defineEdgesExplicitly = true;
   const std::string configFile            = _pathToTests + "mapping-nearest-projection.xml";
-  testQuadMappingNearestProjection(defineEdgesExplicitly, configFile);
+  testQuadMappingNearestProjection(defineEdgesExplicitly, configFile, context);
 }
 
 /**
  * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges from a quad to a triangle
  *
  */
-BOOST_AUTO_TEST_CASE(testQuadMappingNearestProjectionImplicitEdges,
-                     *testing::MinRanks(2) * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1})))
+BOOST_AUTO_TEST_CASE(testQuadMappingNearestProjectionImplicitEdges)
 {
-  if (utils::Parallel::getCommunicatorSize() != 2)
-    return;
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   bool              defineEdgesExplicitly = false;
   const std::string configFile            = _pathToTests + "mapping-nearest-projection.xml";
-  testQuadMappingNearestProjection(defineEdgesExplicitly, configFile);
+  testQuadMappingNearestProjection(defineEdgesExplicitly, configFile, context);
 }
 
 
