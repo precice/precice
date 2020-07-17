@@ -887,7 +887,7 @@ void SolverInterfaceImpl::setMeshQuad(
     distance2 = vertices[1]->getCoords() - vertices[3]->getCoords();
     
     // The new edge, e[4], is the shortest diagonal of the quad
-    if (distance1.norm() < distance2.norm()){
+    if (distance1.norm() <= distance2.norm()){
       e[4] = &mesh->createUniqueEdge(*vertices[0], *vertices[2]);
       mesh->createTriangle(*e[edgeIDs[0]], *e[edgeIDs[1]], *e[4]);
       mesh->createTriangle(*e[edgeIDs[2]], *e[edgeIDs[3]], *e[4]);

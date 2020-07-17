@@ -616,6 +616,38 @@ BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexityWithOffPlane)
   
 }
 
+BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexityWithEqualLeftPoint)
+{
+  int             dim = 3;
+  Mesh            mesh1("Mesh1", dim, false, testing::nextMeshID());
+  auto &          mesh = mesh1;
+  Eigen::VectorXd coords0(dim);
+  Eigen::VectorXd coords1(dim);
+  Eigen::VectorXd coords2(dim);
+  Eigen::VectorXd coords3(dim);
+  coords0 << 0.0, 0.0, 0.0;
+  coords1 << 1.0, 0.0, 0.0;
+  coords2 << 1.0, 1.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  Vertex &v3 = mesh.createVertex(coords3);
+
+  std::array<int,4>  vertexList;
+  vertexList[0] = v0.getID();
+  vertexList[1] = v1.getID();
+  vertexList[2] = v2.getID();
+  vertexList[3] = v3.getID();
+
+  BOOST_TEST(mesh.computeQuadConvexityFromPoints(vertexList));
+  BOOST_TEST(vertexList[0] ==  v0.getID());
+  BOOST_TEST(vertexList[1] ==  v3.getID());
+  BOOST_TEST(vertexList[2] ==  v2.getID());
+  BOOST_TEST(vertexList[3] ==  v1.getID());
+  
+}
+
 BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
 {
   int             dim = 3;
