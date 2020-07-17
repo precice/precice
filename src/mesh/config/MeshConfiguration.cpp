@@ -84,11 +84,9 @@ void MeshConfiguration::xmlTagCallback(
       }
     }
     if (not found) {
-      std::ostringstream stream;
-      stream << "Data with name \"" << name << "\" used by "
+      PRECICE_ERROR("Data with name \"" << name << "\" used by "
              << "mesh \"" << _meshes.back()->getName() << "\" is not defined. "
-             << "Please define a data tag with name=\"" << name << "\".";
-      throw std::runtime_error{stream.str()};
+             << "Please define a data tag with name=\"" << name << "\".");
     }
   }
 }
@@ -115,7 +113,7 @@ void MeshConfiguration::addMesh(
         break;
       }
     }
-    PRECICE_CHECK(found, "Data " << dataNewMesh->getName() << " is not defined. Please define a data tag with name=\""<< dataNewMesh->getName() << "\".");
+    PRECICE_ASSERT(found, "Data " << dataNewMesh->getName() << " is not defined. Please define a data tag with name=\""<< dataNewMesh->getName() << "\".");
   }
   _meshes.push_back(mesh);
 }
