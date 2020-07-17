@@ -216,7 +216,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         PRECICE_WARN(
             "The number of columns in the least squares system exceeded half the number of unknowns at the interface. "
             << "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
-            << "converge. Maybe the number of allowed columns (maxIterationsUsed) should be limited.");
+            << "converge. Maybe the number of allowed columns ("max-used-iterations") should be limited.");
 
       Eigen::VectorXd deltaR = _residuals;
       deltaR -= _oldResiduals;
