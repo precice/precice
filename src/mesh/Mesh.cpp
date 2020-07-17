@@ -507,10 +507,10 @@ bool Mesh::computeQuadConvexityFromPoints(std::array<int,4> &vertexIDs) const
 
   //Transform Coordinates - coord[0] is the origin
   for (int i = 0; i < 4; i++){
-    Eigen::Vector3d euclideanDistance = vertices()[vertexIDs[i]].getCoords() - vertices()[vertexIDs[0]].getCoords();
-    coords[i][0] = e_1.dot(euclideanDistance);
-    coords[i][1] = e_2.dot(euclideanDistance);
-    coords[i][2] = normalVector.dot(euclideanDistance);
+    Eigen::Vector3d coordinateDifference = vertices()[vertexIDs[i]].getCoords() - vertices()[vertexIDs[0]].getCoords();
+    coords[i][0] = e_1.dot(coordinateDifference);
+    coords[i][1] = e_2.dot(coordinateDifference);
+    coords[i][2] = normalVector.dot(coordinateDifference);
   }
 
   PRECICE_DEBUG("Vertex IDs are: " << vertexIDs[0] << " " << vertexIDs[1] << " " << vertexIDs[2] << " " << vertexIDs[3]);
