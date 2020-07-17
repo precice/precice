@@ -1,4 +1,3 @@
-#include "SolverInterfaceImpl.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
@@ -10,6 +9,7 @@
 #include <ostream>
 #include <tuple>
 #include <utility>
+#include "SolverInterfaceImpl.hpp"
 #include "action/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
@@ -28,10 +28,12 @@
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "math/differences.hpp"
+#include "math/geometry.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "partition/Partition.hpp"
@@ -737,7 +739,7 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
       if (_dimensions == 3) {
         err << ", " << posMatrix.col(i)[2];
       }
-      err << "). The request failed for query " << i+1 << " out of " << size << '.';
+      err << "). The request failed for query " << i + 1 << " out of " << size << '.';
       PRECICE_ERROR(err.str());
     }
     ids[i] = j;
@@ -772,8 +774,8 @@ void SolverInterfaceImpl::setMeshTriangle(
 {
   PRECICE_TRACE(meshID, firstEdgeID,
                 secondEdgeID, thirdEdgeID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTriangle is only possible for 3D cases."\
-                " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(_dimensions == 3, "setMeshTriangle is only possible for 3D cases."
+                                  " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -798,8 +800,8 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTriangleWithEdges is only possible for 3D cases."\
-                " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(_dimensions == 3, "setMeshTriangleWithEdges is only possible for 3D cases."
+                                  " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -834,9 +836,9 @@ void SolverInterfaceImpl::setMeshQuad(
 {
   PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."\
-                " Please set the dimension to 3 in the preCICE configuration file.");
-  PRECICE_ASSERT(_dimensions==3, _dimensions);
+  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."
+                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_ASSERT(_dimensions == 3, _dimensions);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -845,57 +847,47 @@ void SolverInterfaceImpl::setMeshQuad(
     PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), "Given EdgeID is invalid!");
     PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID), "Given EdgeID is invalid!");
     PRECICE_CHECK(mesh->isValidEdgeID(fourthEdgeID), "Given EdgeID is invalid!");
-    mesh::Edge *e[5];   //Contains the four edges of the quad and the new diagonal that will be created. 
-    e[0] = &mesh->edges()[firstEdgeID];
-    e[1] = &mesh->edges()[secondEdgeID];
-    e[2] = &mesh->edges()[thirdEdgeID];
-    e[3] = &mesh->edges()[fourthEdgeID];
 
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID)),
                   "The four edge ID's are not unique. Please check that the edges that form the quad are correct.");
 
-    std::array<int,4>  edgeIDs;  // A list of edge ID numbers
-    edgeIDs[0] = firstEdgeID;
-    edgeIDs[1] = secondEdgeID;
-    edgeIDs[2] = thirdEdgeID;
-    edgeIDs[3] = fourthEdgeID;
+    std::array<mesh::Edge *, 4> edges{
+        &mesh->edges()[firstEdgeID],
+        &mesh->edges()[secondEdgeID],
+        &mesh->edges()[thirdEdgeID],
+        &mesh->edges()[fourthEdgeID]};
 
-    // Write out a list of all vertex ID's that are eventually connected in 
-    // V0-V1-V2-V3-V0 order to get diagonal distances.
-    mesh::Vertex *vertices[4];
-    // Reorders the edgeIDs and sets the vertexIDs order.
-    std::array<int,4> vertexIDs = mesh->computeQuadEdgeOrder(edgeIDs); 
-    
-    // Computes vertex order for the convex quad and reorders the variable vertexIDs
-    PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexIDs),"Quad is not convex. " \
-                  "Please check that the adapter send the four correct vertices or that the interface is composed of quads. "\
-                  "A mix of triangles and quads are not supported."); 
-    vertices[0] = &mesh->vertices()[vertexIDs[0]];
-    vertices[1] = &mesh->vertices()[vertexIDs[1]];
-    vertices[2] = &mesh->vertices()[vertexIDs[2]];
-    vertices[3] = &mesh->vertices()[vertexIDs[3]];
- 
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), 
-                                                           vertices[2]->getCoords(), vertices[3]->getCoords())),
-                  "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle." \
-                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "\
+    //chain: connected, edges, vertices
+    auto chain = mesh::asChain(edges);
+    PRECICE_CHECK(chain.connected, "The four Edges passed are not connected.");
+
+    auto coords = mesh::coordsFor(chain.vertices);
+    PRECICE_CHECK(utils::unique_elements(coords),
+                  "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
+                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "
                   "is composed of quads. A mix of triangles and quads are not supported.");
 
+    auto convexity = math::geometry::isConvexQuad(coords);
+    PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
+                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads. "
+                                    "A mix of triangles and quads are not supported.");
+    //auto reordered = utils::reorder_array(convexity.vertexOrder, chain.vertices);
+
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
-    Eigen::Vector3d distance1(_dimensions),distance2(_dimensions);
-    distance1 = vertices[0]->getCoords() - vertices[2]->getCoords();
-    distance2 = vertices[1]->getCoords() - vertices[3]->getCoords();
-    
+    Eigen::Vector3d distance1(_dimensions), distance2(_dimensions);
+    distance1 = chain.vertices[0]->getCoords() - chain.vertices[2]->getCoords();
+    distance2 = chain.vertices[1]->getCoords() - chain.vertices[3]->getCoords();
+
     // The new edge, e[4], is the shortest diagonal of the quad
-    if (distance1.norm() <= distance2.norm()){
-      e[4] = &mesh->createUniqueEdge(*vertices[0], *vertices[2]);
-      mesh->createTriangle(*e[edgeIDs[0]], *e[edgeIDs[1]], *e[4]);
-      mesh->createTriangle(*e[edgeIDs[2]], *e[edgeIDs[3]], *e[4]);
-    }else{
-      e[4] = &mesh->createUniqueEdge(*vertices[1], *vertices[3]);
-      mesh->createTriangle(*e[edgeIDs[3]], *e[edgeIDs[0]], *e[4]);
-      mesh->createTriangle(*e[edgeIDs[1]], *e[edgeIDs[2]], *e[4]);
-    }  
+    if (distance1.norm() <= distance2.norm()) {
+      auto &diag = mesh->createUniqueEdge(*chain.vertices[0], *chain.vertices[2]);
+      mesh->createTriangle(*chain.edges[0], *chain.edges[1], diag);
+      mesh->createTriangle(*chain.edges[2], *chain.edges[3], diag);
+    } else {
+      auto &diag = mesh->createUniqueEdge(*chain.vertices[1], *chain.vertices[3]);
+      mesh->createTriangle(*chain.edges[3], *chain.edges[0], diag);
+      mesh->createTriangle(*chain.edges[1], *chain.edges[2], diag);
+    }
   }
 }
 
@@ -908,58 +900,53 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuadWithEdges is only possible for 3D cases."\
-              " Please set the dimension to 3 in the preCICE configuration file.");
-  PRECICE_ASSERT(_dimensions==3, _dimensions);
+  PRECICE_CHECK(_dimensions == 3, "setMeshQuadWithEdges is only possible for 3D cases."
+                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_ASSERT(_dimensions == 3, _dimensions);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), "Given VertexID is invalid!");
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), "Given VertexID is invalid!");
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), "Given VertexID is invalid!");
-    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), "Given VertexID is invalid!");
-    mesh::Vertex *vertices[4];
-    vertices[0] = &mesh->vertices()[firstVertexID];
-    vertices[1] = &mesh->vertices()[secondVertexID];
-    vertices[2] = &mesh->vertices()[thirdVertexID];
-    vertices[3] = &mesh->vertices()[fourthVertexID];
-    std::array<int,4>  vertexIDs;
-    vertexIDs[0] = firstVertexID;
-    vertexIDs[1] = secondVertexID;
-    vertexIDs[2] = thirdVertexID;
-    vertexIDs[3] = fourthVertexID;
+    PRECICE_ASSERT(context.mesh);
+    mesh::Mesh &mesh = *(context.mesh);
+    PRECICE_CHECK(mesh.isValidVertexID(firstVertexID), "Given VertexID is invalid!");
+    PRECICE_CHECK(mesh.isValidVertexID(secondVertexID), "Given VertexID is invalid!");
+    PRECICE_CHECK(mesh.isValidVertexID(thirdVertexID), "Given VertexID is invalid!");
+    PRECICE_CHECK(mesh.isValidVertexID(fourthVertexID), "Given VertexID is invalid!");
 
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), 
-                                                           vertices[2]->getCoords(), vertices[3]->getCoords() )),
-                  "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle." \
-                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "\
+    auto vertexIDs = utils::make_array(firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+    PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's are not unique. Please check that the vertices that form the quad are correct.");
+
+    auto coords = mesh::coordsFor(mesh, vertexIDs);
+    PRECICE_CHECK(utils::unique_elements(coords),
+                  "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
+                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "
                   "is composed of quads. A mix of triangles and quads are not supported.");
 
-    // Computes vertex order for the convex quad and reorders the variable vertexIDs
-    PRECICE_CHECK(mesh->computeQuadConvexityFromPoints(vertexIDs),"Quad is not convex."); 
+    auto convexity = math::geometry::isConvexQuad(coords);
+    PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
+                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads. "
+                                    "A mix of triangles and quads are not supported.");
+    auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
-    Eigen::VectorXd distance1(_dimensions),distance2(_dimensions);
+    auto &edge0 = mesh.createUniqueEdge(*reordered[0], *reordered[1]);
+    auto &edge1 = mesh.createUniqueEdge(*reordered[1], *reordered[2]);
+    auto &edge2 = mesh.createUniqueEdge(*reordered[2], *reordered[3]);
+    auto &edge3 = mesh.createUniqueEdge(*reordered[3], *reordered[0]);
 
-    distance1 = vertices[vertexIDs[0]]->getCoords() - vertices[vertexIDs[2]]->getCoords();
-    distance2 = vertices[vertexIDs[1]]->getCoords() - vertices[vertexIDs[3]]->getCoords();
-    PRECICE_DEBUG("Distance 1: " << distance1.norm() << " and Distance 2: " << distance2.norm());
-    
-    mesh::Edge *edges[5];  // e[0] - e[3] are the 3 edges of the quad. e[4] is the new diagonal edge to split the quad
-    edges[0] = &mesh->createUniqueEdge(*vertices[vertexIDs[0]], *vertices[vertexIDs[1]]);
-    edges[1] = &mesh->createUniqueEdge(*vertices[vertexIDs[1]], *vertices[vertexIDs[2]]);
-    edges[2] = &mesh->createUniqueEdge(*vertices[vertexIDs[2]], *vertices[vertexIDs[3]]);
-    edges[3] = &mesh->createUniqueEdge(*vertices[vertexIDs[3]], *vertices[vertexIDs[0]]);
-    if (distance1.norm() < distance2.norm()){
-      PRECICE_DEBUG("Cut diagonal: 0 and 2");
-      edges[4] = &mesh->createUniqueEdge(*vertices[vertexIDs[0]], *vertices[vertexIDs[2]]);
-      mesh->createTriangle(*edges[0], *edges[1], *edges[4]);
-      mesh->createTriangle(*edges[2], *edges[3], *edges[4]);
-    }else{
-      PRECICE_DEBUG("Cut diagonal: 1 and 3");
-      edges[4] = &mesh->createUniqueEdge(*vertices[1], *vertices[3]); // diagnonal edge
-      mesh->createTriangle(*edges[0], *edges[4], *edges[3]);
-      mesh->createTriangle(*edges[1], *edges[2], *edges[4]);
+    // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
+    Eigen::Vector3d distance1(_dimensions), distance2(_dimensions);
+    distance1 = reordered[0]->getCoords() - reordered[2]->getCoords();
+    distance2 = reordered[1]->getCoords() - reordered[3]->getCoords();
+
+    // The new edge, e[4], is the shortest diagonal of the quad
+    if (distance1.norm() <= distance2.norm()) {
+      auto &diag = mesh.createUniqueEdge(*reordered[0], *reordered[2]);
+      mesh.createTriangle(edge0, edge1, diag);
+      mesh.createTriangle(edge2, edge3, diag);
+    } else {
+      auto &diag = mesh.createUniqueEdge(*reordered[1], *reordered[3]);
+      mesh.createTriangle(edge3, edge0, diag);
+      mesh.createTriangle(edge1, edge2, diag);
     }
   }
 }
@@ -1594,7 +1581,7 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
   PRECICE_TRACE(meshName);
   const MeshContext *context = _accessor->usedMeshContextByName(meshName);
   PRECICE_ASSERT(context && context->mesh,
-                "Participant \"" << _accessorName << "\" does not use mesh \"" << meshName << "\"!");
+                 "Participant \"" << _accessorName << "\" does not use mesh \"" << meshName << "\"!");
   return *context->mesh;
 }
 

@@ -13,9 +13,11 @@
 #include "mesh/Quad.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "utils/algorithm.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
@@ -552,136 +554,11 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
 
 }
 
-BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexity)
+BOOST_AUTO_TEST_SUITE(Utils)
+
+BOOST_AUTO_TEST_CASE(AsChain)
 {
-  int             dim = 3;
-  Mesh            mesh1("Mesh1", dim, false, testing::nextMeshID());
-  auto &          mesh = mesh1;
-  Eigen::VectorXd coords0(dim);
-  Eigen::VectorXd coords1(dim);
-  Eigen::VectorXd coords2(dim);
-  Eigen::VectorXd coords3(dim);
-  coords0 << 0.5, 0.34, 0.0;
-  coords1 << 0.62, 0.32, 0.0;
-  coords2 << 0.6, 0.24, 0.0;
-  coords3 << 0.3, 0.22, 0.0;
-  Vertex &v0 = mesh.createVertex(coords0);
-  Vertex &v1 = mesh.createVertex(coords1);
-  Vertex &v2 = mesh.createVertex(coords2);
-  Vertex &v3 = mesh.createVertex(coords3);
-
-  std::array<int,4>  vertexList;
-  vertexList[0] = v0.getID();
-  vertexList[1] = v1.getID();
-  vertexList[2] = v2.getID();
-  vertexList[3] = v3.getID();
-
-  BOOST_TEST(mesh.computeQuadConvexityFromPoints(vertexList));
-  BOOST_TEST(vertexList[0] ==  v3.getID());
-  BOOST_TEST(vertexList[1] ==  v2.getID());
-  BOOST_TEST(vertexList[2] ==  v1.getID());
-  BOOST_TEST(vertexList[3] ==  v0.getID());
-  
-}
-
-BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexityWithOffPlane)
-{
-  int             dim = 3;
-  Mesh            mesh1("Mesh1", dim, false, testing::nextMeshID());
-  auto &          mesh = mesh1;
-  Eigen::VectorXd coords0(dim);
-  Eigen::VectorXd coords1(dim);
-  Eigen::VectorXd coords2(dim);
-  Eigen::VectorXd coords3(dim);
-  coords0 << 0.5, 0.34, 0.0;
-  coords1 << 0.62, 0.32, 0.0;
-  coords2 << 0.6, 0.24, 0.0;
-  coords3 << 0.3, 0.22, 0.5;
-  Vertex &v0 = mesh.createVertex(coords0);
-  Vertex &v1 = mesh.createVertex(coords1);
-  Vertex &v2 = mesh.createVertex(coords2);
-  Vertex &v3 = mesh.createVertex(coords3);
-
-  std::array<int,4>  vertexList;
-  vertexList[0] = v0.getID();
-  vertexList[1] = v1.getID();
-  vertexList[2] = v2.getID();
-  vertexList[3] = v3.getID();
-
-  BOOST_TEST(mesh.computeQuadConvexityFromPoints(vertexList));
-  BOOST_TEST(vertexList[0] ==  v3.getID());
-  BOOST_TEST(vertexList[1] ==  v2.getID());
-  BOOST_TEST(vertexList[2] ==  v1.getID());
-  BOOST_TEST(vertexList[3] ==  v0.getID());
-  
-}
-
-BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexityWithEqualLeftPoint)
-{
-  int             dim = 3;
-  Mesh            mesh1("Mesh1", dim, false, testing::nextMeshID());
-  auto &          mesh = mesh1;
-  Eigen::VectorXd coords0(dim);
-  Eigen::VectorXd coords1(dim);
-  Eigen::VectorXd coords2(dim);
-  Eigen::VectorXd coords3(dim);
-  coords0 << 0.0, 0.0, 0.0;
-  coords1 << 1.0, 0.0, 0.0;
-  coords2 << 1.0, 1.0, 0.0;
-  coords3 << 0.0, 1.0, 0.0;
-  Vertex &v0 = mesh.createVertex(coords0);
-  Vertex &v1 = mesh.createVertex(coords1);
-  Vertex &v2 = mesh.createVertex(coords2);
-  Vertex &v3 = mesh.createVertex(coords3);
-
-  std::array<int,4>  vertexList;
-  vertexList[0] = v0.getID();
-  vertexList[1] = v1.getID();
-  vertexList[2] = v2.getID();
-  vertexList[3] = v3.getID();
-
-  BOOST_TEST(mesh.computeQuadConvexityFromPoints(vertexList));
-  BOOST_TEST(vertexList[0] ==  v0.getID());
-  BOOST_TEST(vertexList[1] ==  v3.getID());
-  BOOST_TEST(vertexList[2] ==  v2.getID());
-  BOOST_TEST(vertexList[3] ==  v1.getID());
-  
-}
-
-BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
-{
-  int             dim = 3;
-  Mesh            mesh1("Mesh1", dim, false, testing::nextMeshID());
-  auto &          mesh = mesh1;
-  Eigen::VectorXd coords0(dim);
-  Eigen::VectorXd coords1(dim);
-  Eigen::VectorXd coords2(dim);
-  Eigen::VectorXd coords3(dim);
-  coords0 << 0.5, 0.34, 0.0;
-  coords1 << 0.62, 0.32, 0.0;
-  coords2 << 0.52, 0.31, 0.0;
-  coords3 << 0.51, 0.22, 0.0;
-  Vertex &v0 = mesh.createVertex(coords0);
-  Vertex &v1 = mesh.createVertex(coords1);
-  Vertex &v2 = mesh.createVertex(coords2);
-  Vertex &v3 = mesh.createVertex(coords3);
-
-  std::array<int,4>  vertexList;
-  vertexList[0] = v0.getID();
-  vertexList[1] = v1.getID();
-  vertexList[2] = v2.getID();
-  vertexList[3] = v3.getID();
-
-  BOOST_TEST(not mesh.computeQuadConvexityFromPoints(vertexList));
-  BOOST_TEST(vertexList[0] ==  v0.getID());
-  BOOST_TEST(vertexList[1] ==  v3.getID());
-  BOOST_TEST(vertexList[2] ==  v1.getID());
-  BOOST_TEST(vertexList[3] !=  v2.getID());
-
-}
-
-BOOST_AUTO_TEST_CASE(ComputeValidEdgeConnectivity)
-{
+  PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
   mesh.createData("Data", 1);
 
@@ -707,31 +584,22 @@ BOOST_AUTO_TEST_CASE(ComputeValidEdgeConnectivity)
 
   BOOST_TEST(mesh.edges().size() == 4);
 
-  std::array<int,4>  edgeList;
-  edgeList[0] = e0.getID();
-  edgeList[1] = e1.getID();
-  edgeList[2] = e2.getID();
-  edgeList[3] = e3.getID();
+  auto chain = asChain(utils::make_array(&e0, &e1, &e2, &e3));
 
-  std::array<int,4> vertexList = mesh.computeQuadEdgeOrder(edgeList);
+  BOOST_REQUIRE(chain.connected);
 
-  BOOST_TEST(edgeList[0] == e0.getID());
-  BOOST_TEST(edgeList[1] == e2.getID());
-  BOOST_TEST(edgeList[2] == e1.getID());
-  BOOST_TEST(edgeList[3] == e3.getID()); 
+  BOOST_TEST(chain.edges[0] == &e0);
+  BOOST_TEST(chain.edges[1] == &e2);
+  BOOST_TEST(chain.edges[2] == &e1);
+  BOOST_TEST(chain.edges[3] == &e3); 
 
-  BOOST_TEST(vertexList[0] == e0.vertex(0).getID());
-  BOOST_TEST(vertexList[1] == e0.vertex(1).getID());
-  BOOST_TEST(vertexList[2] == e1.vertex(0).getID());
-  BOOST_TEST(vertexList[3] == e1.vertex(1).getID());
-
-  Eigen::VectorXd distance1(3),distance2(3);
-  distance1 = e0.vertex(0).getCoords() - e1.vertex(0).getCoords();
-  distance2 = e0.vertex(1).getCoords() - e1.vertex(1).getCoords();
-
-  BOOST_TEST(distance1.norm() < distance2.norm());
-  
+  BOOST_TEST(chain.vertices[0] == &v1);
+  BOOST_TEST(chain.vertices[1] == &v3);
+  BOOST_TEST(chain.vertices[2] == &v2);
+  BOOST_TEST(chain.vertices[3] == &v0);
 }
+
+BOOST_AUTO_TEST_SUITE_END() // Utils
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh

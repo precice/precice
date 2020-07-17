@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include "math/differences.hpp"
 #include "utils/assertion.hpp"
+#include <array>
 
 namespace precice {
 namespace math {
@@ -258,6 +259,13 @@ int containedInHyperrectangle(
   }
   return CONTAINED;
 }
+
+struct ConvexityResult {
+  bool convex;
+  std::array<int, 4> vertexOrder;
+};
+
+ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords);
 
 } // namespace geometry
 } // namespace math
