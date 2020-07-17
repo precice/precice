@@ -113,6 +113,8 @@ void precicef_is_coupling_ongoing_(int *isOngoing);
 /**
  * @brief See precice::SolverInterface::isWriteDataRequired().
  *
+ * Deprecated - Forwards to precicef_is_write_data_required_
+ *
  * Fortran syntax:
  * precicef_write_data_required(
  *  DOUBLE PRECISION computedTimestepLength,
@@ -126,7 +128,24 @@ void precicef_write_data_required_(
     int *         isRequired);
 
 /**
+ * @brief See precice::SolverInterface::isWriteDataRequired().
+ *
+ * Fortran syntax:
+ * precicef_is_write_data_required(
+ *  DOUBLE PRECISION computedTimestepLength,
+ *  INTEGER          isRequired )
+ *
+ * IN:  computedTimestepLength
+ * OUT: isRequired(1:true, 0:false)
+ */
+void precicef_is_write_data_required_(
+    const double *computedTimestepLength,
+    int *         isRequired);
+
+/**
  * @brief See precice::SolverInterface::isReadDataAvailable().
+ *
+ * Deprecated - Forwards to precicef_is_read_data_available_
  *
  * Fortran syntax:
  * precicef_read_data_available( INTEGER isAvailable );
@@ -135,6 +154,17 @@ void precicef_write_data_required_(
  * OUT: isAvailable(1:true, 0:false)
  */
 void precicef_read_data_available_(int *isAvailable);
+
+/**
+ * @brief See precice::SolverInterface::isReadDataAvailable().
+ *
+ * Fortran syntax:
+ * precicef_is_read_data_available( INTEGER isAvailable );
+ *
+ * IN:  -
+ * OUT: isAvailable(1:true, 0:false)
+ */
+void precicef_is_read_data_available_(int *isAvailable);
 
 /**
  * @brief See precice::SolverInterface::isTimeWindowComplete().

@@ -104,6 +104,13 @@ void precicef_write_data_required_(
     const double *computedTimestepLength,
     int *         isRequired)
 {
+  precicef_is_write_data_required_(computedTimestepLength, isRequired);
+}
+
+void precicef_is_write_data_required_(
+    const double *computedTimestepLength,
+    int *         isRequired)
+{
   PRECICE_CHECK(impl != nullptr, errormsg);
   if (impl->isWriteDataRequired(*computedTimestepLength)) {
     *isRequired = 1;
@@ -113,6 +120,12 @@ void precicef_write_data_required_(
 }
 
 void precicef_read_data_available_(
+    int *isAvailable)
+{
+  precicef_is_read_data_available_(isAvailable);
+}
+
+void precicef_is_read_data_available_(
     int *isAvailable)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
