@@ -1705,7 +1705,6 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
       int idBC = cplInterface.setMeshEdge(meshOneID, idB, idC);
       int idCD = cplInterface.setMeshEdge(meshOneID, idC, idD);
       int idDA = cplInterface.setMeshEdge(meshOneID, idD, idA);
-      int idCA = cplInterface.setMeshEdge(meshOneID, idC, idA);
 
       cplInterface.setMeshQuad(meshOneID, idAB, idBC, idCD, idDA);
 
