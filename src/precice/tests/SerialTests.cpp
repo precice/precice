@@ -1760,7 +1760,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
 }
 
 /**
- * @brief Tests the Nearest Projection Mapping of a quad between two participants with explicit definition of edges
+ * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges from a quad to a triangle
  *
  */
 BOOST_AUTO_TEST_CASE(testQuadMappingNearestProjectionExplicitEdges,
@@ -1774,7 +1774,7 @@ BOOST_AUTO_TEST_CASE(testQuadMappingNearestProjectionExplicitEdges,
 }
 
 /**
- * @brief Tests the Nearest Projection Mapping of a quad between two participants with explicit definition of edges
+ * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges from a quad to a triangle
  *
  */
 BOOST_AUTO_TEST_CASE(testQuadMappingNearestProjectionImplicitEdges,
