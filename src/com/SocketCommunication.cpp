@@ -831,6 +831,7 @@ struct Interface {
   std::string  name;
   std::string  address;
 };
+
 std::vector<Interface> detectInterfaces()
 {
   std::vector<Interface> interfaces;
@@ -856,12 +857,12 @@ std::vector<Interface> detectInterfaces()
     auto err      = ioctl(socketfd, SIOCGIFADDR, &request);
     close(socketfd);
     if (err) {
-      throw std::system_error{std::error_code{err, std::generic_category()}};
+      continue;
     }
 
     const char *addr = inet_ntoa(((struct sockaddr_in *) &request.ifr_addr)->sin_addr);
     if (!addr) {
-      throw std::runtime_error{"No address"};
+      continue;
     }
     interface.address = addr;
   }
@@ -886,6 +887,7 @@ std::string SocketCommunication::getIpAddress()
   auto pos = std::find_if(interfaces.begin(), interfaces.end(),
                           [&](Interface const &interface) { return interface.name == _networkName; });
   if (pos == interfaces.end()) {
+    PRECICE_DEBUG("There  NOTHIGN");
     std::ostringstream err;
     err << "Cannot find network interface \"" << _networkName << "\". Available interfaces are: ";
     for (const auto &interface : interfaces) {
@@ -893,10 +895,13 @@ std::string SocketCommunication::getIpAddress()
     }
     err << " Please check \"network\" attribues in your configuration file.";
     PRECICE_ERROR(err.str());
-  } else {
-    PRECICE_DEBUG("Detected network IP address:  " << pos->address);
-    return pos->address;
   }
+
+  // Unconnected interfaces don't have an IP address.
+  PRECICE_CHECK(not pos->address.empty(), "The interface \"" << _networkName << "\" does not have an IP address. Please select another interface.");
+
+  PRECICE_DEBUG("Detected network IP address of interface \"" << _networkName << "\":  " << pos->address << '.');
+  return pos->address;
 #endif
 }
 

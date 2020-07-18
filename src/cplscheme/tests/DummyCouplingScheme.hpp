@@ -33,14 +33,14 @@ public:
   /**
    * @brief
    */
-  virtual void initialize(
+  void initialize(
       double startTime,
       int    startTimesteps) override final;
 
   /**
    * @brief Not implemented.
    */
-  virtual bool isInitialized() const override final
+  bool isInitialized() const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -49,7 +49,25 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual void initializeData() override final
+  bool sendsInitializedData() const override final
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  bool receivesInitializedData() const override final
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  void initializeData() override final
   {
     PRECICE_ASSERT(false);
   }
@@ -57,24 +75,24 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual void addComputedTime(double timeToAdd) override final
+  void addComputedTime(double timeToAdd) override final
   { /* Do nothing */
   }
 
   /**
    * @brief
    */
-  virtual void advance() override final;
+  void advance() override final;
 
   /**
    * @brief
    */
-  virtual void finalize() override final;
+  void finalize() override final;
 
   /*
    * @brief Not implemented.
    */
-  virtual std::vector<std::string> getCouplingPartners() const override final
+  std::vector<std::string> getCouplingPartners() const override final
   {
     PRECICE_ASSERT(false);
     return std::vector<std::string>();
@@ -83,7 +101,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const override final
+  bool willDataBeExchanged(double lastSolverTimestepLength) const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -92,7 +110,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool hasDataBeenReceived() const override final
+  bool hasDataBeenReceived() const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -101,7 +119,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getTime() const override final
+  double getTime() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -110,7 +128,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual int getTimeWindows() const override final
+  int getTimeWindows() const override final
   {
     return _timesteps;
     return 0;
@@ -119,7 +137,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool hasTimeWindowSize() const override final
+  bool hasTimeWindowSize() const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -128,7 +146,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getTimeWindowSize() const override final
+  double getTimeWindowSize() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -137,7 +155,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getThisTimeWindowRemainder() const override final
+  double getThisTimeWindowRemainder() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -146,7 +164,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual double getNextTimestepMaxLength() const override final
+  double getNextTimestepMaxLength() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -155,12 +173,12 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool isCouplingOngoing() const override final;
+  bool isCouplingOngoing() const override final;
 
   /**
    * @brief Not implemented.
    */
-  virtual bool isTimeWindowComplete() const override final
+  bool isTimeWindowComplete() const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -169,12 +187,12 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool isActionRequired(const std::string &actionName) const override final;
+  bool isActionRequired(const std::string &actionName) const override final;
 
   /**
    * @brief Not implemented.
    */
-  virtual void markActionFulfilled(const std::string &actionName) override final
+  void markActionFulfilled(const std::string &actionName) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -182,7 +200,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual int getCheckpointTimestepInterval() const
+  int getCheckpointTimestepInterval() const
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -191,7 +209,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual void requireAction(const std::string &actionName) override final
+  void requireAction(const std::string &actionName) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -199,7 +217,7 @@ public:
   /**
    * @brief Empty.
    */
-  virtual std::string printCouplingState() const override final
+  std::string printCouplingState() const override final
   {
     return std::string();
   }

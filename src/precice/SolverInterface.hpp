@@ -127,8 +127,10 @@ public:
    * @param[in] computedTimestepLength Length of timestep used by the solver.
    *
    * @pre initialize() has been called successfully.
+   * @pre initializeData() has been called, if required by configuration.
    * @pre The solver has computed one timestep.
    * @pre The solver has written all coupling data.
+   * @pre isCouplngOngoing() returns true.
    * @pre finalize() has not yet been called.
    *
    * @post Coupling data values specified in the configuration are exchanged.

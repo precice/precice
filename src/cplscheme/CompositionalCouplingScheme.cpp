@@ -41,6 +41,28 @@ bool CompositionalCouplingScheme::isInitialized() const
   return isInitialized;
 }
 
+bool CompositionalCouplingScheme::sendsInitializedData() const
+{
+  PRECICE_TRACE();
+  bool sendsInitializedData = false;
+  for (Scheme scheme : _couplingSchemes) {
+    sendsInitializedData |= scheme.scheme->sendsInitializedData();
+  }
+  PRECICE_DEBUG("return " << sendsInitializedData);
+  return sendsInitializedData;
+}
+
+bool CompositionalCouplingScheme::receivesInitializedData() const
+{
+  PRECICE_TRACE();
+  bool receivesInitializedData = false;
+  for (Scheme scheme : _couplingSchemes) {
+    receivesInitializedData |= scheme.scheme->receivesInitializedData();
+  }
+  PRECICE_DEBUG("return " << receivesInitializedData);
+  return receivesInitializedData;
+}
+
 void CompositionalCouplingScheme::initializeData()
 {
   PRECICE_TRACE();
