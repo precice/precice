@@ -654,7 +654,6 @@ BOOST_AUTO_TEST_CASE(EdgeLength)
   BOOST_TEST(edgeLength(e) == std::sqrt(2));
 }
 
-
 BOOST_AUTO_TEST_CASE(VertexPtrsFor)
 {
   PRECICE_TEST(1_rank);
@@ -672,13 +671,16 @@ BOOST_AUTO_TEST_CASE(VertexPtrsFor)
   Vertex &v0 = mesh.createVertex(coords0);
   Vertex &v1 = mesh.createVertex(coords1);
   Vertex &v2 = mesh.createVertex(coords2);
-  Vertex &v3 = mesh.createVertex(coords3);
+  mesh.createVertex(coords3);
   BOOST_TEST(mesh.vertices().size() == 4);
 
   std::array<int, 3> ids{v0.getID(), v2.getID(), v1.getID()};
-  std::array<Vertex *, 3> expected{&v0, &v2, &v3};
+  std::array<Vertex *, 3> expected{&v0, &v2, &v1};
 
   auto result = vertexPtrsFor(mesh, ids);
+  BOOST_TEST_MESSAGE("IDs " << ids);
+  BOOST_TEST_MESSAGE("RES: " << result);
+  BOOST_TEST_MESSAGE("EXP: " << expected);
   BOOST_REQUIRE(result.size() == 3);
   BOOST_TEST(result == expected);
 }
