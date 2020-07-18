@@ -105,7 +105,7 @@ void ProvidedPartition::communicate()
 
       if (not utils::MasterSlave::isSlave()) {
         PRECICE_CHECK(globalMesh.vertices().size() > 0,
-                      "The provided mesh \"" << globalMesh.getName() << "\" was not defined. Please set the mesh using setMeshXXX() prior to calling initialize().");
+                      "The provided mesh \"" << globalMesh.getName() << "\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().");
         com::CommunicateMesh(m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
       }
     }
