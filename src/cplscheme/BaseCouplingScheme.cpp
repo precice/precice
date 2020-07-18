@@ -164,8 +164,8 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 void BaseCouplingScheme::initializeData()
 {
   // InitializeData uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
-  PRECICE_CHECK(_isInitialized, "initializeData() can be called after initialize() only.");
-  PRECICE_CHECK(not _initializeDataHasBeenCalled, "initializeData() can only be called once.");
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(not _initializeDataHasBeenCalled);
   _initializeDataHasBeenCalled = true;
   PRECICE_TRACE("initializeData()");
 
@@ -175,9 +175,6 @@ void BaseCouplingScheme::initializeData()
   }
 
   PRECICE_DEBUG("Initializing Data ...");
-
-  PRECICE_CHECK(not(_sendsInitializedData && isActionRequired(constants::actionWriteInitialData())),
-                "InitialData has to be written to preCICE before calling initializeData().");
 
   _hasDataBeenReceived = false;
 
@@ -189,8 +186,6 @@ void BaseCouplingScheme::advance()
   PRECICE_TRACE(_timeWindows, _time);
   checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Before calling advance() coupling scheme has to be initialized via initialize().");
-  PRECICE_CHECK((not _receivesInitializedData && not _sendsInitializedData) || (_initializeDataHasBeenCalled),
-                "initializeData() needs to be called before advance if data has to be initialized.");
   _hasDataBeenReceived  = false;
   _isTimeWindowComplete = false;
 

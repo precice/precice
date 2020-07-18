@@ -235,7 +235,8 @@ void SolverInterfaceImpl::configure(
 double SolverInterfaceImpl::initialize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state == State::Constructed, "initialize() may only be called once.");
+  PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
+  PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
@@ -318,6 +319,13 @@ double SolverInterfaceImpl::initialize()
 void SolverInterfaceImpl::initializeData()
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(!_hasInitializedData, "initializeData() may only be called once.");
+  PRECICE_CHECK(_state != State::Finalized, "initializeData() cannot be called after finalize().")
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before initializeData()");
+  PRECICE_ASSERT(_couplingScheme->isInitialized());
+  PRECICE_CHECK(not(_couplingScheme->sendsInitializedData() && isActionRequired(constants::actionWriteInitialData())),
+                "Initial data has to be written to preCICE by calling an appropriate write...Data() function before calling initializeData(). "
+                "Did you forget to call markActionFulfilled(precice::constants::actionWriteInitialData()) after writing initial data?");
 
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
@@ -327,9 +335,8 @@ void SolverInterfaceImpl::initializeData()
 
   PRECICE_DEBUG("Initialize data");
 
-  PRECICE_CHECK(_couplingScheme->isInitialized(),
-                "initialize() has to be called before initializeData()");
   mapWrittenData();
+
   _couplingScheme->initializeData();
   double                           dt = _couplingScheme->getNextTimestepMaxLength();
   std::set<action::Action::Timing> timings;
@@ -351,6 +358,8 @@ void SolverInterfaceImpl::initializeData()
     }
   }
   solverInitEvent.start(precice::syncMode);
+
+  _hasInitializedData = true;
 }
 
 double SolverInterfaceImpl::advance(
@@ -368,8 +377,12 @@ double SolverInterfaceImpl::advance(
   Event                    e("advance", precice::syncMode);
   utils::ScopedEventPrefix sep("advance/");
 
-  PRECICE_CHECK(_couplingScheme->isInitialized(), "initialize() has to be called before advance()");
-  PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false");
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
+  PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
+  PRECICE_ASSERT(_couplingScheme->isInitialized());
+  PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
+  PRECICE_CHECK((not _couplingScheme->receivesInitializedData() && not _couplingScheme->sendsInitializedData()) || (_hasInitializedData),
+                "initializeData() needs to be called before advance if data has to be initialized.");
   _numberAdvanceCalls++;
 
 #ifndef NDEBUG
@@ -525,12 +538,16 @@ int SolverInterfaceImpl::getDimensions() const
 bool SolverInterfaceImpl::isCouplingOngoing() const
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
+  PRECICE_CHECK(_state != State::Finalized, "isCouplingOngoing() cannot be called after finalize().");
   return _couplingScheme->isCouplingOngoing();
 }
 
 bool SolverInterfaceImpl::isReadDataAvailable() const
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isReadDataAvailable().");
+  PRECICE_CHECK(_state != State::Finalized, "isReadDataAvailable() cannot be called after finalize().");
   return _couplingScheme->hasDataBeenReceived();
 }
 
@@ -538,12 +555,16 @@ bool SolverInterfaceImpl::isWriteDataRequired(
     double computedTimestepLength) const
 {
   PRECICE_TRACE(computedTimestepLength);
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isWriteDataRequired().");
+  PRECICE_CHECK(_state != State::Finalized, "isWriteDataRequired() cannot be called after finalize().");
   return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
 bool SolverInterfaceImpl::isTimeWindowComplete() const
 {
   PRECICE_TRACE();
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isTimeWindowComplete().");
+  PRECICE_CHECK(_state != State::Finalized, "isTimeWindowComplete() cannot be called after finalize().");
   return _couplingScheme->isTimeWindowComplete();
 }
 
@@ -551,6 +572,8 @@ bool SolverInterfaceImpl::isActionRequired(
     const std::string &action) const
 {
   PRECICE_TRACE(action, _couplingScheme->isActionRequired(action));
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isActionRequired(...).");
+  PRECICE_CHECK(_state != State::Finalized, "isActionRequired(...) cannot be called after finalize().");
   return _couplingScheme->isActionRequired(action);
 }
 
@@ -558,6 +581,8 @@ void SolverInterfaceImpl::markActionFulfilled(
     const std::string &action)
 {
   PRECICE_TRACE(action);
+  PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before markActionFulfilled(...).");
+  PRECICE_CHECK(_state != State::Finalized, "markActionFulfilled(...) cannot be called after finalize().");
   _couplingScheme->markActionFulfilled(action);
 }
 
@@ -950,6 +975,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
     const double *values)
 {
   PRECICE_TRACE(fromDataID, size);
+  PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
@@ -980,6 +1006,7 @@ void SolverInterfaceImpl::writeVectorData(
     const double *value)
 {
   PRECICE_TRACE(fromDataID, valueIndex);
+  PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   PRECICE_DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
@@ -1002,6 +1029,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
     const double *values)
 {
   PRECICE_TRACE(fromDataID, size);
+  PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   if (size == 0)
     return;
@@ -1027,6 +1055,7 @@ void SolverInterfaceImpl::writeScalarData(
     double value)
 {
   PRECICE_TRACE(fromDataID, valueIndex, value);
+  PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data!");
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
@@ -1046,6 +1075,7 @@ void SolverInterfaceImpl::readBlockVectorData(
     double *   values) const
 {
   PRECICE_TRACE(toDataID, size);
+  PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   if (size == 0)
     return;
@@ -1076,6 +1106,7 @@ void SolverInterfaceImpl::readVectorData(
     double *value) const
 {
   PRECICE_TRACE(toDataID, valueIndex);
+  PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
   PRECICE_REQUIRE_DATA_READ(toDataID);
@@ -1099,6 +1130,7 @@ void SolverInterfaceImpl::readBlockScalarData(
     double *   values) const
 {
   PRECICE_TRACE(toDataID, size);
+  PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   if (size == 0)
     return;
@@ -1124,6 +1156,7 @@ void SolverInterfaceImpl::readScalarData(
     double &value) const
 {
   PRECICE_TRACE(toDataID, valueIndex, value);
+  PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " )when reading vector data!");
   PRECICE_REQUIRE_DATA_READ(toDataID);
