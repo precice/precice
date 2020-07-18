@@ -640,6 +640,21 @@ BOOST_AUTO_TEST_CASE(ShareVertex)
   BOOST_TEST(sharedVertex(e0, e2) == sharedVertex(e2, e0));
 }
 
+BOOST_AUTO_TEST_CASE(EdgeLength)
+{
+  PRECICE_TEST(1_rank);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 1.0, 0.0;
+  Vertex v0{coords0, 0};
+  Vertex v1{coords1, 1};
+  Edge e(v0, v1, 0);
+  BOOST_TEST(edgeLength(e) == std::sqrt(2));
+}
+
+
 BOOST_AUTO_TEST_CASE(VertexPtrsFor)
 {
   PRECICE_TEST(1_rank);

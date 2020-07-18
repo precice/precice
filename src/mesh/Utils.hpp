@@ -29,6 +29,17 @@ inline Vertex *sharedVertex(Edge &a, Edge &b)
   return nullptr;
 }
 
+/** Calulates the length of an Edge
+ *
+ * @param[in] e the edge
+ *
+ * @returns the distance between both vertices of e 
+ */
+inline double edgeLength(Edge& e)
+{
+  return (e.vertex(0).getCoords() - e.vertex(1).getCoords()).norm();
+}
+
 template <std::size_t n>
 struct Chain {
   /// true if the chain is connected or closed and thus valid
