@@ -1,4 +1,5 @@
 #include <Eigen/Core>
+#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <deque>
 #include <iosfwd>
@@ -597,6 +598,130 @@ BOOST_AUTO_TEST_CASE(AsChain)
   BOOST_TEST(chain.vertices[1] == &v3);
   BOOST_TEST(chain.vertices[2] == &v2);
   BOOST_TEST(chain.vertices[3] == &v0);
+}
+
+BOOST_AUTO_TEST_CASE(ShareVertex)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 0.0, 0.0;
+  coords2 << 2.0, 2.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex *v0 = &mesh.createVertex(coords0);
+  Vertex *v1 = &mesh.createVertex(coords1);
+  Vertex *v2 = &mesh.createVertex(coords2);
+  Vertex *v3 = &mesh.createVertex(coords3);
+  BOOST_REQUIRE(mesh.vertices().size() == 4);
+
+  Edge &e0 = mesh.createEdge(*v0, *v1);
+  Edge &e1 = mesh.createEdge(*v1, *v2);
+  Edge &e2 = mesh.createEdge(*v2, *v3);
+  Edge &e3 = mesh.createEdge(*v3, *v0);
+  BOOST_REQUIRE(mesh.edges().size() == 4);
+
+  BOOST_TEST(sharedVertex(e0, e1) == v1);
+  BOOST_TEST(sharedVertex(e1, e2) == v2);
+  BOOST_TEST(sharedVertex(e2, e3) == v3);
+  BOOST_TEST(sharedVertex(e3, e0) == v0);
+
+  // not connnected
+  BOOST_TEST((sharedVertex(e0, e2) == nullptr));
+  BOOST_TEST((sharedVertex(e1, e3) == nullptr));
+
+  // check symmetry
+  BOOST_TEST(sharedVertex(e0, e1) == sharedVertex(e1, e0));
+  BOOST_TEST(sharedVertex(e0, e2) == sharedVertex(e2, e0));
+}
+
+BOOST_AUTO_TEST_CASE(VertexPtrsFor)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 0.0, 0.0;
+  coords2 << 2.0, 2.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  Vertex &v3 = mesh.createVertex(coords3);
+  BOOST_TEST(mesh.vertices().size() == 4);
+
+  std::array<int, 3> ids{v0.getID(), v2.getID(), v1.getID()};
+  std::array<Vertex *, 3> expected{&v0, &v2, &v3};
+
+  auto result = vertexPtrsFor(mesh, ids);
+  BOOST_REQUIRE(result.size() == 3);
+  BOOST_TEST(result == expected);
+}
+
+BOOST_AUTO_TEST_CASE(CoordsForIDs)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 0.0, 0.0;
+  coords2 << 2.0, 2.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  mesh.createVertex(coords3);
+  BOOST_TEST(mesh.vertices().size() == 4);
+
+  std::array<int, 3> ids{v0.getID(), v2.getID(), v1.getID()};
+  std::array<Eigen::VectorXd, 3> expected{coords0, coords2, coords1};
+
+  auto result = coordsFor(mesh, ids);
+  BOOST_REQUIRE(result.size() == 3);
+  BOOST_TEST(result == expected);
+}
+
+BOOST_AUTO_TEST_CASE(CoordsForPtrs)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 0.0, 0.0;
+  coords2 << 2.0, 2.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  mesh.createVertex(coords3);
+  BOOST_TEST(mesh.vertices().size() == 4);
+
+  std::array<Vertex *, 3> ptrs{&v0, &v2, &v1};
+  std::array<Eigen::VectorXd, 3> expected{coords0, coords2, coords1};
+
+  auto result = coordsFor(ptrs);
+  BOOST_REQUIRE(result.size() == 3);
+  BOOST_TEST(result == expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Utils

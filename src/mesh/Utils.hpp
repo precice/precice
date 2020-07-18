@@ -117,10 +117,10 @@ std::array<Eigen::VectorXd, n> coordsFor(const Mesh &mesh, const std::array<int,
 
 /// Given an array of vertex pointers, this function returns an array of coordinates of the vertices
 template <std::size_t n>
-std::array<Eigen::VectorXd, n> coordsFor(const std::array<Vertex *, n> &vertexIDs)
+std::array<Eigen::VectorXd, n> coordsFor(const std::array<Vertex *, n> &vertexPtrs)
 {
   std::array<Eigen::VectorXd, n> coords;
-  std::transform(vertexIDs.begin(), vertexIDs.end(), coords.begin(),
+  std::transform(vertexPtrs.begin(), vertexPtrs.end(), coords.begin(),
                  [](Vertex *v) { return v->getCoords(); });
   return coords;
 }
