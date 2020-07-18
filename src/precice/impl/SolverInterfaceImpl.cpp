@@ -876,15 +876,10 @@ void SolverInterfaceImpl::setMeshQuad(
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID)),
                   "The four edge ID's are not unique. Please check that the edges that form the quad are correct.");
 
-    std::array<mesh::Edge *, 4> edges{
-        &mesh->edges()[firstEdgeID],
-        &mesh->edges()[secondEdgeID],
-        &mesh->edges()[thirdEdgeID],
-        &mesh->edges()[fourthEdgeID]};
-
-    //chain: connected, edges, vertices
-    auto chain = mesh::asChain(edges);
-    PRECICE_CHECK(chain.connected, "The four Edges passed are not connected.");
+    auto chain = mesh::asChain(utils::make_array(
+        &mesh->edges()[firstEdgeID], &mesh->edges()[secondEdgeID],
+        &mesh->edges()[thirdEdgeID], &mesh->edges()[fourthEdgeID]));
+    PRECICE_CHECK(chain.connected, "The four edges are not connect. Please check that the edges that form the quad are correct.");
 
     auto coords = mesh::coordsFor(chain.vertices);
     PRECICE_CHECK(utils::unique_elements(coords),
@@ -896,22 +891,22 @@ void SolverInterfaceImpl::setMeshQuad(
     PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
                                     "Please check that the adapter send the four correct vertices or that the interface is composed of quads. "
                                     "A mix of triangles and quads are not supported.");
-    //auto reordered = utils::reorder_array(convexity.vertexOrder, chain.vertices);
 
-    // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
-    Eigen::Vector3d distance1(_dimensions), distance2(_dimensions);
-    distance1 = chain.vertices[0]->getCoords() - chain.vertices[2]->getCoords();
-    distance2 = chain.vertices[1]->getCoords() - chain.vertices[3]->getCoords();
+    // Use the shortest diagonal to split the quad into 2 triangles.
+    // The diagonal to be used with edges (1, 2) and (0, 3) of the chain
+    double distance1 = (coords[0] - coords[2]).norm();
+    // The diagonal to be used with edges (0, 1) and (2, 3) of the chain
+    double distance2 = (coords[1] - coords[3]).norm();
 
     // The new edge, e[4], is the shortest diagonal of the quad
-    if (distance1.norm() <= distance2.norm()) {
+    if (distance1 < distance2) {
       auto &diag = mesh->createUniqueEdge(*chain.vertices[0], *chain.vertices[2]);
-      mesh->createTriangle(*chain.edges[0], *chain.edges[1], diag);
-      mesh->createTriangle(*chain.edges[2], *chain.edges[3], diag);
-    } else {
-      auto &diag = mesh->createUniqueEdge(*chain.vertices[1], *chain.vertices[3]);
       mesh->createTriangle(*chain.edges[3], *chain.edges[0], diag);
       mesh->createTriangle(*chain.edges[1], *chain.edges[2], diag);
+    } else {
+      auto &diag = mesh->createUniqueEdge(*chain.vertices[1], *chain.vertices[3]);
+      mesh->createTriangle(*chain.edges[0], *chain.edges[1], diag);
+      mesh->createTriangle(*chain.edges[2], *chain.edges[3], diag);
     }
   }
 }
@@ -953,18 +948,20 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
                                     "A mix of triangles and quads are not supported.");
     auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
+    // Vertices are now in the order: V0-V1-V2-V3-V0.
+    // The order now identifies all outer edges of the quad.
     auto &edge0 = mesh.createUniqueEdge(*reordered[0], *reordered[1]);
     auto &edge1 = mesh.createUniqueEdge(*reordered[1], *reordered[2]);
     auto &edge2 = mesh.createUniqueEdge(*reordered[2], *reordered[3]);
     auto &edge3 = mesh.createUniqueEdge(*reordered[3], *reordered[0]);
 
+    // Use the shortest diagonal to split the quad into 2 triangles.
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
-    Eigen::Vector3d distance1(_dimensions), distance2(_dimensions);
-    distance1 = reordered[0]->getCoords() - reordered[2]->getCoords();
-    distance2 = reordered[1]->getCoords() - reordered[3]->getCoords();
+    double distance1 = (reordered[0]->getCoords() - reordered[2]->getCoords()).norm();
+    double distance2 = (reordered[1]->getCoords() - reordered[3]->getCoords()).norm();
 
     // The new edge, e[4], is the shortest diagonal of the quad
-    if (distance1.norm() <= distance2.norm()) {
+    if (distance1 <= distance2) {
       auto &diag = mesh.createUniqueEdge(*reordered[0], *reordered[2]);
       mesh.createTriangle(edge0, edge1, diag);
       mesh.createTriangle(edge2, edge3, diag);
