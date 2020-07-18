@@ -715,7 +715,7 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
     }
   }
   PRECICE_ERROR("Data \"" << dataName << "\" used by mesh \""
-                          << meshName << "\" is not configured!");
+                          << meshName << "\" is not configured.");
 }
 
 PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingScheme(
