@@ -1713,6 +1713,11 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
       cplInterface.setMeshQuadWithEdges(meshOneID, idA, idB, idC, idD);
     }
 
+    auto& mesh = testing::WhiteboxAccessor::impl(cplInterface).mesh("MeshOne");
+    BOOST_REQUIRE(mesh.vertices().size() == 4);
+    BOOST_REQUIRE(mesh.edges().size() == 5);
+    BOOST_REQUIRE(mesh.triangles().size() == 2);
+
     // Initialize, thus sending the mesh.
     double maxDt = cplInterface.initialize();
     BOOST_TEST(cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
