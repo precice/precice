@@ -422,7 +422,7 @@ void ReceivedPartition::compareBoundingBoxes()
     m2n().getMasterCommunication()->send(connectedRanksList, 0);
     PRECICE_CHECK(not connectionMap.empty(), "The mesh \"" << _mesh->getName() << "\" of this participant has no partitions at the coupling interface. "
                                                                                   "Check that both mapped meshes are describing the same geometry. "
-                                                                                  "If you deal with very coarse meshes, consider increasing the safety-factor in the <use-mesh /> tag.");
+                                                                                  "If you deal with very different mesh resolutions, consider increasing the safety-factor in the <use-mesh /> tag.");
     com::CommunicateBoundingBox(m2n().getMasterCommunication()).sendConnectionMap(connectionMap, 0);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
