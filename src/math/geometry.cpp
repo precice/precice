@@ -251,14 +251,17 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
     be transformed.
   */
 
+  Eigen::Vector3d coordOrigin;    // Origin point for the transformation of points onto the new plane
+  coordOrigin = coords[0];
+
   // Normal of the plane of first three points in the list of vertices
-  Eigen::Vector3d e_1 = coords[1] - coords[0];
-  Eigen::Vector3d e_2 = coords[2] - coords[0];
+  Eigen::Vector3d e_1 = coords[1] - coordOrigin;
+  Eigen::Vector3d e_2 = coords[2] - coordOrigin;
   Eigen::Vector3d normalVector = e_1.cross(e_2);
 
   //Transform Coordinates - coord[0] is the origin
   for (int i = 0; i < 4; i++){
-    Eigen::Vector3d coordinateDifference = coords[i] - coords[0];
+    Eigen::Vector3d coordinateDifference = coords[i] - coordOrigin;
     coords[i][0] = e_1.dot(coordinateDifference);
     coords[i][1] = e_2.dot(coordinateDifference);
     coords[i][2] = normalVector.dot(coordinateDifference);

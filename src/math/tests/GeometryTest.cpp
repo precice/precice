@@ -828,6 +828,31 @@ BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexityWithEqualLeftPoint)
   BOOST_TEST(result.vertexOrder[3] == 1);
 }
 
+BOOST_AUTO_TEST_CASE(ComputeInvalidUnitQuadConvexity)
+{
+  PRECICE_TEST(1_rank);
+  int             dim = 3;
+  Eigen::VectorXd coords0(dim);
+  Eigen::VectorXd coords1(dim);
+  Eigen::VectorXd coords2(dim);
+  Eigen::VectorXd coords3(dim);
+  coords2 << 1.0, 0.0, 0.0;
+  coords1 << 1.0, 1.0, 0.0;
+  coords0 << 0.5, 0.9, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+
+  auto vertexList = utils::make_array(coords0, coords1, coords2, coords3);
+  auto result     = geometry::isConvexQuad(vertexList);
+
+  BOOST_TEST(!result.convex);
+  BOOST_TEST(utils::unique_elements(result.vertexOrder));
+  BOOST_TEST_MESSAGE("Vertex Order" << result.vertexOrder);
+  BOOST_TEST(result.vertexOrder[0] == 3);
+  BOOST_TEST(result.vertexOrder[1] == 2);
+  BOOST_TEST(result.vertexOrder[2] == 1);
+  BOOST_TEST(result.vertexOrder[3] == 0);
+}
+
 BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
 {
   PRECICE_TEST(1_rank);
@@ -845,12 +870,12 @@ BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
   auto result     = geometry::isConvexQuad(vertexList);
 
   BOOST_TEST(!result.convex);
-  BOOST_TEST(utils::unique_elements(result.vertexOrder));
+  BOOST_TEST(!utils::unique_elements(result.vertexOrder));
   BOOST_TEST_MESSAGE("Vertex Order" << result.vertexOrder);
   BOOST_TEST(result.vertexOrder[0] == 0);
   BOOST_TEST(result.vertexOrder[1] == 3);
   BOOST_TEST(result.vertexOrder[2] == 1);
-  BOOST_TEST(result.vertexOrder[3] == 2);
+  BOOST_TEST(result.vertexOrder[3] == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // convexity
