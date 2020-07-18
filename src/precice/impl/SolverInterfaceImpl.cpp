@@ -870,7 +870,7 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
     using impl::errorInvalidVertexID;
     PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
     PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thridVertexID));
+    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
     PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
     mesh::Vertex *vertices[4];
     vertices[0] = &mesh->vertices()[firstVertexID];
