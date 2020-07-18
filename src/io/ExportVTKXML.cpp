@@ -11,7 +11,6 @@
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Quad.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
@@ -143,7 +142,7 @@ void ExportVTKXML::writeSubFile(
   if (_meshDimensions == 2) {
     numCells = mesh.edges().size();
   } else {
-    numCells = mesh.triangles().size() + mesh.quads().size();
+    numCells = mesh.triangles().size();
   }
 
   namespace fs = boost::filesystem;
@@ -208,16 +207,13 @@ void ExportVTKXML::exportMesh(
     outFile << '\n';
     outFile << "            </DataArray>\n";
     outFile << "         </Cells>\n";
-  } else { // write triangles and quads as cells
+  } else { // write triangles as cells
 
     outFile << "         <Cells>\n";
     outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";
     for (const mesh::Triangle &triangle : mesh.triangles()) {
       writeTriangle(triangle, outFile);
-    }
-    for (const mesh::Quad &quad : mesh.quads()) {
-      writeQuadrangle(quad, outFile);
     }
     outFile << '\n';
     outFile << "            </DataArray> \n";
@@ -226,18 +222,12 @@ void ExportVTKXML::exportMesh(
     for (size_t i = 1; i <= mesh.triangles().size(); i++) {
       outFile << 3 * i << "  ";
     }
-    for (size_t i = 1; i <= mesh.quads().size(); i++) {
-      outFile << 4 * i << "  ";
-    }
     outFile << '\n';
     outFile << "            </DataArray>\n";
     outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";
     for (size_t i = 1; i <= mesh.triangles().size(); i++) {
       outFile << 5 << "  ";
-    }
-    for (size_t i = 1; i <= mesh.quads().size(); i++) {
-      outFile << 9 << "  ";
     }
     outFile << '\n';
     outFile << "            </DataArray>\n";
@@ -334,16 +324,6 @@ void ExportVTKXML::writeTriangle(
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
   outFile << triangle.vertex(2).getID() << "  ";
-}
-
-void ExportVTKXML::writeQuadrangle(
-    const mesh::Quad &quad,
-    std::ofstream &   outFile)
-{
-  outFile << quad.vertex(0).getID() << "  ";
-  outFile << quad.vertex(1).getID() << "  ";
-  outFile << quad.vertex(2).getID() << "  ";
-  outFile << quad.vertex(3).getID() << "  ";
 }
 
 void ExportVTKXML::writeLine(

@@ -10,7 +10,6 @@
 #include <vector>
 #include "Edge.hpp"
 #include "Mesh.hpp"
-#include "Quad.hpp"
 #include "RTree.hpp"
 #include "Triangle.hpp"
 #include "logging/LogMacros.hpp"
@@ -74,16 +73,6 @@ const Mesh::TriangleContainer &Mesh::triangles() const
   return _triangles;
 }
 
-Mesh::QuadContainer &Mesh::quads()
-{
-  return _quads;
-}
-
-const Mesh::QuadContainer &Mesh::quads() const
-{
-  return _quads;
-}
-
 int Mesh::getDimensions() const
 {
   return _dimensions;
@@ -127,16 +116,6 @@ Triangle &Mesh::createTriangle(
       "Edges are not connected!");
   _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
   return _triangles.back();
-}
-
-Quad &Mesh::createQuad(
-    Edge &edgeOne,
-    Edge &edgeTwo,
-    Edge &edgeThree,
-    Edge &edgeFour)
-{
-  _quads.emplace_back(edgeOne, edgeTwo, edgeThree, edgeFour, _manageQuadIDs.getFreeID());
-  return _quads.back();
 }
 
 PtrData &Mesh::createData(
@@ -240,7 +219,7 @@ void Mesh::computeState()
 
   // Compute normals only if faces to derive normal information are available
   size_t size2DFaces = _edges.size();
-  size_t size3DFaces = _triangles.size() + _quads.size();
+  size_t size3DFaces = _triangles.size();
   if (_dimensions == 2 && size2DFaces == 0) {
     return;
   }
@@ -282,22 +261,6 @@ void Mesh::computeState()
       }
     }
 
-    // Compute quad normals
-    for (Quad &quad : _quads) {
-      PRECICE_ASSERT(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
-      PRECICE_ASSERT(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
-      PRECICE_ASSERT(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
-      PRECICE_ASSERT(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
-
-      // Compute normals (assuming all vertices are on same plane)
-      Eigen::VectorXd weightednormal = quad.computeNormal(_flipNormals);
-      // Accumulate area-weighted normal in associated vertices and edges
-      for (int i = 0; i < 4; i++) {
-        quad.edge(i).setNormal(quad.edge(i).getNormal() + weightednormal);
-        quad.vertex(i).setNormal(quad.vertex(i).getNormal() + weightednormal);
-      }
-    }
-
     // Normalize edge normals (only done in 3D)
     for (Edge &edge : _edges) {
       // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
@@ -313,7 +276,6 @@ void Mesh::computeState()
 
 void Mesh::clear()
 {
-  _quads.clear();
   _triangles.clear();
   _edges.clear();
   _vertices.clear();
@@ -453,8 +415,6 @@ bool Mesh::operator==(const Mesh &other) const
            std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin());
   equal &= _triangles.size() == other._triangles.size() &&
            std::is_permutation(_triangles.begin(), _triangles.end(), other._triangles.begin());
-  equal &= _quads.size() == other._quads.size() &&
-           std::is_permutation(_quads.begin(), _quads.end(), other._quads.begin());
   return equal;
 }
 
@@ -481,11 +441,6 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
   sep = ",\n";
   for (auto &triangle : m.triangles()) {
     os << sep << triangle;
-    sep = token;
-  }
-  sep = ",\n";
-  for (auto &quad : m.quads()) {
-    os << sep << quad;
     sep = token;
   }
   os << "\n)";

@@ -53,26 +53,6 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
     const Eigen::VectorXd &normal,
     const Eigen::VectorXd &location);
 
-/** Takes the corner vertices of a quad and its norm.
- *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
- *
- *  @param a point A of the quad ABCD
- *  @param b point B of the quad ABCD
- *  @param c point C of the quad ABCD
- *  @param d point D of the quad ABCD
- *  @param normal the normal of the quad
- *  @param location the location to compute the barycentric coordinates for
- *
- *   @todo: Interpolation on quads is currently not implemented
- */
-BarycentricCoordsAndProjected calcBarycentricCoordsForQuad(
-    const Eigen::VectorXd &a,
-    const Eigen::VectorXd &b,
-    const Eigen::VectorXd &c,
-    const Eigen::VectorXd &d,
-    const Eigen::VectorXd &normal,
-    const Eigen::VectorXd &location);
-
 } // namespace barycenter
 } // namespace math
 } // namespace precice

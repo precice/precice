@@ -25,7 +25,7 @@ class Triangle {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
   /**
-   * This index-based iterator iterates over the vertices of this Quad.
+   * This index-based iterator iterates over the vertices of this Triangle.
    * The returned value is the forwarded result of Vertex::getCoords.
    * It is thus a read-only random-access iterator.
    */

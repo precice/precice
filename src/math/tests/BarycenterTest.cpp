@@ -136,12 +136,6 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle)
   }
 }
 
-BOOST_AUTO_TEST_CASE(BarycenterQuad)
-{
-  PRECICE_TEST(1_rank);
-  /// @todo implement tests for interpolation on quads
-}
-
 BOOST_AUTO_TEST_SUITE_END() // Barycenter
 
 BOOST_AUTO_TEST_SUITE_END() // Math
