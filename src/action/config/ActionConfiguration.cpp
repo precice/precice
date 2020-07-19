@@ -41,6 +41,10 @@ ActionConfiguration::ActionConfiguration(
       VALUE_ON_EXCHANGE_PRIOR("on-exchange-prior"),
       VALUE_ON_EXCHANGE_POST("on-exchange-post"),
       VALUE_ON_TIME_WINDOW_COMPLETE_POST("on-time-window-complete-post"),
+      WRITE_MAPPING_PRIOR("write-mapping-prior"),
+      WRITE_MAPPING_POST("write-mapping-post"),
+      READ_MAPPING_PRIOR("read-mapping-prior"),
+      READ_MAPPING_POST("read-mapping-post"),
       _meshConfig(meshConfig)
 {
   using namespace xml;
@@ -153,7 +157,8 @@ ActionConfiguration::ActionConfiguration(
                             "Determines when (relative to advancing the coupling scheme) the action is executed.")
                         .setOptions({VALUE_REGULAR_PRIOR, VALUE_REGULAR_POST,
                                      VALUE_ON_EXCHANGE_PRIOR, VALUE_ON_EXCHANGE_POST,
-                                     VALUE_ON_TIME_WINDOW_COMPLETE_POST});
+                                     VALUE_ON_TIME_WINDOW_COMPLETE_POST, WRITE_MAPPING_PRIOR, WRITE_MAPPING_POST,
+                                     READ_MAPPING_PRIOR, READ_MAPPING_POST});
 
   auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
                       .setDocumentation("Determines mesh used in action.");
@@ -313,6 +318,14 @@ action::Action::Timing ActionConfiguration::getTiming() const
     timing = action::Action::ON_EXCHANGE_POST;
   } else if (_configuredAction.timing == VALUE_ON_TIME_WINDOW_COMPLETE_POST) {
     timing = action::Action::ON_TIME_WINDOW_COMPLETE_POST;
+  } else if (_configuredAction.timing == WRITE_MAPPING_PRIOR) {
+    timing = action::Action::WRITE_MAPPING_PRIOR;
+  } else if (_configuredAction.timing == WRITE_MAPPING_POST) {
+    timing = action::Action::WRITE_MAPPING_POST;
+  } else if (_configuredAction.timing == READ_MAPPING_PRIOR) {
+    timing = action::Action::READ_MAPPING_PRIOR;
+  } else if (_configuredAction.timing == READ_MAPPING_POST) {
+    timing = action::Action::READ_MAPPING_POST;
   } else {
     PRECICE_ERROR("Unknown action timing \"" << _configuredAction.timing << "\"!");
   }
