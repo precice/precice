@@ -1704,7 +1704,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
     if (cplInterface.isActionRequired(actionReadIterationCheckpoint())) {
       cplInterface.markActionFulfilled(actionReadIterationCheckpoint());
     } else { //converged
-      BOOST_TEST(numberOfIterations == expectedIterations[timestep]);
+      BOOST_TEST(numberOfIterations == expectedIterations.at(timestep));
       ++timestep;
     }
   }
