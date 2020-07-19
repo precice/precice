@@ -155,7 +155,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
       PRECICE_ERROR("Communication type \"mpi\" can only be used if preCICE was compiled with MPI support enabled. "
-                    "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".")
+                    "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
 #ifdef OMPI_MAJOR_VERSION
       PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
@@ -167,7 +167,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
       PRECICE_ERROR("Communication type \"mpi-singleports\" can only be used if preCICE was compiled with MPI support enabled. "
-                    "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".")
+                    "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
 #ifdef OMPI_MAJOR_VERSION
       PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-singleports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
