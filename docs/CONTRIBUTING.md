@@ -20,6 +20,9 @@ In order to get your contributions into the code base as smoothly as possible, p
   Install `clang-format-8` and run `tools/formatting/format-all` to format your code.
 * Submit a pull request to the repository in the preCICE organization.  
   See [Collaboration workflow with pull requests and issues][workflow] and [Creating a pull request][pullrequest]
+* If applicable, add an entry for our `CHANGELOG.md` as a file `docs/changelog/123.md`, where `123` your Pull Request number.
+  If you have [GitHub CLI](https://cli.github.com/) installed, you can use the script `createChangelog` in `tools/building` to create the file for you.
+  The content of the file is a markdown list of the entries using `*` as marker. Write 1 entry per line to simplify the merging process. Each entry should start with a verb in the past tense such as `Added`, `Fixed`, `Updated`, `Simplified`, `Improved`. This simplifies sorting the changelog and finding interesting content in it.
 
 ## Taking code from other projects
 We believe in the power of Open Source or Free Software Software to share and reuse code from other projects. However, Free Software is not public domain, and not every code could be reused in every other project.

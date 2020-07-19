@@ -550,12 +550,15 @@ private:
 
   cplscheme::PtrCouplingScheme _couplingScheme;
 
-  /// Represents the various states a solverinterface can be in.
+  /// Represents the various states a SolverInterface can be in.
   enum struct State {
-    Constructed,
-    Initialized,
-    Finalized
+    Constructed,  // Initial state of SolverInterface
+    Initialized,  // SolverInterface.initialize() triggers transition from State::Constructed to State::Initialized; mandatory
+    Finalized  // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to State::Finalized; mandatory
   };
+
+  // SolverInterface.initializeData() triggers transition from false to true.
+  bool _hasInitializedData = false;
 
   /// The current State of the solverinterface
   State _state{State::Constructed};

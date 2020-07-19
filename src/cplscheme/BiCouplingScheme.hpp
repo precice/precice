@@ -116,7 +116,7 @@ private:
   std::string _secondParticipant = "unknown";
 
   /// Implements functionality for setupConvergenceMeasures
-  void assignDataToConvergenceMeasure(ConvergenceMeasure *convMeasure, int dataID) override
+  void assignDataToConvergenceMeasure(ConvergenceMeasureContext *convMeasure, int dataID) override
   {
     if ((getSendData(dataID) != nullptr)) {
       convMeasure->couplingData = getSendData(dataID);

@@ -119,11 +119,10 @@ Triangle &Mesh::createTriangle(
     Edge &edgeTwo,
     Edge &edgeThree)
 {
-  PRECICE_CHECK(
+  PRECICE_ASSERT(
       edgeOne.connectedTo(edgeTwo) &&
-          edgeTwo.connectedTo(edgeThree) &&
-          edgeThree.connectedTo(edgeOne),
-      "Edges are not connected!");
+      edgeTwo.connectedTo(edgeThree) &&
+      edgeThree.connectedTo(edgeOne));
   _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
   return _triangles.back();
 }
@@ -146,7 +145,7 @@ PtrData &Mesh::createData(
   for (const PtrData data : _data) {
     PRECICE_CHECK(data->getName() != name,
                   "Data \"" << name << "\" cannot be created twice for "
-                            << "mesh \"" << _name << "\"!");
+                            << "mesh \"" << _name << "\". Please rename or remove one of the use-data tags with name \""<< name << "\".");
   }
   int     id = Data::getDataCount();
   PtrData data(new Data(name, id, dimension));
@@ -162,9 +161,9 @@ const Mesh::DataContainer &Mesh::data() const
 const PtrData &Mesh::data(
     int dataID) const
 {
-  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](PtrData const & ptr){
-      return ptr->getID() == dataID;
-      });
+  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](PtrData const &ptr) {
+    return ptr->getID() == dataID;
+  });
   PRECICE_ASSERT(iter != _data.end(), "Data with ID = " << dataID << " not found in mesh \"" << _name << "\".");
   return *iter;
 }

@@ -118,6 +118,14 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
+  struct ConvergenceMeasureDefintion {
+    mesh::PtrData               data;
+    bool                        suffices;
+    std::string                 meshName;
+    impl::PtrConvergenceMeasure measure;
+    bool                        doesLogging;
+  };
+
   struct Config {
     std::string                   type;
     std::string                   name;
@@ -132,11 +140,9 @@ private:
     /// Tuples of exchange data, mesh, and participant name.
     typedef std::tuple<mesh::PtrData, mesh::PtrMesh, std::string, std::string, bool> Exchange;
     std::vector<Exchange>                                                            exchanges;
-    /// Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<std::tuple<mesh::PtrData, bool, std::string, impl::PtrConvergenceMeasure>> convMeasures;
-    int                                                                                    maxIterations      = -1;
-    int                                                                                    extrapolationOrder = 0;
-
+    std::vector<ConvergenceMeasureDefintion>                                         convergenceMeasureDefinitions;
+    int                                                                              maxIterations      = -1;
+    int                                                                              extrapolationOrder = 0;
   } _config;
 
   mesh::PtrMeshConfiguration _meshConfig;
