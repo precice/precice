@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <exception>
 #include <initializer_list>
 #include <map>
 #include <sstream>
@@ -165,7 +166,12 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
     }
     set(_value, _defaultValue);
   } else {
-    readValueSpecific(position->second, _value);
+    try {
+      readValueSpecific(position->second, _value);
+    }
+    catch(const std::exception& e) {
+      PRECICE_ERROR(e.what());
+    }
     if (_hasValidation) {
       if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
         std::ostringstream stream;

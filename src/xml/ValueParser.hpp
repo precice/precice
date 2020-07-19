@@ -2,39 +2,14 @@
 
 #include <Eigen/Core>
 #include <string>
-#include "logging/LogMacros.hpp"
-#include "logging/Logger.hpp"
 #include "utils/String.hpp"
 
 namespace precice {
 namespace xml {
 
-static logging::Logger _log{"xml::ValueParser"};
+void readValueSpecific(const std::string &rawValue, double &value);
 
-inline void readValueSpecific(const std::string &rawValue, double &value)
-{
-  try {
-    if (rawValue.find('/') != std::string::npos) {
-      std::string left  = rawValue.substr(0, rawValue.find('/'));
-      std::string right = rawValue.substr(rawValue.find('/') + 1, rawValue.size() - rawValue.find('/') - 1);
-
-      value = std::stod(left) / std::stod(right);
-    } else {
-      value = std::stod(rawValue);
-    }
-  } catch (...) {
-    PRECICE_ERROR("String to Double error");
-  }
-}
-
-inline void readValueSpecific(const std::string &rawValue, int &value)
-{
-  try {
-    value = std::stoi(rawValue);
-  } catch (...) {
-    PRECICE_ERROR("String to Int error");
-  }
-}
+void readValueSpecific(const std::string &rawValue, int &value);
 
 inline void readValueSpecific(const std::string &rawValue, std::string &value)
 {
