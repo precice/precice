@@ -143,7 +143,7 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   const auto size = iter->second.getValue().size();
   PRECICE_CHECK(size == dimensions,
                 "Vector attribute \"" << name << "\" of tag <" << getFullName() << "> is "
-                                      << size << "D, which does not match the dimension of the " << dimensions << "D SolverInterface.");
+                                      << size << "D, which does not match the dimension of the " << dimensions << "D solver-interface.");
 
   // Read only first "dimensions" components of the parsed vector values
   Eigen::VectorXd        result(dimensions);
