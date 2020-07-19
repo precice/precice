@@ -1068,7 +1068,7 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                               << "acceleration. Please check the <exchange ... /> and "
                               << "<...-convergence-measure ... /> tags in the "
                               << "<coupling-scheme:... /> of your precice-config.xml.");
-} // namespace cplscheme
+}
 
 } // namespace cplscheme
 } // namespace precice
