@@ -60,6 +60,7 @@
 #include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
 #include "xml/XMLTag.hpp"
+#include "iostream"
 
 using precice::utils::Event;
 using precice::utils::EventRegistry;
@@ -838,6 +839,7 @@ void SolverInterfaceImpl::setMeshQuad(
     mesh->createQuad(e0, e1, e2, e3);
   }
 }
+
 
 void SolverInterfaceImpl::setMeshQuadWithEdges(
     int meshID,

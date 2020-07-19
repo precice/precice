@@ -32,27 +32,110 @@ int main(int argc, char **argv)
 
   int meshID     = interface.getMeshID(meshName);
   int dimensions = interface.getDimensions();
+  std::string dataWriteName; 
+  std::string dataReadName;
+  int N = 6;            // Number of vertices
 
-  std::vector<double> vertex(dimensions, 0);
-  int                 vertexID = interface.setMeshVertex(meshID, vertex.data());
+  if (solverName == "SolverOne"){
+    dataWriteName="dataOne";
+    dataReadName="dataTwo";
+  }
+  if (solverName == "SolverTwo"){
+    dataReadName="dataOne";
+    dataWriteName="dataTwo";
+  }
+  const int readDataID = interface.getDataID(dataReadName,meshID);
+  const int writeDataID = interface.getDataID(dataWriteName,meshID);
+
+  std::vector<double> readData(N*dimensions);
+  std::vector<double> writeData(N*dimensions);
+  std::vector<double> vertex(dimensions);
+  std::vector<int> vertexIDs(N);
+
+  for (int i = 0; i < N; i++){
+    if (i == 1){
+      vertex[0] = 1.0;
+      vertex[1] = 0.0;
+      vertex[2] = 0.0;
+    } else if (i == 2) {
+      vertex[0] = 0.0;
+      vertex[1] = 0.0;
+      vertex[2] = 0.0;
+    } else if (i == 3) {
+      vertex[0] = 2.0;
+      vertex[1] = 2.0;
+      vertex[2] = 0.0;
+    } else if (i == 4) {
+      vertex[0] = 0.0;
+      vertex[1] = 1.0;
+      vertex[2] = 0.0;
+    }
+    else if (i == 0) {
+      vertex[0] = 0.0;
+      vertex[1] = 1.0;
+      vertex[2] = 1.0;
+    }
+    else if (i == 5) {
+      vertex[0] = 0.0;
+      vertex[1] = 1.0;
+      vertex[2] = 2.0;
+    }
+    /*
+    if (i == 0){
+      vertex[0] = 0.5;
+      vertex[1] = 0.4;
+      vertex[2] = 0.0;
+    } else if (i == 1) {
+      vertex[0] = 1.0;
+      vertex[1] = 1.0;
+      vertex[2] = 0.0;
+    } else if (i == 2) {
+      vertex[0] = 1.0;
+      vertex[1] = 0.0;
+      vertex[2] = 0.0;
+    } else {
+      vertex[0] = 0.0;
+      vertex[1] = 1.0;
+      vertex[2] = 0.0;
+    }
+    */
+    for (int j = 0; j < dimensions; j++) {
+      //vertex[j] = i;
+      readData[j + i*dimensions] = i;
+      writeData[j + i*dimensions] = i;
+      
+    }
+    vertexIDs[i] = interface.setMeshVertex(meshID, vertex.data());
+  }
+
+  interface.setMeshEdge(meshID, 1, 2);
+  interface.setMeshEdge(meshID, 4, 3);
+  interface.setMeshEdge(meshID, 4, 2);
+  interface.setMeshEdge(meshID, 1, 3);
+
+  interface.setMeshQuad(meshID, 0, 1, 2, 3);
+  //interface.setMeshQuadWithEdges(meshID, 0, 1, 2, 3);
 
   double dt = interface.initialize();
 
   while (interface.isCouplingOngoing()) {
 
-    if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
-      std::cout << "DUMMY: Writing iteration checkpoint\n";
-      interface.markActionFulfilled(actionWriteIterationCheckpoint());
+    interface.readBlockVectorData(readDataID,N,vertexIDs.data(),readData.data());
+    std::cout << "DUMMY: Reading iteration checkpoint\n";
+    interface.markActionFulfilled(actionReadIterationCheckpoint());
+
+    for (int i = 0; i < N*dimensions; i++){
+      writeData[i] = readData[i] + 1;
     }
+
+    interface.writeBlockVectorData(writeDataID,N,vertexIDs.data(),writeData.data());
+    std::cout << "DUMMY: Writing iteration checkpoint\n";
+    interface.markActionFulfilled(actionWriteIterationCheckpoint());
 
     dt = interface.advance(dt);
 
-    if (interface.isActionRequired(actionReadIterationCheckpoint())) {
-      std::cout << "DUMMY: Writing iteration checkpoint\n";
-      interface.markActionFulfilled(actionReadIterationCheckpoint());
-    } else {
-      std::cout << "DUMMY: Advancing in time\n";
-    }
+    std::cout << "DUMMY: Advancing in time\n";
+
   }
 
   interface.finalize();
