@@ -637,9 +637,10 @@ int SolverInterfaceImpl::getDataID(
 {
   PRECICE_TRACE(dataName, meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
+  impl::MeshContext &context = _accessor->meshContext(meshID);
   PRECICE_CHECK(hasData(dataName, meshID),
-                "Data with name \"" << dataName << "\" is not defined on mesh with ID \"" << meshID << "\". "
-                                    << "Please add \"<use-data = " << dataName << "\" under \"<mesh name = " << meshID << "\".");
+                "Data with name \"" << dataName << "\" is not defined on mesh \"" << context.mesh->getName() << "\". "
+                                    << "Please add <use-data name=\"" << dataName << "\"/> under <mesh name=\"" << context.mesh->getName() << "\"/>.");
   return _dataIDs.at(meshID).at(dataName);
 }
 
