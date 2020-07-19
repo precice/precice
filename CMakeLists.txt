@@ -111,7 +111,7 @@ add_feature_info(PythonActions PRECICE_PythonActions
    This feature can be enabled/disabled by setting the PRECICE_PythonActions CMake option.
   ")
 add_feature_info(CBindings PRECICE_ENABLE_C
-  "Enables the native Fortran bindings.
+  "Enables the native C bindings.
 
    preCICE provides native bindings for C, which are compiled into the library.
    This feature enables the compilation and installation of the bindings into the library.
