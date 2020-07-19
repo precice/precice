@@ -309,9 +309,9 @@ action::Action::Timing ActionConfiguration::getTiming() const
   PRECICE_TRACE(_configuredAction.timing);
   action::Action::Timing timing;
   if (_configuredAction.timing == VALUE_REGULAR_PRIOR) {
-    timing = action::Action::ALWAYS_PRIOR;
+    timing = action::Action::WRITE_MAPPING_PRIOR;
   } else if (_configuredAction.timing == VALUE_REGULAR_POST) {
-    timing = action::Action::ALWAYS_POST;
+    timing = action::Action::READ_MAPPING_PRIOR;
   } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_PRIOR) {
     timing = action::Action::ON_EXCHANGE_PRIOR;
   } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_POST) {
