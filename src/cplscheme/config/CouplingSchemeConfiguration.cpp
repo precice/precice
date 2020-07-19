@@ -175,8 +175,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     PRECICE_ASSERT(_config.type == VALUE_MULTI);
     bool        control         = tag.getBooleanAttributeValue(ATTR_CONTROL);
     std::string participantName = tag.getStringAttributeValue(ATTR_NAME);
-    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), participantName) == _config.participants.end()
-                      && participantName.compare(_config.controller) != 0,
+    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), participantName) == _config.participants.end() && participantName.compare(_config.controller) != 0,
                   "Participant \""
                       << participantName
                       << "\" is provided multiple times to multi coupling scheme. Please make sure that you do not provide the participant multiple times via the <participant name=\""
@@ -206,10 +205,10 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                                                   << "/> tag in the <coupling-scheme:...> of your precice-config.xml");
   } else if (tag.getName() == TAG_TIME_WINDOW_SIZE) {
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
-    _config.validDigits = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
-    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),"Valid digits of time window size has to be between 1 and 16.");
+    _config.validDigits    = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
+    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17), "Valid digits of time window size has to be between 1 and 16.");
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD));
-    if(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
+    if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
       PRECICE_CHECK(_config.timeWindowSize > 0, "Time window size has to be larger than zero. Please check the <time-window-size "
                                                     << "value=\"" << _config.timeWindowSize << "\" "
                                                     << "valid-digits=\"" << _config.validDigits << "\" "
@@ -1052,13 +1051,24 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
       hasFound = true;
     }
   }
+
+  std::string dataName = "";
+  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+    for (mesh::PtrData data : mesh->data()) {
+      if (data->getID() == dataID) {
+        dataName = data->getName();
+        break;
+      }
+    }
+  }
+
   PRECICE_CHECK(hasFound, "You need to exchange every data that you use for convergence measures "
-                              << "and/or the iteration acceleration. Data \"" << dataID << "\" is " /// @todo better provide the dataName! Is there an easy way to access it?
+                              << "and/or the iteration acceleration. Data \"" << dataName << "\" is "
                               << "currently not exchanged, but used for convergence measures and/or iteration "
                               << "acceleration. Please check the <exchange ... /> and "
                               << "<...-convergence-measure ... /> tags in the "
                               << "<coupling-scheme:... /> of your precice-config.xml.");
-}
+} // namespace cplscheme
 
 } // namespace cplscheme
 } // namespace precice
