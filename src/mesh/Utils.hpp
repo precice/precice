@@ -11,7 +11,7 @@ namespace mesh {
 
 /** return a pointer to the shared vertex of 2 edges
  * @param[in] a pointer to Edge a
- * @param[in] a pointer to Edge a
+ * @param[in] b pointer to Edge b
  * @returns a pointer to the Vertex shared by a and b or nullptr otherwise.
  */
 inline Vertex *sharedVertex(Edge &a, Edge &b)
