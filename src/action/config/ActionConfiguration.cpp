@@ -207,7 +207,7 @@ int ActionConfiguration::getUsedMeshID() const
       return mesh->getID();
     }
   }
-  PRECICE_ERROR("No mesh ID found. Please check that the correct mesh name is used.");
+  PRECICE_ERROR("No mesh name \"" << _configuredAction.mesh << "\" found. Please check that the correct mesh name is used.");
   return -1; // To please compiler
 }
 
