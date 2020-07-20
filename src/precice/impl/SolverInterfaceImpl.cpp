@@ -894,12 +894,11 @@ void SolverInterfaceImpl::setMeshQuad(
     PRECICE_CHECK(utils::unique_elements(coords),
                   "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
                   "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface "
-                  "is composed of quads. A mix of triangles and quads are not supported.");
+                  "is composed of planar quads.");
 
     auto convexity = math::geometry::isConvexQuad(coords);
     PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
-                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads. "
-                                    "A mix of triangles and quads are not supported.");
+                                    "Please check that the adapter send the four correct vertices or that the interface is composed of planar quads.");
 
     // Use the shortest diagonal to split the quad into 2 triangles.
     // The diagonal to be used with edges (1, 2) and (0, 3) of the chain
