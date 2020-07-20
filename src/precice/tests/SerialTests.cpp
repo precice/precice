@@ -10,6 +10,7 @@
 #include "math/constants.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/SolverInterface.hpp"
@@ -1662,6 +1663,107 @@ BOOST_AUTO_TEST_CASE(testSummationActionTwoSources)
   testSummationAction(configFile, context);
  }
 
+void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
+{
+  using Eigen::Vector3d;
+
+  const double z = 0.0;
+
+  // MeshOne
+  Vector3d coordOneA{-0.2, 0.0, z};
+  Vector3d coordOneB{0.0, 0.5, z};
+  Vector3d coordOneC{0.2, 0.0, z};
+  Vector3d coordOneD{0.0, -0.5, z};
+
+  if (context.isNamed("SolverOne")) {
+    SolverInterface cplInterface("SolverOne", configFile, 0, 1);
+    // namespace is required because we are outside the fixture
+    const int meshOneID = cplInterface.getMeshID("MeshOne");
+
+    // Setup mesh one.
+    int idA = cplInterface.setMeshVertex(meshOneID, coordOneA.data());
+    int idB = cplInterface.setMeshVertex(meshOneID, coordOneB.data());
+    int idC = cplInterface.setMeshVertex(meshOneID, coordOneC.data());
+    int idD = cplInterface.setMeshVertex(meshOneID, coordOneD.data());
+
+    if (defineEdgesExplicitly) {
+
+      int idAB = cplInterface.setMeshEdge(meshOneID, idA, idB);
+      int idBC = cplInterface.setMeshEdge(meshOneID, idB, idC);
+      int idCD = cplInterface.setMeshEdge(meshOneID, idC, idD);
+      int idDA = cplInterface.setMeshEdge(meshOneID, idD, idA);
+
+      cplInterface.setMeshQuad(meshOneID, idAB, idBC, idCD, idDA);
+
+    } else {
+      cplInterface.setMeshQuadWithEdges(meshOneID, idA, idB, idC, idD);
+    }
+
+    auto& mesh = testing::WhiteboxAccessor::impl(cplInterface).mesh("MeshOne");
+    BOOST_REQUIRE(mesh.vertices().size() == 4);
+    BOOST_REQUIRE(mesh.edges().size() == 5);
+    BOOST_REQUIRE(mesh.triangles().size() == 2);
+
+
+    for (auto& edge: mesh.edges()) {
+      BOOST_TEST(mesh::edgeLength(edge) < 0.6);
+    }
+
+    cplInterface.finalize();
+  }
+
+}
+
+void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
+{
+  using Eigen::Vector3d;
+
+  const double z = 0.0;
+
+  // MeshOne
+  Vector3d coordOneA{0.0, 0.0, z};
+  Vector3d coordOneB{0.5, 0.2, z};
+  Vector3d coordOneC{1.0, 0.0, z};
+  Vector3d coordOneD{0.5, -0.2, z};
+
+  if (context.isNamed("SolverOne")) {
+    SolverInterface cplInterface("SolverOne", configFile, 0, 1);
+    // namespace is required because we are outside the fixture
+    const int meshOneID = cplInterface.getMeshID("MeshOne");
+
+    // Setup mesh one.
+    int idA = cplInterface.setMeshVertex(meshOneID, coordOneA.data());
+    int idB = cplInterface.setMeshVertex(meshOneID, coordOneB.data());
+    int idC = cplInterface.setMeshVertex(meshOneID, coordOneC.data());
+    int idD = cplInterface.setMeshVertex(meshOneID, coordOneD.data());
+
+    if (defineEdgesExplicitly) {
+
+      int idAB = cplInterface.setMeshEdge(meshOneID, idA, idB);
+      int idBC = cplInterface.setMeshEdge(meshOneID, idB, idC);
+      int idCD = cplInterface.setMeshEdge(meshOneID, idC, idD);
+      int idDA = cplInterface.setMeshEdge(meshOneID, idD, idA);
+
+      cplInterface.setMeshQuad(meshOneID, idAB, idCD, idBC, idDA);
+
+    } else {
+      cplInterface.setMeshQuadWithEdges(meshOneID, idA, idB, idD, idC);
+    }
+
+    auto& mesh = testing::WhiteboxAccessor::impl(cplInterface).mesh("MeshOne");
+    BOOST_REQUIRE(mesh.vertices().size() == 4);
+    BOOST_REQUIRE(mesh.edges().size() == 5);
+    BOOST_REQUIRE(mesh.triangles().size() == 2);
+
+
+    for (auto& edge: mesh.edges()) {
+      BOOST_TEST(mesh::edgeLength(edge) < 0.6);
+    }
+
+    cplInterface.finalize();
+  }
+
+}
 
 void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
 {
@@ -1672,7 +1774,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
   // MeshOne
   Vector3d coordOneA{0.0, 0.0, z};
   Vector3d coordOneB{1.0, 0.0, z};
-  Vector3d coordOneC{1.0, 1.0, z};
+  Vector3d coordOneC{0.999999999, 1.0, z};          // Forces diagonal 0-2 to be shorter.
   Vector3d coordOneD{0.0, 1.0, z};
   double   valOneA = 1.0;
   double   valOneB = 3.0;
@@ -1757,7 +1859,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
 
     BOOST_TEST(valueA == expectedValTwoA);
     BOOST_TEST(valueB == expectedValTwoB);
-    //BOOST_TEST(valueC == expectedValTwoC);
+    BOOST_TEST(valueC == expectedValTwoC);
 
     // Verify that there is only one time step necessary.
     cplInterface.advance(maxDt);
@@ -1789,6 +1891,55 @@ BOOST_AUTO_TEST_CASE(testQuadMappingNearestProjectionImplicitEdges)
   const std::string configFile            = _pathToTests + "mapping-nearest-projection.xml";
   testQuadMappingNearestProjection(defineEdgesExplicitly, configFile, context);
 }
+
+/**
+ * @brief Tests the Nearest Projection Mapping on a single participant on a quad mesh of a tall kite with setMeshQuad
+ *
+ */
+BOOST_AUTO_TEST_CASE(testQuadMappingDiagonalNearestProjectionExplicitEdgesTallKite)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank));
+  bool              defineEdgesExplicitly = true;
+  const std::string configFile            = _pathToTests + "mapping-nearest-projection.xml";
+  testQuadMappingNearestProjectionTallKite(defineEdgesExplicitly, configFile, context);
+}
+
+/**
+ * @brief Tests the Nearest Projection Mapping on a single participant on a quad mesh of a tall kite with setMeshQuadWithEdges
+ *
+ */
+BOOST_AUTO_TEST_CASE(testQuadMappingDiagonalNearestProjectionImplicitEdgesTallKite)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank));
+  bool              defineEdgesExplicitly = false;
+  const std::string configFile            = _pathToTests + "mapping-nearest-projection.xml";
+  testQuadMappingNearestProjectionTallKite(defineEdgesExplicitly, configFile, context);
+}
+
+/**
+ * @brief Tests the Nearest Projection Mapping on a single participant on a quad mesh of a tall kite with setMeshQuad
+ *
+ */
+BOOST_AUTO_TEST_CASE(testQuadMappingDiagonalNearestProjectionExplicitEdgesWideKite)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank));
+  bool              defineEdgesExplicitly = true;
+  const std::string configFile            = _pathToTests + "mapping-nearest-projection.xml";
+  testQuadMappingNearestProjectionWideKite(defineEdgesExplicitly, configFile, context);
+}
+
+/**
+ * @brief Tests the Nearest Projection Mapping on a single participant on a quad mesh of a tall kite with setMeshQuadWithEdges
+ *
+ */
+BOOST_AUTO_TEST_CASE(testQuadMappingDiagonalNearestProjectionImplicitEdgesWideKite)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank));
+  bool              defineEdgesExplicitly = false;
+  const std::string configFile            = _pathToTests + "mapping-nearest-projection.xml";
+  testQuadMappingNearestProjectionWideKite(defineEdgesExplicitly, configFile, context);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

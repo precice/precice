@@ -899,7 +899,7 @@ void SolverInterfaceImpl::setMeshQuad(
     double distance2 = (coords[1] - coords[3]).norm();
 
     // The new edge, e[4], is the shortest diagonal of the quad
-    if (distance1 < distance2) {
+    if (distance1 <= distance2) {
       auto &diag = mesh->createUniqueEdge(*chain.vertices[0], *chain.vertices[2]);
       mesh->createTriangle(*chain.edges[3], *chain.edges[0], diag);
       mesh->createTriangle(*chain.edges[1], *chain.edges[2], diag);

@@ -35,7 +35,7 @@ inline Vertex *sharedVertex(Edge &a, Edge &b)
  *
  * @returns the distance between both vertices of e 
  */
-inline double edgeLength(Edge& e)
+inline double edgeLength(const Edge& e)
 {
   return (e.vertex(0).getCoords() - e.vertex(1).getCoords()).norm();
 }
