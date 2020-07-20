@@ -124,7 +124,6 @@ ActionConfiguration::ActionConfiguration(
   {
     XMLTag tag(*this, NAME_RECORDER, occ, TAG);
     tag.setDocumentation("Records action invocations for testing purposes.");
-    tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
