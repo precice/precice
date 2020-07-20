@@ -733,6 +733,20 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
                           << meshName << "\" is not configured.");
 }
 
+mesh::PtrData CouplingSchemeConfiguration::findDataByID(
+    int ID) const
+{
+  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+    for (mesh::PtrData data : mesh->data()) {
+      if (data->getID() == ID) {
+        return data;
+      }
+    }
+  }
+  return nullptr;
+}
+
+
 PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingScheme(
     const std::string &accessor) const
 {
@@ -1067,8 +1081,15 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
       hasFound = true;
     }
   }
+
+  std::string dataName = "";
+  auto dataptr = findDataByID(dataID);
+  if (dataptr) {
+    dataName = dataptr->getName();
+  }
+
   PRECICE_CHECK(hasFound, "You need to exchange every data that you use for convergence measures "
-                              << "and/or the iteration acceleration. Data \"" << dataID << "\" is " /// @todo better provide the dataName! Is there an easy way to access it?
+                              << "and/or the iteration acceleration. Data \"" << dataName << "\" is "
                               << "currently not exchanged, but used for convergence measures and/or iteration "
                               << "acceleration. Please check the <exchange ... /> and "
                               << "<...-convergence-measure ... /> tags in the "

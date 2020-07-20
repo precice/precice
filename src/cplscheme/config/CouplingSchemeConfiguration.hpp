@@ -217,6 +217,9 @@ private:
       const std::string &dataName,
       const std::string &meshName) const;
 
+  mesh::PtrData findDataByID(
+      int ID) const;
+
   PtrCouplingScheme createSerialExplicitCouplingScheme(
       const std::string &accessor) const;
 
