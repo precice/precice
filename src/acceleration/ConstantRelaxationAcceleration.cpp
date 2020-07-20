@@ -20,7 +20,7 @@ ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
 {
   PRECICE_CHECK((relaxation > 0.0) && (relaxation <= 1.0),
                 "Relaxation factor for constant relaxation acceleration "
-                    << "has to be larger than zero and smaller or equal than one. Current relaxation factor is: " << relaxation);
+                    << "has to be larger than zero and smaller or equal to one. Current relaxation factor is: " << relaxation);
 }
 
 void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
