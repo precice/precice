@@ -81,7 +81,7 @@ public:
       : _cPow2(std::pow(c, 2))
   {
     PRECICE_CHECK(math::greater(c, 0.0),
-                  "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero!");
+                  "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute.");
   }
 
   double evaluate(double radius) const
@@ -125,9 +125,9 @@ public:
         _supportRadius(supportRadius)
   {
     PRECICE_CHECK(math::greater(_shape, 0.0),
-                  "Shape parameter for radial-basis-function gaussian has to be larger than zero!");
+                  "Shape parameter for radial-basis-function gaussian has to be larger than zero. Please update the \"shape-parameter\" attribute.");
     PRECICE_CHECK(math::greater(_supportRadius, 0.0),
-                  "Support radius for radial-basis-function gaussian has to be larger than zero!");
+                  "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the \"support-radius\" attribute.");
 
     if (supportRadius < std::numeric_limits<double>::infinity()) {
       _deltaY = evaluate(supportRadius);
@@ -180,7 +180,7 @@ public:
       : _r(supportRadius)
   {
     PRECICE_CHECK(math::greater(_r, 0.0),
-                  "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero!");
+                  "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
   }
 
   double getSupportRadius() const
@@ -220,7 +220,7 @@ public:
       : _r(supportRadius)
   {
     PRECICE_CHECK(math::greater(_r, 0.0),
-                  "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero!");
+                  "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute.");
   }
 
   double getSupportRadius() const
@@ -257,7 +257,7 @@ public:
       : _r(supportRadius)
   {
     PRECICE_CHECK(math::greater(_r, 0.0),
-                  "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero!");
+                  "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
   }
 
   double getSupportRadius() const

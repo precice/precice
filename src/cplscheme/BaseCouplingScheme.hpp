@@ -229,6 +229,7 @@ public:
   void addConvergenceMeasure(
       mesh::PtrData               data,
       bool                        suffices,
+      bool                        strict,
       impl::PtrConvergenceMeasure measure,
       bool                        doesLogging);
 
@@ -333,6 +334,7 @@ protected:
    * @param data Associated data field
    * @param couplingData Coupling data history
    * @param suffices Whether this measure already suffices for convergence
+   * @param strict Whether non-convergence of this measure leads to a premature end of the simulation
    * @param measure Link to the actual convergence measure
    * @param doesLogging Whether this measure is logged in the convergence file
    */
@@ -340,6 +342,7 @@ protected:
     mesh::PtrData               data;
     CouplingData *              couplingData;
     bool                        suffices;
+    bool                        strict;
     impl::PtrConvergenceMeasure measure;
     bool                        doesLogging;
 

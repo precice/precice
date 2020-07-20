@@ -753,39 +753,39 @@ BOOST_AUTO_TEST_CASE(testImplicitWithDataInitialization)
 
   SolverInterface couplingInterface(context.name, _pathToTests + "implicit-data-init.xml", 0, 1);
 
-  int dimensions = couplingInterface.getDimensions();
+  int         dimensions = couplingInterface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
-  double writeValue, expectedReadValue;
+  double      writeValue, expectedReadValue;
 
   if (context.isNamed("SolverOne")) {
-    meshName = "MeshOne";
-    writeDataName = "Forces";
-    readDataName = "Velocities";
-    writeValue = 1;
+    meshName          = "MeshOne";
+    writeDataName     = "Forces";
+    readDataName      = "Velocities";
+    writeValue        = 1;
     expectedReadValue = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshName = "MeshTwo";
-    writeDataName = "Velocities";
-    readDataName = "Forces";
-    writeValue = 2;
+    meshName          = "MeshTwo";
+    writeDataName     = "Velocities";
+    readDataName      = "Forces";
+    writeValue        = 2;
     expectedReadValue = 1;
   }
-  int meshID = couplingInterface.getMeshID(meshName);
-  int writeDataID     = couplingInterface.getDataID(writeDataName, meshID);
-  int readDataID     = couplingInterface.getDataID(readDataName, meshID);
+  int                 meshID      = couplingInterface.getMeshID(meshName);
+  int                 writeDataID = couplingInterface.getDataID(writeDataName, meshID);
+  int                 readDataID  = couplingInterface.getDataID(readDataName, meshID);
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = couplingInterface.setMeshVertex(meshID, vertex.data());
 
   double dt = 0;
-  dt = couplingInterface.initialize();
+  dt        = couplingInterface.initialize();
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
-  const std::string& cowid = actionWriteInitialData();
+  const std::string & cowid = actionWriteInitialData();
 
-  if(couplingInterface.isActionRequired(cowid)){
+  if (couplingInterface.isActionRequired(cowid)) {
     BOOST_TEST(context.isNamed("SolverTwo"));
     couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
     couplingInterface.markActionFulfilled(cowid);
@@ -1659,6 +1659,80 @@ BOOST_AUTO_TEST_CASE(testSummationActionTwoSources)
   PRECICE_TEST("SolverTarget"_on(1_rank), "SolverSourceOne"_on(1_rank), "SolverSourceTwo"_on(1_rank));
   const std::string configFile = _pathToTests + "summation-action.xml";
   testSummationAction(configFile, context);
+}
+
+/**
+ * @brief
+ *
+ */
+void testConvergenceMeasures(const std::string configFile, TestContext const &context, std::vector<int> &expectedIterations)
+{
+  using Eigen::Vector2d;
+  using namespace precice::constants;
+
+  std::string meshName = context.isNamed("SolverOne") ? "MeshOne" : "MeshTwo";
+
+  SolverInterface cplInterface(context.name, configFile, 0, 1);
+  const int       meshID = cplInterface.getMeshID(meshName);
+
+  Vector2d vertex{0.0, 0.0};
+
+  std::vector<double> writeValues = {1.0, 1.01, 2.0, 2.5, 2.8, 2.81};
+
+  int vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
+
+  cplInterface.initialize();
+  int numberOfAdvanceCalls = 0;
+  int numberOfIterations   = -1;
+  int timestep             = 0;
+
+  while (cplInterface.isCouplingOngoing()) {
+    if (cplInterface.isActionRequired(actionWriteIterationCheckpoint())) {
+      numberOfIterations = 0;
+      cplInterface.markActionFulfilled(actionWriteIterationCheckpoint());
+    }
+
+    if (context.isNamed("SolverTwo")) {
+      int dataID = cplInterface.getDataID("Data2", meshID);
+      cplInterface.writeScalarData(dataID, vertexID, writeValues[numberOfAdvanceCalls]);
+    }
+
+    cplInterface.advance(1.0);
+    ++numberOfAdvanceCalls;
+    ++numberOfIterations;
+
+    if (cplInterface.isActionRequired(actionReadIterationCheckpoint())) {
+      cplInterface.markActionFulfilled(actionReadIterationCheckpoint());
+    } else { //converged
+      BOOST_TEST(numberOfIterations == expectedIterations.at(timestep));
+      ++timestep;
+    }
+  }
+  cplInterface.finalize();
+}
+
+BOOST_AUTO_TEST_CASE(testConvergenceMeasures1)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  const std::string configFile         = _pathToTests + "convergence-measures1.xml";
+  std::vector<int>  expectedIterations = {2, 4};
+  testConvergenceMeasures(configFile, context, expectedIterations);
+}
+
+BOOST_AUTO_TEST_CASE(testConvergenceMeasures2)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  const std::string configFile         = _pathToTests + "convergence-measures2.xml";
+  std::vector<int>  expectedIterations = {3, 3};
+  testConvergenceMeasures(configFile, context, expectedIterations);
+}
+
+BOOST_AUTO_TEST_CASE(testConvergenceMeasures3)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  const std::string configFile         = _pathToTests + "convergence-measures3.xml";
+  std::vector<int>  expectedIterations = {2, 4};
+  testConvergenceMeasures(configFile, context, expectedIterations);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

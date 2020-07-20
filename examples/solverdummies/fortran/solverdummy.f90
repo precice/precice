@@ -63,22 +63,23 @@ PROGRAM main
 
   CALL precicef_initialize(dt)
 
-  CALL precicef_action_required(writeInitialData, bool)
+  CALL precicef_is_action_required(writeInitialData, bool)
   IF (bool.EQ.1) THEN
     WRITE (*,*) 'DUMMY: Writing initial data'
   ENDIF
   CALL precicef_initialize_data()
 
-  CALL precicef_ongoing(ongoing)
+  CALL precicef_is_coupling_ongoing(ongoing)
   DO WHILE (ongoing.NE.0)
-
-    CALL precicef_action_required(writeItCheckp, bool)
+  
+    CALL precicef_is_action_required(writeItCheckp, bool)
+    
     IF (bool.EQ.1) THEN
       WRITE (*,*) 'DUMMY: Writing iteration checkpoint'
       CALL precicef_mark_action_fulfilled(writeItCheckp)
     ENDIF
 
-    CALL precicef_read_data_available(bool)
+    CALL precicef_is_read_data_available(bool)
     IF (bool.EQ.1) THEN
       CALL precicef_read_bvdata(readDataID, numberOfVertices, vertexIDs, readData)
     ENDIF
@@ -87,14 +88,14 @@ PROGRAM main
 
     writeData = readData + 1
 
-    CALL precicef_write_data_required(dt, bool)
+    CALL precicef_is_write_data_required(dt, bool)
     IF (bool.EQ.1) THEN
       CALL precicef_write_bvdata(writeDataID, numberOfVertices, vertexIDs, writeData)
     ENDIF
 
     CALL precicef_advance(dt)
 
-    CALL precicef_action_required(readItCheckp, bool)
+    CALL precicef_is_action_required(readItCheckp, bool)
     IF (bool.EQ.1) THEN
       WRITE (*,*) 'DUMMY: Reading iteration checkpoint'
       CALL precicef_mark_action_fulfilled(readItCheckp)
@@ -102,7 +103,7 @@ PROGRAM main
       WRITE (*,*) 'DUMMY: Advancing in time'
     ENDIF
 
-    CALL precicef_ongoing(ongoing)
+    CALL precicef_is_coupling_ongoing(ongoing)
 
   ENDDO
 
