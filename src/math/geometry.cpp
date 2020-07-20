@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "math/math.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace math {
@@ -247,9 +248,11 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
 {
   /*
     All points need to be projected into a new plane with only 2 coordinates, x' and y'. These are used to check 
-    the convexity of the quad. These new coordinates are stored in 'coords'. Vertices in 2D does not need to
-    be transformed.
+    the convexity of the quad. These new coordinates are stored in 'coords'.
   */
+  for(const auto& vec : coords) {
+    PRECICE_ASSERT(vec.size() == 3, "This only works in 3D.");
+  }
 
   Eigen::Vector3d coordOrigin;    // Origin point for the transformation of points onto the new plane
   coordOrigin = coords[0];
