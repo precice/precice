@@ -291,19 +291,16 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
   PRECICE_ASSERT(_couplingScheme->isInitialized());
 
-  std::set<action::Action::Timing> timings;
   double                           dt = 0.0;
 
   dt = _couplingScheme->getNextTimestepMaxLength();
 
-  timings.insert(action::Action::READ_MAPPING_PRIOR);
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    timings.insert(action::Action::ON_EXCHANGE_POST);
+    performDataActions({action::Action::ON_EXCHANGE_POST, action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
-
-  performDataActions(timings, 0.0, 0.0, 0.0, dt);
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
@@ -334,17 +331,19 @@ void SolverInterfaceImpl::initializeData()
   utils::ScopedEventPrefix sep("initializeData/");
 
   PRECICE_DEBUG("Initialize data");
+  double dt = _couplingScheme->getNextTimestepMaxLength();
 
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
   mapWrittenData();
+  performDataActions({action::Action::WRITE_MAPPING_POST, action::Action::ON_EXCHANGE_PRIOR}, 0.0, 0.0, 0.0, dt);
 
   _couplingScheme->initializeData();
-  double                           dt = _couplingScheme->getNextTimestepMaxLength();
-  std::set<action::Action::Timing> timings;
+
   if (_couplingScheme->hasDataBeenReceived()) {
-    timings.insert(action::Action::ON_EXCHANGE_POST);
+    performDataActions({action::Action::ON_EXCHANGE_POST, action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
-  performDataActions(timings, 0.0, 0.0, 0.0, dt);
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   for (const io::ExportContext &context : _accessor->exportContexts()) {
@@ -407,36 +406,27 @@ double SolverInterfaceImpl::advance(
   timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
   time                   = _couplingScheme->getTime();
 
-  std::set<action::Action::Timing> timings;
-
-  timings.insert(action::Action::WRITE_MAPPING_PRIOR);
   if (_couplingScheme->willDataBeExchanged(0.0)) {
+    performDataActions({action::Action::WRITE_MAPPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapWrittenData();
+    performDataActions({action::Action::WRITE_MAPPING_POST, action::Action::ON_EXCHANGE_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
-
-  timings.insert(action::Action::WRITE_MAPPING_POST);
-  if (_couplingScheme->willDataBeExchanged(0.0)) {
-    timings.insert(action::Action::ON_EXCHANGE_PRIOR);
-  }
-  performDataActions(timings, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
 
-  timings.clear();
-  timings.insert(action::Action::READ_MAPPING_PRIOR);
   if (_couplingScheme->hasDataBeenReceived()) {
-    timings.insert(action::Action::ON_EXCHANGE_POST);
+    performDataActions({action::Action::ON_EXCHANGE_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
   if (_couplingScheme->isTimeWindowComplete()) {
-    timings.insert(action::Action::ON_TIME_WINDOW_COMPLETE_POST);
+    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
-  performDataActions(timings, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 
   if (_couplingScheme->hasDataBeenReceived()) {
+    performDataActions({action::Action::READ_MAPPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapReadData();
+    performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
-  timings.insert(action::Action::READ_MAPPING_POST);
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
