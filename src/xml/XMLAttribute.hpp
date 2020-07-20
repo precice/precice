@@ -8,8 +8,8 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
 #include "logging/Logger.hpp"
+#include "utils/assertion.hpp"
 #include "xml/ValueParser.hpp"
 
 namespace precice {
@@ -154,9 +154,7 @@ template <typename ATTRIBUTE_T>
 void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::string> &aAttributes)
 {
   PRECICE_TRACE(_name);
-  if (_read) {
-    PRECICE_ERROR("Attribute \"" + _name + "\" has already been defined. Duplications are not permitted.");
-  }
+  PRECICE_ASSERT(!_read, "Attribute \"" + _name + "\" has already been read.");
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
