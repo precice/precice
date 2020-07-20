@@ -68,14 +68,6 @@ template <std::size_t n>
 Chain<n> asChain(std::array<mesh::Edge *, n> edges)
 {
   static_assert(n > 1, "You already know the answer.");
-  /*
-  The first edge in the list is treated as the first edge (edge[0]). An edge that does not share a vertex
-  with the first edge is the 3rd edge (edge[2]). The edge that shares the first vertex with the first
-  edge (shares vertex[0] with edge[0]) is the 4th edge (edge[3]) as long as it does not share
-  the other vertex with edge[0] (then there is a duplicated edge). The edge sharing vertex[1] and not
-  vertex[0] is the 2nd edge (edge[1]). This also provides the vertex ordering to determine the diagonal, 
-  but not convexity.
-  */
   Chain<n> chain;
   chain.connected = false;
 
