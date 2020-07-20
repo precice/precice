@@ -46,7 +46,7 @@ void ResidualSumPreconditioner::_update_(bool                   timestepComplete
     }
     sum = std::sqrt(sum);
     PRECICE_ASSERT(sum > 0);
-    PRECICE_CHECK(not math::equals(sum, 0.0), "All residual sub-vectors in the residual-sum preconditioner are numerically zero."
+    PRECICE_CHECK(not math::equals(sum, 0.0), "All residual sub-vectors in the residual-sum preconditioner are numerically zero. "
                                               "Your simulation probably got unstable, e.g. produces NAN values.");
 
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
