@@ -52,7 +52,7 @@ MappingConfiguration::MappingConfiguration(
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({"estimate", "compute", "off", "save", "tree"});
   auto attrUseLU = makeXMLAttribute(ATTR_USE_QR, false)
-                       .setDocumentation("If set to true, QR decomposition is used to solve the RBF system (only supported in serial)");
+                       .setDocumentation("If set to true, QR decomposition is used to solve the RBF system");
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  tags;
