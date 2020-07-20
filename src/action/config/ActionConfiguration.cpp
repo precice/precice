@@ -321,19 +321,19 @@ action::Action::Timing ActionConfiguration::getTiming() const
   action::Action::Timing timing;
   if (_configuredAction.timing == VALUE_REGULAR_PRIOR) {
     timing = action::Action::WRITE_MAPPING_PRIOR;
-    PRECICE_WARN("Regular-prior action timings will no longer be supported. Regular-prior will now revert to write-mapping-prior which performs "
+    PRECICE_WARN("Regular-prior action timing is deprecated. Regular-prior will now revert to write-mapping-prior which performs "
                  "the action before a write mapping and before the coupling update.");
   } else if (_configuredAction.timing == VALUE_REGULAR_POST) {
     timing = action::Action::READ_MAPPING_PRIOR;
-    PRECICE_WARN("Regular-post action timings will no longer be supported. Regular-post will now revert to read-mapping-prior which performs "
+    PRECICE_WARN("Regular-post action timing is deprecated. Regular-post will now revert to read-mapping-prior which performs "
                  "the action after the coupling update and before a read mapping.");
   } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_PRIOR) {
     timing = action::Action::WRITE_MAPPING_POST;
-    PRECICE_WARN("on-exchange-prior action timings will no longer be supported. on-exchange-prior will now revert to write-mapping-post which performs "
+    PRECICE_WARN("on-exchange-prior action timing is deprecated. on-exchange-prior will now revert to write-mapping-post which performs "
                  "the action before a write mapping and before the coupling update.");
   } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_POST) {
     timing = action::Action::READ_MAPPING_PRIOR;
-    PRECICE_WARN("on-exchange-post action timings will no longer be supported. on-exchange-post will now revert to read-mapping-prior which performs "
+    PRECICE_WARN("on-exchange-post action timing is deprecated. on-exchange-post will now revert to read-mapping-prior which performs "
                  "the action before a write mapping and before the coupling update.");
   } else if (_configuredAction.timing == VALUE_ON_TIME_WINDOW_COMPLETE_POST) {
     timing = action::Action::ON_TIME_WINDOW_COMPLETE_POST;
