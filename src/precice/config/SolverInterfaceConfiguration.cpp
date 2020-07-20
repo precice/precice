@@ -57,7 +57,7 @@ void SolverInterfaceConfiguration::xmlTagCallback(
     _meshConfiguration->setDimensions(_dimensions);
     _participantConfiguration->setDimensions(_dimensions);
   } else {
-    PRECICE_ERROR("Received callback from tag " << tag.getName());
+    PRECICE_ASSERT(false, "Received callback from unknown tag " << tag.getName());
   }
 }
 
