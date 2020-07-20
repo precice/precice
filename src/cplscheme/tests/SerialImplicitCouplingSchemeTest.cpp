@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
   cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
       new cplscheme::impl::AbsoluteConvergenceMeasure(convergenceLimit1));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, absoluteConvMeasure1);
+  cplScheme.addConvergenceMeasure(mesh->data()[1], false, absoluteConvMeasure1, true);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {5, 5, 5};
@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, minIterationConvMeasure1);
+  cplScheme.addConvergenceMeasure(mesh->data()[1], false, minIterationConvMeasure1, true);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {3, 3, 3};
@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, minIterationConvMeasure1);
+  cplScheme.addConvergenceMeasure(mesh->data()[1], false, minIterationConvMeasure1, true);
   runCouplingWithSubcycling(
       cplScheme, context.name, meshConfig, validIterations);
 }
@@ -783,7 +783,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, minIterationConvMeasure1);
+  cplScheme.addConvergenceMeasure(mesh->data()[1], false, minIterationConvMeasure1, true);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());

@@ -1,4 +1,3 @@
-#include "partition/ProvidedPartition.hpp"
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -16,6 +15,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
+#include "partition/ProvidedPartition.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -104,7 +104,8 @@ void ProvidedPartition::communicate()
       Event e("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
 
       if (not utils::MasterSlave::isSlave()) {
-        PRECICE_CHECK(globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
+        PRECICE_CHECK(globalMesh.vertices().size() > 0,
+                      "The provided mesh \"" << globalMesh.getName() << "\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().");
         com::CommunicateMesh(m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
       }
     }

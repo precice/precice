@@ -1,4 +1,3 @@
-#include "partition/ReceivedPartition.hpp"
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -17,6 +16,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
+#include "partition/ReceivedPartition.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -243,6 +243,18 @@ void ReceivedPartition::compute()
   }
 }
 
+namespace {
+std::string errorMeshFilteredOut(const std::string &meshName)
+{
+  return "The re-partitioning completely filtered out the mesh \"" + meshName +
+         "\" received on this rank at the coupling interface. "
+         "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
+         "Please check your geometry setup again. Small overlaps or gaps are no problem. "
+         "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
+         "of the decomposition strategy might be necessary.";
+}
+} // namespace
+
 void ReceivedPartition::filterByBoundingBox()
 {
   PRECICE_TRACE(_geometricFilter);
@@ -270,13 +282,7 @@ void ReceivedPartition::filterByBoundingBox()
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
 
       if (areProvidedMeshesEmpty()) {
-        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
-                          " received on this rank at the coupling interface. "
-                          "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-                          "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-                          "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
-                          "of the decomposition strategy might be necessary.";
-        PRECICE_CHECK(not _mesh->vertices().empty(), msg);
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
       }
 
     } else { // Master
@@ -305,13 +311,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->addMesh(filteredMesh);
 
       if (areProvidedMeshesEmpty()) {
-        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
-                          " received on this rank at the coupling interface. "
-                          "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-                          "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-                          "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
-                          "of the decomposition strategy might be necessary.";
-        PRECICE_CHECK(not _mesh->vertices().empty(), msg);
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
       }
     }
   } else {
@@ -335,13 +335,7 @@ void ReceivedPartition::filterByBoundingBox()
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
 
       if (areProvidedMeshesEmpty()) {
-        std::string msg = "The re-partitioning completely filtered out the mesh " + _mesh->getName() +
-                          " received on this rank at the coupling interface. "
-                          "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-                          "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-                          "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
-                          "of the decomposition strategy might be necessary.";
-        PRECICE_CHECK(not filteredMesh.vertices().empty(), msg);
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
       }
 
       PRECICE_DEBUG("Bounding box filter, filtered from "
@@ -426,11 +420,10 @@ void ReceivedPartition::compareBoundingBoxes()
 
     // send connectionMap to other master
     m2n().getMasterCommunication()->send(connectedRanksList, 0);
-    if (not connectionMap.empty()) {
-      com::CommunicateBoundingBox(m2n().getMasterCommunication()).sendConnectionMap(connectionMap, 0);
-    } else {
-      PRECICE_ERROR("This participant seems to have no mesh partitions for mesh " << _mesh->getName() << " at the coupling interface.");
-    }
+    PRECICE_CHECK(not connectionMap.empty(), "The mesh \"" << _mesh->getName() << "\" of this participant seems to have no partitions at the coupling interface. "
+                                                                                  "Check that both mapped meshes are describing the same geometry. "
+                                                                                  "If you deal with very different mesh resolutions, consider increasing the safety-factor in the <use-mesh /> tag.");
+    com::CommunicateBoundingBox(m2n().getMasterCommunication()).sendConnectionMap(connectionMap, 0);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
 

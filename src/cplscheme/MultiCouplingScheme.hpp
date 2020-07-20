@@ -130,9 +130,11 @@ private:
   void exchangeInitialData() override;
 
   /**
-   * @brief TODO
+   * @brief Needed for setting up convergence measures
+   * @param convMeasure Convergence measure to which the data field is assigned to
+   * @param dataID Data field to be assigned
    */
-  void assignDataToConvergenceMeasure(ConvergenceMeasure *convergenceMeasure, int dataID) override;
+  void assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID) override;
 
   /**
    * @brief MultiCouplingScheme has to call store for all receive and send data in the vectors

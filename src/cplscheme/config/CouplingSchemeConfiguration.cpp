@@ -627,7 +627,13 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
                     << "mesh=\"" << meshName << "\" "
                     << "suffices=\"" << suffices << "\"/> subtag in your <coupling-scheme ... /> in the precice-config.xml.");
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
+  ConvergenceMeasureDefintion convMeasureDef;
+  convMeasureDef.data        = getData(dataName, meshName);
+  convMeasureDef.suffices    = suffices;
+  convMeasureDef.meshName    = meshName;
+  convMeasureDef.measure     = std::move(measure);
+  convMeasureDef.doesLogging = true;
+  _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
 void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
@@ -644,9 +650,14 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
                     << "data=\"" << dataName << "\" "
                     << "mesh=\"" << meshName << "\" "
                     << "suffices=\"" << suffices << "\"/> subtag in your <coupling-scheme ... /> in the precice-config.xml.");
-  impl::PtrConvergenceMeasure measure(
-      new impl::RelativeConvergenceMeasure(limit));
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
+  impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
+  ConvergenceMeasureDefintion convMeasureDef;
+  convMeasureDef.data        = getData(dataName, meshName);
+  convMeasureDef.suffices    = suffices;
+  convMeasureDef.meshName    = meshName;
+  convMeasureDef.measure     = std::move(measure);
+  convMeasureDef.doesLogging = true;
+  _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
 void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
@@ -663,9 +674,14 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
                     << "data=\"" << dataName << "\" "
                     << "mesh=\"" << meshName << "\" "
                     << "suffices=\"" << suffices << "\"/> subtag in your <coupling-scheme ... /> in the precice-config.xml.");
-  impl::PtrConvergenceMeasure measure(
-      new impl::ResidualRelativeConvergenceMeasure(limit));
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
+  impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
+  ConvergenceMeasureDefintion convMeasureDef;
+  convMeasureDef.data        = getData(dataName, meshName);
+  convMeasureDef.suffices    = suffices;
+  convMeasureDef.meshName    = meshName;
+  convMeasureDef.measure     = std::move(measure);
+  convMeasureDef.doesLogging = true;
+  _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
 void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
@@ -675,9 +691,14 @@ void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
     bool               suffices)
 {
   PRECICE_TRACE();
-  impl::PtrConvergenceMeasure measure(
-      new impl::MinIterationConvergenceMeasure(minIterations));
-  _config.convMeasures.push_back(std::make_tuple(getData(dataName, meshName), suffices, meshName, measure));
+  impl::PtrConvergenceMeasure measure(new impl::MinIterationConvergenceMeasure(minIterations));
+  ConvergenceMeasureDefintion convMeasureDef;
+  convMeasureDef.data        = getData(dataName, meshName);
+  convMeasureDef.suffices    = suffices;
+  convMeasureDef.meshName    = meshName;
+  convMeasureDef.measure     = std::move(measure);
+  convMeasureDef.doesLogging = false;
+  _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
 mesh::PtrData CouplingSchemeConfiguration::getData(
@@ -694,7 +715,7 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
     }
   }
   PRECICE_ERROR("Data \"" << dataName << "\" used by mesh \""
-                          << meshName << "\" is not configured!");
+                          << meshName << "\" is not configured.");
 }
 
 PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingScheme(
@@ -743,23 +764,18 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
-  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling."
+  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling. "
                                               << "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, where "
                                               << "from=\"" << accessor << "\".");
 
   // Add convergence measures
-  using std::get;
-  PRECICE_CHECK(not _config.convMeasures.empty(),
+  PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
-  for (auto &elem : _config.convMeasures) {
-    mesh::PtrData               data       = get<0>(elem);
-    bool                        suffices   = get<1>(elem);
-    std::string                 neededMesh = get<2>(elem);
-    impl::PtrConvergenceMeasure measure    = get<3>(elem);
-    _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
-    checkIfDataIsExchanged(data->getID());
-    scheme->addConvergenceMeasure(data, suffices, measure);
+  for (auto &elem : _config.convergenceMeasureDefinitions) {
+    _meshConfig->addNeededMesh(_config.participants[1], elem.meshName);
+    checkIfDataIsExchanged(elem.data->getID());
+    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
@@ -795,23 +811,18 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
-  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling."
+  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling. "
                                               << "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, where "
                                               << "from=\"" << accessor << "\".");
 
   // Add convergence measures
-  using std::get;
-  PRECICE_CHECK(not _config.convMeasures.empty(),
+  PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
-  for (auto &elem : _config.convMeasures) {
-    mesh::PtrData               data       = get<0>(elem);
-    bool                        suffices   = get<1>(elem);
-    std::string                 neededMesh = get<2>(elem);
-    impl::PtrConvergenceMeasure measure    = get<3>(elem);
-    _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
-    checkIfDataIsExchanged(data->getID());
-    scheme->addConvergenceMeasure(data, suffices, measure);
+  for (auto &elem : _config.convergenceMeasureDefinitions) {
+    _meshConfig->addNeededMesh(_config.participants[1], elem.meshName);
+    checkIfDataIsExchanged(elem.data->getID());
+    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
@@ -863,23 +874,18 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     BiCouplingScheme *castedScheme = dynamic_cast<BiCouplingScheme *>(scheme);
     addDataToBeExchanged(*castedScheme, accessor);
   }
-  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling."
+  PRECICE_CHECK(scheme->hasAnySendData(), "No send data configured. Use explicit scheme for one-way coupling. "
                                               << "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, where "
                                               << "from=\"" << accessor << "\".");
 
   // Add convergence measures
-  using std::get;
-  PRECICE_CHECK(not _config.convMeasures.empty(),
+  PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
-  for (auto &elem : _config.convMeasures) {
-    mesh::PtrData               data       = get<0>(elem);
-    bool                        suffices   = get<1>(elem);
-    std::string                 neededMesh = get<2>(elem);
-    impl::PtrConvergenceMeasure measure    = get<3>(elem);
-    _meshConfig->addNeededMesh(_config.controller, neededMesh);
-    checkIfDataIsExchanged(data->getID());
-    scheme->addConvergenceMeasure(data, suffices, measure);
+  for (auto &elem : _config.convergenceMeasureDefinitions) {
+    _meshConfig->addNeededMesh(_config.controller, elem.meshName);
+    checkIfDataIsExchanged(elem.data->getID());
+    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
