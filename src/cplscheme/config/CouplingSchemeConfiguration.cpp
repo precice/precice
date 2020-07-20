@@ -70,6 +70,7 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       ATTR_FROM("from"),
       ATTR_TO("to"),
       ATTR_SUFFICES("suffices"),
+      ATTR_STRICT("strict"),
       ATTR_CONTROL("control"),
       VALUE_SERIAL_EXPLICIT("serial-explicit"),
       VALUE_PARALLEL_EXPLICIT("parallel-explicit"),
@@ -175,8 +176,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     PRECICE_ASSERT(_config.type == VALUE_MULTI);
     bool        control         = tag.getBooleanAttributeValue(ATTR_CONTROL);
     std::string participantName = tag.getStringAttributeValue(ATTR_NAME);
-    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), participantName) == _config.participants.end()
-                      && participantName.compare(_config.controller) != 0,
+    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), participantName) == _config.participants.end() && participantName.compare(_config.controller) != 0,
                   "Participant \""
                       << participantName
                       << "\" is provided multiple times to multi coupling scheme. Please make sure that you do not provide the participant multiple times via the <participant name=\""
@@ -206,10 +206,10 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                                                   << "/> tag in the <coupling-scheme:...> of your precice-config.xml");
   } else if (tag.getName() == TAG_TIME_WINDOW_SIZE) {
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
-    _config.validDigits = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
-    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),"Valid digits of time window size has to be between 1 and 16.");
+    _config.validDigits    = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
+    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17), "Valid digits of time window size has to be between 1 and 16.");
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD));
-    if(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
+    if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
       PRECICE_CHECK(_config.timeWindowSize > 0, "Time window size has to be larger than zero. Please check the <time-window-size "
                                                     << "value=\"" << _config.timeWindowSize << "\" "
                                                     << "valid-digits=\"" << _config.validDigits << "\" "
@@ -233,29 +233,33 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool        strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices);
+    addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_REL_CONV_MEASURE) {
     std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool        strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addRelativeConvergenceMeasure(dataName, meshName, limit, suffices);
+    addRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_RES_REL_CONV_MEASURE) {
     std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool        strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices);
+    addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_MIN_ITER_CONV_MEASURE) {
     std::string dataName      = tag.getStringAttributeValue(ATTR_DATA);
     std::string meshName      = tag.getStringAttributeValue(ATTR_MESH);
     int         minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
     bool        suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool        strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices);
+    addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices, strict);
   } else if (tag.getName() == TAG_EXCHANGE) {
     std::string   nameData            = tag.getStringAttributeValue(ATTR_DATA);
     std::string   nameMesh            = tag.getStringAttributeValue(ATTR_MESH);
@@ -576,8 +580,11 @@ void CouplingSchemeConfiguration::addBaseAttributesTagConvergenceMeasure(
                       .setDocumentation("Mesh holding the data.");
   tag.addAttribute(attrMesh);
   auto attrSuffices = makeXMLAttribute(ATTR_SUFFICES, false)
-                          .setDocumentation("If true, suffices to lead to convergence.");
+                          .setDocumentation("If true, convergence of this measure is sufficient for overall convergence.");
   tag.addAttribute(attrSuffices);
+  auto attrStrict = makeXMLAttribute(ATTR_STRICT, false)
+                        .setDocumentation("If true, non-convergence of this measure ends the simulation. \"strict\" overrules \"suffices\".");
+  tag.addAttribute(attrStrict);
 }
 
 void CouplingSchemeConfiguration::addTagMaxIterations(
@@ -616,7 +623,8 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
     const std::string &dataName,
     const std::string &meshName,
     double             limit,
-    bool               suffices)
+    bool               suffices,
+    bool               strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0),
@@ -625,11 +633,12 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
                     << "limit=\"" << limit << "\" "
                     << "data=\"" << dataName << "\" "
                     << "mesh=\"" << meshName << "\" "
-                    << "suffices=\"" << suffices << "\"/> subtag in your <coupling-scheme ... /> in the precice-config.xml.");
+                    << "/> subtag in your <coupling-scheme ... /> in the preCICE configuration file.");
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
   convMeasureDef.data        = getData(dataName, meshName);
   convMeasureDef.suffices    = suffices;
+  convMeasureDef.strict      = strict;
   convMeasureDef.meshName    = meshName;
   convMeasureDef.measure     = std::move(measure);
   convMeasureDef.doesLogging = true;
@@ -640,7 +649,8 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
     const std::string &dataName,
     const std::string &meshName,
     double             limit,
-    bool               suffices)
+    bool               suffices,
+    bool               strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
@@ -649,11 +659,12 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
                     << "limit=\"" << limit << "\" "
                     << "data=\"" << dataName << "\" "
                     << "mesh=\"" << meshName << "\" "
-                    << "suffices=\"" << suffices << "\"/> subtag in your <coupling-scheme ... /> in the precice-config.xml.");
+                    << "/> subtag in your <coupling-scheme ... /> in the preCICE configuration file.");
   impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
   convMeasureDef.data        = getData(dataName, meshName);
   convMeasureDef.suffices    = suffices;
+  convMeasureDef.strict      = strict;
   convMeasureDef.meshName    = meshName;
   convMeasureDef.measure     = std::move(measure);
   convMeasureDef.doesLogging = true;
@@ -664,7 +675,8 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
     const std::string &dataName,
     const std::string &meshName,
     double             limit,
-    bool               suffices)
+    bool               suffices,
+    bool               strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
@@ -673,11 +685,12 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
                     << "limit=\"" << limit << "\" "
                     << "data=\"" << dataName << "\" "
                     << "mesh=\"" << meshName << "\" "
-                    << "suffices=\"" << suffices << "\"/> subtag in your <coupling-scheme ... /> in the precice-config.xml.");
+                    << "/> subtag in your <coupling-scheme ... /> in the preCICE configuration file.");
   impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
   convMeasureDef.data        = getData(dataName, meshName);
   convMeasureDef.suffices    = suffices;
+  convMeasureDef.strict      = strict;
   convMeasureDef.meshName    = meshName;
   convMeasureDef.measure     = std::move(measure);
   convMeasureDef.doesLogging = true;
@@ -688,13 +701,15 @@ void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
     const std::string &dataName,
     const std::string &meshName,
     int                minIterations,
-    bool               suffices)
+    bool               suffices,
+    bool               strict)
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(new impl::MinIterationConvergenceMeasure(minIterations));
   ConvergenceMeasureDefintion convMeasureDef;
   convMeasureDef.data        = getData(dataName, meshName);
   convMeasureDef.suffices    = suffices;
+  convMeasureDef.strict      = strict;
   convMeasureDef.meshName    = meshName;
   convMeasureDef.measure     = std::move(measure);
   convMeasureDef.doesLogging = false;
@@ -775,7 +790,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   for (auto &elem : _config.convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(_config.participants[1], elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.measure, elem.doesLogging);
+    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
@@ -822,7 +837,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   for (auto &elem : _config.convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(_config.participants[1], elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.measure, elem.doesLogging);
+    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
@@ -885,7 +900,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   for (auto &elem : _config.convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(_config.controller, elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.measure, elem.doesLogging);
+    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
