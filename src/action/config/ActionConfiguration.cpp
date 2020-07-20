@@ -314,8 +314,8 @@ action::Action::Timing ActionConfiguration::getTiming() const
                   "the action before a write mapping and before the coupling update.");
   } else if (_configuredAction.timing == VALUE_REGULAR_POST) {
     timing = action::Action::READ_MAPPING_PRIOR;
-    PRECICE_WARN("Regular-post action timings will no longer be supported. Regular-post will now revert to Read-mapping-prior which performs "
-                  "the action timings before ReadMappingData but after the coupling update.");
+    PRECICE_WARN("Regular-post action timings will no longer be supported. Regular-post will now revert to read-mapping-prior which performs "
+                  "the action after the coupling update and before a read mapping.");
   } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_PRIOR) {
     timing = action::Action::ON_EXCHANGE_PRIOR;
   } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_POST) {
