@@ -113,7 +113,7 @@ private:
   const std::string ATTR_X_DEAD         = "x-dead";
   const std::string ATTR_Y_DEAD         = "y-dead";
   const std::string ATTR_Z_DEAD         = "z-dead";
-  const std::string ATTR_USE_LU         = "use-lu-decomposition";
+  const std::string ATTR_USE_QR         = "use-qr-decomposition";
 
   const std::string VALUE_WRITE        = "write";
   const std::string VALUE_READ         = "read";

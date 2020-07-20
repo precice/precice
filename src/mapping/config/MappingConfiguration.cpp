@@ -51,8 +51,8 @@ MappingConfiguration::MappingConfiguration(
   auto attrPreallocation = makeXMLAttribute("preallocation", "tree")
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({"estimate", "compute", "off", "save", "tree"});
-  auto attrUseLU = makeXMLAttribute(ATTR_USE_LU, false)
-                       .setDocumentation("If set to true, LU decomposition is used to solve the RBF system (only supported in serial)");
+  auto attrUseLU = makeXMLAttribute(ATTR_USE_QR, false)
+                       .setDocumentation("If set to true, QR decomposition is used to solve the RBF system");
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  tags;
@@ -174,8 +174,8 @@ void MappingConfiguration::xmlTagCallback(
     if (tag.hasAttribute(ATTR_Z_DEAD)) {
       zDead = tag.getBooleanAttributeValue(ATTR_Z_DEAD);
     }
-    if (tag.hasAttribute(ATTR_USE_LU)) {
-      useLU = tag.getBooleanAttributeValue(ATTR_USE_LU);
+    if (tag.hasAttribute(ATTR_USE_QR)) {
+      useLU = tag.getBooleanAttributeValue(ATTR_USE_QR);
     }
     if (tag.hasAttribute("polynomial")) {
       std::string strPolynomial = tag.getStringAttributeValue("polynomial");

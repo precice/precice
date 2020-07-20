@@ -27,11 +27,11 @@
          <mapping:rbf-thin-plate-splines direction="write"
                   constraint="conservative" from="MeshForcesA"
                   to="MeshForcesB" timing="ondemand"
-                  use-lu-decomposition="yes"/>
+                  use-qr-decomposition="yes"/>
          <mapping:rbf-thin-plate-splines direction="read"
                   constraint="consistent" from="MeshDisplacementsB"
                   to="MeshDisplacementsA" timing="ondemand"
-                  use-lu-decomposition="yes"/>
+                  use-qr-decomposition="yes"/>
          <write-data name="Forces"        mesh="MeshForcesA"/>
          <read-data  name="Displacements" mesh="MeshDisplacementsA"/>
       </participant>
