@@ -1077,7 +1077,8 @@ void SolverInterfaceImpl::writeScalarData(
   PRECICE_TRACE(fromDataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
-  PRECICE_CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data. Value index must be >= 0.");
+  PRECICE_CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data. Value index must be >= 0. "
+                "Please check the value index for " << context.fromData->getName());
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
   DataContext &context = _accessor->dataContext(fromDataID);
   PRECICE_CHECK(context.fromData->getDimensions() == 1,
@@ -1134,7 +1135,8 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_TRACE(toDataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
-  PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " ) when reading vector data. Value index must be >= 0.");
+  PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " ) when reading vector data. Value index must be >= 0. "
+                "Please check the value index for " << context.fromData->getName());
   PRECICE_REQUIRE_DATA_READ(toDataID);
   DataContext &context = _accessor->dataContext(toDataID);
   PRECICE_CHECK(context.toData->getDimensions() == _dimensions,
@@ -1189,7 +1191,8 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_TRACE(toDataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(toDataID);
-  PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " ) when reading vector data. Value index must be >= 0.");
+  PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " ) when reading scalar data. Value index must be >= 0. "
+                "Please check the value index for " << context.fromData->getName());
   PRECICE_REQUIRE_DATA_READ(toDataID);
   DataContext &context = _accessor->dataContext(toDataID);
   PRECICE_CHECK(context.toData->getDimensions() == 1,
