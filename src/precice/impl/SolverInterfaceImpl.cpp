@@ -872,7 +872,6 @@ void SolverInterfaceImpl::setMeshQuad(
                 fourthEdgeID);
   PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."
                                   " Please set the dimension to 3 in the preCICE configuration file.");
-  PRECICE_ASSERT(_dimensions == 3, _dimensions);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -932,7 +931,6 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
                 secondVertexID, thirdVertexID, fourthVertexID);
   PRECICE_CHECK(_dimensions == 3, "setMeshQuadWithEdges is only possible for 3D cases."
                                   " Please set the dimension to 3 in the preCICE configuration file.");
-  PRECICE_ASSERT(_dimensions == 3, _dimensions);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
