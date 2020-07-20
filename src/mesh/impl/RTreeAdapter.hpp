@@ -8,7 +8,6 @@
 namespace precice {
 namespace mesh {
 class Triangle;
-class Quad;
 } // namespace mesh
 } // namespace precice
 
@@ -152,25 +151,6 @@ struct closure<pm::Triangle> {
 };
 
 // BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Triangle>));
-
-/** @brief Provides the necessary template specialisations to adapt precice's Quad to boost.geometry
-*
-* This adapts every Quad to the ring concept (filled planar polygone) of boost.geometry.
-*/
-template <>
-struct tag<pm::Quad> {
-  using type = ring_tag;
-};
-template <>
-struct point_order<pm::Quad> {
-  static const order_selector value = clockwise;
-};
-template <>
-struct closure<pm::Quad> {
-  static const closure_selector value = open;
-};
-
-// BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Quad>));
 
 } // namespace traits
 } // namespace geometry

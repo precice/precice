@@ -10,7 +10,6 @@
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Quad.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
@@ -80,9 +79,8 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
   // Plot triangles
   if (mesh.getDimensions() == 3) {
     size_t sizeTriangles = mesh.triangles().size();
-    size_t sizeQuads     = mesh.quads().size();
-    outFile << "CELLS " << sizeTriangles + sizeQuads << ' '
-            << sizeTriangles * 4 + sizeQuads * 5 << "\n\n";
+    outFile << "CELLS " << sizeTriangles << ' '
+            << sizeTriangles * 4 << "\n\n";
     for (auto const &triangle : mesh.triangles()) {
       int internalIndices[3];
       internalIndices[0] = triangle.vertex(0).getID();
@@ -90,21 +88,10 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
       internalIndices[2] = triangle.vertex(2).getID();
       writeTriangle(internalIndices, outFile);
     }
-    for (auto const &quad : mesh.quads()) {
-      int internalIndices[4];
-      internalIndices[0] = quad.vertex(0).getID();
-      internalIndices[1] = quad.vertex(1).getID();
-      internalIndices[2] = quad.vertex(2).getID();
-      internalIndices[3] = quad.vertex(3).getID();
-      writeQuadrangle(internalIndices, outFile);
-    }
 
-    outFile << "\nCELL_TYPES " << sizeTriangles + sizeQuads << "\n\n";
+    outFile << "\nCELL_TYPES " << sizeTriangles  << "\n\n";
     for (size_t i = 0; i < sizeTriangles; i++) {
       outFile << "5\n";
-    }
-    for (size_t i = 0; i < sizeQuads; i++) {
-      outFile << "9\n";
     }
   }
   outFile << '\n';
@@ -214,17 +201,6 @@ void ExportVTK::writeTriangle(
 {
   outFile << 3 << ' ';
   for (int i = 0; i < 3; i++) {
-    outFile << vertexIndices[i] << ' ';
-  }
-  outFile << '\n';
-}
-
-void ExportVTK::writeQuadrangle(
-    int           vertexIndices[4],
-    std::ostream &outFile)
-{
-  outFile << 4 << ' ';
-  for (int i = 0; i < 4; i++) {
     outFile << vertexIndices[i] << ' ';
   }
   outFile << '\n';

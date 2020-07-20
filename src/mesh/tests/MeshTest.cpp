@@ -1,4 +1,5 @@
 #include <Eigen/Core>
+#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <deque>
 #include <iosfwd>
@@ -10,12 +11,13 @@
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Quad.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "utils/algorithm.hpp"
 
 using namespace precice;
 using namespace precice::mesh;
@@ -115,76 +117,6 @@ BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
   BOOST_TEST(equals(v2.getNormal(), normal));
   BOOST_TEST(equals(v3.getNormal(), normal));
   BOOST_TEST(equals(v4.getNormal(), normal));
-}
-
-BOOST_AUTO_TEST_CASE(ComputeState_3D_Quad)
-{
-  PRECICE_TEST(1_rank);
-  mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
-  // Create mesh (Two rectangles with a common edge at z-axis. One extends in
-  // x-y-plane (2 long), the other in y-z-plane (1 long))
-  Vertex &v0 = mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
-  Vertex &v1 = mesh.createVertex(Vector3d(2.0, 0.0, 0.0));
-  Vertex &v2 = mesh.createVertex(Vector3d(2.0, 1.0, 0.0));
-  Vertex &v3 = mesh.createVertex(Vector3d(0.0, 1.0, 0.0));
-  Vertex &v4 = mesh.createVertex(Vector3d(0.0, 0.0, 1.0));
-  Vertex &v5 = mesh.createVertex(Vector3d(0.0, 1.0, 1.0));
-  Edge &  e0 = mesh.createEdge(v0, v1);
-  Edge &  e1 = mesh.createEdge(v1, v2);
-  Edge &  e2 = mesh.createEdge(v2, v3);
-  Edge &  e3 = mesh.createEdge(v3, v0);
-  Edge &  e4 = mesh.createEdge(v0, v4);
-  Edge &  e5 = mesh.createEdge(v4, v5);
-  Edge &  e6 = mesh.createEdge(v5, v3);
-
-  Quad &q0 = mesh.createQuad(e0, e1, e2, e3); // in x-y-plane
-  Quad &q1 = mesh.createQuad(e4, e5, e6, e3); // in z-y-plane
-  mesh.computeState();
-
-  // Perform test validations
-  BOOST_TEST(equals(e0.getCenter(), Vector3d(1.0, 0.0, 0.0)));
-  BOOST_TEST(equals(e1.getCenter(), Vector3d(2.0, 0.5, 0.0)));
-  BOOST_TEST(equals(e2.getCenter(), Vector3d(1.0, 1.0, 0.0)));
-  BOOST_TEST(equals(e3.getCenter(), Vector3d(0.0, 0.5, 0.0)));
-  BOOST_TEST(equals(e4.getCenter(), Vector3d(0.0, 0.0, 0.5)));
-  BOOST_TEST(equals(e5.getCenter(), Vector3d(0.0, 0.5, 1.0)));
-  BOOST_TEST(equals(e6.getCenter(), Vector3d(0.0, 1.0, 0.5)));
-
-  BOOST_TEST(e0.getEnclosingRadius() == 1.0);
-  BOOST_TEST(e1.getEnclosingRadius() == 0.5);
-  BOOST_TEST(e2.getEnclosingRadius() == 1.0);
-  BOOST_TEST(e3.getEnclosingRadius() == 0.5);
-  BOOST_TEST(e4.getEnclosingRadius() == 0.5);
-  BOOST_TEST(e5.getEnclosingRadius() == 0.5);
-  BOOST_TEST(e6.getEnclosingRadius() == 0.5);
-
-  BOOST_TEST(equals(q0.getCenter(), Vector3d(1.0, 0.5, 0.0)));
-  BOOST_TEST(equals(q1.getCenter(), Vector3d(0.0, 0.5, 0.5)));
-
-  BOOST_TEST(q0.getEnclosingRadius() == sqrt(1.25));
-  BOOST_TEST(q1.getEnclosingRadius() == sqrt(0.5));
-
-  Vector3d normal0(0.0, 0.0, -1.0);
-  BOOST_TEST(equals(q0.getNormal(), normal0));
-  Vector3d normal1(1.0, 0.0, 0.0);
-  BOOST_TEST(equals(q1.getNormal(), normal1));
-
-  BOOST_TEST(equals(e0.getNormal(), normal0));
-  BOOST_TEST(equals(e1.getNormal(), normal0));
-  BOOST_TEST(equals(e2.getNormal(), normal0));
-  Vector3d normal0and1(2.0 * normal0 + normal1);
-  normal0and1 = normal0and1.normalized();
-  BOOST_TEST(equals(e3.getNormal(), normal0and1));
-  BOOST_TEST(equals(e4.getNormal(), normal1));
-  BOOST_TEST(equals(e5.getNormal(), normal1));
-  BOOST_TEST(equals(e6.getNormal(), normal1));
-
-  BOOST_TEST(equals(v0.getNormal(), normal0and1));
-  BOOST_TEST(equals(v1.getNormal(), normal0));
-  BOOST_TEST(equals(v2.getNormal(), normal0));
-  BOOST_TEST(equals(v3.getNormal(), normal0and1));
-  BOOST_TEST(equals(v4.getNormal(), normal1));
-  BOOST_TEST(equals(v5.getNormal(), normal1));
 }
 
 BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
@@ -387,10 +319,9 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
     Edge &  e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
     Edge &  e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
     Edge &  e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
-    Edge &  e3 = mesh.createEdge(v1, v3); // LINESTRING (1 0 0, 1 0 1)
-    Edge &  e4 = mesh.createEdge(v3, v2); // LINESTRING (1 0 1, 0 0 1)
+    mesh.createEdge(v1, v3); // LINESTRING (1 0 0, 1 0 1)
+    mesh.createEdge(v3, v2); // LINESTRING (1 0 1, 0 0 1)
     mesh.createTriangle(e0, e1, e2);
-    mesh.createQuad(e0, e3, e4, e2);
     mesh.computeState();
   }
   BOOST_TEST(mesh1 != mesh1flipped);
@@ -408,10 +339,9 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
   Edge &  e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
   Edge &  e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
   Edge &  e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
-  Edge &  e3 = mesh.createEdge(v1, v3); // LINESTRING (1 0 0, 1 0 1)
-  Edge &  e4 = mesh.createEdge(v3, v2); // LINESTRING (1 0 1, 0 0 1)
+  mesh.createEdge(v1, v3); // LINESTRING (1 0 0, 1 0 1)
+  mesh.createEdge(v3, v2); // LINESTRING (1 0 1, 0 0 1)
   mesh.createTriangle(e0, e1, e2);
-  mesh.createQuad(e0, e3, e4, e2);
   mesh.computeState();
   std::stringstream sstream;
   sstream << mesh;
@@ -420,8 +350,7 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
       "GEOMETRYCOLLECTION(\n"
       "POINT (0 0 0), POINT (1 0 0), POINT (0 0 1), POINT (1 0 1),\n"
       "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 1, 0 0 0), LINESTRING (1 0 0, 1 0 1), LINESTRING (1 0 1, 0 0 1),\n"
-      "POLYGON ((0 0 0, 1 0 0, 0 0 1, 0 0 0)),\n"
-      "POLYGON ((0 0 0, 1 0 0, 1 0 1, 0 0 1, 0 0 0))\n"
+      "POLYGON ((0 0 0, 1 0 0, 0 0 1, 0 0 0))\n"
       ")");
   BOOST_TEST(reference == sstream.str());
 }
@@ -549,7 +478,196 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
   BOOST_TEST(mesh.vertices().size() == 2);
   mesh.allocateDataValues();
   BOOST_TEST(values.size() == 2);
+
 }
+
+BOOST_AUTO_TEST_SUITE(Utils)
+
+BOOST_AUTO_TEST_CASE(AsChain)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 0.0, 0.0;
+  coords2 << 2.0, 2.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  Vertex &v3 = mesh.createVertex(coords3);
+
+  BOOST_TEST(mesh.vertices().size() == 4);
+
+  Edge &e0 = mesh.createEdge(v0, v1);
+  Edge &e1 = mesh.createEdge(v3, v2);
+  Edge &e2 = mesh.createEdge(v3, v1);
+  Edge &e3 = mesh.createEdge(v0, v2);
+
+  BOOST_TEST(mesh.edges().size() == 4);
+
+  auto chain = asChain(utils::make_array(&e0, &e1, &e2, &e3));
+
+  BOOST_REQUIRE(chain.connected);
+
+  BOOST_TEST(chain.edges[0] == &e0);
+  BOOST_TEST(chain.edges[1] == &e2);
+  BOOST_TEST(chain.edges[2] == &e1);
+  BOOST_TEST(chain.edges[3] == &e3); 
+
+  BOOST_TEST(chain.vertices[0] == &v1);
+  BOOST_TEST(chain.vertices[1] == &v3);
+  BOOST_TEST(chain.vertices[2] == &v2);
+  BOOST_TEST(chain.vertices[3] == &v0);
+}
+
+BOOST_AUTO_TEST_CASE(ShareVertex)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 0.0, 0.0;
+  coords2 << 2.0, 2.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex *v0 = &mesh.createVertex(coords0);
+  Vertex *v1 = &mesh.createVertex(coords1);
+  Vertex *v2 = &mesh.createVertex(coords2);
+  Vertex *v3 = &mesh.createVertex(coords3);
+  BOOST_REQUIRE(mesh.vertices().size() == 4);
+
+  Edge &e0 = mesh.createEdge(*v0, *v1);
+  Edge &e1 = mesh.createEdge(*v1, *v2);
+  Edge &e2 = mesh.createEdge(*v2, *v3);
+  Edge &e3 = mesh.createEdge(*v3, *v0);
+  BOOST_REQUIRE(mesh.edges().size() == 4);
+
+  BOOST_TEST(sharedVertex(e0, e1) == v1);
+  BOOST_TEST(sharedVertex(e1, e2) == v2);
+  BOOST_TEST(sharedVertex(e2, e3) == v3);
+  BOOST_TEST(sharedVertex(e3, e0) == v0);
+
+  // not connnected
+  BOOST_TEST((sharedVertex(e0, e2) == nullptr));
+  BOOST_TEST((sharedVertex(e1, e3) == nullptr));
+
+  // check symmetry
+  BOOST_TEST(sharedVertex(e0, e1) == sharedVertex(e1, e0));
+  BOOST_TEST(sharedVertex(e0, e2) == sharedVertex(e2, e0));
+}
+
+BOOST_AUTO_TEST_CASE(EdgeLength)
+{
+  PRECICE_TEST(1_rank);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 1.0, 0.0;
+  Vertex v0{coords0, 0};
+  Vertex v1{coords1, 1};
+  Edge e(v0, v1, 0);
+  BOOST_TEST(edgeLength(e) == std::sqrt(2));
+}
+
+BOOST_AUTO_TEST_CASE(VertexPtrsFor)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 0.0, 0.0;
+  coords2 << 2.0, 2.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  mesh.createVertex(coords3);
+  BOOST_TEST(mesh.vertices().size() == 4);
+
+  std::array<int, 3> ids{v0.getID(), v2.getID(), v1.getID()};
+  std::array<Vertex *, 3> expected{&v0, &v2, &v1};
+
+  auto result = vertexPtrsFor(mesh, ids);
+  BOOST_TEST_MESSAGE("IDs " << ids);
+  BOOST_TEST_MESSAGE("RES: " << result);
+  BOOST_TEST_MESSAGE("EXP: " << expected);
+  BOOST_REQUIRE(result.size() == 3);
+  BOOST_TEST(result == expected);
+}
+
+BOOST_AUTO_TEST_CASE(CoordsForIDs)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 0.0, 0.0;
+  coords2 << 2.0, 2.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  mesh.createVertex(coords3);
+  BOOST_TEST(mesh.vertices().size() == 4);
+
+  std::array<int, 3> ids{v0.getID(), v2.getID(), v1.getID()};
+  std::array<Eigen::VectorXd, 3> expected{coords0, coords2, coords1};
+
+  auto result = coordsFor(mesh, ids);
+  BOOST_REQUIRE(result.size() == 3);
+  BOOST_TEST(result == expected);
+}
+
+BOOST_AUTO_TEST_CASE(CoordsForPtrs)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
+  mesh.createData("Data", 1);
+
+  Eigen::Vector3d coords0;
+  Eigen::Vector3d coords1;
+  Eigen::Vector3d coords2;
+  Eigen::Vector3d coords3;
+  coords0 << 1.0, 0.0, 0.0;
+  coords1 << 0.0, 0.0, 0.0;
+  coords2 << 2.0, 2.0, 0.0;
+  coords3 << 0.0, 1.0, 0.0;
+  Vertex &v0 = mesh.createVertex(coords0);
+  Vertex &v1 = mesh.createVertex(coords1);
+  Vertex &v2 = mesh.createVertex(coords2);
+  mesh.createVertex(coords3);
+  BOOST_TEST(mesh.vertices().size() == 4);
+
+  std::array<Vertex *, 3> ptrs{&v0, &v2, &v1};
+  std::array<Eigen::VectorXd, 3> expected{coords0, coords2, coords1};
+
+  auto result = coordsFor(ptrs);
+  BOOST_REQUIRE(result.size() == 3);
+  BOOST_TEST(result == expected);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Utils
 
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh

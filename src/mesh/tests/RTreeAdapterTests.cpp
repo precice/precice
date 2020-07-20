@@ -9,7 +9,6 @@
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Quad.hpp"
 #include "mesh/RTree.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
@@ -81,31 +80,6 @@ BOOST_AUTO_TEST_CASE(TriangleAdapter)
 
   std::vector<Eigen::VectorXd> vertices(t.begin(), t.end());
   std::vector<Eigen::VectorXd> refs{v1.getCoords(), v2.getCoords(), v3.getCoords()};
-  BOOST_TEST(vertices.size() == refs.size());
-  BOOST_TEST((std::is_permutation(
-      vertices.begin(), vertices.end(),
-      refs.begin(),
-      [](const Eigen::VectorXd &lhs, const Eigen::VectorXd &rhs) {
-        return precice::math::equals(lhs, rhs);
-      })));
-}
-
-BOOST_AUTO_TEST_CASE(QuadAdapter)
-{
-  PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
-  auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
-  auto &              v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
-  auto &              v3 = mesh.createVertex(Eigen::Vector3d(3, 0, 0));
-  auto &              v4 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
-  auto &              e1 = mesh.createEdge(v1, v2);
-  auto &              e2 = mesh.createEdge(v2, v3);
-  auto &              e3 = mesh.createEdge(v3, v4);
-  auto &              e4 = mesh.createEdge(v4, v1);
-  auto &              t  = mesh.createQuad(e1, e2, e3, e4);
-
-  std::vector<Eigen::VectorXd> vertices(t.begin(), t.end());
-  std::vector<Eigen::VectorXd> refs{v1.getCoords(), v2.getCoords(), v3.getCoords(), v4.getCoords()};
   BOOST_TEST(vertices.size() == refs.size());
   BOOST_TEST((std::is_permutation(
       vertices.begin(), vertices.end(),
