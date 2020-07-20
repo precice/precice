@@ -97,8 +97,8 @@ add_feature_info(MPICommunication PRECICE_MPICommunication
 add_feature_info(PETScMapping PRECICE_PETScMapping
   "Enables the PETSc-powered radial basic function mappings.
 
-   This enables the PETSc variant of radial basis function mappings which is highly recommended 
-   for large cases running in parallel.
+   This enables the PETSc-based variant of radial basis function mappings which can run in parallel,
+   also across different compute nodes. This is highly recommended for large cases running in parallel.
 
    This feature can be enabled/disabled by setting the PRECICE_PETScMapping CMake option.
    Requires MPICommunication.
