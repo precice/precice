@@ -17,10 +17,6 @@ class Action {
 public:
   /// Defines the time and place of application of the action.
   enum Timing {
-    ALWAYS_PRIOR,                // Everytime, before advancing cpl scheme
-    ALWAYS_POST,                 // Everytime, after advancing cpl scheme
-    ON_EXCHANGE_PRIOR,           // On data exchange, before advancing cpl scheme
-    ON_EXCHANGE_POST,            // On data exchange, after advancing cpl scheme
     ON_TIME_WINDOW_COMPLETE_POST, // On advancing to next dt, after adv. cpl scheme
     WRITE_MAPPING_PRIOR,         // Everytime, before write mapping 
     WRITE_MAPPING_POST,          // Everytime, after write mapping and before advancing cpl scheme

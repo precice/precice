@@ -297,7 +297,7 @@ double SolverInterfaceImpl::initialize()
 
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::ON_EXCHANGE_POST, action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
@@ -335,12 +335,12 @@ void SolverInterfaceImpl::initializeData()
 
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
   mapWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST, action::Action::ON_EXCHANGE_PRIOR}, 0.0, 0.0, 0.0, dt);
+  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
 
   _couplingScheme->initializeData();
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::ON_EXCHANGE_POST, action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
@@ -409,15 +409,12 @@ double SolverInterfaceImpl::advance(
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST, action::Action::ON_EXCHANGE_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
 
-  if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::ON_EXCHANGE_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
-  }
   if (_couplingScheme->isTimeWindowComplete()) {
     performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }

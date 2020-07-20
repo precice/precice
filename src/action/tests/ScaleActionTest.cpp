@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea)
 
   // Scale properties
   action::ScaleByAreaAction scale(
-      action::ScaleByAreaAction::ALWAYS_PRIOR, dataID, mesh,
+      action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh,
       action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
 
   scale.performAction(0.0, 0.0, 0.0, 0.0);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepLength)
   targetValues = Eigen::VectorXd::Zero(targetValues.size());
 
   action::ScaleByDtAction scale(
-      action::ScaleByDtAction::ALWAYS_PRIOR, sourceDataID, targetDataID, mesh,
+      action::ScaleByDtAction::WRITE_MAPPING_POST, sourceDataID, targetDataID, mesh,
       action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_RATIO);
 
   scale.performAction(0.0, 0.0, 0.0, 1.0);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepPartLength)
   targetValues = Eigen::VectorXd::Zero(targetValues.size());
 
   action::ScaleByDtAction scale(
-      action::ScaleByDtAction::ALWAYS_PRIOR, sourceDataID, targetDataID, mesh,
+      action::ScaleByDtAction::WRITE_MAPPING_POST, sourceDataID, targetDataID, mesh,
       action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_PART_RATIO);
 
   scale.performAction(0.0, 0.0, 0.0, 1.0);
