@@ -39,6 +39,11 @@
       <mapping:nearest-projection direction="read"  from="MeshOne" to="MeshTwo" constraint="consistent" />
       <write-data name="Velocities" mesh="MeshTwo" />
       <read-data  name="Forces"     mesh="MeshTwo" />
+      <action:recorder timing="on-time-window-complete-post" mesh="MeshTwo">
+      <action:recorder timing="write-mapping-prior" mesh="MeshTwo">
+      <action:recorder timing="write-mapping-post" mesh="MeshTwo">
+      <action:recorder timing="read-mapping-prior" mesh="MeshTwo">
+      <action:recorder timing="read-mapping-post" mesh="MeshTwo">
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo"/>
