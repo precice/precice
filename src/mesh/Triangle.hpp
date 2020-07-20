@@ -2,8 +2,8 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <array>
 #include <iostream>
-
 #include "math/differences.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/RangeAccessor.hpp"
@@ -133,8 +133,7 @@ private:
   std::array<Edge *, 3> _edges;
 
   /// Decider for choosing unique vertices from _edges.
-  std::array<int, 3> _vertexMap;
-  //  bool _vertexDeciderFirst;
+  std::array<bool, 3> _vertexMap;
 
   /// ID of the edge.
   int _id;

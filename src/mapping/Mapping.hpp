@@ -1,6 +1,8 @@
 #pragma once
 
+#include <iosfwd>
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace mapping {

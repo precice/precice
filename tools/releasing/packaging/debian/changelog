@@ -15,3 +15,21 @@ libprecice1 (1.1.1) experimental; urgency=low
   * Fix SConstruct symlink build target failing when using lowercase build (debug, release) names.
 
  -- the preCICE developers <precice@mailman.informatik.uni-stuttgart.de>  Thu, 19 Apr 2018 16:37:34 +0200
+
+libprecice2 (2.0.0) experimental; urgency=low
+
+  * New upstream release 2.0.0
+
+ -- the preCICE developers <info@precice.org>  Mon, 03 Feb 2020 13:14:16 +0100
+
+libprecice2 (2.0.1) experimental; urgency=low
+
+  * New upstream release 2.0.1
+
+ -- the preCICE developers <info@precice.org>  Tue, 25 Feb 2020 11:53:39 +0100
+
+libprecice2 (2.0.2) experimental; urgency=low
+
+  * New upstream release 2.0.2
+
+ -- the preCICE developers <info@precice.org>  Wed, 01 Apr 2020 11:47:04 +0200

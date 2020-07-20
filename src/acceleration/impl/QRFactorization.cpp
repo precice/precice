@@ -1,12 +1,17 @@
+#include "acceleration/impl/QRFactorization.hpp"
+#include <Eigen/Core>
 #include <algorithm> // std::sort
 #include <cmath>
 #include <iostream>
+#include <memory>
+#include <stddef.h>
 #include <vector>
-
-#include "acceleration/BaseQNAcceleration.hpp"
-#include "acceleration/impl/QRFactorization.hpp"
+#include "acceleration/Acceleration.hpp"
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {
@@ -152,7 +157,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
 }
 
 /**
- * updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted. 
+ * updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted.
  * Returns the deleted column v(1:n)
  */
 void QRFactorization::deleteColumn(int k)
@@ -633,8 +638,8 @@ void QRFactorization::computeReflector(
 }
 
 /**
- *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G, 
- *  where G is the Givens matrix grot, determined by sigma and gamma. 
+ *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G,
+ *  where G is the Givens matrix grot, determined by sigma and gamma.
  */
 void QRFactorization::applyReflector(
     const QRFactorization::givensRot &grot,
@@ -668,12 +673,12 @@ Eigen::MatrixXd &QRFactorization::matrixR()
   return _R;
 }
 
-int QRFactorization::cols()
+int QRFactorization::cols() const
 {
   return _cols;
 }
 
-int QRFactorization::rows()
+int QRFactorization::rows() const
 {
   return _rows;
 }

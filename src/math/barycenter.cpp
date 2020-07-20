@@ -1,4 +1,10 @@
 #include "math/barycenter.hpp"
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <utility>
+#include "math/differences.hpp"
+#include "math/geometry.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace math {

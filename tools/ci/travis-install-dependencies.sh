@@ -52,7 +52,7 @@ if [ ! -f $CACHE_PETSC_TOKEN ]; then
     # Configure and compile
     cd $LOCAL_INSTALL/petsc
     export PETSC_ARCH=arch-linux2-c-debug
-    python2 configure --with-debugging=1 --with-64-bit-indices > ~/petsc.configure
+    python configure --with-debugging=1 --with-64-bit-indices > ~/petsc.configure
     make > ~/petsc.make
     cd $LOCAL_INSTALL
     # Create token

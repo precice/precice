@@ -1,22 +1,25 @@
 #pragma once
 
+#include <algorithm>
+#include <exception>
 #include <initializer_list>
-#include <iostream>
+#include <map>
+#include <sstream>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
-
 #include "logging/Logger.hpp"
-#include "math/math.hpp"
-#include "utils/String.hpp"
-#include "utils/TypeNames.hpp"
 #include "utils/assertion.hpp"
+#include "xml/ValueParser.hpp"
 
 namespace precice {
 namespace xml {
 
 template <typename ATTRIBUTE_T>
 class XMLAttribute {
+  static_assert(std::is_default_constructible<ATTRIBUTE_T>::value, "The value type of XMLAttributes need to be default-constructible.");
+
 public:
   XMLAttribute() = delete;
 
@@ -69,19 +72,7 @@ public:
     return _hasValidation;
   };
 
-  void readValue(std::map<std::string, std::string> &aAttributes);
-
-  void readValueSpecific(std::string &rawValue, double &value);
-
-  void readValueSpecific(std::string &rawValue, int &value);
-
-  void readValueSpecific(std::string &rawValue, std::string &value);
-
-  void readValueSpecific(std::string &rawValue, bool &value);
-
-  void readValueSpecific(std::string &rawValue, Eigen::VectorXd &value);
-
-  //Eigen::VectorXd getAttributeValueAsEigenVectorXd(std::string& rawValue);
+  void readValue(const std::map<std::string, std::string> &aAttributes);
 
   const std::string &getName() const
   {
@@ -112,11 +103,11 @@ private:
 
   bool _read = false;
 
-  ATTRIBUTE_T _value;
+  ATTRIBUTE_T _value{};
 
   bool _hasDefaultValue = false;
 
-  ATTRIBUTE_T _defaultValue;
+  ATTRIBUTE_T _defaultValue{};
 
   bool _hasValidation = false;
 
@@ -161,22 +152,24 @@ XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTR
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aAttributes)
+void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::string> &aAttributes)
 {
   PRECICE_TRACE(_name);
-  if (_read) {
-    std::cout << "Attribute \"" + _name + "\" is defined multiple times\n";
-    PRECICE_ERROR("Attribute \"" + _name + "\" is defined multiple times");
-  }
+  PRECICE_ASSERT(!_read, "Attribute \"" + _name + "\" has already been read.");
 
-  if (aAttributes.find(getName()) == aAttributes.end()) {
+  const auto position = aAttributes.find(getName());
+  if (position == aAttributes.end()) {
     if (not _hasDefaultValue) {
-      std::cout << "Attribute \"" + _name + "\" missing\n";
-      PRECICE_ERROR("Attribute \"" + _name + "\" missing");
+      PRECICE_ERROR("Attribute \"" + _name + "\" is required, but was not defined.");
     }
     set(_value, _defaultValue);
   } else {
-    readValueSpecific(aAttributes[getName()], _value);
+    try {
+      readValueSpecific(position->second, _value);
+    }
+    catch(const std::exception& e) {
+      PRECICE_ERROR(e.what());
+    }
     if (_hasValidation) {
       if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
         std::ostringstream stream;
@@ -191,121 +184,12 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::map<std::string, std::string> &aA
           stream << " or value must be \"" << *first << '"';
         }
 
-        std::cout << stream.str() << '\n';
         PRECICE_ERROR(stream.str());
       }
     }
   }
   PRECICE_DEBUG("Read valid attribute \"" << getName() << "\" value = " << _value);
 }
-
-template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, double &value)
-{
-  try {
-    if (rawValue.find('/') != std::string::npos) {
-      std::string left  = rawValue.substr(0, rawValue.find('/'));
-      std::string right = rawValue.substr(rawValue.find('/') + 1, rawValue.size() - rawValue.find('/') - 1);
-
-      value = std::stod(left) / std::stod(right);
-    } else {
-      value = std::stod(rawValue);
-    }
-  } catch (...) {
-    PRECICE_ERROR("String to Double error");
-  }
-}
-
-template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, int &value)
-{
-  try {
-    value = std::stoi(rawValue);
-  } catch (...) {
-    PRECICE_ERROR("String to Int error");
-  }
-}
-
-template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, std::string &value)
-{
-  value = rawValue;
-}
-
-template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, bool &value)
-{
-  value = precice::utils::convertStringToBool(rawValue);
-}
-
-template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValueSpecific(std::string &rawValue, Eigen::VectorXd &value)
-{
-  Eigen::VectorXd vec;
-
-  std::string valueString(rawValue);
-  bool        componentsLeft = true;
-  int         i              = 0;
-  while (componentsLeft) {
-    std::string tmp1(rawValue);
-    // erase entries before i-th entry
-    for (int j = 0; j < i; j++) {
-      if (tmp1.find(';') != std::string::npos) {
-        tmp1.erase(0, tmp1.find(';') + 1);
-      } else {
-        componentsLeft = false;
-      }
-    }
-    // if we are not in the last vector component...
-    if (tmp1.find(';') != std::string::npos) {
-      // ..., erase entries after i-th entry
-      tmp1.erase(tmp1.find(';'), tmp1.size());
-    }
-
-    if (componentsLeft) {
-
-      vec.conservativeResize(vec.rows() + 1);
-      vec(vec.rows() - 1) = std::stod(tmp1);
-    }
-    i++;
-  }
-
-  value = vec;
-}
-
-/*template<>
-Eigen::VectorXd XMLAttribute<Eigen::VectorXd>::getAttributeValueAsEigenVectorXd(std::string& rawValue)
-{
-  Eigen::VectorXd vec;
-
-  std::string valueString(rawValue);
-  bool componentsLeft = true;
-  int i = 0;
-  while (componentsLeft){
-	std::string tmp1(rawValue);
-	// erase entries before i-th entry
-	for (int j = 0; j < i; j++){
-	  if (tmp1.find(';') != std::string::npos){
-		tmp1.erase(0,tmp1.find(';')+1);
-	  }
-	  else {
-		componentsLeft = false;
-	  }
-	}
-	// if we are not in the last vector component...
-	if (tmp1.find(';') != std::string::npos){
-	  // ..., erase entries after i-th entry
-	  tmp1.erase(tmp1.find(';'),tmp1.size());
-	}
-	if (componentsLeft){
-	   
-	  vec.conservativeResize(vec.rows()+1);
-	  vec(vec.rows()-1) = std::stod(tmp1);
-	}
-	i++;
-  }
-  return vec;
-}*/
 
 template <typename ATTRIBUTE_T>
 template <typename VALUE_T>

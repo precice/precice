@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "MappingContext.hpp"
 #include "mesh/SharedPointer.hpp"
 
@@ -12,6 +13,8 @@ namespace impl {
  */
 struct DataContext {
   bool used = false;
+
+  std::string getName() const;
 
   mesh::PtrData fromData;
 

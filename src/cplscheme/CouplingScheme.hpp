@@ -31,7 +31,7 @@ namespace cplscheme {
  * -# compute data to be sent (possibly taking into account received data from
  *    initialize())
  * -# advance the coupling scheme with advance(); where the maximum timestep
- *    length needs to be obeyed
+ *    length (= time window size) needs to be obeyed
  * -# ....
  * -# when the method isCouplingOngoing() returns false, call finalize() to
  *    stop the coupling scheme
@@ -52,15 +52,30 @@ public:
   virtual ~CouplingScheme() {}
 
   /**
-   * @brief Initializes the coupling scheme and establishes a communiation
+   * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
+   *
+   * @param[in] startTime starting time for coupling @BU correct?
+   * @param[in] startTimeWindow counter of time window for coupling @BU correct?
    */
   virtual void initialize(
       double startTime,
-      int    startTimesteps) = 0;
+      int    startTimeWindow) = 0;
 
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const = 0;
+
+  /**
+   * @brief Getter for _sendsInitializedData
+   * @returns _sendsInitializedData
+   */
+  virtual bool sendsInitializedData() const = 0;
+
+  /**
+   * @brief Getter for _receivesInitializedData
+   * @returns _receivesInitializedData
+   */
+  virtual bool receivesInitializedData() const = 0;
 
   /**
    * @brief Initializes the data for first implicit coupling scheme iteration.
@@ -85,7 +100,7 @@ public:
    *
    * @pre initialize() has been called.
    *
-   * Does not necessarily advances in time.
+   * Does not necessarily advance in time.
    */
   virtual void advance() = 0;
 
@@ -95,7 +110,7 @@ public:
   /// Returns list of all coupling partners.
   virtual std::vector<std::string> getCouplingPartners() const = 0;
 
-  /*
+  /**
    * @brief Returns true, if data will be exchanged when calling advance().
    *
    * Also returns true after the last call of advance() at the end of the
@@ -108,68 +123,43 @@ public:
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   /// actually, this only means that data has been received, data is always sent
-  virtual bool hasDataBeenExchanged() const = 0;
+  virtual bool hasDataBeenReceived() const = 0;
 
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;
 
-  /// Returns the currently computed timesteps of the coupling scheme.
-  virtual int getTimesteps() const = 0;
+  /// Returns the currently computed time windows of the coupling scheme.
+  virtual int getTimeWindows() const = 0;
 
-  /// Returns the maximal time to be computed.
-  virtual double getMaxTime() const = 0;
-
-  /// Returns the maximal timesteps to be computed.
-  virtual int getMaxTimesteps() const = 0;
-
-  //
-  // @brief Returns current subiteration number in timestep.
-  //
-  //virtual int getSubIteration() const =0;
-
-  /// Returns true, if timestep length is prescribed by the cpl scheme.
-  virtual bool hasTimestepLength() const = 0;
+  /// Returns true, if time window size is prescribed by the cpl scheme.
+  virtual bool hasTimeWindowSize() const = 0;
 
   /**
-   * @brief Returns the timestep length, if one is given by the coupling scheme.
+   * @brief Returns the time window size, if one is given by the coupling scheme.
    *
-   * An assertion is thrown, if no valid timestep is given. Check with
-   * hasTimestepLength().
+   * An assertion is thrown, if no valid time window size is given. Check with
+   * hasTimeWindowSize().
    */
-  virtual double getTimestepLength() const = 0;
-
-  /// Defaults to false, i.e., no multilevel PP
-  virtual bool isCoarseModelOptimizationActive()
-  {
-    return false;
-  }
+  virtual double getTimeWindowSize() const = 0;
 
   /**
-   * @brief Returns the remaining timestep length of the current time step.
+   * @brief Returns the remaining time within the current time window.
    *
-   * This is not necessarily the timestep length limit the solver has to obeye
-   * which is returned by getNextTimestepMaxLength().
+   * This is not necessarily the time window size limit the solver has to obey
+   * which is returned by getNextTimestepMaxLength().  // TODO explain this better
    *
-   * If no timestep length is precribed by the coupling scheme, always 0.0 is
+   * If no time window size is prescribed by the coupling scheme, always 0.0 is
    * returned.
    */
-  virtual double getThisTimestepRemainder() const = 0;
-
-  /// Returns part of the current timestep that has been computed already.
-  virtual double getComputedTimestepPart() const = 0;
+  virtual double getThisTimeWindowRemainder() const = 0;
 
   /**
    * @brief Returns the maximal length of the next timestep to be computed.
    *
-   * If no timestep length is prescribed by the coupling scheme, always the
+   * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
   virtual double getNextTimestepMaxLength() const = 0;
-
-  //
-  // @brief Returns the number of valid digits when compare times.
-  //
-  //virtual int getValidDigits() const =0;
 
   /// Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const = 0;

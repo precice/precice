@@ -1,8 +1,13 @@
 #include "MeshConfiguration.hpp"
 #include <sstream>
+#include <stdexcept>
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
 namespace precice {
@@ -79,10 +84,9 @@ void MeshConfiguration::xmlTagCallback(
       }
     }
     if (not found) {
-      std::ostringstream stream;
-      stream << "Data with name \"" << name << "\" is not available during "
-             << "configuration of mesh \"" << _meshes.back()->getName() << "\"";
-      throw std::runtime_error{stream.str()};
+      PRECICE_ERROR("Data with name \"" << name << "\" used by "
+             << "mesh \"" << _meshes.back()->getName() << "\" is not defined. "
+             << "Please define a data tag with name=\"" << name << "\".");
     }
   }
 }
@@ -109,7 +113,7 @@ void MeshConfiguration::addMesh(
         break;
       }
     }
-    PRECICE_CHECK(found, "Data " << dataNewMesh->getName() << " is not available in data configuration!");
+    PRECICE_ASSERT(found, "Data " << dataNewMesh->getName() << " is not defined. Please define a data tag with name=\""<< dataNewMesh->getName() << "\".");
   }
   _meshes.push_back(mesh);
 }

@@ -1,6 +1,7 @@
 PROGRAM main
   IMPLICIT NONE
-  CHARACTER*50                    :: config, participantName, meshName, writeInitialData, readItCheckp, writeItCheckp
+  CHARACTER*512                   :: config
+  CHARACTER*50                    :: participantName, meshName, writeInitialData, readItCheckp, writeItCheckp
   INTEGER                         :: rank, commsize, ongoing, dimensions, meshID, vertexID, bool
   REAL                            :: dtlimit
   REAL, DIMENSION(:), ALLOCATABLE :: vertex
@@ -33,25 +34,25 @@ PROGRAM main
         
   CALL precicef_initialize(dtlimit)            
 
-  CALL precicef_action_required(writeInitialData, bool)
+  CALL precicef_is_action_required(writeInitialData, bool)
   IF (bool.EQ.1) THEN
     WRITE (*,*) 'DUMMY: Writing initial data'
   ENDIF
   CALL precicef_initialize_data()
 
-  CALL precicef_ongoing(ongoing)
+  CALL precicef_is_coupling_ongoing(ongoing)
   DO WHILE (ongoing.NE.0)
   
-    CALL precicef_action_required(writeItCheckp, bool)
+    CALL precicef_is_action_required(writeItCheckp, bool)
     IF (bool.EQ.1) THEN
       WRITE (*,*) 'DUMMY: Writing iteration checkpoint'
       CALL precicef_mark_action_fulfilled(writeItCheckp)
     ENDIF
 
     CALL precicef_advance(dtlimit)
-    CALL precicef_ongoing(ongoing)
+    CALL precicef_is_coupling_ongoing(ongoing)
 
-    CALL precicef_action_required(readItCheckp, bool)
+    CALL precicef_is_action_required(readItCheckp, bool)
     IF (bool.EQ.1) THEN
       WRITE (*,*) 'DUMMY: Reading iteration checkpoint'
       CALL precicef_mark_action_fulfilled(readItCheckp)

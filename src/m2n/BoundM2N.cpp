@@ -1,9 +1,11 @@
 #include "m2n/BoundM2N.hpp"
+#include <memory>
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
 #include "utils/MasterSlave.hpp"
-
-#include "logging/Logger.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace m2n {

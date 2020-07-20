@@ -1,6 +1,8 @@
 #pragma once
 
+#include <map>
 #include <set>
+#include <stddef.h>
 #include <string>
 #include <vector>
 #include "action/Action.hpp"
@@ -8,6 +10,7 @@
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "io/Constants.hpp"
+#include "logging/Logger.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/SolverInterface.hpp"
@@ -24,11 +27,19 @@ class SolverInterfaceConfiguration;
 // Forward declaration to friend the boost test struct
 namespace PreciceTests {
 namespace Serial {
-struct TestConfiguration;
-}
+struct TestConfigurationPeano;
+struct TestConfigurationComsol;
+} // namespace Serial
 } // namespace PreciceTests
 
 namespace precice {
+namespace cplscheme {
+class CouplingSchemeConfiguration;
+} // namespace cplscheme
+namespace mesh {
+class Mesh;
+} // namespace mesh
+
 namespace impl {
 
 /// Implementation of solver interface.
@@ -87,23 +98,11 @@ public:
       int                accessorCommunicatorSize,
       void *             communicator);
 
-  /**
-   * @brief Configures the coupling interface from the given xml file.
+  /** Ensures that finalize() has been called.
    *
-   * Only after the configuration a reasonable state of a SolverInterfaceImpl
-   * object is achieved.
-   *
-   * @param configurationFileName [IN] Name (with path) of the xml config. file.
+   * @see finalize()
    */
-  void configure(const std::string &configurationFileName);
-
-  /**
-   * @brief Configures the coupling interface with a prepared configuration.
-   *
-   * Can be used to configure the SolverInterfaceImpl without xml file. Requires
-   * to manually setup the configuration object.
-   */
-  void configure(const config::SolverInterfaceConfiguration &configuration);
+  ~SolverInterfaceImpl();
 
   /**
    * @brief Initializes all coupling data and starts (coupled) simulation.
@@ -144,8 +143,25 @@ public:
   /**
    * @brief Finalizes the coupled simulation.
    *
-   * - Tears down communication means used for coupling.
-   * - Finalizes MPI if initialized in initializeCoupling.
+   * If initialize() has been called:
+   *
+   * - Synchronizes with remote partiticipants
+   * - handles final exports
+   * - cleans up general state
+   *
+   * Always:
+   *
+   * - flushes and finalizes Events
+   * - finalizes managed PETSc
+   * - finalizes managed MPI
+   *
+   * @post Closes MasterSlave communication
+   * @post Finalized managed PETSc
+   * @post Finalized managed MPI
+   *
+   * @warning
+   * Finalize is not the inverse of initialize().
+   * Finalize has to be called after construction.
    */
   void finalize();
 
@@ -534,8 +550,39 @@ private:
 
   cplscheme::PtrCouplingScheme _couplingScheme;
 
+  /// Represents the various states a SolverInterface can be in.
+  enum struct State {
+    Constructed,  // Initial state of SolverInterface
+    Initialized,  // SolverInterface.initialize() triggers transition from State::Constructed to State::Initialized; mandatory
+    Finalized  // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to State::Finalized; mandatory
+  };
+
+  // SolverInterface.initializeData() triggers transition from false to true.
+  bool _hasInitializedData = false;
+
+  /// The current State of the solverinterface
+  State _state{State::Constructed};
+
   /// Counts calls to advance for plotting.
   long int _numberAdvanceCalls = 0;
+
+  /**
+   * @brief Configures the coupling interface from the given xml file.
+   *
+   * Only after the configuration a reasonable state of a SolverInterfaceImpl
+   * object is achieved.
+   *
+   * @param configurationFileName [IN] Name (with path) of the xml config. file.
+   */
+  void configure(const std::string &configurationFileName);
+
+  /**
+   * @brief Configures the coupling interface with a prepared configuration.
+   *
+   * Can be used to configure the SolverInterfaceImpl without xml file. Requires
+   * to manually setup the configuration object.
+   */
+  void configure(const config::SolverInterfaceConfiguration &configuration);
 
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
 
@@ -624,7 +671,8 @@ private:
   void syncTimestep(double computedTimestepLength);
 
   /// To allow white box tests.
-  friend struct PreciceTests::Serial::TestConfiguration;
+  friend struct PreciceTests::Serial::TestConfigurationPeano;
+  friend struct PreciceTests::Serial::TestConfigurationComsol;
 };
 
 } // namespace impl

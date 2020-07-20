@@ -1,5 +1,4 @@
 #include "partition/Partition.hpp"
-#include "mesh/Mesh.hpp"
 
 namespace precice {
 namespace partition {

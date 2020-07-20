@@ -59,7 +59,19 @@ set(CPACK_SOURCE_IGNORE_FILES
   ".gitignore"
   )
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, petsc-dev (>= 3.6), libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-filesystem-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libeigen3-dev, libxml2-dev, python-dev, python-numpy")
+# Build dependecy set
+unset(CPACK_DEBIAN_PACKAGE_DEPENDS)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-filesystem-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2")
+if(PRECICE_PythonActions)
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, python3-dev, python3-numpy")
+endif()
+if(PRECICE_MPICommunication)
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, mpi-default-dev")
+endif()
+if(PRECICE_PETScMapping)
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, petsc-dev (>= 3.6)")
+endif()
+
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Precise Code Interaction Coupling Environment\n\
  preCICE (Precise Code Interaction Coupling Environment) is a coupling library\n\
@@ -107,4 +119,5 @@ else()
     )
 endif()
 
+file(REMOVE CPackConfig.cmake CPackSourceConfig.cmake)
 include(CPack)

@@ -1,14 +1,23 @@
 #ifndef PRECICE_NO_MPI
 
-#include "com/MPIDirectCommunication.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <string>
+#include "com/SharedPointer.hpp"
+#include "io/Export.hpp"
 #include "io/ExportVTKXML.hpp"
-#include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Triangle.hpp"
-#include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
+
+namespace precice {
+namespace mesh {
+class Edge;
+class Vertex;
+} // namespace mesh
+} // namespace precice
 
 // void ExportVTKXMLTest:: run()
 // {
@@ -31,49 +40,11 @@ BOOST_AUTO_TEST_SUITE(IOTests)
 
 using namespace precice;
 
-struct SetupMasterSlaveFixture {
-  SetupMasterSlaveFixture()
-  {
-    BOOST_TEST(utils::Parallel::getCommunicatorSize() == 4);
-
-    auto masterSlaveCom                = std::make_shared<com::MPIDirectCommunication>();
-    utils::MasterSlave::_communication = masterSlaveCom;
-
-    utils::Parallel::synchronizeProcesses();
-
-    if (utils::Parallel::getProcessRank() == 0) {
-      utils::Parallel::splitCommunicator("Master");
-      masterSlaveCom->acceptConnection("Master", "Slaves", "Test", utils::Parallel::getProcessRank());
-      masterSlaveCom->setRankOffset(1);
-      utils::MasterSlave::configure(0, 4);
-    } else if (utils::Parallel::getProcessRank() == 1) {
-      utils::Parallel::splitCommunicator("Slaves");
-      masterSlaveCom->requestConnection("Master", "Slaves", "Test", 0, 3);
-      utils::MasterSlave::configure(1, 4);
-    } else if (utils::Parallel::getProcessRank() == 2) {
-      utils::Parallel::splitCommunicator("Slaves");
-      masterSlaveCom->requestConnection("Master", "Slaves", "Test", 1, 3);
-      utils::MasterSlave::configure(2, 4);
-    } else if (utils::Parallel::getProcessRank() == 3) {
-      utils::Parallel::splitCommunicator("Slaves");
-      masterSlaveCom->requestConnection("Master", "Slaves", "Test", 2, 3);
-      utils::MasterSlave::configure(3, 4);
-    }
-  }
-
-  ~SetupMasterSlaveFixture()
-  {
-    utils::Parallel::synchronizeProcesses();
-    utils::Parallel::clearGroups();
-    utils::MasterSlave::_communication.reset();
-  }
-};
-
-BOOST_FIXTURE_TEST_SUITE(VTKXMLExport, SetupMasterSlaveFixture,
-                         *testing::OnSize(4))
+BOOST_AUTO_TEST_SUITE(VTKXMLExport)
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   int        dim           = 2;
   bool       invertNormals = false;
   mesh::Mesh mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
@@ -119,6 +90,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   int        dim           = 3;
   bool       invertNormals = false;
   mesh::Mesh mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
@@ -167,6 +139,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 
 BOOST_AUTO_TEST_CASE(ExportQuadMesh)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   using namespace mesh;
   int        dim           = 3;
   bool       invertNormals = false;

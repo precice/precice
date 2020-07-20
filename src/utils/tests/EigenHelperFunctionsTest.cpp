@@ -1,14 +1,22 @@
+#include <Eigen/Core>
+#include <iosfwd>
+#include <string>
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/String.hpp"
+#include "utils/algorithm.hpp"
 
 using namespace precice;
 using namespace precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
-BOOST_AUTO_TEST_SUITE(EigenHelperFunctionsTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(EigenHelperFunctionsTests)
 
 BOOST_AUTO_TEST_CASE(FirstN)
 {
+  PRECICE_TEST(1_rank);
   Eigen::VectorXd a(7);
   a << 1, 2, 3, 4, 5, 6, 7;
   Eigen::RowVectorXd b(3);
@@ -20,6 +28,7 @@ BOOST_AUTO_TEST_SUITE(RangePreview)
 
 BOOST_AUTO_TEST_CASE(EigenVector)
 {
+  PRECICE_TEST(1_rank);
   Eigen::VectorXd a{7};
   a << 1, 2, 3, 4, 5, 6, 0;
   std::ostringstream oss;
@@ -32,6 +41,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_CASE(ComponentWiseLess)
 {
+  PRECICE_TEST(1_rank);
   precice::utils::ComponentWiseLess cwl;
 
   Eigen::VectorXd a(8);
@@ -47,10 +57,10 @@ BOOST_AUTO_TEST_CASE(ComponentWiseLess)
 
   Eigen::VectorXd c = b;
 
-  BOOST_TEST(componentWiseLess(c, b));
-  BOOST_TEST(componentWiseLess(b, c));
-  BOOST_TEST(cwl(c, b));
-  BOOST_TEST(cwl(b, c));
+  BOOST_TEST(!componentWiseLess(c, b));
+  BOOST_TEST(!componentWiseLess(b, c));
+  BOOST_TEST(!cwl(c, b));
+  BOOST_TEST(!cwl(b, c));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

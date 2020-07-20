@@ -1,4 +1,7 @@
 #include "Edge.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include "math/differences.hpp"
 #include "utils/EigenIO.hpp"
 
 namespace precice {

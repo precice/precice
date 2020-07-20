@@ -1,4 +1,9 @@
+#include <list>
+#include <string>
+#include "io/ExportContext.hpp"
+#include "io/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -8,6 +13,7 @@ using namespace precice;
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {
+  PRECICE_TEST(1_rank);
   using xml::XMLTag;
   XMLTag tag = xml::getRootTag();
   {

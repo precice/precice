@@ -2,11 +2,17 @@
 #include <Eigen/Core>
 #include <boost/container/flat_set.hpp>
 #include <boost/function_output_iterator.hpp>
+#include <functional>
+#include <memory>
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/RTree.hpp"
-#include "query/FindClosestVertex.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Vertex.hpp"
 #include "utils/Event.hpp"
-#include "utils/Helpers.hpp"
 #include "utils/Statistics.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 extern bool syncMode;
@@ -51,7 +57,11 @@ void NearestNeighborMapping::computeMapping()
                      distanceStatistics(bg::distance(match, coords));
                    }));
     }
-    PRECICE_INFO("Mapping distance " << distanceStatistics);
+    if (distanceStatistics.empty()) {
+      PRECICE_INFO("Mapping distance not available due to empty partition.");
+    } else {
+      PRECICE_INFO("Mapping distance " << distanceStatistics);
+    }
   } else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Compute conservative mapping");
@@ -72,7 +82,11 @@ void NearestNeighborMapping::computeMapping()
                      distanceStatistics(bg::distance(match, coords));
                    }));
     }
-    PRECICE_INFO("Mapping distance " << distanceStatistics);
+    if (distanceStatistics.empty()) {
+      PRECICE_INFO("Mapping distance not available due to empty partition.");
+    } else {
+      PRECICE_INFO("Mapping distance " << distanceStatistics);
+    }
   }
   _hasComputedMapping = true;
 }

@@ -1,5 +1,7 @@
 #include "String.hpp"
 #include <boost/algorithm/string/case_conv.hpp>
+#include <memory>
+#include <vector>
 #include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/split.hpp"
 #include "utils/assertion.hpp"
@@ -58,6 +60,19 @@ bool convertStringToBool(std::string const &value)
     return true;
 
   return false;
+}
+
+std::string truncate_wstring_to_string(std::wstring wstr, char fill)
+{
+  std::string converted(wstr.length(), '\0');
+  // Buffer for the multibyte representation of a wchar
+  std::string mb(MB_CUR_MAX, '\0');
+  for(size_t i = 0; i != wstr.length(); ++i) {
+        // Converts a wchar to 1-MB_CUR_MAX chars
+        std::size_t ret = std::wctomb(&mb[0], wstr[i]);
+        converted[i] = (ret == 1) ? mb.front() : fill;
+  }
+  return converted;
 }
 
 } // namespace utils

@@ -1,8 +1,16 @@
 #include "ConfigParser.hpp"
+#include <algorithm>
+#include <exception>
 #include <fstream>
+#include <iterator>
 #include <libxml/SAX.h>
+#include <memory>
 #include <string>
 #include <unordered_set>
+#include <utility>
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace xml {
@@ -84,8 +92,8 @@ ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationConte
 
   try {
     connectTags(context, DefTags, SubTags);
-  } catch (const std::string &error) {
-    PRECICE_ERROR(error);
+  } catch (const std::exception &e) {
+    PRECICE_ERROR("An unexpected exception occurred during configuration: " << e.what() << '.');
   }
 }
 
@@ -103,6 +111,7 @@ void ConfigParser::MessageProxy(int level, const std::string &mess)
     break;
   case (XML_ERR_WARNING):
     PRECICE_WARN(mess);
+    break;
   default:
     PRECICE_INFO(mess);
   }
@@ -121,9 +130,7 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.serror         = OnStructuredErrorFunc;
 
   std::ifstream ifs(filePath);
-  if (not ifs) {
-    PRECICE_ERROR("File open error: " << filePath);
-  }
+  PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"" << filePath << '"');
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
@@ -151,7 +158,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
         });
 
     if (tagPosition == DefTags.end()) {
-      PRECICE_ERROR("Tag <" + expectedName + "> is unknown");
+      PRECICE_ERROR("The configuration contains an unknown tag <" + expectedName + ">.");
     }
 
     auto pDefSubTag = *tagPosition;
@@ -159,7 +166,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 
     if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
       if (usedTags.count(pDefSubTag->_fullName)) {
-        PRECICE_ERROR("Tag <" + pDefSubTag->_fullName + "> is already used");
+        PRECICE_ERROR("Tag <" + pDefSubTag->_fullName + "> is not allowed to occur multiple times.");
       }
       usedTags.emplace(pDefSubTag->_fullName);
     }

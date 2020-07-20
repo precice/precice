@@ -1,5 +1,10 @@
 #include "acceleration/impl/ResidualSumPreconditioner.hpp"
+#include <algorithm>
+#include <math.h>
+#include "logging/LogMacros.hpp"
+#include "math/differences.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {
@@ -41,10 +46,13 @@ void ResidualSumPreconditioner::_update_(bool                   timestepComplete
     }
     sum = std::sqrt(sum);
     PRECICE_ASSERT(sum > 0);
+    PRECICE_CHECK(not math::equals(sum, 0.0), "All residual sub-vectors in the residual-sum preconditioner are numerically zero. "
+                                              "Your simulation probably got unstable, e.g. produces NAN values.");
 
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       _residualSum[k] += norms[k] / sum;
-      PRECICE_ASSERT(_residualSum[k] > 0);
+      PRECICE_CHECK(not math::equals(_residualSum[k], 0.0), "A sub-vector in the residual-sum preconditioner became numerically zero. "
+                                                            "Thus, the preconditioner is no longer stable. Please try the value preconditioner instead.");
     }
 
     offset = 0;

@@ -1,17 +1,32 @@
-#include "testing/Testing.hpp"
-
+#include <Eigen/Core>
+#include <algorithm>
+#include <memory>
+#include <ostream>
+#include "mapping/Mapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
-#include "mesh/Edge.hpp"
+#include "math/constants.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
+#include "utils/assertion.hpp"
+
+namespace precice {
+namespace mesh {
+class Edge;
+class Vertex;
+} // namespace mesh
+} // namespace precice
 
 using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(NearestProjectionMapping, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(NearestProjectionMapping)
 
 BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   int dimensions = 2;
 
@@ -107,6 +122,7 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
 
 BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   int dimensions = 2;
 
@@ -199,6 +215,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
 
 BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   int dimensions = 3;
 
@@ -310,6 +327,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
 
 BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   int dimensions = 3;
 
@@ -365,6 +383,7 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
 
 BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnVertices)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   int dimensions = 3;
 
@@ -417,6 +436,7 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnVertices)
 
 BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
 {
+  PRECICE_TEST(1_rank);
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
@@ -465,6 +485,7 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
 
 BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
 {
+  PRECICE_TEST(1_rank);
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 

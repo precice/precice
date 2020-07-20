@@ -1,7 +1,14 @@
 #include "ScaleByAreaAction.hpp"
+#include <Eigen/Core>
+#include <memory>
+#include "action/Action.hpp"
+#include "logging/LogMacros.hpp"
+#include "mapping/Mapping.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace action {
@@ -24,7 +31,7 @@ void ScaleByAreaAction::performAction(
     double fullDt)
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(getMesh()->getDimensions() == 2, "Not implemented for dimension != 2!");
+  PRECICE_ASSERT(getMesh()->getDimensions() == 2, "The ScaleByAreaAction requires a mesh of dimensionality 2.");
   auto &          targetValues = _targetData->values();
   Eigen::VectorXd areas        = Eigen::VectorXd::Zero(getMesh()->vertices().size());
   for (mesh::Edge &edge : getMesh()->edges()) {

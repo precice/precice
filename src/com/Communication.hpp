@@ -1,6 +1,11 @@
 #pragma once
 
+#include <set>
+#include <stddef.h>
+#include <string>
+#include <vector>
 #include "Request.hpp"
+#include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -82,7 +87,8 @@ public:
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 std::string const &tag,
-                                int                acceptorRank) = 0;
+                                int                acceptorRank,
+                                int                rankOffset = 0) = 0;
 
   /**
    * @brief Accepts connection from another communicator, which has to call requestConnectionAsClient().
@@ -146,6 +152,19 @@ public:
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) = 0;
 
+  /** Establishes the Master-Slave connection.
+   *
+   * @param[in] participantName Name of the calling participant.
+   * @param[in] tag Tag for establishing this connection
+   * @param[in] rank The current rank in the participant 
+   * @param[in] size Total size of the participant
+   *
+   */
+  void connectMasterSlaves(std::string const &participantName,
+                           std::string const &tag,
+                           int                rank,
+                           int                size);
+
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -177,15 +196,15 @@ public:
   /// @{
 
   /// Performs a reduce summation on the rank given by rankMaster
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster);
   /// Performs a reduce summation on the master, every other rank has to call reduceSum
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size);
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size);
 
   virtual void reduceSum(int itemToSend, int &itemToReceive, int rankMaster);
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster);
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size);
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster);
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size);
 
   virtual void allreduceSum(double itemToSend, double &itemToReceive, int rankMaster);
   virtual void allreduceSum(double itemToSend, double &itemToReceive);
@@ -329,6 +348,9 @@ protected:
   int _rankOffset = 0;
 
   bool _isConnected = false;
+
+  /// Adjusts the given rank bases on the _rankOffset
+  virtual int adjustRank(int rank) const;
 
 private:
   logging::Logger _log{"com::Communication"};

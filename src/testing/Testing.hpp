@@ -1,172 +1,34 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <boost/test/unit_test.hpp>
+#include <string>
+#include <type_traits>
+#include "math/differences.hpp"
 #include "math/math.hpp"
-#include "precice/config/Configuration.hpp"
+#include "testing/TestContext.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/Parallel.hpp"
-#include "xml/XMLTag.hpp"
+#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace testing {
 
 namespace bt = boost::unit_test;
-using Par    = precice::utils::Parallel;
 
-/// Fixture to set and reset MPI communicator
-struct MPICommRestrictFixture {
-  explicit MPICommRestrictFixture(std::vector<int> &ranks)
-  {
-    // Restriction MUST always be called on all ranks, otherwise we hang
-    if (static_cast<int>(ranks.size()) < Par::getCommunicatorSize()) {
-      Par::restrictGlobalCommunicator(ranks);
-    }
-  }
+namespace inject {
+using precice::testing::Require;
+using precice::testing::operator""_rank;
+using precice::testing::operator""_ranks;
+using precice::testing::operator""_on;
+} // namespace inject
 
-  ~MPICommRestrictFixture()
-  {
-    Par::setGlobalCommunicator(Par::getCommunicatorWorld());
-  }
-};
-
-/// Fixture to restrict to a single rank
-/*
- * How does that differ from MPICommRestrictFixture({0})? The MPICommRestrictFixture restricts the communicator
- * to rank 0 and assigns that all ranks. This produces invalid communicators on all other ranks.
- * SingleRankFixture restricts every rank to itself. Effectively using MPI_COMM_SELF as communicator on each rank.
- * We don't use MPI_COMM_SELF because this causes errors when it's freed.
- */
-struct SingleRankFixture {
-  explicit SingleRankFixture()
-  {
-    // Restriction MUST always be called on all ranks, otherwise we hang
-    Par::setGlobalCommunicator(Par::getRestrictedCommunicator({Par::getProcessRank()}));
-  }
-
-  ~SingleRankFixture()
-  {
-    Par::setGlobalCommunicator(Par::getCommunicatorWorld());
-  }
-};
-
-/// Fixture to sync procceses before and after test
-struct SyncProcessesFixture {
-  SyncProcessesFixture()
-  {
-    Par::synchronizeProcesses();
-  }
-
-  ~SyncProcessesFixture()
-  {
-    Par::synchronizeProcesses();
-  }
-};
-
-/// Boost.Test decorator that makes the test run only on specfic ranks.
-/*
- * This does not restrict the communicator, which must be done by installing the MPICommrestrictFixture.
- */
-class OnRanks : public bt::decorator::base {
-public:
-  explicit OnRanks(const std::vector<int> &ranks)
-      : _ranks(ranks)
-  {
-  }
-
-private:
-  virtual void apply(bt::test_unit &tu)
-  {
-    size_t myRank = Par::getProcessRank();
-    size_t size   = Par::getCommunicatorSize();
-
-    // If current rank is not in requested ranks
-    if (std::find(_ranks.begin(), _ranks.end(), myRank) == _ranks.end()) {
-      bt::framework::get<bt::test_suite>(tu.p_parent_id).remove(tu.p_id);
-      return;
-    }
-
-    // If more ranks requested than available
-    if (_ranks.size() > size) {
-      bt::framework::get<bt::test_suite>(tu.p_parent_id).remove(tu.p_id);
-      return;
-    }
-
-    // Install the fixture. Disabled because installing the fixture on just a
-    // subset of ranks causes a restriction to be made from a subset of ranks
-    // which means the application will hang.
-    // tu.p_fixtures.value.push_back(
-    //   bt::test_unit_fixture_ptr(
-    //     new bt::class_based_fixture<MPICommRestrictFixture, std::vector<int>>(_ranks)));
-  }
-
-  virtual bt::decorator::base_ptr clone() const
-  {
-    return bt::decorator::base_ptr(new OnRanks(_ranks));
-  }
-
-  std::vector<int> _ranks;
-};
-
-/// Boost.Test decorator that makes the test run only on the master aka rank 0
-class OnMaster : public OnRanks {
-public:
-  explicit OnMaster()
-      : OnRanks({0})
-  {
-  }
-};
-
-/// Boost.Test decorator that makes the test run only on a specific MPI size
-class OnSize : public bt::decorator::base {
-public:
-  explicit OnSize(const int size)
-      : givenSize(size)
-  {
-  }
-
-  virtual void apply(bt::test_unit &tu)
-  {
-    if (givenSize != Par::getCommunicatorSize()) {
-      bt::framework::get<bt::test_suite>(tu.p_parent_id).remove(tu.p_id);
-      return;
-    }
-  }
-
-  virtual bt::decorator::base_ptr clone() const
-  {
-    return bt::decorator::base_ptr(new OnSize(givenSize));
-  }
-
-  const int givenSize;
-};
-
-/// Boost.Test decorator that deletes the test, unless a minimum number of ranks is available.
-/*
- * This does not restrict the communicator, which must be done by installing the MPICommrestrictFixture.
- */
-class MinRanks : public bt::decorator::base {
-public:
-  explicit MinRanks(const int minimumSize)
-      : minSize(minimumSize)
-  {
-  }
-
-private:
-  virtual void apply(bt::test_unit &tu)
-  {
-    if (minSize > Par::getCommunicatorSize()) {
-      bt::framework::get<bt::test_suite>(tu.p_parent_id).remove(tu.p_id);
-      return;
-    }
-  }
-
-  virtual bt::decorator::base_ptr clone() const
-  {
-    return bt::decorator::base_ptr(new MinRanks(minSize));
-  }
-
-  const int minSize;
-};
+#define PRECICE_TEST(...)                             \
+  using namespace precice::testing::inject;           \
+  precice::testing::TestContext context{__VA_ARGS__}; \
+  if (context.invalid) {                              \
+    return;                                           \
+  }                                                   \
+  BOOST_TEST_MESSAGE(context.describe());
 
 /// Boost.Test decorator that unconditionally deletes the test.
 class Deleted : public bt::decorator::base {

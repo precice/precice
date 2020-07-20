@@ -1,15 +1,26 @@
-#include "M2NConfiguration.hpp"
 #include <list>
-#include "com/MPIDirectCommunication.hpp"
+#include <ostream>
+#include <stdexcept>
+#include "M2NConfiguration.hpp"
+#include "com/CommunicationFactory.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/MPISinglePortsCommunicationFactory.hpp"
+#include "com/SharedPointer.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
+#include "utils/networking.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
+
+#ifndef PRECICE_NO_MPI
+#include <mpi.h>
+#endif
 
 namespace precice {
 namespace m2n {
@@ -32,13 +43,12 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
                             "bind it automatically.");
     tag.addAttribute(attrPort);
 
-    auto attrNetwork = makeXMLAttribute("network", "lo")
+    auto attrNetwork = makeXMLAttribute("network", utils::networking::loopbackInterfaceName())
                            .setDocumentation(
                                "Interface name to be used for socket communiation. "
-                               "Default is \"lo\", i.e., the local host loopback. "
+                               "Default is the cannonical name of the loopback interface of your platform. "
                                "Might be different on supercomputing systems, e.g. \"ib0\" "
-                               "for the InfiniBand on SuperMUC. "
-                               "For macOS use \"lo0\". ");
+                               "for the InfiniBand on SuperMUC. ");
     tag.addAttribute(attrNetwork);
 
     auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
@@ -76,13 +86,6 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
 
-  {
-    XMLTag tag(*this, "mpi-single", occ, TAG);
-    doc = "Communication via MPI with startup in common communication space.";
-    tag.setDocumentation(doc);
-    tags.push_back(tag);
-  }
-
   XMLAttribute<bool> attrEnforce(ATTR_ENFORCE_GATHER_SCATTER, false);
   attrEnforce.setDocumentation("Enforce the distributed communication to a gather-scatter scheme. "
                                "Only recommended for trouble shooting.");
@@ -117,7 +120,7 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
       return get<0>(tuple);
     }
   }
-  throw std::runtime_error{std::string{"No m2n communication configured between \""} + from + "\" and \"" + to + "\"!"};
+  PRECICE_ERROR("There is no m2n communication configured between participants \"" + from + "\" and \"" + to + "\". Please add an appropriate \"<m2n />\" tag.");
 }
 
 void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
@@ -130,10 +133,10 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     bool useTwoLevelInit      = tag.getBooleanAttributeValue(ATTR_USE_TWO_LEVEL_INIT);
 
     if (enforceGatherScatter && useTwoLevelInit) {
-      throw std::runtime_error{"A gather-scatter m2n communication cannot use two-level initialization."};
+      throw std::runtime_error{std::string{"A gather-scatter m2n communication cannot use two-level initialization. Please switch either "} + "\"" + ATTR_ENFORCE_GATHER_SCATTER + "\" or \"" + ATTR_USE_TWO_LEVEL_INIT + "\" off."};
     }
     if (context.size == 1 && useTwoLevelInit) {
-      throw std::runtime_error{"To use two-level initialization, both participants need to run in parallel."};
+      throw std::runtime_error{"To use two-level initialization, both participants need to run in parallel. If you want to run in serial please switch two-level intialization off."};
     }
 
     com::PtrCommunicationFactory comFactory;
@@ -151,31 +154,33 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     } else if (tag.getName() == "mpi") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      throw std::runtime_error{"Communication type \"mpi\" can only be used when preCICE is compiled with argument \"mpi=on\""};
+      PRECICE_ERROR("Communication type \"mpi\" can only be used if preCICE was compiled with MPI support enabled. "
+                    "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
+#ifdef OMPI_MAJOR_VERSION
+      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
+#endif
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
     } else if (tag.getName() == "mpi-singleports") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      throw std::runtime_error{"Communication type \"mpi-singleports\" can only be used when preCICE is compiled with argument \"mpi=on\""};
+      PRECICE_ERROR("Communication type \"mpi-singleports\" can only be used if preCICE was compiled with MPI support enabled. "
+                    "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
+#ifdef OMPI_MAJOR_VERSION
+      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-singleports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
+#endif
       comFactory = std::make_shared<com::MPISinglePortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
-#endif
-    } else if (tag.getName() == "mpi-single") {
-#ifdef PRECICE_NO_MPI
-      throw std::runtime_error{"Communication type \"mpi-single\" can only be used when preCICE is compiled with argument \"mpi=on\""};
-#else
-      com        = std::make_shared<com::MPIDirectCommunication>();
 #endif
     }
 
     PRECICE_ASSERT(com.get() != nullptr);
 
     DistributedComFactory::SharedPointer distrFactory;
-    if (tag.getName() == "mpi-single" || enforceGatherScatter) {
+    if (enforceGatherScatter) {
       distrFactory = std::make_shared<GatherScatterComFactory>(com);
     } else {
       distrFactory = std::make_shared<PointToPointComFactory>(comFactory);
@@ -197,9 +202,7 @@ void M2NConfiguration::checkDuplicates(
     alreadyAdded |= (get<1>(tuple) == from) && (get<2>(tuple) == to);
     alreadyAdded |= (get<2>(tuple) == from) && (get<1>(tuple) == to);
   }
-  if (alreadyAdded) {
-    throw std::runtime_error{std::string{"Multiple communication defined between participant \""} + from + "\" and \"" + to + "\""};
-  }
+  PRECICE_CHECK(!alreadyAdded, "Multiple m2n communications between participant \"" + from + "\" and \"" + to + "\" are not allowed. Please remove redundant <m2n /> tags between them.");
 }
 
 } // namespace m2n

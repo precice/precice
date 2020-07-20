@@ -1,10 +1,13 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <algorithm>
 #include <deque>
 #include <fstream>
+#include <map>
 #include <sstream>
-
+#include <string>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
@@ -46,6 +49,11 @@
 // ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
+namespace io {
+class TXTReader;
+class TXTWriter;
+} // namespace io
+
 namespace acceleration {
 
 /**
@@ -106,22 +114,6 @@ public:
   virtual void iterationsConverged(DataMap &cplData);
 
   /**
-    * @brief sets the design specification we want to meet for the objective function,
-    *     i. e., we want to solve for argmin_x ||R(x) - q||, with R(x) = H(x) - x
-    *     Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
-    *     with q=0.
-    */
-  virtual void setDesignSpecification(Eigen::VectorXd &q);
-
-  /**
-    * @brief Returns the design specification for the optimization problem.
-    *        Information needed to measure the convergence.
-    *        In case of manifold mapping it also returns the design specification
-    *        for the surrogate model which is updated in every iteration.
-    */
-  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap &cplData);
-
-  /**
     * @brief Exports the current state of the acceleration to a file.
     */
   virtual void exportState(io::TXTWriter &writer);
@@ -133,8 +125,20 @@ public:
     */
   virtual void importState(io::TXTReader &reader);
 
-  // delete this:
-  virtual int getDeletedColumns();
+  /// how many QN columns were deleted in this timestep
+  virtual int getDeletedColumns() const;
+
+  /// how many QN columns were dropped (went out of scope) in this timestep
+  virtual int getDroppedColumns() const;
+
+  /** @brief: computes number of cols in least squares system, i.e, number of cols in
+    *  _matrixV, _matrixW, _qrV, etc..
+    *	 This is necessary only for master-slave mode, when some procs do not have
+    *	 any nodes on the coupling interface. In this case, the matrices are not
+    *  constructed and we have no information about the number of cols. This info
+    *  is needed for master-slave communication. Number of its =! _cols in general.
+    */
+  virtual int getLSSystemCols() const;
 
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};
@@ -230,14 +234,6 @@ protected:
   std::ostringstream _infostringstream;
   std::fstream       _infostream;
 
-  /** @brief: computes number of cols in least squares system, i.e, number of cols in
-    *  _matrixV, _matrixW, _qrV, etc..
-    *	 This is necessary only for master-slave mode, when some procs do not have
-    *	 any nodes on the coupling interface. In this case, the matrices are not
-    *  constructed and we have no information about the number of cols. This info
-    *  is needed for master-slave communication. Number of its =! _cols in general.
-    */
-  int getLSSystemCols();
   int getLSSystemRows();
 
   /**
@@ -284,14 +280,6 @@ private:
   /// @brief Difference between solver input and output from last timestep
   Eigen::VectorXd _oldResiduals;
 
-  /**
-    * @brief sets the design specification we want to meet for the objective function,
-    *     i. e., we want to solve for argmin_x ||R(x) - q||, with R(x) = H(x) - x
-    *     Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
-    *     with q=0.
-    */
-  Eigen::VectorXd _designSpecification;
-
   /** @brief backup of the V,W and matrixCols data structures. Needed for the skipping of
    *  initial relaxation, if previous time step converged within one iteration i.e., V and W
    *  are empty -- in this case restore V and W with time step t-2.
@@ -300,8 +288,11 @@ private:
   Eigen::MatrixXd _matrixWBackup;
   std::deque<int> _matrixColsBackup;
 
-  /// Additional debugging info, is not important for computation:
+  /// Number of filtered out columns in this time window
   int _nbDelCols = 0;
+
+  /// Number of dropped columns in this time window (old time window out of scope)
+  int _nbDropCols = 0;
 };
 } // namespace acceleration
 } // namespace precice

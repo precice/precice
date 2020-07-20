@@ -1,21 +1,37 @@
+#include <Eigen/Core>
+#include <algorithm>
+#include <list>
+#include <memory>
+#include <string>
+#include "action/Action.hpp"
 #include "action/ScaleByAreaAction.hpp"
 #include "action/ScaleByDtAction.hpp"
+#include "action/SharedPointer.hpp"
 #include "action/config/ActionConfiguration.hpp"
+#include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "xml/XMLTag.hpp"
+
+namespace precice {
+namespace mesh {
+class Vertex;
+} // namespace mesh
+} // namespace precice
 
 using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(ActionTests)
-BOOST_AUTO_TEST_SUITE(Scale, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(Scale)
 
 BOOST_AUTO_TEST_CASE(DivideByArea)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 2, true, testing::nextMeshID()));
   PtrData data   = mesh->createData("test-data", 1);
@@ -48,6 +64,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea)
 
 BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepLength)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 3, true, testing::nextMeshID()));
   PtrData sourceData   = mesh->createData("SourceData", 1);
@@ -103,6 +120,7 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepLength)
 
 BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepPartLength)
 {
+  PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 3, true, testing::nextMeshID()));
   PtrData sourceData   = mesh->createData("SourceData", 1);
@@ -149,13 +167,14 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepPartLength)
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {
+  PRECICE_TEST(1_rank);
   {
     std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-1.xml";
     xml::XMLTag                tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-    dataConfig->setDimensions(3);
+    dataConfig->setDimensions(2);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-    meshConfig->setDimensions(3);
+    meshConfig->setDimensions(2);
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
@@ -166,9 +185,9 @@ BOOST_AUTO_TEST_CASE(Configuration)
     std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-2.xml";
     xml::XMLTag                tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-    dataConfig->setDimensions(3);
+    dataConfig->setDimensions(2);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-    meshConfig->setDimensions(3);
+    meshConfig->setDimensions(2);
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);

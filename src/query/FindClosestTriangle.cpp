@@ -1,10 +1,11 @@
 #include "FindClosestTriangle.hpp"
 #include <Eigen/Dense>
+// #include <Eigen/Core>
 #include "math/barycenter.hpp"
-#include "math/math.hpp"
-#include "mesh/Mesh.hpp"
+#include "math/differences.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace query {

@@ -1,33 +1,31 @@
-#include "Participant.hpp"
 #include <algorithm>
+#include <ostream>
 #include <utility>
 #include "DataContext.hpp"
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
+#include "Participant.hpp"
 #include "WatchPoint.hpp"
 #include "action/Action.hpp"
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/impl/SharedPointer.hpp"
+#include "utils/ManageUniqueIDs.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace impl {
-
-int Participant::_participantsSize = 0;
-
-void Participant::resetParticipantCount()
-{
-  _participantsSize = 0;
-}
 
 Participant::Participant(
     std::string                 name,
     mesh::PtrMeshConfiguration &meshConfig)
     : _name(std::move(name)),
-      _id(_participantsSize),
       _meshContexts(meshConfig->meshes().size(), nullptr),
       _dataContexts(meshConfig->getDataConfiguration()->data().size() * meshConfig->meshes().size(), nullptr)
 {
-  _participantsSize++;
 }
 
 Participant::~Participant()
@@ -40,17 +38,11 @@ Participant::~Participant()
   _writeDataContexts.deleteElements();
   _readMappingContexts.deleteElements();
   _writeMappingContexts.deleteElements();
-  _participantsSize--;
 }
 
 const std::string &Participant::getName() const
 {
   return _name;
-}
-
-int Participant::getID() const
-{
-  return _id;
 }
 
 void Participant::addWatchPoint(
@@ -91,8 +83,10 @@ void Participant::useMesh(
   _usedMeshContexts.push_back(context);
 
   PRECICE_CHECK(fromParticipant.empty() || (!provideMesh),
-                "Participant " << _name << " cannot receive and provide mesh "
-                               << mesh->getName() << " at the same time!");
+                "Participant \"" << _name << "\" cannot receive and provide mesh \""
+                                 << mesh->getName() << "\" at the same time. "
+                                 << "Please remove all but one of the \"from\" and \"provide\" attributes in the <use-mesh name=\""
+                                 << mesh->getName() << "\"/> node of " << _name << ".");
 }
 
 void Participant::addWriteData(
@@ -242,6 +236,24 @@ std::vector<MeshContext *> &Participant::usedMeshContexts()
   return _usedMeshContexts;
 }
 
+MeshContext *Participant::usedMeshContextByName(const std::string &name)
+{
+  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
+                          [&name](MeshContext const *context) {
+                            return context->mesh->getName() == name;
+                          });
+  return (pos == _usedMeshContexts.end()) ? nullptr : *pos;
+}
+
+MeshContext const *Participant::usedMeshContextByName(const std::string &name) const
+{
+  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
+                          [&name](MeshContext const *context) {
+                            return context->mesh->getName() == name;
+                          });
+  return (pos == _usedMeshContexts.end()) ? nullptr : *pos;
+}
+
 void Participant::addAction(
     const action::PtrAction &action)
 {
@@ -277,7 +289,7 @@ void Participant::checkDuplicatedUse(
   PRECICE_ASSERT((int) _meshContexts.size() > mesh->getID());
   PRECICE_CHECK(_meshContexts[mesh->getID()] == nullptr,
                 "Mesh \"" << mesh->getName() << " cannot be used twice by "
-                          << "participant " << _name << "!");
+                          << "participant " << _name << ". Please remove one of the use-mesh nodes with name=\"" << mesh->getName() << "\"./>");
 }
 
 void Participant::checkDuplicatedData(
@@ -287,7 +299,8 @@ void Participant::checkDuplicatedData(
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size(), data->getID(), _dataContexts.size());
   PRECICE_CHECK(_dataContexts[data->getID()] == nullptr,
                 "Participant \"" << _name << "\" can read/write data \""
-                                 << data->getName() << "\" only once!");
+                                 << data->getName() << "\" only once."
+                << "Please remove any duplicate instances of write-data/read-data nodes.");
 }
 
 bool Participant::useMaster()
