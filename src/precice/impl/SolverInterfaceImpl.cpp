@@ -415,14 +415,14 @@ double SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
 
-  if (_couplingScheme->isTimeWindowComplete()) {
-    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
-  }
-
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+  }
+
+  if (_couplingScheme->isTimeWindowComplete()) {
+    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
