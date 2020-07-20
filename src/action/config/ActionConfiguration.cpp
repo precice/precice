@@ -310,8 +310,8 @@ action::Action::Timing ActionConfiguration::getTiming() const
   action::Action::Timing timing;
   if (_configuredAction.timing == VALUE_REGULAR_PRIOR) {
     timing = action::Action::WRITE_MAPPING_PRIOR;
-    PRECICE_WARN("Regular-prior action timings will no longer be supported. Regular-prior will now revert to Write-mapping-prior which performs "
-                  "the action timings before writeMappingData and before the coupling update.");
+    PRECICE_WARN("Regular-prior action timings will no longer be supported. Regular-prior will now revert to write-mapping-prior which performs "
+                  "the action before a write mapping and before the coupling update.");
   } else if (_configuredAction.timing == VALUE_REGULAR_POST) {
     timing = action::Action::READ_MAPPING_PRIOR;
     PRECICE_WARN("Regular-post action timings will no longer be supported. Regular-post will now revert to Read-mapping-prior which performs "
