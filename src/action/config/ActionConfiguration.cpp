@@ -1,13 +1,14 @@
-#include "ActionConfiguration.hpp"
 #include <algorithm>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
+#include "ActionConfiguration.hpp"
 #include "action/ComputeCurvatureAction.hpp"
 #include "action/PythonAction.hpp"
 #include "action/ScaleByAreaAction.hpp"
 #include "action/ScaleByDtAction.hpp"
 #include "action/SummationAction.hpp"
+#include "action/RecorderAction.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -30,6 +31,7 @@ ActionConfiguration::ActionConfiguration(
       NAME_SUMMATION("summation"),
       NAME_COMPUTE_CURVATURE("compute-curvature"),
       NAME_PYTHON("python"),
+      NAME_RECORDER("recorder"),
       TAG_SOURCE_DATA("source-data"),
       TAG_TARGET_DATA("target-data"),
       TAG_CONVERGENCE_TOLERANCE("convergence-tolerance"),
@@ -116,6 +118,12 @@ ActionConfiguration::ActionConfiguration(
   {
     XMLTag tag(*this, NAME_COMPUTE_CURVATURE, occ, TAG);
     tag.setDocumentation("Computes curvature values at mesh vertices.");
+    tag.addSubtag(tagTargetData);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, NAME_RECORDER, occ, TAG);
+    tag.setDocumentation("Records action invocations for testing purposes.");
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
@@ -292,6 +300,9 @@ void ActionConfiguration::createAction()
   } else if (_configuredAction.type == NAME_SUMMATION) {
     action = action::PtrAction(
         new action::SummationAction(timing, sourceDataIDs, targetDataID, mesh));
+  } else if (_configuredAction.type == NAME_RECORDER) {
+    action = action::PtrAction(
+        new action::RecorderAction(timing, mesh));
   }
 #ifndef PRECICE_NO_PYTHON
   else if (_configuredAction.type == NAME_PYTHON) {
@@ -311,11 +322,11 @@ action::Action::Timing ActionConfiguration::getTiming() const
   if (_configuredAction.timing == VALUE_REGULAR_PRIOR) {
     timing = action::Action::WRITE_MAPPING_PRIOR;
     PRECICE_WARN("Regular-prior action timings will no longer be supported. Regular-prior will now revert to write-mapping-prior which performs "
-                  "the action before a write mapping and before the coupling update.");
+                 "the action before a write mapping and before the coupling update.");
   } else if (_configuredAction.timing == VALUE_REGULAR_POST) {
     timing = action::Action::READ_MAPPING_PRIOR;
     PRECICE_WARN("Regular-post action timings will no longer be supported. Regular-post will now revert to read-mapping-prior which performs "
-                  "the action after the coupling update and before a read mapping.");
+                 "the action after the coupling update and before a read mapping.");
   } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_PRIOR) {
     timing = action::Action::ON_EXCHANGE_PRIOR;
   } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_POST) {

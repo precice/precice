@@ -81,6 +81,7 @@ private:
   const std::string NAME_SUMMATION;
   const std::string NAME_COMPUTE_CURVATURE;
   const std::string NAME_PYTHON;
+  const std::string NAME_RECORDER;
 
   const std::string TAG_SOURCE_DATA;
   const std::string TAG_TARGET_DATA;

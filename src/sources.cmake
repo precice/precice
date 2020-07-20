@@ -43,6 +43,8 @@ target_sources(precice
     src/action/ComputeCurvatureAction.hpp
     src/action/PythonAction.cpp
     src/action/PythonAction.hpp
+    src/action/RecorderAction.cpp
+    src/action/RecorderAction.hpp
     src/action/ScaleByAreaAction.cpp
     src/action/ScaleByAreaAction.hpp
     src/action/ScaleByDtAction.cpp
@@ -204,6 +206,7 @@ target_sources(precice
     src/mesh/config/DataConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
+    src/mesh/impl/BBUtils.hpp
     src/mesh/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
