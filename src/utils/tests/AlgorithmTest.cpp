@@ -177,6 +177,19 @@ BOOST_AUTO_TEST_CASE(Scramble)
   BOOST_TEST(reordered == expected);
 }
 
+BOOST_AUTO_TEST_CASE(ScramblePointer)
+{
+  PRECICE_TEST(1_rank);
+  int a = 1, b = 2;
+
+  std::array<int*, 3> input{&a,&b,nullptr};
+  std::array<int, 3> order{2,0,1};
+  std::array<int*, 3> expected{nullptr, &a, &b};
+
+  auto reordered = utils::reorder_array(order, input);
+  BOOST_TEST(reordered == expected);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // ReorderArray
 
 BOOST_AUTO_TEST_SUITE_END() // Alorithm
