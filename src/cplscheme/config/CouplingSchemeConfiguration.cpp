@@ -717,6 +717,20 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
                           << meshName << "\" is not configured.");
 }
 
+mesh::PtrData CouplingSchemeConfiguration::findDataByID(
+    int ID) const
+{
+  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+    for (mesh::PtrData data : mesh->data()) {
+      if (data->getID() == ID) {
+        return data;
+      }
+    }
+  }
+  return nullptr;
+}
+
+
 PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingScheme(
     const std::string &accessor) const
 {
@@ -1053,13 +1067,9 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
   }
 
   std::string dataName = "";
-  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
-    for (mesh::PtrData data : mesh->data()) {
-      if (data->getID() == dataID) {
-        dataName = data->getName();
-        break;
-      }
-    }
+  auto dataptr = findDataByID(dataID);
+  if (dataptr) {
+    dataName = dataptr->getName();
   }
 
   PRECICE_CHECK(hasFound, "You need to exchange every data that you use for convergence measures "
