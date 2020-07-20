@@ -24,8 +24,8 @@ AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
       _aitkenFactor(initialRelaxation)
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
-                "Initial relaxation factor for aitken acceleration has to "
-                    << "be larger than zero and smaller or equal than one!");
+                "Initial relaxation factor for Aitken acceleration has to "
+                    << "be larger than zero and smaller or equal to one. Current initial relaxation is: " << _initialRelaxation);
 }
 
 void AitkenAcceleration::initialize(DataMap &cplData)

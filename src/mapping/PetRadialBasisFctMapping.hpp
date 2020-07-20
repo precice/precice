@@ -217,12 +217,12 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
 
   if (getDimensions() == 2) {
     _deadAxis = {xDead, yDead};
-    PRECICE_CHECK(not(xDead and yDead), "You cannot choose all axes to be dead for a RBF mapping");
+    PRECICE_CHECK(not(xDead and yDead), "You cannot set all axes to dead for an RBF mapping. Please remove one of the respective mapping's \"x-dead\" or \"y-dead\" attributes.");
     if (zDead)
-      PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect.");
+      PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
   } else if (getDimensions() == 3) {
     _deadAxis = {xDead, yDead, zDead};
-    PRECICE_CHECK(not(xDead and yDead and zDead), "You cannot choose all axes to be dead for a RBF mapping");
+    PRECICE_CHECK(not(xDead and yDead and zDead), "You cannot set all axes to dead for an RBF mapping. Please remove one of the respective mapping's \"x-dead\", \"y-dead\", or \"z-dead\" attributes.");
   } else {
     PRECICE_ASSERT(false);
   }

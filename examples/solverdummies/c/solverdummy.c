@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char **argv)
 {
@@ -9,10 +10,16 @@ int main(int argc, char **argv)
   int     solverProcessIndex = 0;
   int     solverProcessSize  = 1;
   int     dimensions         = -1;
-  double *vertex;
+  double *vertices;
+  double *readData;
+  double *writeData;
   int     meshID   = -1;
   int     dataID   = -1;
-  int     vertexID = -1;
+  int    *vertexIDs;
+  int     numberOfVertices = 3;
+  int     writeDataID = -1;
+  int     readDataID = -1;
+
 
   if (argc != 4) {
     printf("Usage: ./solverdummy configFile solverName meshName\n\n");
@@ -37,37 +44,73 @@ int main(int argc, char **argv)
 
   meshID = precicec_getMeshID(meshName);
 
-  dimensions = precicec_getDimensions();
-  vertex     = malloc(dimensions * sizeof(double));
-
-  for (int i = 0; i < dimensions; i++) {
-    vertex[i] = 0.0;
+  if (strcmp(participantName,"SolverOne") == 0){
+    writeDataID = precicec_getDataID("dataOne",meshID);
+    readDataID = precicec_getDataID("dataTwo",meshID);
+  }
+  if (strcmp(participantName,"SolverTwo") == 0){
+    writeDataID = precicec_getDataID("dataTwo",meshID);
+    readDataID = precicec_getDataID("dataOne",meshID);
   }
 
-  vertexID = precicec_setMeshVertex(meshID, vertex);
-  free(vertex);
+  dimensions = precicec_getDimensions();
+  vertices   = malloc(numberOfVertices * dimensions * sizeof(double));
+  readData   = malloc(numberOfVertices * dimensions * sizeof(double));
+  writeData  = malloc(numberOfVertices * dimensions * sizeof(double));
+  vertexIDs  = malloc(numberOfVertices * sizeof(int));
+
+  for (int i = 0; i < numberOfVertices; i++){
+    for (int j = 0; j < dimensions; j++) {
+      vertices[j + numberOfVertices*i] = i;
+      readData[j + numberOfVertices*i] = i;
+      writeData[j + numberOfVertices*i] = i;
+    }
+  }
+
+  precicec_setMeshVertices(meshID, numberOfVertices, vertices, vertexIDs);
+
+  free(vertices);
 
   dt = precicec_initialize();
 
   while (precicec_isCouplingOngoing()) {
 
     if (precicec_isActionRequired(writeItCheckp)) {
-      printf("DUMMY: Writing iteration checkpoint");
+      printf("DUMMY: Writing iteration checkpoint \n");
       precicec_markActionFulfilled(writeItCheckp);
+    }
+
+    if(precicec_isReadDataAvailable)
+    {
+      precicec_readBlockVectorData(readDataID, numberOfVertices, vertexIDs, readData);
+    }
+
+    for (int i = 0; i < numberOfVertices*dimensions; i++){
+      writeData[i] = readData[i] + 1;
+    }
+
+    if(precicec_isWriteDataRequired(dt))
+    {
+      precicec_writeBlockVectorData(writeDataID, numberOfVertices, vertexIDs, writeData);
     }
 
     dt = precicec_advance(dt);
 
     if (precicec_isActionRequired(readItCheckp)) {
+      printf("DUMMY: Reading iteration checkpoint \n");
       precicec_markActionFulfilled(readItCheckp);
-      printf("DUMMY: Reading iteration checkpoint");
-    } else {
-      printf("DUMMY: Advancing in time");
     }
+    else{
+      printf("DUMMY: Advancing in time \n");
+    }
+
   }
 
   precicec_finalize();
-  printf("DUMMY: Closing C solver dummy...");
+  free(writeData);
+  free(readData);
+  free(vertexIDs);
+  printf("DUMMY: Closing C solver dummy... \n");
 
   return 0;
 }

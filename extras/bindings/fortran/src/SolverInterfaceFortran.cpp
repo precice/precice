@@ -86,6 +86,12 @@ void precicef_get_dims_(
 void precicef_ongoing_(
     int *isOngoing)
 {
+  precicef_is_coupling_ongoing_(isOngoing);
+}
+
+void precicef_is_coupling_ongoing_(
+    int *isOngoing)
+{
   PRECICE_CHECK(impl != nullptr, errormsg);
   if (impl->isCouplingOngoing()) {
     *isOngoing = 1;
@@ -98,6 +104,13 @@ void precicef_write_data_required_(
     const double *computedTimestepLength,
     int *         isRequired)
 {
+  precicef_is_write_data_required_(computedTimestepLength, isRequired);
+}
+
+void precicef_is_write_data_required_(
+    const double *computedTimestepLength,
+    int *         isRequired)
+{
   PRECICE_CHECK(impl != nullptr, errormsg);
   if (impl->isWriteDataRequired(*computedTimestepLength)) {
     *isRequired = 1;
@@ -107,6 +120,12 @@ void precicef_write_data_required_(
 }
 
 void precicef_read_data_available_(
+    int *isAvailable)
+{
+  precicef_is_read_data_available_(isAvailable);
+}
+
+void precicef_is_read_data_available_(
     int *isAvailable)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -151,6 +170,14 @@ void precicef_has_to_evaluate_fine_model_(
 }
 
 void precicef_action_required_(
+    const char *action,
+    int *       isRequired,
+    int         lengthAction)
+{
+  precicef_is_action_required_(action, isRequired, lengthAction);
+}
+
+void precicef_is_action_required_(
     const char *action,
     int *       isRequired,
     int         lengthAction)

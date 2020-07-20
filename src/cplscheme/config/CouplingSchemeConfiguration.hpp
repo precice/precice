@@ -108,6 +108,7 @@ private:
   const std::string ATTR_FROM;
   const std::string ATTR_TO;
   const std::string ATTR_SUFFICES;
+  const std::string ATTR_STRICT;
   const std::string ATTR_CONTROL;
 
   const std::string VALUE_SERIAL_EXPLICIT;
@@ -121,6 +122,7 @@ private:
   struct ConvergenceMeasureDefintion {
     mesh::PtrData               data;
     bool                        suffices;
+    bool                        strict;
     std::string                 meshName;
     impl::PtrConvergenceMeasure measure;
     bool                        doesLogging;
@@ -187,29 +189,36 @@ private:
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
-      bool               suffices);
+      bool               suffices,
+      bool               strict);
 
   void addRelativeConvergenceMeasure(
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
-      bool               suffices);
+      bool               suffices,
+      bool               strict);
 
   void addResidualRelativeConvergenceMeasure(
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
-      bool               suffices);
+      bool               suffices,
+      bool               strict);
 
   void addMinIterationConvergenceMeasure(
       const std::string &dataName,
       const std::string &meshName,
       int                minIterations,
-      bool               suffices);
+      bool               suffices,
+      bool               strict);
 
   mesh::PtrData getData(
       const std::string &dataName,
       const std::string &meshName) const;
+
+  mesh::PtrData findDataByID(
+      int ID) const;
 
   PtrCouplingScheme createSerialExplicitCouplingScheme(
       const std::string &accessor) const;

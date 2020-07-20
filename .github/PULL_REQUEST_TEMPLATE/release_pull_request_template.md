@@ -12,7 +12,7 @@ Only the release manager should update this post (even tickboxes, due to race co
    * Extract summary
    * Fix wording
    * Sort the entries lexicographically
-* [ ] Look over the Roadmap and update entries.
+* [ ] Look over the [Roadmap](https://github.com/precice/precice/wiki/Roadmap) and update entries.
 * [ ] Merge master to develop (No commits after the release on master)
 * [ ] Check code base w.r.t code formatting (run [`precice/tools/formatting/check-format`](https://github.com/precice/precice/blob/develop/tools/formatting/check-format)) and reformat if required (run [`precice/tools/formatting/format-all`](https://github.com/precice/precice/blob/develop/tools/formatting/format-all))
 * [ ] Create branch `release-N` from develop. If needed, `git rebase develop`.
@@ -61,6 +61,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 | | | OpenFOAM / deal.II [flap_perp_2D](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp_2D/OpenFOAM-deal.II) |
 | | | OpenFOAM / FEniCS [flap_perp](https://github.com/precice/tutorials/tree/master/FSI/flap_perp/OpenFOAM-FEniCS) |
 | | | OpenFOAM / FEniCS [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-fenics) |
+| | | OpenFOAM / FEniCS [cylinderFlap, only run first few minutes](https://github.com/precice/tutorials/tree/develop/FSI/cylinderFlap/OpenFOAM-FEniCS) |
 | | | OpenFOAM / Nutils [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-nutils) |
 | | | FEniCS / FEniCS [partitioned-heat](https://github.com/precice/tutorials/tree/master/HT/partitioned-heat/fenics-fenics) |
 | | | MATLAB / MATLAB [ODEs](https://github.com/precice/matlab-bindings/tree/develop/tutorial) |
@@ -76,9 +77,43 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 ## Post-release
 
-* [ ] (independent release) [Python bindings](https://github.com/precice/python-bindings)
-* [ ] (independent release) [MATLAB bindings](https://github.com/precice/matlab-bindings)
 * [ ] Update Arch Linux AUR Package
 * [ ] Update Spack recipe
+
+### Release new version for bindings (to ensure compatibility with newest preCICE version)
+
+- [ ] fortan-module?
+- [ ] [MATLAB bindings](https://github.com/precice/matlab-bindings/compare/master...develop)
+- [ ] [python bindings](https://github.com/precice/python-bindings/compare/master...develop)
+
+### (only if breaking changes) Open PRs or issues `develop -> master` for all adapters
+
+- [ ] athlet-adapter? 
+- [ ] [calculix-adapter](https://github.com/precice/calculix-adapter/compare/master...develop)
+- [ ] code_aster-adapter?
+- [ ] [comsol-adapter](https://github.com/precice/comsol-adapter/compare/master...develop)
+- [ ] [dealii-adapter](https://github.com/precice/dealii-adapter/compare/master...develop)
+- [ ] lsdyna-adapter?
+- [ ] [fenics-adapter](https://github.com/precice/fenics-adapter/compare/master...develop)
+- [ ] [fluent-adapter](https://github.com/precice/fluent-adapter/compare/master...develop)
+- [ ] mbdyn-adapter?
+- [ ] [openfoam-adapter](https://github.com/precice/openfoam-adapter/compare/master...develop)
+- [ ] [su2-adapter](https://github.com/precice/su2-adapter/compare/master...develop)
+
+### (only if breaking changes) Open PRs or issues `develop -> master` for all other tools
+
+- [ ] [aste](https://github.com/precice/aste/compare/master...develop)
+- [ ] [elastictube1d](https://github.com/precice/elastictube1d/compare/master...develop)
+- [ ] [tutorials](https://github.com/precice/tutorials/compare/master...develop)
+- [ ] [systemtests](https://github.com/precice/systemtests/compare/master...develop)
+
+### Marketing
+
 * [ ] Send email and do marketing
 * [ ] Tweet
+
+### Misc
+
+* [ ] Update the [PR template](https://github.com/precice/precice/blob/add_PR_template/.github/PULL_REQUEST_TEMPLATE/release_pull_request_template.md)
+
+To open a new PR with this template, use this [PR template query](https://github.com/precice/precice/compare/new?template=release_pull_request_template.md)
