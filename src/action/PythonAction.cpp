@@ -99,7 +99,7 @@ void PythonAction::performAction(double time,
       double * sourceValues = _sourceData->values().data();
       //PRECICE_ASSERT(_sourceValues == NULL);
       _sourceValues = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
-      PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed!");
+      PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
       PyTuple_SetItem(dataArgs, 2, _sourceValues);
     }
     if (_targetData) {
@@ -108,7 +108,7 @@ void PythonAction::performAction(double time,
       //PRECICE_ASSERT(_targetValues == NULL);
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
-      PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed!");
+      PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
       int argumentIndex = _sourceData ? 3 : 2;
       PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
     }
@@ -131,9 +131,9 @@ void PythonAction::performAction(double time,
       PyObject *pythonID     = PyLong_FromLong(id);
       PyObject *pythonCoords = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
       PyObject *pythonNormal = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
-      PRECICE_CHECK(pythonID != nullptr, "Creating python ID failed!");
-      PRECICE_CHECK(pythonCoords != nullptr, "Creating python coords failed!");
-      PRECICE_CHECK(pythonNormal != nullptr, "Creating python normal failed!");
+      PRECICE_CHECK(pythonID != nullptr, "Creating python ID failed. Please check that the python-actions mesh name is correct.");
+      PRECICE_CHECK(pythonCoords != nullptr, "Creating python coords failed. Please check that the python-actions mesh name is correct.");
+      PRECICE_CHECK(pythonNormal != nullptr, "Creating python normal failed. Please check that the python-actions mesh name is correct.");
       PyTuple_SetItem(vertexArgs, 0, pythonID);
       PyTuple_SetItem(vertexArgs, 1, pythonCoords);
       PyTuple_SetItem(vertexArgs, 2, pythonNormal);
