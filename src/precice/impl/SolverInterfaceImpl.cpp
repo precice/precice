@@ -407,7 +407,7 @@ double SolverInterfaceImpl::advance(
   time                   = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
-    performDataActions({action::Action::WRITE_MAPPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST, action::Action::ON_EXCHANGE_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
@@ -423,7 +423,7 @@ double SolverInterfaceImpl::advance(
   }
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
@@ -911,6 +911,8 @@ void SolverInterfaceImpl::mapWriteDataFrom(
                      "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
     return;
   }
+  double time = _couplingScheme->getTime();
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0, 0, 0);
   if (not mappingContext.mapping->hasComputedMapping()) {
     PRECICE_DEBUG("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
     mappingContext.mapping->computeMapping();
@@ -927,6 +929,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
     }
   }
   mappingContext.hasMappedData = true;
+  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0, 0, 0);
 }
 
 void SolverInterfaceImpl::mapReadDataTo(
@@ -943,6 +946,8 @@ void SolverInterfaceImpl::mapReadDataTo(
                      "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
     return;
   }
+  double time = _couplingScheme->getTime();
+  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0, 0, 0);
   if (not mappingContext.mapping->hasComputedMapping()) {
     PRECICE_DEBUG("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
     mappingContext.mapping->computeMapping();
@@ -960,6 +965,7 @@ void SolverInterfaceImpl::mapReadDataTo(
     }
   }
   mappingContext.hasMappedData = true;
+  performDataActions({action::Action::READ_MAPPING_POST}, time, 0, 0, 0);
 }
 
 void SolverInterfaceImpl::writeBlockVectorData(
