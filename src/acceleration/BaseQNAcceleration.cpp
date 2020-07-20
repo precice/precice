@@ -51,11 +51,13 @@ BaseQNAcceleration::BaseQNAcceleration(
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "Initial relaxation factor for QN acceleration has to "
-                    << "be larger than zero and smaller or equal than one!");
+                    << "be larger than zero and smaller or equal than one. Current initial relaxation is: " << _initialRelaxation);
   PRECICE_CHECK(_maxIterationsUsed > 0,
-                "Maximal iterations used for QN acceleration has to be larger than zero!");
+                "Maximum number of iterations used in the quasi-Newton acceleration "
+                    << "scheme has to be larger than zero. Current maximum reused iterations is: " << _maxIterationsUsed);
   PRECICE_CHECK(_timestepsReused >= 0,
-                "Number of old timesteps to be reused for QN acceleration has to be >= 0!");
+                "Number of previous time windows to be reused for quasi-Newton acceleration has to be larger than or equal to zero. "
+                << "Current number of time windows reused is " << _timestepsReused);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -212,7 +214,9 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
       if (2 * getLSSystemCols() >= getLSSystemRows())
         PRECICE_WARN(
-            "The number of columns in the least squares system exceeded half the number of unknowns at the interface. The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not converge. Maybe the number of allowed columns (maxIterationsUsed) should be limited.");
+            "The number of columns in the least squares system exceeded half the number of unknowns at the interface. "
+            << "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
+            << "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
 
       Eigen::VectorXd deltaR = _residuals;
       deltaR -= _oldResiduals;
