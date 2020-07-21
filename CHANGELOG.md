@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file. For future 
 
 - Added MPI version detection and print it during the CMake configuration.
 - Added a new action to sum up data values, `action:summation`.
+- Added check for only allowing watchpoints on a provided meshes.
+- Added check for the coordinates of configured watchpoints. They have to match the dimensionality of the `<solver-interface>`.
 - Added check to prevent `<use-mesh>` from the same participant.
 - Added control flow checks to C bingings.
 - Added many tests for the communication abstraction.
