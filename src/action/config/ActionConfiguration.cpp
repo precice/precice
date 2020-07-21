@@ -1,13 +1,14 @@
-#include "ActionConfiguration.hpp"
 #include <algorithm>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
+#include "ActionConfiguration.hpp"
 #include "action/ComputeCurvatureAction.hpp"
 #include "action/PythonAction.hpp"
 #include "action/ScaleByAreaAction.hpp"
 #include "action/ScaleByDtAction.hpp"
 #include "action/SummationAction.hpp"
+#include "action/RecorderAction.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -30,6 +31,7 @@ ActionConfiguration::ActionConfiguration(
       NAME_SUMMATION("summation"),
       NAME_COMPUTE_CURVATURE("compute-curvature"),
       NAME_PYTHON("python"),
+      NAME_RECORDER("recorder"),
       TAG_SOURCE_DATA("source-data"),
       TAG_TARGET_DATA("target-data"),
       TAG_CONVERGENCE_TOLERANCE("convergence-tolerance"),
@@ -41,6 +43,10 @@ ActionConfiguration::ActionConfiguration(
       VALUE_ON_EXCHANGE_PRIOR("on-exchange-prior"),
       VALUE_ON_EXCHANGE_POST("on-exchange-post"),
       VALUE_ON_TIME_WINDOW_COMPLETE_POST("on-time-window-complete-post"),
+      WRITE_MAPPING_PRIOR("write-mapping-prior"),
+      WRITE_MAPPING_POST("write-mapping-post"),
+      READ_MAPPING_PRIOR("read-mapping-prior"),
+      READ_MAPPING_POST("read-mapping-post"),
       _meshConfig(meshConfig)
 {
   using namespace xml;
@@ -116,6 +122,11 @@ ActionConfiguration::ActionConfiguration(
     tags.push_back(tag);
   }
   {
+    XMLTag tag(*this, NAME_RECORDER, occ, TAG);
+    tag.setDocumentation("Records action invocations for testing purposes.");
+    tags.push_back(tag);
+  }
+  {
     XMLTag tag(*this, NAME_PYTHON, occ, TAG);
     doc = "Calls Python script to execute action.";
     doc += " See preCICE file \"src/action/PythonAction.py\" for an overview.";
@@ -153,7 +164,8 @@ ActionConfiguration::ActionConfiguration(
                             "Determines when (relative to advancing the coupling scheme) the action is executed.")
                         .setOptions({VALUE_REGULAR_PRIOR, VALUE_REGULAR_POST,
                                      VALUE_ON_EXCHANGE_PRIOR, VALUE_ON_EXCHANGE_POST,
-                                     VALUE_ON_TIME_WINDOW_COMPLETE_POST});
+                                     VALUE_ON_TIME_WINDOW_COMPLETE_POST, WRITE_MAPPING_PRIOR, WRITE_MAPPING_POST,
+                                     READ_MAPPING_PRIOR, READ_MAPPING_POST});
 
   auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
                       .setDocumentation("Determines mesh used in action.");
@@ -275,6 +287,9 @@ void ActionConfiguration::createAction()
   } else if (_configuredAction.type == NAME_SUMMATION) {
     action = action::PtrAction(
         new action::SummationAction(timing, sourceDataIDs, targetDataID, mesh));
+  } else if (_configuredAction.type == NAME_RECORDER) {
+    action = action::PtrAction(
+        new action::RecorderAction(timing, mesh));
   }
 #ifndef PRECICE_NO_PYTHON
   else if (_configuredAction.type == NAME_PYTHON) {
@@ -292,15 +307,31 @@ action::Action::Timing ActionConfiguration::getTiming() const
   PRECICE_TRACE(_configuredAction.timing);
   action::Action::Timing timing;
   if (_configuredAction.timing == VALUE_REGULAR_PRIOR) {
-    timing = action::Action::ALWAYS_PRIOR;
+    timing = action::Action::WRITE_MAPPING_PRIOR;
+    PRECICE_WARN("Regular-prior action timing is deprecated. Regular-prior will now revert to write-mapping-prior which performs "
+                 "the action before a write mapping and before the coupling update.");
   } else if (_configuredAction.timing == VALUE_REGULAR_POST) {
-    timing = action::Action::ALWAYS_POST;
+    timing = action::Action::READ_MAPPING_PRIOR;
+    PRECICE_WARN("Regular-post action timing is deprecated. Regular-post will now revert to read-mapping-prior which performs "
+                 "the action after the coupling update and before a read mapping.");
   } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_PRIOR) {
-    timing = action::Action::ON_EXCHANGE_PRIOR;
+    timing = action::Action::WRITE_MAPPING_POST;
+    PRECICE_WARN("on-exchange-prior action timing is deprecated. on-exchange-prior will now revert to write-mapping-post which performs "
+                 "the action before a write mapping and before the coupling update.");
   } else if (_configuredAction.timing == VALUE_ON_EXCHANGE_POST) {
-    timing = action::Action::ON_EXCHANGE_POST;
+    timing = action::Action::READ_MAPPING_PRIOR;
+    PRECICE_WARN("on-exchange-post action timing is deprecated. on-exchange-post will now revert to read-mapping-prior which performs "
+                 "the action before a write mapping and before the coupling update.");
   } else if (_configuredAction.timing == VALUE_ON_TIME_WINDOW_COMPLETE_POST) {
     timing = action::Action::ON_TIME_WINDOW_COMPLETE_POST;
+  } else if (_configuredAction.timing == WRITE_MAPPING_PRIOR) {
+    timing = action::Action::WRITE_MAPPING_PRIOR;
+  } else if (_configuredAction.timing == WRITE_MAPPING_POST) {
+    timing = action::Action::WRITE_MAPPING_POST;
+  } else if (_configuredAction.timing == READ_MAPPING_PRIOR) {
+    timing = action::Action::READ_MAPPING_PRIOR;
+  } else if (_configuredAction.timing == READ_MAPPING_POST) {
+    timing = action::Action::READ_MAPPING_POST;
   } else {
     PRECICE_ERROR("Unknown action timing \"" << _configuredAction.timing << "\". Valid action timings are "
                                              << "regular-prior, regular-post, on-exchange-prior, on-exchange-post, on-time-window-complete-post");

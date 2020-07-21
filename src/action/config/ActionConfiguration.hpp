@@ -81,6 +81,7 @@ private:
   const std::string NAME_SUMMATION;
   const std::string NAME_COMPUTE_CURVATURE;
   const std::string NAME_PYTHON;
+  const std::string NAME_RECORDER;
 
   const std::string TAG_SOURCE_DATA;
   const std::string TAG_TARGET_DATA;
@@ -100,6 +101,10 @@ private:
   const std::string VALUE_ON_EXCHANGE_PRIOR;
   const std::string VALUE_ON_EXCHANGE_POST;
   const std::string VALUE_ON_TIME_WINDOW_COMPLETE_POST;
+  const std::string WRITE_MAPPING_PRIOR;
+  const std::string WRITE_MAPPING_POST;
+  const std::string READ_MAPPING_PRIOR;
+  const std::string READ_MAPPING_POST;
 
   mesh::PtrMeshConfiguration _meshConfig;
 

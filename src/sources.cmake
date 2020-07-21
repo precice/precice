@@ -43,6 +43,8 @@ target_sources(precice
     src/action/ComputeCurvatureAction.hpp
     src/action/PythonAction.cpp
     src/action/PythonAction.hpp
+    src/action/RecorderAction.cpp
+    src/action/RecorderAction.hpp
     src/action/ScaleByAreaAction.cpp
     src/action/ScaleByAreaAction.hpp
     src/action/ScaleByDtAction.cpp
