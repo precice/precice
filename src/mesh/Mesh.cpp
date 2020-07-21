@@ -1,3 +1,4 @@
+#include "Mesh.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
@@ -9,7 +10,6 @@
 #include <utility>
 #include <vector>
 #include "Edge.hpp"
-#include "Mesh.hpp"
 #include "RTree.hpp"
 #include "Triangle.hpp"
 #include "logging/LogMacros.hpp"
@@ -125,7 +125,7 @@ PtrData &Mesh::createData(
   for (const PtrData data : _data) {
     PRECICE_CHECK(data->getName() != name,
                   "Data \"" << name << "\" cannot be created twice for "
-                            << "mesh \"" << _name << "\". Please rename or remove one of the use-data tags with name \""<< name << "\".");
+                            << "mesh \"" << _name << "\". Please rename or remove one of the use-data tags with name \"" << name << "\".");
   }
   int     id = Data::getDataCount();
   PtrData data(new Data(name, id, dimension));

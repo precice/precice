@@ -1,7 +1,7 @@
+#include "M2NConfiguration.hpp"
 #include <list>
 #include <ostream>
 #include <stdexcept>
-#include "M2NConfiguration.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/MPISinglePortsCommunicationFactory.hpp"

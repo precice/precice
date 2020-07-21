@@ -67,10 +67,10 @@ std::string truncate_wstring_to_string(std::wstring wstr, char fill)
   std::string converted(wstr.length(), '\0');
   // Buffer for the multibyte representation of a wchar
   std::string mb(MB_CUR_MAX, '\0');
-  for(size_t i = 0; i != wstr.length(); ++i) {
-        // Converts a wchar to 1-MB_CUR_MAX chars
-        std::size_t ret = std::wctomb(&mb[0], wstr[i]);
-        converted[i] = (ret == 1) ? mb.front() : fill;
+  for (size_t i = 0; i != wstr.length(); ++i) {
+    // Converts a wchar to 1-MB_CUR_MAX chars
+    std::size_t ret = std::wctomb(&mb[0], wstr[i]);
+    converted[i]    = (ret == 1) ? mb.front() : fill;
   }
   return converted;
 }

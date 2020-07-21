@@ -23,7 +23,7 @@ ParallelMatrixOperations::~ParallelMatrixOperations()
 {
   PRECICE_TRACE();
 
-  if(_needCyclicComm) {
+  if (_needCyclicComm) {
     closeCircularCommunication();
   }
 }
@@ -37,12 +37,12 @@ void ParallelMatrixOperations::establishCircularCommunication()
   com::PtrCommunication cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication("."));
   com::PtrCommunication cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication("."));
 
-  const auto size = utils::MasterSlave::getSize();
-  const auto rank = utils::MasterSlave::getRank();
-  const int prevProc = (rank - 1 + size) % size;
-  const int nextProc = (rank + 1) % size;
+  const auto size     = utils::MasterSlave::getSize();
+  const auto rank     = utils::MasterSlave::getRank();
+  const int  prevProc = (rank - 1 + size) % size;
+  const int  nextProc = (rank + 1) % size;
 
-  std::string prefix = "MVQNCyclicComm";
+  std::string prefix   = "MVQNCyclicComm";
   std::string prevName = prefix + std::to_string(prevProc);
   std::string thisName = prefix + std::to_string(rank);
   std::string nextName = prefix + std::to_string(nextProc);
@@ -60,7 +60,7 @@ void ParallelMatrixOperations::establishCircularCommunication()
     cyclicCommLeft->cleanupEstablishment(prevName, thisName);
   }
 
-  _cyclicCommLeft = std::move(cyclicCommLeft);
+  _cyclicCommLeft  = std::move(cyclicCommLeft);
   _cyclicCommRight = std::move(cyclicCommRight);
 }
 
@@ -81,7 +81,6 @@ void ParallelMatrixOperations::closeCircularCommunication()
   _cyclicCommRight = nullptr;
   _cyclicCommLeft  = nullptr;
 }
-
 
 } // namespace impl
 } // namespace acceleration

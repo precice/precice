@@ -89,7 +89,7 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
       writeTriangle(internalIndices, outFile);
     }
 
-    outFile << "\nCELL_TYPES " << sizeTriangles  << "\n\n";
+    outFile << "\nCELL_TYPES " << sizeTriangles << "\n\n";
     for (size_t i = 0; i < sizeTriangles; i++) {
       outFile << "5\n";
     }

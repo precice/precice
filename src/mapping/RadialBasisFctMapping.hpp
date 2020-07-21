@@ -6,10 +6,10 @@
 #include "impl/BasisFunctions.hpp"
 #include "mesh/Filter.hpp"
 #include "mesh/RTree.hpp"
+#include "mesh/impl/BBUtils.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/EigenHelperFunctions.hpp"
-#include "mesh/impl/BBUtils.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/QR>

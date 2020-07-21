@@ -23,7 +23,6 @@ inline bool isValidPort(int port)
   return (port >= 0) && !utils::isTruncated<unsigned short>(port);
 }
 
-
 /// Exclusive "or" logical operation. Returns true, if either lhs or rhs are true.
 inline bool xOR(bool lhs, bool rhs)
 {

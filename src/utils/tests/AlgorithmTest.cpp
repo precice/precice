@@ -147,9 +147,9 @@ BOOST_AUTO_TEST_CASE(OneElement)
 BOOST_AUTO_TEST_CASE(AlreadySorted)
 {
   PRECICE_TEST(1_rank);
-  std::array<int, 3> input{3,4,5};
-  std::array<int, 3> order{0,1,2};
-  std::array<int, 3> expected{3,4,5};
+  std::array<int, 3> input{3, 4, 5};
+  std::array<int, 3> order{0, 1, 2};
+  std::array<int, 3> expected{3, 4, 5};
 
   auto reordered = utils::reorder_array(order, input);
   BOOST_TEST(reordered == expected);
@@ -158,9 +158,9 @@ BOOST_AUTO_TEST_CASE(AlreadySorted)
 BOOST_AUTO_TEST_CASE(Reverse)
 {
   PRECICE_TEST(1_rank);
-  std::array<int, 3> input{3,4,5};
-  std::array<int, 3> order{2,1,0};
-  std::array<int, 3> expected{5,4,3};
+  std::array<int, 3> input{3, 4, 5};
+  std::array<int, 3> order{2, 1, 0};
+  std::array<int, 3> expected{5, 4, 3};
 
   auto reordered = utils::reorder_array(order, input);
   BOOST_TEST(reordered == expected);
@@ -169,9 +169,9 @@ BOOST_AUTO_TEST_CASE(Reverse)
 BOOST_AUTO_TEST_CASE(Scramble)
 {
   PRECICE_TEST(1_rank);
-  std::array<int, 3> input{3,4,5};
-  std::array<int, 3> order{2,0,1};
-  std::array<int, 3> expected{5,3,4};
+  std::array<int, 3> input{3, 4, 5};
+  std::array<int, 3> order{2, 0, 1};
+  std::array<int, 3> expected{5, 3, 4};
 
   auto reordered = utils::reorder_array(order, input);
   BOOST_TEST(reordered == expected);
@@ -182,9 +182,9 @@ BOOST_AUTO_TEST_CASE(ScramblePointer)
   PRECICE_TEST(1_rank);
   int a = 1, b = 2;
 
-  std::array<int*, 3> input{&a,&b,nullptr};
-  std::array<int, 3> order{2,0,1};
-  std::array<int*, 3> expected{nullptr, &a, &b};
+  std::array<int *, 3> input{&a, &b, nullptr};
+  std::array<int, 3>   order{2, 0, 1};
+  std::array<int *, 3> expected{nullptr, &a, &b};
 
   auto reordered = utils::reorder_array(order, input);
   BOOST_TEST(reordered == expected);

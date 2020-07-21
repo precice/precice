@@ -1,10 +1,10 @@
+#include "xml/ValueParser.hpp"
 #include <boost/algorithm/string/constants.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
-#include "xml/ValueParser.hpp"
 
 namespace precice {
 namespace xml {

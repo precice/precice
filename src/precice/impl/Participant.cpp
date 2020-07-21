@@ -1,10 +1,10 @@
+#include "Participant.hpp"
 #include <algorithm>
 #include <ostream>
 #include <utility>
 #include "DataContext.hpp"
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
-#include "Participant.hpp"
 #include "WatchPoint.hpp"
 #include "action/Action.hpp"
 #include "logging/LogMacros.hpp"
@@ -300,7 +300,7 @@ void Participant::checkDuplicatedData(
   PRECICE_CHECK(_dataContexts[data->getID()] == nullptr,
                 "Participant \"" << _name << "\" can read/write data \""
                                  << data->getName() << "\" only once."
-                << "Please remove any duplicate instances of write-data/read-data nodes.");
+                                 << "Please remove any duplicate instances of write-data/read-data nodes.");
 }
 
 bool Participant::useMaster()

@@ -149,14 +149,14 @@ void AccelerationConfiguration::xmlTagCallback(
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_DATA) {
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
-    auto success = _uniqueDataNames.insert(dataName);
+    auto        success  = _uniqueDataNames.insert(dataName);
     if (not success.second) {
       PRECICE_ERROR("You have provided a subtag "
                     << "<data name=\"" << dataName << "\" ... /> more than once in your <acceleration:.../>. "
                     << "Please remove the duplicated entry.");
     }
-    _meshName            = callingTag.getStringAttributeValue(ATTR_MESH);
-    double scaling       = 1.0;
+    _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
+    double scaling = 1.0;
     if (_config.type == VALUE_IQNILS || _config.type == VALUE_MVQN || _config.type == VALUE_BROYDEN) {
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
     }
@@ -175,7 +175,7 @@ void AccelerationConfiguration::xmlTagCallback(
     if (_config.dataIDs.empty()) {
       std::ostringstream stream;
       stream << "Data with name \"" << dataName << "\" associated to mesh \""
-             << _meshName << "\" not found on configuration of acceleration. Add \"" 
+             << _meshName << "\" not found on configuration of acceleration. Add \""
              << dataName << "\" to the \"<mesh name=" << _meshName << ">\" tag, or change the "
              << "data name in the acceleration scheme.";
       throw std::runtime_error{stream.str()};
@@ -207,7 +207,7 @@ void AccelerationConfiguration::xmlTagCallback(
 
     if (_config.alwaysBuildJacobian)
       PRECICE_ERROR("IMVJ cannot be in restart mode while parameter always-build-jacobian is set to true. "
-      << "Please remove 'always-build-jacobian' from the configuration file or do not run in restart mode.");
+                    << "Please remove 'always-build-jacobian' from the configuration file or do not run in restart mode.");
 
 #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);

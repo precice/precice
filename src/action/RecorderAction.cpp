@@ -1,6 +1,6 @@
+#include "action/RecorderAction.hpp"
 #include <vector>
 #include "action/Action.hpp"
-#include "action/RecorderAction.hpp"
 #include "mesh/SharedPointer.hpp"
 
 namespace precice {
@@ -20,7 +20,6 @@ void RecorderAction::performAction(
   records.push_back(Record{
       getTiming(), time, dt, computedPartFullDt, fullDt});
 }
-
 
 std::vector<RecorderAction::Record> RecorderAction::records{};
 

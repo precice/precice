@@ -39,7 +39,7 @@ inline Vertex *sharedVertex(Edge &a, Edge &b)
  *
  * @returns the distance between both vertices of e 
  */
-inline double edgeLength(const Edge& e)
+inline double edgeLength(const Edge &e)
 {
   return (e.vertex(0).getCoords() - e.vertex(1).getCoords()).norm();
 }
@@ -87,8 +87,8 @@ Chain<n> asChain(std::array<mesh::Edge *, n> edges)
     }
   }
   // the last edge just needs to be checked
-  if (!edges[n-1]->connectedTo(*edges[n-2]) ||
-      !edges[n-1]->connectedTo(*edges[0])) {
+  if (!edges[n - 1]->connectedTo(*edges[n - 2]) ||
+      !edges[n - 1]->connectedTo(*edges[0])) {
     return chain;
   }
   chain.edges = edges;
@@ -98,7 +98,7 @@ Chain<n> asChain(std::array<mesh::Edge *, n> edges)
     chain.vertices[i] = sharedVertex(*edges[i], *edges[i + 1]);
   }
   chain.vertices[n - 1] = sharedVertex(*edges[0], *edges[n - 1]);
-  chain.connected = true;
+  chain.connected       = true;
   return chain;
 }
 

@@ -57,7 +57,7 @@ BaseQNAcceleration::BaseQNAcceleration(
                     << "scheme has to be larger than zero. Current maximum reused iterations is: " << _maxIterationsUsed);
   PRECICE_CHECK(_timestepsReused >= 0,
                 "Number of previous time windows to be reused for quasi-Newton acceleration has to be larger than or equal to zero. "
-                << "Current number of time windows reused is " << _timestepsReused);
+                    << "Current number of time windows reused is " << _timestepsReused);
 }
 
 /** ---------------------------------------------------------------------------------------------

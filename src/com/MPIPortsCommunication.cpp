@@ -73,11 +73,11 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
     }
 
     PRECICE_ASSERT(requesterCommunicatorSize > 0,
-                  "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
+                   "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
     PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
-                  "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize<< " but should be " << peerCount);
+                   "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize << " but should be " << peerCount);
     PRECICE_ASSERT(_communicators.count(requesterRank) == 0,
-                  "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
+                   "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
 
     _communicators.emplace(requesterRank, communicator);
 

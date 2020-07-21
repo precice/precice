@@ -1,3 +1,4 @@
+#include "xml/XMLTag.hpp"
 #include <Eigen/Core>
 #include <ostream>
 #include <utility>
@@ -5,7 +6,6 @@
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"
-#include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace xml {

@@ -56,11 +56,11 @@ void append(
 }
 
 Eigen::VectorXd reduceVector(
-    const Eigen::VectorXd &fullVector,
-    const std::vector<bool>& deadAxis)
+    const Eigen::VectorXd &  fullVector,
+    const std::vector<bool> &deadAxis)
 {
   int deadDimensions = 0;
-  int dimensions = deadAxis.size();
+  int dimensions     = deadAxis.size();
   for (int d = 0; d < dimensions; d++) {
     if (deadAxis[d])
       deadDimensions += 1;
@@ -76,7 +76,6 @@ Eigen::VectorXd reduceVector(
   }
   return reducedVector;
 }
-
 
 } // namespace utils
 } // namespace precice

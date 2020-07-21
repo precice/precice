@@ -1,3 +1,4 @@
+#include "SolverInterfaceImpl.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
@@ -9,7 +10,6 @@
 #include <ostream>
 #include <tuple>
 #include <utility>
-#include "SolverInterfaceImpl.hpp"
 #include "action/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
@@ -294,10 +294,9 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
   PRECICE_ASSERT(_couplingScheme->isInitialized());
 
-  double                           dt = 0.0;
+  double dt = 0.0;
 
   dt = _couplingScheme->getNextTimestepMaxLength();
-
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
@@ -1067,7 +1066,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size() / context.fromData->getDimensions(), "Value index out of range. Please check that the size of "
-                  << context.fromData->getName() << " is correct.");
+                                                                                                                 << context.fromData->getName() << " is correct.");
     int offsetInternal = valueIndex * _dimensions;
     int offset         = i * _dimensions;
     for (int dim = 0; dim < _dimensions; dim++) {
@@ -1096,7 +1095,7 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_ASSERT(context.toData.get() != nullptr);
   auto &values = context.fromData->values();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size() / context.fromData->getDimensions(), "Value index out of range. Please check that the valueIndex for "
-                  << context.fromData->getName() << " is in the correct range.");
+                                                                                                       << context.fromData->getName() << " is in the correct range.");
   int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
     values[offset + dim] = value[dim];
@@ -1127,7 +1126,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size() / context.fromData->getDimensions(), "Value index out of range. Please check that the size of "
-                  << context.fromData->getName() << " is correct.");
+                                                                                                                 << context.fromData->getName() << " is correct.");
     PRECICE_ASSERT(i < valuesInternal.size(), i, valuesInternal.size());
     valuesInternal[valueIndex] = values[i];
   }
@@ -1144,7 +1143,8 @@ void SolverInterfaceImpl::writeScalarData(
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
   DataContext &context = _accessor->dataContext(fromDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data. Value index must be >= 0. "
-                "Please check the value index for " << context.fromData->getName());
+                                                                           "Please check the value index for "
+                                                          << context.fromData->getName());
   PRECICE_CHECK(context.fromData->getDimensions() == 1,
                 "You cannot call writeScalarData on the vector data type \"" << context.fromData->getName()
                                                                              << "\". Use writeVectorData or change the data type for \""
@@ -1152,7 +1152,7 @@ void SolverInterfaceImpl::writeScalarData(
   PRECICE_ASSERT(context.toData);
   auto &values = context.fromData->values();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size() / context.fromData->getDimensions(), "Value index out of range. Please check that the valueIndex for "
-                  << context.fromData->getName() << " is in the correct range.");
+                                                                                                       << context.fromData->getName() << " is in the correct range.");
   values[valueIndex] = value;
 }
 
@@ -1180,7 +1180,7 @@ void SolverInterfaceImpl::readBlockVectorData(
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size() / context.fromData->getDimensions(), "Value index out of range. Please check that the size of "
-                  << context.fromData->getName() << " is correct.");
+                                                                                                                 << context.fromData->getName() << " is correct.");
     int offsetInternal = valueIndex * _dimensions;
     int offset         = i * _dimensions;
     for (int dim = 0; dim < _dimensions; dim++) {
@@ -1202,7 +1202,8 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_REQUIRE_DATA_READ(toDataID);
   DataContext &context = _accessor->dataContext(toDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " ) when reading vector data. Value index must be >= 0. "
-                "Please check the value index for " << context.fromData->getName());
+                                                                            "Please check the value index for "
+                                                           << context.fromData->getName());
   PRECICE_CHECK(context.toData->getDimensions() == _dimensions,
                 "You cannot call readVectorData on the scalar data type \"" << context.toData->getName()
                                                                             << "\". Use readScalarData or change the data type for \""
@@ -1210,7 +1211,7 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_ASSERT(context.fromData);
   auto &values = context.toData->values();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size() / context.fromData->getDimensions(), "Value index out of range. Please check that the valueIndex for "
-                  << context.fromData->getName() << " is in the correct range.");
+                                                                                                       << context.fromData->getName() << " is in the correct range.");
   int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
     value[dim] = values[offset + dim];
@@ -1242,7 +1243,7 @@ void SolverInterfaceImpl::readBlockScalarData(
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size(), "Value index out of range. Please check that the size of "
-                  << context.fromData->getName() << " is correct.");
+                                                                             << context.fromData->getName() << " is correct.");
     values[i] = valuesInternal[valueIndex];
   }
 }
@@ -1258,7 +1259,8 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_REQUIRE_DATA_READ(toDataID);
   DataContext &context = _accessor->dataContext(toDataID);
   PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " ) when reading scalar data. Value index must be >= 0. "
-                "Please check the value index for " << context.fromData->getName());
+                                                                            "Please check the value index for "
+                                                           << context.fromData->getName());
   PRECICE_CHECK(context.toData->getDimensions() == 1,
                 "You cannot call readScalarData on the vector data type \"" << context.toData->getName()
                                                                             << "\". Use readVectorData or change the data type for \""
@@ -1266,7 +1268,7 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_ASSERT(context.fromData);
   auto &values = context.toData->values();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size(), "Value index out of range. Please check that the valueIndex for "
-                  << context.fromData->getName() << " is in the correct range.");
+                                                                   << context.fromData->getName() << " is in the correct range.");
   value = values[valueIndex];
   PRECICE_DEBUG("Read value = " << value);
 }

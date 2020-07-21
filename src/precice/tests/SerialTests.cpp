@@ -6,12 +6,13 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include "action/RecorderAction.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/constants.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Utils.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/MeshContext.hpp"
@@ -20,7 +21,6 @@
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "action/RecorderAction.hpp"
 
 using namespace precice;
 using precice::testing::TestContext;
@@ -1652,7 +1652,7 @@ void testSummationAction(const std::string configFile, TestContext const &contex
     cplInterface.finalize();
   }
 }
-    
+
 /**
  * @brief Test for summation action
  *
@@ -1662,7 +1662,7 @@ BOOST_AUTO_TEST_CASE(testSummationActionTwoSources)
   PRECICE_TEST("SolverTarget"_on(1_rank), "SolverSourceOne"_on(1_rank), "SolverSourceTwo"_on(1_rank));
   const std::string configFile = _pathToTests + "summation-action.xml";
   testSummationAction(configFile, context);
- }
+}
 
 void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
 {
@@ -1700,19 +1700,17 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, const 
       cplInterface.setMeshQuadWithEdges(meshOneID, idA, idB, idC, idD);
     }
 
-    auto& mesh = testing::WhiteboxAccessor::impl(cplInterface).mesh("MeshOne");
+    auto &mesh = testing::WhiteboxAccessor::impl(cplInterface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
     BOOST_REQUIRE(mesh.edges().size() == 5);
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
-
-    for (auto& edge: mesh.edges()) {
+    for (auto &edge : mesh.edges()) {
       BOOST_TEST(mesh::edgeLength(edge) < 0.6);
     }
 
     cplInterface.finalize();
   }
-
 }
 
 void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
@@ -1751,19 +1749,17 @@ void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, const 
       cplInterface.setMeshQuadWithEdges(meshOneID, idA, idB, idD, idC);
     }
 
-    auto& mesh = testing::WhiteboxAccessor::impl(cplInterface).mesh("MeshOne");
+    auto &mesh = testing::WhiteboxAccessor::impl(cplInterface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
     BOOST_REQUIRE(mesh.edges().size() == 5);
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
-
-    for (auto& edge: mesh.edges()) {
+    for (auto &edge : mesh.edges()) {
       BOOST_TEST(mesh::edgeLength(edge) < 0.6);
     }
 
     cplInterface.finalize();
   }
-
 }
 
 void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)
@@ -1775,7 +1771,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
   // MeshOne
   Vector3d coordOneA{0.0, 0.0, z};
   Vector3d coordOneB{1.0, 0.0, z};
-  Vector3d coordOneC{0.999999999, 1.0, z};          // Forces diagonal 0-2 to be shorter.
+  Vector3d coordOneC{0.999999999, 1.0, z}; // Forces diagonal 0-2 to be shorter.
   Vector3d coordOneD{0.0, 1.0, z};
   double   valOneA = 1.0;
   double   valOneB = 3.0;
@@ -1816,7 +1812,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
       cplInterface.setMeshQuadWithEdges(meshOneID, idA, idB, idC, idD);
     }
 
-    auto& mesh = testing::WhiteboxAccessor::impl(cplInterface).mesh("MeshOne");
+    auto &mesh = testing::WhiteboxAccessor::impl(cplInterface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 4);
     BOOST_REQUIRE(mesh.edges().size() == 5);
     BOOST_REQUIRE(mesh.triangles().size() == 2);
@@ -1867,7 +1863,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
     BOOST_TEST(!cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
     cplInterface.finalize();
   }
-} 
+}
 
 /**
  * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges from a quad to a triangle
@@ -1940,7 +1936,6 @@ BOOST_AUTO_TEST_CASE(testQuadMappingDiagonalNearestProjectionImplicitEdgesWideKi
   const std::string configFile            = _pathToTests + "mapping-nearest-projection.xml";
   testQuadMappingNearestProjectionWideKite(defineEdgesExplicitly, configFile, context);
 }
-
 
 /**
  * @brief method to test whether certain convergence measures give the correct number of iterations
@@ -2028,27 +2023,27 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
 
   SolverInterface couplingInterface(context.name, configFile, 0, 1);
 
-  int dimensions = couplingInterface.getDimensions();
+  int         dimensions = couplingInterface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
-  double writeValue;
+  double      writeValue;
 
   if (context.isNamed("SolverOne")) {
-    meshName = "MeshOne";
+    meshName      = "MeshOne";
     writeDataName = "Forces";
-    readDataName = "Velocities";
-    writeValue = 1;
+    readDataName  = "Velocities";
+    writeValue    = 1;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshName = "MeshTwo";
+    meshName      = "MeshTwo";
     writeDataName = "Velocities";
-    readDataName = "Forces";
-    writeValue = 2;
+    readDataName  = "Forces";
+    writeValue    = 2;
   }
-  int meshID = couplingInterface.getMeshID(meshName);
-  int writeDataID     = couplingInterface.getDataID(writeDataName, meshID);
-  int readDataID     = couplingInterface.getDataID(readDataName, meshID);
+  int                 meshID      = couplingInterface.getMeshID(meshName);
+  int                 writeDataID = couplingInterface.getDataID(writeDataName, meshID);
+  int                 readDataID  = couplingInterface.getDataID(readDataName, meshID);
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = couplingInterface.setMeshVertex(meshID, vertex.data());
 
@@ -2067,9 +2062,9 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
   action::RecorderAction::reset();
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
-  const std::string& cowid = actionWriteInitialData();
+  const std::string & cowid = actionWriteInitialData();
 
-  if(couplingInterface.isActionRequired(cowid)){
+  if (couplingInterface.isActionRequired(cowid)) {
     BOOST_TEST(context.isNamed("SolverTwo"));
     couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
     couplingInterface.markActionFulfilled(cowid);
@@ -2098,14 +2093,14 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
     dt = couplingInterface.advance(dt);
     BOOST_TEST(couplingInterface.isTimeWindowComplete());
     iteration++;
-    if(context.isNamed("SolverOne") || iteration < 10) {
+    if (context.isNamed("SolverOne") || iteration < 10) {
       BOOST_TEST(action::RecorderAction::records.size() == 5);
       BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_PRIOR);
       BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::WRITE_MAPPING_POST);
       BOOST_TEST(action::RecorderAction::records.at(2).timing == action::Action::READ_MAPPING_PRIOR);
       BOOST_TEST(action::RecorderAction::records.at(3).timing == action::Action::READ_MAPPING_POST);
       BOOST_TEST(action::RecorderAction::records.at(4).timing == action::Action::ON_TIME_WINDOW_COMPLETE_POST);
-    } else {  // SolverTwo only writes in very last iteration, does not read.
+    } else { // SolverTwo only writes in very last iteration, does not read.
       BOOST_TEST(action::RecorderAction::records.size() == 3);
       BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_PRIOR);
       BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::WRITE_MAPPING_POST);
@@ -2128,29 +2123,29 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
 
   SolverInterface couplingInterface(context.name, configFile, 0, 1);
 
-  int dimensions = couplingInterface.getDimensions();
+  int         dimensions = couplingInterface.getDimensions();
   std::string meshName;
   std::string writeDataName;
   std::string readDataName;
   std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
-  double writeValue;
+  double      writeValue;
 
   if (context.isNamed("SolverOne")) {
-    meshName = "MeshOne";
+    meshName      = "MeshOne";
     writeDataName = "Forces";
-    readDataName = "Velocities";
-    writeValue = 1;
+    readDataName  = "Velocities";
+    writeValue    = 1;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshName = "MeshTwo";
+    meshName      = "MeshTwo";
     writeDataName = "Velocities";
-    readDataName = "Forces";
-    writeValue = 2;
+    readDataName  = "Forces";
+    writeValue    = 2;
   }
-  int meshID = couplingInterface.getMeshID(meshName);
-  int writeDataID     = couplingInterface.getDataID(writeDataName, meshID);
-  int readDataID     = couplingInterface.getDataID(readDataName, meshID);
+  int                 meshID      = couplingInterface.getMeshID(meshName);
+  int                 writeDataID = couplingInterface.getDataID(writeDataName, meshID);
+  int                 readDataID  = couplingInterface.getDataID(readDataName, meshID);
   std::vector<double> vertex(dimensions, 0);
   int                 vertexID = couplingInterface.setMeshVertex(meshID, vertex.data());
 
@@ -2169,9 +2164,9 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
   action::RecorderAction::reset();
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
-  const std::string& cowid = actionWriteInitialData();
+  const std::string & cowid = actionWriteInitialData();
 
-  if(couplingInterface.isActionRequired(cowid)){
+  if (couplingInterface.isActionRequired(cowid)) {
     BOOST_TEST(context.isNamed("SolverTwo"));
     couplingInterface.writeVectorData(writeDataID, vertexID, writeData.data());
     couplingInterface.markActionFulfilled(cowid);
@@ -2204,11 +2199,11 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
     if (couplingInterface.isActionRequired(readIterCheckpoint)) {
       couplingInterface.markActionFulfilled(readIterCheckpoint);
     }
-    if(couplingInterface.isTimeWindowComplete()) {
+    if (couplingInterface.isTimeWindowComplete()) {
       iteration++;
     }
-    if(context.isNamed("SolverOne") || iteration < 10) {
-      if(couplingInterface.isTimeWindowComplete()) {
+    if (context.isNamed("SolverOne") || iteration < 10) {
+      if (couplingInterface.isTimeWindowComplete()) {
         BOOST_TEST(action::RecorderAction::records.size() == 5);
         BOOST_TEST(action::RecorderAction::records.at(4).timing == action::Action::ON_TIME_WINDOW_COMPLETE_POST);
       } else {
@@ -2218,8 +2213,8 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
       BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::WRITE_MAPPING_POST);
       BOOST_TEST(action::RecorderAction::records.at(2).timing == action::Action::READ_MAPPING_PRIOR);
       BOOST_TEST(action::RecorderAction::records.at(3).timing == action::Action::READ_MAPPING_POST);
-    } else {  // SolverTwo only writes in very last iteration, does not read.
-      if(couplingInterface.isTimeWindowComplete()) {
+    } else { // SolverTwo only writes in very last iteration, does not read.
+      if (couplingInterface.isTimeWindowComplete()) {
         BOOST_TEST(action::RecorderAction::records.size() == 3);
         BOOST_TEST(action::RecorderAction::records.at(2).timing == action::Action::ON_TIME_WINDOW_COMPLETE_POST);
       } else {
@@ -2227,7 +2222,6 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
       }
       BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_PRIOR);
       BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::WRITE_MAPPING_POST);
-
     }
     action::RecorderAction::reset();
   }

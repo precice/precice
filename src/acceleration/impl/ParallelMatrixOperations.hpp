@@ -25,7 +25,7 @@ public:
   ~ParallelMatrixOperations();
 
   /// Initializes the acceleration.
-  void initialize(bool                  needcyclicComm);
+  void initialize(bool needcyclicComm);
 
   template <typename Derived1, typename Derived2>
   void multiply(
@@ -328,7 +328,6 @@ private:
    * @postcondition _cyclicCommLeft, _cyclicCommRight are disconnected and set to nullptr
    */
   void closeCircularCommunication();
-
 };
 
 } // namespace impl

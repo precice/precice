@@ -95,7 +95,7 @@ private:
 
   impl::PtrPreconditioner _preconditioner;
 
-  std::set<std::string> _uniqueDataNames;  
+  std::set<std::string> _uniqueDataNames;
 
   struct ConfigurationData {
     std::vector<int>      dataIDs;

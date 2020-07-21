@@ -1,9 +1,9 @@
+#include "SolverInterfaceConfiguration.hpp"
 #include <map>
 #include <memory>
 #include <ostream>
 #include <vector>
 #include "ParticipantConfiguration.hpp"
-#include "SolverInterfaceConfiguration.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
@@ -77,7 +77,7 @@ void SolverInterfaceConfiguration::xmlEndTagCallback(
             const impl::MeshContext *meshContext = participant->usedMeshContextByName(neededMesh);
             PRECICE_CHECK(meshContext != nullptr,
                           "Participant \"" << neededMeshes.first << "\" needs to use the mesh \"" << neededMesh << "\" to be able to use it in the coupling scheme. "
-                          << "Please either add a use-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.");
+                                           << "Please either add a use-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.");
           }
           participantFound = true;
           break;

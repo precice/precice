@@ -166,8 +166,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
   } else {
     try {
       readValueSpecific(position->second, _value);
-    }
-    catch(const std::exception& e) {
+    } catch (const std::exception &e) {
       PRECICE_ERROR(e.what());
     }
     if (_hasValidation) {

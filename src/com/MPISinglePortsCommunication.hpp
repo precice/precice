@@ -1,7 +1,6 @@
 #pragma once
 #ifndef PRECICE_NO_MPI
 
-#include <mpi.h>
 #include <map>
 #include <mpi.h>
 #include <set>

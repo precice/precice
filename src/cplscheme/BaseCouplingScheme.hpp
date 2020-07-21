@@ -596,7 +596,7 @@ private:
    */
   virtual void assignDataToConvergenceMeasure(
       ConvergenceMeasureContext *convMeasure,
-      int                      dataID) = 0;
+      int                        dataID) = 0;
 
   /**
    * @brief used for storing send/receive data at end of acceleration, if not converged.

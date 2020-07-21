@@ -319,8 +319,8 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
     Edge &  e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
     Edge &  e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
     Edge &  e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
-    mesh.createEdge(v1, v3); // LINESTRING (1 0 0, 1 0 1)
-    mesh.createEdge(v3, v2); // LINESTRING (1 0 1, 0 0 1)
+    mesh.createEdge(v1, v3);              // LINESTRING (1 0 0, 1 0 1)
+    mesh.createEdge(v3, v2);              // LINESTRING (1 0 1, 0 0 1)
     mesh.createTriangle(e0, e1, e2);
     mesh.computeState();
   }
@@ -339,8 +339,8 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
   Edge &  e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
   Edge &  e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
   Edge &  e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
-  mesh.createEdge(v1, v3); // LINESTRING (1 0 0, 1 0 1)
-  mesh.createEdge(v3, v2); // LINESTRING (1 0 1, 0 0 1)
+  mesh.createEdge(v1, v3);              // LINESTRING (1 0 0, 1 0 1)
+  mesh.createEdge(v3, v2);              // LINESTRING (1 0 1, 0 0 1)
   mesh.createTriangle(e0, e1, e2);
   mesh.computeState();
   std::stringstream sstream;
@@ -478,7 +478,6 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
   BOOST_TEST(mesh.vertices().size() == 2);
   mesh.allocateDataValues();
   BOOST_TEST(values.size() == 2);
-
 }
 
 BOOST_AUTO_TEST_SUITE(Utils)
@@ -518,7 +517,7 @@ BOOST_AUTO_TEST_CASE(AsChain)
   BOOST_TEST(chain.edges[0] == &e0);
   BOOST_TEST(chain.edges[1] == &e2);
   BOOST_TEST(chain.edges[2] == &e1);
-  BOOST_TEST(chain.edges[3] == &e3); 
+  BOOST_TEST(chain.edges[3] == &e3);
 
   BOOST_TEST(chain.vertices[0] == &v1);
   BOOST_TEST(chain.vertices[1] == &v3);
@@ -576,7 +575,7 @@ BOOST_AUTO_TEST_CASE(EdgeLength)
   coords1 << 0.0, 1.0, 0.0;
   Vertex v0{coords0, 0};
   Vertex v1{coords1, 1};
-  Edge e(v0, v1, 0);
+  Edge   e(v0, v1, 0);
   BOOST_TEST(edgeLength(e) == std::sqrt(2));
 }
 
@@ -600,7 +599,7 @@ BOOST_AUTO_TEST_CASE(VertexPtrsFor)
   mesh.createVertex(coords3);
   BOOST_TEST(mesh.vertices().size() == 4);
 
-  std::array<int, 3> ids{v0.getID(), v2.getID(), v1.getID()};
+  std::array<int, 3>      ids{v0.getID(), v2.getID(), v1.getID()};
   std::array<Vertex *, 3> expected{&v0, &v2, &v1};
 
   auto result = vertexPtrsFor(mesh, ids);
@@ -631,7 +630,7 @@ BOOST_AUTO_TEST_CASE(CoordsForIDs)
   mesh.createVertex(coords3);
   BOOST_TEST(mesh.vertices().size() == 4);
 
-  std::array<int, 3> ids{v0.getID(), v2.getID(), v1.getID()};
+  std::array<int, 3>             ids{v0.getID(), v2.getID(), v1.getID()};
   std::array<Eigen::VectorXd, 3> expected{coords0, coords2, coords1};
 
   auto result = coordsFor(mesh, ids);
@@ -659,7 +658,7 @@ BOOST_AUTO_TEST_CASE(CoordsForPtrs)
   mesh.createVertex(coords3);
   BOOST_TEST(mesh.vertices().size() == 4);
 
-  std::array<Vertex *, 3> ptrs{&v0, &v2, &v1};
+  std::array<Vertex *, 3>        ptrs{&v0, &v2, &v1};
   std::array<Eigen::VectorXd, 3> expected{coords0, coords2, coords1};
 
   auto result = coordsFor(ptrs);

@@ -1,14 +1,14 @@
+#include "ActionConfiguration.hpp"
 #include <algorithm>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
-#include "ActionConfiguration.hpp"
 #include "action/ComputeCurvatureAction.hpp"
 #include "action/PythonAction.hpp"
+#include "action/RecorderAction.hpp"
 #include "action/ScaleByAreaAction.hpp"
 #include "action/ScaleByDtAction.hpp"
 #include "action/SummationAction.hpp"
-#include "action/RecorderAction.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"

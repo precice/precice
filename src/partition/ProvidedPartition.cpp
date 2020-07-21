@@ -1,3 +1,4 @@
+#include "partition/ProvidedPartition.hpp"
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -15,7 +16,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
-#include "partition/ProvidedPartition.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"

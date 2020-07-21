@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <array>
 #include "math/differences.hpp"
 #include "utils/assertion.hpp"
-#include <array>
 
 namespace precice {
 namespace math {
@@ -261,7 +261,7 @@ int containedInHyperrectangle(
 }
 
 struct ConvexityResult {
-  bool convex;
+  bool               convex;
   std::array<int, 4> vertexOrder;
 };
 

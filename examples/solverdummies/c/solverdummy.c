@@ -13,13 +13,12 @@ int main(int argc, char **argv)
   double *vertices;
   double *readData;
   double *writeData;
-  int     meshID   = -1;
-  int     dataID   = -1;
-  int    *vertexIDs;
+  int     meshID = -1;
+  int     dataID = -1;
+  int *   vertexIDs;
   int     numberOfVertices = 3;
-  int     writeDataID = -1;
-  int     readDataID = -1;
-
+  int     writeDataID      = -1;
+  int     readDataID       = -1;
 
   if (argc != 4) {
     printf("Usage: ./solverdummy configFile solverName meshName\n\n");
@@ -44,13 +43,13 @@ int main(int argc, char **argv)
 
   meshID = precicec_getMeshID(meshName);
 
-  if (strcmp(participantName,"SolverOne") == 0){
-    writeDataID = precicec_getDataID("dataOne",meshID);
-    readDataID = precicec_getDataID("dataTwo",meshID);
+  if (strcmp(participantName, "SolverOne") == 0) {
+    writeDataID = precicec_getDataID("dataOne", meshID);
+    readDataID  = precicec_getDataID("dataTwo", meshID);
   }
-  if (strcmp(participantName,"SolverTwo") == 0){
-    writeDataID = precicec_getDataID("dataTwo",meshID);
-    readDataID = precicec_getDataID("dataOne",meshID);
+  if (strcmp(participantName, "SolverTwo") == 0) {
+    writeDataID = precicec_getDataID("dataTwo", meshID);
+    readDataID  = precicec_getDataID("dataOne", meshID);
   }
 
   dimensions = precicec_getDimensions();
@@ -59,11 +58,11 @@ int main(int argc, char **argv)
   writeData  = malloc(numberOfVertices * dimensions * sizeof(double));
   vertexIDs  = malloc(numberOfVertices * sizeof(int));
 
-  for (int i = 0; i < numberOfVertices; i++){
+  for (int i = 0; i < numberOfVertices; i++) {
     for (int j = 0; j < dimensions; j++) {
-      vertices[j + numberOfVertices*i] = i;
-      readData[j + numberOfVertices*i] = i;
-      writeData[j + numberOfVertices*i] = i;
+      vertices[j + numberOfVertices * i]  = i;
+      readData[j + numberOfVertices * i]  = i;
+      writeData[j + numberOfVertices * i] = i;
     }
   }
 
@@ -80,17 +79,15 @@ int main(int argc, char **argv)
       precicec_markActionFulfilled(writeItCheckp);
     }
 
-    if(precicec_isReadDataAvailable)
-    {
+    if (precicec_isReadDataAvailable) {
       precicec_readBlockVectorData(readDataID, numberOfVertices, vertexIDs, readData);
     }
 
-    for (int i = 0; i < numberOfVertices*dimensions; i++){
+    for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData[i] = readData[i] + 1;
     }
 
-    if(precicec_isWriteDataRequired(dt))
-    {
+    if (precicec_isWriteDataRequired(dt)) {
       precicec_writeBlockVectorData(writeDataID, numberOfVertices, vertexIDs, writeData);
     }
 
@@ -99,11 +96,9 @@ int main(int argc, char **argv)
     if (precicec_isActionRequired(readItCheckp)) {
       printf("DUMMY: Reading iteration checkpoint \n");
       precicec_markActionFulfilled(readItCheckp);
-    }
-    else{
+    } else {
       printf("DUMMY: Advancing in time \n");
     }
-
   }
 
   precicec_finalize();
