@@ -4,20 +4,57 @@ All notable changes to this project will be documented in this file. For future 
 
 ## 2.1.0
 
-- Refactor `cplscheme::BaseCouplingScheme` and derived classes. Introduce `cplscheme::BiCouplingScheme`.
-- Refactor `mesh::BoundingBox` into seperate class
-- Removed deprecated and untested Manifold Mapping. API functions `hasToEvaluateSurrogateModel` and `hasToEvaluateFineModel` remain as nop stubs.
-- Change the CMake FindNumPy module to only consider information based on the selected python interpreter.
-- Implemented a new action to sum up data values, `action:summation`.
+- Added MPI version detection and print it during the CMake configuration.
+- Added a new action to sum up data values, `action:summation`.
+- Added check for only allowing watchpoints on a provided meshes.
+- Added check for the coordinates of configured watchpoints. They have to match the dimensionality of the `<solver-interface>`.
+- Added check to prevent `<use-mesh>` from the same participant.
+- Added control flow checks to C bingings.
 - Added many tests for the communication abstraction.
-- Refactor `com::Communication` handling of rank adjustments.
+- Added option to make a convergence measure strict. It has to converge then and leads to a premature simulation stop if not. 
+- Added parallel support for Eigen RBF mapping.
+- Added platform-specific defaults of the loopback interface name to the `network` attribute of socket connections.
+- Added reset of written data 0 in `advance()` to simplify detection of missing write data calls.
+- Added several checks to prevent that false API usage leads to complicated quasi-Newton assertions.
+- Added support for planar quads based on triangulation, needed, for instance for nearest-projection mapping. Quads will be split along the shortest diagonal to minimize the mapping error. Note that this triangulation will be visible in configured mesh exports.
+- Added tests which build solverdummies and tests which run them in various configurations.
+- Added tooling to prevent changelog conflicts.
+- Added warning when configuring m2n as mpi when preCICE is compiled with OpenMPI. This is known to cause connection issues.
+- Allowed multiple convergence measures of same coupling data.
+- Changed `com::MPIDirectcommunication` to work only for Master-Slave connections.
 - Changed test setup to a simpler and consistent version using the new `testing::TestContext`. Tests now require to run on 4 MPI ranks. They will still compile but not run when `MPICommunication=OFF`.
-- Added tests which build solverdummies and test which run them in various configurations.
-- Enable RBF-based tests in partiton unit-tests and serial integration tests
-- Split multi-setup integration tests into multiple single-setup tests.
-- Change `com::MPIDirectcommunication` to work only for Master-Slave connections.
+- Changed the CMake FindNumPy module to only consider information based on the selected python interpreter.
+- Changed the minimum required PETSc version to 3.12, which delivers consistent results across platforms.
+- Disabled tests based on MPIPorts and MPISinglePorts when using Open MPI.
+- Enabled RBF-based tests in partiton unit-tests and serial integration tests.
+- Extended iteration logging by total and dropped quasi-Newton columns. 
+- Extended title headers of convergence and iteration files by measure abbreviation.
+- Fixed MPIPorts and MPISinglePorts not always closing ports.
+- Fixed SocketCommunication setting up a port and writing connection info even if there are no requesters.
+- Fixed compatibility with Boost 1.73.0.
+- Fixed memory leaks and hanging communication when not calling `precice::SolverInterface::finalize()`.
+- Fixed memory leaks in C bindings.
+- Fixed memory leaks in Fortran bindings in case of missing call to`X_finalize()`.
+- Fixed memory leaks when using petrbf mappings in some conditions.
+- Fixed occasional errors when using PETRBF with a preCICE-managed MPI Communicator.
+- Fixed over-subscription error when executing the tests with recent versions of Open MPI on less than 4 physical cores.
+- Fixed silent truncation of numeric values in the config with C locales using decimal comma. The parser now always uses the locale `en_US.UTF-8`.
+- Fixed target `test_install` requiring CMake version 1.13.
+- Fixed value semantics of `precice::SolverInterface`.
+- Improved **all** error messages.
+- Improved readability of relative convergence measure INFO logs.
+- Refactored `com::Communication` handling of rank adjustments.
+- Refactored `cplscheme::BaseCouplingScheme` and derived classes. Introduce `cplscheme::BiCouplingScheme`.
+- Refactored `mesh::BoundingBox` into seperate class.
 - Removed `m2n:mpi-single`, which never worked outside tests.
-- Fix target `test_install` requiring CMake version 1.13.
+- Removed convergence file logging for min-iterations convergence measure.
+- Removed deprecated and untested Manifold Mapping. API functions `hasToEvaluateSurrogateModel` and `hasToEvaluateFineModel` remain as nop stubs.
+- Removed logging of average convergence rates.
+- Removed support for `CPP` and `CPPFLAGS` environment variables.
+- Renamed a few functions of the Fortran bindings for consistency with the C++ API. This does not break backwards compatibility, but the previous functions are now considered deprecated and will be removed in v3.
+- Removes the summary of event timing when preCICE finalizes and writes it to the file `precice-PARTICIPANT-events-summary.log` instead.
+- Restricted the configuration of WatchPoints to provided meshes.
+- Split multi-setup integration tests into multiple single-setup tests.
 
 ## 2.0.2
 

@@ -299,8 +299,7 @@ void Participant::checkDuplicatedData(
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size(), data->getID(), _dataContexts.size());
   PRECICE_CHECK(_dataContexts[data->getID()] == nullptr,
                 "Participant \"" << _name << "\" can read/write data \""
-                                 << data->getName() << "\" only once."
-                                 << "Please remove any duplicate instances of write-data/read-data nodes.");
+                                 << data->getName() << "\" only once. Please remove any duplicate instances of write-data/read-data nodes.");
 }
 
 bool Participant::useMaster()
