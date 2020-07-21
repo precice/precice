@@ -15,7 +15,7 @@ class Mesh;
 namespace precice {
 namespace io {
 
-/// Writes polygonal, triangle, or quadrangle meshes to vtk files.
+/// Writes polygonal, or triangle meshes to vtk files.
 class ExportVTK : public Export {
 public:
   explicit ExportVTK(bool exportNormals);
@@ -44,10 +44,6 @@ public:
 
   static void writeTriangle(
       int           vertexIndices[3],
-      std::ostream &outFile);
-
-  static void writeQuadrangle(
-      int           vertexIndices[4],
       std::ostream &outFile);
 
 private:

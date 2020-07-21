@@ -192,14 +192,13 @@ target_sources(precice
     src/mesh/Filter.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
-    src/mesh/Quad.cpp
-    src/mesh/Quad.hpp
     src/mesh/RTree.cpp
     src/mesh/RTree.hpp
     src/mesh/RangeAccessor.hpp
     src/mesh/SharedPointer.hpp
     src/mesh/Triangle.cpp
     src/mesh/Triangle.hpp
+    src/mesh/Utils.hpp
     src/mesh/Vertex.cpp
     src/mesh/Vertex.hpp
     src/mesh/config/DataConfiguration.cpp
@@ -241,8 +240,6 @@ target_sources(precice
     src/query/FindClosest.hpp
     src/query/FindClosestEdge.cpp
     src/query/FindClosestEdge.hpp
-    src/query/FindClosestQuad.cpp
-    src/query/FindClosestQuad.hpp
     src/query/FindClosestTriangle.cpp
     src/query/FindClosestTriangle.hpp
     src/query/FindClosestVertex.cpp

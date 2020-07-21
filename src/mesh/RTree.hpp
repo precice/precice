@@ -7,7 +7,6 @@
 #include <memory>
 #include <type_traits>
 #include "mesh/Mesh.hpp"
-#include "mesh/Quad.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/impl/RTreeAdapter.hpp"
@@ -22,7 +21,6 @@ struct rtree;
 
 namespace mesh {
 class Edge;
-class Quad;
 class Triangle;
 class Vertex;
 namespace impl {
@@ -50,11 +48,6 @@ struct PrimitiveTraits<Edge> {
 template <>
 struct PrimitiveTraits<Triangle> {
   using MeshContainer = Mesh::TriangleContainer;
-};
-
-template <>
-struct PrimitiveTraits<Quad> {
-  using MeshContainer = Mesh::VertexContainer;
 };
 
 /// The general rtree parameter type used in precice

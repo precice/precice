@@ -51,8 +51,8 @@ MappingConfiguration::MappingConfiguration(
   auto attrPreallocation = makeXMLAttribute("preallocation", "tree")
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({"estimate", "compute", "off", "save", "tree"});
-  auto attrUseLU = makeXMLAttribute(ATTR_USE_LU, false)
-                       .setDocumentation("If set to true, LU decomposition is used to solve the RBF system (only supported in serial)");
+  auto attrUseLU = makeXMLAttribute(ATTR_USE_QR, false)
+                       .setDocumentation("If set to true, QR decomposition is used to solve the RBF system");
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  tags;
@@ -174,8 +174,8 @@ void MappingConfiguration::xmlTagCallback(
     if (tag.hasAttribute(ATTR_Z_DEAD)) {
       zDead = tag.getBooleanAttributeValue(ATTR_Z_DEAD);
     }
-    if (tag.hasAttribute(ATTR_USE_LU)) {
-      useLU = tag.getBooleanAttributeValue(ATTR_USE_LU);
+    if (tag.hasAttribute(ATTR_USE_QR)) {
+      useLU = tag.getBooleanAttributeValue(ATTR_USE_QR);
     }
     if (tag.hasAttribute("polynomial")) {
       std::string strPolynomial = tag.getStringAttributeValue("polynomial");
@@ -245,8 +245,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
-  PRECICE_CHECK(fromMesh.get() != nullptr, "Mesh \"" << fromMeshName << "\" not defined at creation of mapping!");
-  PRECICE_CHECK(toMesh.get() != nullptr, "Mesh \"" << toMeshName << "\" not defined at creation of mapping!");
+  PRECICE_CHECK(fromMesh.get() != nullptr, "Mesh \"" << fromMeshName << "\" was not found while creating a mapping. Please correct the from=\"" << fromMeshName << "\" attribute.");
+  PRECICE_CHECK(toMesh.get() != nullptr, "Mesh \"" << toMeshName << "\" was not found while creating a mapping. Please correct the to=\"" << toMeshName << "\" attribute.");
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh   = toMesh;
   configuredMapping.timing   = timing;
@@ -257,7 +257,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (direction == VALUE_READ) {
     configuredMapping.direction = READ;
   } else {
-    PRECICE_ERROR("Unknown direction type \"" << direction << "\"!");
+    PRECICE_ASSERT(false, "Unknown mapping direction type \"" << direction << "\". Please check the documentation for available options.");
   }
 
   Mapping::Constraint constraintValue;
@@ -266,7 +266,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (constraint == VALUE_CONSISTENT) {
     constraintValue = Mapping::CONSISTENT;
   } else {
-    PRECICE_ERROR("Unknown mapping constraint \"" << constraint << "\"!");
+    PRECICE_ASSERT(false, "Unknown mapping constraint \"" << constraint << "\". Please check the documentation for available options.");
   }
 
   if (type == VALUE_NEAREST_NEIGHBOR) {
@@ -394,9 +394,11 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
     bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
     PRECICE_CHECK(!sameFromMesh, "There cannot be two mappings from mesh \""
-                                     << mapping.fromMesh->getName() << "\"");
+                                     << mapping.fromMesh->getName() << "\". "
+                                     << "Please remove any duplicate mapping definitions with from=\"" << mapping.fromMesh->getName() << "\" or use a different mesh.");
     PRECICE_CHECK(!sameToMesh, "There cannot be two mappings to mesh \""
-                                   << mapping.toMesh->getName() << "\"");
+                                   << mapping.toMesh->getName() << "\". "
+                                   << "Please remove any duplicate mapping definitions with to=\"" << mapping.toMesh->getName() << "\" or use a different mesh.");
   }
 }
 
@@ -409,7 +411,7 @@ MappingConfiguration::Timing MappingConfiguration::getTiming(const std::string &
   } else if (timing == VALUE_TIMING_ON_DEMAND) {
     return ON_DEMAND;
   }
-  PRECICE_ERROR("Unknown timing value \"" << timing << "\"!");
+  PRECICE_ASSERT(false, "Unknown timing value \"" << timing << "\". Please check the documentation for available options.");
 }
 
 } // namespace mapping

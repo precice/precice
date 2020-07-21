@@ -497,10 +497,9 @@ public:
    * @param[in] secondEdgeID ID of the second edge of the Quad
    * @param[in] thirdEdgeID ID of the third edge of the Quad
    * @param[in] fourthEdgeID ID of the forth edge of the Quad
-   *
-   * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID, and fourthEdgeID were added to the mesh with the ID meshID
-   *
-   * @warning Quads are not fully implemented yet.
+   * 
+   * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID and fourthEdgeID were added to the mesh with the ID meshID.
+   * 
    */
   void setMeshQuad(
       int meshID,
@@ -524,7 +523,7 @@ public:
    * @param[in] thirdVertexID ID of the third vertex of the Quad
    * @param[in] fourthVertexID ID of the fourth vertex of the Quad
    *
-   * @pre edges with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
    *
    */
   void setMeshQuadWithEdges(

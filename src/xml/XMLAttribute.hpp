@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <exception>
 #include <initializer_list>
 #include <map>
 #include <sstream>
@@ -8,8 +9,8 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
 #include "logging/Logger.hpp"
+#include "utils/assertion.hpp"
 #include "xml/ValueParser.hpp"
 
 namespace precice {
@@ -154,18 +155,21 @@ template <typename ATTRIBUTE_T>
 void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::string> &aAttributes)
 {
   PRECICE_TRACE(_name);
-  if (_read) {
-    PRECICE_ERROR("Attribute \"" + _name + "\" is defined multiple times");
-  }
+  PRECICE_ASSERT(!_read, "Attribute \"" + _name + "\" has already been read.");
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
     if (not _hasDefaultValue) {
-      PRECICE_ERROR("Attribute \"" + _name + "\" missing");
+      PRECICE_ERROR("Attribute \"" + _name + "\" is required, but was not defined.");
     }
     set(_value, _defaultValue);
   } else {
-    readValueSpecific(position->second, _value);
+    try {
+      readValueSpecific(position->second, _value);
+    }
+    catch(const std::exception& e) {
+      PRECICE_ERROR(e.what());
+    }
     if (_hasValidation) {
       if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
         std::ostringstream stream;

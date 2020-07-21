@@ -97,7 +97,8 @@ add_feature_info(MPICommunication PRECICE_MPICommunication
 add_feature_info(PETScMapping PRECICE_PETScMapping
   "Enables the PETSc-powered radial basic function mappings.
 
-   The radial basis function mappings require MPI and PETSc to work in parallel.
+   This enables the PETSc-based variant of radial basis function mappings which can run in parallel,
+   also across different compute nodes. This is highly recommended for large cases running in parallel.
 
    This feature can be enabled/disabled by setting the PRECICE_PETScMapping CMake option.
    Requires MPICommunication.
@@ -111,7 +112,7 @@ add_feature_info(PythonActions PRECICE_PythonActions
    This feature can be enabled/disabled by setting the PRECICE_PythonActions CMake option.
   ")
 add_feature_info(CBindings PRECICE_ENABLE_C
-  "Enables the native Fortran bindings.
+  "Enables the native C bindings.
 
    preCICE provides native bindings for C, which are compiled into the library.
    This feature enables the compilation and installation of the bindings into the library.

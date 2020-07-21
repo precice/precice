@@ -186,17 +186,6 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
   return {barycentricCoords, projected};
 }
 
-BarycentricCoordsAndProjected calcBarycentricCoordsForQuad(
-    const Eigen::VectorXd &a,
-    const Eigen::VectorXd &b,
-    const Eigen::VectorXd &c,
-    const Eigen::VectorXd &d,
-    const Eigen::VectorXd &normal,
-    const Eigen::VectorXd &location)
-{
-  PRECICE_ASSERT("Interpolation on Quads is not implemented!");
-  return {};
-}
 } // namespace barycenter
 } // namespace math
 } // namespace precice

@@ -219,7 +219,7 @@ int ActionConfiguration::getUsedMeshID() const
       return mesh->getID();
     }
   }
-  PRECICE_ERROR("No mesh ID found!");
+  PRECICE_ERROR("No mesh name \"" << _configuredAction.mesh << "\" found. Please check that the correct mesh name is used.");
   return -1; // To please compiler
 }
 
@@ -247,24 +247,12 @@ void ActionConfiguration::createAction()
       }
     }
   }
-  if (mesh.get() == nullptr) {
-    std::ostringstream stream;
-    stream << "Data action uses mesh \"" << _configuredAction.mesh
-           << "\" which is not configured";
-    throw std::runtime_error{stream.str()};
-  }
-  if ((not _configuredAction.sourceDataVector.empty()) && (sourceDataIDs.empty())) {
-    std::ostringstream stream;
-    stream << "Data action uses source data \"" << _configuredAction.sourceDataVector.back()
-           << "\" which is not configured";
-    throw std::runtime_error{stream.str()};
-  }
-  if ((not _configuredAction.targetData.empty()) && (targetDataID == -1)) {
-    std::ostringstream stream;
-    stream << "Data action uses target data \"" << _configuredAction.targetData
-           << "\" which is not configured";
-    throw std::runtime_error{stream.str()};
-  }
+  PRECICE_CHECK(mesh,
+                "Data action uses mesh \"" << _configuredAction.mesh << "\" which is not configured. Please ensure that the correct mesh name is given in <action:python mesh=\"...\">");
+  PRECICE_CHECK((_configuredAction.sourceDataVector.empty() || not sourceDataIDs.empty()),
+                "Data action uses source data \"" << _configuredAction.sourceDataVector.back() << "\" which is not configured. Please ensure that the source data name is used by the mesh.");
+  PRECICE_CHECK((_configuredAction.targetData.empty() || (targetDataID != -1)),
+                "Data action uses target data \"" << _configuredAction.targetData << "\" which is not configured. Please ensure that the target data name is used by the mesh");
   action::PtrAction action;
   if (_configuredAction.type == NAME_MULTIPLY_BY_AREA) {
     PRECICE_CHECK(mesh->getDimensions() == 2,
@@ -345,7 +333,8 @@ action::Action::Timing ActionConfiguration::getTiming() const
   } else if (_configuredAction.timing == READ_MAPPING_POST) {
     timing = action::Action::READ_MAPPING_POST;
   } else {
-    PRECICE_ERROR("Unknown action timing \"" << _configuredAction.timing << "\"!");
+    PRECICE_ERROR("Unknown action timing \"" << _configuredAction.timing << "\". Valid action timings are "
+                                             << "regular-prior, regular-post, on-exchange-prior, on-exchange-post, on-time-window-complete-post");
   }
   return timing;
 }

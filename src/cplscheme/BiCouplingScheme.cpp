@@ -59,7 +59,7 @@ void BiCouplingScheme::addDataToSend(
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _sendData.insert(pair);
   } else {
-    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for sending.");
+    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"" << data->getName() << "\" .../> tags");
   }
 }
 
@@ -75,7 +75,7 @@ void BiCouplingScheme::addDataToReceive(
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _receiveData.insert(pair);
   } else {
-    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for receiving.");
+    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"" << data->getName() << "\" ... /> tags");
   }
 }
 

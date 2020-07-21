@@ -30,7 +30,6 @@ class Vertex;
 //       Par::setGlobalCommunicator(comm);
 //       testMethod(testExportPolygonalMesh);
 //       testMethod(testExportTriangulatedMesh);
-//       testMethod(testExportQuadMesh);
 //       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
 //     }
 //   }
@@ -133,70 +132,6 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   bool             exportNormals = false;
   io::ExportVTKXML exportVTKXML(exportNormals);
   std::string      filename = "io-ExportVTKXMLTest-testExportTriangulatedMesh";
-  std::string      location = "";
-  exportVTKXML.doExport(filename, location, mesh);
-}
-
-BOOST_AUTO_TEST_CASE(ExportQuadMesh)
-{
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  using namespace mesh;
-  int        dim           = 3;
-  bool       invertNormals = false;
-  mesh::Mesh mesh("QuadMesh", dim, invertNormals, testing::nextMeshID());
-
-  if (utils::Parallel::getProcessRank() == 0) {
-    mesh.getVertexDistribution()[0] = {};
-    mesh.getVertexDistribution()[1] = {0, 1, 2, 3};
-    mesh.getVertexDistribution()[2] = {4, 5, 6, 7, 8, 9};
-    mesh.getVertexDistribution()[3] = {};
-  } else if (utils::Parallel::getProcessRank() == 1) {
-    // z=0 plane
-    Vertex &v0 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-    Vertex &v1 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
-    // z=1 plane
-    Vertex &v4 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
-    Vertex &v5 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
-    // z=0 plane
-    Edge &e0 = mesh.createEdge(v0, v1);
-    // z=1 plane
-    Edge &e4 = mesh.createEdge(v4, v5);
-    // inbetween edges
-    Edge &e8 = mesh.createEdge(v0, v4);
-    Edge &e9 = mesh.createEdge(v1, v5);
-    // x-z plane
-    mesh.createQuad(e0, e9, e4, e8);
-  } else if (utils::Parallel::getProcessRank() == 2) {
-    // z=0 plane
-    Vertex &v1 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
-    Vertex &v2 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
-    Vertex &v3 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
-    // z=1 plane
-    Vertex &v5 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
-    Vertex &v6 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
-    Vertex &v7 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
-    // z=0 plane
-    Edge &e1 = mesh.createEdge(v1, v2);
-    Edge &e2 = mesh.createEdge(v2, v3);
-    // z=1 plane
-    Edge &e5 = mesh.createEdge(v5, v6);
-    Edge &e6 = mesh.createEdge(v6, v7);
-    // inbetween edges
-    Edge &e9  = mesh.createEdge(v1, v5);
-    Edge &e10 = mesh.createEdge(v2, v6);
-    Edge &e11 = mesh.createEdge(v3, v7);
-    // x-z plane
-    mesh.createQuad(e11, e6, e10, e2);
-    // y-z plane
-    mesh.createQuad(e9, e1, e10, e5);
-  } else if (utils::Parallel::getProcessRank() == 3) {
-  }
-
-  mesh.computeState();
-
-  bool             exportNormals = false;
-  io::ExportVTKXML exportVTKXML(exportNormals);
-  std::string      filename = "io-ExportVTKXMLTest-testExportQuadMesh";
   std::string      location = "";
   exportVTKXML.doExport(filename, location, mesh);
 }
