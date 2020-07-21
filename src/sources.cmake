@@ -223,6 +223,7 @@ target_sources(precice
     src/precice/config/SharedPointer.hpp
     src/precice/config/SolverInterfaceConfiguration.cpp
     src/precice/config/SolverInterfaceConfiguration.hpp
+    src/precice/impl/CommonErrorMessages.hpp
     src/precice/impl/DataContext.cpp
     src/precice/impl/DataContext.hpp
     src/precice/impl/MappingContext.hpp
