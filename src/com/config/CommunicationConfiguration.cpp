@@ -1,8 +1,13 @@
 #include "CommunicationConfiguration.hpp"
+#include <memory>
+#include <ostream>
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SocketCommunication.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice {
 namespace com {
@@ -14,33 +19,29 @@ PtrCommunication CommunicationConfiguration::createCommunication(
     std::string network = tag.getStringAttributeValue("network");
     int         port    = tag.getIntAttributeValue("port");
 
-    PRECICE_CHECK(not utils::isTruncated<unsigned short>(port),
-                  "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
+    PRECICE_CHECK(utils::isValidPort(port),
+                  "A sockets communication was configured with an invalid port \"" << port << "\". Please check the \"ports="
+                                                                                              "\" attributes of your socket connections.");
 
     std::string dir = tag.getStringAttributeValue("exchange-directory");
     com             = std::make_shared<com::SocketCommunication>(port, false, network, dir);
   } else if (tag.getName() == "mpi") {
     std::string dir = tag.getStringAttributeValue("exchange-directory");
 #ifdef PRECICE_NO_MPI
-    std::ostringstream error;
-    error << "Communication type \"mpi\" can only be used "
-          << "when preCICE is compiled with argument \"mpi=on\"";
-    throw std::runtime_error{error.str()};
+    PRECICE_ERROR("Communication type \"mpi\" can only be used if preCICE was compiled with MPI support enabled. "
+                  "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com = std::make_shared<com::MPIPortsCommunication>(dir);
 #endif
   } else if (tag.getName() == "mpi-single") {
 #ifdef PRECICE_NO_MPI
-    std::ostringstream error;
-    error << "Communication type \"mpi-single\" can only be used "
-          << "when preCICE is compiled with argument \"mpi=on\"";
-    throw std::runtime_error{error.str()};
+    PRECICE_ERROR("Communication type \"mpi-single\" can only be used if preCICE was compiled with MPI support enabled. "
+                  "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com = std::make_shared<com::MPIDirectCommunication>();
-
 #endif
   }
-  PRECICE_ASSERT(com.get() != nullptr);
+  PRECICE_ASSERT(com != nullptr);
   return com;
 }
 

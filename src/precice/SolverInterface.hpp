@@ -127,8 +127,10 @@ public:
    * @param[in] computedTimestepLength Length of timestep used by the solver.
    *
    * @pre initialize() has been called successfully.
+   * @pre initializeData() has been called, if required by configuration.
    * @pre The solver has computed one timestep.
    * @pre The solver has written all coupling data.
+   * @pre isCouplngOngoing() returns true.
    * @pre finalize() has not yet been called.
    *
    * @post Coupling data values specified in the configuration are exchanged.
@@ -145,7 +147,7 @@ public:
   /**
    * @brief Finalizes preCICE.
    *
-   * @pre initialize() has been called successfully.
+   * @pre finalize() has not been called.
    *
    * @post Communication channels are closed.
    * @post Meshes and data are deallocated
@@ -246,7 +248,7 @@ public:
    * @brief Returns whether the solver has to evaluate the surrogate model representation.
    *
    * @deprecated
-   * Only necessary for deprecated manifold mapping.
+   * Was necessary for deleted manifold mapping. Always returns false.
    *
    * @returns whether the surrogate model has to be evaluated.
    *
@@ -261,7 +263,7 @@ public:
    * @brief Checks if the solver has to evaluate the fine model representation.
    *
    * @deprecated
-   * Only necessary for deprecated manifold mapping.
+   * Was necessary for deprecated manifold mapping. Always returns true.
    *
    * @returns whether the fine model has to be evaluated.
    *
@@ -495,10 +497,9 @@ public:
    * @param[in] secondEdgeID ID of the second edge of the Quad
    * @param[in] thirdEdgeID ID of the third edge of the Quad
    * @param[in] fourthEdgeID ID of the forth edge of the Quad
-   *
-   * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID, and fourthEdgeID were added to the mesh with the ID meshID
-   *
-   * @warning Quads are not fully implemented yet.
+   * 
+   * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID and fourthEdgeID were added to the mesh with the ID meshID.
+   * 
    */
   void setMeshQuad(
       int meshID,
@@ -522,7 +523,7 @@ public:
    * @param[in] thirdVertexID ID of the third vertex of the Quad
    * @param[in] fourthVertexID ID of the fourth vertex of the Quad
    *
-   * @pre edges with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
    *
    */
   void setMeshQuadWithEdges(

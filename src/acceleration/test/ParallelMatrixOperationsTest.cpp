@@ -1,16 +1,21 @@
+#include <boost/test/unit_test_log.hpp>
 #ifndef PRECICE_NO_MPI
 
 #include <Eigen/Core>
-
+#include <algorithm>
+#include <math.h>
+#include <memory>
+#include <ostream>
+#include <stdlib.h>
+#include <string>
+#include <vector>
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "com/Communication.hpp"
-#include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "cplscheme/Constants.hpp"
-#include "testing/Fixtures.hpp"
+#include "com/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/Parallel.hpp"
 
 BOOST_AUTO_TEST_SUITE(AccelerationTests)
 
@@ -18,31 +23,30 @@ using namespace precice;
 using namespace precice::acceleration;
 using namespace precice::acceleration::impl;
 
-BOOST_AUTO_TEST_SUITE(ParallelMatrixOperationsTests,
-                      *testing::OnSize(4))
+BOOST_AUTO_TEST_SUITE(ParallelMatrixOperationsTests)
 
 void validate_result_equals_reference(
-    Eigen::MatrixXd & result_local,
-    Eigen::MatrixXd & reference_global,
-    std::vector<int> &offsets,
-    bool              partitionedRowWise)
+    Eigen::MatrixXd &result_local,
+    Eigen::MatrixXd &reference_global,
+    int              offset,
+    bool             partitionedRowWise)
 {
-  int off = offsets[utils::MasterSlave::getRank()];
   for (int i = 0; i < result_local.rows(); i++) {
     for (int j = 0; j < result_local.cols(); j++) {
       if (partitionedRowWise) {
-        BOOST_TEST(testing::equals(result_local(i, j), reference_global(i + off, j)),
-                   "Failed: (" << i + off << ", " << j << ") result, reference:" << result_local(i, j) << ", " << reference_global(i + off, j));
+        BOOST_TEST(testing::equals(result_local(i, j), reference_global(i + offset, j)),
+                   "Failed: (" << i + offset << ", " << j << ") result, reference:" << result_local(i, j) << ", " << reference_global(i + offset, j));
       } else {
-        BOOST_TEST(testing::equals(result_local(i, j), reference_global(i, j + off)),
-                   "Failed: (" << i << ", " << j + off << ") result, reference:" << result_local(i, j) << ", " << reference_global(i, j + off));
+        BOOST_TEST(testing::equals(result_local(i, j), reference_global(i, j + offset)),
+                   "Failed: (" << i << ", " << j + offset << ") result, reference:" << result_local(i, j) << ", " << reference_global(i, j + offset));
       }
     }
   }
 }
 
-BOOST_AUTO_TEST_CASE(ParVectorOperations, *boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(ParVectorOperations)
 {
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   int              n_global = 10;
   int              n_local;
   double           a = 0;
@@ -78,16 +82,16 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations, *boost::unit_test::fixture<testing::Ma
 
   // <vec1, vec2> = 7.069617899295469
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isMaster()) {
     n_local = 3;
     a       = 1;
-  } else if (utils::Parallel::getProcessRank() == 1) {
+  } else if (context.isRank(1)) {
     n_local = 4;
     a       = 2;
-  } else if (utils::Parallel::getProcessRank() == 2) {
+  } else if (context.isRank(2)) {
     n_local = 0;
     a       = 3;
-  } else if (utils::Parallel::getProcessRank() == 3) {
+  } else if (context.isRank(3)) {
     n_local = 3;
     a       = 4;
   }
@@ -133,7 +137,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations, *boost::unit_test::fixture<testing::Ma
   Eigen::VectorXd vec2_local(n_local);
 
   // partition and distribute
-  int off = vertexOffsets[utils::MasterSlave::getRank()];
+  int off = vertexOffsets[context.rank];
   for (int i = 0; i < n_local; i++) {
     vec1_local(i) = vec1(i + off);
     vec2_local(i) = vec2(i + off);
@@ -153,21 +157,9 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations, *boost::unit_test::fixture<testing::Ma
   BOOST_TEST(testing::equals(dotproduct, 7.069617899295469));
 }
 
-BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp, *boost::unit_test::fixture<testing::MasterComFixture>())
+BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
 {
-  com::PtrCommunication _cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication("."));
-  com::PtrCommunication _cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication("."));
-
-  // initialize cyclic communication between successive slaves
-  int prevProc = (utils::Parallel::getProcessRank() - 1 < 0) ? utils::Parallel::getCommunicatorSize() - 1 : utils::Parallel::getProcessRank() - 1;
-  if ((utils::Parallel::getProcessRank() % 2) == 0) {
-    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "Test", utils::Parallel::getProcessRank());
-    _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", "Test", 0, 1);
-  } else {
-    _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::Parallel::getProcessRank()), "", "Test", 0, 1);
-    _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", "Test", utils::Parallel::getProcessRank());
-  }
-  _cyclicCommLeft->cleanupEstablishment("cyclicComm-" + std::to_string(prevProc), "");
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
 
   int              n_global = 10, m_global = 5;
   int              n_local;
@@ -254,13 +246,13 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp, *boost::unit_test::fixture<testing:
       1.803781441584700,
       1.462976489192458;
 
-  if (utils::Parallel::getProcessRank() == 0) {
+  if (context.isMaster()) {
     n_local = 3;
-  } else if (utils::Parallel::getProcessRank() == 1) {
+  } else if (context.isRank(1)) {
     n_local = 4;
-  } else if (utils::Parallel::getProcessRank() == 2) {
+  } else if (context.isRank(2)) {
     n_local = 0;
-  } else if (utils::Parallel::getProcessRank() == 3) {
+  } else if (context.isRank(3)) {
     n_local = 3;
   }
 
@@ -275,7 +267,7 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp, *boost::unit_test::fixture<testing:
 
   // partition and distribute matrices
 
-  int off = vertexOffsets[utils::MasterSlave::getRank()];
+  int off = vertexOffsets[context.rank];
   for (int i = 0; i < n_global; i++)
     for (int j = 0; j < n_local; j++) {
       J_local(i, j)  = J_global(i, j + off);
@@ -301,49 +293,41 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp, *boost::unit_test::fixture<testing:
 
   // initialize ParallelMatrixOperations object
   ParallelMatrixOperations parMatrixOps{};
-  parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight, true);
+  parMatrixOps.initialize(true);
 
   /*
    * test parallel multiplications
    */
+  BOOST_TEST_MESSAGE("Test 1");
   // 1.) multiply JW = J * W (n x m), parallel: (n_local x m)
   Eigen::MatrixXd resJW_local(n_local, m_global);
   parMatrixOps.multiply(J_local, W_local, resJW_local, vertexOffsets, n_global, n_global, m_global);
-  validate_result_equals_reference(resJW_local, JW_global, vertexOffsets, true);
+  validate_result_equals_reference(resJW_local, JW_global, vertexOffsets[context.rank], true);
 
+  BOOST_TEST_MESSAGE("Test 2");
   // 2.) multiply WZ = W * Z (n x n), parallel: (n_global x n_local)
   Eigen::MatrixXd resWZ_local(n_global, n_local);
   parMatrixOps.multiply(W_local, Z_local, resWZ_local, vertexOffsets, n_global, m_global, n_global);
-  validate_result_equals_reference(resWZ_local, WZ_global, vertexOffsets, false);
+  validate_result_equals_reference(resWZ_local, WZ_global, vertexOffsets[context.rank], false);
 
+  BOOST_TEST_MESSAGE("Test 3");
   // 3.) multiply Jres = J * res (n x 1), parallel: (n_local x 1)
   Eigen::MatrixXd resJres_local(n_local, 1);
   parMatrixOps.multiply(J_local, res_local, resJres_local, vertexOffsets, n_global, n_global, 1);
-  validate_result_equals_reference(resJres_local, Jres_global, vertexOffsets, true);
+  validate_result_equals_reference(resJres_local, Jres_global, vertexOffsets[context.rank], true);
 
+  BOOST_TEST_MESSAGE("Test 4");
   // 4.) multiply JW = J * W (n x m), parallel: (n_local x m) with block-wise multiplication
   Eigen::MatrixXd resJW_local2(n_local, m_global);
   parMatrixOps.multiply(J_local, W_local, resJW_local2, vertexOffsets, n_global, n_global, m_global, false);
-  validate_result_equals_reference(resJW_local2, JW_global, vertexOffsets, true);
+  validate_result_equals_reference(resJW_local2, JW_global, vertexOffsets[context.rank], true);
 
+  BOOST_TEST_MESSAGE("Test 5");
   // 5.) multiply Jres = J * res (n x 1), parallel: (n_local x 1) with block-wise multiplication
   Eigen::VectorXd resJres_local2(n_local); // use the function with parameter of type Eigen::VectorXd
   parMatrixOps.multiply(J_local, res_local_vec, resJres_local2, vertexOffsets, n_global, n_global, 1, false);
   Eigen::MatrixXd matrix_cast = resJres_local2;
-  validate_result_equals_reference(matrix_cast, Jres_global, vertexOffsets, true);
-
-  // close and shut down cyclic communication connections
-  if (_cyclicCommRight != nullptr || _cyclicCommLeft != nullptr) {
-    if ((utils::Parallel::getProcessRank() % 2) == 0) {
-      _cyclicCommLeft->closeConnection();
-      _cyclicCommRight->closeConnection();
-    } else {
-      _cyclicCommRight->closeConnection();
-      _cyclicCommLeft->closeConnection();
-    }
-    _cyclicCommRight = nullptr;
-    _cyclicCommLeft  = nullptr;
-  }
+  validate_result_equals_reference(matrix_cast, Jres_global, vertexOffsets[context.rank], true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

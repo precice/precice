@@ -29,9 +29,6 @@ public:
   /// Constructor, opens file.
   explicit TXTTableWriter(const std::string &filename);
 
-  /// Destructor, closes file, if not done yet.
-  ~TXTTableWriter();
-
   /**
    * @brief Adds a data entry to the table.
    *
@@ -76,6 +73,9 @@ public:
 
   /// Closes the file, is automatically called on destruction.
   void close();
+
+  /// Resets the table information.
+  void reset();
 
 private:
   /// Represents one data entry to be written.

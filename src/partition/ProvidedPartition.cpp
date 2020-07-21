@@ -1,11 +1,24 @@
 #include "partition/ProvidedPartition.hpp"
 #include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <utility>
+#include <vector>
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/SharedPointer.hpp"
+#include "mesh/BoundingBox.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/Vertex.hpp"
+#include "partition/Partition.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 using precice::utils::Event;
 
@@ -38,7 +51,10 @@ void ProvidedPartition::communicate()
   for (auto &m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
 
-      PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh.");
+      PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh. "
+                                                 "Please either switch two-level initialization off in your m2n definition, or "
+                                                 "adapt your mesh setup such that each provided mesh is only received by maximum one "
+                                                 "participant.");
       twoLevelInitAlreadyUsed = true;
 
       Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);
@@ -88,7 +104,8 @@ void ProvidedPartition::communicate()
       Event e("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
 
       if (not utils::MasterSlave::isSlave()) {
-        PRECICE_CHECK(globalMesh.vertices().size() > 0, "The provided mesh " << globalMesh.getName() << " is invalid (possibly empty).");
+        PRECICE_CHECK(globalMesh.vertices().size() > 0,
+                      "The provided mesh \"" << globalMesh.getName() << "\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().");
         com::CommunicateMesh(m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
       }
     }
@@ -137,14 +154,18 @@ void ProvidedPartition::prepare()
     if (std::any_of(_m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); })) {
       if (utils::MasterSlave::isMaster()) {
         PRECICE_DEBUG("Fill vertex distribution");
+        auto &localIds = _mesh->getVertexDistribution()[0];
         for (int i = 0; i < _mesh->getVertexOffsets()[0]; i++) {
-          _mesh->getVertexDistribution()[0].push_back(i);
+          localIds.push_back(i);
         }
         for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+          // This always creates an entry for each slave
+          auto &slaveIds = _mesh->getVertexDistribution()[rankSlave];
           for (int i = _mesh->getVertexOffsets()[rankSlave - 1]; i < _mesh->getVertexOffsets()[rankSlave]; i++) {
-            _mesh->getVertexDistribution()[rankSlave].push_back(i);
+            slaveIds.push_back(i);
           }
         }
+        PRECICE_ASSERT(_mesh->getVertexDistribution().size() == static_cast<decltype(_mesh->getVertexDistribution().size())>(utils::MasterSlave::getSize()));
       }
     }
   } else if (utils::MasterSlave::isSlave()) {
@@ -214,6 +235,7 @@ void ProvidedPartition::compareBoundingBoxes()
 
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave
+    PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
@@ -222,15 +244,15 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
-
-    // master stores its bb into bbm
-    bbm[0] = _mesh->getBoundingBox();
+    mesh::BoundingBox          bb(_mesh->getDimensions());
+    bbm.emplace(0, _mesh->getBoundingBox());
+    PRECICE_ASSERT(!bbm.empty(), "The bounding box of the local mesh is invalid!");
 
     // master receives bbs from slaves and stores them in bbm
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
       // initialize bbm
-      bbm[rankSlave] = mesh::Mesh::BoundingBox(_mesh->getDimensions());
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm[rankSlave], rankSlave);
+      bbm.emplace(rankSlave, bb);
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm.at(rankSlave), rankSlave);
     }
 
     // master sends number of ranks and bbm to the other master

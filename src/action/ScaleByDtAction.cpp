@@ -1,7 +1,11 @@
 #include "ScaleByDtAction.hpp"
+#include <Eigen/Core>
+#include <memory>
+#include "action/Action.hpp"
+#include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace action {

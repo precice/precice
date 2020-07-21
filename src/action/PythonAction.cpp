@@ -1,13 +1,51 @@
 #ifndef PRECICE_NO_PYTHON
 #include "PythonAction.hpp"
+#include <Eigen/Core>
 #include <Python.h>
+#include <cstdlib>
+#include <memory>
 #include <numpy/arrayobject.h>
+#include <ostream>
+#include <pthread.h>
+#include <string>
+#include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace action {
+
+namespace {
+std::string python_error_as_string()
+{
+  PyObject *ptype, *pvalue, *ptraceback;
+  PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+  if (ptype == nullptr) {
+    return "<no error available>";
+  } else {
+    // pvalue and ptraceback may be NULL
+    // We don't need the type or the traceback, so we dereference them straight away
+    Py_DECREF(ptype);
+    Py_XDECREF(ptraceback); // may be NULL
+
+    if (pvalue == nullptr) {
+      return "<no error message available>";
+    }
+    wchar_t *wmessage = PyUnicode_AsWideCharString(pvalue, nullptr);
+    Py_DECREF(pvalue);
+
+    if (wmessage) {
+      auto message = utils::truncate_wstring_to_string(wmessage);
+      PyMem_Free(wmessage);
+      return message;
+    } else {
+      return "<fetching error message failed>";
+    }
+  }
+}
+} // namespace
 
 PythonAction::PythonAction(
     Timing               timing,
@@ -62,7 +100,7 @@ void PythonAction::performAction(double time,
       double * sourceValues = _sourceData->values().data();
       //PRECICE_ASSERT(_sourceValues == NULL);
       _sourceValues = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
-      PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed!");
+      PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
       PyTuple_SetItem(dataArgs, 2, _sourceValues);
     }
     if (_targetData) {
@@ -71,15 +109,13 @@ void PythonAction::performAction(double time,
       //PRECICE_ASSERT(_targetValues == NULL);
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
-      PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed!");
+      PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
       int argumentIndex = _sourceData ? 3 : 2;
       PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
     }
     PyObject_CallObject(_performAction, dataArgs);
     if (PyErr_Occurred()) {
-      PyErr_Print();
-      PRECICE_ERROR("Error occurred during call of function "
-                    << "performAction() python module \"" << _moduleName << "\"!");
+      PRECICE_ERROR("Error occurred during call of function performAction() in python module \"" << _moduleName << "\". The error message is: " << python_error_as_string());
     }
   }
 
@@ -96,17 +132,15 @@ void PythonAction::performAction(double time,
       PyObject *pythonID     = PyLong_FromLong(id);
       PyObject *pythonCoords = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
       PyObject *pythonNormal = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
-      PRECICE_CHECK(pythonID != nullptr, "Creating python ID failed!");
-      PRECICE_CHECK(pythonCoords != nullptr, "Creating python coords failed!");
-      PRECICE_CHECK(pythonNormal != nullptr, "Creating python normal failed!");
+      PRECICE_CHECK(pythonID != nullptr, "Creating python ID failed. Please check that the python-actions mesh name is correct.");
+      PRECICE_CHECK(pythonCoords != nullptr, "Creating python coords failed. Please check that the python-actions mesh name is correct.");
+      PRECICE_CHECK(pythonNormal != nullptr, "Creating python normal failed. Please check that the python-actions mesh name is correct.");
       PyTuple_SetItem(vertexArgs, 0, pythonID);
       PyTuple_SetItem(vertexArgs, 1, pythonCoords);
       PyTuple_SetItem(vertexArgs, 2, pythonNormal);
       PyObject_CallObject(_vertexCallback, vertexArgs);
       if (PyErr_Occurred()) {
-        PyErr_Print();
-        PRECICE_ERROR("Error occurred during call of function "
-                      << "vertexCallback() python module \"" << _moduleName << "\"!");
+        PRECICE_ERROR("Error occurred during call of function vertexCallback() in python module \"" << _moduleName << "\". The error message is: " << python_error_as_string());
       }
     }
     Py_DECREF(vertexArgs);
@@ -116,9 +150,7 @@ void PythonAction::performAction(double time,
     PyObject *postActionArgs = PyTuple_New(0);
     PyObject_CallObject(_postAction, postActionArgs);
     if (PyErr_Occurred()) {
-      PyErr_Print();
-      PRECICE_ERROR("Error occurred during call of function "
-                    << "postAction() in python module \"" << _moduleName << "\"!");
+      PRECICE_ERROR("Error occurred during call of function postAction() in python module \"" << _moduleName << "\". The error message is: " << python_error_as_string());
     }
     Py_DECREF(postActionArgs);
   }
@@ -139,15 +171,14 @@ void PythonAction::initialize()
   _moduleNameObject = PyUnicode_FromString(_moduleName.c_str());
   _module           = PyImport_Import(_moduleNameObject);
   if (_module == nullptr) {
-    PyErr_Print();
-    PRECICE_ERROR("Could not load python module \"" << _moduleName << "\" at path \"" << _modulePath << "\"!");
+    PRECICE_ERROR("An error occurred while loading python module \"" << _moduleName << "\": " << python_error_as_string());
   }
 
   // Construct method performAction
   _performAction = PyObject_GetAttrString(_module, "performAction");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    PRECICE_WARN("No function void performAction() in python module \"" << _moduleName << "\" found.");
+    PRECICE_WARN("Python module \"" << _module << "\" does not define function performAction().");
     _performAction = nullptr;
   }
   //  bool valid = _performAction != NULL;
@@ -159,7 +190,7 @@ void PythonAction::initialize()
   _vertexCallback = PyObject_GetAttrString(_module, "vertexCallback");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    PRECICE_WARN("No function void vertexCallback() in python module \"" << _moduleName << "\" found.");
+    PRECICE_WARN("Python module \"" << _module << "\" does not define function vertexCallback().");
     _vertexCallback = nullptr;
   }
 
@@ -167,7 +198,7 @@ void PythonAction::initialize()
   _postAction = PyObject_GetAttrString(_module, "postAction");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    PRECICE_WARN("No function void postAction() in python module \"" << _moduleName << "\" found.");
+    PRECICE_WARN("Python module \"" << _module << "\" does not define function postAction().");
     _postAction = nullptr;
   }
 }

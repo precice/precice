@@ -1,18 +1,23 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <boost/signals2.hpp>
 #include <deque>
+#include <iosfwd>
 #include <list>
 #include <map>
+#include <string>
 #include <vector>
+#include "logging/Logger.hpp"
+#include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
-#include "mesh/Quad.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {
@@ -33,9 +38,7 @@ public:
   using VertexContainer   = std::deque<Vertex>;
   using EdgeContainer     = std::deque<Edge>;
   using TriangleContainer = std::deque<Triangle>;
-  using QuadContainer     = std::deque<Quad>;
   using DataContainer     = std::vector<PtrData>;
-  using BoundingBox       = std::vector<std::pair<double, double>>;
   using BoundingBoxMap    = std::map<int, BoundingBox>;
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
@@ -88,12 +91,6 @@ public:
   /// Returns const container holding all triangles.
   const TriangleContainer &triangles() const;
 
-  /// Returns modifiable container holding all quads.
-  QuadContainer &quads();
-
-  /// Returns const container holding all quads.
-  const QuadContainer &quads() const;
-
   int getDimensions() const;
 
   template <typename VECTOR_T>
@@ -136,20 +133,6 @@ public:
       Edge &edgeTwo,
       Edge &edgeThree);
 
-  /**
-   * @brief Creates and initializes a Quad object.
-   *
-   * @param[in] edgeOne Reference to first edge defining the Quad.
-   * @param[in] edgeTwo Reference to second edge defining the Quad.
-   * @param[in] edgeThree Reference to third edge defining the Quad.
-   * @param[in] edgeFour Reference to fourth edge defining the Quad.
-   */
-  Quad &createQuad(
-      Edge &edgeOne,
-      Edge &edgeTwo,
-      Edge &edgeThree,
-      Edge &edgeFour);
-
   PtrData &createData(
       const std::string &name,
       int                dimension);
@@ -180,7 +163,7 @@ public:
   /**
    * @brief Necessary before any geom. operations can be performed on the mesh.
    *
-   * If no edges (in 2d) or triangles/quads (in 3d) are
+   * If no edges (in 2d) or triangles(in 3d) are
    * given, no normals are computed in order to avoid dividing by zero on
    * normalization of the vertex normals.
    *
@@ -217,6 +200,12 @@ public:
 
   void setGlobalNumberOfVertices(int num);
 
+  // Get the data of owned vertices for given data ID
+  Eigen::VectorXd getOwnedVertexData(int dataID);
+
+  // Tag all the vertices
+  void tagAll();
+
   /// Returns a vector of connected ranks
   std::vector<int> &getConnectedRanks()
   {
@@ -237,15 +226,7 @@ public:
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
    * computeState() has to be called after setting the mesh.
    */
-  const BoundingBox getBoundingBox() const;
-
-  /**
-   * @brief Returns the Center Of Gravity of the mesh
-   *
-   * Returns a vector of doubles, size d, each dimension computed as
-   * cog =  (max - min) / 2 + min
-   */
-  const std::vector<double> getCOG() const;
+  const BoundingBox &getBoundingBox() const;
 
   bool operator==(const Mesh &other) const;
 
@@ -270,7 +251,6 @@ private:
   VertexContainer   _vertices;
   EdgeContainer     _edges;
   TriangleContainer _triangles;
-  QuadContainer     _quads;
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;
@@ -280,8 +260,6 @@ private:
   utils::ManageUniqueIDs _manageEdgeIDs;
 
   utils::ManageUniqueIDs _manageTriangleIDs;
-
-  utils::ManageUniqueIDs _manageQuadIDs;
 
   /**
    * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.

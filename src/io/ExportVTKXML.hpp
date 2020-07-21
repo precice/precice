@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <iosfwd>
 #include <string>
 #include <vector>
 #include "Export.hpp"
@@ -9,7 +10,6 @@
 namespace precice {
 namespace mesh {
 class Mesh;
-class Quad;
 class Edge;
 class Triangle;
 } // namespace mesh
@@ -53,10 +53,6 @@ public:
   static void writeTriangle(
       const mesh::Triangle &triangle,
       std::ofstream &       outFile);
-
-  static void writeQuadrangle(
-      const mesh::Quad &quad,
-      std::ofstream &   outFile);
 
 private:
   logging::Logger _log{"io::ExportVTKXML"};

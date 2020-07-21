@@ -5,6 +5,7 @@
 #include <functional>
 #include <iterator>
 #include <type_traits>
+#include <utility>
 
 namespace precice {
 namespace utils {
@@ -136,6 +137,17 @@ template <typename Range, typename Iter = typename Range::const_iterator, typena
 const RangePreview<Iter> previewRange(Size n, const Range &range)
 {
   return {n, std::begin(range), std::end(range)};
+}
+
+/// Reorders an array given an array of unique indices.
+template <typename T, typename Index, size_t n>
+auto reorder_array(const std::array<Index, n> &order, const std::array<T, n> &elements) -> std::array<T, n>
+{
+  std::array<T, n> reordered;
+  for (std::size_t i = 0; i < n; ++i) {
+    reordered[i] = elements[order[i]];
+  }
+  return reordered;
 }
 
 } // namespace utils

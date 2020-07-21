@@ -3,7 +3,9 @@
 #include <boost/asio.hpp>
 #include <deque>
 #include <functional>
+#include <memory>
 #include <mutex>
+#include <string>
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -25,8 +27,6 @@ public:
   void dispatch(std::shared_ptr<Socket> sock, boost::asio::const_buffers_1 data, std::function<void()> callback);
 
 private:
-  logging::Logger _log{"com::SocketSendQueue"};
-
   /// This method can be called arbitrarily many times, but enough times to ensure the queue makes progress.
   void process();
 

@@ -7,7 +7,6 @@
 
 int main(int argc, char **argv)
 {
-  std::cout << "Starting SolverDummy...\n";
   int commRank = 0;
   int commSize = 1;
 
@@ -15,8 +14,7 @@ int main(int argc, char **argv)
   using namespace precice::constants;
 
   if (argc != 4) {
-    std::cout << "Usage: ./solverdummy configFile solverName meshName\n";
-    std::cout << '\n';
+    std::cout << "Usage: ./solverdummy configFile solverName meshName\n\n";
     std::cout << "Parameter description\n";
     std::cout << "  configurationFile: Path and filename of preCICE configuration\n";
     std::cout << "  solverName:        SolverDummy participant name in preCICE configuration\n";
@@ -27,18 +25,42 @@ int main(int argc, char **argv)
   std::string configFileName(argv[1]);
   std::string solverName(argv[2]);
   std::string meshName(argv[3]);
-  int         N = 1;
+
+  std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName << "\", participant name \"" << solverName << "\", and mesh name \"" << meshName << "\".\n";
 
   SolverInterface interface(solverName, configFileName, commRank, commSize);
 
-  int                              meshID     = interface.getMeshID(meshName);
-  int                              dimensions = interface.getDimensions();
-  std::vector<std::vector<double>> vertices(N, std::vector<double>(dimensions, 0));
-  std::vector<int>                 dataIndices(N, 0);
+  int         meshID     = interface.getMeshID(meshName);
+  int         dimensions = interface.getDimensions();
+  std::string dataWriteName;
+  std::string dataReadName;
+  int         numberOfVertices = 3;
 
-  for (int i = 0; i < N; i++) {
-    dataIndices[i] = interface.setMeshVertex(meshID, vertices[i].data());
+  if (solverName == "SolverOne") {
+    dataWriteName = "dataOne";
+    dataReadName  = "dataTwo";
   }
+  if (solverName == "SolverTwo") {
+    dataReadName  = "dataOne";
+    dataWriteName = "dataTwo";
+  }
+  const int readDataID  = interface.getDataID(dataReadName, meshID);
+  const int writeDataID = interface.getDataID(dataWriteName, meshID);
+
+  std::vector<double> readData(numberOfVertices * dimensions);
+  std::vector<double> writeData(numberOfVertices * dimensions);
+  std::vector<double> vertices(numberOfVertices * dimensions);
+  std::vector<int>    vertexIDs(numberOfVertices);
+
+  for (int i = 0; i < numberOfVertices; i++) {
+    for (int j = 0; j < dimensions; j++) {
+      vertices[j + numberOfVertices * i]  = i;
+      readData[j + numberOfVertices * i]  = i;
+      writeData[j + numberOfVertices * i] = i;
+    }
+  }
+
+  interface.setMeshVertices(meshID, numberOfVertices, vertices.data(), vertexIDs.data());
 
   double dt = interface.initialize();
 
@@ -49,10 +71,22 @@ int main(int argc, char **argv)
       interface.markActionFulfilled(actionWriteIterationCheckpoint());
     }
 
+    if (interface.isReadDataAvailable()) {
+      interface.readBlockVectorData(readDataID, numberOfVertices, vertexIDs.data(), readData.data());
+    }
+
+    for (int i = 0; i < numberOfVertices * dimensions; i++) {
+      writeData[i] = readData[i] + 1;
+    }
+
+    if (interface.isWriteDataRequired(dt)) {
+      interface.writeBlockVectorData(writeDataID, numberOfVertices, vertexIDs.data(), writeData.data());
+    }
+
     dt = interface.advance(dt);
 
     if (interface.isActionRequired(actionReadIterationCheckpoint())) {
-      std::cout << "DUMMY: Writing iteration checkpoint\n";
+      std::cout << "DUMMY: Reading iteration checkpoint\n";
       interface.markActionFulfilled(actionReadIterationCheckpoint());
     } else {
       std::cout << "DUMMY: Advancing in time\n";

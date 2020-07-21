@@ -1,15 +1,26 @@
 #include <Eigen/Core>
+#include <algorithm>
+#include <array>
+#include <functional>
+#include <ostream>
+#include <string>
+#include <utility>
+#include <vector>
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "utils/String.hpp"
 #include "utils/algorithm.hpp"
 
 using namespace precice;
 namespace pu = precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
-BOOST_AUTO_TEST_SUITE(AlgorithmTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(AlgorithmTests)
 
 BOOST_AUTO_TEST_CASE(MakeArray)
 {
+  PRECICE_TEST(1_rank);
   auto a = pu::make_array(1, 2, 3);
   BOOST_TEST(a.size() == 3);
   BOOST_TEST(a[0] == 1);
@@ -19,6 +30,7 @@ BOOST_AUTO_TEST_CASE(MakeArray)
 
 BOOST_AUTO_TEST_CASE(UniqueElements)
 {
+  PRECICE_TEST(1_rank);
   std::vector<int> y{1, 2, 3, 4, 5, 6, 7, 8, 9};
   BOOST_TEST(pu::unique_elements(y));
   BOOST_TEST(pu::unique_elements(y, [](int l, int r) { return l == r; }));
@@ -38,6 +50,7 @@ BOOST_AUTO_TEST_CASE(UniqueElements)
 
 BOOST_AUTO_TEST_CASE(UniqueEigenElements)
 {
+  PRECICE_TEST(1_rank);
   Eigen::VectorXd v1(3);
   v1 << 1.0, 0.1, 0.2;
   Eigen::VectorXd v2(3);
@@ -66,6 +79,7 @@ BOOST_AUTO_TEST_CASE(UniqueEigenElements)
 
 BOOST_AUTO_TEST_CASE(Mismatch)
 {
+  PRECICE_TEST(1_rank);
   std::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9};
   std::vector<int> b{1, 2, 3, 4, 5, 0, 9};
 
@@ -87,6 +101,7 @@ BOOST_AUTO_TEST_SUITE(RangePreview)
 
 BOOST_AUTO_TEST_CASE(NormalRangePreview)
 {
+  PRECICE_TEST(1_rank);
   std::vector<int>   a{1, 2, 3, 4, 5, 6, 0};
   std::ostringstream oss;
   oss << pu::previewRange(2, a);
@@ -96,6 +111,7 @@ BOOST_AUTO_TEST_CASE(NormalRangePreview)
 
 BOOST_AUTO_TEST_CASE(PrintNoElements)
 {
+  PRECICE_TEST(1_rank);
   std::vector<int>   a{1, 2, 3, 4, 5, 6, 0};
   std::ostringstream oss;
   oss << pu::previewRange(0, a);
@@ -105,6 +121,7 @@ BOOST_AUTO_TEST_CASE(PrintNoElements)
 
 BOOST_AUTO_TEST_CASE(EmptyRange)
 {
+  PRECICE_TEST(1_rank);
   std::vector<int>   a;
   std::ostringstream oss;
   oss << pu::previewRange(3, a);
@@ -113,6 +130,67 @@ BOOST_AUTO_TEST_CASE(EmptyRange)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Range
+
+BOOST_AUTO_TEST_SUITE(ReorderArray)
+
+BOOST_AUTO_TEST_CASE(OneElement)
+{
+  PRECICE_TEST(1_rank);
+  std::array<int, 1> input{1};
+  std::array<int, 1> order{0};
+  std::array<int, 1> expected{1};
+
+  auto reordered = utils::reorder_array(order, input);
+  BOOST_TEST(reordered == expected);
+}
+
+BOOST_AUTO_TEST_CASE(AlreadySorted)
+{
+  PRECICE_TEST(1_rank);
+  std::array<int, 3> input{3, 4, 5};
+  std::array<int, 3> order{0, 1, 2};
+  std::array<int, 3> expected{3, 4, 5};
+
+  auto reordered = utils::reorder_array(order, input);
+  BOOST_TEST(reordered == expected);
+}
+
+BOOST_AUTO_TEST_CASE(Reverse)
+{
+  PRECICE_TEST(1_rank);
+  std::array<int, 3> input{3, 4, 5};
+  std::array<int, 3> order{2, 1, 0};
+  std::array<int, 3> expected{5, 4, 3};
+
+  auto reordered = utils::reorder_array(order, input);
+  BOOST_TEST(reordered == expected);
+}
+
+BOOST_AUTO_TEST_CASE(Scramble)
+{
+  PRECICE_TEST(1_rank);
+  std::array<int, 3> input{3, 4, 5};
+  std::array<int, 3> order{2, 0, 1};
+  std::array<int, 3> expected{5, 3, 4};
+
+  auto reordered = utils::reorder_array(order, input);
+  BOOST_TEST(reordered == expected);
+}
+
+BOOST_AUTO_TEST_CASE(ScramblePointer)
+{
+  PRECICE_TEST(1_rank);
+  int a = 1, b = 2;
+
+  std::array<int *, 3> input{&a, &b, nullptr};
+  std::array<int, 3>   order{2, 0, 1};
+  std::array<int *, 3> expected{nullptr, &a, &b};
+
+  auto reordered = utils::reorder_array(order, input);
+  BOOST_TEST(reordered == expected);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // ReorderArray
 
 BOOST_AUTO_TEST_SUITE_END() // Alorithm
 

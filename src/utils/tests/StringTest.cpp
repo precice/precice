@@ -1,4 +1,6 @@
 #include <string>
+#include "math/constants.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/String.hpp"
 
@@ -6,10 +8,11 @@ using namespace precice;
 using namespace precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
-BOOST_AUTO_TEST_SUITE(StringTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(StringTests)
 
 BOOST_AUTO_TEST_CASE(StringWrap)
 {
+  PRECICE_TEST(1_rank);
   std::string text("123456 1234567 12345678");
   std::string wrapped = wrapText(text, 4, 0);
   BOOST_TEST(wrapped == std::string("123456\n1234567\n12345678"));
@@ -37,6 +40,7 @@ BOOST_AUTO_TEST_CASE(StringWrap)
 
 BOOST_AUTO_TEST_CASE(StringAppendExtension)
 {
+  PRECICE_TEST(1_rank);
   std::string filename("somefile");
   std::string extension(".xyz");
 
@@ -55,6 +59,7 @@ BOOST_AUTO_TEST_CASE(StringAppendExtension)
 
 BOOST_AUTO_TEST_CASE(ConvertStringToBool)
 {
+  PRECICE_TEST(1_rank);
   BOOST_TEST(convertStringToBool("tRUe") == true);
   BOOST_TEST(convertStringToBool("FALSE") == false);
   BOOST_TEST(convertStringToBool("oN") == true);

@@ -1,4 +1,5 @@
 #include "Configuration.hpp"
+#include "logging/LogMacros.hpp"
 #include "xml/XMLAttribute.hpp"
 
 namespace precice {

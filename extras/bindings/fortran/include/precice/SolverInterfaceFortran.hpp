@@ -89,6 +89,8 @@ void precicef_get_dims_(int *dimensions);
 /**
  * @brief See precice::SolverInterface::isOngoing().
  *
+ * Deprecated - Forwards to precicef_is_coupling_ongoing_
+ *
  * Fortran syntax:
  * precicef_ongoing( INTEGER isOngoing )
  *
@@ -98,7 +100,20 @@ void precicef_get_dims_(int *dimensions);
 void precicef_ongoing_(int *isOngoing);
 
 /**
+ * @brief See precice::SolverInterface::isCouplingOngoing().
+ *
+ * Fortran syntax:
+ * precicef_is_coupling_ongoing( INTEGER isOngoing )
+ *
+ * IN:  -
+ * OUT: isOngoing(1:true, 0:false)
+ */
+void precicef_is_coupling_ongoing_(int *isOngoing);
+
+/**
  * @brief See precice::SolverInterface::isWriteDataRequired().
+ *
+ * Deprecated - Forwards to precicef_is_write_data_required_
  *
  * Fortran syntax:
  * precicef_write_data_required(
@@ -113,7 +128,24 @@ void precicef_write_data_required_(
     int *         isRequired);
 
 /**
+ * @brief See precice::SolverInterface::isWriteDataRequired().
+ *
+ * Fortran syntax:
+ * precicef_is_write_data_required(
+ *  DOUBLE PRECISION computedTimestepLength,
+ *  INTEGER          isRequired )
+ *
+ * IN:  computedTimestepLength
+ * OUT: isRequired(1:true, 0:false)
+ */
+void precicef_is_write_data_required_(
+    const double *computedTimestepLength,
+    int *         isRequired);
+
+/**
  * @brief See precice::SolverInterface::isReadDataAvailable().
+ *
+ * Deprecated - Forwards to precicef_is_read_data_available_
  *
  * Fortran syntax:
  * precicef_read_data_available( INTEGER isAvailable );
@@ -122,6 +154,17 @@ void precicef_write_data_required_(
  * OUT: isAvailable(1:true, 0:false)
  */
 void precicef_read_data_available_(int *isAvailable);
+
+/**
+ * @brief See precice::SolverInterface::isReadDataAvailable().
+ *
+ * Fortran syntax:
+ * precicef_is_read_data_available( INTEGER isAvailable );
+ *
+ * IN:  -
+ * OUT: isAvailable(1:true, 0:false)
+ */
+void precicef_is_read_data_available_(int *isAvailable);
 
 /**
  * @brief See precice::SolverInterface::isTimeWindowComplete().
@@ -159,6 +202,8 @@ void precicef_has_to_evaluate_fine_model_(int *hasToEvaluate);
 /**
  * @brief See precice::SolverInterface::isActionRequired().
  *
+ * Deprecated - Forwards to precicef_is_action_required_
+ *
  * Fortran syntax:
  * precicef_action_required(
  *   CHARACTER action(*),
@@ -168,6 +213,22 @@ void precicef_has_to_evaluate_fine_model_(int *hasToEvaluate);
  * OUT: isRequired(1:true, 0:false)
  */
 void precicef_action_required_(
+    const char *action,
+    int *       isRequired,
+    int         lengthAction);
+
+/**
+ * @brief See precice::SolverInterface::isActionRequired().
+ *
+ * Fortran syntax:
+ * precicef_is_action_required(
+ *   CHARACTER action(*),
+ *   INTEGER   isRequired )
+ *
+ * IN:  action
+ * OUT: isRequired(1:true, 0:false)
+ */
+void precicef_is_action_required_(
     const char *action,
     int *       isRequired,
     int         lengthAction);

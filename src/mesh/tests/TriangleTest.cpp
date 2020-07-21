@@ -1,20 +1,24 @@
+#include <Eigen/Core>
+#include <iterator>
 #include <sstream>
-
+#include <string>
+#include "logging/Logger.hpp"
 #include "mesh/Edge.hpp"
+#include "mesh/RangeAccessor.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-
-#include <iterator>
 
 using namespace precice;
 using namespace precice::mesh;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
-BOOST_AUTO_TEST_SUITE(TriangleTests, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(TriangleTests)
 
 BOOST_AUTO_TEST_CASE(Triangles)
 {
+  PRECICE_TEST(1_rank);
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -171,6 +175,7 @@ BOOST_AUTO_TEST_CASE(Triangles)
 
 BOOST_AUTO_TEST_CASE(TriangleEquality)
 {
+  PRECICE_TEST(1_rank);
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -207,6 +212,7 @@ BOOST_AUTO_TEST_CASE(TriangleEquality)
 
 BOOST_AUTO_TEST_CASE(TriangleWKTPrint)
 {
+  PRECICE_TEST(1_rank);
   Vertex            v1(Eigen::Vector3d(0., 0., 0.), 0);
   Vertex            v2(Eigen::Vector3d(0., 1., 0.), 0);
   Vertex            v3(Eigen::Vector3d(1., 0., 0.), 0);

@@ -1,7 +1,11 @@
 #include "xml/XMLTag.hpp"
-#include <cctype>
+#include <Eigen/Core>
+#include <ostream>
+#include <utility>
+#include "logging/LogMacros.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/String.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 
 namespace precice {
 namespace xml {
@@ -136,10 +140,10 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   // std::map<std::string, XMLAttribute<utils::DynVector> >::const_iterator iter;
   auto iter = _eigenVectorXdAttributes.find(name);
   PRECICE_ASSERT(iter != _eigenVectorXdAttributes.end());
-  PRECICE_CHECK(iter->second.getValue().size() >= dimensions,
-                "Vector attribute \"" << name << "\" of tag <" << getFullName()
-                                      << "> has less dimensions than required (" << iter->second.getValue().size()
-                                      << " instead of " << dimensions << ")!");
+  const auto size = iter->second.getValue().size();
+  PRECICE_CHECK(size == dimensions,
+                "Vector attribute \"" << name << "\" of tag <" << getFullName() << "> is "
+                                      << size << "D, which does not match the dimension of the " << dimensions << "D solver-interface.");
 
   // Read only first "dimensions" components of the parsed vector values
   Eigen::VectorXd        result(dimensions);
@@ -151,8 +155,7 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   return result;
 }
 
-// new readattributes fx
-void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
+void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttributes)
 {
   PRECICE_TRACE();
 
@@ -160,7 +163,7 @@ void XMLTag::readAttributes(std::map<std::string, std::string> &aAttributes)
     auto name = element.first;
 
     if (not utils::contained(name, _attributes)) {
-      PRECICE_ERROR("Wrong attribute \"" << name << '\"');
+      PRECICE_ERROR("Tag <" << _name << "> contains an unknown attribute named \"" << name << "\".");
     }
   }
 
@@ -280,9 +283,9 @@ void XMLTag::areAllSubtagsConfigured() const
     if ((not configured) && (occurOnce || occurOnceOrMore)) {
 
       if (tag->getNamespace().empty()) {
-        PRECICE_ERROR("Tag <" << tag->getName() << "> is missing");
+        PRECICE_ERROR("Tag <" << tag->getName() << "> was not found but is required to occur at least once.");
       } else {
-        PRECICE_ERROR("Tag <" << tag->getNamespace() << ":...> is missing");
+        PRECICE_ERROR("Tag <" << tag->getNamespace() << ":... > was not found but is required to occur at least once.");
       }
     }
   }

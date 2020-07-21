@@ -25,11 +25,11 @@
          <mapping:rbf-thin-plate-splines direction="write"
                   constraint="conservative" from="FliteNodes"
                   to="CalculixNodes" timing="initial"
-                  use-lu-decomposition="yes"/>
+                  use-qr-decomposition="yes"/>
          <mapping:rbf-thin-plate-splines direction="read"
                   constraint="consistent" from="CalculixNodes"
                   to="FliteNodes" timing="initial"
-                  use-lu-decomposition="yes"/>
+                  use-qr-decomposition="yes"/>
          <write-data name="Forces"           mesh="FliteNodes"/>
          <read-data  name="Displacements"    mesh="FliteNodes"/>
          <read-data  name="OldDisplacements" mesh="FliteNodes"/>

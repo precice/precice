@@ -2,8 +2,8 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <array>
 #include <iostream>
-
 #include "math/differences.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/RangeAccessor.hpp"
@@ -25,7 +25,7 @@ class Triangle {
 public:
   /// Type of the read-only const random-access iterator over Vertex coords
   /**
-   * This index-based iterator iterates over the vertices of this Quad.
+   * This index-based iterator iterates over the vertices of this Triangle.
    * The returned value is the forwarded result of Vertex::getCoords.
    * It is thus a read-only random-access iterator.
    */
@@ -133,8 +133,7 @@ private:
   std::array<Edge *, 3> _edges;
 
   /// Decider for choosing unique vertices from _edges.
-  std::array<int, 3> _vertexMap;
-  //  bool _vertexDeciderFirst;
+  std::array<bool, 3> _vertexMap;
 
   /// ID of the edge.
   int _id;

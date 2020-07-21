@@ -2,6 +2,9 @@
 
 #include <Eigen/Core>
 #include <array>
+#include <limits>
+#include <stddef.h>
+#include <string>
 #include "logging/Logger.hpp"
 
 namespace precice {

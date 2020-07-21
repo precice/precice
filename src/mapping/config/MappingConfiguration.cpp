@@ -1,10 +1,24 @@
 #include "MappingConfiguration.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <list>
+#include <memory>
+#include <ostream>
+#include <string.h>
+#include <utility>
+#include "logging/LogMacros.hpp"
+#include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -37,8 +51,8 @@ MappingConfiguration::MappingConfiguration(
   auto attrPreallocation = makeXMLAttribute("preallocation", "tree")
                                .setDocumentation("Sets kind of preallocation for PETSc RBF implementation")
                                .setOptions({"estimate", "compute", "off", "save", "tree"});
-  auto attrUseLU = makeXMLAttribute(ATTR_USE_LU, false)
-                       .setDocumentation("If set to true, LU decomposition is used to solve the RBF system (only supported in serial)");
+  auto attrUseLU = makeXMLAttribute(ATTR_USE_QR, false)
+                       .setDocumentation("If set to true, QR decomposition is used to solve the RBF system");
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  tags;
@@ -160,8 +174,8 @@ void MappingConfiguration::xmlTagCallback(
     if (tag.hasAttribute(ATTR_Z_DEAD)) {
       zDead = tag.getBooleanAttributeValue(ATTR_Z_DEAD);
     }
-    if (tag.hasAttribute(ATTR_USE_LU)) {
-      useLU = tag.getBooleanAttributeValue(ATTR_USE_LU);
+    if (tag.hasAttribute(ATTR_USE_QR)) {
+      useLU = tag.getBooleanAttributeValue(ATTR_USE_QR);
     }
     if (tag.hasAttribute("polynomial")) {
       std::string strPolynomial = tag.getStringAttributeValue("polynomial");
@@ -231,8 +245,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
-  PRECICE_CHECK(fromMesh.get() != nullptr, "Mesh \"" << fromMeshName << "\" not defined at creation of mapping!");
-  PRECICE_CHECK(toMesh.get() != nullptr, "Mesh \"" << toMeshName << "\" not defined at creation of mapping!");
+  PRECICE_CHECK(fromMesh.get() != nullptr, "Mesh \"" << fromMeshName << "\" was not found while creating a mapping. Please correct the from=\"" << fromMeshName << "\" attribute.");
+  PRECICE_CHECK(toMesh.get() != nullptr, "Mesh \"" << toMeshName << "\" was not found while creating a mapping. Please correct the to=\"" << toMeshName << "\" attribute.");
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh   = toMesh;
   configuredMapping.timing   = timing;
@@ -243,7 +257,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (direction == VALUE_READ) {
     configuredMapping.direction = READ;
   } else {
-    PRECICE_ERROR("Unknown direction type \"" << direction << "\"!");
+    PRECICE_ASSERT(false, "Unknown mapping direction type \"" << direction << "\". Please check the documentation for available options.");
   }
 
   Mapping::Constraint constraintValue;
@@ -252,7 +266,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (constraint == VALUE_CONSISTENT) {
     constraintValue = Mapping::CONSISTENT;
   } else {
-    PRECICE_ERROR("Unknown mapping constraint \"" << constraint << "\"!");
+    PRECICE_ASSERT(false, "Unknown mapping constraint \"" << constraint << "\". Please check the documentation for available options.");
   }
 
   if (type == VALUE_NEAREST_NEIGHBOR) {
@@ -270,8 +284,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   // the mapping is a RBF mapping
 
   configuredMapping.isRBF = true;
-  bool isSerial           = context.size == 1;
-  bool usePETSc           = false;
+  bool    usePETSc        = false;
+  RBFType rbfType         = RBFType::EIGEN;
 
 #ifndef PRECICE_NO_PETSC
   // for petsc initialization
@@ -279,25 +293,19 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   char *arg  = new char[8];
   strcpy(arg, "precice");
   char **argv = &arg;
-  utils::Petsc::initialize(&argc, &argv);
+  utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
   delete[] arg;
   usePETSc = true;
 #endif
 
-  bool createPetRBF = false;
-  if (usePETSc) {
-    if (isSerial) {
-      createPetRBF = not useLU;
-    } else {
-      if (useLU)
-        PRECICE_WARN("LU decomposition is not supported for parallel RBF data mappings. Switching to GMRES (PETSc)");
-      createPetRBF = true;
-    }
+  if (usePETSc && (not useLU)) {
+    rbfType = RBFType::PETSc;
   } else {
-    PRECICE_CHECK(isSerial, "Using RBF data mappings in parallel requires building with PETSc.");
+    rbfType = RBFType::EIGEN;
   }
 
-  if (not createPetRBF) {
+  if (rbfType == RBFType::EIGEN) {
+    PRECICE_DEBUG("Eigen RBF is used");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead));
@@ -335,7 +343,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
 #ifndef PRECICE_NO_PETSC
 
-  if (createPetRBF) {
+  if (rbfType == RBFType::PETSc) {
+    PRECICE_DEBUG("PETSc RBF is used.");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
@@ -385,9 +394,11 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
     bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
     PRECICE_CHECK(!sameFromMesh, "There cannot be two mappings from mesh \""
-                                     << mapping.fromMesh->getName() << "\"");
+                                     << mapping.fromMesh->getName() << "\". "
+                                     << "Please remove any duplicate mapping definitions with from=\"" << mapping.fromMesh->getName() << "\" or use a different mesh.");
     PRECICE_CHECK(!sameToMesh, "There cannot be two mappings to mesh \""
-                                   << mapping.toMesh->getName() << "\"");
+                                   << mapping.toMesh->getName() << "\". "
+                                   << "Please remove any duplicate mapping definitions with to=\"" << mapping.toMesh->getName() << "\" or use a different mesh.");
   }
 }
 
@@ -400,7 +411,7 @@ MappingConfiguration::Timing MappingConfiguration::getTiming(const std::string &
   } else if (timing == VALUE_TIMING_ON_DEMAND) {
     return ON_DEMAND;
   }
-  PRECICE_ERROR("Unknown timing value \"" << timing << "\"!");
+  PRECICE_ASSERT(false, "Unknown timing value \"" << timing << "\". Please check the documentation for available options.");
 }
 
 } // namespace mapping

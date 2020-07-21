@@ -1,13 +1,13 @@
 #include "Logger.hpp"
-
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
-
-#include <boost/log/attributes/mutable_constant.hpp>
-#include <boost/log/expressions.hpp>
+#include <iosfwd>
+#include <utility>
 
 namespace precice {
 namespace logging {
@@ -74,34 +74,49 @@ void setLogLocation(LogLocation loc)
 }
 } // namespace
 
-void Logger::error(LogLocation loc, const std::string &mess)
+void Logger::error(LogLocation loc, const std::string &mess) noexcept
 {
-  setLogLocation(loc);
-  BOOST_LOG_SEV(*_impl, boost::log::trivial::severity_level::error) << mess;
+  try {
+    setLogLocation(loc);
+    BOOST_LOG_SEV(*_impl, boost::log::trivial::severity_level::error) << mess;
+  } catch (...) {
+  }
 }
 
-void Logger::warning(LogLocation loc, const std::string &mess)
+void Logger::warning(LogLocation loc, const std::string &mess) noexcept
 {
-  setLogLocation(loc);
-  BOOST_LOG_SEV(*_impl, boost::log::trivial::severity_level::warning) << mess;
+  try {
+    setLogLocation(loc);
+    BOOST_LOG_SEV(*_impl, boost::log::trivial::severity_level::warning) << mess;
+  } catch (...) {
+  }
 }
 
-void Logger::info(LogLocation loc, const std::string &mess)
+void Logger::info(LogLocation loc, const std::string &mess) noexcept
 {
-  setLogLocation(loc);
-  BOOST_LOG_SEV(*_impl, boost::log::trivial::severity_level::info) << mess;
+  try {
+    setLogLocation(loc);
+    BOOST_LOG_SEV(*_impl, boost::log::trivial::severity_level::info) << mess;
+  } catch (...) {
+  }
 }
 
-void Logger::debug(LogLocation loc, const std::string &mess)
+void Logger::debug(LogLocation loc, const std::string &mess) noexcept
 {
-  setLogLocation(loc);
-  BOOST_LOG_SEV(*_impl, boost::log::trivial::severity_level::debug) << mess;
+  try {
+    setLogLocation(loc);
+    BOOST_LOG_SEV(*_impl, boost::log::trivial::severity_level::debug) << mess;
+  } catch (...) {
+  }
 }
 
-void Logger::trace(LogLocation loc, const std::string &mess)
+void Logger::trace(LogLocation loc, const std::string &mess) noexcept
 {
-  setLogLocation(loc);
-  BOOST_LOG_SEV(*_impl, boost::log::trivial::severity_level::trace) << mess;
+  try {
+    setLogLocation(loc);
+    BOOST_LOG_SEV(*_impl, boost::log::trivial::severity_level::trace) << mess;
+  } catch (...) {
+  }
 }
 
 } // namespace logging

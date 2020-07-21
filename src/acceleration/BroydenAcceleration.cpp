@@ -1,8 +1,15 @@
-#include <Eigen/Core>
-
 #include "acceleration/BroydenAcceleration.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <stddef.h>
+#include "acceleration/impl/QRFactorization.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {
@@ -68,7 +75,7 @@ void BroydenAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen:
 
   PRECICE_DEBUG("currentColumns=" << _currentColumns);
   if (_currentColumns > 1) {
-    PRECICE_ERROR("truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.");
+    PRECICE_ERROR("Truncated IMVJ is no longer supported. Please use IMVJ with restart mode instead.");
     PRECICE_DEBUG("compute update with QR-dec");
     //computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   } else {

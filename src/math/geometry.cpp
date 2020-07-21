@@ -1,12 +1,18 @@
 #include "geometry.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <math.h>
+#include <stdlib.h>
+#include "logging/Logger.hpp"
 #include "math/math.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace math {
 namespace geometry {
+
+logging::Logger _log("math::geometry");
 
 bool segmentsIntersect(
     const Eigen::Ref<const Eigen::Vector2d> &a,
@@ -239,6 +245,83 @@ int containedInTriangle(
   }
   // Outside of triangle
   return NOT_CONTAINED;
+}
+
+ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
+{
+  /*
+    All points need to be projected into a new plane with only 2 coordinates, x' and y'. These are used to check
+    the convexity of the quad. These new coordinates are stored in 'coords'.
+  */
+  for (const auto &vec : coords) {
+    PRECICE_ASSERT(vec.size() == 3, "This only works in 3D.");
+  }
+
+  Eigen::Vector3d coordOrigin; // Origin point for the transformation of points onto the new plane
+  coordOrigin = coords[0];
+
+  // Normal of the plane of first three points in the list of vertices
+  Eigen::Vector3d e_1          = coords[1] - coordOrigin;
+  Eigen::Vector3d e_2          = coords[2] - coordOrigin;
+  Eigen::Vector3d normalVector = e_1.cross(e_2);
+
+  PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0), "Non-planar quads are not supported. The vertex coordinates are: " << coords << ".");
+
+  //Transform Coordinates - coord[0] is the origin
+  for (int i = 0; i < 4; i++) {
+    Eigen::Vector3d coordinateDifference = coords[i] - coordOrigin;
+    coords[i][0]                         = e_1.dot(coordinateDifference);
+    coords[i][1]                         = e_2.dot(coordinateDifference);
+    coords[i][2]                         = normalVector.dot(coordinateDifference);
+  }
+
+  /*
+  For the convex hull algorithm, the most left hand point regarding the x coordinate is chosen as the starting point.
+  The algorithm moves in an anti-clockwise position, finding the most right hand coordinate from the
+  previous most right hand point. The algorithm must find 3 other points in order to be a valid quad.
+  */
+
+  //First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift wrapping algorithm
+  int idLowestPoint = 0;
+  for (int i = 1; i < 4; i++) {
+    if (coords[i][0] < coords[idLowestPoint][0]) {
+      idLowestPoint = i;
+    }
+  }
+
+  // Found starting point. Add this as the first vertex in the convex hull.
+  // current is the origin point => hull[0]
+  int             validVertexIDCounter = 0;             // Counts number of times a valid vertex is found. Must be 4 for a valid quad.
+  int             currentVertex        = idLowestPoint; // current valid vertex
+  ConvexityResult result{};
+  do {
+    // Add current point to result
+    result.vertexOrder[validVertexIDCounter] = currentVertex;
+
+    // Next potential valid vertex
+    int nextVertex = (currentVertex + 1) % 4; // remainder resets loop through vector of points
+    for (int i = 0; i < 4; i++) {
+      double y1  = coords[currentVertex][1] - coords[nextVertex][1];
+      double y2  = coords[currentVertex][1] - coords[i][1];
+      double x1  = coords[currentVertex][0] - coords[nextVertex][0];
+      double x2  = coords[currentVertex][0] - coords[i][0];
+      double val = y2 * x1 - y1 * x2;
+
+      if (val > 0) {
+        nextVertex = i;
+      }
+    }
+    // Now nextVertex is the most anti-clockwise with respect to current
+    // Set current as nextVertex for next iteration, so that nextVertex is added to
+    // result 'hull'
+    currentVertex = nextVertex;
+    validVertexIDCounter++;
+  } while (currentVertex != idLowestPoint); // While we don't come to first point
+
+  //Ordering of quad is hull 0-1-2-3-0
+  result.convex = (validVertexIDCounter == 4);
+
+  return result;
 }
 
 } // namespace geometry

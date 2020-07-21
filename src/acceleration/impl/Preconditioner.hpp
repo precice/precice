@@ -4,6 +4,8 @@
 #include <vector>
 
 #include "cplscheme/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {

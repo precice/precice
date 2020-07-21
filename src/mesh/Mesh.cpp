@@ -1,14 +1,20 @@
 #include "Mesh.hpp"
 #include <Eigen/Core>
-#include <Eigen/Geometry>
 #include <algorithm>
 #include <array>
 #include <boost/container/flat_map.hpp>
+#include <functional>
+#include <memory>
+#include <ostream>
+#include <type_traits>
+#include <utility>
+#include <vector>
 #include "Edge.hpp"
-#include "Quad.hpp"
 #include "RTree.hpp"
 #include "Triangle.hpp"
-#include "math/math.hpp"
+#include "logging/LogMacros.hpp"
+#include "math/geometry.hpp"
+#include "mesh/Data.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -22,7 +28,8 @@ Mesh::Mesh(
     : _name(name),
       _dimensions(dimensions),
       _flipNormals(flipNormals),
-      _id(id)
+      _id(id),
+      _boundingBox(dimensions)
 {
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
@@ -66,16 +73,6 @@ const Mesh::TriangleContainer &Mesh::triangles() const
   return _triangles;
 }
 
-Mesh::QuadContainer &Mesh::quads()
-{
-  return _quads;
-}
-
-const Mesh::QuadContainer &Mesh::quads() const
-{
-  return _quads;
-}
-
 int Mesh::getDimensions() const
 {
   return _dimensions;
@@ -112,23 +109,12 @@ Triangle &Mesh::createTriangle(
     Edge &edgeTwo,
     Edge &edgeThree)
 {
-  PRECICE_CHECK(
+  PRECICE_ASSERT(
       edgeOne.connectedTo(edgeTwo) &&
-          edgeTwo.connectedTo(edgeThree) &&
-          edgeThree.connectedTo(edgeOne),
-      "Edges are not connected!");
+      edgeTwo.connectedTo(edgeThree) &&
+      edgeThree.connectedTo(edgeOne));
   _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
   return _triangles.back();
-}
-
-Quad &Mesh::createQuad(
-    Edge &edgeOne,
-    Edge &edgeTwo,
-    Edge &edgeThree,
-    Edge &edgeFour)
-{
-  _quads.emplace_back(edgeOne, edgeTwo, edgeThree, edgeFour, _manageQuadIDs.getFreeID());
-  return _quads.back();
 }
 
 PtrData &Mesh::createData(
@@ -139,7 +125,7 @@ PtrData &Mesh::createData(
   for (const PtrData data : _data) {
     PRECICE_CHECK(data->getName() != name,
                   "Data \"" << name << "\" cannot be created twice for "
-                            << "mesh \"" << _name << "\"!");
+                            << "mesh \"" << _name << "\". Please rename or remove one of the use-data tags with name \"" << name << "\".");
   }
   int     id = Data::getDataCount();
   PtrData data(new Data(name, id, dimension));
@@ -155,12 +141,11 @@ const Mesh::DataContainer &Mesh::data() const
 const PtrData &Mesh::data(
     int dataID) const
 {
-  for (const PtrData &data : _data) {
-    if (data->getID() == dataID) {
-      return data;
-    }
-  }
-  PRECICE_ERROR("Data with ID = " << dataID << " not found in mesh \"" << _name << "\"!");
+  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](PtrData const &ptr) {
+    return ptr->getID() == dataID;
+  });
+  PRECICE_ASSERT(iter != _data.end(), "Data with ID = " << dataID << " not found in mesh \"" << _name << "\".");
+  return *iter;
 }
 
 const std::string &Mesh::getName() const
@@ -197,10 +182,18 @@ bool Mesh::isValidEdgeID(int edgeID) const
 void Mesh::allocateDataValues()
 {
   PRECICE_TRACE(_vertices.size());
+  const auto expectedCount = _vertices.size();
+  using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
   for (PtrData data : _data) {
-    int total          = _vertices.size() * data->getDimensions();
-    int leftToAllocate = total - data->values().size();
-    if (leftToAllocate > 0) {
+    const SizeType expectedSize = expectedCount * data->getDimensions();
+    const auto     actualSize   = static_cast<SizeType>(data->values().size());
+    // Shrink Buffer
+    if (expectedSize < actualSize) {
+      data->values().resize(expectedSize);
+    }
+    // Enlarge Buffer
+    if (expectedSize > actualSize) {
+      const auto leftToAllocate = expectedSize - actualSize;
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
     PRECICE_DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
@@ -210,19 +203,12 @@ void Mesh::allocateDataValues()
 void Mesh::computeBoundingBox()
 {
   PRECICE_TRACE(_name);
-  BoundingBox boundingBox(_dimensions,
-                          std::make_pair(std::numeric_limits<double>::max(),
-                                         std::numeric_limits<double>::lowest()));
+  BoundingBox bb(_dimensions);
   for (const Vertex &vertex : _vertices) {
-    for (int d = 0; d < _dimensions; d++) {
-      boundingBox[d].first  = std::min(vertex.getCoords()[d], boundingBox[d].first);
-      boundingBox[d].second = std::max(vertex.getCoords()[d], boundingBox[d].second);
-    }
+    bb.expandBy(vertex);
   }
-  for (int d = 0; d < _dimensions; d++) {
-    PRECICE_DEBUG("BoundingBox, dim: " << d << ", first: " << boundingBox[d].first << ", second: " << boundingBox[d].second);
-  }
-  _boundingBox = std::move(boundingBox);
+  _boundingBox = std::move(bb);
+  PRECICE_DEBUG("Bounding Box, " << _boundingBox);
 }
 
 void Mesh::computeState()
@@ -232,7 +218,7 @@ void Mesh::computeState()
 
   // Compute normals only if faces to derive normal information are available
   size_t size2DFaces = _edges.size();
-  size_t size3DFaces = _triangles.size() + _quads.size();
+  size_t size3DFaces = _triangles.size();
   if (_dimensions == 2 && size2DFaces == 0) {
     return;
   }
@@ -274,22 +260,6 @@ void Mesh::computeState()
       }
     }
 
-    // Compute quad normals
-    for (Quad &quad : _quads) {
-      PRECICE_ASSERT(quad.vertex(0) != quad.vertex(1), quad.vertex(0).getCoords(), quad.getID());
-      PRECICE_ASSERT(quad.vertex(1) != quad.vertex(2), quad.vertex(1).getCoords(), quad.getID());
-      PRECICE_ASSERT(quad.vertex(2) != quad.vertex(3), quad.vertex(2).getCoords(), quad.getID());
-      PRECICE_ASSERT(quad.vertex(3) != quad.vertex(0), quad.vertex(3).getCoords(), quad.getID());
-
-      // Compute normals (assuming all vertices are on same plane)
-      Eigen::VectorXd weightednormal = quad.computeNormal(_flipNormals);
-      // Accumulate area-weighted normal in associated vertices and edges
-      for (int i = 0; i < 4; i++) {
-        quad.edge(i).setNormal(quad.edge(i).getNormal() + weightednormal);
-        quad.vertex(i).setNormal(quad.vertex(i).getNormal() + weightednormal);
-      }
-    }
-
     // Normalize edge normals (only done in 3D)
     for (Edge &edge : _edges) {
       // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
@@ -305,7 +275,6 @@ void Mesh::computeState()
 
 void Mesh::clear()
 {
-  _quads.clear();
   _triangles.clear();
   _edges.clear();
   _vertices.clear();
@@ -356,6 +325,33 @@ void Mesh::setGlobalNumberOfVertices(int num)
   _globalNumberOfVertices = num;
 }
 
+Eigen::VectorXd Mesh::getOwnedVertexData(int dataID)
+{
+
+  std::vector<double> ownedDataVector;
+  int                 valueDim = data(dataID)->getDimensions();
+  int                 index    = 0;
+
+  for (const auto &vertex : vertices()) {
+    if (vertex.isOwner()) {
+      for (int dim = 0; dim < valueDim; ++dim) {
+        ownedDataVector.push_back(data(dataID)->values()[index * valueDim + dim]);
+      }
+    }
+    ++index;
+  }
+  Eigen::Map<Eigen::VectorXd> ownedData(ownedDataVector.data(), ownedDataVector.size());
+
+  return ownedData;
+}
+
+void Mesh::tagAll()
+{
+  for (auto &vertex : _vertices) {
+    vertex.tag();
+  }
+}
+
 void Mesh::addMesh(
     Mesh &deltaMesh)
 {
@@ -404,18 +400,9 @@ void Mesh::addMesh(
   meshChanged(*this);
 }
 
-const Mesh::BoundingBox Mesh::getBoundingBox() const
+const BoundingBox &Mesh::getBoundingBox() const
 {
   return _boundingBox;
-}
-
-const std::vector<double> Mesh::getCOG() const
-{
-  std::vector<double> cog(_dimensions);
-  for (int d = 0; d < _dimensions; d++) {
-    cog[d] = (_boundingBox[d].second - _boundingBox[d].first) / 2.0 + _boundingBox[d].first;
-  }
-  return cog;
 }
 
 bool Mesh::operator==(const Mesh &other) const
@@ -427,8 +414,6 @@ bool Mesh::operator==(const Mesh &other) const
            std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin());
   equal &= _triangles.size() == other._triangles.size() &&
            std::is_permutation(_triangles.begin(), _triangles.end(), other._triangles.begin());
-  equal &= _quads.size() == other._quads.size() &&
-           std::is_permutation(_quads.begin(), _quads.end(), other._quads.begin());
   return equal;
 }
 
@@ -455,11 +440,6 @@ std::ostream &operator<<(std::ostream &os, const Mesh &m)
   sep = ",\n";
   for (auto &triangle : m.triangles()) {
     os << sep << triangle;
-    sep = token;
-  }
-  sep = ",\n";
-  for (auto &quad : m.quads()) {
-    os << sep << quad;
     sep = token;
   }
   os << "\n)";

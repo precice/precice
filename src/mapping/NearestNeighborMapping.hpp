@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mapping/Mapping.hpp"

@@ -1,18 +1,20 @@
-#include <Eigen/Core>
-
 #include "acceleration/IQNILSAcceleration.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <deque>
+#include <memory>
 #include "acceleration/impl/Preconditioner.hpp"
+#include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "io/TXTReader.hpp"
-#include "io/TXTWriter.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 //#include "utils/NumericalCompare.hpp"
 
@@ -232,6 +234,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
 void IQNILSAcceleration::specializedIterationsConverged(
     DataMap &cplData)
 {
+  PRECICE_TRACE();
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }

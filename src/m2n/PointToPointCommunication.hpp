@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cstddef>
 #include <list>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
-
 #include "DistributedCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
@@ -11,6 +13,10 @@
 #include "mesh/SharedPointer.hpp"
 
 namespace precice {
+namespace com {
+class Request;
+} // namespace com
+
 namespace m2n {
 /**
  * @brief Point-to-point communication implementation of DistributedCommunication.

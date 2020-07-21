@@ -1,15 +1,21 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <iosfwd>
+#include <string>
 #include <vector>
 #include "FindClosestEdge.hpp"
-#include "FindClosestQuad.hpp"
 #include "FindClosestTriangle.hpp"
 #include "FindClosestVertex.hpp"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace mesh {
 class Mesh;
-}
+class Edge;
+class Triangle;
+class Vertex;
+} // namespace mesh
 } // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -65,11 +71,6 @@ InterpolationElements generateInterpolationElements(
 InterpolationElements generateInterpolationElements(
     const mesh::Vertex &  location,
     const mesh::Triangle &element);
-
-/// Generates the InterpolationElements for projecting a Vertex on a Quad
-InterpolationElements generateInterpolationElements(
-    const mesh::Vertex &location,
-    const mesh::Quad &  element);
 
 /**
  * @brief Determines closest Triangle, Edge, or Vertex object to a given point.
@@ -128,9 +129,6 @@ private:
   /// Find closest distance to Triangle objects.
   FindClosestTriangle _findClosestTriangle;
 
-  /// Find closest distance to Quad objects.
-  FindClosestQuad _findClosestQuad;
-
   /// Closest mesh element.
   ClosestElement _closest;
 
@@ -153,7 +151,6 @@ FindClosest::FindClosest(
     : _findClosestVertex(searchpoint),
       _findClosestEdge(searchpoint),
       _findClosestTriangle(searchpoint),
-      _findClosestQuad(searchpoint),
       _closest(searchpoint.size()),
       _searchpoint(searchpoint)
 {
@@ -168,7 +165,6 @@ bool FindClosest::operator()(
   _findClosestTriangle(container);
   _findClosestEdge(container);
   _findClosestVertex(container);
-  _findClosestQuad(container);
   return determineClosest();
 }
 

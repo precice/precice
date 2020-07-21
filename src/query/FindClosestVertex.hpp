@@ -1,6 +1,10 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <limits>
+#include <stddef.h>
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 // ---------------------------------------------------------- CLASS DEFINITION
 

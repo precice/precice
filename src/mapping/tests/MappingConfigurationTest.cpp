@@ -1,7 +1,13 @@
+#include <memory>
+#include <string>
+#include <vector>
+#include "logging/Logger.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -9,10 +15,11 @@ using namespace precice;
 using namespace precice::mapping;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
-BOOST_AUTO_TEST_SUITE(Configuration, *testing::OnMaster())
+BOOST_AUTO_TEST_SUITE(Configuration)
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {
+  PRECICE_TEST(1_rank);
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-config.xml");

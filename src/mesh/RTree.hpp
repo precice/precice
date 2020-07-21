@@ -1,94 +1,32 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <boost/geometry.hpp>
+#include <iosfwd>
 #include <map>
 #include <memory>
+#include <type_traits>
 #include "mesh/Mesh.hpp"
-#include "mesh/Quad.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/impl/RTreeAdapter.hpp"
 
-// Forward declaration to friend the boost test struct
-namespace MeshTests {
-namespace RTree {
-struct CacheClearing;
-}
-} // namespace MeshTests
-
 namespace precice {
+
+namespace testing {
+namespace accessors {
+struct rtree;
+}
+} // namespace testing
+
 namespace mesh {
-
-/** The enumeration of various primitive types.
- * \see PrimitiveIndex
- * \see as_primitve_enum
- */
-enum class Primitive {
-  Vertex,
-  Edge,
-  Triangle,
-  Quad
-};
-
-/// A standard print operator for Primitive
-std::ostream &operator<<(std::ostream &out, Primitive val);
-
-/// The type traits to return the enum value of a primitive type.
-template <class T>
-struct as_primitive_enum {
-};
-template <>
-struct as_primitive_enum<mesh::Vertex> {
-  static constexpr Primitive value = Primitive::Vertex;
-};
-template <>
-struct as_primitive_enum<mesh::Edge> {
-  static constexpr Primitive value = Primitive::Edge;
-};
-template <>
-struct as_primitive_enum<mesh::Triangle> {
-  static constexpr Primitive value = Primitive::Triangle;
-};
-template <>
-struct as_primitive_enum<mesh::Quad> {
-  static constexpr Primitive value = Primitive::Quad;
-};
-
-/** Binds an Index and Primitive into a type
- * \see AABBGenerator
- * \see indexPrimitives
- */
-struct PrimitiveIndex {
-  Primitive type;
-  size_t    index;
-};
-
-/// Standard equality test for PrimitiveIndex
-bool operator==(const PrimitiveIndex &lhs, const PrimitiveIndex &rhs);
-
-/// Standard non-equality test for PrimitiveIndex
-bool operator!=(const PrimitiveIndex &lhs, const PrimitiveIndex &rhs);
-
-/// A standard print operator for PrimitiveIndex
-std::ostream &operator<<(std::ostream &out, PrimitiveIndex val);
-
-/// The axis aligned bounding box based on the Vertex Type
-using AABB = boost::geometry::model::box<Eigen::VectorXd>;
-
-/// The rtree capable of indexing primitives of an entire Mesh
-using PrimitiveRTree = boost::geometry::index::rtree<std::pair<AABB, PrimitiveIndex>, boost::geometry::index::rstar<16>>;
-
-/// The shared_ptr convenience type for PrimitiveRTree
-using PtrPrimitiveRTree = std::shared_ptr<PrimitiveRTree>;
-
-/** Indexes a given mesh and returns a PrimitiveRTree holding the index
- *
- * This indexes the vertices, edges, triangles, and quads of a given Mesh and retrurns the index tree
- *
- * \param mesh the mesh to index
- *
- * \return the tree containing the indexed primitives descibed above
- */
-PrimitiveRTree indexMesh(const Mesh &mesh);
+class Edge;
+class Triangle;
+class Vertex;
+namespace impl {
+template <typename Container>
+class VectorIndexable;
+} // namespace impl
 
 /// The RTree box type
 using RTreeBox = boost::geometry::model::box<Eigen::VectorXd>;
@@ -98,23 +36,18 @@ template <class T>
 struct PrimitiveTraits;
 
 template <>
-struct PrimitiveTraits<pm::Vertex> {
+struct PrimitiveTraits<Vertex> {
   using MeshContainer = Mesh::VertexContainer;
 };
 
 template <>
-struct PrimitiveTraits<pm::Edge> {
+struct PrimitiveTraits<Edge> {
   using MeshContainer = Mesh::EdgeContainer;
 };
 
 template <>
-struct PrimitiveTraits<pm::Triangle> {
+struct PrimitiveTraits<Triangle> {
   using MeshContainer = Mesh::TriangleContainer;
-};
-
-template <>
-struct PrimitiveTraits<pm::Quad> {
-  using MeshContainer = Mesh::VertexContainer;
 };
 
 /// The general rtree parameter type used in precice
@@ -191,19 +124,13 @@ public:
 
   static triangle_traits::Ptr getTriangleRTree(const PtrMesh &mesh);
 
-  /// Returns the pointer to boost::geometry::rtree for the given mesh primitives
-  /*
-   * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
-   */
-  static PtrPrimitiveRTree getPrimitiveRTree(const PtrMesh &mesh);
-
   /// Only clear the trees of that specific mesh
   static void clear(Mesh &mesh);
 
   /// Clear the complete cache
   static void clear();
 
-  friend struct MeshTests::RTree::CacheClearing;
+  friend struct testing::accessors::rtree;
 
 private:
   struct MeshIndices {
@@ -214,8 +141,8 @@ private:
 
   static MeshIndices &cacheEntry(int MeshID);
 
-  static std::map<int, MeshIndices>       _cached_trees;    ///< Cache for all index trees
-  static std::map<int, PtrPrimitiveRTree> _primitive_trees; ///< Cache for the primitive trees
+  using RTreeCache = std::map<int, MeshIndices>;
+  static RTreeCache _cached_trees; ///< Cache for all index trees
 };
 
 using Box3d = boost::geometry::model::box<boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>>;
@@ -224,4 +151,16 @@ using Box3d = boost::geometry::model::box<boost::geometry::model::point<double, 
 Box3d getEnclosingBox(Vertex const &middlePoint, double sphereRadius);
 
 } // namespace mesh
+
+namespace testing {
+namespace accessors {
+struct rtree {
+  static mesh::rtree::RTreeCache &getCache()
+  {
+    return mesh::rtree::_cached_trees;
+  }
+};
+} // namespace accessors
+} // namespace testing
+
 } // namespace precice

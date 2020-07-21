@@ -1,15 +1,18 @@
+#include "acceleration/AitkenAcceleration.hpp"
 #include <Eigen/Core>
 #include <limits>
-
-#include "acceleration/AitkenAcceleration.hpp"
+#include <map>
+#include <math.h>
+#include <memory>
+#include <ostream>
+#include <stddef.h>
 #include "cplscheme/CouplingData.hpp"
+#include "logging/LogMacros.hpp"
 #include "math/math.hpp"
-#include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace acceleration {
@@ -21,14 +24,13 @@ AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
       _aitkenFactor(initialRelaxation)
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
-                "Initial relaxation factor for aitken acceleration has to "
-                    << "be larger than zero and smaller or equal than one!");
+                "Initial relaxation factor for Aitken acceleration has to "
+                    << "be larger than zero and smaller or equal to one. Current initial relaxation is: " << _initialRelaxation);
 }
 
 void AitkenAcceleration::initialize(DataMap &cplData)
 {
-  PRECICE_CHECK(utils::contained(*_dataIDs.begin(), cplData),
-                "Data with ID " << *_dataIDs.begin() << " is not contained in data given at initialization!");
+  checkDataIDs(cplData);
   size_t entries = 0;
   if (_dataIDs.size() == 1) {
     entries = cplData[_dataIDs.at(0)]->values->size();
@@ -40,7 +42,6 @@ void AitkenAcceleration::initialize(DataMap &cplData)
   double          initializer = std::numeric_limits<double>::max();
   Eigen::VectorXd toAppend    = Eigen::VectorXd::Constant(entries, initializer);
   utils::append(_residuals, toAppend);
-  _designSpecification = Eigen::VectorXd::Zero(entries);
 
   // Append column for old values if not done by coupling scheme yet
   for (DataMap::value_type &pair : cplData) {
@@ -114,36 +115,5 @@ void AitkenAcceleration::iterationsConverged(
   _residuals        = Eigen::VectorXd::Constant(_residuals.size(), std::numeric_limits<double>::max());
 }
 
-/** ---------------------------------------------------------------------------------------------
- *         getDesignSpecification()
- *
- * @brief: Returns the design specification corresponding to the given coupling data.
- *         This information is needed for convergence measurements in the coupling scheme.
- *  ---------------------------------------------------------------------------------------------
- */
-std::map<int, Eigen::VectorXd> AitkenAcceleration::getDesignSpecification(
-    DataMap &cplData)
-{
-  std::map<int, Eigen::VectorXd> designSpecifications;
-  int                            off = 0;
-  for (int id : _dataIDs) {
-    int             size = cplData[id]->values->size();
-    Eigen::VectorXd q    = Eigen::VectorXd::Zero(size);
-    for (int i = 0; i < size; i++) {
-      q(i) = _designSpecification(i + off);
-    }
-    off += size;
-    std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
-    designSpecifications.insert(pair);
-  }
-  return designSpecifications;
-}
-
-void AitkenAcceleration::setDesignSpecification(
-    Eigen::VectorXd &q)
-{
-  _designSpecification = q;
-  PRECICE_ERROR("design specification for Aitken relaxation is not supported yet.");
-}
 } // namespace acceleration
 } // namespace precice

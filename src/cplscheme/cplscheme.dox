@@ -26,9 +26,9 @@ The example code below illustrates the usage of a coupling scheme.
 
     
 @code        
+#include "cplscheme/ExplicitCouplingScheme.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "cplscheme/ExplicitCouplingScheme.hpp"
 
 using namespace mesh;
 using namespace cplscheme;

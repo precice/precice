@@ -1,12 +1,18 @@
 #include "FindClosest.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <cmath>
 #include <limits>
-#include <utility>
+#include <ostream>
+#include "logging/LogMacros.hpp"
 #include "math/barycenter.hpp"
-#include "math/math.hpp"
+#include "math/differences.hpp"
 #include "mesh/Edge.hpp"
-#include "mesh/Quad.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "query/FindClosestEdge.hpp"
+#include "query/FindClosestTriangle.hpp"
+#include "query/FindClosestVertex.hpp"
 
 namespace precice {
 namespace query {
@@ -67,32 +73,6 @@ InterpolationElements generateInterpolationElements(
   return elems;
 }
 
-InterpolationElements generateInterpolationElements(
-    const mesh::Vertex &location,
-    const mesh::Quad &  element)
-{
-  auto &A = element.vertex(0);
-  auto &B = element.vertex(1);
-  auto &C = element.vertex(2);
-  auto &D = element.vertex(3);
-
-  const auto bcoords = math::barycenter::calcBarycentricCoordsForQuad(
-                           A.getCoords(),
-                           B.getCoords(),
-                           C.getCoords(),
-                           D.getCoords(),
-                           element.getNormal(),
-                           location.getCoords())
-                           .barycentricCoords;
-
-  InterpolationElements elems;
-  elems.emplace_back(A, bcoords(0));
-  elems.emplace_back(B, bcoords(1));
-  elems.emplace_back(C, bcoords(2));
-  elems.emplace_back(D, bcoords(3));
-  return elems;
-}
-
 bool FindClosest::hasFound() const
 {
   return not _closest.meshIDs.empty();
@@ -132,10 +112,6 @@ bool FindClosest::determineClosest()
     _closest.distance = _findClosestTriangle.getEuclidianDistance();
     closestType       = 2;
   }
-  if (greater(_closest.distance, _findClosestQuad.getEuclidianDistance())) {
-    _closest.distance = _findClosestQuad.getEuclidianDistance();
-    closestType       = 3;
-  }
   // Assign all properties to _closest
   Eigen::VectorXd normal = Eigen::VectorXd::Zero(_searchpoint.size());
   if (closestType == 0) { // Vertex
@@ -171,23 +147,6 @@ bool FindClosest::determineClosest()
     _closest.interpolationElements.push_back(element0);
     _closest.interpolationElements.push_back(element1);
     _closest.interpolationElements.push_back(element2);
-  } else if (closestType == 3) { // Quad
-    mesh::Quad &quad         = _findClosestQuad.getClosestQuad();
-    _closest.vectorToElement = _findClosestQuad.getVectorToProjectionPoint();
-    normal                   = quad.getNormal();
-    InterpolationElement element0, element1, element2, element3;
-    element0.element = &quad.vertex(0);
-    element1.element = &quad.vertex(1);
-    element2.element = &quad.vertex(2);
-    element3.element = &quad.vertex(3);
-    element0.weight  = _findClosestQuad.getProjectionPointParameter(0);
-    element1.weight  = _findClosestQuad.getProjectionPointParameter(1);
-    element2.weight  = _findClosestQuad.getProjectionPointParameter(2);
-    element3.weight  = _findClosestQuad.getProjectionPointParameter(3);
-    _closest.interpolationElements.push_back(element0);
-    _closest.interpolationElements.push_back(element1);
-    _closest.interpolationElements.push_back(element2);
-    _closest.interpolationElements.push_back(element3);
   } else {
     return false;
   }
@@ -203,7 +162,6 @@ void FindClosest::reset()
   _findClosestVertex   = FindClosestVertex(_searchpoint);
   _findClosestEdge     = FindClosestEdge(_searchpoint);
   _findClosestTriangle = FindClosestTriangle(_searchpoint);
-  _findClosestQuad     = FindClosestQuad(_searchpoint);
 }
 
 } // namespace query
