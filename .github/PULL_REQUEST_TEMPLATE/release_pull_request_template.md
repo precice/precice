@@ -114,11 +114,14 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 ### Marketing
 
+* [ ] Finalize post on [Discourse](https://precice.discourse.group/)
+* [ ] Write on [Gitter](https://gitter.im/precice/Lobby)
 * [ ] Send announcement to the [mailing list](https://mailman.informatik.uni-stuttgart.de/mailman/listinfo/precice)
 * [ ] [CFD-Online](https://www.cfd-online.com/Forum/news.cgi/form/0)
 * [ ] NADigest
 * [ ] Post on [Twitter](https://twitter.com/preCICE_org) (additionally to the automatic)
 * [ ] Post on [ResearchGate](https://www.researchgate.net/project/preCICE)
+* [ ] Post on LinkedIn (individuals)
 * [ ] Submit a short article to the [Quartl](https://www5.in.tum.de/wiki/index.php/Quartl)
 
 
