@@ -94,7 +94,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 - [ ] [athlet-adapter](https://github.com/precice/athlet-adapter/compare/master...develop) 
 - [ ] [calculix-adapter](https://github.com/precice/calculix-adapter/compare/master...develop)
-- [ ] code_aster-adapter?
+- [ ] [code_aster-adapter](https://github.com/precice/code_aster-adapter/compare/master...develop)
 - [ ] [comsol-adapter](https://github.com/precice/comsol-adapter/compare/master...develop)
 - [ ] [dealii-adapter](https://github.com/precice/dealii-adapter/compare/master...develop)
 - [ ] [fenics-adapter](https://github.com/precice/fenics-adapter/compare/master...develop)
