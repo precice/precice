@@ -69,14 +69,14 @@ Run all these tests manually on your system. If you succeed, please write a comm
 | | | OpenFOAM / Nutils [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-nutils) |
 | | | FEniCS / FEniCS [partitioned-heat](https://github.com/precice/tutorials/tree/master/HT/partitioned-heat/fenics-fenics) |
 | | | MATLAB / MATLAB [ODEs](https://github.com/precice/matlab-bindings/tree/develop/tutorial) |
-| | | ExaFSA: Ateles / FASTEST |
-| | | Alya |
 | | | 1D-ElasticTube [C++](https://github.com/precice/elastictube1d/tree/develop/cxx) | 
 | | | 1D-ElasticTube [Python](https://github.com/precice/elastictube1d/tree/develop/python) |
-| | | SuperMUC |
-| | | Solverdummy [Fortran 2003](https://github.com/precice/precice/tree/develop/tools/solverdummies/f2003) | 
+| | | Solverdummy [Fortran module](https://github.com/precice/fortran-module/tree/develop/examples/solverdummy) | 
 | | | Solverdummy [Python](https://github.com/precice/python-bindings/tree/develop/solverdummy) |
 | | | Solverdummy [MATLAB](https://github.com/precice/matlab-bindings/tree/develop/solverdummy) |
+| | | Alya |
+| | | ExaFSA: Ateles / FASTEST |
+| | | SuperMUC |
 
 
 ## Post-release
@@ -86,20 +86,20 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 ### Release new version for bindings (to ensure compatibility with newest preCICE version)
 
-- [ ] fortan-module?
+- [ ] [Fortan module](https://github.com/precice/fortran-module/compare/master...develop)
 - [ ] [MATLAB bindings](https://github.com/precice/matlab-bindings/compare/master...develop)
 - [ ] [python bindings](https://github.com/precice/python-bindings/compare/master...develop)
 
 ### (only if breaking changes) Open PRs or issues `develop -> master` for all adapters
 
-- [ ] athlet-adapter? 
+- [ ] [athlet-adapter](https://github.com/precice/athlet-adapter/compare/master...develop) 
 - [ ] [calculix-adapter](https://github.com/precice/calculix-adapter/compare/master...develop)
 - [ ] code_aster-adapter?
 - [ ] [comsol-adapter](https://github.com/precice/comsol-adapter/compare/master...develop)
 - [ ] [dealii-adapter](https://github.com/precice/dealii-adapter/compare/master...develop)
-- [ ] lsdyna-adapter?
 - [ ] [fenics-adapter](https://github.com/precice/fenics-adapter/compare/master...develop)
 - [ ] [fluent-adapter](https://github.com/precice/fluent-adapter/compare/master...develop)
+- [ ] lsdyna-adapter?
 - [ ] mbdyn-adapter?
 - [ ] [openfoam-adapter](https://github.com/precice/openfoam-adapter/compare/master...develop)
 - [ ] [su2-adapter](https://github.com/precice/su2-adapter/compare/master...develop)
@@ -108,8 +108,8 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 - [ ] [aste](https://github.com/precice/aste/compare/master...develop)
 - [ ] [elastictube1d](https://github.com/precice/elastictube1d/compare/master...develop)
+- [ ] [run.precice](https://github.com/precice/run.precice-frontend/compare/master...develop)
 - [ ] [tutorials](https://github.com/precice/tutorials/compare/master...develop)
-- [ ] [run.precice](https://github.com/precice/run.precice-frontend)
 - [ ] [systemtests](https://github.com/precice/systemtests/compare/master...develop)
 
 ### Marketing
