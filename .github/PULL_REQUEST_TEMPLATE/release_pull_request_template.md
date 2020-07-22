@@ -28,6 +28,7 @@ Only the release manager should update this post (even tickboxes, due to race co
    * [ ] (prepare independent release, if necessary!) [MATLAB bindings](https://github.com/precice/matlab-bindings)
 * [ ] Commit the version bump
 * [ ] Draft message to mailing list
+* [ ] Write a draft "blog post" on [Discourse](https://precice.discourse.group/)
 * [ ] Update documentation (all)
   * [ ] Update markdown configuration reference in wiki
 * [ ] Approve the PR with at least two reviews (all)
@@ -53,12 +54,15 @@ Run all these tests manually on your system. If you succeed, please write a comm
 | State | Tester | Test |
 | --- | --- | --- |
 | | | SU2 / CalculiX [flap_perp](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp/SU2-CalculiX) |
-| | | OpenFOAM / OpenFOAM [flow_over_plate](https://github.com/precice/openfoam-adapter/tree/master/tutorials/CHT/flow-over-plate) |
+| | | OpenFOAM / OpenFOAM [flow_over_plate](https://github.com/precice/openfoam-adapter/tree/master/tutorials/CHT/flow-over-plate) serial + parallel |
 | | | OpenFOAM / OpenFOAM - NP mapping in OpenFOAM [flow_over_plate](https://github.com/precice/openfoam-adapter/tree/master/tutorials/CHT/flow-over-plate) |
 | | | OpenFOAM / CalculiX FSI [flap perp](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp/OpenFOAM-CalculiX) |
 | | | OpenFOAM / CalculiX FSI - NP mapping in CalculiX [3D_Tube](https://github.com/precice/tutorials/tree/develop/FSI/3D_Tube/OpenFOAM-CalculiX) |
 | | | OpenFOAM / CalculiX / OpenFOAM CHT [heat_exchanger](https://github.com/precice/tutorials/tree/develop/CHT/heat_exchanger/buoyantSimpleFoam-CalculiX) |
-| | | OpenFOAM / deal.II [flap_perp_2D](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp_2D/OpenFOAM-deal.II) |
+| | | OpenFOAM / deal.II [flap_perp_2D](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp_2D/OpenFOAM-deal.II) (linear + non-linear, serial + parallel) |
+| | | OpenFOAM / deal.II [flap_perp](https://github.com/precice/tutorials/tree/master/FSI/flap_perp/OpenFOAM-deal.II) |
+| | | OpenFOAM / deal.II [FSI cylinderFlap_2D](https://github.com/precice/tutorials/tree/develop/FSI/cylinderFlap_2D/OpenFOAM-deal.II) |
+| | | OpenFOAM / deal.II [FSI cylinderFlap](https://github.com/precice/tutorials/tree/develop/FSI/cylinderFlap_2D/OpenFOAM-deal.II) |
 | | | OpenFOAM / FEniCS [flap_perp](https://github.com/precice/tutorials/tree/master/FSI/flap_perp/OpenFOAM-FEniCS) |
 | | | OpenFOAM / FEniCS [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-fenics) |
 | | | OpenFOAM / FEniCS [cylinderFlap, only run first few minutes](https://github.com/precice/tutorials/tree/develop/FSI/cylinderFlap/OpenFOAM-FEniCS) |
@@ -105,14 +109,18 @@ Run all these tests manually on your system. If you succeed, please write a comm
 - [ ] [aste](https://github.com/precice/aste/compare/master...develop)
 - [ ] [elastictube1d](https://github.com/precice/elastictube1d/compare/master...develop)
 - [ ] [tutorials](https://github.com/precice/tutorials/compare/master...develop)
+- [ ] [run.precice](https://github.com/precice/run.precice-frontend)
 - [ ] [systemtests](https://github.com/precice/systemtests/compare/master...develop)
 
 ### Marketing
 
-* [ ] Send announcement to mailing list
-* [ ] CFD-Online
+* [ ] Send announcement to the [mailing list](https://mailman.informatik.uni-stuttgart.de/mailman/listinfo/precice)
+* [ ] [CFD-Online](https://www.cfd-online.com/Forum/news.cgi/form/0)
 * [ ] NADigest
-* [ ] Tweet
+* [ ] Post on [Twitter](https://twitter.com/preCICE_org) (additionally to the automatic)
+* [ ] Post on [ResearchGate](https://www.researchgate.net/project/preCICE)
+* [ ] Submit a short article to the [Quartl](https://www5.in.tum.de/wiki/index.php/Quartl)
+
 
 ### Misc
 
