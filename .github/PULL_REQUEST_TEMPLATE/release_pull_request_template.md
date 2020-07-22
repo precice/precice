@@ -109,7 +109,9 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 ### Marketing
 
-* [ ] Send email and do marketing
+* [ ] Send announcement to mailing list
+* [ ] CFD-Online
+* [ ] NADigest
 * [ ] Tweet
 
 ### Misc
