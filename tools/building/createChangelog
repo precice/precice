@@ -17,7 +17,7 @@ if command -v gh > /dev/null ; then
     else
       echo "Changelog file for PR $PR created."
       echo $FILE
-      echo "* TODO" > $FILE
+      echo "- TODO" > $FILE
       exit 0
     fi
   else
