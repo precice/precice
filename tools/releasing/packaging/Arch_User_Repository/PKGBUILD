@@ -1,4 +1,5 @@
 # Maintainer:  The preCICE developers <info@precice.org>
+# Contributor: The preCICE developers <info@precice.org>
 
 pkgname=precice
 pkgver=2.1.0
@@ -7,11 +8,11 @@ pkgdesc="A Coupling Library for Partitioned Multi-Physics Simulations on Massive
 arch=('x86_64')
 url="https://www.precice.org"
 license=('LGPL3')
-depends=('openmpi' 'boost' 'petsc' 'python-numpy')
+depends=('boost' 'openmpi' 'petsc' 'python-numpy')
 makedepends=('cmake' 'eigen')
 optdepends=()
 provides=('precice')
-source=("https://github.com/precice/precice/archive/v${pkgver}.tar.gz")
+source=("$pkgname-$pkgver.tar.gz::https://github.com/precice/precice/archive/v${pkgver}.tar.gz")
 sha256sums=('1e6432724f70d0c6c05fdd645e0026754edbc547719a35bf1d3c12a779b1d00e')
 
 build() {
@@ -20,8 +21,9 @@ build() {
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=/usr \
           -DBUILD_SHARED_LIBS=ON \
-          -DPRECICE_PETScMapping=on \
-          -DPRECICE_PythonActions=on
+          -DPRECICE_MPICommunication=ON \
+          -DPRECICE_PETScMapping=ON \
+          -DPRECICE_PythonActions=ON
     make
 }
 
