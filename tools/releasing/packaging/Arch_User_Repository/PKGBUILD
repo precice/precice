@@ -1,5 +1,4 @@
-# Maintainer:  The preCICE developers <info@precice.org>
-# Contributor: The preCICE developers <info@precice.org>
+# Maintainer:  Florian Lindner <florian.lindner@xgm.de>
 
 pkgname=precice
 pkgver=2.1.0
