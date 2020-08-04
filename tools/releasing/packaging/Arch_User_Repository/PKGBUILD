@@ -17,7 +17,7 @@ sha256sums=('1e6432724f70d0c6c05fdd645e0026754edbc547719a35bf1d3c12a779b1d00e')
 build() {
     cd "${pkgname}-${pkgver}"
     cmake . \
-          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_BUILD_TYPE=None \
           -DCMAKE_INSTALL_PREFIX=/usr \
           -DBUILD_SHARED_LIBS=ON \
           -DPRECICE_MPICommunication=ON \
