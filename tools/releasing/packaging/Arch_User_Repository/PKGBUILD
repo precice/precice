@@ -23,6 +23,7 @@ build() {
           -DPRECICE_MPICommunication=ON \
           -DPRECICE_PETScMapping=ON \
           -DPRECICE_PythonActions=ON \
+          -DCMAKE_CXX_FLAGS="-O2 -DNDEBUG" \
           -Wno-dev
     make
 }
