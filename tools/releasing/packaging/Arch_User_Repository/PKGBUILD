@@ -22,7 +22,8 @@ build() {
           -DBUILD_SHARED_LIBS=ON \
           -DPRECICE_MPICommunication=ON \
           -DPRECICE_PETScMapping=ON \
-          -DPRECICE_PythonActions=ON
+          -DPRECICE_PythonActions=ON \
+          -Wno-dev
     make
 }
 
