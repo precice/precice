@@ -7,12 +7,12 @@ namespace precice {
 namespace acceleration {
 namespace impl {
 
-void ParallelMatrixOperations::initialize(bool needCyclicComm)
+void ParallelMatrixOperations::initialize(const bool needCyclicComm)
 {
   PRECICE_TRACE();
 
   if (needCyclicComm && (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave())) {
-    _needCyclicComm = needCyclicComm;
+    _needCyclicComm = true;
     establishCircularCommunication();
   } else {
     _needCyclicComm = false;
