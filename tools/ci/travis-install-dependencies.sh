@@ -20,7 +20,7 @@ if [ ! -f $CACHE_EIGEN_TOKEN ]; then
     rm -rf $LOCAL_INSTALL/eigen3
     mkdir $LOCAL_INSTALL/eigen3
     # Download
-    wget -nv https://gitlab.com/libeigen/eigen/-/archive/3.3.2/eigen-3.3.2.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/eigen3 --strip-components=1 eigen-eigen-da9b4e14c255
+    wget -nv https://gitlab.com/libeigen/eigen/-/archive/3.3.2/eigen-3.3.2.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/eigen3 eigen-3.3.2
     # Create token
     touch $CACHE_EIGEN_TOKEN
 fi
