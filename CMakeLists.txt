@@ -4,7 +4,7 @@ set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
 # Overview of this configuration
-# 
+#
 # PREAMBLE
 # Setup Options
 # Find Mandatory Dependencies
@@ -59,6 +59,7 @@ option(PRECICE_PythonActions "Python support" ON)
 option(PRECICE_Packages "Configure package generation." ON)
 option(PRECICE_InstallTest "Add test binary and necessary files to install target." OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries by default" OFF)
+option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
 option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
@@ -270,7 +271,7 @@ if(CMAKE_VERSION VERSION_LESS "3.11")
   endif()
 endif()
 
-# Add precice as an empty target 
+# Add precice as an empty target
 add_library(precice ${preCICE_DUMMY})
 set_target_properties(precice PROPERTIES
   # precice is a C++11 project
@@ -343,7 +344,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp" @ONLY)
 
 # Includes Configuration
-target_include_directories(precice PUBLIC 
+target_include_directories(precice PUBLIC
   $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
   $<INSTALL_INTERFACE:include>
@@ -358,7 +359,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 #
 
 add_executable(binprecice "src/drivers/main.cpp")
-target_link_libraries(binprecice 
+target_link_libraries(binprecice
   PRIVATE
   Threads::Threads
   precice
@@ -393,44 +394,47 @@ endif()
 #
 # Configuration of Target testprecice
 #
+IF (BUILD_TESTING)
+  add_executable(testprecice "src/testing/main.cpp")
+  target_link_libraries(testprecice
+    PRIVATE
+    Threads::Threads
+    precice
+    Eigen3::Eigen
+    prettyprint
+    Boost::boost
+    Boost::filesystem
+    Boost::log
+    Boost::log_setup
+    Boost::program_options
+    Boost::system
+    Boost::thread
+    Boost::unit_test_framework
+    )
+  set_target_properties(testprecice PROPERTIES
+    # precice is a C++11 project
+    CXX_STANDARD 11
+    )
+  # Copy needed properties from the lib to the executatble. This is necessary as
+  # this executable uses the library source, not only the interface.
+  copy_target_property(precice testprecice COMPILE_DEFINITIONS)
+  copy_target_property(precice testprecice COMPILE_OPTIONS)
 
-add_executable(testprecice "src/testing/main.cpp")
-target_link_libraries(testprecice
-  PRIVATE
-  Threads::Threads
-  precice
-  Eigen3::Eigen
-  prettyprint
-  Boost::boost
-  Boost::filesystem
-  Boost::log
-  Boost::log_setup
-  Boost::program_options
-  Boost::system
-  Boost::thread
-  Boost::unit_test_framework
-  )
-set_target_properties(testprecice PROPERTIES
-  # precice is a C++11 project
-  CXX_STANDARD 11
-  )
-# Copy needed properties from the lib to the executatble. This is necessary as
-# this executable uses the library source, not only the interface.
-copy_target_property(precice testprecice COMPILE_DEFINITIONS)
-copy_target_property(precice testprecice COMPILE_OPTIONS)
+  # Testprecice fully depends on MPI and PETSc.
+  if(PRECICE_MPICommunication)
+    target_link_libraries(testprecice PRIVATE MPI::MPI_CXX)
+  endif()
+  if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
+    target_include_directories(testprecice PRIVATE ${PETSC_INCLUDES})
+    target_link_libraries(testprecice PRIVATE ${PETSC_LIBRARIES})
+  endif()
 
-# Testprecice fully depends on MPI and PETSc.
-if(PRECICE_MPICommunication)
-  target_link_libraries(testprecice PRIVATE MPI::MPI_CXX)
-endif()
-if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
-  target_include_directories(testprecice PRIVATE ${PETSC_INCLUDES})
-  target_link_libraries(testprecice PRIVATE ${PETSC_LIBRARIES})
-endif()
-
-# Test Sources Configuration
-include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
-
+  message(STATUS "Including test sources")
+  # Test Sources Configuration
+  include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
+else(BUILD_TESTING)
+  message(STATUS "Excluding test sources")
+endif(BUILD_TESTING)
 
 # Include Native C Bindings
 if (PRECICE_ENABLE_C)
@@ -460,7 +464,7 @@ install(TARGETS precice binprecice
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   )
 
-if(PRECICE_InstallTest)
+if(BUILD_TESTING AND PRECICE_InstallTest)
   # Install the testprecice target
   install(TARGETS testprecice
     EXPORT preciceTargets
@@ -544,7 +548,8 @@ else()
   install(DIRECTORY docs/man/man1
     DESTINATION ${CMAKE_INSTALL_MANDIR}
     )
-  if(PRECICE_InstallTest)
+
+  if(BUILD_TESTING AND PRECICE_InstallTest)
     install(FILES docs/man/man1/testprecice.1
       DESTINATION share/man
       )
@@ -557,7 +562,7 @@ configure_file(
   "lib/pkgconfig/libprecice.pc"
   @ONLY
   )
-install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig" 
+install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig"
   DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
@@ -580,15 +585,16 @@ endif()
 #
 # CTest
 #
+if (BUILD_TESTING)
+  print_empty()
+  print_section("TESTS")
 
-print_empty()
-print_section("TESTS")
-
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
 
-#
-# Add test_install
-#
+  #
+  # Add test_install
+  #
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/TestInstall.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/cmake/TestInstall.cmake)
+endif()
