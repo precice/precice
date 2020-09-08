@@ -104,7 +104,14 @@ function(add_precice_test_build_solverdummy PAT_LANG)
     COMMAND ${CMAKE_CTEST_COMMAND}
     --build-and-test ${PAT_SRC_DIR} ${PAT_BIN_DIR}
     --build-generator ${CMAKE_GENERATOR}
-    --build-options -Dprecice_DIR=${preCICE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
+    --build-options -Dprecice_DIR=${preCICE_BINARY_DIR} 
+                    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} 
+                    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} 
+                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} 
+                    -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
+                    -DPRECICE_MPICommunication=${PRECICE_MPICommunication}
+                    -DPRECICE_PythonActions=${PRECICE_PythonActions}
+                    -DPRECICE_PETScMapping=${PRECICE_PETScMapping}
     )
 
   # Setting properties
