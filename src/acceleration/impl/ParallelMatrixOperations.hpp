@@ -25,7 +25,7 @@ public:
   ~ParallelMatrixOperations();
 
   /// Initializes the acceleration.
-  void initialize(bool needcyclicComm);
+  void initialize(const bool needCyclicComm);
 
   template <typename Derived1, typename Derived2>
   void multiply(
