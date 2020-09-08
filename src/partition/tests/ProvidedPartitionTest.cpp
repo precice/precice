@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
       BOOST_TEST(vertices[0].isOwner() == true);
       BOOST_TEST(vertices[1].isOwner() == true);
 
-      BOOST_TEST_INFO(vertexDistribution);
+      BOOST_TEST_INFO("vertexDistribution");
       BOOST_REQUIRE((vertexDistribution.size()) == 3);
       BOOST_TEST(vertexDistribution.at(0).size() == 2);
       BOOST_TEST(vertexDistribution.at(1).size() == 0);
