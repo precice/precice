@@ -2273,51 +2273,51 @@ BOOST_AUTO_TEST_CASE(MultipleFromMappings)
     interface.finalize();
   }
 }
-
-BOOST_AUTO_TEST_CASE(MultipleToMappings)
-{
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
-
-  using Eigen::Vector2d;
-  using namespace precice::constants;
-
-  const std::string configFile = _pathToTests + "multiple-to-mappings.xml";
-
-  SolverInterface interface(context.name, configFile, 0, 1);
-  Vector2d        vertex{0.0, 0.0};
-
-  if (context.isNamed("A")) {
-    const int meshIDTop      = interface.getMeshID("MeshATop");
-    const int meshIDBottom   = interface.getMeshID("MeshABottom");
-    int       vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
-    int       vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
-    int       dataIDTop      = interface.getDataID("DisplacementTop", meshIDTop);
-    int       dataIDBottom   = interface.getDataID("DisplacementBottom", meshIDBottom);
-
-    double dt              = interface.initialize();
-    double displacementTop = 1.0;
-    interface.writeScalarData(dataIDTop, vertexIDTop, displacementTop);
-    double displacementBottom = 2.0;
-    interface.writeScalarData(dataIDTop, vertexIDTop, displacementBottom);
-    interface.advance(dt);
-    BOOST_TEST(not interface.isCouplingOngoing());
-    interface.finalize();
-
-  } else {
-    BOOST_TEST(context.isNamed("B"));
-    const int meshID   = interface.getMeshID("MeshB");
-    int       vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int       dataID   = interface.getDataID("DisplacementSum", meshID);
-
-    double dt = interface.initialize();
-    interface.advance(dt);
-    double displacement = -1.0;
-    interface.readScalarData(dataID, vertexID, displacement);
-    BOOST_TEST(displacement == 3.0);
-    BOOST_TEST(not interface.isCouplingOngoing());
-    interface.finalize();
-  }
-}
+//
+// BOOST_AUTO_TEST_CASE(MultipleToMappings)
+// {
+//   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
+//
+//   using Eigen::Vector2d;
+//   using namespace precice::constants;
+//
+//   const std::string configFile = _pathToTests + "multiple-to-mappings.xml";
+//
+//   SolverInterface interface(context.name, configFile, 0, 1);
+//   Vector2d        vertex{0.0, 0.0};
+//
+//   if (context.isNamed("A")) {
+//     const int meshIDTop      = interface.getMeshID("MeshATop");
+//     const int meshIDBottom   = interface.getMeshID("MeshABottom");
+//     int       vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
+//     int       vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
+//     int       dataIDTop      = interface.getDataID("DisplacementTop", meshIDTop);
+//     int       dataIDBottom   = interface.getDataID("DisplacementBottom", meshIDBottom);
+//
+//     double dt              = interface.initialize();
+//     double displacementTop = 1.0;
+//     interface.writeScalarData(dataIDTop, vertexIDTop, displacementTop);
+//     double displacementBottom = 2.0;
+//     interface.writeScalarData(dataIDTop, vertexIDTop, displacementBottom);
+//     interface.advance(dt);
+//     BOOST_TEST(not interface.isCouplingOngoing());
+//     interface.finalize();
+//
+//   } else {
+//     BOOST_TEST(context.isNamed("B"));
+//     const int meshID   = interface.getMeshID("MeshB");
+//     int       vertexID = interface.setMeshVertex(meshID, vertex.data());
+//     int       dataID   = interface.getDataID("DisplacementSum", meshID);
+//
+//     double dt = interface.initialize();
+//     interface.advance(dt);
+//     double displacement = -1.0;
+//     interface.readScalarData(dataID, vertexID, displacement);
+//     BOOST_TEST(displacement == 3.0);
+//     BOOST_TEST(not interface.isCouplingOngoing());
+//     interface.finalize();
+//   }
+// }
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

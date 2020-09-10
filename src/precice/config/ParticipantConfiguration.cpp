@@ -438,8 +438,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     toMeshContext.meshRequirement = std::max(
         toMeshContext.meshRequirement, map->getOutputRequirement());
 
-    fromMeshContext.fromMappingContext = *mappingContext;
-    toMeshContext.toMappingContext     = *mappingContext;
+    fromMeshContext.fromMappingContexts.push_back(*mappingContext);
+    toMeshContext.toMappingContexts.push_back(*mappingContext);
   }
   _mappingConfig->resetMappings();
 

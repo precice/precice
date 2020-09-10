@@ -61,7 +61,7 @@ private:
    * Empty provided meshes mean that the re-partitioning completely filtered
    * out the mesh received on this rank at the coupling interface.
    */
-  bool areProvidedMeshesEmpty() const;
+  bool isAnyProvidedMeshNonEmpty() const;
 
   void createOwnerInformation();
 

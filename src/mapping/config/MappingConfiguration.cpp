@@ -393,9 +393,9 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
   for (const ConfiguredMapping &configuredMapping : _mappings) {
     bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
-    PRECICE_CHECK(!sameFromMesh, "There cannot be two mappings from mesh \""
-                                     << mapping.fromMesh->getName() << "\". "
-                                     << "Please remove any duplicate mapping definitions with from=\"" << mapping.fromMesh->getName() << "\" or use a different mesh.");
+    // PRECICE_CHECK(!sameFromMesh, "There cannot be two mappings from mesh \""
+    //                                  << mapping.fromMesh->getName() << "\". "
+    //                                  << "Please remove any duplicate mapping definitions with from=\"" << mapping.fromMesh->getName() << "\" or use a different mesh.");
     PRECICE_CHECK(!sameToMesh, "There cannot be two mappings to mesh \""
                                    << mapping.toMesh->getName() << "\". "
                                    << "Please remove any duplicate mapping definitions with to=\"" << mapping.toMesh->getName() << "\" or use a different mesh.");

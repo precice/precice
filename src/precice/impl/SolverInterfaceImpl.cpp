@@ -976,33 +976,37 @@ void SolverInterfaceImpl::mapWriteDataFrom(
 {
   PRECICE_TRACE(fromMeshID);
   PRECICE_VALIDATE_MESH_ID(fromMeshID);
-  impl::MeshContext &   context        = _accessor->meshContext(fromMeshID);
-  impl::MappingContext &mappingContext = context.fromMappingContext;
-  if (not mappingContext.mapping) {
+  impl::MeshContext &context = _accessor->meshContext(fromMeshID);
+
+  if (context.fromMappingContexts.empty()) {
     PRECICE_ERROR("You attempt to \"mapWriteDataFrom\" mesh "
                   << context.mesh->getName()
                   << ", but there is no mapping from this mesh configured."
                      "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
     return;
   }
+
   double time = _couplingScheme->getTime();
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0, 0, 0);
-  if (not mappingContext.mapping->hasComputedMapping()) {
-    PRECICE_DEBUG("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
-    mappingContext.mapping->computeMapping();
-  }
-  for (impl::DataContext &context : _accessor->writeDataContexts()) {
-    if (context.mesh->getID() == fromMeshID) {
-      int inDataID             = context.fromData->getID();
-      int outDataID            = context.toData->getID();
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      PRECICE_DEBUG("Map data \"" << context.fromData->getName()
-                                  << "\" from mesh \"" << context.mesh->getName() << "\"");
-      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
-      mappingContext.mapping->map(inDataID, outDataID);
+
+  for (impl::MappingContext &mappingContext : context.fromMappingContexts) {
+    if (not mappingContext.mapping->hasComputedMapping()) {
+      PRECICE_DEBUG("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
+      mappingContext.mapping->computeMapping();
     }
+    for (impl::DataContext &context : _accessor->writeDataContexts()) {
+      if (context.mesh->getID() == fromMeshID) {
+        int inDataID             = context.fromData->getID();
+        int outDataID            = context.toData->getID();
+        context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+        PRECICE_DEBUG("Map data \"" << context.fromData->getName()
+                                    << "\" from mesh \"" << context.mesh->getName() << "\"");
+        PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
+        mappingContext.mapping->map(inDataID, outDataID);
+      }
+    }
+    mappingContext.hasMappedData = true;
   }
-  mappingContext.hasMappedData = true;
   performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0, 0, 0);
 }
 
@@ -1011,34 +1015,38 @@ void SolverInterfaceImpl::mapReadDataTo(
 {
   PRECICE_TRACE(toMeshID);
   PRECICE_VALIDATE_MESH_ID(toMeshID);
-  impl::MeshContext &   context        = _accessor->meshContext(toMeshID);
-  impl::MappingContext &mappingContext = context.toMappingContext;
-  if (mappingContext.mapping.use_count() == 0) {
+  impl::MeshContext &context = _accessor->meshContext(toMeshID);
+
+  if (context.toMappingContexts.empty()) {
     PRECICE_ERROR("You attempt to \"mapReadDataTo\" mesh "
                   << context.mesh->getName()
                   << ", but there is no mapping to this mesh configured."
                      "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
     return;
   }
+
   double time = _couplingScheme->getTime();
   performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0, 0, 0);
-  if (not mappingContext.mapping->hasComputedMapping()) {
-    PRECICE_DEBUG("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
-    mappingContext.mapping->computeMapping();
-  }
-  for (impl::DataContext &context : _accessor->readDataContexts()) {
-    if (context.mesh->getID() == toMeshID) {
-      int inDataID             = context.fromData->getID();
-      int outDataID            = context.toData->getID();
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
-      PRECICE_DEBUG("Map data \"" << context.fromData->getName()
-                                  << "\" to mesh \"" << context.mesh->getName() << "\"");
-      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
-      mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
+
+  for (impl::MappingContext &mappingContext : context.toMappingContexts) {
+    if (not mappingContext.mapping->hasComputedMapping()) {
+      PRECICE_DEBUG("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
+      mappingContext.mapping->computeMapping();
     }
+    for (impl::DataContext &context : _accessor->readDataContexts()) {
+      if (context.mesh->getID() == toMeshID) {
+        int inDataID             = context.fromData->getID();
+        int outDataID            = context.toData->getID();
+        context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+        PRECICE_DEBUG("Map data \"" << context.fromData->getName()
+                                    << "\" to mesh \"" << context.mesh->getName() << "\"");
+        PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
+        mappingContext.mapping->map(inDataID, outDataID);
+        PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
+      }
+    }
+    mappingContext.hasMappedData = true;
   }
-  mappingContext.hasMappedData = true;
   performDataActions({action::Action::READ_MAPPING_POST}, time, 0, 0, 0);
 }
 
@@ -1372,8 +1380,12 @@ void SolverInterfaceImpl::configurePartitions(
       m2n::PtrM2N m2n = m2nConfig->getM2N(receiver, provider);
       m2n->createDistributedCommunication(context->mesh);
       context->partition->addM2N(m2n);
-      context->partition->setFromMapping(context->fromMappingContext.mapping);
-      context->partition->setToMapping(context->toMappingContext.mapping);
+      for (MappingContext &mappingContext : context->fromMappingContexts) {
+        context->partition->addFromMapping(mappingContext.mapping);
+      }
+      for (MappingContext &mappingContext : context->toMappingContexts) {
+        context->partition->addToMapping(mappingContext.mapping);
+      }
     }
   }
 }

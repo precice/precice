@@ -31,8 +31,8 @@
   </participant>
 
   <participant name="B">
-    <use-mesh name="BMesh" provide="yes"/>
-    <write-data name="Pressure" mesh="BMesh"/>
+    <use-mesh name="MeshB" provide="yes"/>
+    <write-data name="Pressure" mesh="MeshB"/>
   </participant>
 
   <m2n:sockets from="B" to="A"/>
@@ -41,7 +41,7 @@
     <participants first="A" second="B"/>
     <max-time value="1.0"/>
     <time-window-size value="1.0" />
-    <exchange data="Pressure" mesh="BMesh" from="B" to="A" />
+    <exchange data="Pressure" mesh="MeshB" from="B" to="A" />
   </coupling-scheme:parallel-explicit>
 
 </solver-interface>
