@@ -47,8 +47,9 @@ fi
 if [ ! -f $CACHE_PETSC_TOKEN ]; then
     # Cleanup
     rm -rf $LOCAL_INSTALL/petsc
+    mkdir $LOCAL_INSTALL/petsc
     # Download
-    git clone -b maint https://gitlab.com/petsc/petsc $LOCAL_INSTALL/petsc
+    wget -nv 'https://gitlab.com/petsc/petsc/-/archive/maint/petsc-maint.tar.bz2' -O - | tar xj -C $LOCAL_INSTALL/petsc --strip-components=1
     # Configure and compile
     cd $LOCAL_INSTALL/petsc
     export PETSC_ARCH=arch-linux2-c-debug
