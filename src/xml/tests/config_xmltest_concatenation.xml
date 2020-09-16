@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
-
 <configuration>
-    <test-attribute-concatenation>
-        <test attribute="value-one" />
-        <test attribute="value-two" />
-        <test attribute="value-three" />
-    </test-attribute-concatenation>
+  <test-attribute-concatenation>
+    <test attribute="value-one"/>
+    <test attribute="value-two"/>
+    <test attribute="value-three"/>
+  </test-attribute-concatenation>
 </configuration>

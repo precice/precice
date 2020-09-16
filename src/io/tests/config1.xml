@@ -1,6 +1,4 @@
 <?xml version="1.0"?>
-
 <configuration>
-   <export:vtk every-n-time-windows="10" trigger-solver="on"
-           normals="on" directory="./" />
+  <export:vtk every-n-time-windows="10" trigger-solver="on" normals="on" directory="./"/>
 </configuration>

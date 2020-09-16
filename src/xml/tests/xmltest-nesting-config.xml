@@ -1,12 +1,13 @@
+<?xml version="1.0"?>
 <nested-tag>
-   <subtag attribute="1"/>
-   <nested-tag>
-      <subtag attribute="11"/>
-   </nested-tag>
-   <nested-tag>
-      <subtag attribute="12"/>
-      <nested-tag>
-         <subtag attribute="121"/>
-      </nested-tag>
-   </nested-tag>
+  <subtag attribute="1"/>
+  <nested-tag>
+    <subtag attribute="11"/>
+  </nested-tag>
+  <nested-tag>
+    <subtag attribute="12"/>
+    <nested-tag>
+      <subtag attribute="121"/>
+    </nested-tag>
+  </nested-tag>
 </nested-tag>

@@ -1,11 +1,10 @@
 <?xml version="1.0"?>
 <configuration>
-   <data:scalar name="Data"/>
-   <mesh name="Mesh">
-      <use-data name="Data"/>
-   </mesh>
-   <action:multiply-by-area timing="regular-prior" mesh="Mesh">
-      <target-data name="Data" />
-   </action:multiply-by-area>  
+  <data:scalar name="Data"/>
+  <mesh name="Mesh">
+    <use-data name="Data"/>
+  </mesh>
+  <action:multiply-by-area timing="regular-prior" mesh="Mesh">
+    <target-data name="Data"/>
+  </action:multiply-by-area>
 </configuration>
-
