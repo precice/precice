@@ -1,4 +1,4 @@
-#include "ConfigParser.hpp"
+#include "xml/ConfigParser.hpp"
 #include <algorithm>
 #include <exception>
 #include <fstream>
@@ -14,6 +14,25 @@
 
 namespace precice {
 namespace xml {
+
+std::string decodeXML(std::string xml)
+{
+  static const std::map<std::string, char> escapes{{"&lt;", '<'}, {"&gt;", '>'}, {"&amp;", '&'}, {"&quot;", '"'}, {"&apos;", '\''}};
+  while (true) {
+    bool changes{false};
+    for (const auto &kv : escapes) {
+      auto position = xml.find(kv.first);
+      if (position != std::string::npos) {
+        xml.replace(position, kv.first.length(), 1, kv.second);
+        changes = true;
+      }
+    }
+    if (!changes) {
+      break;
+    }
+  };
+  return xml;
+}
 
 // ------------------------- Callback functions for libxml2  -------------------------
 
@@ -37,7 +56,7 @@ void OnStartElementNs(
     auto        valueEnd   = reinterpret_cast<const char *>(attributes[index + 4]);
     std::string value(valueBegin, valueEnd);
 
-    attributesMap[attributeName] = value;
+    attributesMap[attributeName] = decodeXML(value);
   }
 
   auto pParser = static_cast<ConfigParser *>(ctx);
