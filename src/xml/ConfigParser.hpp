@@ -16,6 +16,9 @@ namespace xml {
 class XMLTag; // forward declaration to resolve circular import
 struct ConfigurationContext;
 
+/// Decodes escape sequences of a given xml
+std::string decodeXML(std::string xml);
+
 class ConfigParser {
 public:
   /// Struct holding the read tag from xml file
