@@ -150,7 +150,7 @@ void AccelerationConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_DATA) {
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = callingTag.getStringAttributeValue(ATTR_MESH);
-    auto        success  = _uniqueDataAndMeshNames.insert(std::pair<std::string, std::string>(dataName, meshName));
+    auto        success = _uniqueDataAndMeshNames.emplace(dataName, meshName);
     if (not success.second) {
       PRECICE_ERROR("You have provided a subtag "
                     << "<data name=\"" << dataName << "\" mesh=\"" << meshName << "\"/> more than once in your <acceleration:.../>. "
