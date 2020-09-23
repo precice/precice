@@ -37,14 +37,9 @@ struct CouplingData {
   ///  True, if the data values if this CouplingData requires to be initialized by a participant.
   bool requiresInitialization;
 
-  [[deprecated("Use CouplingData::getDimensions().")]]  // @todo: remove before merge, since it is C++14
-  /// dimension of one data value (scalar=1, or vectorial=interface-dimension)
-  int dimension;
-
   int getDimensions()
   {
     PRECICE_ASSERT(data != nullptr);
-    PRECICE_ASSERT(dimension == data->getDimensions());
     return data->getDimensions();
   }
 
@@ -64,8 +59,7 @@ struct CouplingData {
       bool          requiresInitialization)
       : values(&(data->values())),
         mesh(mesh),
-        requiresInitialization(requiresInitialization),
-        dimension(data->getDimensions())
+        requiresInitialization(requiresInitialization)
   {
     PRECICE_ASSERT(values != NULL);
     PRECICE_ASSERT(mesh.use_count() > 0);

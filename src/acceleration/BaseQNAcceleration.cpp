@@ -138,7 +138,7 @@ void BaseQNAcceleration::initialize(
       int accumulatedNumberOfUnknowns = 0;
       for (auto &elem : _dataIDs) {
         auto &offsets = cplData[elem]->mesh->getVertexOffsets();
-        accumulatedNumberOfUnknowns += offsets[i] * cplData[elem]->dimension;
+        accumulatedNumberOfUnknowns += offsets[i] * cplData[elem]->getDimensions();
       }
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
