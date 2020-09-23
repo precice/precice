@@ -12,13 +12,13 @@ struct CouplingData {
   using DataMatrix = Eigen::MatrixXd;
 
   /// Returns a reference to the data values.
-  Eigen::VectorXd &dataValues()
+  Eigen::VectorXd &values()
   {
     return data->values();
   }
 
   /// Returns a const reference to the data values.
-  const Eigen::VectorXd &dataValues() const
+  const Eigen::VectorXd &values() const
   {
     return data->values();
   }

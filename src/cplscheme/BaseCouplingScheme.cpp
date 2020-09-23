@@ -74,9 +74,9 @@ void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const DataMap::value_type &pair : sendData) {
-    int size = pair.second->dataValues().size();
+    int size = pair.second->values().size();
     if (size > 0) {
-      m2n->send(pair.second->dataValues().data(), size, pair.second->mesh->getID(), pair.second->getDimensions());
+      m2n->send(pair.second->values().data(), size, pair.second->mesh->getID(), pair.second->getDimensions());
     }
     sentDataIDs.push_back(pair.first);
   }
@@ -90,9 +90,9 @@ void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
   for (DataMap::value_type &pair : receiveData) {
-    int size = pair.second->dataValues().size();
+    int size = pair.second->values().size();
     if (size > 0) {
-      m2n->receive(pair.second->dataValues().data(), size, pair.second->mesh->getID(), pair.second->getDimensions());
+      m2n->receive(pair.second->values().data(), size, pair.second->mesh->getID(), pair.second->getDimensions());
     }
     receivedDataIDs.push_back(pair.first);
   }
@@ -103,7 +103,7 @@ void BaseCouplingScheme::store(DataMap data)
 {
   for (DataMap::value_type &pair : data) {
     if (pair.second->oldValues.size() > 0) {
-      pair.second->oldValues.col(0) = pair.second->dataValues();
+      pair.second->oldValues.col(0) = pair.second->values();
     }
   }
 }
@@ -249,9 +249,9 @@ void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
     for (DataMap::value_type &pair : dataMap) {
       if (pair.second->oldValues.cols() == 0)
         break;
-      pair.second->oldValues.col(0) = pair.second->dataValues();
+      pair.second->oldValues.col(0) = pair.second->values();
       // For extrapolation, treat the initial value as old time windows value
-      utils::shiftSetFirst(pair.second->oldValues, pair.second->dataValues());
+      utils::shiftSetFirst(pair.second->oldValues, pair.second->values());
     }
   }
 }
@@ -264,7 +264,7 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
     for (DataMap::value_type &pair : data) {
       PRECICE_DEBUG("Extrapolate data: " << pair.first);
       PRECICE_ASSERT(pair.second->oldValues.cols() > 1);
-      Eigen::VectorXd &values       = pair.second->dataValues();
+      Eigen::VectorXd &values       = pair.second->values();
       pair.second->oldValues.col(0) = values;  // = x^t
       values *= 2.0;                           // = 2*x^t
       values -= pair.second->oldValues.col(1); // = 2*x^t - x^(t-1)
@@ -274,7 +274,7 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
     PRECICE_INFO("Performing second order extrapolation");
     for (DataMap::value_type &pair : data) {
       PRECICE_ASSERT(pair.second->oldValues.cols() > 2);
-      Eigen::VectorXd &values     = pair.second->dataValues();
+      Eigen::VectorXd &values     = pair.second->values();
       auto             valuesOld1 = pair.second->oldValues.col(1);
       auto             valuesOld2 = pair.second->oldValues.col(2);
 
@@ -471,7 +471,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     if (convMeasure.couplingData->oldValues.cols() < 1) {
       utils::append(convMeasure.couplingData->oldValues,
-                    (Eigen::MatrixXd) Eigen::MatrixXd::Zero(convMeasure.couplingData->dataValues().size(), 1));
+                    (Eigen::MatrixXd) Eigen::MatrixXd::Zero(convMeasure.couplingData->values().size(), 1));
     }
   }
   // Reserve storage for extrapolation of data values
@@ -481,7 +481,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
       PRECICE_DEBUG("Add cols: " << pair.first << ", cols: " << cols);
       PRECICE_ASSERT(cols <= 1, cols);
       utils::append(pair.second->oldValues,
-                    (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->dataValues().size(), _extrapolationOrder + 1 - cols));
+                    (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values().size(), _extrapolationOrder + 1 - cols));
     }
   }
   // Storage reservation for acceleration methods happens in Acceleration::initialize
@@ -539,7 +539,7 @@ bool BaseCouplingScheme::measureConvergence()
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
     const auto &oldValues = convMeasure.couplingData->oldValues.col(0);
 
-    convMeasure.measure->measure(oldValues, convMeasure.couplingData->dataValues());
+    convMeasure.measure->measure(oldValues, convMeasure.couplingData->values());
 
     if (not utils::MasterSlave::isSlave() && convMeasure.doesLogging) {
       _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());

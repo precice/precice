@@ -95,8 +95,8 @@ void BaseQNAcceleration::initialize(
   std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   for (auto &elem : _dataIDs) {
-    entries += cplData[elem]->dataValues().size();
-    subVectorSizes.push_back(cplData[elem]->dataValues().size());
+    entries += cplData[elem]->values().size();
+    subVectorSizes.push_back(cplData[elem]->values().size());
   }
 
   _matrixCols.push_front(0);
@@ -161,7 +161,7 @@ void BaseQNAcceleration::initialize(
   for (DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _dataIDs)) {
       _secondaryDataIDs.push_back(pair.first);
-      int secondaryEntries            = pair.second->dataValues().size();
+      int secondaryEntries            = pair.second->values().size();
       _secondaryResiduals[pair.first] = Eigen::VectorXd::Zero(secondaryEntries);
     }
   }
@@ -170,8 +170,8 @@ void BaseQNAcceleration::initialize(
   for (DataMap::value_type &pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) { // Add only, if not already done
-      //PRECICE_ASSERT(pair.second->dataValues().size() > 0, pair.first);
-      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->dataValues().size()));
+      //PRECICE_ASSERT(pair.second->values().size() > 0, pair.first);
+      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values().size()));
     }
   }
 
@@ -467,8 +467,8 @@ void BaseQNAcceleration::concatenateCouplingData(
 
   int offset = 0;
   for (int id : _dataIDs) {
-    int         size      = cplData[id]->dataValues().size();
-    auto &      values    = cplData[id]->dataValues();
+    int         size      = cplData[id]->values().size();
+    auto &      values    = cplData[id]->values();
     const auto &oldValues = cplData[id]->oldValues.col(0);
     for (int i = 0; i < size; i++) {
       _values(i + offset)    = values(i);
@@ -485,8 +485,8 @@ void BaseQNAcceleration::splitCouplingData(
 
   int offset = 0;
   for (int id : _dataIDs) {
-    int   size       = cplData[id]->dataValues().size();
-    auto &valuesPart = cplData[id]->dataValues();
+    int   size       = cplData[id]->values().size();
+    auto &valuesPart = cplData[id]->values();
     //Eigen::VectorXd& oldValuesPart = cplData[id]->oldValues.col(0);
     cplData[id]->oldValues.col(0) = _oldValues.segment(offset, size); /// @todo: check if this is correct
     for (int i = 0; i < size; i++) {

@@ -143,14 +143,14 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
 
   pp.performAcceleration(data);
 
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(0), 1.00000000000000000000));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(1), 1.01000000000000000888));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(2), 1.02000000000000001776));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(3), 1.03000000000000002665));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(0), 0.199000000000000010214));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(1), 0.199000000000000010214));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(2), 0.199000000000000010214));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(3), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00000000000000000000));
+  BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01000000000000000888));
+  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02000000000000001776));
+  BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03000000000000002665));
+  BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199000000000000010214));
 
   Eigen::VectorXd newdvalues;
   utils::append(newdvalues, 10.0);
@@ -158,18 +158,18 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
 
-  data.begin()->second->dataValues() = newdvalues;
+  data.begin()->second->values() = newdvalues;
 
   pp.performAcceleration(data);
 
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(0), -5.63401340929695848558e-01));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(1), 6.10309919173602111186e-01));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(2), 1.78402117927690184729e+00));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(3), 2.95773243938020247157e+00));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(0), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(1), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(2), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(3), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929695848558e-01));
+  BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173602111186e-01));
+  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.78402117927690184729e+00));
+  BOOST_TEST(testing::equals(data.at(0)->values()(3), 2.95773243938020247157e+00));
+  BOOST_TEST(testing::equals(data.at(1)->values()(0), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(1), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(2), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733250157e-02));
 }
 
 BOOST_AUTO_TEST_CASE(testVIQNPP)
@@ -241,32 +241,32 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 
   pp.performAcceleration(data);
 
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(0), 1.00));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(1), 1.01));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(2), 1.02));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(3), 1.03));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(0), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(1), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(2), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(3), 0.199));
+  BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00));
+  BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01));
+  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02));
+  BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03));
+  BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199));
 
   Eigen::VectorXd newdvalues;
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
-  data.begin()->second->dataValues() = newdvalues;
+  data.begin()->second->values() = newdvalues;
 
   pp.performAcceleration(data);
 
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(0), -5.63401340929692295845e-01));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(1), 6.10309919173607440257e-01));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(2), 1.78402117927690717636e+00));
-  BOOST_TEST(testing::equals(data.at(0)->dataValues()(3), 2.95773243938020513610e+00));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(0), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(1), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(2), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals(data.at(1)->dataValues()(3), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929692295845e-01));
+  BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173607440257e-01));
+  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.78402117927690717636e+00));
+  BOOST_TEST(testing::equals(data.at(0)->values()(3), 2.95773243938020513610e+00));
+  BOOST_TEST(testing::equals(data.at(1)->values()(0), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(1), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(2), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733944046e-02));
 }
 
 BOOST_AUTO_TEST_CASE(testInitializeData)
