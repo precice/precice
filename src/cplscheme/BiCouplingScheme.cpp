@@ -55,7 +55,7 @@ void BiCouplingScheme::addDataToSend(
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _sendData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(&(data->values()), mesh, requiresInitialization, data->getDimensions()));
+    PtrCouplingData     ptrCplData(new CouplingData(data, mesh, requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _sendData.insert(pair);
   } else {
@@ -71,7 +71,7 @@ void BiCouplingScheme::addDataToReceive(
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _receiveData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(&(data->values()), mesh, requiresInitialization, data->getDimensions()));
+    PtrCouplingData     ptrCplData(new CouplingData(data, mesh, requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _receiveData.insert(pair);
   } else {

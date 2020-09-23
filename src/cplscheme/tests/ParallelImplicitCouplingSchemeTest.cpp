@@ -100,36 +100,37 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
                                     timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
                                     restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
 
-  Eigen::VectorXd dvalues;
   Eigen::VectorXd dcol1;
-  Eigen::VectorXd fvalues;
   Eigen::VectorXd fcol1;
 
+  mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
+  mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
+
   //init displacements
-  utils::append(dvalues, 1.0);
-  utils::append(dvalues, 2.0);
-  utils::append(dvalues, 3.0);
-  utils::append(dvalues, 4.0);
+  utils::append(displacements->values(), 1.0);
+  utils::append(displacements->values(), 2.0);
+  utils::append(displacements->values(), 3.0);
+  utils::append(displacements->values(), 4.0);
 
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
 
-  PtrCouplingData dpcd(new CouplingData(&dvalues, dummyMesh, false, 1));
+  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
 
   //init forces
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
 
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
 
-  PtrCouplingData fpcd(new CouplingData(&fvalues, dummyMesh, false, 1));
+  PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
   DataMap data;
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
@@ -197,36 +198,37 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   acceleration::IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                                       timestepsReused, filter, singularityLimit, dataIDs, prec);
 
-  Eigen::VectorXd dvalues;
   Eigen::VectorXd dcol1;
-  Eigen::VectorXd fvalues;
   Eigen::VectorXd fcol1;
 
+  mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
+  mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
+
   //init displacements
-  utils::append(dvalues, 1.0);
-  utils::append(dvalues, 2.0);
-  utils::append(dvalues, 3.0);
-  utils::append(dvalues, 4.0);
+  utils::append(displacements->values(), 1.0);
+  utils::append(displacements->values(), 2.0);
+  utils::append(displacements->values(), 3.0);
+  utils::append(displacements->values(), 4.0);
 
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
 
-  PtrCouplingData dpcd(new CouplingData(&dvalues, dummyMesh, false, 1));
+  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
 
   //init forces
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
 
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
 
-  PtrCouplingData fpcd(new CouplingData(&fvalues, dummyMesh, false, 1));
+  PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
   DataMap data;
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));

@@ -58,21 +58,6 @@ struct CouplingData {
     PRECICE_ASSERT(false);
   }
 
-  [[deprecated("Use CouplingData(mesh::PtrData, mesh::PtrMesh, bool requiresInitialization).")]]  // @todo: remove before merge, since it is C++14
-  CouplingData(
-      Eigen::VectorXd *values,
-      mesh::PtrMesh    mesh,
-      bool             requiresInitialization,
-      int              dimension)
-      : values(values),
-        mesh(mesh),
-        requiresInitialization(requiresInitialization),
-        dimension(dimension)
-  {
-    PRECICE_ASSERT(values != NULL);
-    PRECICE_ASSERT(mesh.use_count() > 0);
-  }
-
   CouplingData(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
