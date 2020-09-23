@@ -58,10 +58,13 @@ struct CouplingData {
       mesh::PtrMesh mesh,
       bool          requiresInitialization)
       : values(&(data->values())),
+        data(data),
         mesh(mesh),
         requiresInitialization(requiresInitialization)
   {
     PRECICE_ASSERT(values != NULL);
+    PRECICE_ASSERT(data != nullptr);
+    PRECICE_ASSERT(mesh != nullptr);
     PRECICE_ASSERT(mesh.use_count() > 0);
   }
 };
