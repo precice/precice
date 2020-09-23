@@ -11,10 +11,6 @@ namespace cplscheme {
 struct CouplingData {
   using DataMatrix = Eigen::MatrixXd;
 
-  [[deprecated("Use &(CouplingData::dataValues()). Even better: Don't use a pointer.")]]  // @todo: remove before merge, since it is C++14
-  /// Data values of current iteration.
-  Eigen::VectorXd *values;
-
   /// Returns a reference to the data values.
   Eigen::VectorXd &dataValues()
   {
@@ -30,9 +26,9 @@ struct CouplingData {
   /// Data values of previous iteration (1st col) and previous time windows.
   DataMatrix oldValues;
 
-  mesh::PtrMesh mesh;
-
   mesh::PtrData data;
+
+  mesh::PtrMesh mesh;
 
   ///  True, if the data values if this CouplingData requires to be initialized by a participant.
   bool requiresInitialization;
@@ -57,12 +53,10 @@ struct CouplingData {
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization)
-      : values(&(data->values())),
-        data(data),
+      : data(data),
         mesh(mesh),
         requiresInitialization(requiresInitialization)
   {
-    PRECICE_ASSERT(values != NULL);
     PRECICE_ASSERT(data != nullptr);
     PRECICE_ASSERT(mesh != nullptr);
     PRECICE_ASSERT(mesh.use_count() > 0);

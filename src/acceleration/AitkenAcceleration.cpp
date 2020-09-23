@@ -33,11 +33,11 @@ void AitkenAcceleration::initialize(DataMap &cplData)
   checkDataIDs(cplData);
   size_t entries = 0;
   if (_dataIDs.size() == 1) {
-    entries = cplData[_dataIDs.at(0)]->values->size();
+    entries = cplData[_dataIDs.at(0)]->dataValues().size();
   } else {
     PRECICE_ASSERT(_dataIDs.size() == 2);
-    entries = cplData[_dataIDs.at(0)]->values->size() +
-              cplData[_dataIDs.at(1)]->values->size();
+    entries = cplData[_dataIDs.at(0)]->dataValues().size() +
+              cplData[_dataIDs.at(1)]->dataValues().size();
   }
   double          initializer = std::numeric_limits<double>::max();
   Eigen::VectorXd toAppend    = Eigen::VectorXd::Constant(entries, initializer);
@@ -47,9 +47,9 @@ void AitkenAcceleration::initialize(DataMap &cplData)
   for (DataMap::value_type &pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) {
-      PRECICE_ASSERT(pair.second->values->size() > 0, pair.first);
+      PRECICE_ASSERT(pair.second->dataValues().size() > 0, pair.first);
       utils::append(pair.second->oldValues,
-                    (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
+                    (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->dataValues().size()));
     }
   }
 }
@@ -65,7 +65,7 @@ void AitkenAcceleration::performAcceleration(
   Eigen::VectorXd values;
   Eigen::VectorXd oldValues;
   for (int id : _dataIDs) {
-    utils::append(values, *(cplData[id]->values));
+    utils::append(values, cplData[id]->dataValues());
     utils::append(oldValues, (Eigen::VectorXd) cplData[id]->oldValues.col(0));
   }
 
@@ -94,7 +94,7 @@ void AitkenAcceleration::performAcceleration(
   double omega         = _aitkenFactor;
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type &pair : cplData) {
-    auto &      values    = *pair.second->values;
+    auto &      values    = pair.second->dataValues();
     const auto &oldValues = pair.second->oldValues.col(0);
     values *= omega;
     for (int i = 0; i < values.size(); i++) {
