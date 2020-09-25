@@ -15,7 +15,10 @@ constexpr static const char *PARSING_LOCALE = "en_US.UTF-8";
 double parseDouble(const std::string &rawValue)
 {
   std::istringstream iss{rawValue};
-  iss.imbue(std::locale(PARSING_LOCALE));
+  try {
+    iss.imbue(std::locale(PARSING_LOCALE));
+  } catch (...) {
+  }
   double value;
   iss >> value;
   if (!iss.eof()) {
@@ -40,7 +43,10 @@ void readValueSpecific(const std::string &rawValue, double &value)
 void readValueSpecific(const std::string &rawValue, int &value)
 {
   std::istringstream iss{rawValue};
-  iss.imbue(std::locale(PARSING_LOCALE));
+  try {
+    iss.imbue(std::locale(PARSING_LOCALE));
+  } catch (...) {
+  }
   iss >> value;
   if (!iss.eof()) {
     throw std::runtime_error{"Could not fully parse value \"" + rawValue + "\" as an int."};
