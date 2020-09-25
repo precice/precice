@@ -33,7 +33,6 @@ void ComputeCurvatureAction::performAction(
 
   if (getMesh()->getDimensions() == 2) {
     dataValues = Eigen::VectorXd::Zero(dataValues.size());
-    //assign(values) = 0.0;
     Eigen::Vector2d tangent;
     for (mesh::Edge &edge : getMesh()->edges()) {
       mesh::Vertex &v0 = edge.vertex(0);
