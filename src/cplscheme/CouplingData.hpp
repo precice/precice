@@ -14,6 +14,7 @@ struct CouplingData {
   /// Returns a reference to the data values.
   Eigen::VectorXd &values()
   {
+    PRECICE_ASSERT(data != nullptr);
     return data->values();
   }
 
