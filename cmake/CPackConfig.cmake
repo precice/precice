@@ -73,10 +73,10 @@ if(PRECICE_PETScMapping)
 endif()
 
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
-set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Precise Code Interaction Coupling Environment\n\
- preCICE (Precise Code Interaction Coupling Environment) is a coupling library\n\
- for partitioned multi-physics simulations, including, but not restricted to\n\
- fluid-structure interaction and conjugate heat transfer simulations.\n\
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "\
+ preCICE is a coupling library for partitioned multi-physics simulations,\n\
+ including, but not restricted to fluid-structure interaction and\n\
+ conjugate heat transfer simulations.\n\
  Partitioned means that preCICE couples existing programs (solvers) capable of\n\
  simulating a subpart of the complete physics involved in a simulation.\n\
  This allows for the high flexibility that is needed to keep a decent\n\
