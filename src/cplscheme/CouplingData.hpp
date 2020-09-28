@@ -20,6 +20,7 @@ struct CouplingData {
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const
   {
+    PRECICE_ASSERT(data != nullptr);
     return data->values();
   }
 
