@@ -115,7 +115,8 @@ class PrettyPrinter():
                 self.printElement(child, level=level)
             return
 
-        groups1 = itertools.groupby(element.getchildren(), lambda e: e.tag)
+        groups1 = itertools.groupby(element.getchildren(),
+                                    lambda e: str(e.tag).split(':')[0])
 
         groups = []
 
