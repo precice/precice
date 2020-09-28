@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
   <data:vector name="vector-data" />
-
   <data:scalar name="floating-data" />
-
   <data:vector name="second-vector-data" />
 </configuration>

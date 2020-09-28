@@ -3,7 +3,6 @@
   <solver-interface dimensions="3">
     <data:vector name="Forces" />
     <data:vector name="Velocities" />
-
     <data:scalar name="Pressures" />
     <data:scalar name="Temperatures" />
 

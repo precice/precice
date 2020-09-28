@@ -2,7 +2,6 @@
 <precice-configuration>
   <solver-interface dimensions="3">
     <data:vector name="DataOne" />
-
     <data:scalar name="DataTwo" />
 
     <mesh name="MeshOne">

@@ -2,9 +2,7 @@
 <precice-configuration>
   <solver-interface dimensions="2">
     <data:vector name="Data0" />
-
     <data:scalar name="Data1" />
-
     <data:vector name="Data2" />
 
     <mesh name="MeshA">

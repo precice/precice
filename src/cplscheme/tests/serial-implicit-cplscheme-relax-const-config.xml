@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
   <data:scalar name="Data0" />
-
   <data:vector name="Data1" />
 
   <mesh name="Mesh">
