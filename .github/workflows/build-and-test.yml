@@ -1,5 +1,9 @@
 name: Build and Test
 on:
+  push:
+    branches:
+      - master
+      - develop
   pull_request:
     paths:
       - 'cmake/**'
