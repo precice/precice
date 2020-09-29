@@ -12,7 +12,7 @@ if command -v clang-format-8 > /dev/null; then
     BINARY="clang-format-8"
 elif command -v clang-format > /dev/null; then
     BINARY="clang-format"
-    VERSION=$(clang-format --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
+    VERSION=$(clang-format --version | grep -o '[0-9]\+.[0-9]\+.[0-9]\+' | head -1 | cut -d '.' -f 1)
     if (( $VERSION != 8 )); then
         echo "clang-format version 8 expected, but ${VERSION} found!"
         echo "Please install a suffixed binary (clang-format-8) or install clang-format version 8."
@@ -25,18 +25,29 @@ else
 fi
 echo "Using binary: $BINARY"
 
-FILES="$(find . -type f -name \*.hpp -or -name \*.h -or -name \*.cpp -or -name \*.c)"
-
-echo "Checking $(echo "$FILES" | wc -l) files. This may take a while."
-DIFFS=""
-if command -v parallel > /dev/null; then
-    echo "Using GNU parallel"
-    CMD="${BINARY} -style=file --output-replacements-xml {} | grep '<replacement ' > /dev/null && echo {}"
-    DIFFS=$( echo "$FILES" | parallel --bar --group "$CMD" )
+# Detect GNU parallel
+if command -v parallel > /dev/null ; then
+    echo "GNU parallel detected."
+    HAS_PARALLEL=true
+    PAROPS="--group "
+    if [ -z "$CI" ]; then
+      PAROPS="$PAROPS --bar"
+    fi
 else
     echo "Install GNU parallel to format in parallel."
-    for cfile in $FILES; do
-        ${BINARY} -style=file --output-replacements-xml $cfile | grep "<replacement " > /dev/null
+    HAS_PARALLEL=false
+fi
+
+# Check C/C++
+CFILES="$(find . -type f -name \*.hpp -or -name \*.h -or -name \*.cpp -or -name \*.c)"
+echo "Checking $(echo "$CFILES" | wc -l) C/C++ files"
+DIFFS=""
+if $HAS_PARALLEL; then
+    CMD="${BINARY} -style=file --output-replacements-xml {} | grep '<replacement ' > /dev/null && echo {}"
+    DIFFS=$( echo "$CFILES" | parallel $PAROPS "$CMD" )
+else
+    for cfile in $CFILES; do
+        ${BINARY} -style=file --output-replacements-xml $cfile | grep '<replacement ' > /dev/null
         RET=$?
         if [ $RET -eq 0 ]; then
             DIFFS="$DIFFS $cfile"
@@ -44,10 +55,40 @@ else
     done
 fi
 
+# Detect python
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+if command -v python3 > /dev/null; then
+  PYCMD="python3"
+elif command -v python3 > /dev/null; then
+  PYCMD="python"
+else
+  echo "No python installation found. XML files will not be checked."
+fi
+
+if [ ! -z "$PYCMD" ]; then
+  # Check XML
+  XMLFILES=$(find . -not \( -path ./docs -prune \) -type f -name \*.xml)
+  XMLFMT="$SCRIPTDIR/config-formatter"
+  echo "Checking $(echo "$XMLFILES" | wc -l) XML files"
+  if $HAS_PARALLEL; then
+    CMD="${PYCMD} $XMLFMT {} | diff -q {} - > /dev/null || echo {}"
+    DIFFS=$( echo "$XMLFILES" | parallel $PAROPS "$CMD" )
+  else
+    echo "Install GNU parallel to format in parallel."
+    for xmlfile in $XMLFILES; do
+      diff -q <(${PYCMD} $XMLFMT $xmlfile) $xmlfile > /dev/null
+      RET=$?
+      if [ ! $RET -eq 0 ]; then
+        DIFFS="$DIFFS $xmlfile"
+      fi
+    done
+  fi
+fi
+
 if [[ -n "$DIFFS" ]]; then
     echo "The following files are not formatted correctly:"
-    for cfile in $DIFFS; do
-        echo "$cfile"
+    for file in $DIFFS; do
+        echo "$file"
     done
     exit 1
 else
