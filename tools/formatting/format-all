@@ -11,7 +11,7 @@ if command -v clang-format-8 > /dev/null; then
     BINARY="clang-format-8"
 elif command -v clang-format > /dev/null; then
     BINARY="clang-format"
-    VERSION=$(clang-format --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
+    VERSION=$(clang-format --version | grep -o '[0-9]\+.[0-9]\+.[0-9]\+' | head -1 | cut -d '.' -f 1)
     if (( $VERSION != 8 )); then
         echo "clang-format version 8 expected, but ${VERSION} found!"
         echo "Please install a suffixed binary (clang-format-8) or install clang-format version 8."
