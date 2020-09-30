@@ -125,7 +125,7 @@ jobs:
         run: |
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '/usr/*' "/opt/*" --output-file coverage.info # filter system-files and local-dependencies
-          bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports" 
+          bash <(curl -s https://codecov.io/bash) -v -f coverage.info || echo "Codecov did not collect coverage reports" 
       - name: Check packages
         working-directory: build
         if: ${{ contains(matrix.IMAGE, 'ubuntu') }}
