@@ -6,13 +6,8 @@ on:
 jobs:
   latest:
     runs-on: ubuntu-latest
+    container: 'precice/ci-ubuntu-2004:latest'
     steps:
-      - name: Install libraries
-        run: |
-          set -x
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake git libeigen3-dev libxml2-dev libboost-all-dev petsc-dev python3-dev python3-numpy 
-
       - name: Download Coverity Build Tool
         run: |
           wget -q https://scan.coverity.com/download/linux64 --post-data "token=$TOKEN&project=precice%2Fprecice" -O coverity_tool.tgz
