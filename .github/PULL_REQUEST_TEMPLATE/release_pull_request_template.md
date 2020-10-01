@@ -28,6 +28,7 @@ Only the release manager should update this post (even tickboxes, due to race co
    * [ ] (prepare independent release, if necessary!) [MATLAB bindings](https://github.com/precice/matlab-bindings)
 * [ ] Commit the version bump
 * [ ] Draft message to mailing list
+* [ ] Write a draft "blog post" on [Discourse](https://precice.discourse.group/)
 * [ ] Update documentation (all)
   * [ ] Update markdown configuration reference in wiki
 * [ ] Approve the PR with at least two reviews (all)
@@ -53,26 +54,29 @@ Run all these tests manually on your system. If you succeed, please write a comm
 | State | Tester | Test |
 | --- | --- | --- |
 | | | SU2 / CalculiX [flap_perp](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp/SU2-CalculiX) |
-| | | OpenFOAM / OpenFOAM [flow_over_plate](https://github.com/precice/openfoam-adapter/tree/master/tutorials/CHT/flow-over-plate) |
+| | | OpenFOAM / OpenFOAM [flow_over_plate](https://github.com/precice/openfoam-adapter/tree/master/tutorials/CHT/flow-over-plate) serial + parallel |
 | | | OpenFOAM / OpenFOAM - NP mapping in OpenFOAM [flow_over_plate](https://github.com/precice/openfoam-adapter/tree/master/tutorials/CHT/flow-over-plate) |
 | | | OpenFOAM / CalculiX FSI [flap perp](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp/OpenFOAM-CalculiX) |
 | | | OpenFOAM / CalculiX FSI - NP mapping in CalculiX [3D_Tube](https://github.com/precice/tutorials/tree/develop/FSI/3D_Tube/OpenFOAM-CalculiX) |
 | | | OpenFOAM / CalculiX / OpenFOAM CHT [heat_exchanger](https://github.com/precice/tutorials/tree/develop/CHT/heat_exchanger/buoyantSimpleFoam-CalculiX) |
-| | | OpenFOAM / deal.II [flap_perp_2D](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp_2D/OpenFOAM-deal.II) |
+| | | OpenFOAM / deal.II [flap_perp_2D](https://github.com/precice/tutorials/tree/develop/FSI/flap_perp_2D/OpenFOAM-deal.II) (linear + non-linear, serial + parallel) |
+| | | OpenFOAM / deal.II [flap_perp](https://github.com/precice/tutorials/tree/master/FSI/flap_perp/OpenFOAM-deal.II) |
+| | | OpenFOAM / deal.II [FSI cylinderFlap_2D](https://github.com/precice/tutorials/tree/develop/FSI/cylinderFlap_2D/OpenFOAM-deal.II) |
+| | | OpenFOAM / deal.II [FSI cylinderFlap](https://github.com/precice/tutorials/tree/develop/FSI/cylinderFlap_2D/OpenFOAM-deal.II) |
 | | | OpenFOAM / FEniCS [flap_perp](https://github.com/precice/tutorials/tree/master/FSI/flap_perp/OpenFOAM-FEniCS) |
 | | | OpenFOAM / FEniCS [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-fenics) |
 | | | OpenFOAM / FEniCS [cylinderFlap, only run first few minutes](https://github.com/precice/tutorials/tree/develop/FSI/cylinderFlap/OpenFOAM-FEniCS) |
 | | | OpenFOAM / Nutils [flow-over-plate](https://github.com/precice/tutorials/tree/master/CHT/flow-over-plate/buoyantPimpleFoam-nutils) |
 | | | FEniCS / FEniCS [partitioned-heat](https://github.com/precice/tutorials/tree/master/HT/partitioned-heat/fenics-fenics) |
 | | | MATLAB / MATLAB [ODEs](https://github.com/precice/matlab-bindings/tree/develop/tutorial) |
-| | | ExaFSA: Ateles / FASTEST |
-| | | Alya |
 | | | 1D-ElasticTube [C++](https://github.com/precice/elastictube1d/tree/develop/cxx) | 
 | | | 1D-ElasticTube [Python](https://github.com/precice/elastictube1d/tree/develop/python) |
-| | | SuperMUC |
-| | | Solverdummy [Fortran 2003](https://github.com/precice/precice/tree/develop/tools/solverdummies/f2003) | 
+| | | Solverdummy [Fortran module](https://github.com/precice/fortran-module/tree/develop/examples/solverdummy) | 
 | | | Solverdummy [Python](https://github.com/precice/python-bindings/tree/develop/solverdummy) |
 | | | Solverdummy [MATLAB](https://github.com/precice/matlab-bindings/tree/develop/solverdummy) |
+| | | Alya |
+| | | ExaFSA: Ateles / FASTEST |
+| | | SuperMUC |
 
 
 ## Post-release
@@ -82,20 +86,20 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 ### Release new version for bindings (to ensure compatibility with newest preCICE version)
 
-- [ ] fortan-module?
+- [ ] [Fortan module](https://github.com/precice/fortran-module/compare/master...develop)
 - [ ] [MATLAB bindings](https://github.com/precice/matlab-bindings/compare/master...develop)
 - [ ] [python bindings](https://github.com/precice/python-bindings/compare/master...develop)
 
 ### (only if breaking changes) Open PRs or issues `develop -> master` for all adapters
 
-- [ ] athlet-adapter? 
+- [ ] [athlet-adapter](https://github.com/precice/athlet-adapter/compare/master...develop) 
 - [ ] [calculix-adapter](https://github.com/precice/calculix-adapter/compare/master...develop)
-- [ ] code_aster-adapter?
+- [ ] [code_aster-adapter](https://github.com/precice/code_aster-adapter/compare/master...develop)
 - [ ] [comsol-adapter](https://github.com/precice/comsol-adapter/compare/master...develop)
 - [ ] [dealii-adapter](https://github.com/precice/dealii-adapter/compare/master...develop)
-- [ ] lsdyna-adapter?
 - [ ] [fenics-adapter](https://github.com/precice/fenics-adapter/compare/master...develop)
 - [ ] [fluent-adapter](https://github.com/precice/fluent-adapter/compare/master...develop)
+- [ ] lsdyna-adapter?
 - [ ] mbdyn-adapter?
 - [ ] [openfoam-adapter](https://github.com/precice/openfoam-adapter/compare/master...develop)
 - [ ] [su2-adapter](https://github.com/precice/su2-adapter/compare/master...develop)
@@ -104,13 +108,22 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 - [ ] [aste](https://github.com/precice/aste/compare/master...develop)
 - [ ] [elastictube1d](https://github.com/precice/elastictube1d/compare/master...develop)
+- [ ] [run.precice](https://github.com/precice/run.precice-frontend/compare/master...develop)
 - [ ] [tutorials](https://github.com/precice/tutorials/compare/master...develop)
 - [ ] [systemtests](https://github.com/precice/systemtests/compare/master...develop)
 
 ### Marketing
 
-* [ ] Send email and do marketing
-* [ ] Tweet
+* [ ] Finalize post on [Discourse](https://precice.discourse.group/)
+* [ ] Write on [Gitter](https://gitter.im/precice/Lobby)
+* [ ] Send announcement to the [mailing list](https://mailman.informatik.uni-stuttgart.de/mailman/listinfo/precice)
+* [ ] [CFD-Online](https://www.cfd-online.com/Forum/news.cgi/form/0)
+* [ ] NADigest
+* [ ] Post on [Twitter](https://twitter.com/preCICE_org) (additionally to the automatic)
+* [ ] Post on [ResearchGate](https://www.researchgate.net/project/preCICE)
+* [ ] Post on LinkedIn (individuals)
+* [ ] Submit a short article to the [Quartl](https://www5.in.tum.de/wiki/index.php/Quartl)
+
 
 ### Misc
 
