@@ -133,7 +133,7 @@ void MultiCouplingScheme::addDataToSend(
 {
   int id = data->getID();
   if (!utils::contained(id, _sendDataVector[index])) {
-    PtrCouplingData     ptrCplData(new CouplingData(&(data->values()), mesh, initialize, data->getDimensions()));
+    PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _sendDataVector[index].insert(pair);
   } else {
@@ -151,7 +151,7 @@ void MultiCouplingScheme::addDataToReceive(
 {
   int id = data->getID();
   if (!utils::contained(id, _receiveDataVector[index])) {
-    PtrCouplingData     ptrCplData(new CouplingData(&(data->values()), mesh, initialize, data->getDimensions()));
+    PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _receiveDataVector[index].insert(pair);
   } else {
