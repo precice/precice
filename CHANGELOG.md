@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## 2.1.1
+
+- Fix compilation error emitted by intel compilers when compiling tests.
+- Fix error message for unique acceleration subtags.
+- Fix parsing error on systems without locales installed. This fixes issues when running preCICE in minimal docker containers.
+- Fix preCICE erroneously expects cyclic communicator for IMVJ with restart.
+- Fix system-dependent compilation error when compiling tests.
+
 ## 2.1.0
 
 - Added MPI version detection and print it during the CMake configuration.
