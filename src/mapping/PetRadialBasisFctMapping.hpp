@@ -7,6 +7,13 @@
 #include <numeric>
 #include <vector>
 
+#include <boost/version.hpp>
+#if BOOST_VERSION < 106600
+#include <boost/function_output_iterator.hpp>
+#else
+#include <boost/iterator/function_output_iterator.hpp>
+#endif
+
 #include "config/MappingConfiguration.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "math/math.hpp"

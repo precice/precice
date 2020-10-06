@@ -1,0 +1,17 @@
+name: code-style
+on:
+  pull_request:
+    paths:
+      - '**.[ch]pp'
+      - '**.[ch]'
+      - '**.xml'
+
+jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    container: precice/ci-formatting:latest
+    steps:
+      - name: Checkout preCICE
+        uses: actions/checkout@v2
+      - name: Check formatting
+        run: tools/formatting/check-format
