@@ -410,6 +410,11 @@ protected:
   void extrapolateData(DataMap &data);
 
   /**
+   * @brief used for storing send/receive data at end of acceleration, if not converged.
+   */
+  virtual void storeData() = 0;
+
+  /**
    * @brief compares _iterations with _maxIterations
    * @returns true, if maximum number of coupling iterations is reached
    */
@@ -597,11 +602,6 @@ private:
   virtual void assignDataToConvergenceMeasure(
       ConvergenceMeasureContext *convMeasure,
       int                        dataID) = 0;
-
-  /**
-   * @brief used for storing send/receive data at end of acceleration, if not converged.
-   */
-  virtual void storeData() = 0;
 };
 } // namespace cplscheme
 } // namespace precice

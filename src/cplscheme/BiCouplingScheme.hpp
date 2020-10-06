@@ -97,6 +97,15 @@ protected:
   /// @brief Receive from coupling partner and return whether coupling scheme has converged
   bool receiveConvergence();
 
+  /**
+   * @brief BiCouplingScheme has to call store for receive and send data
+   */
+  void storeData() override
+  {
+    store(getSendData());
+    store(getReceiveData());
+  }
+
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 
@@ -124,15 +133,6 @@ private:
       convMeasure->couplingData = getReceiveData(dataID);
       PRECICE_ASSERT(convMeasure->couplingData != nullptr);
     }
-  }
-
-  /**
-   * @brief BiCouplingScheme has to call store for receive and send data
-   */
-  void storeData() override
-  {
-    store(getSendData());
-    store(getReceiveData());
   }
 };
 

@@ -69,6 +69,19 @@ public:
     return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](DataMap sendData) { return not sendData.empty(); });
   }
 
+  /**
+   * @brief MultiCouplingScheme has to call store for all receive and send data in the vectors
+   */
+  void storeData() override
+  {
+    for (DataMap &sendData : _sendDataVector) {
+      store(sendData);
+    }
+    for (DataMap &receiveData : _receiveDataVector) {
+      store(receiveData);
+    }
+  }
+
 private:
   /**
    * @brief get CouplingData from _allData using dataID
@@ -135,19 +148,6 @@ private:
    * @param dataID Data field to be assigned
    */
   void assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID) override;
-
-  /**
-   * @brief MultiCouplingScheme has to call store for all receive and send data in the vectors
-   */
-  void storeData() override
-  {
-    for (DataMap &sendData : _sendDataVector) {
-      store(sendData);
-    }
-    for (DataMap &receiveData : _receiveDataVector) {
-      store(receiveData);
-    }
-  }
 };
 
 } // namespace cplscheme
