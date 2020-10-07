@@ -28,10 +28,6 @@ void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
   checkDataIDs(cplData);
 
   // Append column for old values if not done by coupling scheme yet
-  int entries = 0;
-  for (auto &elem : _dataIDs) {
-    entries += cplData[elem]->values().size();
-  }
   for (DataMap::value_type &pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) {
