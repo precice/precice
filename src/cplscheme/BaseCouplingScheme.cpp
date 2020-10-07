@@ -245,13 +245,16 @@ void BaseCouplingScheme::setExtrapolationOrder(
 
 void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
+  // @todo: better implementation
+  // if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
   if (isImplicitCouplingScheme()) {
     for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->oldValues.cols() == 0)
-        break;
-      pair.second->oldValues.col(0) = pair.second->values();
-      // For extrapolation, treat the initial value as old time windows value
-      utils::shiftSetFirst(pair.second->oldValues, pair.second->values());
+      if (pair.second->oldValues.cols() == 0)  // no oldValues available, i.e. this is the first time window.
+      {
+        PRECICE_ASSERT(getTimeWindows() == 1);
+        break;  // exit loop, since there is no old data.
+      }
+      pair.second->updateOldValues();
     }
   }
 }
@@ -259,31 +262,9 @@ void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 void BaseCouplingScheme::extrapolateData(DataMap &data)
 {
   PRECICE_TRACE(_timeWindows);
-  if ((_extrapolationOrder == 1) || getTimeWindows() == 2) { //timesteps is increased before extrapolate is called
-    PRECICE_INFO("Performing first order extrapolation");
-    for (DataMap::value_type &pair : data) {
-      PRECICE_DEBUG("Extrapolate data: " << pair.first);
-      PRECICE_ASSERT(pair.second->oldValues.cols() > 1);
-      Eigen::VectorXd &values       = pair.second->values();
-      values *= 2.0;                           // = 2*x^t
-      values -= pair.second->oldValues.col(1); // = 2*x^t - x^(t-1)
-      utils::shiftSetFirst(pair.second->oldValues, values);
-    }
-  } else if (_extrapolationOrder == 2) {
-    PRECICE_INFO("Performing second order extrapolation");
-    for (DataMap::value_type &pair : data) {
-      PRECICE_ASSERT(pair.second->oldValues.cols() > 2);
-      Eigen::VectorXd &values     = pair.second->values();
-      auto             valuesOld1 = pair.second->oldValues.col(1);
-      auto             valuesOld2 = pair.second->oldValues.col(2);
-
-      values *= 2.5;                          // = 2.5 x^t
-      values -= valuesOld1 * 2.0;             // = 2.5x^t - 2x^(t-1)
-      values += valuesOld2 * 0.5;             // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
-      utils::shiftSetFirst(pair.second->oldValues, values);
-    }
-  } else {
-    PRECICE_ASSERT(false, "Extrapolation order is invalid.");
+  for (DataMap::value_type &pair : data) {
+    PRECICE_DEBUG("Extrapolate data: " << pair.first);
+    pair.second->extrapolateData(_extrapolationOrder, getTimeWindows());
   }
 }
 
