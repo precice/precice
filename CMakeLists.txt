@@ -295,7 +295,7 @@ target_link_libraries(precice PRIVATE
   Boost::unit_test_framework
   )
 if(UNIX OR APPLE OR MINGW)
-  target_compile_definitions(precice PRIVATE _GNU_SOURCE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
+  target_compile_definitions(precice PRIVATE _GNU_SOURCE)
   target_link_libraries(precice PRIVATE ${CMAKE_DL_LIBS})
 endif()
 
