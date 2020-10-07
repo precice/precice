@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. For future 
 - Fix parsing error on systems without locales installed. This fixes issues when running preCICE in minimal docker containers.
 - Fix preCICE erroneously expects cyclic communicator for IMVJ with restart.
 - Fix system-dependent compilation error when compiling tests.
+- Update the PKGBUILD for the Arch Linux User Repository to be compatible with preCICE v2.
 
 ## 2.1.0
 
