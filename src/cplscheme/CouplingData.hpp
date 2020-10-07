@@ -35,12 +35,10 @@ struct CouplingData {  // @todo: should be a class from a design standpoint. See
 
   void extrapolateData(int order, int timeWindows)
   {
-    if ((order == 1) || (timeWindows == 2)) { //timesteps is increased before extrapolate is called
-      if((order != 1) && (timeWindows == 2))
-        PRECICE_ASSERT(order == 2);
+    if ((order == 1) || (timeWindows == 2 && order == 2)) { //timesteps is increased before extrapolate is called
       // PRECICE_INFO("Performing first order extrapolation");
       PRECICE_ASSERT(this->oldValues.cols() > 1);
-      this->values() *= 2.0;              // = 2*x^t
+      this->values() *= 2.0;                    // = 2*x^t
       this->values() -= this->oldValues.col(1); // = 2*x^t - x^(t-1)
       utils::shiftSetFirst(this->oldValues, this->values());
     } else if (order == 2) {
@@ -49,9 +47,9 @@ struct CouplingData {  // @todo: should be a class from a design standpoint. See
       auto valuesOld1 = this->oldValues.col(1);
       auto valuesOld2 = this->oldValues.col(2);
 
-      this->values() *= 2.5;              // = 2.5 x^t
-      this->values() -= valuesOld1 * 2.0; // = 2.5x^t - 2x^(t-1)
-      this->values() += valuesOld2 * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
+      this->values() *= 2.5;              // = 2.5*x^t
+      this->values() -= valuesOld1 * 2.0; // = 2.5*x^t - 2*x^(t-1)
+      this->values() += valuesOld2 * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
       utils::shiftSetFirst(this->oldValues, this->values());
     } else {
       PRECICE_ASSERT(false, "Extrapolation order is invalid.");

@@ -245,15 +245,8 @@ void BaseCouplingScheme::setExtrapolationOrder(
 
 void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
-  // @todo: better implementation
-  // if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
-  if (isImplicitCouplingScheme()) {
+  if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
     for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->oldValues.cols() == 0)  // no oldValues available, i.e. this is the first time window.
-      {
-        PRECICE_ASSERT(getTimeWindows() == 1);
-        break;  // exit loop, since there is no old data.
-      }
       pair.second->updateOldValues();
     }
   }
