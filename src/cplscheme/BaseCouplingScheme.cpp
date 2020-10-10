@@ -103,7 +103,7 @@ void BaseCouplingScheme::store(DataMap data)
 {
   for (DataMap::value_type &pair : data) {
     if (pair.second->oldValues.size() > 0) {
-      pair.second->oldValues.col(0) = pair.second->values();
+      pair.second->storeOldValues();
     }
   }
 }

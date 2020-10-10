@@ -26,9 +26,14 @@ struct CouplingData {  // @todo: should be a class from a design standpoint. See
     return data->values();
   }
 
-  void updateOldValues()
+  void storeOldValues()
   {
     oldValues.col(0) = this->values();
+  }
+
+  void updateOldValues()
+  {
+    storeOldValues();
     // For extrapolation, treat the initial value as old time windows value
     utils::shiftSetFirst(this->oldValues, this->values());
   }
