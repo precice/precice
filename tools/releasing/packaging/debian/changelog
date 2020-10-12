@@ -39,3 +39,9 @@ libprecice2 (2.1.0) experimental; urgency=low
   * New upstream release 2.1.0
 
  -- the preCICE developers <info@precice.org>  Tue, 21 Jul 2020 09:12:08 +0200
+
+libprecice2 (2.1.1) experimental; urgency=low
+
+  * New upstream release 2.1.1
+
+ -- the preCICE developers <info@precice.org>  Tue, 06 Oct 2020 11:43:48 +0200

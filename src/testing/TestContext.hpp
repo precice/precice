@@ -82,7 +82,7 @@ struct Participant {
 };
 
 /// User-defined literal allowing to create a serial Participant from a given string.
-inline Participant operator""_on(const char *name, long unsigned int)
+inline Participant operator""_on(const char *name, std::size_t)
 {
   return Participant{name};
 }
