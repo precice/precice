@@ -102,8 +102,8 @@ void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
 void BaseCouplingScheme::store(DataMap data)
 {
   for (DataMap::value_type &pair : data) {
-    if (pair.second->oldValues.size() > 0) {
-      pair.second->storeOldValues();
+    if (pair.second->lastIteration.size() > 0) {
+      pair.second->storeIteration();
     }
   }
 }
@@ -247,7 +247,8 @@ void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
   if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
     for (DataMap::value_type &pair : dataMap) {
-      pair.second->updateOldValues();
+      pair.second->storeIteration();
+      pair.second->updateLastTimeWindows();
     }
   }
 }
@@ -441,19 +442,12 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
-    if (convMeasure.couplingData->oldValues.cols() < 1) {
-      utils::append(convMeasure.couplingData->oldValues,
-                    (Eigen::MatrixXd) Eigen::MatrixXd::Zero(convMeasure.couplingData->values().size(), 1));
-    }
+    convMeasure.couplingData->lastIteration = Eigen::VectorXd::Zero(convMeasure.couplingData->values().size());
   }
   // Reserve storage for extrapolation of data values
   if (_extrapolationOrder > 0) {
     for (DataMap::value_type &pair : data) {
-      int cols = pair.second->oldValues.cols();
-      PRECICE_DEBUG("Add cols: " << pair.first << ", cols: " << cols);
-      PRECICE_ASSERT(cols <= 1, cols);
-      utils::append(pair.second->oldValues,
-                    (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values().size(), _extrapolationOrder + 1 - cols));
+      pair.second->lastTimeWindows = Eigen::MatrixXd::Zero(pair.second->values().size(), _extrapolationOrder);
     }
   }
   // Storage reservation for acceleration methods happens in Acceleration::initialize
@@ -509,7 +503,7 @@ bool BaseCouplingScheme::measureConvergence()
 
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
-    const auto &oldValues = convMeasure.couplingData->oldValues.col(0);
+    const auto &oldValues = convMeasure.couplingData->lastIteration;
 
     convMeasure.measure->measure(oldValues, convMeasure.couplingData->values());
 

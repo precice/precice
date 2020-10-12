@@ -29,11 +29,7 @@ void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
 
   // Append column for old values if not done by coupling scheme yet
   for (DataMap::value_type &pair : cplData) {
-    int cols = pair.second->oldValues.cols();
-    if (cols < 1) {
-      PRECICE_ASSERT(pair.second->values().size() > 0, pair.first);
-      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values().size()));
-    }
+    pair.second->lastIteration = (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values().size());
   }
 }
 
@@ -44,7 +40,7 @@ void ConstantRelaxationAcceleration::performAcceleration(DataMap &cplData)
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type &pair : cplData) {
     auto &      values    = pair.second->values();
-    const auto &oldValues = pair.second->oldValues.col(0);
+    const auto &oldValues = pair.second->lastIteration;
     values *= omega;
     values += oldValues * oneMinusOmega;
     PRECICE_DEBUG("pp values" << values);
