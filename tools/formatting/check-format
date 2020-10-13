@@ -85,6 +85,29 @@ if [ ! -z "$PYCMD" ]; then
   fi
 fi
 
+if command -v cmake-format > /dev/null; then
+  # Check CMake
+  CMakeFILES=$(find . -type f -name \*.cmake -or -name "CMakeLists.txt")
+  echo "Checking $(echo "$CMakeFILES" | wc -l) CMake files"
+  if $HAS_PARALLEL; then
+    CMD="cmake-format {} | diff -q {} - > /dev/null || echo {}"
+    DIFFS=$( echo "$CMakeFILES" | parallel $PAROPS "$CMD" )
+  else
+    echo "Install GNU parallel to format in parallel."
+    for cmakefile in $CMakeFILES; do
+      diff -q <(cmake-format $cmakefile) $cmakefile > /dev/null
+      RET=$?
+      if [ ! $RET -eq 0 ]; then
+        DIFFS="$DIFFS $cmakefile"
+      fi
+    done
+  fi
+else
+    echo "No cmake-format installation found. CMake files will not be checked."
+fi
+
+
+
 if [[ -n "$DIFFS" ]]; then
     echo "The following files are not formatted correctly:"
     for file in $DIFFS; do

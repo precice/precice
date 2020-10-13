@@ -49,9 +49,9 @@ fi
 # Detect python3
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 if command -v python3 > /dev/null; then
-  PYCMD="python3"
+    PYCMD="python3"
 else
-  PYCMD="python"
+    PYCMD="python"
 fi
 
 XMLFILES=$(find . -not \( -path ./docs -prune \) -type f -name \*.xml)
@@ -60,11 +60,28 @@ echo "Formatting $(echo "$XMLFILES" | wc -l) XML files"
 if $HAS_PARALLEL; then
     echo "$XMLFILES" | parallel --bar "$PYMCD $XMLFMT -i {}"
 else
-  for xmlfile in $XMLFILES; do
-    $PYCMD $XMLFMT -i $xmlfile
-    echo -n "."
-  done
-echo
+    for xmlfile in $XMLFILES; do
+        $PYCMD $XMLFMT -i $xmlfile
+        echo -n "."
+    done
+    echo
+fi
+
+CMakeFILES=$(find . -type f -name \*.cmake -or -name "CMakeLists.txt")
+echo "Formatting $(echo "$CMakeFILES" | wc -l) CMake files"
+if command -v cmake-format > /dev/null; then
+    if $HAS_PARALLEL; then
+        echo "$CMakeFILES" | parallel --bar "cmake-format -i {}"
+    else
+        for cmakefile in $CMakeFILES; do
+            $PYCMD cmake-format -i $cmakefile
+            echo -n "."
+        done
+        echo
+    fi
+else 
+    echo "cmake-format not found!"
+    echo "Please install cmake-format pip."
 fi
 
 echo -e "\nDone"
