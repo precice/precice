@@ -100,10 +100,10 @@ protected:
   /**
    * @brief BiCouplingScheme has to call store for receive and send data
    */
-  void storeData() override
+  void storeLastIteration() override
   {
-    store(getSendData());
-    store(getReceiveData());
+    storeLastIterationFor(getSendData());
+    storeLastIterationFor(getReceiveData());
   }
 
 private:

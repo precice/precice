@@ -37,27 +37,23 @@ struct CouplingData {  // @todo: should be a class from a design standpoint. See
 
   void extrapolateData(int order, int timeWindows)
   {
+    updateLastTimeWindows();
+    Eigen::VectorXd extrapolatedValue;
     if ((order == 1) || (timeWindows == 2 && order == 2)) { //timesteps is increased before extrapolate is called
       // PRECICE_INFO("Performing first order extrapolation");
-      PRECICE_ASSERT(this->lastTimeWindows.cols() > 0);
-      this->values() *= 2.0;                          // = 2*x^t
-      this->values() -= this->lastTimeWindows.col(0); // = 2*x^t - x^(t-1)
-      utils::shiftSetFirst(this->lastTimeWindows, this->lastIteration);
-      this->lastIteration = this->values();
+      PRECICE_ASSERT(this->lastTimeWindows.cols() > 1);
+      extrapolatedValue = this->lastTimeWindows.col(0) * 2.0;          // = 2*x^t
+      extrapolatedValue -= this->lastTimeWindows.col(1); // = 2*x^t - x^(t-1)
     } else if (order == 2) {
       // PRECICE_INFO("Performing second order extrapolation");
-      PRECICE_ASSERT(this->lastTimeWindows.cols() > 1);
-      auto valuesOld1 = this->lastTimeWindows.col(0);
-      auto valuesOld2 = this->lastTimeWindows.col(1);
-
-      this->values() *= 2.5;              // = 2.5*x^t
-      this->values() -= valuesOld1 * 2.0; // = 2.5*x^t - 2*x^(t-1)
-      this->values() += valuesOld2 * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
-      utils::shiftSetFirst(this->lastTimeWindows, this->lastIteration);
-      this->lastIteration = this->values();
+      PRECICE_ASSERT(this->lastTimeWindows.cols() > 2);
+      extrapolatedValue = this->lastTimeWindows.col(0) * 2.5;  // = 2.5*x^t
+      extrapolatedValue -= this->lastTimeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
+      extrapolatedValue += this->lastTimeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
     } else {
       PRECICE_ASSERT(false, "Extrapolation order is invalid.");
     }
+    this->values() = extrapolatedValue;                           // update value
   }
 
   /// Data values of previous time windows.

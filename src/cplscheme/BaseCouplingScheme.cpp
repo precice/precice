@@ -99,12 +99,10 @@ void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
   PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
 }
 
-void BaseCouplingScheme::store(DataMap data)
+void BaseCouplingScheme::storeLastIterationFor(DataMap data)
 {
   for (DataMap::value_type &pair : data) {
-    if (pair.second->lastIteration.size() > 0) {
-      pair.second->storeIteration();
-    }
+    pair.second->storeIteration();
   }
 }
 
@@ -447,7 +445,8 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   // Reserve storage for extrapolation of data values
   if (_extrapolationOrder > 0) {
     for (DataMap::value_type &pair : data) {
-      pair.second->lastTimeWindows = Eigen::MatrixXd::Zero(pair.second->values().size(), _extrapolationOrder);
+      pair.second->lastIteration = Eigen::VectorXd::Zero(pair.second->values().size());
+      pair.second->lastTimeWindows = Eigen::MatrixXd::Zero(pair.second->values().size(), _extrapolationOrder + 1);
     }
   }
   // Storage reservation for acceleration methods happens in Acceleration::initialize
@@ -643,13 +642,13 @@ bool BaseCouplingScheme::accelerate()
     getAcceleration()->performAcceleration(getAccelerationData());
   }
 
-  // Store data for conv. measurement, acceleration, or extrapolation
-  storeData();
-
   // extrapolate new input data for the solver evaluation in time.
   if (convergence && (_extrapolationOrder > 0)) {
     extrapolateData(getAccelerationData());
   }
+
+  // Store data for conv. measurement, acceleration
+  storeLastIteration();
 
   return convergence;
 }

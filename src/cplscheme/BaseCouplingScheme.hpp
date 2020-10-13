@@ -261,10 +261,10 @@ protected:
   void receiveData(m2n::PtrM2N m2n, DataMap receiveData);
 
   /**
-   * @brief Used by storeData to take care of storing individual DataMap
+   * @brief Used by storeLastIteration to take care of storing individual DataMap
    * @param data DataMap that will be stored
    */
-  void store(DataMap data);
+  void storeLastIterationFor(DataMap data);
 
   typedef std::map<int, Eigen::VectorXd> ValuesMap;
 
@@ -412,7 +412,7 @@ protected:
   /**
    * @brief used for storing send/receive data at end of acceleration, if not converged.
    */
-  virtual void storeData() = 0;  // @todo: Try to make this private. This method is currently, only used for sake of testing.
+  virtual void storeLastIteration() = 0;  // @todo: Try to make this private. This method is currently, only used for sake of testing.
 
   /**
    * @brief compares _iterations with _maxIterations
