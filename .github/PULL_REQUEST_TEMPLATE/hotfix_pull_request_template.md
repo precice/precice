@@ -11,7 +11,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Look over [`CHANGELOG.md`](https://github.com/precice/precice/blob/develop/CHANGELOG.md) (all)
    * Add things, if necessary
    * Extract summary
-   * Fix wording
+   * Fix wording and tense
    * Sort the entries lexicographically
 * [ ] Check code base w.r.t code formatting (run [`precice/tools/formatting/check-format`](https://github.com/precice/precice/blob/develop/tools/formatting/check-format)) and reformat if required (run [`precice/tools/formatting/format-all`](https://github.com/precice/precice/blob/develop/tools/formatting/format-all))
 * [ ] Run `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH` to bump the version
