@@ -13,13 +13,14 @@
 
 find_package(Git QUIET)
 if(GIT_FOUND)
-  add_custom_target(GitRevision
+  add_custom_target(
+    GitRevision
     COMMAND ${CMAKE_COMMAND} -DSRC=${PROJECT_SOURCE_DIR}/src/precice/impl/versions.cpp.in -DDST=${PROJECT_BINARY_DIR}/src/precice/impl/versions.cpp -DpreCICE_VERSION=${preCICE_VERSION} -DpreCICE_VERSION_INFORMATION=${preCICE_VERSION_INFORMATION} -P ${CMAKE_CURRENT_LIST_DIR}/cmake_refresh_git_revision.cmake
     WORKING_DIRECTORY "${preCICE_SOURCE_DIR}"
     BYPRODUCTS src/precice/impl/versions.cpp
     DEPENDS src/precice/impl/versions.cpp.in
     VERBATIM
-    )
+  )
   add_dependencies(precice GitRevision)
 else(GIT_FOUND)
   set(preCICE_REVISION "no-info [Git not found]")

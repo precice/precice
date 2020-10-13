@@ -5,22 +5,24 @@
 # a minimalisitic exectutable.
 # They report their activity as STATUS messages.
 # A failing validation is reported as a FATAL_ERROR.
-# 
+#
 # Variables
 #  PRECICE_ALWAYS_VALIDATE_LIBS - Always actively validates the libs.
 #
 
 # General function to validate a given library
 # precice_validate_lib( <code-to-compile> NAME <name> [LINK_LIBRARIES <lib> ...] [COMPILE_DEFINITIONS <def> ... ]
-# 
+#
 # Caches on success to speed up development. Set PRECICE_ALWAYS_VALIDATE_LIBS to disable this behaviour.
 #
 function(precice_validate_lib ARG_CODE)
   include(CMakeParseArguments)
-  cmake_parse_arguments(PARSE_ARGV 1 ARG
+  cmake_parse_arguments(
+    PARSE_ARGV 1 ARG
     ""
     "NAME"
-    "LINK_LIBRARIES;COMPILE_DEFINITIONS")
+    "LINK_LIBRARIES;COMPILE_DEFINITIONS"
+  )
   if(NOT ARG_NAME)
     message(FATAL_ERROR "Argument required: NAME")
   endif()
@@ -41,14 +43,15 @@ function(precice_validate_lib ARG_CODE)
   else()
     unset(VAL_SUCCESS)
     unset(VAL_OUT)
-    try_compile(VAL_SUCCESS
+    try_compile(
+      VAL_SUCCESS
       ${_wdir}
       ${_wdir}/${_filename}
       COMPILE_DEFINITIONS ${ARG_COMPILE_DEFINITIONS}
       LINK_LIBRARIES ${ARG_LINK_LIBRARIES}
       OUTPUT_VARIABLE VAL_OUT
       CXX_STANDARD 11
-      )
+    )
     if(NOT VAL_SUCCESS)
       message(FATAL_ERROR "Validating ${ARG_NAME} - failure\n\n${VAL_OUT}")
     else()
@@ -65,7 +68,7 @@ macro(precice_validate_libpython)
     NAME LibPython
     LINK_LIBRARIES ${PYTHON_LIBRARIES}
     COMPILE_DEFINITIONS -I ${PYTHON_INCLUDE_DIRS}
-    )
+  )
 endmacro()
 
 # Validation for NumPy
@@ -75,7 +78,7 @@ macro(precice_validate_numpy)
     NAME NumPy
     COMPILE_DEFINITIONS "-I ${PYTHON_INCLUDE_DIRS}"
     LINK_LIBRARIES NumPy::NumPy ${PYTHON_LIBRARIES}
-    )
+  )
 endmacro()
 
 # Validation for LibXML2
@@ -83,9 +86,9 @@ endmacro()
 macro(precice_validate_libxml2)
   precice_validate_lib(
     "#include <libxml/SAX.h>\nint main() { return 0; } "
-  NAME LibXml2
-  COMPILE_DEFINITIONS "-I ${LIBXML2_INCLUDE_DIR}"
-  LINK_LIBRARIES ${LIBXML2_LIBRARIES}
+    NAME LibXml2
+    COMPILE_DEFINITIONS "-I ${LIBXML2_INCLUDE_DIR}"
+    LINK_LIBRARIES ${LIBXML2_LIBRARIES}
   )
 endmacro()
 
@@ -94,7 +97,8 @@ macro(precice_validate_eigen)
   precice_validate_lib(
     "#include <Eigen/Core>\nint main() { return 0; } "
     NAME Eigen
-    LINK_LIBRARIES Eigen3::Eigen)
+    LINK_LIBRARIES Eigen3::Eigen
+  )
 endmacro()
 
 
@@ -103,7 +107,8 @@ macro(precice_validate_json)
   precice_validate_lib(
     "#include <nlohmann/json.hpp>\nint main() { return 0; } "
     NAME JSON
-    LINK_LIBRARIES JSON)
+    LINK_LIBRARIES JSON
+  )
 endmacro()
 
 # Validation for prettyprint
@@ -111,5 +116,6 @@ macro(precice_validate_prettyprint)
   precice_validate_lib(
     "#include <prettyprint/prettyprint.hpp>\nint main() { return 0; } "
     NAME Prettyprint
-    LINK_LIBRARIES prettyprint)
+    LINK_LIBRARIES prettyprint
+  )
 endmacro()

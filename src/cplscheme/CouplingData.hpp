@@ -8,7 +8,7 @@
 namespace precice {
 namespace cplscheme {
 
-struct CouplingData {  // @todo: should be a class from a design standpoint. See https://github.com/precice/precice/pull/865#discussion_r495825098
+struct CouplingData { // @todo: should be a class from a design standpoint. See https://github.com/precice/precice/pull/865#discussion_r495825098
   using DataMatrix = Eigen::MatrixXd;
 
   /// Returns a reference to the data values.

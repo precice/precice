@@ -5,7 +5,7 @@
 #
 # Imported Targets
 # ^^^^^^^^^^^^^^^^
-# 
+#
 # This module defines the followwing IMPORTED target:
 #
 #  PETSc::PETSc        - the PETSc library
@@ -22,12 +22,12 @@
 #  PETSc_VERSION_MAJOR  - the MAJOR part of PETSc_VERSION
 #  PETSc_VERSION_MINOR  - the MINOR part of PETSc_VERSION
 #  PETSc_VERSION_PATCH  - the PATCH part of PETSc_VERSION
-# 
+#
 # Variables for locating PETSc
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Additional CMake variables for locating PETSc
-#  PETSc_DIR            - the path to the root directory of PETSc 
+#  PETSc_DIR            - the path to the root directory of PETSc
 #  PETSc_ARCH           - the PETSc architecture
 #  PETSc_NO_ENV         - instructs the module not to use the environment variables 'PETSC_DIR' and 'PETSC_ENV' to find PETSc
 #
@@ -167,18 +167,20 @@ if(PKG_CONFIG_FOUND)
 endif()
 unset(_petsc_quiet_arg)
 
-include (FindPackageHandleStandardArgs)
-find_package_handle_standard_args (PETSc
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(
+  PETSc
   REQUIRED_VARS PETSc_FOUND PETSc_INCLUDE_DIRS PETSc_LIBRARIES
   VERSION_VAR PETSc_VERSION
-  )
+)
 
 if(NOT TARGET PETSc::PETSc)
   add_library(PETSc::PETSc INTERFACE IMPORTED)
-  set_target_properties(PETSc::PETSc PROPERTIES
+  set_target_properties(
+    PETSc::PETSc PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${PETSc_INCLUDE_DIRS}"
     INTERFACE_LINK_LIBRARIES "${PETSc_LIBRARIES}"
-    )
+  )
 endif()
 
 mark_as_advanced(PETSc_INCLUDE_DIRS PETSc_LIBRARIES PETSc_VERSION_MAJOR PETSc_VERSION_MINOR PETSc_VERSION_PATCH VERSION_VAR PETSc_VERSION)

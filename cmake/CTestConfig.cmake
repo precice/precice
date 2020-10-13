@@ -36,7 +36,7 @@ function(add_precice_test)
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
   # Are direct dependencies fullfilled?
-  if( (NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping) )
+  if((NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping))
     message(STATUS "Test ${PAT_FULL_NAME} - skipped")
     return()
   endif()
@@ -48,21 +48,23 @@ function(add_precice_test)
 
   # Assemble the command
   message(STATUS "Test ${PAT_FULL_NAME}")
-  add_test(NAME ${PAT_FULL_NAME}
+  add_test(
+    NAME ${PAT_FULL_NAME}
     COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${PAT_ARGUMENTS} ${MPIEXEC_POSTFLAGS}
-    )
+  )
   # Generate working directory
   set(PAT_WDIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
   file(MAKE_DIRECTORY "${PAT_WDIR}")
   # Setting properties
-  set_tests_properties(${PAT_FULL_NAME}
+  set_tests_properties(
+    ${PAT_FULL_NAME}
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_WDIR}"
     ENVIRONMENT "PRECICE_ROOT=${preCICE_SOURCE_DIR};OMPI_MCA_rmaps_base_oversubscribe=1"
-    )
+  )
   if(PAT_TIMEOUT)
-    set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
+    set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT})
   endif()
   set(_labels ${PAT_LABELS})
   set_tests_properties(${PAT_FULL_NAME} PROPERTIES LABELS "${_labels}")
@@ -100,22 +102,24 @@ function(add_precice_test_build_solverdummy PAT_LANG)
 
   # Add the actual test
   message(STATUS "Test ${PAT_FULL_NAME}")
-  add_test(NAME ${PAT_FULL_NAME}
+  add_test(
+    NAME ${PAT_FULL_NAME}
     COMMAND ${CMAKE_CTEST_COMMAND}
     --build-and-test ${PAT_SRC_DIR} ${PAT_BIN_DIR}
     --build-generator ${CMAKE_GENERATOR}
     --build-options -Dprecice_DIR=${preCICE_BINARY_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}
-    )
+  )
 
   # Setting properties
-  set_tests_properties(${PAT_FULL_NAME}
+  set_tests_properties(
+    ${PAT_FULL_NAME}
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_BIN_DIR}"
     FIXTURES_SETUP "${PAT_LANG}-solverdummy"
     LABELS "Solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-    )
+  )
 endfunction(add_precice_test_build_solverdummy)
 
 function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
@@ -128,8 +132,8 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
   if(NOT PRECICE_TEST_WRAPPER_SCRIPT)
-      message(STATUS "Test ${PAT_FULL_NAME} - skipped")
-      return()
+    message(STATUS "Test ${PAT_FULL_NAME} - skipped")
+    return()
   endif()
 
   # Make sure all required compilers are available
@@ -171,7 +175,8 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
 
   # Add the actual test
   message(STATUS "Test ${PAT_FULL_NAME}")
-  add_test(NAME ${PAT_FULL_NAME}
+  add_test(
+    NAME ${PAT_FULL_NAME}
     COMMAND ${CMAKE_COMMAND}
     -D WRAPPER=${PRECICE_TEST_WRAPPER_SCRIPT}
     -D DUMMY_A=${PAT_BIN_DIR_A}/solverdummy
@@ -179,10 +184,11 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     -D DUMMY_RUN_DIR=${PAT_RUN_DIR}
     -D DUMMY_CONFIG=${PAT_CONFIG}
     -P ${preCICE_SOURCE_DIR}/cmake/runsolverdummies.cmake
-    )
+  )
 
   # Setting properties
-  set_tests_properties(${PAT_FULL_NAME}
+  set_tests_properties(
+    ${PAT_FULL_NAME}
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_RUN_DIR}"
@@ -190,7 +196,7 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     FIXTURES_REQUIRED "${PAT_LANG_B}-solverdummy"
     LABELS "Solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-    )
+  )
 endfunction(add_precice_test_run_solverdummies)
 
 
@@ -204,108 +210,108 @@ add_precice_test(
   NAME acceleration
   ARGUMENTS "--run_test=AccelerationTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME action
   ARGUMENTS "--run_test=ActionTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME com
   ARGUMENTS "--run_test=CommunicationTests:\!CommunicationTests/MPIPorts:\!CommunicationTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME com.mpiports
   ARGUMENTS "--run_test=CommunicationTests/MPIPorts:CommunicationTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS "mpiports"
   MPIPORTS
-  )
+)
 add_precice_test(
   NAME cplscheme
   ARGUMENTS "--run_test=CplSchemeTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME io
   ARGUMENTS "--run_test=IOTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME m2n
   ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPorts:\!M2NTets/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME m2n.mpiports
   ARGUMENTS "--run_test=M2NTests/MPIPorts:M2NTests/MPISinglePorts"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS "mpiports"
   MPIPORTS
-  )
+)
 add_precice_test(
   NAME mapping
   ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME mapping.petrbf
   ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   LABELS petsc
   PETSC
-  )
+)
 add_precice_test(
   NAME math
   ARGUMENTS "--run_test=MathTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME mesh
   ARGUMENTS "--run_test=MeshTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME partition
   ARGUMENTS "--run_test=PartitionTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME interface
   ARGUMENTS "--run_test=PreciceTests:\!PreciceTests/Serial:\!PreciceTests/Parallel"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME serial
   ARGUMENTS "--run_test=PreciceTests/Serial"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  )
+)
 add_precice_test(
   NAME parallel
   ARGUMENTS "--run_test=PreciceTests/Parallel"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  )
+)
 add_precice_test(
   NAME query
   ARGUMENTS "--run_test=QueryTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME testing
   ARGUMENTS "--run_test=TestingTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME utils
   ARGUMENTS "--run_test=UtilsTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 add_precice_test(
   NAME xml
   ARGUMENTS "--run_test=XML"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+)
 
 add_precice_test_build_solverdummy(cpp)
 add_precice_test_build_solverdummy(c)
@@ -326,4 +332,4 @@ add_custom_target(
   DEPENDS testprecice
   WORKING_DIRECTORY ${preCICE_BINARY_DIR}
   USES_TERMINAL
-  )
+)

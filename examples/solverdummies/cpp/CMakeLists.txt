@@ -9,10 +9,11 @@ target_link_libraries(solverdummy PRIVATE precice::precice)
 
 
 enable_testing()
-add_test(NAME precice.solverdummy
+add_test(
+  NAME precice.solverdummy
   COMMAND ${CMAKE_COMMAND}
   -DDUMMY_EXE=$<TARGET_FILE:solverdummy>
   -DDUMMY_CONFIG=${CMAKE_CURRENT_SOURCE_DIR}/../precice-config.xml
   -V
   -P ${CMAKE_CURRENT_SOURCE_DIR}/test.cmake
-  )
+)

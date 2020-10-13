@@ -41,13 +41,14 @@ endfunction(print_section)
 
 # Prints a fixed set of general cmake configuration variables and additional variables
 # invoke: to print the configuration only
-#         print_configuration() 
+#         print_configuration()
 # invoke: to print additional variables
 #         print_configuration(ADDITIONAL "VAR1:DESC1" "VAR2:DESC2")
 function(print_configuration)
   cmake_parse_arguments(PARSE_ARGV 0 PRINT_CONFIG "" "" "ADDITIONAL")
   print_section("CONFIGURATION")
-  print_variables( VARS
+  print_variables(
+    VARS
     "PROJECT_VERSION;Library version to build"
     "CMAKE_BUILD_TYPE;Build configuration"
     "BUILD_SHARED_LIBS;Build shared libraries"
@@ -60,7 +61,7 @@ function(print_configuration)
     "CMAKE_INSTALL_PREFIX;Install prefix"
     "CMAKE_SOURCE_DIR;Source directory"
     "CMAKE_BINARY_DIR;Binary directory"
-    )
+  )
   if(PRINT_CONFIG_ADDITIONAL)
     print_variables(VARS ${PRINT_CONFIG_ADDITIONAL})
   endif()

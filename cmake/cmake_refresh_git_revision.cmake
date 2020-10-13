@@ -17,7 +17,7 @@ execute_process(
   OUTPUT_VARIABLE PRECICE_REVISION_OUT
   OUTPUT_STRIP_TRAILING_WHITESPACE
   ERROR_QUIET
-  )
+)
 
 set(preCICE_REVISION "no-info [Git failed/Not a repository]")
 if("${PRECICE_REVISION_RET}" EQUAL "0")
@@ -26,4 +26,4 @@ if("${PRECICE_REVISION_RET}" EQUAL "0")
 else()
   message(STATUS "Revision status: Detection failed")
 endif()
-configure_file( ${SRC} ${DST} @ONLY)
+configure_file(${SRC} ${DST} @ONLY)

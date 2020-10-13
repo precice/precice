@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.10.2)
 project(preCICE VERSION 2.1.1 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
@@ -22,8 +22,8 @@ set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 #
 
 # Make our cmake modules visible to CMake
-list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules")
 
 include(CheckCXX11Library)
 include(CopyTargetProperty)
@@ -83,19 +83,22 @@ print_configuration(
   "PRECICE_Packages;Configure package generation"
   "PRECICE_InstallTest;Install tests/testfiles"
   "PRECICE_CTEST_MPI_FLAGS;Additional CTest MPI Flags"
-  )
+)
 print_empty()
 
 include(FeatureSummary)
-add_feature_info(MPICommunication PRECICE_MPICommunication
+add_feature_info(
+  MPICommunication PRECICE_MPICommunication
   "Enables the MPI communication back-end.
 
    This enables the MPI communication back-end which is highly recommended on multi-node systems.
    See the documentation of the CMake module FindMPI to control its functionality.
 
    This feature can be enabled/disabled by setting the PRECICE_MPICommunication CMake option.
-")
-add_feature_info(PETScMapping PRECICE_PETScMapping
+"
+)
+add_feature_info(
+  PETScMapping PRECICE_PETScMapping
   "Enables the PETSc-powered radial basic function mappings.
 
    This enables the PETSc-based variant of radial basis function mappings which can run in parallel,
@@ -103,16 +106,20 @@ add_feature_info(PETScMapping PRECICE_PETScMapping
 
    This feature can be enabled/disabled by setting the PRECICE_PETScMapping CMake option.
    Requires MPICommunication.
-  ")
-add_feature_info(PythonActions PRECICE_PythonActions
+  "
+)
+add_feature_info(
+  PythonActions PRECICE_PythonActions
   "Enables the support for user-defined python actions.
 
    preCICE allows to manipulate coupling data at runtime using configurable actions.
    This feature enables the support for user-defined actions written in Python based on numpy.
 
    This feature can be enabled/disabled by setting the PRECICE_PythonActions CMake option.
-  ")
-add_feature_info(CBindings PRECICE_ENABLE_C
+  "
+)
+add_feature_info(
+  CBindings PRECICE_ENABLE_C
   "Enables the native C bindings.
 
    preCICE provides native bindings for C, which are compiled into the library.
@@ -120,8 +127,10 @@ add_feature_info(CBindings PRECICE_ENABLE_C
    Note that we strongly recommend to compile with C bindings enabled for compatibility reasons.
 
    This feature can be enabled/disabled by setting the PRECICE_ENABLE_C CMake option.
-  ")
-add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
+  "
+)
+add_feature_info(
+  FortranBindings PRECICE_ENABLE_FORTRAN
   "Enables the native Fortran bindings.
 
    preCICE provides native bindings for Fortran, which are compiled into the library.
@@ -129,9 +138,10 @@ add_feature_info(FortranBindings PRECICE_ENABLE_FORTRAN
    Note that we strongly recommend to compile with Fortran bindings enabled for compatibility reasons.
 
    This feature can be enabled/disabled by setting the PRECICE_ENABLE_FORTRAN CMake option.
-  ")
+  "
+)
 
-feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
+feature_summary(WHAT ENABLED_FEATURES DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
 feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "=== DISABLED FEATURES ===" QUIET_ON_EMPTY)
 
 
@@ -141,7 +151,7 @@ feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "=== DISABLED FEATURES ===" Q
 #
 print_section("DEPENDENCIES")
 
-find_package (Threads REQUIRED)
+find_package(Threads REQUIRED)
 
 if(TPL_ENABLE_BOOST)
   xsdk_tpl_require(BOOST BOOST_ROOT)
@@ -149,9 +159,10 @@ if(TPL_ENABLE_BOOST)
   set(Boost_NO_SYSTEM_PATHS ON CACHE BOOL "" FORCE)
   unset(ENV{BOOST_ROOT})
 endif()
-find_package(Boost 1.65.1 REQUIRED
+find_package(
+  Boost 1.65.1 REQUIRED
   COMPONENTS filesystem log log_setup program_options system thread unit_test_framework
-  )
+)
 
 # Eigen
 if(TPL_ENABLE_EIGEN3)
@@ -194,7 +205,7 @@ precice_validate_prettyprint()
 #
 
 # Option: PRECICE_MPICommunication
-if (PRECICE_MPICommunication)
+if(PRECICE_MPICommunication)
   set(MPI_DETERMINE_LIBRARY_VERSION ON) # Try to detect the library vendor
 
   find_package(MPI REQUIRED)
@@ -208,8 +219,8 @@ if (PRECICE_MPICommunication)
 endif()
 
 # Option: PETSC
-if (PRECICE_PETScMapping)
-  if (TPL_ENABLE_PETSC)
+if(PRECICE_PETScMapping)
+  if(TPL_ENABLE_PETSC)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
     # PETSc detection uses primarily these ENVs
   endif()
@@ -220,8 +231,8 @@ else()
 endif()
 
 # Option Python
-if (PRECICE_PythonActions)
-  if (TPL_ENABLE_PYTHON)
+if(PRECICE_PythonActions)
+  if(TPL_ENABLE_PYTHON)
     xsdk_tpl_require(PYTHON PYTHON_LIBRARY PYTHON_INCLUDE_DIR NumPy_INCLUDE_DIR)
     find_package(PythonLibs REQUIRED)
 
@@ -264,18 +275,20 @@ endif()
 
 # Add precice as an empty target
 add_library(precice ${preCICE_DUMMY})
-set_target_properties(precice PROPERTIES
+set_target_properties(
+  precice PROPERTIES
   # precice is a C++11 project
   CXX_STANDARD 11
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
-  )
+)
 
 # Setup Boost
 target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
-target_link_libraries(precice PRIVATE
+target_link_libraries(
+  precice PRIVATE
   Boost::boost
   Boost::filesystem
   Boost::log
@@ -284,7 +297,7 @@ target_link_libraries(precice PRIVATE
   Boost::system
   Boost::thread
   Boost::unit_test_framework
-  )
+)
 if(UNIX OR APPLE OR MINGW)
   target_link_libraries(precice PRIVATE ${CMAKE_DL_LIBS})
 endif()
@@ -304,21 +317,21 @@ target_link_libraries(precice PRIVATE prettyprint)
 target_link_libraries(precice PRIVATE JSON)
 
 # Setup MPI
-if (PRECICE_MPICommunication)
+if(PRECICE_MPICommunication)
   target_link_libraries(precice PRIVATE MPI::MPI_CXX)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_MPI)
 endif()
 
 # Setup PETSC
-if (PRECICE_PETScMapping AND PRECICE_MPICommunication)
+if(PRECICE_PETScMapping AND PRECICE_MPICommunication)
   target_link_libraries(precice PRIVATE PETSc::PETSc)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PETSC)
 endif()
 
 # Option Python
-if (PRECICE_PythonActions)
+if(PRECICE_PythonActions)
   target_link_libraries(precice PRIVATE NumPy::NumPy)
   target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
   target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
@@ -334,11 +347,12 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp" @ONLY)
 
 # Includes Configuration
-target_include_directories(precice PUBLIC
+target_include_directories(
+  precice PUBLIC
   $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
   $<INSTALL_INTERFACE:include>
-  )
+)
 
 # Sources Configuration
 include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
@@ -349,7 +363,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 #
 
 add_executable(binprecice "src/drivers/main.cpp")
-target_link_libraries(binprecice
+target_link_libraries(
+  binprecice
   PRIVATE
   Threads::Threads
   precice
@@ -363,11 +378,12 @@ target_link_libraries(binprecice
   Boost::system
   Boost::thread
   Boost::unit_test_framework
-  )
-set_target_properties(binprecice PROPERTIES
+)
+set_target_properties(
+  binprecice PROPERTIES
   # precice is a C++11 project
   CXX_STANDARD 11
-  )
+)
 # Copy needed properties from the lib to the executatble. This is necessary as
 # this executable uses the library source, not only the interface.
 copy_target_property(precice binprecice COMPILE_DEFINITIONS)
@@ -383,9 +399,10 @@ endif()
 #
 # Configuration of Target testprecice
 #
-IF (BUILD_TESTING)
+if(BUILD_TESTING)
   add_executable(testprecice "src/testing/main.cpp")
-  target_link_libraries(testprecice
+  target_link_libraries(
+    testprecice
     PRIVATE
     Threads::Threads
     precice
@@ -399,11 +416,12 @@ IF (BUILD_TESTING)
     Boost::system
     Boost::thread
     Boost::unit_test_framework
-    )
-  set_target_properties(testprecice PROPERTIES
+  )
+  set_target_properties(
+    testprecice PROPERTIES
     # precice is a C++11 project
     CXX_STANDARD 11
-    )
+  )
   # Copy needed properties from the lib to the executatble. This is necessary as
   # this executable uses the library source, not only the interface.
   copy_target_property(precice testprecice COMPILE_DEFINITIONS)
@@ -425,13 +443,13 @@ else(BUILD_TESTING)
 endif(BUILD_TESTING)
 
 # Include Native C Bindings
-if (PRECICE_ENABLE_C)
+if(PRECICE_ENABLE_C)
   # include(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/c)
 endif()
 
 # Include Native Fortran Bindings
-if (PRECICE_ENABLE_FORTRAN)
+if(PRECICE_ENABLE_FORTRAN)
   # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
 endif()
@@ -443,66 +461,78 @@ endif()
 # precice - the library
 # binprecice - the precice binary
 include(GNUInstallDirs)
-install(TARGETS precice binprecice
+install(
+  TARGETS precice binprecice
   EXPORT preciceTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
-  )
+)
 
 if(BUILD_TESTING AND PRECICE_InstallTest)
   # Install the testprecice target
-  install(TARGETS testprecice
+  install(
+    TARGETS testprecice
     EXPORT preciceTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
+  )
 
   # Install the resources necessary for the tests
-  install(DIRECTORY src
+  install(
+    DIRECTORY src
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice
     FILES_MATCHING
     PATTERN "*.xml"
-    )
-  install(DIRECTORY src/action/tests/
+  )
+  install(
+    DIRECTORY src/action/tests/
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice/src/action/tests
     FILES_MATCHING
     PATTERN "*.py"
-    )
+  )
 endif()
 
 # Install examples
-install(DIRECTORY examples
+install(
+  DIRECTORY examples
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/precice
   PATTERN ".gitignore" EXCLUDE
-  )
+)
 
 # Export the Targets to install
-install(EXPORT preciceTargets
+install(
+  EXPORT preciceTargets
   FILE preciceTargets.cmake
   NAMESPACE precice::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/precice
-  )
+)
 
 # Generate a Package Config File for precice
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file("preciceConfigVersion.cmake"
+write_basic_package_version_file(
+  "preciceConfigVersion.cmake"
   VERSION ${preCICE_VERSION}
   COMPATIBILITY SameMajorVersion
-  )
+)
 
 # Install the Config and the ConfigVersion files
-install(FILES "cmake/preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
+install(
+  FILES "cmake/preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/precice
-  )
+)
 
 # Setup the config in the build directory
-export(EXPORT preciceTargets
+export(
+  EXPORT preciceTargets
   NAMESPACE precice::
-  FILE "preciceTargets.cmake")
-file(COPY "cmake/preciceConfig.cmake"
-  DESTINATION "${preCICE_BINARY_DIR}")
+  FILE "preciceTargets.cmake"
+)
+file(
+  COPY "cmake/preciceConfig.cmake"
+  DESTINATION "${preCICE_BINARY_DIR}"
+)
 
 # Add an alias to allow subprojects to use the namespaced name
 add_library(precice::precice ALIAS precice)
@@ -527,20 +557,23 @@ if(GZIP_EXE)
   endforeach()
 
   # Install compressed manpages
-  install(DIRECTORY ${PRECICE_PACKAGING_DIR}/man1
+  install(
+    DIRECTORY ${PRECICE_PACKAGING_DIR}/man1
     DESTINATION ${CMAKE_INSTALL_MANDIR}
-    )
+  )
 else()
   message(WARNING "Installing uncompressed manpages")
   # Install uncompressed manpages
-  install(DIRECTORY docs/man/man1
+  install(
+    DIRECTORY docs/man/man1
     DESTINATION ${CMAKE_INSTALL_MANDIR}
-    )
+  )
 
   if(BUILD_TESTING AND PRECICE_InstallTest)
-    install(FILES docs/man/man1/testprecice.1
+    install(
+      FILES docs/man/man1/testprecice.1
       DESTINATION share/man
-      )
+    )
   endif()
 endif()
 
@@ -549,8 +582,9 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/tools/releasing/packaging/debian/precice.pc.in"
   "lib/pkgconfig/libprecice.pc"
   @ONLY
-  )
-install(DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig"
+)
+install(
+  DIRECTORY "${preCICE_BINARY_DIR}/lib/pkgconfig"
   DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
@@ -565,7 +599,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/Uninstall.cmake)
 # CPack
 #
 
-if (PRECICE_Packages)
+if(PRECICE_Packages)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPackConfig.cmake)
 endif()
 
@@ -573,7 +607,7 @@ endif()
 #
 # CTest
 #
-if (BUILD_TESTING)
+if(BUILD_TESTING)
   print_empty()
   print_section("TESTS")
 

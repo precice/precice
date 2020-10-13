@@ -30,23 +30,26 @@ if(NOT NumPy_FOUND)
 
   if(PYTHON_EXECUTABLE)
     unset(_numpy_include_dir)
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}"
+    execute_process(
+      COMMAND "${PYTHON_EXECUTABLE}"
       -c "import numpy; print(numpy.get_include())"
       OUTPUT_VARIABLE _numpy_include_dir
       OUTPUT_STRIP_TRAILING_WHITESPACE
       ERROR_QUIET
-      )
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}"
+    )
+    execute_process(
+      COMMAND "${PYTHON_EXECUTABLE}"
       -c "import numpy; print(numpy.__version__)"
       OUTPUT_VARIABLE NumPy_VERSION
       OUTPUT_STRIP_TRAILING_WHITESPACE
       ERROR_QUIET
-      )
-    find_path(NumPy_INCLUDE_DIR
+    )
+    find_path(
+      NumPy_INCLUDE_DIR
       numpy/arrayobject.h
       PATH "${_numpy_include_dir}"
       NO_DEFAULT_PATH
-      )
+    )
     unset(_numpy_include_dir)
   endif()
 endif()
@@ -54,18 +57,19 @@ endif()
 # handle the QUIETLY and REQUIRED arguments and set NumPy_FOUND to TRUE if
 # all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args( NumPy
-    REQUIRED_VARS NumPy_INCLUDE_DIR
-    VERSION_VAR NumPy_VERSION
-    )
+find_package_handle_standard_args(
+  NumPy
+  REQUIRED_VARS NumPy_INCLUDE_DIR
+  VERSION_VAR NumPy_VERSION
+)
 
 if(NumPy_FOUND)
-    set(NumPy_INCLUDE_DIRS ${NumPy_INCLUDE_DIR})
+  set(NumPy_INCLUDE_DIRS ${NumPy_INCLUDE_DIR})
 
-    if(NOT TARGET NumPy::NumPy)
-        add_library(NumPy::NumPy INTERFACE IMPORTED)
-        set_property(TARGET NumPy::NumPy PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NumPy_INCLUDE_DIR}")
-    endif()
+  if(NOT TARGET NumPy::NumPy)
+    add_library(NumPy::NumPy INTERFACE IMPORTED)
+    set_property(TARGET NumPy::NumPy PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NumPy_INCLUDE_DIR}")
+  endif()
 endif()
 
 mark_as_advanced(NumPy_INCLUDE_DIR)

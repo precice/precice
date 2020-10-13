@@ -26,7 +26,7 @@ execute_process(
   COMMAND ${WRAPPER} ${DUMMY_A} ${DUMMY_B} ${DUMMY_CONFIG}
   WORKING_DIRECTORY ${DUMMY_RUN_DIR}
   RESULT_VARIABLE DUMMY_RESULT
-  )
+)
 
 # Check the return codes/statuses of the solvers
 if(NOT (DUMMY_RESULT EQUAL 0))

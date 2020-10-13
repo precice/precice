@@ -1,4 +1,3 @@
-
 # This function overrides the option OPTION with the value of the TPL_OPTION if it is defined.
 function(xsdk_tpl_option_override OPTION TPL_OPTION)
   if(DEFINED ${TPL_OPTION})
@@ -15,7 +14,7 @@ function(xsdk_tpl_require NAME)
 
   # Lists all required variables alongside their state.
   foreach(TPL_REQ ${ARGN})
-    if ( NOT DEFINED ${TPL_REQ} )
+    if(NOT DEFINED ${TPL_REQ})
       message(STATUS "  * ${TPL_REQ} - NOT DEFINED")
       list(APPEND TPL_REQ_MISSING "${TPL_REQ}")
     else()

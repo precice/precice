@@ -15,10 +15,11 @@ else()
   # Try to detect the codename of the distro using lsb_release
   find_program(LSB_RELEASE_EXE lsb_release)
   if(LSB_RELEASE_EXE)
-    execute_process(COMMAND ${LSB_RELEASE_EXE} -cs
+    execute_process(
+      COMMAND ${LSB_RELEASE_EXE} -cs
       OUTPUT_VARIABLE DISTRO_CODENAME
       OUTPUT_STRIP_TRAILING_WHITESPACE
-      )
+    )
     set(CPACK_SYSTEM_NAME "${DISTRO_CODENAME}")
   else()
     # Use the target system name of cmake as fallback
@@ -40,7 +41,7 @@ set(CPACK_PACKAGE_HOMEPAGE_URL "www.precice.org")
 #set(CPACK_PACKAGE_ICON "")
 set(CPACK_PACKAGE_CHECKSUM "SHA256")
 set(CPACK_RESOURCE_FILE_LICENSE "${preCICE_SOURCE_DIR}/LICENSE")
-set(CPACK_RESOURCE_FILE_README  "${preCICE_SOURCE_DIR}/tools/releasing/packaging/README.txt")
+set(CPACK_RESOURCE_FILE_README "${preCICE_SOURCE_DIR}/tools/releasing/packaging/README.txt")
 set(CPACK_RESOURCE_FILE_WELCOME "${preCICE_SOURCE_DIR}/tools/releasing/packaging/WELCOME.txt")
 set(CPACK_MONOLITHIC_INSTALL TRUE)
 set(CPACK_STRIP_FILES TRUE)
@@ -53,11 +54,12 @@ endif()
 
 #set(CPACK_SOURCE_PACKAGE_FILE_NAME "")
 set(CPACK_SOURCE_GENERATOR ${CPACK_GENERATOR})
-set(CPACK_SOURCE_IGNORE_FILES
+set(
+  CPACK_SOURCE_IGNORE_FILES
   "/build/"
   "/.git/"
   ".gitignore"
-  )
+)
 
 # Build dependecy set
 unset(CPACK_DEBIAN_PACKAGE_DEPENDS)
@@ -88,16 +90,18 @@ set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)
 set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
 
 # Install doc files
-install(FILES tools/releasing/packaging/debian/copyright
+install(
+  FILES tools/releasing/packaging/debian/copyright
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
-  )
+)
 
 # Install lintian override
 file(WRITE "${PRECICE_PACKAGING_DIR}/lintian-override" "${CPACK_PACKAGE_NAME} binary: non-dev-pkg-with-shlib-symlink")
-install(FILES "${PRECICE_PACKAGING_DIR}/lintian-override" 
+install(
+  FILES "${PRECICE_PACKAGING_DIR}/lintian-override"
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/lintian/overrides
   RENAME ${CPACK_PACKAGE_NAME}
-  )
+)
 
 # Compress and install the debian changelog
 find_program(GZIP_EXE gzip DOC "The gzip executable")
@@ -108,15 +112,17 @@ if(GZIP_EXE)
   execute_process(COMMAND "${GZIP_EXE}" "-9nf" "${PRECICE_PACKAGING_DIR}/changelog")
 
   # Install compressed changelog
-  install(FILES ${PRECICE_PACKAGING_DIR}/changelog.gz
+  install(
+    FILES ${PRECICE_PACKAGING_DIR}/changelog.gz
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
-    )
+  )
 else()
   message(WARNING "Installing uncompressed changelog")
   # Install uncompressed changelog
-  install(FILES tools/releasing/packaging/debian/changelog
+  install(
+    FILES tools/releasing/packaging/debian/changelog
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/doc/${CPACK_PACKAGE_NAME}
-    )
+  )
 endif()
 
 file(REMOVE CPackConfig.cmake CPackSourceConfig.cmake)
