@@ -412,7 +412,7 @@ protected:
   /**
    * @brief used for storing send/receive data at end of acceleration, if not converged.
    */
-  virtual void storeData() = 0;
+  virtual void storeData() = 0;  // @todo: Try to make this private. This method is currently, only used for sake of testing.
 
   /**
    * @brief compares _iterations with _maxIterations
