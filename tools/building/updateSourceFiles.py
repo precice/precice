@@ -72,36 +72,39 @@ SOURCES_BASE = """#
 # This file lists all sources that will be compiles into the precice library
 #
 
-target_sources(precice
-    PRIVATE
-    {}
-    )
+target_sources(
+  precice
+  PRIVATE
+  {}
+)
 
 #
 # Select headers to install
 #
 
-set_property(TARGET precice PROPERTY PUBLIC_HEADER
-    {}
-    )
+set_property(
+  TARGET precice PROPERTY PUBLIC_HEADER
+  {}
+)
 """
 TESTS_BASE = """#
 # This file lists all tests sources that will be compiled into the test executable
 #
-target_sources(testprecice
-    PRIVATE
-    {}
-    )
+target_sources(
+  testprecice
+  PRIVATE
+  {}
+)
 """
 
 
 def generate_cmake_files(sources, public, tests):
     sources = SOURCES_BASE.format(
-        "\n    ".join(sources),
-        "\n    ".join(public)
+        "\n  ".join(sources),
+        "\n  ".join(public)
     )
     tests = TESTS_BASE.format(
-        "\n    ".join(tests)
+        "\n  ".join(tests)
     )
     return sources, tests
 
