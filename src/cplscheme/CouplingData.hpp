@@ -74,7 +74,7 @@ struct CouplingData {  // @todo: should be a class from a design standpoint. See
   Waveform waveform;
 
   /// Data values of previous iteration.
-  Eigen::VectorXd lastIteration;
+  Eigen::VectorXd lastIteration;  // @todo: make this read-only. Only allow update via storeIteration.
 
   mesh::PtrData data;
 

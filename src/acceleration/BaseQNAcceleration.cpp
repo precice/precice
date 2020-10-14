@@ -166,9 +166,8 @@ void BaseQNAcceleration::initialize(
     }
   }
 
-  // Append old value columns, if not done outside of acceleration already
   for (DataMap::value_type &pair : cplData) {
-    pair.second->lastIteration = (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values().size());
+    pair.second->storeIteration();
   }
 
   _preconditioner->initialize(subVectorSizes);

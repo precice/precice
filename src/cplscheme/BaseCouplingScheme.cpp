@@ -444,7 +444,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   // Reserve storage for extrapolation of data values
   if (_extrapolationOrder > 0) {
     for (DataMap::value_type &pair : data) {
-      pair.second->lastIteration = Eigen::VectorXd::Zero(pair.second->values().size());
+      pair.second->storeIteration();
       pair.second->initializeWaveform(_extrapolationOrder);
     }
   }
