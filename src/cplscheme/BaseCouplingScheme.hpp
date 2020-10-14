@@ -379,12 +379,6 @@ protected:
   }
 
   /**
-   * @brief Set old coupling data values to current values
-   * @param dataMap Data fields to update
-   */
-  void updateOldValues(DataMap &dataMap);
-
-  /**
    * @brief sends convergence to other participant via m2n
    * @param m2n used for sending
    * @param convergence bool that is being sent
@@ -402,6 +396,12 @@ protected:
    * This function is called from the child classes
    */
   bool accelerate();
+
+  /**
+   * @brief stores current data in buffer of Waveform
+   * @param data Data fields to extrapolate
+   */
+  void storeWindowData(DataMap &data);
 
   /**
    * @brief Extrapolate coupling data from values of previous time windows

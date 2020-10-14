@@ -81,7 +81,10 @@ void SerialCouplingScheme::exchangeInitialData()
   } else { // second participant
     PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
     if (sendsInitializedData()) {
-      updateOldValues(getSendData());
+      if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
+        storeWindowData(getSendData());
+        storeLastIterationFor(getSendData());
+      }
       // The second participant sends the initialized data to the first participant
       // here, which receives the data on call of initialize().
       sendData(getM2N(), getSendData());

@@ -42,10 +42,16 @@ void ParallelCouplingScheme::exchangeInitialData()
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
       // second participant has to save values for extrapolation
-      updateOldValues(getReceiveData());
+      if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
+        storeWindowData(getReceiveData());
+        storeLastIterationFor(getReceiveData());
+      }
     }
     if (sendsInitializedData()) {
-      updateOldValues(getSendData());
+      if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
+        storeWindowData(getSendData());
+        storeLastIterationFor(getSendData());
+      }
       sendData(getM2N(), getSendData());
     }
   }

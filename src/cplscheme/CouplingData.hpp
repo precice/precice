@@ -62,7 +62,6 @@ struct CouplingData {  // @todo: should be a class from a design standpoint. See
 
   void extrapolateData(int order, int timeWindows)
   {
-    waveform.addNewWindowData(this->values());
     this->values() = waveform.extrapolateData(order, timeWindows);
   }
 

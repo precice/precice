@@ -241,13 +241,12 @@ void BaseCouplingScheme::setExtrapolationOrder(
   _extrapolationOrder = order;
 }
 
-void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
+void BaseCouplingScheme::storeWindowData(DataMap &data)
 {
-  if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
-    for (DataMap::value_type &pair : dataMap) {
-      pair.second->storeIteration();  // @todo: Move this outside? Has nothing to do with extrapolation etc.
-      pair.second->waveform.addNewWindowData(pair.second->values());
-    }
+  PRECICE_TRACE(_timeWindows);
+  for (DataMap::value_type &pair : data) {
+    PRECICE_DEBUG("Store data: " << pair.first);
+    pair.second->waveform.addNewWindowData(pair.second->values());
   }
 }
 
@@ -644,6 +643,7 @@ bool BaseCouplingScheme::accelerate()
 
   // extrapolate new input data for the solver evaluation in time.
   if (convergence && (_extrapolationOrder > 0)) {
+    storeWindowData(getAccelerationData());
     extrapolateData(getAccelerationData());
   }
 

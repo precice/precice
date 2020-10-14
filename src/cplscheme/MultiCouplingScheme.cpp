@@ -75,12 +75,18 @@ void MultiCouplingScheme::exchangeInitialData()
     checkDataHasBeenReceived();
     // second participant has to save values for extrapolation
     for (DataMap &receiveData : _receiveDataVector) {
-      updateOldValues(receiveData);
+      if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
+        storeWindowData(receiveData);
+        storeLastIterationFor(receiveData);
+      }
     }
   }
   if (sendsInitializedData()) {
     for (DataMap &sendData : _sendDataVector) {
-      updateOldValues(sendData);
+      if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
+        storeWindowData(sendData);
+        storeLastIterationFor(sendData);
+      }
     }
     for (size_t i = 0; i < _m2ns.size(); i++) {
       sendData(_m2ns[i], _sendDataVector[i]);
