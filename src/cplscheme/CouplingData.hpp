@@ -9,6 +9,37 @@
 namespace precice {
 namespace cplscheme {
 
+struct Waveform {
+  void addNewWindowData(Eigen::VectorXd data)
+  {
+    // For extrapolation, treat the initial value as old time windows value
+    utils::shiftSetFirst(this->lastTimeWindows, data);
+  }
+
+  Eigen::VectorXd extrapolateData(int order, int timeWindows)
+  {
+    Eigen::VectorXd extrapolatedValue;
+    if ((order == 1) || (timeWindows == 2 && order == 2)) { //timesteps is increased before extrapolate is called
+      // PRECICE_INFO("Performing first order extrapolation");
+      PRECICE_ASSERT(this->lastTimeWindows.cols() > 1);
+      extrapolatedValue = this->lastTimeWindows.col(0) * 2.0;          // = 2*x^t
+      extrapolatedValue -= this->lastTimeWindows.col(1); // = 2*x^t - x^(t-1)
+    } else if (order == 2) {
+      // PRECICE_INFO("Performing second order extrapolation");
+      PRECICE_ASSERT(this->lastTimeWindows.cols() > 2);
+      extrapolatedValue = this->lastTimeWindows.col(0) * 2.5;  // = 2.5*x^t
+      extrapolatedValue -= this->lastTimeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
+      extrapolatedValue += this->lastTimeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
+    } else {
+      PRECICE_ASSERT(false, "Extrapolation order is invalid.");
+    }
+    return extrapolatedValue;
+  }
+
+  /// Data values of previous time windows.
+  Eigen::MatrixXd lastTimeWindows;
+};
+
 struct CouplingData {  // @todo: should be a class from a design standpoint. See https://github.com/precice/precice/pull/865#discussion_r495825098
   /// Returns a reference to the data values.
   Eigen::VectorXd &values()
@@ -29,35 +60,19 @@ struct CouplingData {  // @todo: should be a class from a design standpoint. See
     lastIteration = this->values();
   }
 
-  void updateLastTimeWindows()
-  {
-    // For extrapolation, treat the initial value as old time windows value
-    utils::shiftSetFirst(this->lastTimeWindows, this->values());
-  }
-
   void extrapolateData(int order, int timeWindows)
   {
-    updateLastTimeWindows();
-    Eigen::VectorXd extrapolatedValue;
-    if ((order == 1) || (timeWindows == 2 && order == 2)) { //timesteps is increased before extrapolate is called
-      // PRECICE_INFO("Performing first order extrapolation");
-      PRECICE_ASSERT(this->lastTimeWindows.cols() > 1);
-      extrapolatedValue = this->lastTimeWindows.col(0) * 2.0;          // = 2*x^t
-      extrapolatedValue -= this->lastTimeWindows.col(1); // = 2*x^t - x^(t-1)
-    } else if (order == 2) {
-      // PRECICE_INFO("Performing second order extrapolation");
-      PRECICE_ASSERT(this->lastTimeWindows.cols() > 2);
-      extrapolatedValue = this->lastTimeWindows.col(0) * 2.5;  // = 2.5*x^t
-      extrapolatedValue -= this->lastTimeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-      extrapolatedValue += this->lastTimeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
-    } else {
-      PRECICE_ASSERT(false, "Extrapolation order is invalid.");
-    }
-    this->values() = extrapolatedValue;                           // update value
+    waveform.addNewWindowData(this->values());
+    this->values() = waveform.extrapolateData(order, timeWindows);
   }
 
-  /// Data values of previous time windows.
-  Eigen::MatrixXd lastTimeWindows;
+  void initializeWaveform(int extrapolationOrder)
+  {
+    waveform.lastTimeWindows = Eigen::MatrixXd::Zero(this->values().size(), extrapolationOrder + 1);
+  }
+
+  /// Stores data of this and previous time windows and allows to extrapolate.
+  Waveform waveform;
 
   /// Data values of previous iteration.
   Eigen::VectorXd lastIteration;
@@ -91,7 +106,8 @@ struct CouplingData {  // @todo: should be a class from a design standpoint. See
       bool          requiresInitialization)
       : data(data),
         mesh(mesh),
-        requiresInitialization(requiresInitialization)
+        requiresInitialization(requiresInitialization),
+        waveform()
   {
     PRECICE_ASSERT(data != nullptr);
     PRECICE_ASSERT(mesh != nullptr);

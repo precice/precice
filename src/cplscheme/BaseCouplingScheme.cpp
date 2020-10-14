@@ -245,8 +245,8 @@ void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
 {
   if (isImplicitCouplingScheme() && getTimeWindows() > 1) {
     for (DataMap::value_type &pair : dataMap) {
-      pair.second->storeIteration();
-      pair.second->updateLastTimeWindows();
+      pair.second->storeIteration();  // @todo: Move this outside? Has nothing to do with extrapolation etc.
+      pair.second->waveform.addNewWindowData(pair.second->values());
     }
   }
 }
@@ -446,7 +446,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   if (_extrapolationOrder > 0) {
     for (DataMap::value_type &pair : data) {
       pair.second->lastIteration = Eigen::VectorXd::Zero(pair.second->values().size());
-      pair.second->lastTimeWindows = Eigen::MatrixXd::Zero(pair.second->values().size(), _extrapolationOrder + 1);
+      pair.second->initializeWaveform(_extrapolationOrder);
     }
   }
   // Storage reservation for acceleration methods happens in Acceleration::initialize
