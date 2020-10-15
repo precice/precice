@@ -101,7 +101,9 @@ void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
 
 void BaseCouplingScheme::storeLastIterationFor(DataMap data)
 {
+  PRECICE_ASSERT(isImplicitCouplingScheme());
   for (DataMap::value_type &pair : data) {
+    //PRECICE_ASSERT(pair.second->lastIteration.size() > 0);  // @todo: Why is this assertion failing?
     pair.second->storeIteration();
   }
 }
