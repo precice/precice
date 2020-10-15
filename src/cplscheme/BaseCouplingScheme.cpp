@@ -441,7 +441,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
-    convMeasure.couplingData->lastIteration = Eigen::VectorXd::Zero(convMeasure.couplingData->values().size());
+    convMeasure.couplingData->storeIteration();
   }
   // Reserve storage for extrapolation of data values
   if (_extrapolationOrder > 0) {
