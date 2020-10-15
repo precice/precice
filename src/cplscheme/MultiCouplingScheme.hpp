@@ -69,20 +69,6 @@ public:
     return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](DataMap sendData) { return not sendData.empty(); });
   }
 
-protected:
-  /**
-   * @brief MultiCouplingScheme has to call store for all receive and send data in the vectors
-   */
-  void storeLastIteration() override
-  {
-    for (DataMap &sendData : _sendDataVector) {
-      storeLastIterationFor(sendData);
-    }
-    for (DataMap &receiveData : _receiveDataVector) {
-      storeLastIterationFor(receiveData);
-    }
-  }
-
 private:
   /**
    * @brief get CouplingData from _allData using dataID

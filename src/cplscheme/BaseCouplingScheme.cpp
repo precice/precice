@@ -99,15 +99,6 @@ void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
   PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
 }
 
-void BaseCouplingScheme::storeLastIterationFor(DataMap data)
-{
-  PRECICE_ASSERT(isImplicitCouplingScheme());
-  for (DataMap::value_type &pair : data) {
-    //PRECICE_ASSERT(pair.second->lastIteration.size() > 0);  // @todo: Why is this assertion failing?
-    pair.second->storeIteration();
-  }
-}
-
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
 {
   _timeWindowSize = timeWindowSize;
@@ -143,7 +134,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
       // reserve memory and initialize data with zero
-      setupDataMatrices(getAccelerationData());
+      setupDataMatrices();
       if (getAcceleration()) {
         getAcceleration()->initialize(getAccelerationData()); // Reserve memory, initialize
       }
@@ -243,19 +234,19 @@ void BaseCouplingScheme::setExtrapolationOrder(
   _extrapolationOrder = order;
 }
 
-void BaseCouplingScheme::storeWindowData(DataMap &data)
+void BaseCouplingScheme::storeWindowData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : data) {
+  for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: " << pair.first);
     pair.second->waveform.addNewWindowData(pair.second->values());
   }
 }
 
-void BaseCouplingScheme::extrapolateData(DataMap &data)
+void BaseCouplingScheme::extrapolateData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : data) {
+  for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Extrapolate data: " << pair.first);
     pair.second->extrapolateData(_extrapolationOrder, getTimeWindows());
   }
@@ -434,10 +425,10 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   }
 }
 
-void BaseCouplingScheme::setupDataMatrices(DataMap &data)
+void BaseCouplingScheme::setupDataMatrices()
 {
   PRECICE_TRACE();
-  PRECICE_DEBUG("Data size: " << data.size());
+  PRECICE_DEBUG("Data size: " << getAccelerationData().size());
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
@@ -445,7 +436,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   }
   // Reserve storage for extrapolation of data values
   if (_extrapolationOrder > 0) {
-    for (DataMap::value_type &pair : data) {
+    for (DataMap::value_type &pair : getAccelerationData()) {
       pair.second->storeIteration();
       pair.second->initializeWaveform(_extrapolationOrder);
     }
@@ -645,8 +636,8 @@ bool BaseCouplingScheme::accelerate()
 
   // extrapolate new input data for the solver evaluation in time.
   if (convergence && (_extrapolationOrder > 0)) {
-    storeWindowData(getAccelerationData());
-    extrapolateData(getAccelerationData());
+    storeWindowData();
+    extrapolateData();
   }
 
   // Store data for conv. measurement, acceleration

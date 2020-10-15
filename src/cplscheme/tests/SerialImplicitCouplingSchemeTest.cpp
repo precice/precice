@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   scheme.addDataToSend(data, mesh, true);
   scheme.setExtrapolationOrder(1);
-  scheme.setupDataMatrices(scheme.getSendData());
+  scheme.setupDataMatrices();
   CouplingData *cplData = scheme.getSendData(dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);
@@ -464,8 +464,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   cplData->values()[0] = 1.0;
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
-  scheme.storeWindowData(scheme.getSendData());
-  scheme.extrapolateData(scheme.getSendData());
+  scheme.storeWindowData();
+  scheme.extrapolateData();
   scheme.storeLastIteration();
   BOOST_TEST(testing::equals(cplData->values()[0], 2.0));
   BOOST_TEST(testing::equals(cplData->lastIteration(0), 2.0));
@@ -474,8 +474,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   cplData->values()[0] = 4.0;
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
-  scheme.storeWindowData(scheme.getSendData());
-  scheme.extrapolateData(scheme.getSendData());
+  scheme.storeWindowData();
+  scheme.extrapolateData();
   scheme.storeLastIteration();
   BOOST_TEST(testing::equals(cplData->values()[0], 7.0));
   BOOST_TEST(testing::equals(cplData->lastIteration(0), 7.0));
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   scheme2.addDataToSend(data, mesh, false);
   scheme2.setExtrapolationOrder(2);
-  scheme2.setupDataMatrices(scheme2.getSendData());
+  scheme2.setupDataMatrices();
   cplData = scheme2.getSendData(dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);
@@ -507,8 +507,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   cplData->values()[0] = 1.0;
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
-  scheme2.storeWindowData(scheme2.getSendData());
-  scheme2.extrapolateData(scheme2.getSendData());
+  scheme2.storeWindowData();
+  scheme2.extrapolateData();
   scheme2.storeLastIteration();
   BOOST_TEST(testing::equals(cplData->values()[0], 2.0));
   BOOST_TEST(testing::equals(cplData->lastIteration(0), 2.0));
@@ -518,8 +518,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   cplData->values()[0] = 4.0;
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
-  scheme2.storeWindowData(scheme2.getSendData());
-  scheme2.extrapolateData(scheme2.getSendData());
+  scheme2.storeWindowData();
+  scheme2.extrapolateData();
   scheme2.storeLastIteration();
   BOOST_TEST(testing::equals(cplData->values()[0], 8.0));
   BOOST_TEST(testing::equals(cplData->lastIteration(0), 8.0));

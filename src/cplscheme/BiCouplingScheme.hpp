@@ -97,15 +97,6 @@ protected:
   /// @brief Receive from coupling partner and return whether coupling scheme has converged
   bool receiveConvergence();
 
-  /**
-   * @brief BiCouplingScheme has to call store for receive and send data
-   */
-  void storeLastIteration() override
-  {
-    storeLastIterationFor(getSendData());
-    storeLastIterationFor(getReceiveData());
-  }
-
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 

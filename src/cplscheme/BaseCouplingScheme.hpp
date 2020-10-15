@@ -260,12 +260,6 @@ protected:
   /// Receives data receiveDataIDs given in mapCouplingData with communication.
   void receiveData(m2n::PtrM2N m2n, DataMap receiveData);
 
-  /**
-   * @brief Used by storeLastIteration to take care of storing individual DataMap
-   * @param data DataMap that will be stored
-   */
-  void storeLastIterationFor(DataMap data);
-
   typedef std::map<int, Eigen::VectorXd> ValuesMap;
 
   /**
@@ -367,7 +361,7 @@ protected:
    * @brief Sets up data matrices to store data values from previous iterations and time windows.
    * @param data Data fields for which data is stored
    */
-  void setupDataMatrices(DataMap &data);
+  void setupDataMatrices();
 
   /**
    * @brief Getter for _acceleration
@@ -399,20 +393,25 @@ protected:
 
   /**
    * @brief stores current data in buffer of Waveform
-   * @param data Data fields to extrapolate
    */
-  void storeWindowData(DataMap &data);
+  void storeWindowData();
 
   /**
    * @brief Extrapolate coupling data from values of previous time windows
-   * @param data Data fields to extrapolate
    */
-  void extrapolateData(DataMap &data);
+  void extrapolateData();
 
   /**
    * @brief used for storing send/receive data at end of acceleration, if not converged.
    */
-  virtual void storeLastIteration() = 0;  // @todo: Try to make this private. This method is currently, only used for sake of testing.
+  void storeLastIteration()  // @todo: Try to make this private. This method is currently, only used for sake of testing.
+  {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+    for (DataMap::value_type &pair : getAccelerationData()) {
+      // PRECICE_ASSERT(pair.second->lastIteration.size() > 0);  // @todo: Why is this assertion failing?
+      pair.second->storeIteration();
+    }
+  }
 
   /**
    * @brief compares _iterations with _maxIterations
