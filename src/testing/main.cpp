@@ -63,6 +63,7 @@ bool init_unit_test()
     if (logLevel >= log_all_errors)
       config.filter = "%Severity% >= warning"; // log warnings in any case
 
+    config.format = "%TimeStamp(format=\"%H:%M:%S\")%|%Participant%|%Rank%|%Module%|l%Line%|%Function%|%ColorizedSeverity%%Message%";
     logConfigs.push_back(config);
   }
 
