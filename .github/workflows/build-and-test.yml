@@ -1,12 +1,9 @@
 name: Build and Test
 on:
-<<<<<<< HEAD
   push:
     branches:
       - master
       - develop
-=======
->>>>>>> master
   pull_request:
     paths:
       - 'cmake/**'
@@ -128,14 +125,10 @@ jobs:
         run: |
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '/usr/*' "/opt/*" --output-file coverage.info # filter system-files and local-dependencies
-<<<<<<< HEAD
       - uses: codecov/codecov-action@v1
         with:
           file: ./build/coverage.info
         if: ${{ matrix.COVFLAGS }} 
-=======
-          bash <(curl -s https://codecov.io/bash) -f coverage.info -t ${{ secrets.CODECOV_TOKEN }} || echo "Codecov did not collect coverage reports" 
->>>>>>> master
       - name: Check packages
         working-directory: build
         if: ${{ contains(matrix.IMAGE, 'ubuntu') }}
