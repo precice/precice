@@ -64,6 +64,13 @@ bool init_unit_test()
       config.filter = "%Severity% >= warning"; // log warnings in any case
 
     config.format = "%TimeStamp(format=\"%H:%M:%S\")%|%Participant%|%Rank%|%Module%|l%Line%|%Function%|%ColorizedSeverity%%Message%";
+
+    config.type = "stream";
+    config.output = "stdout";
+    logConfigs.push_back(config);
+
+    config.type = "file";
+    config.output = "test.log";
     logConfigs.push_back(config);
   }
 
