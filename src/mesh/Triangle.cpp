@@ -75,6 +75,14 @@ Triangle::Triangle(
       "Triangle vertices are not unique!");
 }
 
+double Triangle::getArea() const{
+  Eigen::Vector3d vectorA = edge(1).vertex(1).getCoords() - edge(1).vertex(0).getCoords();
+  Eigen::Vector3d vectorB = edge(0).vertex(1).getCoords() - edge(0).vertex(0).getCoords();
+  // Compute cross-product of vector A and vector B
+  auto normal = vectorA.cross(vectorB);
+  return (0.5 * normal.norm());
+}
+
 const Eigen::VectorXd Triangle::computeNormal(bool flip)
 {
   Eigen::Vector3d vectorA = edge(1).getCenter() - edge(0).getCenter();
