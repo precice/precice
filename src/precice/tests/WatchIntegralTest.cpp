@@ -544,18 +544,20 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
   // File Format: Time  DoubleData  SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral ScalarData NoConnectivity Parallel")
   {
-    auto result   = readDoublesFromTXTFile(fileName, 3);
-    auto expected = std::vector<double>{
-        0.0, 36.0, 8.0,
-        1.0, 44.0, 8.0,
-        2.0, 44.0, 8.0
-    };
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
+    if(utils::MasterSlave::isMaster()){
+      auto result   = readDoublesFromTXTFile(fileName, 3);
+      auto expected = std::vector<double>{
+          0.0, 36.0, 8.0,
+          1.0, 44.0, 8.0,
+          2.0, 44.0, 8.0
+      };
+      BOOST_TEST(result.size() == expected.size());
+      for (size_t i = 0; i < result.size(); ++i) {
+        BOOST_TEST_CONTEXT("entry index: " << i)
+        {
+          using testing::equals;
+          BOOST_TEST(equals(result.at(i), expected.at(i)));
+        }
       }
     }
   }
@@ -645,18 +647,20 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
   // File Format: Time  DoubleData  SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData NoConnectivity Parallel")
   {
-    auto result   = readDoublesFromTXTFile(fileName, 4);
-    auto expected = std::vector<double>{
-        0.0, 64.0, 72.0, 8.0,
-        1.0, 72.0, 80.0, 8.0,
-        2.0, 72.0, 80.0, 8.0
-    };
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
+    if(utils::MasterSlave::isMaster()){
+      auto result   = readDoublesFromTXTFile(fileName, 4);
+      auto expected = std::vector<double>{
+          0.0, 64.0, 72.0, 8.0,
+          1.0, 72.0, 80.0, 8.0,
+          2.0, 72.0, 80.0, 8.0
+      };
+      BOOST_TEST(result.size() == expected.size());
+      for (size_t i = 0; i < result.size(); ++i) {
+        BOOST_TEST_CONTEXT("entry index: " << i)
+        {
+          using testing::equals;
+          BOOST_TEST(equals(result.at(i), expected.at(i)));
+        }
       }
     }
   }
@@ -751,18 +755,20 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
   // File Format: Time  DoubleData  SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral ScalarData EdgeConnectivity Parallel")
   {
-    auto result   = readDoublesFromTXTFile(fileName, 3);
-    auto expected = std::vector<double>{
-        0.0, 25.5, 5.0,
-        1.0, 30.5, 5.0,
-        2.0, 30.5, 5.0
-    };
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
+    if(utils::MasterSlave::isMaster()){
+      auto result   = readDoublesFromTXTFile(fileName, 3);
+      auto expected = std::vector<double>{
+          0.0, 25.5, 5.0,
+          1.0, 30.5, 5.0,
+          2.0, 30.5, 5.0
+      };
+      BOOST_TEST(result.size() == expected.size());
+      for (size_t i = 0; i < result.size(); ++i) {
+        BOOST_TEST_CONTEXT("entry index: " << i)
+        {
+          using testing::equals;
+          BOOST_TEST(equals(result.at(i), expected.at(i)));
+        }
       }
     }
   }
@@ -857,18 +863,20 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
   // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData EdgeConnectivity Parallel")
   {
-    auto result   = readDoublesFromTXTFile(fileName, 4);
-    auto expected = std::vector<double>{
-        0.0, 46.0, 51.0, 5.0,
-        1.0, 51.0, 56.0, 5.0,
-        2.0, 51.0, 56.0, 5.0
-    };
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
+    if(utils::MasterSlave::isMaster()){
+      auto result   = readDoublesFromTXTFile(fileName, 4);
+      auto expected = std::vector<double>{
+          0.0, 46.0, 51.0, 5.0,
+          1.0, 51.0, 56.0, 5.0,
+          2.0, 51.0, 56.0, 5.0
+      };
+      BOOST_TEST(result.size() == expected.size());
+      for (size_t i = 0; i < result.size(); ++i) {
+        BOOST_TEST_CONTEXT("entry index: " << i)
+        {
+          using testing::equals;
+          BOOST_TEST(equals(result.at(i), expected.at(i)));
+        }
       }
     }
   }
@@ -955,18 +963,20 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
   // File Format: Time  DoubleData SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral ScalarData FaceConnectivity Parallel")
   {
-    auto result   = readDoublesFromTXTFile(fileName, 3);
-    auto expected = std::vector<double>{
-        0.0, 28.0, 12.0,
-        1.0, 40.0, 12.0,
-        2.0, 40.0, 12.0
-    };
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
+    if(utils::MasterSlave::isMaster()){
+      auto result   = readDoublesFromTXTFile(fileName, 3);
+      auto expected = std::vector<double>{
+          0.0, 28.0, 12.0,
+          1.0, 40.0, 12.0,
+          2.0, 40.0, 12.0
+      };
+      BOOST_TEST(result.size() == expected.size());
+      for (size_t i = 0; i < result.size(); ++i) {
+        BOOST_TEST_CONTEXT("entry index: " << i)
+        {
+          using testing::equals;
+          BOOST_TEST(equals(result.at(i), expected.at(i)));
+        }
       }
     }
   }
@@ -1053,18 +1063,20 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
   // File Format: Time  DoubleData SurfaceArea
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData FaceConnectivity Parallel")
   {
-    auto result   = readDoublesFromTXTFile(fileName, 4);
-    auto expected = std::vector<double>{
-        0.0, 44.0, 56.0, 12.0,
-        1.0, 56.0, 68.0, 12.0,
-        2.0, 56.0, 68.0, 12.0
-    };
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
+    if(utils::MasterSlave::isMaster()){
+      auto result   = readDoublesFromTXTFile(fileName, 4);
+      auto expected = std::vector<double>{
+          0.0, 44.0, 56.0, 12.0,
+          1.0, 56.0, 68.0, 12.0,
+          2.0, 56.0, 68.0, 12.0
+      };
+      BOOST_TEST(result.size() == expected.size());
+      for (size_t i = 0; i < result.size(); ++i) {
+        BOOST_TEST_CONTEXT("entry index: " << i)
+        {
+          using testing::equals;
+          BOOST_TEST(equals(result.at(i), expected.at(i)));
+        }
       }
     }
   }
