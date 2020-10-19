@@ -56,6 +56,11 @@ private:
     Eigen::VectorXd coordinates;
   };
 
+  struct WatchIntegralConfig {
+    std::string     name;
+    std::string     nameMesh;
+  };
+
   mutable logging::Logger _log{"config::ParticipantConfiguration"};
 
   const std::string TAG             = "participant";
@@ -63,6 +68,7 @@ private:
   const std::string TAG_READ        = "read-data";
   const std::string TAG_DATA_ACTION = "data-action";
   const std::string TAG_USE_MESH    = "use-mesh";
+  const std::string TAG_WATCH_INTEGRAL = "watch-integral";
   const std::string TAG_WATCH_POINT = "watch-point";
   const std::string TAG_MASTER      = "master";
 
@@ -102,6 +108,8 @@ private:
   std::vector<impl::PtrParticipant> _participants;
 
   std::vector<WatchPointConfig> _watchPointConfigs;
+
+  std::vector<WatchIntegralConfig> _watchIntegralConfigs;
 
   partition::ReceivedPartition::GeometricFilter getGeoFilter(const std::string &geoFilter) const;
 

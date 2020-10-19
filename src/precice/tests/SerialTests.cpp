@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <deque>
 #include <memory>
+#include <istream>
+#include <fstream>
+#include <iterator>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -40,6 +43,20 @@ struct SerialTestFixture : testing::WhiteboxAccessor {
     reset();
   }
 };
+
+namespace {
+std::vector<double> readDoublesFromTXTFile(const std::string &filename, int skip = 0)
+{
+  std::ifstream is{filename};
+  if (skip > 0) {
+    std::string ignore;
+    while (skip--) {
+      is >> ignore;
+    }
+  }
+  return {std::istream_iterator<double>{is}, std::istream_iterator<double>{}};
+}
+} // namespace
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Serial, SerialTestFixture)
@@ -1527,7 +1544,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
   cplInterface.finalize();
 }
 
-void testSummationAction(const std::string configFile, TestContext const &context)
+void testSummationAction(const std::string& configFile, TestContext const &context)
 {
   using Eigen::Vector3d;
 
@@ -1662,6 +1679,109 @@ BOOST_AUTO_TEST_CASE(testSummationActionTwoSources)
   PRECICE_TEST("SolverTarget"_on(1_rank), "SolverSourceOne"_on(1_rank), "SolverSourceTwo"_on(1_rank));
   const std::string configFile = _pathToTests + "summation-action.xml";
   testSummationAction(configFile, context);
+}
+
+void testWatchIntegral(const std::string& configFile, TestContext& context){
+  using Eigen::Vector3d;
+
+  if (context.isNamed("SolverOne")) {
+    SolverInterface cplInterface(context.name, configFile, 0, 1);
+
+    // Set mesh
+    Vector3d coordA{0.0, 0.0, 0.3};
+    Vector3d coordB{1.0, 0.0, 0.3};
+    Vector3d coordC{1.0, 1.0, 0.3};
+    Vector3d coordD{0.0, 1.0, 0.3};
+
+    const int meshID = cplInterface.getMeshID("MeshOne");
+
+    int idA = cplInterface.setMeshVertex(meshID, coordA.data());
+    int idB = cplInterface.setMeshVertex(meshID, coordB.data());
+    int idC = cplInterface.setMeshVertex(meshID, coordC.data());
+    int idD = cplInterface.setMeshVertex(meshID, coordD.data());
+
+    // Initialize, the mesh
+    double dt = cplInterface.initialize();
+
+    int    dataAID = cplInterface.getDataID("DataOne", meshID);
+    double valueA  = 1.0;
+    double valueB  = 3.0;
+    double valueC  = 5.0;
+    double valueD  = 7.0;
+
+    double increment = 1.0;
+
+    while (cplInterface.isCouplingOngoing()) {
+
+      cplInterface.writeScalarData(dataAID, idA, valueA);
+      cplInterface.writeScalarData(dataAID, idB, valueB);
+      cplInterface.writeScalarData(dataAID, idC, valueC);
+      cplInterface.writeScalarData(dataAID, idD, valueD);
+
+      dt = cplInterface.advance(dt);
+
+      valueA += increment;
+      valueB += increment;
+      valueC += increment;
+      valueD += increment;
+    }
+    cplInterface.finalize();
+  } else if (context.isNamed("SolverTwo")) {
+
+    SolverInterface cplInterface(context.name, configFile, 0, 1);
+
+    // Set mesh
+    Vector3d coordA{0.0, 0.0, 0.3};
+    Vector3d coordB{1.0, 0.0, 0.3};
+    Vector3d coordC{1.0, 1.0, 0.3};
+    Vector3d coordD{0.0, 1.0, 0.3};
+
+    const int meshID = cplInterface.getMeshID("MeshTwo");
+
+    int idA = cplInterface.setMeshVertex(meshID, coordA.data());
+    int idB = cplInterface.setMeshVertex(meshID, coordB.data());
+    int idC = cplInterface.setMeshVertex(meshID, coordC.data());
+    int idD = cplInterface.setMeshVertex(meshID, coordD.data());
+
+    // Initialize the mesh
+    double dt = cplInterface.initialize();
+
+    int    dataAID = cplInterface.getDataID("DataTwo", meshID);
+    double valueA, valueB, valueC, valueD;
+
+    while (cplInterface.isCouplingOngoing()) {
+
+      cplInterface.readScalarData(dataAID, idA, valueA);
+      cplInterface.readScalarData(dataAID, idB, valueB);
+      cplInterface.readScalarData(dataAID, idC, valueC);
+      cplInterface.readScalarData(dataAID, idD, valueD);
+
+      dt = cplInterface.advance(dt);
+    }
+    cplInterface.finalize();
+  }
+
+  std::string fileName = "precice-SolverTwo-watchintegral-WatchIntegral.log";
+    auto result   = readDoublesFromTXTFile(fileName, 4);
+    auto expected = std::vector<double>{
+        1.0, 20.0, 0.0, 4.0,
+        2.0, 24.0, 0.0, 4.0,
+        3.0, 24.0, 0.0, 4.0
+    };
+    BOOST_TEST(result.size() == expected.size());
+    for (size_t i = 0; i < result.size(); ++i) {
+      BOOST_TEST_CONTEXT("entry index: " << i)
+      {
+        using testing::equals;
+        BOOST_TEST(equals(result.at(i), expected.at(i)));
+      }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testWatchIntegralConfig){
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  const std::string configFile = _pathToTests + "watch-integral.xml";
+  testWatchIntegral(configFile, context);
 }
 
 void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, const std::string configFile, const TestContext &context)

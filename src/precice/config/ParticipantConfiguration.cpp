@@ -24,6 +24,7 @@
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
+#include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/PointerVector.hpp"
@@ -102,6 +103,19 @@ ParticipantConfiguration::ParticipantConfiguration(
                                 "linearly to that point.");
   tagWatchPoint.addAttribute(attrCoordinate);
   tag.addSubtag(tagWatchPoint);
+
+  XMLTag tagWatchIntegral(*this, TAG_WATCH_INTEGRAL, XMLTag::OCCUR_ARBITRARY);
+  doc = "A watch integral can be used to follow the transient changes of data ";
+  doc += "and surface area at a given interface.";
+  tagWatchIntegral.setDocumentation(doc);
+  doc = "Name of the watch integral. Is taken in combination with the participant ";
+  doc += "name to construct the filename the watch integral data is written to.";
+  attrName.setDocumentation(doc);
+  tagWatchIntegral.addAttribute(attrName);
+  doc = "Mesh to be watched.";
+  attrMesh.setDocumentation(doc);
+  tagWatchIntegral.addAttribute(attrMesh);
+  tag.addSubtag(tagWatchIntegral);
 
   XMLTag tagUseMesh(*this, TAG_USE_MESH, XMLTag::OCCUR_ARBITRARY);
   doc = "Makes a mesh (see tag <mesh> available to a participant.";
@@ -285,6 +299,12 @@ void ParticipantConfiguration::xmlTagCallback(
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
     config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _dimensions);
     _watchPointConfigs.push_back(config);
+  } else if(tag.getName() == TAG_WATCH_INTEGRAL){
+    PRECICE_ASSERT(_dimensions != 0);
+    WatchIntegralConfig config;
+    config.name = tag.getStringAttributeValue(ATTR_NAME);
+    config.nameMesh = tag.getStringAttributeValue(ATTR_MESH);
+    _watchIntegralConfigs.push_back(config);
   } else if (tag.getNamespace() == TAG_MASTER) {
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com = comConfig.createCommunication(tag);
@@ -544,6 +564,28 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     participant->addWatchPoint(watchPoint);
   }
   _watchPointConfigs.clear();
+
+  // Create watch integrals
+  for(const WatchIntegralConfig &config : _watchIntegralConfigs){
+    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
+
+    PRECICE_CHECK(meshContext && meshContext->mesh,
+                  "Participant \"" << participant->getName()
+                                   << "\" defines watch integral \"" << config.name
+                                   << "\" for mesh \"" << config.nameMesh
+                                   << "\" which is not used by the participant. "
+                                   << "Please add a use-mesh node with name=\"" << config.nameMesh << "\".");
+    PRECICE_CHECK(meshContext->provideMesh,
+                  "Participant \"" << participant->getName()
+                                   << "\" defines watch integral \"" << config.name
+                                   << "\" for the received mesh \"" << config.nameMesh << "\", which is not allowed. "
+                                   << "Please move the watchpoint definition to the participant providing mesh \"" << config.nameMesh << "\".");
+
+    std::string         filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
+    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext->mesh, filename));
+    participant->addWatchIntegral(watchIntegral);
+  }
+  _watchIntegralConfigs.clear();
 
   // create default master communication if needed
   if (context.size > 1 && not _isMasterDefined && participant->getName() == context.name) {

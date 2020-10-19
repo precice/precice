@@ -6,6 +6,7 @@
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
 #include "WatchPoint.hpp"
+#include "WatchIntegral.hpp"
 #include "action/Action.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
@@ -51,9 +52,19 @@ void Participant::addWatchPoint(
   _watchPoints.push_back(watchPoint);
 }
 
+void Participant::addWatchIntegral(
+    const PtrWatchIntegral &watchIntegral)
+{
+  _watchIntegrals.push_back(watchIntegral);
+}
+
 std::vector<PtrWatchPoint> &Participant::watchPoints()
 {
   return _watchPoints;
+}
+
+std::vector<PtrWatchIntegral> &Participant::watchIntegrals(){
+  return _watchIntegrals;
 }
 
 void Participant::useMesh(

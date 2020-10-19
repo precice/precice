@@ -71,14 +71,12 @@ void WatchIntegral::exportIntegralData(
     if(dataDimensions > 1){
       
       Eigen::VectorXd value = Eigen::VectorXd::Zero(dataDimensions);
-      double surfaceArea = 0.0;
-      calculateVectorData(value, surfaceArea, elem);
+      calculateVectorData(value, elem);
       
       if(utils::MasterSlave::getSize() > 1){
         Eigen::VectorXd valueRecv = Eigen::VectorXd::Zero(dataDimensions);
         utils::MasterSlave::allreduceSum(value.data(), valueRecv.data(), value.size());
         value = valueRecv;
-        utils::MasterSlave::allreduceSum(surfaceArea, surfaceArea, 1);
       }
 
       if(not utils::MasterSlave::isSlave()){
@@ -88,49 +86,49 @@ void WatchIntegral::exportIntegralData(
         else{
           _txtWriter.writeData(elem->getName(), Eigen::Vector3d(value));
         }
-        _txtWriter.writeData("SurfaceArea", surfaceArea);
       }
-    
     }
     else{
 
       double value = 0.0;
-      double surfaceArea = 0.0;
-      calculateScalarData(value, surfaceArea, elem);
+      calculateScalarData(value, elem);
 
       if(utils::MasterSlave::getSize() > 1){
         utils::MasterSlave::allreduceSum(value, value, 1);
-        utils::MasterSlave::allreduceSum(surfaceArea, surfaceArea, 1);
       }
       if(not utils::MasterSlave::isSlave()){
         _txtWriter.writeData(elem->getName(), value);
-        _txtWriter.writeData("SurfaceArea", surfaceArea);
       }
     }
   }
+
+  double surfaceArea = calculateSurfaceArea();
+  if(utils::MasterSlave::getSize() > 1){
+    double surfaceAreaSum = 0.0;
+    utils::MasterSlave::allreduceSum(surfaceArea, surfaceAreaSum, 1);
+    surfaceArea = surfaceAreaSum;
+  }
+
+  if(not utils::MasterSlave::isSlave()){
+    _txtWriter.writeData("SurfaceArea", surfaceArea);
+  }
 }
 
-void WatchIntegral::calculateVectorData(Eigen::VectorXd& value, double& surfaceArea, mesh::PtrData data){
+void WatchIntegral::calculateVectorData(Eigen::VectorXd& value, mesh::PtrData data){
   
   int dim = data->getDimensions();
   const Eigen::VectorXd& values = data->values();
   Eigen::VectorXd temp(dim);
   value = Eigen::VectorXd::Zero(data->getDimensions());
-  surfaceArea = 0.0;
 
   if(_mesh->edges().empty()){
-    
-    int index = 0;
-
     for (const auto& vertex : _mesh->vertices()) {
       int offset = vertex.getID() * dim;
       for (int i = 0; i < dim; i++) {
         temp[i] = values[offset + i];
       }
       value += temp;
-      index++;
     }
-    surfaceArea = static_cast<double>(_mesh->vertices().size());
   }
   else{ // Connectivity information is given
     // For 2D, connectivity elements are edges
@@ -144,9 +142,7 @@ void WatchIntegral::calculateVectorData(Eigen::VectorXd& value, double& surfaceA
         for (int i = 0; i < dim; i++) {
           temp[i] = 0.5 * (values[vertex1.getID() * dim + i] + values[vertex2.getID() * dim + i]) * edge.getLength();
         }
-
         value += temp;
-        surfaceArea += edge.getLength();
       }
     }
     else{ // For 3D, connectivity elements are faces, calculate the average and multply by face area
@@ -155,25 +151,21 @@ void WatchIntegral::calculateVectorData(Eigen::VectorXd& value, double& surfaceA
         for(int i = 0; i < dim; ++i){
           temp[i] = values[face.vertex(0).getID()*dim + i] + values[face.vertex(1).getID()*dim + i] + values[face.vertex(2).getID()*dim + i];
         }
-        
         value += (temp * face.getArea()) / 3.0;
-        surfaceArea += face.getArea();
       }
     }
   }
 }
 
-void WatchIntegral::calculateScalarData(double& value, double& surfaceArea, mesh::PtrData data){
+void WatchIntegral::calculateScalarData(double& value, mesh::PtrData data){
   
   const Eigen::VectorXd& values = data->values();
   value = 0.0;
-  surfaceArea = 0.0;
 
   if(_mesh->edges().empty()){
     for(const auto& vertex : _mesh->vertices()){
       value += values[vertex.getID()];
     }
-    surfaceArea = static_cast<double>(_mesh->vertices().size());
   }
   else{ // Connectivity information is given
     // For 2D, connectivity elements are edges
@@ -185,17 +177,37 @@ void WatchIntegral::calculateScalarData(double& value, double& surfaceArea, mesh
         const auto& vertex2 = edge.vertex(1);
           
         value += 0.5 * (values[vertex1.getID()] + values[vertex2.getID()]) * edge.getLength();
-        surfaceArea += edge.getLength();
       }
     }
     else{ // For 3D, connectivity elements are faces, calculate the average and multply by face area
       for(const auto& face : _mesh->triangles()){
         double localValue = values[face.vertex(0).getID()] + values[face.vertex(1).getID()] + values[face.vertex(2).getID()];
         value += (localValue * face.getArea()) / 3.0;
-        surfaceArea += face.getArea();
       }
     }
   }
+}
+
+double WatchIntegral::calculateSurfaceArea(){
+  
+  double surfaceArea = 0.0;
+
+  if(not _mesh->triangles().empty()){
+    for(const auto& face : _mesh->triangles()){
+      surfaceArea += face.getArea();
+    }
+  }
+  else if(not _mesh->edges().empty()){
+    for(const auto& edge : _mesh->edges()){
+      surfaceArea += edge.getLength();
+    }
+  }
+  else{
+    surfaceArea += static_cast<double>(_mesh->vertices().size());
+  }
+
+  return surfaceArea;
+
 }
 
 } // namespace impl

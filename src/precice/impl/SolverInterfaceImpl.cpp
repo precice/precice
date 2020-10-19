@@ -50,6 +50,7 @@
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/ValidationMacros.hpp"
+#include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -1586,6 +1587,9 @@ void SolverInterfaceImpl::handleExports()
     // Export watch point data
     for (const PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
       watchPoint->exportPointData(_couplingScheme->getTime());
+    }
+    for(const PtrWatchIntegral &watchIntegral : _accessor->watchIntegrals()){
+      watchIntegral->exportIntegralData(_couplingScheme->getTime());
     }
   }
 }

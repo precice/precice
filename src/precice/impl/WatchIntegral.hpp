@@ -44,9 +44,11 @@ private:
 
   std::vector<mesh::PtrData> _dataToExport;
 
-  void calculateVectorData(Eigen::VectorXd& value, double& surfaceArea, mesh::PtrData data);
+  void calculateVectorData(Eigen::VectorXd& value, mesh::PtrData data);
 
-  void calculateScalarData(double& value, double& surfaceArea, mesh::PtrData data);
+  void calculateScalarData(double& value, mesh::PtrData data);
+
+  double calculateSurfaceArea();
 };
 
 } // namespace impl
