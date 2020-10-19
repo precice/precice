@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <limits>
 #include <string>
 #include <vector>
 #include "mesh/SharedPointer.hpp"

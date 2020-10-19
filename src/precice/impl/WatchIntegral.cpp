@@ -1,11 +1,5 @@
 #include "WatchIntegral.hpp"
 #include <Eigen/Core>
-#include <algorithm>
-#include <limits>
-#include <memory>
-#include <ostream>
-#include <utility>
-#include "com/Communication.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
@@ -13,7 +7,6 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/assertion.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice {
