@@ -70,8 +70,7 @@ void WatchIntegral::exportIntegralData(
     
     if(dataDimensions > 1){
       
-      Eigen::VectorXd value = Eigen::VectorXd::Zero(dataDimensions);
-      calculateVectorData(value, elem);
+      Eigen::VectorXd value = calculateVectorData(elem);
       
       if(utils::MasterSlave::getSize() > 1){
         Eigen::VectorXd valueRecv = Eigen::VectorXd::Zero(dataDimensions);
@@ -89,12 +88,11 @@ void WatchIntegral::exportIntegralData(
       }
     }
     else{
-
-      double value = 0.0;
-      calculateScalarData(value, elem);
-
+      double value = calculateScalarData(elem);
       if(utils::MasterSlave::getSize() > 1){
-        utils::MasterSlave::allreduceSum(value, value, 1);
+        double valueSum = 0.0;
+        utils::MasterSlave::allreduceSum(value, valueSum, 1);
+        value = valueSum;
       }
       if(not utils::MasterSlave::isSlave()){
         _txtWriter.writeData(elem->getName(), value);
@@ -114,20 +112,18 @@ void WatchIntegral::exportIntegralData(
   }
 }
 
-void WatchIntegral::calculateVectorData(Eigen::VectorXd& value, mesh::PtrData data){
+Eigen::VectorXd WatchIntegral::calculateVectorData(mesh::PtrData data){
   
   int dim = data->getDimensions();
   const Eigen::VectorXd& values = data->values();
-  Eigen::VectorXd temp(dim);
-  value = Eigen::VectorXd::Zero(data->getDimensions());
+  Eigen::VectorXd value = Eigen::VectorXd::Zero(dim);
 
   if(_mesh->edges().empty()){
     for (const auto& vertex : _mesh->vertices()) {
       int offset = vertex.getID() * dim;
       for (int i = 0; i < dim; i++) {
-        temp[i] = values[offset + i];
+        value[i] += values[offset + i];
       }
-      value += temp;
     }
   }
   else{ // Connectivity information is given
@@ -140,27 +136,25 @@ void WatchIntegral::calculateVectorData(Eigen::VectorXd& value, mesh::PtrData da
         const auto& vertex2 = edge.vertex(1);
           
         for (int i = 0; i < dim; i++) {
-          temp[i] = 0.5 * (values[vertex1.getID() * dim + i] + values[vertex2.getID() * dim + i]) * edge.getLength();
+          value[i] += 0.5 * (values[vertex1.getID() * dim + i] + values[vertex2.getID() * dim + i]) * edge.getLength();
         }
-        value += temp;
       }
     }
     else{ // For 3D, connectivity elements are faces, calculate the average and multply by face area
       for(const auto& face : _mesh->triangles()){
-        
         for(int i = 0; i < dim; ++i){
-          temp[i] = values[face.vertex(0).getID()*dim + i] + values[face.vertex(1).getID()*dim + i] + values[face.vertex(2).getID()*dim + i];
+          value[i] += face.getArea() * (values[face.vertex(0).getID()*dim + i] + values[face.vertex(1).getID()*dim + i] + values[face.vertex(2).getID()*dim + i]) / 3.0;
         }
-        value += (temp * face.getArea()) / 3.0;
       }
     }
   }
+  return std::move(value);
 }
 
-void WatchIntegral::calculateScalarData(double& value, mesh::PtrData data){
+double WatchIntegral::calculateScalarData(mesh::PtrData data){
   
   const Eigen::VectorXd& values = data->values();
-  value = 0.0;
+  double value = 0.0;
 
   if(_mesh->edges().empty()){
     for(const auto& vertex : _mesh->vertices()){
@@ -186,28 +180,30 @@ void WatchIntegral::calculateScalarData(double& value, mesh::PtrData data){
       }
     }
   }
+  return value;
 }
 
 double WatchIntegral::calculateSurfaceArea(){
   
   double surfaceArea = 0.0;
 
+  // 3D and has face connectivity
   if(not _mesh->triangles().empty()){
     for(const auto& face : _mesh->triangles()){
       surfaceArea += face.getArea();
     }
   }
+  // 2D and has edge connectivity
   else if(not _mesh->edges().empty()){
     for(const auto& edge : _mesh->edges()){
       surfaceArea += edge.getLength();
     }
   }
+  // No connectivity, dimension is not important
   else{
     surfaceArea += static_cast<double>(_mesh->vertices().size());
   }
-
   return surfaceArea;
-
 }
 
 } // namespace impl
