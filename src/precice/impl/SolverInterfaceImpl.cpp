@@ -1588,7 +1588,7 @@ void SolverInterfaceImpl::handleExports()
     for (const PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
       watchPoint->exportPointData(_couplingScheme->getTime());
     }
-    for(const PtrWatchIntegral &watchIntegral : _accessor->watchIntegrals()){
+    for (const PtrWatchIntegral &watchIntegral : _accessor->watchIntegrals()) {
       watchIntegral->exportIntegralData(_couplingScheme->getTime());
     }
   }

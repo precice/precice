@@ -24,7 +24,8 @@ int Edge::getID() const
   return _id;
 }
 
-double Edge::getLength() const{
+double Edge::getLength() const
+{
   double length = (_vertices[1]->getCoords() - _vertices[0]->getCoords()).norm();
   return length;
 }
