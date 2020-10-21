@@ -3,9 +3,9 @@
 #include <Eigen/Core>
 #include <string>
 #include <vector>
-#include "mesh/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace mesh {
@@ -36,14 +36,14 @@ public:
   WatchIntegral(
       mesh::PtrMesh      meshToWatch,
       const std::string &exportFilename,
-      bool  isScalingOn);
+      bool               isScalingOn);
 
   /// Writes one line with data of the integral over the mesh into the output file.
   void exportIntegralData(double time);
 
 private:
   logging::Logger _log{"impl::WatchIntegral"};
-  
+
   mesh::PtrMesh _mesh;
 
   io::TXTTableWriter _txtWriter;

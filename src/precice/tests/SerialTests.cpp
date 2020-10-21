@@ -2,10 +2,10 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <deque>
-#include <memory>
-#include <istream>
 #include <fstream>
+#include <istream>
 #include <iterator>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -1544,7 +1544,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
   cplInterface.finalize();
 }
 
-void testSummationAction(const std::string& configFile, TestContext const &context)
+void testSummationAction(const std::string &configFile, TestContext const &context)
 {
   using Eigen::Vector3d;
 
@@ -1681,7 +1681,8 @@ BOOST_AUTO_TEST_CASE(testSummationActionTwoSources)
   testSummationAction(configFile, context);
 }
 
-void testWatchIntegral(const std::string& configFile, TestContext& context){
+void testWatchIntegral(const std::string &configFile, TestContext &context)
+{
   using Eigen::Vector2d;
 
   if (context.isNamed("SolverOne")) {
@@ -1757,14 +1758,13 @@ void testWatchIntegral(const std::string& configFile, TestContext& context){
       dt = cplInterface.advance(dt);
     }
     cplInterface.finalize();
-  
+
     std::string fileName = "precice-SolverTwo-watchintegral-WatchIntegral.log";
-    auto result   = readDoublesFromTXTFile(fileName, 4);
-    auto expected = std::vector<double>{
+    auto        result   = readDoublesFromTXTFile(fileName, 4);
+    auto        expected = std::vector<double>{
         1.0, 9.5, 0.0, 3.0,
         2.0, 12.5, 0.0, 3.0,
-        3.0, 12.5, 0.0, 3.0
-    };
+        3.0, 12.5, 0.0, 3.0};
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
       BOOST_TEST_CONTEXT("entry index: " << i)
@@ -1776,13 +1776,15 @@ void testWatchIntegral(const std::string& configFile, TestContext& context){
   }
 }
 
-BOOST_AUTO_TEST_CASE(testWatchIntegralConfig){
+BOOST_AUTO_TEST_CASE(testWatchIntegralConfig)
+{
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   const std::string configFile = _pathToTests + "watch-integral.xml";
   testWatchIntegral(configFile, context);
 }
 
-void testWatchIntegralNoScale(const std::string& configFile, TestContext& context){
+void testWatchIntegralNoScale(const std::string &configFile, TestContext &context)
+{
   using Eigen::Vector2d;
 
   if (context.isNamed("SolverOne")) {
@@ -1860,12 +1862,11 @@ void testWatchIntegralNoScale(const std::string& configFile, TestContext& contex
     cplInterface.finalize();
 
     std::string fileName = "precice-SolverTwo-watchintegral-WatchIntegralNoScale.log";
-    auto result   = readDoublesFromTXTFile(fileName, 4);
-    auto expected = std::vector<double>{
+    auto        result   = readDoublesFromTXTFile(fileName, 4);
+    auto        expected = std::vector<double>{
         1.0, 9.0, 0.0, 3.0,
         2.0, 12.0, 0.0, 3.0,
-        3.0, 12.0, 0.0, 3.0
-    };
+        3.0, 12.0, 0.0, 3.0};
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
       BOOST_TEST_CONTEXT("entry index: " << i)
@@ -1877,7 +1878,8 @@ void testWatchIntegralNoScale(const std::string& configFile, TestContext& contex
   }
 }
 
-BOOST_AUTO_TEST_CASE(testWatchIntegralNoScaleConfig){
+BOOST_AUTO_TEST_CASE(testWatchIntegralNoScaleConfig)
+{
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   const std::string configFile = _pathToTests + "watch-integral-noscale.xml";
   testWatchIntegralNoScale(configFile, context);

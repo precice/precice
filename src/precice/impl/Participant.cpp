@@ -5,8 +5,8 @@
 #include "DataContext.hpp"
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
-#include "WatchPoint.hpp"
 #include "WatchIntegral.hpp"
+#include "WatchPoint.hpp"
 #include "action/Action.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
@@ -63,7 +63,8 @@ std::vector<PtrWatchPoint> &Participant::watchPoints()
   return _watchPoints;
 }
 
-std::vector<PtrWatchIntegral> &Participant::watchIntegrals(){
+std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
+{
   return _watchIntegrals;
 }
 
