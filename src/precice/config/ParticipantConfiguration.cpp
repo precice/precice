@@ -104,6 +104,12 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagWatchPoint.addAttribute(attrCoordinate);
   tag.addSubtag(tagWatchPoint);
 
+  auto attrScaleWitConn = XMLAttribute<bool>(ATTR_SCALE_WITH_CONN)
+                              .setDocumentation("Whether vertex data is to be scaled with the area which is "
+                              "calculated based on connectivity information of mesh or not. If it is true, "
+                              "data is scaled with area; lengths of the edges in case of edge connectivity, "
+                              "areas of the triangles in case of face connectivity. If false, vertex data is "
+                              "directly is summed up.");
   XMLTag tagWatchIntegral(*this, TAG_WATCH_INTEGRAL, XMLTag::OCCUR_ARBITRARY);
   doc = "A watch integral can be used to follow the transient changes of data ";
   doc += "and surface area at a given interface.";
@@ -115,6 +121,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   doc = "Mesh to be watched.";
   attrMesh.setDocumentation(doc);
   tagWatchIntegral.addAttribute(attrMesh);
+  tagWatchIntegral.addAttribute(attrScaleWitConn);
   tag.addSubtag(tagWatchIntegral);
 
   XMLTag tagUseMesh(*this, TAG_USE_MESH, XMLTag::OCCUR_ARBITRARY);
@@ -304,6 +311,7 @@ void ParticipantConfiguration::xmlTagCallback(
     WatchIntegralConfig config;
     config.name = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh = tag.getStringAttributeValue(ATTR_MESH);
+    config.isScalingOn = tag.getBooleanAttributeValue(ATTR_SCALE_WITH_CONN);
     _watchIntegralConfigs.push_back(config);
   } else if (tag.getNamespace() == TAG_MASTER) {
     com::CommunicationConfiguration comConfig;
@@ -582,7 +590,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                                    << "Please move the watchpoint definition to the participant providing mesh \"" << config.nameMesh << "\".");
 
     std::string         filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
-    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext->mesh, filename));
+    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext->mesh, filename, config.isScalingOn));
     participant->addWatchIntegral(watchIntegral);
   }
   _watchIntegralConfigs.clear();

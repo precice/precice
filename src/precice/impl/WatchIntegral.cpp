@@ -14,9 +14,11 @@ namespace impl {
 
 WatchIntegral::WatchIntegral(
     mesh::PtrMesh      meshToWatch,
-    const std::string &exportFilename)
+    const std::string &exportFilename,
+    bool isScalingOn)
     : _mesh(std::move(meshToWatch)),
-      _txtWriter(exportFilename)
+      _txtWriter(exportFilename),
+      _isScalingOn(isScalingOn)
 {
   PRECICE_ASSERT(_mesh);
 
@@ -43,11 +45,11 @@ WatchIntegral::WatchIntegral(
   if(not utils::MasterSlave::isSlave()){
     _txtWriter.addData("SurfaceArea", io::TXTTableWriter::DOUBLE);
   }
-}
 
-const mesh::PtrMesh &WatchIntegral::mesh() const
-{
-  return _mesh;
+  if((not _isScalingOn)){
+    PRECICE_WARN("Mesh " << _mesh->getName() << " contains connectivity information, however, watch-integral "
+                 "is configured without area scaling. Result will be the summation of the vertex data.");
+  }
 }
 
 void WatchIntegral::exportIntegralData(
@@ -67,7 +69,7 @@ void WatchIntegral::exportIntegralData(
       
       if(utils::MasterSlave::getSize() > 1){
         Eigen::VectorXd valueRecv = Eigen::VectorXd::Zero(dataDimensions);
-        utils::MasterSlave::allreduceSum(value.data(), valueRecv.data(), value.size());
+        utils::MasterSlave::reduceSum(value.data(), valueRecv.data(), value.size());
         value = valueRecv;
       }
 
@@ -84,7 +86,7 @@ void WatchIntegral::exportIntegralData(
       double value = calculateScalarData(elem);
       if(utils::MasterSlave::getSize() > 1){
         double valueSum = 0.0;
-        utils::MasterSlave::allreduceSum(value, valueSum, 1);
+        utils::MasterSlave::reduceSum(&value, &valueSum, 1);
         value = valueSum;
       }
       if(not utils::MasterSlave::isSlave()){
@@ -96,7 +98,7 @@ void WatchIntegral::exportIntegralData(
   double surfaceArea = calculateSurfaceArea();
   if(utils::MasterSlave::getSize() > 1){
     double surfaceAreaSum = 0.0;
-    utils::MasterSlave::allreduceSum(surfaceArea, surfaceAreaSum, 1);
+    utils::MasterSlave::reduceSum(&surfaceArea, &surfaceAreaSum, 1);
     surfaceArea = surfaceAreaSum;
   }
 
@@ -111,7 +113,7 @@ Eigen::VectorXd WatchIntegral::calculateVectorData(mesh::PtrData data){
   const Eigen::VectorXd& values = data->values();
   Eigen::VectorXd value = Eigen::VectorXd::Zero(dim);
 
-  if(_mesh->edges().empty()){
+  if(_mesh->edges().empty() || (not _isScalingOn)){
     for (const auto& vertex : _mesh->vertices()) {
       int offset = vertex.getID() * dim;
       for (int i = 0; i < dim; i++) {
@@ -149,7 +151,7 @@ double WatchIntegral::calculateScalarData(mesh::PtrData data){
   const Eigen::VectorXd& values = data->values();
   double value = 0.0;
 
-  if(_mesh->edges().empty()){
+  if(_mesh->edges().empty() || not _isScalingOn){
     for(const auto& vertex : _mesh->vertices()){
       value += values[vertex.getID()];
     }

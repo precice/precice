@@ -59,6 +59,7 @@ private:
   struct WatchIntegralConfig {
     std::string     name;
     std::string     nameMesh;
+    bool            isScalingOn;
   };
 
   mutable logging::Logger _log{"config::ParticipantConfiguration"};
@@ -88,6 +89,7 @@ private:
   const std::string ATTR_CONTEXT            = "context";
   const std::string ATTR_NETWORK            = "network";
   const std::string ATTR_EXCHANGE_DIRECTORY = "exchange-directory";
+  const std::string ATTR_SCALE_WITH_CONN    = "scale-with-connectivity";
 
   const std::string VALUE_FILTER_ON_SLAVES = "on-slaves";
   const std::string VALUE_FILTER_ON_MASTER = "on-master";

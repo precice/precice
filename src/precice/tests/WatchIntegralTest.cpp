@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
   std::string fileName("precice-WatchIntegralTest-scalarData-noConnectivity.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
   std::string fileName("precice-WatchIntegralTest-vectorData-noConnectivity.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -233,6 +233,210 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
       {
         using testing::equals;
         BOOST_TEST(equals(result.at(i), expected.at(i)));
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityNoScale)
+{
+  PRECICE_TEST(1_rank);
+  using namespace mesh;
+  // Setup geometry
+  std::string name("rectangle");
+  bool        flipNormals = false;
+  int         dimensions = 2;
+  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+
+  mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
+
+  mesh::Edge &e1 = mesh->createEdge(v1, v2);
+  mesh::Edge &e2 = mesh->createEdge(v2, v3);
+
+  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  auto &  doubleValues = doubleData->values();
+
+  mesh->computeState();
+  mesh->allocateDataValues();
+
+  doubleValues(0) = 1.0;
+  doubleValues(1) = 2.0;
+  doubleValues(2) = 3.0;
+
+  std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity-noScale.log");
+
+  {
+    impl::WatchIntegral watchIntegral(mesh, fileName, false);
+
+    // Write output
+    watchIntegral.exportIntegralData(0.0);
+
+    // Change data (next timestep)
+    doubleValues(0) = 2.0;
+    doubleValues(1) = 3.0;
+    doubleValues(2) = 4.0;
+
+    // Write output again
+    watchIntegral.exportIntegralData(1.0);
+
+    watchIntegral.exportIntegralData(2.0);
+
+  }
+  // File Format: Time  DoubleData  SurfaceArea
+  BOOST_TEST_CONTEXT("Validating WatchIntegral ScalarData EdgeConnectivity NoScale")
+  {
+    auto result   = readDoublesFromTXTFile(fileName, 3);
+    auto expected = std::vector<double>{
+        0.0, 6.0, 3.0,
+        1.0, 9.0, 3.0,
+        2.0, 9.0, 3.0
+    };
+    BOOST_TEST(result.size() == expected.size());
+    for (size_t i = 0; i < result.size(); ++i) {
+      BOOST_TEST_CONTEXT("entry index: " << i)
+      {
+        using testing::equals;
+        BOOST_TEST(equals(result.at(i), expected.at(i)));
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
+{
+  PRECICE_TEST(1_rank);
+  using namespace mesh;
+  // Setup geometry
+  std::string name("rectangle");
+  bool        flipNormals = false;
+  int         dimensions = 2;
+  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+
+  mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
+
+  mesh::Edge &e1 = mesh->createEdge(v1, v2);
+  mesh::Edge &e2 = mesh->createEdge(v2, v3);
+
+
+  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  auto &  doubleValues = doubleData->values();
+
+  mesh->computeState();
+  mesh->allocateDataValues();
+
+  doubleValues(0) = 1.0; doubleValues(1) = 2.0;
+  doubleValues(2) = 3.0; doubleValues(3) = 4.0;
+  doubleValues(4) = 5.0; doubleValues(5) = 6.0;
+
+  std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity.log");
+
+  {
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
+
+    // Write output
+    watchIntegral.exportIntegralData(0.0);
+
+    // Change data (next timestep)
+    doubleValues(0) = 2.0; doubleValues(1) = 3.0;
+    doubleValues(2) = 4.0; doubleValues(3) = 5.0;
+    doubleValues(4) = 6.0; doubleValues(5) = 7.0;
+
+    // Write output again
+    watchIntegral.exportIntegralData(1.0);
+
+    watchIntegral.exportIntegralData(2.0);
+
+  }
+  // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
+  BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData EdgeConnectivity")
+  {
+    if(utils::MasterSlave::isMaster()){
+      auto result   = readDoublesFromTXTFile(fileName, 4);
+      auto expected = std::vector<double>{
+          0.0, 10.0, 13.0, 3.0,
+          1.0, 13.0, 56.0, 3.0,
+          2.0, 13.0, 56.0, 3.0
+      };
+      BOOST_TEST(result.size() == expected.size());
+      for (size_t i = 0; i < result.size(); ++i) {
+        BOOST_TEST_CONTEXT("entry index: " << i)
+        {
+          using testing::equals;
+          BOOST_TEST(equals(result.at(i), expected.at(i)));
+        }
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
+{
+  PRECICE_TEST(1_rank);
+  using namespace mesh;
+  // Setup geometry
+  std::string name("rectangle");
+  bool        flipNormals = false;
+  int         dimensions = 2;
+  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+
+  mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
+
+  mesh::Edge &e1 = mesh->createEdge(v1, v2);
+  mesh::Edge &e2 = mesh->createEdge(v2, v3);
+
+
+  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  auto &  doubleValues = doubleData->values();
+
+  mesh->computeState();
+  mesh->allocateDataValues();
+
+  doubleValues(0) = 1.0; doubleValues(1) = 2.0;
+  doubleValues(2) = 3.0; doubleValues(3) = 4.0;
+  doubleValues(4) = 5.0; doubleValues(5) = 6.0;
+
+  std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity-noScale.log");
+
+  {
+    impl::WatchIntegral watchIntegral(mesh, fileName, false);
+
+    // Write output
+    watchIntegral.exportIntegralData(0.0);
+
+    // Change data (next timestep)
+    doubleValues(0) = 2.0; doubleValues(1) = 3.0;
+    doubleValues(2) = 4.0; doubleValues(3) = 5.0;
+    doubleValues(4) = 6.0; doubleValues(5) = 7.0;
+
+    // Write output again
+    watchIntegral.exportIntegralData(1.0);
+
+    watchIntegral.exportIntegralData(2.0);
+
+  }
+  // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
+  BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData EdgeConnectivity NoScale")
+  {
+    if(utils::MasterSlave::isMaster()){
+      auto result   = readDoublesFromTXTFile(fileName, 4);
+      auto expected = std::vector<double>{
+          0.0, 9.0, 12.0, 3.0,
+          1.0, 12.0, 15.0, 3.0,
+          2.0, 12.0, 15.0, 3.0
+      };
+      BOOST_TEST(result.size() == expected.size());
+      for (size_t i = 0; i < result.size(); ++i) {
+        BOOST_TEST_CONTEXT("entry index: " << i)
+        {
+          using testing::equals;
+          BOOST_TEST(equals(result.at(i), expected.at(i)));
+        }
       }
     }
   }
@@ -276,7 +480,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
   std::string fileName("precice-WatchIntegralTest-scalarData-faceConnectivity.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -301,6 +505,81 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
         0.0, 28.0, 12.0,
         1.0, 40.0, 12.0,
         2.0, 40.0, 12.0
+    };
+    BOOST_TEST(result.size() == expected.size());
+    for (size_t i = 0; i < result.size(); ++i) {
+      BOOST_TEST_CONTEXT("entry index: " << i)
+      {
+        using testing::equals;
+        BOOST_TEST(equals(result.at(i), expected.at(i)));
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityNoScale)
+{
+  PRECICE_TEST(1_rank);
+  using namespace mesh;
+  // Setup geometry
+  std::string name("rectangle");
+  bool        flipNormals = false;
+  int         dimensions = 3;
+  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+
+  mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
+  mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
+  mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector3d(0.0, 4.0, 0.0));
+
+  mesh::Edge &e1 = mesh->createEdge(v1, v2);
+  mesh::Edge &e2 = mesh->createEdge(v2, v3);
+  mesh::Edge &e3 = mesh->createEdge(v3, v4);
+  mesh::Edge &e4 = mesh->createEdge(v4, v1);
+  mesh::Edge &e5 = mesh->createEdge(v1, v3);
+
+  mesh::Triangle &t1 = mesh->createTriangle(e1, e2, e5);
+  mesh::Triangle &t2 = mesh->createTriangle(e3, e4, e5);
+
+  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  auto &  doubleValues = doubleData->values();
+
+  mesh->computeState();
+  mesh->allocateDataValues();
+
+  doubleValues(0) = 1.0;
+  doubleValues(1) = 2.0;
+  doubleValues(2) = 3.0;
+  doubleValues(3) = 4.0;
+
+  std::string fileName("precice-WatchIntegralTest-scalarData-faceConnectivity-noScale.log");
+
+  {
+    impl::WatchIntegral watchIntegral(mesh, fileName, false);
+
+    // Write output
+    watchIntegral.exportIntegralData(0.0);
+
+    // Change data (next timestep)
+    doubleValues(0) = 2.0;
+    doubleValues(1) = 3.0;
+    doubleValues(2) = 4.0;
+    doubleValues(3) = 5.0;
+
+    // Write output again
+    watchIntegral.exportIntegralData(1.0);
+
+    watchIntegral.exportIntegralData(2.0);
+
+  }
+  // File Format: Time  DoubleData SurfaceArea
+  BOOST_TEST_CONTEXT("Validating WatchIntegral ScalarData FaceConnectivity NoScale")
+  {
+    auto result   = readDoublesFromTXTFile(fileName, 3);
+    auto expected = std::vector<double>{
+        0.0, 10.0, 12.0,
+        1.0, 14.0, 12.0,
+        2.0, 14.0, 12.0
     };
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
@@ -351,7 +630,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
   std::string fileName("precice-WatchIntegralTest-vectorData-faceConnectivity.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -376,6 +655,81 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
         0.0, 44.0, 56.0, 12.0,
         1.0, 56.0, 68.0, 12.0,
         2.0, 56.0, 68.0, 12.0
+    };
+    BOOST_TEST(result.size() == expected.size());
+    for (size_t i = 0; i < result.size(); ++i) {
+      BOOST_TEST_CONTEXT("entry index: " << i)
+      {
+        using testing::equals;
+        BOOST_TEST(equals(result.at(i), expected.at(i)));
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
+{
+  PRECICE_TEST(1_rank);
+  using namespace mesh;
+  // Setup geometry
+  std::string name("rectangle");
+  bool        flipNormals = false;
+  int         dimensions = 3;
+  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+
+  mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
+  mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
+  mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector3d(0.0, 4.0, 0.0));
+
+  mesh::Edge &e1 = mesh->createEdge(v1, v2);
+  mesh::Edge &e2 = mesh->createEdge(v2, v3);
+  mesh::Edge &e3 = mesh->createEdge(v3, v4);
+  mesh::Edge &e4 = mesh->createEdge(v4, v1);
+  mesh::Edge &e5 = mesh->createEdge(v1, v3);
+
+  mesh::Triangle &t1 = mesh->createTriangle(e1, e2, e5);
+  mesh::Triangle &t2 = mesh->createTriangle(e3, e4, e5);
+
+  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  auto &  doubleValues = doubleData->values();
+
+  mesh->computeState();
+  mesh->allocateDataValues();
+
+  doubleValues(0) = 1.0; doubleValues(1) = 2.0;
+  doubleValues(2) = 3.0; doubleValues(3) = 4.0;
+  doubleValues(4) = 5.0; doubleValues(5) = 6.0;
+  doubleValues(6) = 7.0; doubleValues(7) = 8.0;
+
+  std::string fileName("precice-WatchIntegralTest-vectorData-faceConnectivity-noScale.log");
+
+  {
+    impl::WatchIntegral watchIntegral(mesh, fileName, false);
+
+    // Write output
+    watchIntegral.exportIntegralData(0.0);
+
+    // Change data (next timestep)
+    doubleValues(0) = 2.0; doubleValues(1) = 3.0;
+    doubleValues(2) = 4.0; doubleValues(3) = 5.0;
+    doubleValues(4) = 6.0; doubleValues(5) = 7.0;
+    doubleValues(6) = 8.0; doubleValues(7) = 9.0;
+
+    // Write output again
+    watchIntegral.exportIntegralData(1.0);
+
+    watchIntegral.exportIntegralData(2.0);
+
+  }
+  // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
+  BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData FaceConnectivity NoScale")
+  {
+    auto result   = readDoublesFromTXTFile(fileName, 4);
+    auto expected = std::vector<double>{
+        0.0, 16.0, 20.0, 12.0,
+        1.0, 20.0, 24.0, 12.0,
+        2.0, 20.0, 24.0, 12.0
     };
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
@@ -426,7 +780,7 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
   std::string fileName("precice-WatchIntegralTest-meshChane-faceConnectivity.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -512,7 +866,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
   std::string fileName("precice-WatchIntegralTest-scalarData-noConnectivity-parallel.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -615,7 +969,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
   std::string fileName("precice-WatchIntegralTest-vectorData-noConnectivity-parallel.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -723,7 +1077,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity-parallel.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -831,7 +1185,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity-parallel.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -935,7 +1289,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
   std::string fileName("precice-WatchIntegralTest-scalarData-faceConnectivity-parallel.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -1035,7 +1389,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
   std::string fileName("precice-WatchIntegralTest-vectorData-faceConnectivity-parallel.log");
 
   {
-    impl::WatchIntegral watchIntegral(mesh, fileName);
+    impl::WatchIntegral watchIntegral(mesh, fileName, true);
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
