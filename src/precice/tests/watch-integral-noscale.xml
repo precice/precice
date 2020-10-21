@@ -27,7 +27,7 @@
     <participant name="SolverTwo">
       <use-mesh name="MeshTwo" provide="yes" />
       <read-data name="DataTwo" mesh="MeshTwo" />
-      <watch-integral name="WatchIntegralNoScale" mesh="MeshTwo" scale-with-connectivity="no"/>
+      <watch-integral name="WatchIntegralNoScale" mesh="MeshTwo" scale-with-connectivity="no" />
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />
