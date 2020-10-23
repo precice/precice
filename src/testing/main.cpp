@@ -66,12 +66,12 @@ bool init_unit_test()
     const std::string prefix{"%TimeStamp(format=\"%H:%M:%S.%f\")%|%Participant%|%Rank%|%Module%|l%Line%|%Function%|"};
 
     config.format = prefix + "%ColorizedSeverity%%Message%";
-    config.type = "stream";
+    config.type   = "stream";
     config.output = "stdout";
     logConfigs.push_back(config);
 
     config.format = prefix + "%Severity%%Message%";
-    config.type = "file";
+    config.type   = "file";
     config.output = "test.log";
     logConfigs.push_back(config);
   }
