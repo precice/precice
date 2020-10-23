@@ -63,7 +63,7 @@ bool init_unit_test()
     if (logLevel >= log_all_errors)
       config.filter = "%Severity% >= warning"; // log warnings in any case
 
-    const std::string prefix{"%TimeStamp(format=\"%H:%M:%S\")%|%Participant%|%Rank%|%Module%|l%Line%|%Function%|"};
+    const std::string prefix{"%TimeStamp(format=\"%H:%M:%S.%f\")%|%Participant%|%Rank%|%Module%|l%Line%|%Function%|"};
 
     config.format = prefix + "%ColorizedSeverity%%Message%";
     config.type = "stream";
