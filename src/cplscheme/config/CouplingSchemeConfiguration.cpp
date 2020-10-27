@@ -1,11 +1,11 @@
 #include "CouplingSchemeConfiguration.hpp"
 #include <algorithm>
-#include <list>
 #include <memory>
 #include <ostream>
 #include <stddef.h>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
@@ -87,47 +87,38 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
 {
   using namespace xml;
 
-  XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
-  std::list<XMLTag>  tags;
-  std::string        doc;
-
+  XMLTag::Occurrence  occ = XMLTag::OCCUR_ARBITRARY;
+  std::vector<XMLTag> tags;
   {
     XMLTag tag(*this, VALUE_SERIAL_EXPLICIT, occ, TAG);
-    doc = "Explicit coupling scheme according to conventional serial";
-    doc += " staggered procedure (CSS).";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Explicit coupling scheme according to conventional serial staggered procedure (CSS).");
     addTypespecifcSubtags(VALUE_SERIAL_EXPLICIT, tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PARALLEL_EXPLICIT, occ, TAG);
-    doc = "Explicit coupling scheme according to conventional parallel";
-    doc += " staggered procedure (CPS).";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Explicit coupling scheme according to conventional parallel staggered procedure (CPS).");
     addTypespecifcSubtags(VALUE_PARALLEL_EXPLICIT, tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_SERIAL_IMPLICIT, occ, TAG);
-    doc = "Implicit coupling scheme according to block Gauss-Seidel iterations (S-System).";
-    doc += " Improved implicit iterations are achieved by using a acceleration (recommended!).";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Implicit coupling scheme according to block Gauss-Seidel iterations (S-System). "
+                         "Improved implicit iterations are achieved by using a acceleration (recommended!).");
     addTypespecifcSubtags(VALUE_SERIAL_IMPLICIT, tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PARALLEL_IMPLICIT, occ, TAG);
-    doc = "Parallel Implicit coupling scheme according to block Jacobi iterations (V-System).";
-    doc += " Improved implicit iterations are achieved by using a acceleration (recommended!).";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Parallel Implicit coupling scheme according to block Jacobi iterations (V-System). "
+                         "Improved implicit iterations are achieved by using a acceleration (recommended!).");
     addTypespecifcSubtags(VALUE_PARALLEL_IMPLICIT, tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_MULTI, occ, TAG);
-    doc = "Multi coupling scheme according to block Jacobi iterations.";
-    doc += " Improved implicit iterations are achieved by using a acceleration (recommended!).";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Multi coupling scheme according to block Jacobi iterations. "
+                         "Improved implicit iterations are achieved by using a acceleration (recommended!).");
     addTypespecifcSubtags(VALUE_MULTI, tag);
     tags.push_back(tag);
   }
