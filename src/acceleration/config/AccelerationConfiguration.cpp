@@ -534,10 +534,10 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagPreconditioner.setDocumentation(
         "To improve the performance of a parallel or a multi coupling schemes a preconditioner"
         " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
-        " an attribute of data. "
-        " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
-        " A residual preconditioner scales every acceleration data by the current residual."
-        " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
+        " an attribute of data.\n"
+        "- A value preconditioner scales every acceleration data by the norm of the data in the previous time window.\n"
+        "- A residual preconditioner scales every acceleration data by the current residual.\n"
+        "- A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.\n");
     auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
