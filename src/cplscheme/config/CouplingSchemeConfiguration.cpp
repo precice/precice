@@ -485,8 +485,10 @@ void CouplingSchemeConfiguration::addTagParticipants(
   using namespace xml;
   XMLTag                    tagParticipants(*this, TAG_PARTICIPANTS, XMLTag::OCCUR_ONCE);
   XMLAttribute<std::string> attrFirst(ATTR_FIRST);
+  attrFirst.setDocumentation("First participant to run the solver.");
   tagParticipants.addAttribute(attrFirst);
   XMLAttribute<std::string> attrSecond(ATTR_SECOND);
+  attrSecond.setDocumentation("Second participant to run the solver.");
   tagParticipants.addAttribute(attrSecond);
   tag.addSubtag(tagParticipants);
 }
@@ -497,8 +499,10 @@ void CouplingSchemeConfiguration::addTagParticipant(
   using namespace xml;
   XMLTag                    tagParticipant(*this, TAG_PARTICIPANT, XMLTag::OCCUR_ONCE_OR_MORE);
   XMLAttribute<std::string> attrName(ATTR_NAME);
+  attrName.setDocumentation("Name of the participant.");
   tagParticipant.addAttribute(attrName);
   XMLAttribute<bool> attrControl(ATTR_CONTROL, false);
+  attrControl.setDocumentation("Does this participant control the coupling?");
   tagParticipant.addAttribute(attrControl);
   tag.addSubtag(tagParticipant);
 }
@@ -530,6 +534,7 @@ void CouplingSchemeConfiguration::addTagAbsoluteConvergenceMeasure(
   XMLTag tagConvergenceMeasure(*this, TAG_ABS_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
+  attrLimit.setDocumentation("Limit under which the measure is considered to have converged.");
   tagConvergenceMeasure.addAttribute(attrLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }
@@ -542,6 +547,7 @@ void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(
                                XMLTag::OCCUR_ARBITRARY);
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
+  attrLimit.setDocumentation("Limit under which the measure is considered to have converged.");
   tagConvergenceMeasure.addAttribute(attrLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }
@@ -553,6 +559,7 @@ void CouplingSchemeConfiguration::addTagRelativeConvergenceMeasure(
   XMLTag tagConvergenceMeasure(*this, TAG_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
+  attrLimit.setDocumentation("Limit under which the measure is considered to have converged.");
   tagConvergenceMeasure.addAttribute(attrLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }
@@ -590,8 +597,10 @@ void CouplingSchemeConfiguration::addTagMaxIterations(
     xml::XMLTag &tag)
 {
   using namespace xml;
-  XMLTag            tagMaxIterations(*this, TAG_MAX_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
+  XMLTag tagMaxIterations(*this, TAG_MAX_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
+  tagMaxIterations.setDocumentation("Allows to specify a maximum amount of iterations. The simulation will end if this limit is exceeded.");
   XMLAttribute<int> attrValue(ATTR_VALUE);
+  attrValue.setDocumentation("The maximum value of iterations.");
   tagMaxIterations.addAttribute(attrValue);
   tag.addSubtag(tagMaxIterations);
 }
@@ -602,6 +611,7 @@ void CouplingSchemeConfiguration::addTagExtrapolation(
   using namespace xml;
   XMLTag            tagExtrapolation(*this, TAG_EXTRAPOLATION, XMLTag::OCCUR_NOT_OR_ONCE);
   XMLAttribute<int> attrValue(ATTR_VALUE);
+  attrValue.setDocumentation("The extrapolation order to use.");
   tagExtrapolation.addAttribute(attrValue);
   tagExtrapolation.setDocumentation("Sets order of predictor of interface values for first participant.");
   tag.addSubtag(tagExtrapolation);
