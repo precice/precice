@@ -58,39 +58,47 @@ MappingConfiguration::MappingConfiguration(
   std::list<XMLTag>  tags;
   {
     XMLTag tag(*this, VALUE_RBF_TPS, occ, TAG);
+    tag.setDocumentation("Global radial-basis-function mapping based on the thin plate splines.");
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_MULTIQUADRICS, occ, TAG);
+    tag.setDocumentation("Global radial-basis-function mapping based on the multiquadrics RBF.");
     tag.addAttribute(attrShapeParam);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_INV_MULTIQUADRICS, occ, TAG);
+    tag.setDocumentation("Global radial-basis-function mapping based on the inverse multiquadrics RBF.");
     tag.addAttribute(attrShapeParam);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_VOLUME_SPLINES, occ, TAG);
+    tag.setDocumentation("Global radial-basis-function mapping based on the volume-splines RBF.");
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_GAUSSIAN, occ, TAG);
+    tag.setDocumentation("Local radial-basis-function mapping based on the Gaussian RBF with a cut-off threshold.");
     tag.addAttribute(attrShapeParam);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_CTPS_C2, occ, TAG);
+    tag.setDocumentation("Local radial-basis-function mapping based on the C2-polynomial RBF.");
     tag.addAttribute(attrSupportRadius);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C0, occ, TAG);
+    tag.setDocumentation("Local radial-basis-function mapping based on the C0-polynomial RBF.");
     tag.addAttribute(attrSupportRadius);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C6, occ, TAG);
+    tag.setDocumentation("Local radial-basis-function mapping based on the C6-polynomial RBF.");
     tag.addAttribute(attrSupportRadius);
     tags.push_back(tag);
   }
@@ -106,23 +114,32 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR, occ, TAG);
+    tag.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries.");
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_PROJECTION, occ, TAG);
+    tag.setDocumentation("Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate the nearest projections.");
     tags.push_back(tag);
   }
 
   auto attrDirection = XMLAttribute<std::string>(ATTR_DIRECTION)
-                           .setOptions({VALUE_WRITE, VALUE_READ});
+                           .setOptions({VALUE_WRITE, VALUE_READ})
+                           .setDocumentation("Write mappings map written data prior to communication, thus in the same participant who writes the data. "
+                                             "Read mappings map received data after communication, thus in the same participant who reads the data.");
 
-  XMLAttribute<std::string> attrFromMesh(ATTR_FROM);
-  XMLAttribute<std::string> attrToMesh(ATTR_TO);
+  auto attrFromMesh = XMLAttribute<std::string>(ATTR_FROM)
+                          .setDocumentation("The mesh to map the data from.");
+
+  auto attrToMesh = XMLAttribute<std::string>(ATTR_TO)
+                        .setDocumentation("The mesh to map the data to.");
 
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
+                            .setDocumentation("Use consistent for ")
                             .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT});
 
   auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
+                        .setDocumentation("This allows to defer the mapping of the data to advance or to a manual call to mapReadDataTo and mapWriteDataFrom.")
                         .setOptions({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE, VALUE_TIMING_ON_DEMAND});
 
   // Add tags that all mappings use and add to parent tag
