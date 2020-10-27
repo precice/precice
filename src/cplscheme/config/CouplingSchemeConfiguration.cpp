@@ -510,16 +510,18 @@ void CouplingSchemeConfiguration::addTagExchange(
     xml::XMLTag &tag)
 {
   using namespace xml;
-  XMLTag                    tagExchange(*this, TAG_EXCHANGE, XMLTag::OCCUR_ONCE_OR_MORE);
-  XMLAttribute<std::string> attrData(ATTR_DATA);
+  XMLTag tagExchange(*this, TAG_EXCHANGE, XMLTag::OCCUR_ONCE_OR_MORE);
+  tagExchange.setDocumentation("Defines the flow of data between meshes of participants.");
+
+  auto attrData = XMLAttribute<std::string>(ATTR_DATA).setDocumentation("The data to exchange.");
   tagExchange.addAttribute(attrData);
-  XMLAttribute<std::string> attrMesh(ATTR_MESH);
+  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH).setDocumentation("The mesh which uses the data.");
   tagExchange.addAttribute(attrMesh);
-  XMLAttribute<std::string> participantFrom(ATTR_FROM);
+  auto participantFrom = XMLAttribute<std::string>(ATTR_FROM).setDocumentation("The participant sending the data.");
   tagExchange.addAttribute(participantFrom);
-  XMLAttribute<std::string> participantTo(ATTR_TO);
+  auto participantTo = XMLAttribute<std::string>(ATTR_TO).setDocumentation("The participant receiving the data.");
   tagExchange.addAttribute(participantTo);
-  XMLAttribute<bool> attrInitialize(ATTR_INITIALIZE, false);
+  auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initializeData?");
   tagExchange.addAttribute(attrInitialize);
   tag.addSubtag(tagExchange);
 }
