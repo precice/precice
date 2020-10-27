@@ -455,20 +455,26 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
     xml::XMLTag &      tag)
 {
   using namespace xml;
-  XMLTag               tagMaxTime(*this, TAG_MAX_TIME, XMLTag::OCCUR_NOT_OR_ONCE);
+  XMLTag tagMaxTime(*this, TAG_MAX_TIME, XMLTag::OCCUR_NOT_OR_ONCE);
+  tagMaxTime.setDocumentation("Defined the end of the simulation as total time.");
+
   XMLAttribute<double> attrValueMaxTime(ATTR_VALUE);
+  attrValueMaxTime.setDocumentation("The value of the maximum.");
   tagMaxTime.addAttribute(attrValueMaxTime);
   tag.addSubtag(tagMaxTime);
 
-  XMLTag            tagMaxTimeWindows(*this, TAG_MAX_TIME_WINDOWS, XMLTag::OCCUR_NOT_OR_ONCE);
+  XMLTag tagMaxTimeWindows(*this, TAG_MAX_TIME_WINDOWS, XMLTag::OCCUR_NOT_OR_ONCE);
+  tagMaxTimeWindows.setDocumentation("Defined the end of the simulation as a total count of time windows.");
   XMLAttribute<int> attrValueMaxTimeWindows(ATTR_VALUE);
   tagMaxTimeWindows.addAttribute(attrValueMaxTimeWindows);
   tag.addSubtag(tagMaxTimeWindows);
 
   XMLTag tagTimeWindowSize(*this, TAG_TIME_WINDOW_SIZE, XMLTag::OCCUR_ONCE);
-  auto   attrValueTimeWindowSize = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE);
+  auto   attrValueTimeWindowSize = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE)
+                                     .setDocumentation("The maximum time window size.");
   tagTimeWindowSize.addAttribute(attrValueTimeWindowSize);
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
+  attrValidDigits.setDocumentation("Precision to use when checking for end of time windows used this many digits. \\(\\phi = 10^{-validDigits}\\)");
   tagTimeWindowSize.addAttribute(attrValidDigits);
   std::vector<std::string> allowedMethods;
   if (type == VALUE_SERIAL_EXPLICIT || type == VALUE_SERIAL_IMPLICIT) {
@@ -477,7 +483,7 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   } else {
     allowedMethods = {VALUE_FIXED};
   }
-  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED).setOptions(allowedMethods);
+  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED).setOptions(allowedMethods).setDocumentation("Is the time window size fixed or does the first participant choose it?");
   tagTimeWindowSize.addAttribute(attrMethod);
   tag.addSubtag(tagTimeWindowSize);
 }
