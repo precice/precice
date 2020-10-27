@@ -1,10 +1,10 @@
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include <algorithm>
-#include <vector>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/AitkenAcceleration.hpp"
 #include "acceleration/BroydenAcceleration.hpp"
@@ -87,25 +87,29 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
   // static int recursionCounter = 0;
   // recursionCounter++;
 
-  XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
-  std::vector<XMLTag>  tags;
+  XMLTag::Occurrence  occ = XMLTag::OCCUR_NOT_OR_ONCE;
+  std::vector<XMLTag> tags;
   {
     XMLTag tag(*this, VALUE_CONSTANT, occ, TAG);
+    tag.setDocumentation("Accelerates coupling data with constant underrelaxation.");
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_AITKEN, occ, TAG);
+    tag.setDocumentation("Accelerates coupling data with dynamic underrelaxation.");
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_IQNILS, occ, TAG);
+    tag.setDocumentation("Accelerates coupling data with the interface quasi-Newton inverse least-squares method.");
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_MVQN, occ, TAG);
+    tag.setDocumentation("Accelerates coupling data with the interface quasi-Newton inverse multi-vector Jacobian method.");
 
     auto alwaybuildJacobian = makeXMLAttribute(ATTR_BUILDJACOBIAN, false)
                                   .setDocumentation("If set to true, the IMVJ will set up the Jacobian matrix"
@@ -118,6 +122,7 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
   }
   {
     XMLTag tag(*this, VALUE_BROYDEN, occ, TAG);
+    tag.setDocumentation("Accelerates coupling data with the (single-vector) Broyden method.");
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }
@@ -339,43 +344,58 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
   if (tag.getName() == VALUE_CONSTANT) {
     XMLTag               tagRelax(*this, TAG_RELAX, XMLTag::OCCUR_ONCE);
     XMLAttribute<double> attrValue(ATTR_VALUE);
+    attrValue.setDocumentation("Constant relaxation factor.");
     tagRelax.addAttribute(attrValue);
     tag.addSubtag(tagRelax);
   } else if (tag.getName() == VALUE_AITKEN) {
-    XMLTag               tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
+    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
+    tagInitRelax.setDocumentation("Initial relaxation factor.");
     XMLAttribute<double> attrValue(ATTR_VALUE);
+    attrValue.setDocumentation("Initial relaxation factor.");
     tagInitRelax.addAttribute(attrValue);
-    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE, false);
-    tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
-    XMLTag                    tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
+    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
+    tagData.setDocumentation("The data used to compute the acceleration.");
     XMLAttribute<std::string> attrName(ATTR_NAME);
+    attrName.setDocumentation("The name of the data.");
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
+    attrMesh.setDocumentation("The name of the mesh which holds the data.");
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
   } else if (tag.getName() == VALUE_IQNILS) {
-    XMLTag               tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
+    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
+    tagInitRelax.setDocumentation("Initial relaxation factor.");
     XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
+    attrDoubleValue.setDocumentation("Initial relaxation factor.");
     tagInitRelax.addAttribute(attrDoubleValue);
     XMLAttribute<bool> attrEnforce(ATTR_ENFORCE, false);
+    attrEnforce.setDocumentation("Enforce initial relaxation in every time window.");
     tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
-    XMLTag            tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE);
+    XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE);
+    tagMaxUsedIter.setDocumentation("Maximum number of columns used in low-rank approximation of Jacobian.");
     XMLAttribute<int> attrIntValue(ATTR_VALUE);
+    attrIntValue.setDocumentation("The number of columns.");
     tagMaxUsedIter.addAttribute(attrIntValue);
     tag.addSubtag(tagMaxUsedIter);
 
     XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_ONCE);
-    tagTimeWindowsReused.addAttribute(attrIntValue);
+    tagTimeWindowsReused.setDocumentation("Number of past time windows from which columns are used to approximate Jacobian.");
+    XMLAttribute<int> attrNumTimeWindowsReused(ATTR_VALUE);
+    attrNumTimeWindowsReused.setDocumentation("The number of time windows.");
+    tagTimeWindowsReused.addAttribute(attrNumTimeWindowsReused);
     tag.addSubtag(tagTimeWindowsReused);
 
-    XMLTag                    tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
+    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
+    tagData.setDocumentation("The data used to compute the acceleration.");
     XMLAttribute<std::string> attrName(ATTR_NAME);
+    attrName.setDocumentation("The name of the data.");
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
-    auto                      attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
+    attrMesh.setDocumentation("The name of the mesh which holds the data.");
+    auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
                            .setDocumentation(
                                "To improve the performance of a parallel or a multi coupling schemes, "
                                "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
@@ -385,13 +405,6 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tag.addSubtag(tagData);
 
     XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
-    auto   attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
-                              .setOptions({VALUE_QR1FILTER,
-                                           VALUE_QR1_ABSFILTER,
-                                           VALUE_QR2FILTER});
-    tagFilter.addAttribute(attrFilterName);
-    XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
-    tagFilter.addAttribute(attrSingularityLimit);
     tagFilter.setDocumentation("Type of filtering technique that is used to "
                                "maintain good conditioning in the least-squares system. Possible filters:\n"
                                "  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
@@ -400,21 +413,30 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
                                "modified Gram-Schmidt. This can give different results even when no columns "
                                "are filtered out.");
+    auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
+                              .setOptions({VALUE_QR1FILTER,
+                                           VALUE_QR1_ABSFILTER,
+                                           VALUE_QR2FILTER})
+                              .setDocumentation("Type of the filter.");
+    tagFilter.addAttribute(attrFilterName);
+    XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
+    attrSingularityLimit.setDocumentation("Limit eps of the filter.");
+    tagFilter.addAttribute(attrSingularityLimit);
     tag.addSubtag(tagFilter);
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
-    auto   attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
-                                      .setDocumentation(
-                                          "To improve the performance of a parallel or a multi coupling schemes a preconditioner"
-                                          " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
-                                          " an attribute of data. "
-                                          " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
-                                          " A residual preconditioner scales every acceleration data by the current residual."
-                                          " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.")
+    tagPreconditioner.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner"
+                                       " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
+                                       " an attribute of data. "
+                                       " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
+                                       " A residual preconditioner scales every acceleration data by the current residual."
+                                       " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
+    auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
                                                    VALUE_RESIDUAL_PRECONDITIONER,
-                                                   VALUE_RESIDUAL_SUM_PRECONDITIONER});
+                                                   VALUE_RESIDUAL_SUM_PRECONDITIONER})
+                                      .setDocumentation("The type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                               .setDocumentation(
@@ -424,10 +446,13 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tag.addSubtag(tagPreconditioner);
 
   } else if (tag.getName() == VALUE_MVQN) {
-    XMLTag               tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
+    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
+    tagInitRelax.setDocumentation("Initial relaxation factor.");
     XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
+    attrDoubleValue.setDocumentation("Initial relaxation factor.");
     tagInitRelax.addAttribute(attrDoubleValue);
     XMLAttribute<bool> attrEnforce(ATTR_ENFORCE, false);
+    attrEnforce.setDocumentation("Enforce initial relaxation in every time window.");
     tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
@@ -438,14 +463,15 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                             VALUE_LS_RESTART,
                                             VALUE_SVD_RESTART,
                                             VALUE_SLIDE_RESTART})
-                               .setDefaultValue(VALUE_SVD_RESTART);
+                               .setDefaultValue(VALUE_SVD_RESTART)
+                               .setDocumentation("Type of the restart mode.");
     tagIMVJRESTART.addAttribute(attrRestartName);
-    tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used\n"
-                                    "  no-restart: IMVJ runs in normal mode with explicit representation of Jacobian\n"
-                                    "  RS-ZERO:    IMVJ runs in restart mode. After M time steps all Jacobain information is dropped, restart with no information\n"
-                                    "  RS-LS:      IMVJ runs in restart mode. After M time steps a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
-                                    "  RS-SVD:     IMVJ runs in restart mode. After M time steps a truncated SVD of the Jacobian is updated.\n"
-                                    "  RS-SLIDE:   IMVJ runs in sliding window restart mode.\n");
+    tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used:\n"
+                                    "-  `no-restart`: IMVJ runs in normal mode with explicit representation of Jacobian\n"
+                                    "-  `RS-ZERO`:    IMVJ runs in restart mode. After M time steps all Jacobain information is dropped, restart with no information\n"
+                                    "-  `RS-LS`:      IMVJ runs in restart mode. After M time steps a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
+                                    "-  `RS-SVD`:     IMVJ runs in restart mode. After M time steps a truncated SVD of the Jacobian is updated.\n"
+                                    "-  `RS-SLIDE`:   IMVJ runs in sliding window restart mode.\n");
     auto attrChunkSize = makeXMLAttribute(ATTR_IMVJCHUNKSIZE, 8)
                              .setDocumentation("Specifies the number of time steps M after which the IMVJ restarts, if run in restart-mode. Defaul value is M=8.");
     auto attrReusedTimeWindowsAtRestart = makeXMLAttribute(ATTR_RSLS_REUSED_TIME_WINDOWS, 8)
@@ -457,19 +483,25 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagIMVJRESTART.addAttribute(attrRSSVD_truncationEps);
     tag.addSubtag(tagIMVJRESTART);
 
-    XMLTag            tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE);
+    XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE);
+    tagMaxUsedIter.setDocumentation("Maximum number of columns used in low-rank approximation of Jacobian.");
     XMLAttribute<int> attrIntValue(ATTR_VALUE);
+    attrIntValue.setDocumentation("The number of columns.");
     tagMaxUsedIter.addAttribute(attrIntValue);
     tag.addSubtag(tagMaxUsedIter);
 
     XMLTag tagTimeWindowsReused(*this, TAG_TIME_WINDOWS_REUSED, XMLTag::OCCUR_ONCE);
+    tagTimeWindowsReused.setDocumentation("Number of past time windows from which columns are used to approximate Jacobian.");
     tagTimeWindowsReused.addAttribute(attrIntValue);
     tag.addSubtag(tagTimeWindowsReused);
 
-    XMLTag                    tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
+    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
+    tagData.setDocumentation("The data used to compute the acceleration.");
     XMLAttribute<std::string> attrName(ATTR_NAME);
+    attrName.setDocumentation("The name of the data.");
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
-    auto                      attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
+    attrMesh.setDocumentation("The name of the mesh which holds the data.");
+    auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
                            .setDocumentation(
                                "To improve the performance of a parallel or a multi coupling schemes, "
                                "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
@@ -478,14 +510,7 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
 
-    XMLTag               tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
-    XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
-    tagFilter.addAttribute(attrSingularityLimit);
-    auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
-                              .setOptions({VALUE_QR1FILTER,
-                                           VALUE_QR1_ABSFILTER,
-                                           VALUE_QR2FILTER});
-    tagFilter.addAttribute(attrFilterName);
+    XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
     tagFilter.setDocumentation("Type of filtering technique that is used to "
                                "maintain good conditioning in the least-squares system. Possible filters:\n"
                                "  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
@@ -494,21 +519,31 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
                                "modified Gram-Schmidt. This can give different results even when no columns "
                                "are filtered out.");
+    XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
+    attrSingularityLimit.setDocumentation("Limit eps of the filter.");
+    tagFilter.addAttribute(attrSingularityLimit);
+    auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
+                              .setOptions({VALUE_QR1FILTER,
+                                           VALUE_QR1_ABSFILTER,
+                                           VALUE_QR2FILTER})
+                              .setDocumentation("Type of the filter.");
+    tagFilter.addAttribute(attrFilterName);
     tag.addSubtag(tagFilter);
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
-    auto   attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
+    tagPreconditioner.setDocumentation(
+        "To improve the performance of a parallel or a multi coupling schemes a preconditioner"
+        " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
+        " an attribute of data. "
+        " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
+        " A residual preconditioner scales every acceleration data by the current residual."
+        " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
+    auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
                                                    VALUE_RESIDUAL_PRECONDITIONER,
                                                    VALUE_RESIDUAL_SUM_PRECONDITIONER})
-                                      .setDocumentation(
-                                          "To improve the performance of a parallel or a multi coupling schemes a preconditioner"
-                                          " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
-                                          " an attribute of data. "
-                                          " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
-                                          " A residual preconditioner scales every acceleration data by the current residual."
-                                          " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
+                                      .setDocumentation("Type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                               .setDocumentation("After the given number of time steps, the preconditioner weights are freezed and the preconditioner acts like a constant preconditioner.");
