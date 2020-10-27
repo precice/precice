@@ -1,6 +1,6 @@
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include <algorithm>
-#include <list>
+#include <vector>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -88,7 +88,7 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
   // recursionCounter++;
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
-  std::list<XMLTag>  tags;
+  std::vector<XMLTag>  tags;
   {
     XMLTag tag(*this, VALUE_CONSTANT, occ, TAG);
     addTypeSpecificSubtags(tag);
