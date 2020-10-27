@@ -407,9 +407,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
     tagFilter.setDocumentation("Type of filtering technique that is used to "
                                "maintain good conditioning in the least-squares system. Possible filters:\n"
-                               "  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
-                               "  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
-                               "  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n"
+                               " - `QR1-filter`: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
+                               " - `QR1_absolute-filter`: updateQR-dec with (absolute) test R(i,i) < eps|\n"
+                               " - `QR2-filter`: en-block QR-dec with test |v_orth| < eps * |v|\n\n"
                                "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
                                "modified Gram-Schmidt. This can give different results even when no columns "
                                "are filtered out.");
@@ -467,11 +467,11 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                .setDocumentation("Type of the restart mode.");
     tagIMVJRESTART.addAttribute(attrRestartName);
     tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used:\n"
-                                    "-  `no-restart`: IMVJ runs in normal mode with explicit representation of Jacobian\n"
-                                    "-  `RS-ZERO`:    IMVJ runs in restart mode. After M time steps all Jacobain information is dropped, restart with no information\n"
-                                    "-  `RS-LS`:      IMVJ runs in restart mode. After M time steps a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
-                                    "-  `RS-SVD`:     IMVJ runs in restart mode. After M time steps a truncated SVD of the Jacobian is updated.\n"
-                                    "-  `RS-SLIDE`:   IMVJ runs in sliding window restart mode.\n");
+                                    "- `no-restart`: IMVJ runs in normal mode with explicit representation of Jacobian\n"
+                                    "- `RS-ZERO`:    IMVJ runs in restart mode. After M time steps all Jacobain information is dropped, restart with no information\n"
+                                    "- `RS-LS`:      IMVJ runs in restart mode. After M time steps a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
+                                    "- `RS-SVD`:     IMVJ runs in restart mode. After M time steps a truncated SVD of the Jacobian is updated.\n"
+                                    "- `RS-SLIDE`:   IMVJ runs in sliding window restart mode.\n");
     auto attrChunkSize = makeXMLAttribute(ATTR_IMVJCHUNKSIZE, 8)
                              .setDocumentation("Specifies the number of time steps M after which the IMVJ restarts, if run in restart-mode. Defaul value is M=8.");
     auto attrReusedTimeWindowsAtRestart = makeXMLAttribute(ATTR_RSLS_REUSED_TIME_WINDOWS, 8)
@@ -513,9 +513,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
     tagFilter.setDocumentation("Type of filtering technique that is used to "
                                "maintain good conditioning in the least-squares system. Possible filters:\n"
-                               "  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
-                               "  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
-                               "  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n"
+                               "- `QR1-filter`: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
+                               "- `QR1_absolute-filter`: updateQR-dec with (absolute) test R(i,i) < eps|\n"
+                               "- `QR2-filter`: en-block QR-dec with test |v_orth| < eps * |v|\n\n"
                                "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
                                "modified Gram-Schmidt. This can give different results even when no columns "
                                "are filtered out.");
