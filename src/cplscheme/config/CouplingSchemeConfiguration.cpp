@@ -457,6 +457,7 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   XMLTag tagMaxTimeWindows(*this, TAG_MAX_TIME_WINDOWS, XMLTag::OCCUR_NOT_OR_ONCE);
   tagMaxTimeWindows.setDocumentation("Defined the end of the simulation as a total count of time windows.");
   XMLAttribute<int> attrValueMaxTimeWindows(ATTR_VALUE);
+  attrValueMaxTimeWindows.setDocumentation("The maximum count of time windows.");
   tagMaxTimeWindows.addAttribute(attrValueMaxTimeWindows);
   tag.addSubtag(tagMaxTimeWindows);
 

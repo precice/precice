@@ -448,12 +448,10 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
   } else if (tag.getName() == VALUE_MVQN) {
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
     tagInitRelax.setDocumentation("Initial relaxation factor.");
-    XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
-    attrDoubleValue.setDocumentation("Initial relaxation factor.");
-    tagInitRelax.addAttribute(attrDoubleValue);
-    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE, false);
-    attrEnforce.setDocumentation("Enforce initial relaxation in every time window.");
-    tagInitRelax.addAttribute(attrEnforce);
+    tagInitRelax.addAttribute(
+        XMLAttribute<double>(ATTR_VALUE).setDocumentation("Initial relaxation factor."));
+    tagInitRelax.addAttribute(
+        XMLAttribute<bool>(ATTR_ENFORCE, false).setDocumentation("Enforce initial relaxation in every time window."));
     tag.addSubtag(tagInitRelax);
 
     XMLTag tagIMVJRESTART(*this, TAG_IMVJRESTART, XMLTag::OCCUR_NOT_OR_ONCE);
