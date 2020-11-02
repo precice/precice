@@ -337,43 +337,44 @@ void AccelerationConfiguration::clear()
   _neededMeshes.clear();
 }
 
-void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag) {
+void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
+{
   using namespace precice::xml;
 
-    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
-    tagData.setDocumentation("The data used to compute the acceleration.");
-    XMLAttribute<std::string> attrName(ATTR_NAME);
-    attrName.setDocumentation("The name of the data.");
-    XMLAttribute<std::string> attrMesh(ATTR_MESH);
-    attrMesh.setDocumentation("The name of the mesh which holds the data.");
-    auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
-                           .setDocumentation(
-                               "To improve the performance of a parallel or a multi coupling schemes, "
-                               "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
-    tagData.addAttribute(attrScaling);
-    tagData.addAttribute(attrName);
-    tagData.addAttribute(attrMesh);
-    tag.addSubtag(tagData);
+  XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
+  tagData.setDocumentation("The data used to compute the acceleration.");
+  XMLAttribute<std::string> attrName(ATTR_NAME);
+  attrName.setDocumentation("The name of the data.");
+  XMLAttribute<std::string> attrMesh(ATTR_MESH);
+  attrMesh.setDocumentation("The name of the mesh which holds the data.");
+  auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
+                         .setDocumentation(
+                             "To improve the performance of a parallel or a multi coupling schemes, "
+                             "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
+  tagData.addAttribute(attrScaling);
+  tagData.addAttribute(attrName);
+  tagData.addAttribute(attrMesh);
+  tag.addSubtag(tagData);
 
-    XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
-    tagFilter.setDocumentation("Type of filtering technique that is used to "
-                               "maintain good conditioning in the least-squares system. Possible filters:\n"
-                               " - `QR1-filter`: updateQR-dec with (relative) test \\\\(R(i,i) < \\epsilon *\\lVert R\\rVert\\\\)\n"
-                               " - `QR1_absolute-filter`: updateQR-dec with (absolute) test \\\\(R(i, i) < \\epsilon\\\\)\n"
-                               " - `QR2-filter`: en-block QR-dec with test \\\\(\\lvert v_\\text{orth} \\rvert < \\epsilon * \\lvert v \\rvert\\\\)\n\n"
-                               "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
-                               "modified Gram-Schmidt. This can give different results even when no columns "
-                               "are filtered out.");
-    XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
-    attrSingularityLimit.setDocumentation("Limit eps of the filter.");
-    tagFilter.addAttribute(attrSingularityLimit);
-    auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
-                              .setOptions({VALUE_QR1FILTER,
-                                           VALUE_QR1_ABSFILTER,
-                                           VALUE_QR2FILTER})
-                              .setDocumentation("Type of the filter.");
-    tagFilter.addAttribute(attrFilterName);
-    tag.addSubtag(tagFilter);
+  XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
+  tagFilter.setDocumentation("Type of filtering technique that is used to "
+                             "maintain good conditioning in the least-squares system. Possible filters:\n"
+                             " - `QR1-filter`: updateQR-dec with (relative) test \\\\(R(i,i) < \\epsilon *\\lVert R\\rVert\\\\)\n"
+                             " - `QR1_absolute-filter`: updateQR-dec with (absolute) test \\\\(R(i, i) < \\epsilon\\\\)\n"
+                             " - `QR2-filter`: en-block QR-dec with test \\\\(\\lvert v_\\text{orth} \\rvert < \\epsilon * \\lvert v \\rvert\\\\)\n\n"
+                             "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
+                             "modified Gram-Schmidt. This can give different results even when no columns "
+                             "are filtered out.");
+  XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
+  attrSingularityLimit.setDocumentation("Limit eps of the filter.");
+  tagFilter.addAttribute(attrSingularityLimit);
+  auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
+                            .setOptions({VALUE_QR1FILTER,
+                                         VALUE_QR1_ABSFILTER,
+                                         VALUE_QR2FILTER})
+                            .setDocumentation("Type of the filter.");
+  tagFilter.addAttribute(attrFilterName);
+  tag.addSubtag(tagFilter);
 }
 
 void AccelerationConfiguration::addTypeSpecificSubtags(

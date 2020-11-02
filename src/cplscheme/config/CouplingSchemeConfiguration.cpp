@@ -463,7 +463,7 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
 
   XMLTag tagTimeWindowSize(*this, TAG_TIME_WINDOW_SIZE, XMLTag::OCCUR_ONCE);
   tagTimeWindowSize.setDocumentation("Defines the size of the time window.");
-  auto   attrValueTimeWindowSize = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE)
+  auto attrValueTimeWindowSize = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE)
                                      .setDocumentation("The maximum time window size.");
   tagTimeWindowSize.addAttribute(attrValueTimeWindowSize);
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
@@ -487,7 +487,7 @@ void CouplingSchemeConfiguration::addTagParticipants(
     xml::XMLTag &tag)
 {
   using namespace xml;
-  XMLTag                    tagParticipants(*this, TAG_PARTICIPANTS, XMLTag::OCCUR_ONCE);
+  XMLTag tagParticipants(*this, TAG_PARTICIPANTS, XMLTag::OCCUR_ONCE);
   tagParticipants.setDocumentation("Defines the participants of the coupling scheme.");
   XMLAttribute<std::string> attrFirst(ATTR_FIRST);
   attrFirst.setDocumentation("First participant to run the solver.");
