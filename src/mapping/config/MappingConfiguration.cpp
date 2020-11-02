@@ -135,7 +135,7 @@ MappingConfiguration::MappingConfiguration(
                         .setDocumentation("The mesh to map the data to.");
 
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
-                            .setDocumentation("Use consistent for ")
+                            .setDocumentation("Use conservative to conserve the quantity of the data over the interface such as force or mass. Use consistent for normalized quantities such as temperature or pressure.")
                             .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT});
 
   auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
