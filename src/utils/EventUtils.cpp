@@ -492,9 +492,9 @@ void EventRegistry::collect()
         MPI_Recv(recvStateChanges.data(), recvStateChanges.size(),
                  MPI_LONG, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
         Event::StateChanges stateChanges; // evtl. reserve
-        for (size_t i = 0; i < recvStateChanges.size(); i += 2) {
-          stateChanges.emplace_back(static_cast<Event::State>(recvStateChanges[i]),
-                                    stdy_clk::time_point(std::chrono::milliseconds(recvStateChanges[i + 1])));
+        for (size_t k = 0; k < recvStateChanges.size(); k += 2) {
+          stateChanges.emplace_back(static_cast<Event::State>(recvStateChanges[k]),
+                                    stdy_clk::time_point(std::chrono::milliseconds(recvStateChanges[k + 1])));
         }
 
         // Receive the map that stores the data associated with an event
