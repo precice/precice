@@ -10,7 +10,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Look over [`CHANGELOG.md`](https://github.com/precice/precice/blob/develop/CHANGELOG.md) (all)
    * Add things, if necessary
    * Extract summary
-   * Fix wording
+   * Fix wording and tense
    * Sort the entries lexicographically
 * [ ] Look over the [Roadmap](https://github.com/precice/precice/wiki/Roadmap) and update entries.
 * [ ] Merge master to develop (No commits after the release on master)

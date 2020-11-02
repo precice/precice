@@ -21,8 +21,8 @@
 <a style="text-decoration: none" href="https://github.com/precice/precice/releases/latest" target="_blank">
     <img src="https://img.shields.io/github/release/precice/precice.svg" alt="Release">
 </a>
-<a style="text-decoration: none" href="https://travis-ci.org/precice/precice" target="_blank">
-    <img src="https://travis-ci.org/precice/precice.svg?branch=develop" alt="Build status">
+<a style="text-decoration: none" href="https://github.com/precice/precice/actions?query=workflow%3A%22Build+and+Test%22+branch%3Adevelop" target="_blank">
+    <img src="https://github.com/precice/precice/workflows/Build%20and%20Test/badge.svg" alt="Build status">
 </a>
 <a style="text-decoration: none" href="https://travis-ci.org/github/precice/systemtests/builds" target="_blank">
     <img src="https://img.shields.io/badge/system%20tests-check-blue" alt="Build status">

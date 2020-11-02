@@ -477,8 +477,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 4.0));
 
   // Test second order extrapolation
-  cplData->values() = Eigen::VectorXd::Zero(cplData->values().size());
-  cplData->oldValues    = Eigen::MatrixXd::Zero(cplData->oldValues.rows(), cplData->oldValues.cols());
+  cplData->values()  = Eigen::VectorXd::Zero(cplData->values().size());
+  cplData->oldValues = Eigen::MatrixXd::Zero(cplData->oldValues.rows(), cplData->oldValues.cols());
   //assign(cplData->values()) = 0.0;
   //assign(cplData->oldValues) = 0.0;
   SerialCouplingScheme scheme2(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations);
