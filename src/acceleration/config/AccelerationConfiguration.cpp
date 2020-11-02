@@ -97,7 +97,7 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
   }
   {
     XMLTag tag(*this, VALUE_AITKEN, occ, TAG);
-    tag.setDocumentation("Accelerates coupling data with dynamic underrelaxation.");
+    tag.setDocumentation("Accelerates coupling data with dynamic Aitken under-relaxation.");
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }

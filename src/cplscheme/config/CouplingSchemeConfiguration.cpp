@@ -450,7 +450,7 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   tagMaxTime.setDocumentation("Defined the end of the simulation as total time.");
 
   XMLAttribute<double> attrValueMaxTime(ATTR_VALUE);
-  attrValueMaxTime.setDocumentation("The value of the maximum.");
+  attrValueMaxTime.setDocumentation("The value of the maximum simulation time.");
   tagMaxTime.addAttribute(attrValueMaxTime);
   tag.addSubtag(tagMaxTime);
 
@@ -466,7 +466,7 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
                                      .setDocumentation("The maximum time window size.");
   tagTimeWindowSize.addAttribute(attrValueTimeWindowSize);
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
-  attrValidDigits.setDocumentation("Precision to use when checking for end of time windows used this many digits. \\(\\phi = 10^{-validDigits}\\)");
+  attrValidDigits.setDocumentation(R"(Precision to use when checking for end of time windows used this many digits. \\(\phi = 10^{-validDigits}\\))");
   tagTimeWindowSize.addAttribute(attrValidDigits);
   std::vector<std::string> allowedMethods;
   if (type == VALUE_SERIAL_EXPLICIT || type == VALUE_SERIAL_IMPLICIT) {
@@ -475,7 +475,9 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   } else {
     allowedMethods = {VALUE_FIXED};
   }
-  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED).setOptions(allowedMethods).setDocumentation("Is the time window size fixed or does the first participant choose it?");
+  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
+                        .setOptions(allowedMethods)
+                        .setDocumentation("The method used to determine the time window size. Use `fixed` to fix the time window size for the participants.");
   tagTimeWindowSize.addAttribute(attrMethod);
   tag.addSubtag(tagTimeWindowSize);
 }
@@ -533,6 +535,9 @@ void CouplingSchemeConfiguration::addTagAbsoluteConvergenceMeasure(
 {
   using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_ABS_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
+  tagConvergenceMeasure.setDocumentation(
+      "Absolute convergence criterion based on the two-norm difference of data values between iterations.\n"
+      "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
   attrLimit.setDocumentation("Limit under which the measure is considered to have converged.");
@@ -546,6 +551,9 @@ void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(
   using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_RES_REL_CONV_MEASURE,
                                XMLTag::OCCUR_ARBITRARY);
+  tagConvergenceMeasure.setDocumentation(
+      "Residual relative convergence criterion based on the relative two-norm differences of data values between iterations.\n"
+      "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert / \\left\\lVert H(x^{k-1}) - x^{k-1} \\right\\rVert < \\text{limit}\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
   attrLimit.setDocumentation("Limit under which the measure is considered to have converged.");
@@ -558,9 +566,12 @@ void CouplingSchemeConfiguration::addTagRelativeConvergenceMeasure(
 {
   using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
+  tagConvergenceMeasure.setDocumentation(
+      "Relative convergence criterion based on the relative two-norm difference of data values between iterations.\n"
+      "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert / \\left\\lVert H(x^k) \\right\\rVert < \\text{limit} \\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
-  attrLimit.setDocumentation("Limit under which the measure is considered to have converged.");
+  attrLimit.setDocumentation(R"(Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).)");
   tagConvergenceMeasure.addAttribute(attrLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }
@@ -570,8 +581,10 @@ void CouplingSchemeConfiguration::addTagMinIterationConvergenceMeasure(
 {
   xml::XMLTag tagMinIterationConvMeasure(*this,
                                          TAG_MIN_ITER_CONV_MEASURE, xml::XMLTag::OCCUR_ARBITRARY);
+  tagMinIterationConvMeasure.setDocumentation("Convergence criterion used to ensure a miminimal amount of iterations. Specifying a mesh and data is required for technical reasons and does not influence the measure.");
   addBaseAttributesTagConvergenceMeasure(tagMinIterationConvMeasure);
   xml::XMLAttribute<int> attrMinIterations(ATTR_MIN_ITERATIONS);
+  attrMinIterations.setDocumentation("The minimal amount of iterations.");
   tagMinIterationConvMeasure.addAttribute(attrMinIterations);
   tag.addSubtag(tagMinIterationConvMeasure);
 }
