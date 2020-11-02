@@ -537,7 +537,7 @@ void CouplingSchemeConfiguration::addTagAbsoluteConvergenceMeasure(
   XMLTag tagConvergenceMeasure(*this, TAG_ABS_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
   tagConvergenceMeasure.setDocumentation(
       "Absolute convergence criterion based on the two-norm difference of data values between iterations.\n"
-      "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert\\$$");
+      "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert < \\text{limit}\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
   attrLimit.setDocumentation("Limit under which the measure is considered to have converged.");
@@ -553,7 +553,7 @@ void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(
                                XMLTag::OCCUR_ARBITRARY);
   tagConvergenceMeasure.setDocumentation(
       "Residual relative convergence criterion based on the relative two-norm differences of data values between iterations.\n"
-      "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert / \\left\\lVert H(x^{k-1}) - x^{k-1} \\right\\rVert < \\text{limit}\\$$");
+      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert}{\\left\\lVert H(x^{k-1}) - x^{k-1} \\right\\rVert} < \\text{limit}\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
   attrLimit.setDocumentation("Limit under which the measure is considered to have converged.");
@@ -568,7 +568,7 @@ void CouplingSchemeConfiguration::addTagRelativeConvergenceMeasure(
   XMLTag tagConvergenceMeasure(*this, TAG_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
   tagConvergenceMeasure.setDocumentation(
       "Relative convergence criterion based on the relative two-norm difference of data values between iterations.\n"
-      "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert / \\left\\lVert H(x^k) \\right\\rVert < \\text{limit} \\$$");
+      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert}{\\left\\lVert H(x^k) \\right\\rVert} < \\text{limit} \\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
   attrLimit.setDocumentation(R"(Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).)");
