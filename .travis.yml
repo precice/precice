@@ -18,7 +18,6 @@ addons:
       - python3-numpy
       - libblas-dev
       - liblapack-dev
-      - lcov
 
 env:
   global:
@@ -40,20 +39,6 @@ env:
     - MPI=on PETSC=on
     - MPI=on PETSC=off
     - MPI=off PETSC=off
-
-matrix:
-  include:
-
-    # Test coverage
-    - name: "Test Coverage"
-      compiler: gcc
-      script:
-        - $TRAVIS_BUILD_DIR/tools/ci/travis-coverage.sh
-      after_success:
-        - lcov --capture --directory "$TRAVIS_BUILD_DIR/build" --output-file coverage.info
-        - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
-        - lcov --list coverage.info # debug info
-        - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
 
 cache:
   ccache: true

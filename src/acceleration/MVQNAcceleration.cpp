@@ -120,7 +120,7 @@ void MVQNAcceleration::computeUnderrelaxationSecondaryData(
   // Perform underrelaxation with initial relaxation factor for secondary data
   for (int id : _secondaryDataIDs) {
     PtrCouplingData  data   = cplData[id];
-    Eigen::VectorXd &values = *(data->values);
+    Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
     secResiduals                  = data->oldValues.col(0); // old

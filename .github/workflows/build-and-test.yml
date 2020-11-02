@@ -1,0 +1,142 @@
+name: Build and Test
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    paths:
+      - 'cmake/**'
+      - 'examples/**'
+      - 'src/**'
+      - 'thirdparty/**'
+      - 'CMakeLists.txt'
+
+jobs:
+  build:
+    name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
+    runs-on: ubuntu-latest
+    container: 'precice/ci-${{ matrix.IMAGE }}:latest'
+    defaults:
+      run:
+        shell: "bash --login -eo pipefail {0}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - IMAGE: 'ubuntu-1804'
+            CONFIG: Bare
+            CXX: 'g++'
+            TYPE: Debug
+            COVFLAGS: '--coverage'
+          - IMAGE: 'ubuntu-1804'
+            CONFIG: MPI
+            CXX: 'g++'
+            TYPE: Debug
+            COVFLAGS: '--coverage'
+          - IMAGE: 'ubuntu-1804'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
+            COVFLAGS: '--coverage'
+          - IMAGE: 'ubuntu-1804'
+            CONFIG: Bare
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'ubuntu-1804'
+            CONFIG: MPI
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'ubuntu-1804'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'ubuntu-2004'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'clang++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'clang++'
+            TYPE: Release
+    env:
+      CCACHE_DIR: "$GITHUB_WORKSPACE/ccache"
+      OMPI_MCA_rmaps_base_oversubscribe: 1
+    steps:
+      - name: Restore ccache
+        uses: actions/cache@v2
+        with:
+          path: ccache
+          key: precice-ccache-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
+      - uses: actions/checkout@v2
+      - name: Generate build directory
+        run: mkdir -p build
+      - name: Configure
+        working-directory: build
+        env:
+          CXX: ${{ matrix.CXX }}
+          CXXFLAGS: "-Wall ${{ matrix.COVFLAGS }}"
+          MPI: ${{ contains(matrix.CONFIG, 'MPI') }}
+          PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
+        run: |
+          cmake --version
+          cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DPRECICE_MPICommunication=${{ env.MPI }} -DPRECICE_PETScMapping=${{ env.PETSc }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache 
+          path: build/CMakeCache.txt
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs 
+          path: 'build/CMakeFiles/*.log'
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands 
+          path: build/compile_commands.json
+      - name: Compile
+        working-directory: build
+        run: |
+          make -j $(nproc)
+      - name: Adjust user rights
+        run: chown -R $PRECICE_USER build
+      - name: Tests
+        env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+        working-directory: build
+        run: su -c "ctest" $PRECICE_USER
+      - name: Coverage Report
+        working-directory: build
+        if: ${{ matrix.COVFLAGS }}
+        run: |
+          lcov --capture --directory . --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' "/opt/*" --output-file coverage.info # filter system-files and local-dependencies
+      - uses: codecov/codecov-action@v1
+        with:
+          file: ./build/coverage.info
+        if: ${{ matrix.COVFLAGS }} 
+      - name: Check packages
+        working-directory: build
+        if: ${{ contains(matrix.IMAGE, 'ubuntu') }}
+        run: |
+          cpack
+          lintian -i --suppress-tags control-file-has-bad-permissions *.deb
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput 
+          path: build/TestOutput/

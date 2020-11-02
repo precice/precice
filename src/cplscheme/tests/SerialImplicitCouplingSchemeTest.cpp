@@ -453,31 +453,31 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme.setupDataMatrices(scheme.getSendData());
   CouplingData *cplData = scheme.getSendData(dataID);
   BOOST_CHECK(cplData); // no nullptr
-  BOOST_TEST(cplData->values->size() == 1);
+  BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->oldValues.cols() == 2);
   BOOST_TEST(cplData->oldValues.rows() == 1);
-  BOOST_TEST(testing::equals((*cplData->values)[0], 0.0));
+  BOOST_TEST(testing::equals(cplData->values()[0], 0.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 0.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 0.0));
 
-  (*cplData->values)[0] = 1.0;
+  cplData->values()[0] = 1.0;
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
   scheme.extrapolateData(scheme.getSendData());
-  BOOST_TEST(testing::equals((*cplData->values)[0], 2.0));
+  BOOST_TEST(testing::equals(cplData->values()[0], 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 1.0));
 
-  (*cplData->values)[0] = 4.0;
+  cplData->values()[0] = 4.0;
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
   scheme.extrapolateData(scheme.getSendData());
-  BOOST_TEST(testing::equals((*cplData->values)[0], 7.0));
+  BOOST_TEST(testing::equals(cplData->values()[0], 7.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 7.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 4.0));
 
   // Test second order extrapolation
-  *cplData->values   = Eigen::VectorXd::Zero(cplData->values->size());
+  cplData->values()  = Eigen::VectorXd::Zero(cplData->values().size());
   cplData->oldValues = Eigen::MatrixXd::Zero(cplData->oldValues.rows(), cplData->oldValues.cols());
-  //assign(*cplData->values) = 0.0;
+  //assign(cplData->values()) = 0.0;
   //assign(cplData->oldValues) = 0.0;
   SerialCouplingScheme scheme2(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations);
 
@@ -486,26 +486,26 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme2.setupDataMatrices(scheme2.getSendData());
   cplData = scheme2.getSendData(dataID);
   BOOST_CHECK(cplData); // no nullptr
-  BOOST_TEST(cplData->values->size() == 1);
+  BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->oldValues.cols() == 3);
   BOOST_TEST(cplData->oldValues.rows() == 1);
-  BOOST_TEST(testing::equals((*cplData->values)[0], 0.0));
+  BOOST_TEST(testing::equals(cplData->values()[0], 0.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 0.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 0.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 2), 0.0));
 
-  (*cplData->values)[0] = 1.0;
+  cplData->values()[0] = 1.0;
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.extrapolateData(scheme2.getSendData());
-  BOOST_TEST(testing::equals((*cplData->values)[0], 2.0));
+  BOOST_TEST(testing::equals(cplData->values()[0], 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 1.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 2), 0.0));
 
-  (*cplData->values)[0] = 4.0;
+  cplData->values()[0] = 4.0;
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.extrapolateData(scheme2.getSendData());
-  BOOST_TEST(testing::equals((*cplData->values)[0], 8.0));
+  BOOST_TEST(testing::equals(cplData->values()[0], 8.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 8.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 4.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 2), 1.0));

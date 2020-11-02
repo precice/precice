@@ -5,7 +5,7 @@ PROGRAM main
   CHARACTER*50                    :: readDataName, writeDataName
   INTEGER                         :: rank, commsize, ongoing, dimensions, meshID, bool, numberOfVertices, i,j
   INTEGER                         :: readDataID, writeDataID
-  REAL                            :: dt
+  DOUBLE PRECISION                :: dt
   DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: vertices, writeData, readData
   INTEGER, DIMENSION(:), ALLOCATABLE :: vertexIDs
 

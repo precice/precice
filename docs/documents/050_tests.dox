@@ -6,11 +6,10 @@ Running and writing tests
 
 Running
 ------
-The ```tools/compileAndTest.py``` script simplifies running all tsts.
+Use ```ctest``` or ```make test``` within the build folder to run all tests.
 
-- ```./tools/compileAndTest.py -t``` runs all tests on 4 MPI ranks.
-- ```./build/last/testprecice -x``` runs boost test with colored output.
-- ```./build/last/testprecice -x -r detailed -t "+/+PetRadial+"``` (replace all + by *, due to Doxygen) runs all ```PetRadial*``` tests from all test suites using colored output and detailed reporting.
+- ```mpirun -np 4 ./build/testprecice -x``` runs boost test with colored output.
+- ```mpirun -np 4 ./build/testprecice -x -r detailed -t "+/+PetRadial+"``` (replace all + by *, due to Doxygen) runs all ```PetRadial*``` tests from all test suites using colored output and detailed reporting.
 
 Writing
 -------

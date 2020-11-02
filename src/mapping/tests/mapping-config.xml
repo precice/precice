@@ -1,13 +1,24 @@
-<?xml version="1.0"?>
-
+<?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-   <mesh name="TestMesh"></mesh>
-   <mesh name="TestMeshTwo"></mesh>
-   <mesh name="TestMeshThree"></mesh>
-   <mapping:nearest-projection direction="write" from="TestMesh" to="TestMeshThree"
-   				 constraint="conservative" timing="ondemand"/>
-   <mapping:nearest-projection direction="read" from="TestMeshThree" to="TestMeshTwo"
-   				 constraint="consistent"/>
-   <mapping:nearest-projection direction="write" from="TestMeshTwo" to="TestMesh"
-   				 constraint="conservative" timing="onadvance"/>
+  <mesh name="TestMesh" />
+  <mesh name="TestMeshTwo" />
+  <mesh name="TestMeshThree" />
+
+  <mapping:nearest-projection
+    direction="write"
+    from="TestMesh"
+    to="TestMeshThree"
+    constraint="conservative"
+    timing="ondemand" />
+  <mapping:nearest-projection
+    direction="read"
+    from="TestMeshThree"
+    to="TestMeshTwo"
+    constraint="consistent" />
+  <mapping:nearest-projection
+    direction="write"
+    from="TestMeshTwo"
+    to="TestMesh"
+    constraint="conservative"
+    timing="onadvance" />
 </configuration>

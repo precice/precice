@@ -3,8 +3,8 @@
 #define PRECICE_VERSION "@preCICE_VERSION@"
 
 #ifndef PRECICE_NO_PETSC
-  #define PETSC_MAJOR @PETSC_VERSION_MAJOR@
-  #define PETSC_MINOR @PETSC_VERSION_MINOR@
+  #define PETSC_MAJOR @PETSc_VERSION_MAJOR@
+  #define PETSC_MINOR @PETSc_VERSION_MINOR@
 #endif
 
 namespace precice {

@@ -1,6 +1,17 @@
 #pragma once
 
 #include "Mapping.hpp"
+
+#include <Eigen/Core>
+#include <Eigen/QR>
+
+#include <boost/version.hpp>
+#if BOOST_VERSION < 106600
+#include <boost/function_output_iterator.hpp>
+#else
+#include <boost/iterator/function_output_iterator.hpp>
+#endif
+
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "impl/BasisFunctions.hpp"
@@ -10,9 +21,6 @@
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
-
-#include <Eigen/Core>
-#include <Eigen/QR>
 
 namespace precice {
 extern bool syncMode;
