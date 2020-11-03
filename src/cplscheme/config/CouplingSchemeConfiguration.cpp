@@ -614,7 +614,7 @@ void CouplingSchemeConfiguration::addTagMaxIterations(
 {
   using namespace xml;
   XMLTag tagMaxIterations(*this, TAG_MAX_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
-  tagMaxIterations.setDocumentation("Allows to specify a maximum amount of iterations. The simulation will end if this limit is exceeded.");
+  tagMaxIterations.setDocumentation("Allows to specify a maximum amount of iterations per time window.");
   XMLAttribute<int> attrValue(ATTR_VALUE);
   attrValue.setDocumentation("The maximum value of iterations.");
   tagMaxIterations.addAttribute(attrValue);
