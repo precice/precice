@@ -44,6 +44,7 @@ target_sources(testprecice
     src/math/tests/GeometryTest.cpp
     src/mesh/tests/BoundingBoxTest.cpp
     src/mesh/tests/DataConfigurationTest.cpp
+    src/mesh/tests/GradientConfigurationTest.cpp
     src/mesh/tests/EdgeTest.cpp
     src/mesh/tests/MeshTest.cpp
     src/mesh/tests/RTreeAdapterTests.cpp

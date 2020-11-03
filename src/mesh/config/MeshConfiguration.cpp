@@ -16,8 +16,11 @@ namespace mesh {
 
 MeshConfiguration::MeshConfiguration(
     xml::XMLTag &              parent,
-    PtrDataConfiguration       config ) :
-    MeshConfiguration(parent, config, PtrGradientConfiguration(new GradientConfiguration(parent))) {}
+    PtrDataConfiguration       config )
+    : MeshConfiguration(parent, // chain constructor to the next
+                        config,
+                        PtrGradientConfiguration(new GradientConfiguration(parent)))
+    {}
 
 MeshConfiguration::MeshConfiguration(
     xml::XMLTag &              parent,

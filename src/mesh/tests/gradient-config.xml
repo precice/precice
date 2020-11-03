@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <gradient:vector name="vector-data" />
+  <gradient:scalar name="floating-data" />
+  <gradient:vector name="second-vector-data" />
+</configuration>
