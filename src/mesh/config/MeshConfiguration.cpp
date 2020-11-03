@@ -5,6 +5,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
+#include "mesh/config/GradientConfiguration.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"
@@ -14,15 +15,23 @@ namespace precice {
 namespace mesh {
 
 MeshConfiguration::MeshConfiguration(
-    xml::XMLTag &        parent,
-    PtrDataConfiguration config)
+    xml::XMLTag &              parent,
+    PtrDataConfiguration       config ) :
+    MeshConfiguration(parent, config, PtrGradientConfiguration(new GradientConfiguration(parent))) {}
+
+MeshConfiguration::MeshConfiguration(
+    xml::XMLTag &              parent,
+    PtrDataConfiguration       config,
+    PtrGradientConfiguration gradientConfig)
     : TAG("mesh"),
       ATTR_NAME("name"),
       ATTR_FLIP_NORMALS("flip-normals"),
       TAG_DATA("use-data"),
+      TAG_GRADIENT("use-gradient"),
       ATTR_SIDE_INDEX("side"),
       _dimensions(0),
       _dataConfig(config),
+      _gradientConfig(gradientConfig),
       _meshes(),
       _neededMeshes(),
       _meshIdManager(new utils::ManageUniqueIDs())
@@ -50,6 +59,13 @@ MeshConfiguration::MeshConfiguration(
   attrName.setDocumentation("Name of the data set.");
   subtagData.addAttribute(attrName);
   tag.addSubtag(subtagData);
+  
+  XMLTag subtagGradient(*this, TAG_GRADIENT, XMLTag::OCCUR_ARBITRARY);
+  doc = "Assigns a before defined gradient data set (see tag <gradient>) to the mesh.";
+  subtagGradient.setDocumentation(doc);
+  attrName.setDocumentation("Name of the gradient data set.");
+  subtagGradient.addAttribute(attrName);
+  tag.addSubtag(subtagGradient);
 
   parent.addSubtag(tag);
 }
@@ -88,6 +104,21 @@ void MeshConfiguration::xmlTagCallback(
                                         << "mesh \"" << _meshes.back()->getName() << "\" is not defined. "
                                         << "Please define a data tag with name=\"" << name << "\".");
     }
+  } else if (tag.getName() == TAG_GRADIENT) {
+    std::string name = tag.getStringAttributeValue(ATTR_NAME);
+    bool found(false);
+    for (const GradientConfiguration::ConfiguredGradient &gradient : _gradientConfig->gradients()) {
+      if (gradient.name == name) {
+        _meshes.back()->createGradient(gradient.name, gradient.dimensions);
+        found = true;
+        break;
+      }
+    }
+    if (not found) {
+      PRECICE_ERROR("Gradient with name \"" << name << "\" used by "
+                                            << "mesh \"" << _meshes.back()->getName() << "\" is not defined. "
+                                            << "Please define a gradient tag with name=\"" << name << "\".");
+    }
   }
 }
 
@@ -114,6 +145,16 @@ void MeshConfiguration::addMesh(
       }
     }
     PRECICE_ASSERT(found, "Data " << dataNewMesh->getName() << " is not defined. Please define a data tag with name=\"" << dataNewMesh->getName() << "\".");
+  }
+  for(PtrGradient gradNewMesh : mesh->gradients()) {
+    bool found(false);
+    for (const GradientConfiguration::ConfiguredGradient &gradient : _gradientConfig->gradients()) {
+      if ((gradNewMesh->getName() == gradient.name) && (gradNewMesh->getDimensions() == gradient.dimensions)) {
+        found = true;
+        break;
+      }
+    }
+    PRECICE_ASSERT(found, "Gradient " << gradNewMesh->getName() << " is not defined. Please define a gradient tag with name=\"" << gradNewMesh->getName() << "\".");
   }
   _meshes.push_back(mesh);
 }

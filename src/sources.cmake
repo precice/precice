@@ -190,6 +190,8 @@ target_sources(precice
     src/mesh/Edge.cpp
     src/mesh/Edge.hpp
     src/mesh/Filter.hpp
+    src/mesh/Gradient.hpp
+    src/mesh/Gradient.cpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
     src/mesh/RTree.cpp
@@ -203,6 +205,8 @@ target_sources(precice
     src/mesh/Vertex.hpp
     src/mesh/config/DataConfiguration.cpp
     src/mesh/config/DataConfiguration.hpp
+    src/mesh/config/GradientConfiguration.cpp
+    src/mesh/config/GradientConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
     src/mesh/impl/BBUtils.hpp

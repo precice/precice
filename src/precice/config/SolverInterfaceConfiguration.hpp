@@ -49,6 +49,11 @@ public:
   {
     return _dataConfiguration;
   }
+  
+  const mesh::PtrGradientConfiguration getGradientConfiguration() const
+  {
+    return _gradientConfiguration;
+  }
 
   const mesh::PtrMeshConfiguration getMeshConfiguration() const
   {
@@ -74,6 +79,11 @@ public:
   void setDataConfiguration(mesh::PtrDataConfiguration config)
   {
     _dataConfiguration = config;
+  }
+
+  void setGradientConfiguration(mesh::PtrGradientConfiguration config)
+  {
+    _gradientConfiguration = config;
   }
 
   /**
@@ -105,6 +115,8 @@ private:
   //int _indexAccessor;
 
   mesh::PtrDataConfiguration _dataConfiguration;
+
+  mesh::PtrGradientConfiguration _gradientConfiguration;
 
   mesh::PtrMeshConfiguration _meshConfiguration;
 

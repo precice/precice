@@ -26,8 +26,14 @@ class MeshConfiguration : public xml::XMLTag::Listener {
 public:
   /// Constructor, takes a valid data configuration as argument.
   MeshConfiguration(
-      xml::XMLTag &        parent,
-      PtrDataConfiguration config);
+      xml::XMLTag &            parent,
+      PtrDataConfiguration     dataConfig);
+
+  /// Constructor, takes valid data and gradient configurations as argument.
+  MeshConfiguration(
+      xml::XMLTag &            parent,
+      PtrDataConfiguration     dataConfig,
+      PtrGradientConfiguration gradientConfig);
 
   void setDimensions(int dimensions);
 
@@ -47,6 +53,8 @@ public:
       xml::XMLTag &                    callingTag);
 
   const PtrDataConfiguration &getDataConfiguration() const;
+
+  const PtrGradientConfiguration &getGradientConfiguration() const;
 
   void addMesh(const mesh::PtrMesh &mesh);
 
@@ -71,12 +79,16 @@ private:
   const std::string ATTR_NAME;
   const std::string ATTR_FLIP_NORMALS;
   const std::string TAG_DATA;
+  const std::string TAG_GRADIENT;
   const std::string ATTR_SIDE_INDEX;
 
   int _dimensions;
 
   /// Data configuration.
   PtrDataConfiguration _dataConfig;
+  
+  /// Gradient configuration
+  PtrGradientConfiguration _gradientConfig;
 
   /// Configured meshes.
   std::vector<PtrMesh> _meshes;

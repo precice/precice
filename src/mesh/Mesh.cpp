@@ -15,6 +15,7 @@
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
+#include "mesh/Gradient.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -148,6 +149,37 @@ const PtrData &Mesh::data(
   return *iter;
 }
 
+PtrGradient &Mesh::createGradient(
+    const std::string &name,
+    int                dimension)
+{
+  PRECICE_TRACE(name, dimension);
+  for(const PtrGradient grad : _gradients) {
+    PRECICE_CHECK(grad->getName() != name,
+                  "Gradient \"" << name << "\" cannot be created twice for "
+                            << "mesh \"" << _name << "\". Please rename or remove one of the use-gradient tags with name \"" << name << "\".");
+  }
+  int id = Gradient::getGradientCount();
+  PtrGradient grad(new Gradient(name, id, dimension));
+  _gradients.push_back(grad);
+  return _gradients.back();
+}
+
+const Mesh::GradientContainer &Mesh::gradients() const
+{
+  return _gradients;
+}
+
+const PtrGradient &Mesh::gradient(
+    int dataID) const
+{
+  auto iter = std::find_if(_gradients.begin(), _gradients.end(), [dataID](PtrGradient const &ptr) {
+    return ptr->getID() == dataID;
+  });
+  PRECICE_ASSERT(iter != _gradients.end(), "Gradient with data ID = " << dataID << " not found in mesh \"" << _name << "\".");
+  return *iter;
+}
+
 const std::string &Mesh::getName() const
 {
   return _name;
@@ -197,6 +229,28 @@ void Mesh::allocateDataValues()
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
     PRECICE_DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
+  }
+}
+
+void Mesh::allocateGradientValues()
+{
+  PRECICE_TRACE(_vertices.size());
+  const auto expectedCount = _vertices.size();
+  using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
+  for (PtrGradient grad : _gradients) {
+    const auto                     dim = grad->getDimensions();
+    const SizeType expectedColumnCount = expectedCount * dim;
+    const auto     actualColumnCount   = static_cast<SizeType>(grad->values().cols());
+    // Shrink Buffer
+    if (expectedColumnCount < actualColumnCount) {
+      grad->values().resize(expectedColumnCount, dim);
+    }
+    // Enlarge Buffer
+    if (expectedColumnCount > actualColumnCount) {
+      const auto leftToAllocate = expectedColumnCount - actualColumnCount;
+      utils::append(grad->values(), (Eigen::MatrixXd) Eigen::MatrixXd::Zero(leftToAllocate, dim));
+    }
+    PRECICE_DEBUG("Gradient " << grad->getName() << " now has " << grad->values().size() << " values");
   }
 }
 

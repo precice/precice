@@ -9,6 +9,7 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
+#include "mesh/config/GradientConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
@@ -33,8 +34,10 @@ SolverInterfaceConfiguration::SolverInterfaceConfiguration(xml::XMLTag &parent)
 
   _dataConfiguration = mesh::PtrDataConfiguration(
       new mesh::DataConfiguration(tag));
+  _gradientConfiguration = mesh::PtrGradientConfiguration(
+      new mesh::GradientConfiguration(tag));
   _meshConfiguration = mesh::PtrMeshConfiguration(
-      new mesh::MeshConfiguration(tag, _dataConfiguration));
+      new mesh::MeshConfiguration(tag, _dataConfiguration, _gradientConfiguration));
   _m2nConfiguration = m2n::M2NConfiguration::SharedPointer(
       new m2n::M2NConfiguration(tag));
   _participantConfiguration = config::PtrParticipantConfiguration(

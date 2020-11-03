@@ -39,6 +39,7 @@ public:
   using EdgeContainer     = std::deque<Edge>;
   using TriangleContainer = std::deque<Triangle>;
   using DataContainer     = std::vector<PtrData>;
+  using GradientContainer = std::vector<PtrGradient>;
   using BoundingBoxMap    = std::map<int, BoundingBox>;
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
@@ -136,10 +137,18 @@ public:
   PtrData &createData(
       const std::string &name,
       int                dimension);
+      
+  PtrGradient &createGradient(
+      const std::string &name,
+      int                dimension);
 
   const DataContainer &data() const;
+  
+  const GradientContainer &gradients() const;
 
   const PtrData &data(int dataID) const;
+  
+  const PtrGradient &gradient(int dataID) const;
 
   /// Returns the name of the mesh, as set in the config file.
   const std::string &getName() const;
@@ -160,6 +169,8 @@ public:
   /// Allocates memory for the vertex data values.
   void allocateDataValues();
 
+  /// Allocates memory for the vertex gradient values.
+  void allocateGradientValues();
   /**
    * @brief Necessary before any geom. operations can be performed on the mesh.
    *
@@ -254,6 +265,9 @@ private:
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;
+
+  /// Gradients hold by the vertices of the mesh.
+  GradientContainer _gradients;
 
   utils::ManageUniqueIDs _manageVertexIDs;
 
