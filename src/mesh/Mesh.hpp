@@ -147,8 +147,10 @@ public:
   const GradientContainer &gradients() const;
 
   const PtrData &data(int dataID) const;
-  
+
   const PtrGradient &gradient(int dataID) const;
+
+  const PtrGradient &gradient(const PtrData forData) const;
 
   /// Returns the name of the mesh, as set in the config file.
   const std::string &getName() const;

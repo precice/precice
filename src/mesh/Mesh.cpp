@@ -180,6 +180,16 @@ const PtrGradient &Mesh::gradient(
   return *iter;
 }
 
+const PtrGradient &Mesh::gradient(
+    const PtrData forData) const
+{
+    auto iter = std::find_if(_gradients.begin(), _gradients.end(), [forData](PtrGradient const &ptr) {
+    return ptr->getName() == forData->getName();
+  });
+  PRECICE_ASSERT(iter != _gradients.end(), "Gradient for data name = " << forData->getName() << " not found in mesh \"" << _name << "\".");
+  return *iter;
+}
+
 const std::string &Mesh::getName() const
 {
   return _name;
