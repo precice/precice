@@ -264,8 +264,7 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
     for (DataMap::value_type &pair : data) {
       PRECICE_DEBUG("Extrapolate data: " << pair.first);
       PRECICE_ASSERT(pair.second->oldValues.cols() > 1);
-      Eigen::VectorXd &values       = pair.second->values();
-      pair.second->oldValues.col(0) = values;  // = x^t
+      Eigen::VectorXd &values = pair.second->values();
       values *= 2.0;                           // = 2*x^t
       values -= pair.second->oldValues.col(1); // = 2*x^t - x^(t-1)
       utils::shiftSetFirst(pair.second->oldValues, values);
@@ -278,10 +277,9 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
       auto             valuesOld1 = pair.second->oldValues.col(1);
       auto             valuesOld2 = pair.second->oldValues.col(2);
 
-      pair.second->oldValues.col(0) = values; // = x^t
-      values *= 2.5;                          // = 2.5 x^t
-      values -= valuesOld1 * 2.0;             // = 2.5x^t - 2x^(t-1)
-      values += valuesOld2 * 0.5;             // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
+      values *= 2.5;              // = 2.5 x^t
+      values -= valuesOld1 * 2.0; // = 2.5x^t - 2x^(t-1)
+      values += valuesOld2 * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
       utils::shiftSetFirst(pair.second->oldValues, values);
     }
   } else {
@@ -677,12 +675,12 @@ bool BaseCouplingScheme::accelerate()
     getAcceleration()->performAcceleration(getAccelerationData());
   }
 
+  // Store data for conv. measurement, acceleration, or extrapolation
+  storeData();
+
   // extrapolate new input data for the solver evaluation in time.
   if (convergence && (_extrapolationOrder > 0)) {
-    extrapolateData(getAccelerationData()); // Also stores data
-  } else {
-    // Store data for conv. measurement, acceleration, or extrapolation
-    storeData();
+    extrapolateData(getAccelerationData());
   }
 
   return convergence;
