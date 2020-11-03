@@ -542,7 +542,7 @@ void CouplingSchemeConfiguration::addTagAbsoluteConvergenceMeasure(
       "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert_2 < \\text{limit}\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
-  attrLimit.setDocumentation("Limit under which the measure is considered to have converged.");
+  attrLimit.setDocumentation("Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).");
   tagConvergenceMeasure.addAttribute(attrLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }
@@ -558,7 +558,7 @@ void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(
       "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^{k-1}) - x^{k-1} \\right\\rVert_2} < \\text{limit}\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
-  attrLimit.setDocumentation("Limit under which the measure is considered to have converged.");
+  attrLimit.setDocumentation("Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).");
   tagConvergenceMeasure.addAttribute(attrLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }
