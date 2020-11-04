@@ -248,17 +248,53 @@ void Mesh::allocateGradientValues()
   const auto expectedCount = _vertices.size();
   using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
   for (PtrGradient grad : _gradients) {
-    const auto                     dim = grad->getDimensions();
-    const SizeType expectedColumnCount = expectedCount * dim;
+    const auto                valueDim = grad->getDimensions();
+    const auto                spaceDim = this->getDimensions();
+    /*
+    gradient data matrix has valueDim rows and spaceDim*vertices.size() columns
+
+    G = ... |g00 g01 g02||h00 h02 h02| ...
+        ... |g10 g11 g12||h10 h11 h12| ...
+        ... |g20 g21 g22||h20 h21 h22| ...
+
+    The gradient is used as G*v = r [where v is always a spaceDim-vector]
+
+    Scalar in 2D  => 1 row (= valueDim) x 2 columns (= spaceDim)
+             |v0|
+             |v1|
+   |g00 g01| |r0|
+
+    2D vector    => 2 rows (=valueDim) x 2 columns (= spaceDim)
+              |v0|
+              |v1|
+    |g00 g01| |r0|
+    |g10 g11| |r1|
+
+    Scalar in 3D => 1 row (= valueDim) x 3 columns (= spaceDim)
+                  |v0|
+                  |v1|
+                  |v2|
+    |g00 g01 g02| |r0|
+
+    3D vector    => 3 rows (=valueDim) x 3 columns (= spaceDim)
+                  |v0|
+                  |v1|
+                  |v2|
+    |g00 g01 g02| |r0|
+    |g10 g11 g12| |r1|
+    |g20 g21 g22| |r2|
+
+    */
+    const SizeType expectedColumnCount = expectedCount * spaceDim;
     const auto     actualColumnCount   = static_cast<SizeType>(grad->values().cols());
     // Shrink Buffer
     if (expectedColumnCount < actualColumnCount) {
-      grad->values().resize(expectedColumnCount, dim);
+      grad->values().resize(valueDim, expectedColumnCount);
     }
     // Enlarge Buffer
     if (expectedColumnCount > actualColumnCount) {
       const auto leftToAllocate = expectedColumnCount - actualColumnCount;
-      utils::append(grad->values(), (Eigen::MatrixXd) Eigen::MatrixXd::Zero(leftToAllocate, dim));
+      utils::append(grad->values(), (Eigen::MatrixXd) Eigen::MatrixXd::Zero(valueDim, leftToAllocate));
     }
     PRECICE_DEBUG("Gradient " << grad->getName() << " now has " << grad->values().size() << " values");
   }

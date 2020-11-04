@@ -76,6 +76,7 @@ private:
   /// Counter for existing Gradient objects.
   static size_t _gradientCount;
 
+  /// The gradients matrices. Column-major ordering is default.
   Eigen::MatrixXd _values;
 
   /// Name of the gradient data set.
