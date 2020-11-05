@@ -1792,7 +1792,6 @@ void testWatchIntegral(const std::string &configFile, TestContext &context)
         }
       }
     }
-
   }
 }
 

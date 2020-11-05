@@ -109,7 +109,7 @@ Eigen::VectorXd WatchIntegral::calculateVectorData(mesh::PtrData data)
 
   int                    dim    = data->getDimensions();
   const Eigen::VectorXd &values = data->values();
-  Eigen::VectorXd        sum  = Eigen::VectorXd::Zero(dim);
+  Eigen::VectorXd        sum    = Eigen::VectorXd::Zero(dim);
 
   if (_mesh->edges().empty() || (not _isScalingOn)) {
     for (const auto &vertex : _mesh->vertices()) {
@@ -146,7 +146,7 @@ double WatchIntegral::calculateScalarData(mesh::PtrData data)
 {
 
   const Eigen::VectorXd &values = data->values();
-  double                 sum  = 0.0;
+  double                 sum    = 0.0;
 
   if (_mesh->edges().empty() || not _isScalingOn) {
     for (const auto &vertex : _mesh->vertices()) {
