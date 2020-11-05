@@ -118,6 +118,7 @@ private:
   } _config;
 
   void addTypeSpecificSubtags(xml::XMLTag &tag);
+  void addCommonIQNSubtags(xml::XMLTag &tag);
 };
 } // namespace acceleration
 } // namespace precice
