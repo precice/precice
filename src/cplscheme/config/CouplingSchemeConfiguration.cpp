@@ -1,11 +1,11 @@
 #include "CouplingSchemeConfiguration.hpp"
 #include <algorithm>
-#include <list>
 #include <memory>
 #include <ostream>
 #include <stddef.h>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
@@ -87,47 +87,38 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
 {
   using namespace xml;
 
-  XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
-  std::list<XMLTag>  tags;
-  std::string        doc;
-
+  XMLTag::Occurrence  occ = XMLTag::OCCUR_ARBITRARY;
+  std::vector<XMLTag> tags;
   {
     XMLTag tag(*this, VALUE_SERIAL_EXPLICIT, occ, TAG);
-    doc = "Explicit coupling scheme according to conventional serial";
-    doc += " staggered procedure (CSS).";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Explicit coupling scheme according to conventional serial staggered procedure (CSS).");
     addTypespecifcSubtags(VALUE_SERIAL_EXPLICIT, tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PARALLEL_EXPLICIT, occ, TAG);
-    doc = "Explicit coupling scheme according to conventional parallel";
-    doc += " staggered procedure (CPS).";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Explicit coupling scheme according to conventional parallel staggered procedure (CPS).");
     addTypespecifcSubtags(VALUE_PARALLEL_EXPLICIT, tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_SERIAL_IMPLICIT, occ, TAG);
-    doc = "Implicit coupling scheme according to block Gauss-Seidel iterations (S-System).";
-    doc += " Improved implicit iterations are achieved by using a acceleration (recommended!).";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Implicit coupling scheme according to block Gauss-Seidel iterations (S-System). "
+                         "Improved implicit iterations are achieved by using a acceleration (recommended!).");
     addTypespecifcSubtags(VALUE_SERIAL_IMPLICIT, tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PARALLEL_IMPLICIT, occ, TAG);
-    doc = "Parallel Implicit coupling scheme according to block Jacobi iterations (V-System).";
-    doc += " Improved implicit iterations are achieved by using a acceleration (recommended!).";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Parallel Implicit coupling scheme according to block Jacobi iterations (V-System). "
+                         "Improved implicit iterations are achieved by using a acceleration (recommended!).");
     addTypespecifcSubtags(VALUE_PARALLEL_IMPLICIT, tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_MULTI, occ, TAG);
-    doc = "Multi coupling scheme according to block Jacobi iterations.";
-    doc += " Improved implicit iterations are achieved by using a acceleration (recommended!).";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Multi coupling scheme according to block Jacobi iterations. "
+                         "Improved implicit iterations are achieved by using a acceleration (recommended!).");
     addTypespecifcSubtags(VALUE_MULTI, tag);
     tags.push_back(tag);
   }
@@ -455,20 +446,28 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
     xml::XMLTag &      tag)
 {
   using namespace xml;
-  XMLTag               tagMaxTime(*this, TAG_MAX_TIME, XMLTag::OCCUR_NOT_OR_ONCE);
+  XMLTag tagMaxTime(*this, TAG_MAX_TIME, XMLTag::OCCUR_NOT_OR_ONCE);
+  tagMaxTime.setDocumentation("Defined the end of the simulation as total time.");
+
   XMLAttribute<double> attrValueMaxTime(ATTR_VALUE);
+  attrValueMaxTime.setDocumentation("The value of the maximum simulation time.");
   tagMaxTime.addAttribute(attrValueMaxTime);
   tag.addSubtag(tagMaxTime);
 
-  XMLTag            tagMaxTimeWindows(*this, TAG_MAX_TIME_WINDOWS, XMLTag::OCCUR_NOT_OR_ONCE);
+  XMLTag tagMaxTimeWindows(*this, TAG_MAX_TIME_WINDOWS, XMLTag::OCCUR_NOT_OR_ONCE);
+  tagMaxTimeWindows.setDocumentation("Defined the end of the simulation as a total count of time windows.");
   XMLAttribute<int> attrValueMaxTimeWindows(ATTR_VALUE);
+  attrValueMaxTimeWindows.setDocumentation("The maximum count of time windows.");
   tagMaxTimeWindows.addAttribute(attrValueMaxTimeWindows);
   tag.addSubtag(tagMaxTimeWindows);
 
   XMLTag tagTimeWindowSize(*this, TAG_TIME_WINDOW_SIZE, XMLTag::OCCUR_ONCE);
-  auto   attrValueTimeWindowSize = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE);
+  tagTimeWindowSize.setDocumentation("Defines the size of the time window.");
+  auto attrValueTimeWindowSize = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE)
+                                     .setDocumentation("The maximum time window size.");
   tagTimeWindowSize.addAttribute(attrValueTimeWindowSize);
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
+  attrValidDigits.setDocumentation(R"(Precision to use when checking for end of time windows used this many digits. \\(\phi = 10^{-validDigits}\\))");
   tagTimeWindowSize.addAttribute(attrValidDigits);
   std::vector<std::string> allowedMethods;
   if (type == VALUE_SERIAL_EXPLICIT || type == VALUE_SERIAL_IMPLICIT) {
@@ -477,7 +476,9 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   } else {
     allowedMethods = {VALUE_FIXED};
   }
-  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED).setOptions(allowedMethods);
+  auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
+                        .setOptions(allowedMethods)
+                        .setDocumentation("The method used to determine the time window size. Use `fixed` to fix the time window size for the participants.");
   tagTimeWindowSize.addAttribute(attrMethod);
   tag.addSubtag(tagTimeWindowSize);
 }
@@ -486,10 +487,13 @@ void CouplingSchemeConfiguration::addTagParticipants(
     xml::XMLTag &tag)
 {
   using namespace xml;
-  XMLTag                    tagParticipants(*this, TAG_PARTICIPANTS, XMLTag::OCCUR_ONCE);
+  XMLTag tagParticipants(*this, TAG_PARTICIPANTS, XMLTag::OCCUR_ONCE);
+  tagParticipants.setDocumentation("Defines the participants of the coupling scheme.");
   XMLAttribute<std::string> attrFirst(ATTR_FIRST);
+  attrFirst.setDocumentation("First participant to run the solver.");
   tagParticipants.addAttribute(attrFirst);
   XMLAttribute<std::string> attrSecond(ATTR_SECOND);
+  attrSecond.setDocumentation("Second participant to run the solver.");
   tagParticipants.addAttribute(attrSecond);
   tag.addSubtag(tagParticipants);
 }
@@ -500,8 +504,10 @@ void CouplingSchemeConfiguration::addTagParticipant(
   using namespace xml;
   XMLTag                    tagParticipant(*this, TAG_PARTICIPANT, XMLTag::OCCUR_ONCE_OR_MORE);
   XMLAttribute<std::string> attrName(ATTR_NAME);
+  attrName.setDocumentation("Name of the participant.");
   tagParticipant.addAttribute(attrName);
   XMLAttribute<bool> attrControl(ATTR_CONTROL, false);
+  attrControl.setDocumentation("Does this participant control the coupling?");
   tagParticipant.addAttribute(attrControl);
   tag.addSubtag(tagParticipant);
 }
@@ -510,16 +516,18 @@ void CouplingSchemeConfiguration::addTagExchange(
     xml::XMLTag &tag)
 {
   using namespace xml;
-  XMLTag                    tagExchange(*this, TAG_EXCHANGE, XMLTag::OCCUR_ONCE_OR_MORE);
-  XMLAttribute<std::string> attrData(ATTR_DATA);
+  XMLTag tagExchange(*this, TAG_EXCHANGE, XMLTag::OCCUR_ONCE_OR_MORE);
+  tagExchange.setDocumentation("Defines the flow of data between meshes of participants.");
+
+  auto attrData = XMLAttribute<std::string>(ATTR_DATA).setDocumentation("The data to exchange.");
   tagExchange.addAttribute(attrData);
-  XMLAttribute<std::string> attrMesh(ATTR_MESH);
+  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH).setDocumentation("The mesh which uses the data.");
   tagExchange.addAttribute(attrMesh);
-  XMLAttribute<std::string> participantFrom(ATTR_FROM);
+  auto participantFrom = XMLAttribute<std::string>(ATTR_FROM).setDocumentation("The participant sending the data.");
   tagExchange.addAttribute(participantFrom);
-  XMLAttribute<std::string> participantTo(ATTR_TO);
+  auto participantTo = XMLAttribute<std::string>(ATTR_TO).setDocumentation("The participant receiving the data.");
   tagExchange.addAttribute(participantTo);
-  XMLAttribute<bool> attrInitialize(ATTR_INITIALIZE, false);
+  auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initializeData?");
   tagExchange.addAttribute(attrInitialize);
   tag.addSubtag(tagExchange);
 }
@@ -529,8 +537,12 @@ void CouplingSchemeConfiguration::addTagAbsoluteConvergenceMeasure(
 {
   using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_ABS_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
+  tagConvergenceMeasure.setDocumentation(
+      "Absolute convergence criterion based on the two-norm difference of data values between iterations.\n"
+      "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert_2 < \\text{limit}\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
+  attrLimit.setDocumentation("Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).");
   tagConvergenceMeasure.addAttribute(attrLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }
@@ -541,8 +553,12 @@ void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(
   using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_RES_REL_CONV_MEASURE,
                                XMLTag::OCCUR_ARBITRARY);
+  tagConvergenceMeasure.setDocumentation(
+      "Residual relative convergence criterion based on the relative two-norm differences of data values between iterations.\n"
+      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^{k-1}) - x^{k-1} \\right\\rVert_2} < \\text{limit}\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
+  attrLimit.setDocumentation("Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).");
   tagConvergenceMeasure.addAttribute(attrLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }
@@ -552,8 +568,12 @@ void CouplingSchemeConfiguration::addTagRelativeConvergenceMeasure(
 {
   using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
+  tagConvergenceMeasure.setDocumentation(
+      "Relative convergence criterion based on the relative two-norm difference of data values between iterations.\n"
+      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^k) \\right\\rVert_2} < \\text{limit} \\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
+  attrLimit.setDocumentation(R"(Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).)");
   tagConvergenceMeasure.addAttribute(attrLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }
@@ -563,8 +583,10 @@ void CouplingSchemeConfiguration::addTagMinIterationConvergenceMeasure(
 {
   xml::XMLTag tagMinIterationConvMeasure(*this,
                                          TAG_MIN_ITER_CONV_MEASURE, xml::XMLTag::OCCUR_ARBITRARY);
+  tagMinIterationConvMeasure.setDocumentation("Convergence criterion used to ensure a miminimal amount of iterations. Specifying a mesh and data is required for technical reasons and does not influence the measure.");
   addBaseAttributesTagConvergenceMeasure(tagMinIterationConvMeasure);
   xml::XMLAttribute<int> attrMinIterations(ATTR_MIN_ITERATIONS);
+  attrMinIterations.setDocumentation("The minimal amount of iterations.");
   tagMinIterationConvMeasure.addAttribute(attrMinIterations);
   tag.addSubtag(tagMinIterationConvMeasure);
 }
@@ -591,8 +613,10 @@ void CouplingSchemeConfiguration::addTagMaxIterations(
     xml::XMLTag &tag)
 {
   using namespace xml;
-  XMLTag            tagMaxIterations(*this, TAG_MAX_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
+  XMLTag tagMaxIterations(*this, TAG_MAX_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
+  tagMaxIterations.setDocumentation("Allows to specify a maximum amount of iterations per time window.");
   XMLAttribute<int> attrValue(ATTR_VALUE);
+  attrValue.setDocumentation("The maximum value of iterations.");
   tagMaxIterations.addAttribute(attrValue);
   tag.addSubtag(tagMaxIterations);
 }
@@ -603,6 +627,7 @@ void CouplingSchemeConfiguration::addTagExtrapolation(
   using namespace xml;
   XMLTag            tagExtrapolation(*this, TAG_EXTRAPOLATION, XMLTag::OCCUR_NOT_OR_ONCE);
   XMLAttribute<int> attrValue(ATTR_VALUE);
+  attrValue.setDocumentation("The extrapolation order to use.");
   tagExtrapolation.addAttribute(attrValue);
   tagExtrapolation.setDocumentation("Sets order of predictor of interface values for first participant.");
   tag.addSubtag(tagExtrapolation);

@@ -7,13 +7,6 @@
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 
-// Forward declaration to friend the boost test struct
-namespace CplSchemeTests {
-namespace SerialImplicitCouplingSchemeTests {
-struct testExtrapolateData;
-}
-} // namespace CplSchemeTests
-
 namespace precice {
 namespace cplscheme {
 
@@ -52,8 +45,6 @@ public:
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
       int                           maxIterations = -1);
-
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
 
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
