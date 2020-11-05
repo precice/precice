@@ -54,14 +54,14 @@ public:
    */
   void requestConnection(
       const std::string &acceptorName,
-      const std::string &requesterName);
+      const std::string &requesterName) override;
   /**
    *  This method has not been implemented yet.
    *  @todo: Ideally this should not be here
    */
   virtual void acceptPreConnection(
       std::string const &acceptorName,
-      std::string const &requesterName);
+      std::string const &requesterName) override;
 
   /**
    *  This method has not been implemented yet.
@@ -69,7 +69,8 @@ public:
    */
   virtual void requestPreConnection(
       std::string const &acceptorName,
-      std::string const &requesterName);
+      std::string const &requesterName) override;
+
 
   /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
   void completeSlavesConnection() override;
