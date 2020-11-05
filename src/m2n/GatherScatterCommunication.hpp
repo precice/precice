@@ -71,7 +71,6 @@ public:
       std::string const &acceptorName,
       std::string const &requesterName) override;
 
-
   /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
   void completeSlavesConnection() override;
 
