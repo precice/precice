@@ -105,11 +105,10 @@ ParticipantConfiguration::ParticipantConfiguration(
   tag.addSubtag(tagWatchPoint);
 
   auto attrScaleWitConn = XMLAttribute<bool>(ATTR_SCALE_WITH_CONN)
-                              .setDocumentation("Whether vertex data is to be scaled with the area which is "
-                                                "calculated based on connectivity information of mesh or not. If it is true, "
-                                                "data is scaled with area; lengths of the edges in case of edge connectivity, "
-                                                "areas of the triangles in case of face connectivity. If false, vertex data is "
-                                                "directly is summed up.");
+                              .setDocumentation("Whether the vertex data is scaled with the element area before "
+                                                "summing up or not. In 2D, vertex data is scaled with the average length of "
+                                                "neighboring edges. In 3D, vertex data is scaled with the average surface of "
+                                                "neighboring triangles. If false, vertex data is directly summed up.");
   XMLTag tagWatchIntegral(*this, TAG_WATCH_INTEGRAL, XMLTag::OCCUR_ARBITRARY);
   doc = "A watch integral can be used to follow the transient change of integral data ";
   doc += "and surface area for a given coupling mesh.";
