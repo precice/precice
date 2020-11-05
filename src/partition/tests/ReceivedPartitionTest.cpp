@@ -631,8 +631,8 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
         BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == false);
         BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == false);
         BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices()[3].isOwner() == true);
         BOOST_TEST(pSolidzMesh->vertices()[4].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[5].isOwner() == true);
         BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 1);
         BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 2);
         BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 3);
