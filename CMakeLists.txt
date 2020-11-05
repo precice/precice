@@ -287,7 +287,6 @@ target_link_libraries(precice PRIVATE
   )
 if(UNIX OR APPLE OR MINGW)
   target_compile_definitions(precice PRIVATE _GNU_SOURCE)
-  target_compile_definitions(precice PRIVATE MACOS)
   target_link_libraries(precice PRIVATE ${CMAKE_DL_LIBS})
 endif()
 
