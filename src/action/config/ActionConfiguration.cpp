@@ -50,15 +50,14 @@ ActionConfiguration::ActionConfiguration(
       _meshConfig(meshConfig)
 {
   using namespace xml;
-  std::string doc;
-  XMLTag      tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
+  XMLTag tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
   tagSourceData.setDocumentation("Single data to read from. ");
   XMLTag tagMultipleSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
   tagMultipleSourceData.setDocumentation("Multiple data to read from.");
   XMLTag tagTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_ONCE);
   tagTargetData.setDocumentation("Data to read from and write to.");
 
-  auto attrName = XMLAttribute<std::string>(ATTR_NAME).setDocumentation("Name of data.");
+  auto attrName = XMLAttribute<std::string>(ATTR_NAME).setDocumentation("Name of the data.");
   tagSourceData.addAttribute(attrName);
   tagMultipleSourceData.addAttribute(attrName);
   tagTargetData.addAttribute(attrName);
@@ -67,50 +66,43 @@ ActionConfiguration::ActionConfiguration(
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   {
     XMLTag tag(*this, NAME_MULTIPLY_BY_AREA, occ, TAG);
-    doc = "Multiplies data values with mesh area associated to vertex holding the value.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Multiplies data values with mesh area associated to vertex holding the value.");
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, NAME_DIVIDE_BY_AREA, occ, TAG);
-    doc = "Divides data values by mesh area associated to vertex holding the value.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Divides data values by mesh area associated to vertex holding the value.");
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, NAME_SCALE_BY_COMPUTED_DT_RATIO, occ, TAG);
-    doc = "Multiplies source data values by ratio of full dt / last computed dt,";
-    doc += " and writes the result into target data.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Multiplies source data values by ratio of full dt / last computed dt,"
+                         " and writes the result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, NAME_SCALE_BY_COMPUTED_DT_PART_RATIO, occ, TAG);
-    doc = "Multiplies source data values by ratio of full dt / computed dt part,";
-    doc += " and writes the result into target data.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Multiplies source data values by ratio of full dt / computed dt part,"
+                         " and writes the result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, NAME_SCALE_BY_DT, occ, TAG);
-    doc = "Multiplies source data values by last computed dt, and writes the ";
-    doc += "result into target data.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Multiplies source data values by last computed dt, and writes the "
+                         "result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, NAME_SUMMATION, occ, TAG);
-    doc = "Sums up multiple source data values and writes the result into ";
-    doc += "target data.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Sums up multiple source data values and writes the result into target data.");
     tag.addSubtag(tagMultipleSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
@@ -128,40 +120,39 @@ ActionConfiguration::ActionConfiguration(
   }
   {
     XMLTag tag(*this, NAME_PYTHON, occ, TAG);
-    doc = "Calls Python script to execute action.";
-    doc += " See preCICE file \"src/action/PythonAction.py\" for an overview.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Calls Python script to execute action."
+                         " See preCICE file \"src/action/PythonAction.py\" for an overview.");
+
     XMLTag tagModulePath(*this, TAG_MODULE_PATH, XMLTag::OCCUR_NOT_OR_ONCE);
-    doc = "Directory path to Python module, i.e. script file.";
-    doc = " If it doesn't occur, the current path is used";
-    tagModulePath.setDocumentation(doc);
-    XMLTag tagModule(*this, TAG_MODULE_NAME, XMLTag::OCCUR_ONCE);
-    doc = "Name of Python module, i.e. Python script file without file ending. ";
-    doc += "The module name has to differ from existing (library) modules, ";
-    doc += "otherwise, the existing module will be loaded instead of the user script.";
-    tagModule.setDocumentation(doc);
-    tagModulePath.addAttribute(makeXMLAttribute(ATTR_NAME, ""));
-    tagModule.addAttribute(attrName);
+    tagModulePath.setDocumentation("Directory path to Python module, i.e. script file."
+                                   " If it doesn't occur, the current path is used");
+    tagModulePath.addAttribute(makeXMLAttribute(ATTR_NAME, "").setDocumentation("The path to the directory of the module."));
     tag.addSubtag(tagModulePath);
+
+    XMLTag tagModule(*this, TAG_MODULE_NAME, XMLTag::OCCUR_ONCE);
+    tagModule.setDocumentation("Name of Python module, i.e. Python script file without file ending. "
+                               "The module name has to differ from existing (library) modules, "
+                               "otherwise, the existing module will be loaded instead of the user script.");
+    tagModule.addAttribute(attrName);
     tag.addSubtag(tagModule);
+
     XMLTag tagOptionalSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_NOT_OR_ONCE);
-    doc = "Source data to be read is handed to the Python module.";
-    doc += " Can be omitted, if only a target data is needed.";
-    tagOptionalSourceData.setDocumentation(doc);
-    XMLTag tagOptionalTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_NOT_OR_ONCE);
-    doc = "Target data to be read and written to is handed to the Python module.";
-    doc = " Can be omitted, if only source data is needed.";
-    tagOptionalTargetData.setDocumentation(doc);
+    tagOptionalSourceData.setDocumentation("Source data to be read is handed to the Python module."
+                                           " Can be omitted, if only a target data is needed.");
     tagOptionalSourceData.addAttribute(attrName);
-    tagOptionalTargetData.addAttribute(attrName);
     tag.addSubtag(tagOptionalSourceData);
+
+    XMLTag tagOptionalTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_NOT_OR_ONCE);
+    tagOptionalTargetData.setDocumentation("Target data to be read and written to is handed to the Python module."
+                                           " Can be omitted, if only source data is needed.");
+    tagOptionalTargetData.addAttribute(attrName);
     tag.addSubtag(tagOptionalTargetData);
+
     tags.push_back(tag);
   }
 
   auto attrTiming = XMLAttribute<std::string>(ATTR_TIMING)
-                        .setDocumentation(
-                            "Determines when (relative to advancing the coupling scheme) the action is executed.")
+                        .setDocumentation("Determines when (relative to advancing the coupling scheme) the action is executed.")
                         .setOptions({VALUE_REGULAR_PRIOR, VALUE_REGULAR_POST,
                                      VALUE_ON_EXCHANGE_PRIOR, VALUE_ON_EXCHANGE_POST,
                                      VALUE_ON_TIME_WINDOW_COMPLETE_POST, WRITE_MAPPING_PRIOR, WRITE_MAPPING_POST,
