@@ -46,9 +46,8 @@ WatchIntegral::WatchIntegral(
     _txtWriter.addData("SurfaceArea", io::TXTTableWriter::DOUBLE);
   }
 
-  if ((not _isScalingOn)) {
-    PRECICE_WARN("Mesh " << _mesh->getName() << " contains connectivity information, however, watch-integral "
-                                                "is configured without area scaling. Result will be the summation of the vertex data.");
+  if ((not _isScalingOn) and (_mesh->edges().empty() or _mesh->triangles().empty())) {
+    PRECICE_WARN("Watch-integral is configured with scaling option on; however, mesh " << _mesh->getName() << " does not contain connectivity information. Therefore, the integral will be calculated without scaling.");
   }
 }
 
@@ -110,13 +109,13 @@ Eigen::VectorXd WatchIntegral::calculateVectorData(mesh::PtrData data)
 
   int                    dim    = data->getDimensions();
   const Eigen::VectorXd &values = data->values();
-  Eigen::VectorXd        value  = Eigen::VectorXd::Zero(dim);
+  Eigen::VectorXd        sum  = Eigen::VectorXd::Zero(dim);
 
   if (_mesh->edges().empty() || (not _isScalingOn)) {
     for (const auto &vertex : _mesh->vertices()) {
       int offset = vertex.getID() * dim;
       for (int i = 0; i < dim; i++) {
-        value[i] += values[offset + i];
+        sum[i] += values[offset + i];
       }
     }
   } else { // Connectivity information is given
@@ -129,29 +128,29 @@ Eigen::VectorXd WatchIntegral::calculateVectorData(mesh::PtrData data)
         const auto &vertex2 = edge.vertex(1);
 
         for (int i = 0; i < dim; i++) {
-          value[i] += 0.5 * (values[vertex1.getID() * dim + i] + values[vertex2.getID() * dim + i]) * edge.getLength();
+          sum[i] += 0.5 * (values[vertex1.getID() * dim + i] + values[vertex2.getID() * dim + i]) * edge.getLength();
         }
       }
     } else { // For 3D, connectivity elements are faces, calculate the average and multply by face area
       for (const auto &face : _mesh->triangles()) {
         for (int i = 0; i < dim; ++i) {
-          value[i] += face.getArea() * (values[face.vertex(0).getID() * dim + i] + values[face.vertex(1).getID() * dim + i] + values[face.vertex(2).getID() * dim + i]) / 3.0;
+          sum[i] += face.getArea() * (values[face.vertex(0).getID() * dim + i] + values[face.vertex(1).getID() * dim + i] + values[face.vertex(2).getID() * dim + i]) / 3.0;
         }
       }
     }
   }
-  return std::move(value);
+  return std::move(sum);
 }
 
 double WatchIntegral::calculateScalarData(mesh::PtrData data)
 {
 
   const Eigen::VectorXd &values = data->values();
-  double                 value  = 0.0;
+  double                 sum  = 0.0;
 
   if (_mesh->edges().empty() || not _isScalingOn) {
     for (const auto &vertex : _mesh->vertices()) {
-      value += values[vertex.getID()];
+      sum += values[vertex.getID()];
     }
   } else { // Connectivity information is given
     // For 2D, connectivity elements are edges
@@ -162,16 +161,16 @@ double WatchIntegral::calculateScalarData(mesh::PtrData data)
         const auto &vertex1 = edge.vertex(0);
         const auto &vertex2 = edge.vertex(1);
 
-        value += 0.5 * (values[vertex1.getID()] + values[vertex2.getID()]) * edge.getLength();
+        sum += 0.5 * (values[vertex1.getID()] + values[vertex2.getID()]) * edge.getLength();
       }
     } else { // For 3D, connectivity elements are faces, calculate the average and multply by face area
       for (const auto &face : _mesh->triangles()) {
         double localValue = values[face.vertex(0).getID()] + values[face.vertex(1).getID()] + values[face.vertex(2).getID()];
-        value += (localValue * face.getArea()) / 3.0;
+        sum += (localValue * face.getArea()) / 3.0;
       }
     }
   }
-  return value;
+  return sum;
 }
 
 double WatchIntegral::calculateSurfaceArea()
