@@ -111,8 +111,8 @@ ParticipantConfiguration::ParticipantConfiguration(
                                                 "areas of the triangles in case of face connectivity. If false, vertex data is "
                                                 "directly is summed up.");
   XMLTag tagWatchIntegral(*this, TAG_WATCH_INTEGRAL, XMLTag::OCCUR_ARBITRARY);
-  doc = "A watch integral can be used to follow the transient changes of data ";
-  doc += "and surface area at a given interface.";
+  doc = "A watch integral can be used to follow the transient change of integral data ";
+  doc += "and surface area for a given coupling mesh.";
   tagWatchIntegral.setDocumentation(doc);
   doc = "Name of the watch integral. Is taken in combination with the participant ";
   doc += "name to construct the filename the watch integral data is written to.";
