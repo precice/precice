@@ -10,4 +10,5 @@ ARG version
 RUN echo "$version" | grep "v[0-9]\+\.[0-9]\+\.[0-9]\+" > /dev/null # The version must follow the format vX.Y.Z
 RUN wget -q -O libprecice.deb https://github.com/precice/precice/releases/download/${version}/libprecice`echo ${version} | sed 's/v\([0-9]\+\)\.\([0-9]\+\.[0-9]\+\)/\1_\1.\2/'`_focal.deb && \
     ( dpkg -i libprecice.deb || apt-get install -fyy ) && \
-    rm libprecice.deb
+    rm libprecice.deb && \
+    binprecice xml > /dev/null # Make sure the installation is functional
