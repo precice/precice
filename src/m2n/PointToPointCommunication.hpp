@@ -66,7 +66,7 @@ public:
    * @param[in] acceptorName  Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void acceptPreConnection(std::string const &acceptorName,
+  void acceptPreConnection(std::string const &acceptorName,
                                    std::string const &requesterName) override;
 
   /**
@@ -76,7 +76,7 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  virtual void requestPreConnection(std::string const &acceptorName,
+  void requestPreConnection(std::string const &acceptorName,
                                     std::string const &requesterName) override;
 
   /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
