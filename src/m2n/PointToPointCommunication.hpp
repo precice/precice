@@ -67,7 +67,7 @@ public:
    * @param[in] requesterName Name of remote participant to connect to.
    */
   void acceptPreConnection(std::string const &acceptorName,
-                                   std::string const &requesterName) override;
+                           std::string const &requesterName) override;
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -77,7 +77,7 @@ public:
    * @param[in] requesterName Name of calling participant.
    */
   void requestPreConnection(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
+                            std::string const &requesterName) override;
 
   /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
   void completeSlavesConnection() override;
