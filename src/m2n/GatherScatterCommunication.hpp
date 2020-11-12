@@ -59,7 +59,7 @@ public:
    *  This method has not been implemented yet.
    *  @todo: Ideally this should not be here
    */
-  virtual void acceptPreConnection(
+  void acceptPreConnection(
       std::string const &acceptorName,
       std::string const &requesterName) override;
 
@@ -67,7 +67,7 @@ public:
    *  This method has not been implemented yet.
    *  @todo: Ideally this should not be here
    */
-  virtual void requestPreConnection(
+  void requestPreConnection(
       std::string const &acceptorName,
       std::string const &requesterName) override;
 
