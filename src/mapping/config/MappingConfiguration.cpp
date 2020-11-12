@@ -392,21 +392,13 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
 {
   for (const ConfiguredMapping &configuredMapping : _mappings) {
-    bool sameToMesh = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
-
-    if (sameToMesh) {
-      for (const mesh::PtrData data : mapping.fromMesh->data()) {
-        for (const mesh::PtrData configuredData : configuredMapping.fromMesh->data()) {
-          bool sameToData = data->getName() == configuredData->getName();
-          PRECICE_CHECK(!sameToData, "There cannot be two mappings to mesh \""
-                                         << mapping.toMesh->getName() << "\" "
-                                         << "if the meshes from which is mapped contain duplicated data fields. "
-                                         << "Here, both from meshes contain data \"" << data->getName() << "\". "
-                                         << "The mapping is not well defined. Which data \"" << data->getName() << "\" "
-                                         << "should be mapped to mesh \"" << mapping.toMesh->getName() << "\"?");
-        }
-      }
-    }
+    bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
+    bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
+    bool sameMapping  = sameToMesh && sameFromMesh;
+    PRECICE_CHECK(!sameMapping, "There cannot be two mappings from mesh \""
+                                    << mapping.fromMesh->getName() << "\" to mesh \""
+                                    << mapping.toMesh->getName() << "\". "
+                                    << "Please remove one of the duplicated meshes. ");
   }
 }
 

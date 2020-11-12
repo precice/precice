@@ -4,19 +4,23 @@
     <data:scalar name="DisplacementSum" />
     <data:scalar name="DisplacementTop" />
     <data:scalar name="DisplacementBottom" />
+    <data:scalar name="Pressure" />
 
     <mesh name="MeshB">
       <use-data name="DisplacementTop" />
       <use-data name="DisplacementBottom" />
       <use-data name="DisplacementSum" />
+      <use-data name="Pressure" />
     </mesh>
 
     <mesh name="MeshATop">
       <use-data name="DisplacementTop" />
+      <use-data name="Pressure" />
     </mesh>
 
     <mesh name="MeshABottom">
       <use-data name="DisplacementBottom" />
+      <use-data name="Pressure" />
     </mesh>
 
     <participant name="A">
