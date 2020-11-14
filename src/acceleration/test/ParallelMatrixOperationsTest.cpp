@@ -97,13 +97,13 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
   }
 
   // ------ test Allreduce/ Reduce ---------------------------
-  std::vector<double> aa = {a, a};
+  std::vector<double> aa   = {a, a};
   std::vector<double> res2 = {0, 0};
   std::vector<double> res3 = {0, 0};
-  
-  double  res1 = 0;
-  int iaa   = (int) a;
-  int ires1 = 0, ires2 = 0;
+
+  double res1  = 0;
+  int    iaa   = (int) a;
+  int    ires1 = 0, ires2 = 0;
 
   utils::MasterSlave::allreduceSum(a, res1, 1);
   utils::MasterSlave::allreduceSum(iaa, ires2, 1);

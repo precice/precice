@@ -297,11 +297,11 @@ BOOST_AUTO_TEST_CASE(Demonstration)
 BOOST_AUTO_TEST_CASE(MeshEquality)
 {
   PRECICE_TEST(1_rank);
-  int   dim = 3;
-  Mesh  mesh1("Mesh1", dim, false, testing::nextMeshID());
-  Mesh  mesh1flipped("Mesh1flipped", dim, true, testing::nextMeshID());
-  Mesh  mesh2("Mesh2", dim, false, testing::nextMeshID());
-  std::array<Mesh*, 3> meshes = {&mesh1, &mesh1flipped, &mesh2};
+  int                   dim = 3;
+  Mesh                  mesh1("Mesh1", dim, false, testing::nextMeshID());
+  Mesh                  mesh1flipped("Mesh1flipped", dim, true, testing::nextMeshID());
+  Mesh                  mesh2("Mesh2", dim, false, testing::nextMeshID());
+  std::array<Mesh *, 3> meshes = {&mesh1, &mesh1flipped, &mesh2};
   for (auto ptr : meshes) {
     auto &          mesh = *ptr;
     Eigen::VectorXd coords0(dim);
