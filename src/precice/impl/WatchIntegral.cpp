@@ -41,10 +41,6 @@ WatchIntegral::WatchIntegral(
       }
     }
   }
-
-  if (_isScalingOn and (_mesh->edges().empty())) {
-    PRECICE_WARN("Watch-integral is configured with scaling option on; however, mesh " << _mesh->getName() << " does not contain connectivity information. Therefore, the integral will be calculated without scaling.");
-  }
 }
 
 void WatchIntegral::initialize()
@@ -52,6 +48,9 @@ void WatchIntegral::initialize()
   // Do not add surface area column if there is no connectivity
   if ((not utils::MasterSlave::isSlave()) and (not _mesh->edges().empty())) {
     _txtWriter.addData("SurfaceArea", io::TXTTableWriter::DOUBLE);
+  }
+  if (_isScalingOn and (_mesh->edges().empty())) {
+    PRECICE_WARN("Watch-integral is configured with scaling option on; however, mesh " << _mesh->getName() << " does not contain connectivity information. Therefore, the integral will be calculated without scaling.");
   }
 }
 
