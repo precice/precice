@@ -46,7 +46,7 @@ WatchIntegral::WatchIntegral(
     _txtWriter.addData("SurfaceArea", io::TXTTableWriter::DOUBLE);
   }
 
-  if ((not _isScalingOn) and (_mesh->edges().empty())) {
+  if (_isScalingOn and (_mesh->edges().empty())) {
     PRECICE_WARN("Watch-integral is configured with scaling option on; however, mesh " << _mesh->getName() << " does not contain connectivity information. Therefore, the integral will be calculated without scaling.");
   }
 }
