@@ -42,18 +42,23 @@ WatchIntegral::WatchIntegral(
     }
   }
 
-  if (not utils::MasterSlave::isSlave()) {
-    _txtWriter.addData("SurfaceArea", io::TXTTableWriter::DOUBLE);
-  }
-
   if (_isScalingOn and (_mesh->edges().empty())) {
     PRECICE_WARN("Watch-integral is configured with scaling option on; however, mesh " << _mesh->getName() << " does not contain connectivity information. Therefore, the integral will be calculated without scaling.");
+  }
+}
+
+void WatchIntegral::initialize()
+{
+  // Do not add surface area column if there is no connectivity
+  if ((not utils::MasterSlave::isSlave()) and (not _mesh->edges().empty())) {
+    _txtWriter.addData("SurfaceArea", io::TXTTableWriter::DOUBLE);
   }
 }
 
 void WatchIntegral::exportIntegralData(
     double time)
 {
+
   if (not utils::MasterSlave::isSlave()) {
     _txtWriter.writeData("Time", time);
   }
@@ -92,15 +97,24 @@ void WatchIntegral::exportIntegralData(
     }
   }
 
-  double surfaceArea = calculateSurfaceArea();
-  if (utils::MasterSlave::getSize() > 1) {
-    double surfaceAreaSum = 0.0;
-    utils::MasterSlave::reduceSum(&surfaceArea, &surfaceAreaSum, 1);
-    surfaceArea = surfaceAreaSum;
-  }
-
-  if (not utils::MasterSlave::isSlave()) {
-    _txtWriter.writeData("SurfaceArea", surfaceArea);
+  // Calculate surface area only if there is connectivity information
+  if (not _mesh->edges().empty()) {
+    double surfaceArea = calculateSurfaceArea();
+    if (utils::MasterSlave::getSize() > 1) {
+      double surfaceAreaSum = 0.0;
+      utils::MasterSlave::reduceSum(&surfaceArea, &surfaceAreaSum, 1);
+      surfaceArea = surfaceAreaSum;
+    }
+    if (not utils::MasterSlave::isSlave()) {
+      _txtWriter.writeData("SurfaceArea", surfaceArea);
+    }
+  } else {
+    // Empty partitions should also call reduceSum to prevent deadlock
+    if (utils::MasterSlave::getSize() > 1) {
+      double surfaceArea    = 0.0;
+      double surfaceAreaSum = 0.0;
+      utils::MasterSlave::reduceSum(&surfaceArea, &surfaceAreaSum, 1);
+    }
   }
 }
 
@@ -176,23 +190,16 @@ double WatchIntegral::calculateScalarData(mesh::PtrData data)
 double WatchIntegral::calculateSurfaceArea()
 {
 
+  PRECICE_ASSERT(not _mesh->edges().empty());
   double surfaceArea = 0.0;
-
-  // 3D and has face connectivity
-  if (not _mesh->triangles().empty()) {
+  if (_mesh->getDimensions() == 3) {
     for (const auto &face : _mesh->triangles()) {
       surfaceArea += face.getArea();
     }
-  }
-  // 2D and has edge connectivity
-  else if (not _mesh->edges().empty()) {
+  } else {
     for (const auto &edge : _mesh->edges()) {
       surfaceArea += edge.getLength();
     }
-  }
-  // No connectivity, dimension is not important
-  else {
-    surfaceArea += static_cast<double>(_mesh->vertices().size());
   }
   return surfaceArea;
 }

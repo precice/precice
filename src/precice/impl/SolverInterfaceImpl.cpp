@@ -286,6 +286,9 @@ double SolverInterfaceImpl::initialize()
   for (PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
     watchPoint->initialize();
   }
+  for (PtrWatchIntegral &watchIntegral : _accessor->watchIntegrals()) {
+    watchIntegral->initialize();
+  }
 
   // Initialize coupling state, overwrite these values for restart
   double time       = 0.0;

@@ -70,6 +70,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -85,14 +86,14 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
 
     watchIntegral.exportIntegralData(2.0);
   }
-  // File Format: Time  DoubleData  SurfaceArea
+  // File Format: Time  DoubleData
   BOOST_TEST_CONTEXT("Validating WatchIntegral ScalarData NoConnectivity")
   {
-    auto result   = readDoublesFromTXTFile(fileName, 3);
+    auto result   = readDoublesFromTXTFile(fileName, 2);
     auto expected = std::vector<double>{
-        0.0, 10.0, 4.0,
-        1.0, 14.0, 4.0,
-        2.0, 14.0, 4.0};
+        0.0, 10.0,
+        1.0, 14.0,
+        2.0, 14.0};
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
       BOOST_TEST_CONTEXT("entry index: " << i)
@@ -138,6 +139,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -157,14 +159,14 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
 
     watchIntegral.exportIntegralData(2.0);
   }
-  // File Format: Time  DoubleData0 DoubleData1  SurfaceArea
+  // File Format: Time  DoubleData0 DoubleData1
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData NoConnectivity")
   {
-    auto result   = readDoublesFromTXTFile(fileName, 4);
+    auto result   = readDoublesFromTXTFile(fileName, 3);
     auto expected = std::vector<double>{
-        0.0, 16.0, 20.0, 4.0,
-        1.0, 20.0, 24.0, 4.0,
-        2.0, 20.0, 24.0, 4.0};
+        0.0, 16.0, 20.0,
+        1.0, 20.0, 24.0,
+        2.0, 20.0, 24.0};
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
       BOOST_TEST_CONTEXT("entry index: " << i)
@@ -207,6 +209,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -271,6 +274,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityNoScale)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, false);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -338,6 +342,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -410,6 +415,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, false);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -487,6 +493,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -560,6 +567,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityNoScale)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, false);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -637,6 +645,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -718,6 +727,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, false);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -791,10 +801,11 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
   doubleValues(2) = 3.0;
   doubleValues(3) = 4.0;
 
-  std::string fileName("precice-WatchIntegralTest-meshChane-faceConnectivity.log");
+  std::string fileName("precice-WatchIntegralTest-meshChange-faceConnectivity.log");
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -873,6 +884,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -897,15 +909,15 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
 
     watchIntegral.exportIntegralData(2.0);
   }
-  // File Format: Time  DoubleData  SurfaceArea
+  // File Format: Time  DoubleData
   BOOST_TEST_CONTEXT("Validating WatchIntegral ScalarData NoConnectivity Parallel")
   {
     if (utils::MasterSlave::isMaster()) {
-      auto result   = readDoublesFromTXTFile(fileName, 3);
+      auto result   = readDoublesFromTXTFile(fileName, 2);
       auto expected = std::vector<double>{
-          0.0, 36.0, 8.0,
-          1.0, 44.0, 8.0,
-          2.0, 44.0, 8.0};
+          0.0, 36.0,
+          1.0, 44.0,
+          2.0, 44.0};
       BOOST_TEST(result.size() == expected.size());
       for (size_t i = 0; i < result.size(); ++i) {
         BOOST_TEST_CONTEXT("entry index: " << i)
@@ -973,6 +985,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -1005,15 +1018,15 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
 
     watchIntegral.exportIntegralData(2.0);
   }
-  // File Format: Time  DoubleData  SurfaceArea
+  // File Format: Time  DoubleData
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData NoConnectivity Parallel")
   {
     if (utils::MasterSlave::isMaster()) {
-      auto result   = readDoublesFromTXTFile(fileName, 4);
+      auto result   = readDoublesFromTXTFile(fileName, 3);
       auto expected = std::vector<double>{
-          0.0, 64.0, 72.0, 8.0,
-          1.0, 72.0, 80.0, 8.0,
-          2.0, 72.0, 80.0, 8.0};
+          0.0, 64.0, 72.0,
+          1.0, 72.0, 80.0,
+          2.0, 72.0, 80.0};
       BOOST_TEST(result.size() == expected.size());
       for (size_t i = 0; i < result.size(); ++i) {
         BOOST_TEST_CONTEXT("entry index: " << i)
@@ -1084,6 +1097,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -1198,6 +1212,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -1312,6 +1327,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);
@@ -1422,6 +1438,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
 
   {
     impl::WatchIntegral watchIntegral(mesh, fileName, true);
+    watchIntegral.initialize();
 
     // Write output
     watchIntegral.exportIntegralData(0.0);

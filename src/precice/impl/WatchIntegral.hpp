@@ -41,6 +41,9 @@ public:
   /// Writes one line with data of the integral over the mesh into the output file.
   void exportIntegralData(double time);
 
+  /// Adds surface area information based on mesh connectivity
+  void initialize();
+
 private:
   logging::Logger _log{"impl::WatchIntegral"};
 
