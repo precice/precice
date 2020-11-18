@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <solver-interface dimensions="2">
+    <data:scalar name="DataOne" />
+    <data:scalar name="DataTwo" />
+
+    <mesh name="MeshOne">
+      <use-data name="DataOne" />
+    </mesh>
+
+    <mesh name="MeshTwo">
+      <use-data name="DataOne" />
+      <use-data name="DataTwo" />
+    </mesh>
+
+    <participant name="SolverOne">
+      <use-mesh name="MeshOne" provide="yes" />
+      <use-mesh name="MeshTwo" from="SolverTwo" />
+      <mapping:nearest-projection
+        direction="write"
+        from="MeshOne"
+        to="MeshTwo"
+        constraint="conservative" />
+      <write-data name="DataOne" mesh="MeshOne" />
+    </participant>
+
+    <participant name="SolverTwo">
+      <use-mesh name="MeshTwo" provide="yes" />
+      <read-data name="DataTwo" mesh="MeshTwo" />
+      <watch-integral name="WatchIntegral" mesh="MeshTwo" scale-with-connectivity="yes" />
+      <watch-integral name="WatchIntegralNoScale" mesh="MeshTwo" scale-with-connectivity="no" />
+    </participant>
+
+    <m2n:sockets from="SolverOne" to="SolverTwo" />
+
+    <coupling-scheme:serial-explicit>
+      <participants first="SolverOne" second="SolverTwo" />
+      <max-time-windows value="3" />
+      <time-window-size value="1.0" />
+      <exchange data="DataOne" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+    </coupling-scheme:serial-explicit>
+  </solver-interface>
+</precice-configuration>

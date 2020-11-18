@@ -56,15 +56,22 @@ private:
     Eigen::VectorXd coordinates;
   };
 
+  struct WatchIntegralConfig {
+    std::string name;
+    std::string nameMesh;
+    bool        isScalingOn;
+  };
+
   mutable logging::Logger _log{"config::ParticipantConfiguration"};
 
-  const std::string TAG             = "participant";
-  const std::string TAG_WRITE       = "write-data";
-  const std::string TAG_READ        = "read-data";
-  const std::string TAG_DATA_ACTION = "data-action";
-  const std::string TAG_USE_MESH    = "use-mesh";
-  const std::string TAG_WATCH_POINT = "watch-point";
-  const std::string TAG_MASTER      = "master";
+  const std::string TAG                = "participant";
+  const std::string TAG_WRITE          = "write-data";
+  const std::string TAG_READ           = "read-data";
+  const std::string TAG_DATA_ACTION    = "data-action";
+  const std::string TAG_USE_MESH       = "use-mesh";
+  const std::string TAG_WATCH_INTEGRAL = "watch-integral";
+  const std::string TAG_WATCH_POINT    = "watch-point";
+  const std::string TAG_MASTER         = "master";
 
   const std::string ATTR_NAME               = "name";
   const std::string ATTR_SOURCE_DATA        = "source-data";
@@ -82,6 +89,7 @@ private:
   const std::string ATTR_CONTEXT            = "context";
   const std::string ATTR_NETWORK            = "network";
   const std::string ATTR_EXCHANGE_DIRECTORY = "exchange-directory";
+  const std::string ATTR_SCALE_WITH_CONN    = "scale-with-connectivity";
 
   const std::string VALUE_FILTER_ON_SLAVES = "on-slaves";
   const std::string VALUE_FILTER_ON_MASTER = "on-master";
@@ -102,6 +110,8 @@ private:
   std::vector<impl::PtrParticipant> _participants;
 
   std::vector<WatchPointConfig> _watchPointConfigs;
+
+  std::vector<WatchIntegralConfig> _watchIntegralConfigs;
 
   partition::ReceivedPartition::GeometricFilter getGeoFilter(const std::string &geoFilter) const;
 
