@@ -123,7 +123,11 @@ public:
 
   void addWatchPoint(const PtrWatchPoint &watchPoint);
 
+  void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
+
   std::vector<PtrWatchPoint> &watchPoints();
+
+  std::vector<PtrWatchIntegral> &watchIntegrals();
 
   /// Adds a mesh to be used by the participant.
   void useMesh(
@@ -163,6 +167,8 @@ private:
   std::string _name;
 
   std::vector<PtrWatchPoint> _watchPoints;
+
+  std::vector<PtrWatchIntegral> _watchIntegrals;
 
   /// Export contexts to export meshes, data, and more.
   std::vector<io::ExportContext> _exportContexts;
