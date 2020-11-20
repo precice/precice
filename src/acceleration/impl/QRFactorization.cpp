@@ -318,8 +318,6 @@ int QRFactorization::orthogonalize(
 
   if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
     PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
-  } else {
-    PRECICE_ASSERT(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            null        = false;
@@ -436,9 +434,6 @@ int QRFactorization::orthogonalize_stable(
   // serial case
   if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
     PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
-    // master-slave case
-  } else {
-    PRECICE_ASSERT(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            restart     = false;

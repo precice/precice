@@ -391,12 +391,126 @@ void runTestQN(std::string const &config, TestContext const &context)
   BOOST_TEST(iterations >= 5);
 }
 
+/// tests for different QN settings if correct fixed point is reached mesh with empty partition
+void runTestQNEmptyPartition(std::string const &config, TestContext const &context)
+{
+  std::string meshName, writeDataName, readDataName;
+
+  if (context.isNamed("SolverOne")) {
+    meshName      = "MeshOne";
+    writeDataName = "Data1";
+    readDataName  = "Data2";
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    meshName      = "MeshTwo";
+    writeDataName = "Data2";
+    readDataName  = "Data1";
+  }
+
+  SolverInterface interface(context.name, config, context.rank, context.size);
+  int             meshID      = interface.getMeshID(meshName);
+  int             writeDataID = interface.getDataID(writeDataName, meshID);
+  int             readDataID  = interface.getDataID(readDataName, meshID);
+
+  int vertexIDs[4];
+
+  // meshes for rank 0 and rank 1, we use matching meshes for both participants
+  double positions0[8] = {1.0, 0.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.5};
+
+  if (context.isNamed("SolverOne")) {
+    // All mesh is on Master
+    if (context.isMaster()) {
+      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
+    }
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    // All mesh is on Slave
+    if (not context.isMaster()) {
+      interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
+    }
+  }
+
+  interface.initialize();
+  double inValues[4]  = {0.0, 0.0, 0.0, 0.0};
+  double outValues[4] = {0.0, 0.0, 0.0, 0.0};
+
+  int iterations = 0;
+
+  while (interface.isCouplingOngoing()) {
+    if (interface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+      interface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+    }
+
+    if (interface.isReadDataAvailable())
+      if ((context.isNamed("SolverOne") and context.isMaster()) or
+          (context.isNamed("SolverTwo") and (not context.isMaster()))) {
+        interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
+      }
+
+    /*
+      Solves the following non-linear equations, which are extended to a fixed-point equation (simply +x)
+      2 * x_1^2 - x_2 * x_3 - 8 = 0
+      x_1^2 * x_2 + 2 * x_1 * x_2 * x_3 + x_2 * x_3^2 + x_2 = 0
+      x_3^2 - 4 = 0
+      x_4^2 - 4 = 0
+
+      Analyical solutions are (+/-2, 0, +/-2, +/-2).
+      Assumably due to the initial relaxation the iteration always converges to the solution in the negative quadrant.
+    */
+
+    if (context.isNamed("SolverOne")) {
+      for (int i = 0; i < 4; i++) {
+        outValues[i] = inValues[i]; //only pushes solution through
+      }
+    } else {
+      outValues[0] = 2 * inValues[0] * inValues[0] - inValues[1] * inValues[2] - 8.0 + inValues[0];
+      outValues[1] = inValues[0] * inValues[0] * inValues[1] + 2.0 * inValues[0] * inValues[1] * inValues[2] + inValues[1] * inValues[2] * inValues[2] + inValues[1];
+      outValues[2] = inValues[2] * inValues[2] - 4.0 + inValues[2];
+      outValues[3] = inValues[3] * inValues[3] - 4.0 + inValues[3];
+    }
+
+    if ((context.isNamed("SolverOne") and context.isMaster()) or
+        (context.isNamed("SolverTwo") and (not context.isMaster()))) {
+      interface.writeBlockScalarData(writeDataID, 4, vertexIDs, outValues);
+    }
+    interface.advance(1.0);
+
+    if (interface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
+      interface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+    }
+    iterations++;
+  }
+
+  interface.finalize();
+
+  //relative residual in config is 1e-7, so 2 orders of magnitude less strict
+  if ((context.isNamed("SolverOne") and context.isMaster()) or
+      (context.isNamed("SolverTwo") and (not context.isMaster()))) {
+    BOOST_TEST(outValues[0] == -2.0, boost::test_tools::tolerance(1e-5));
+    BOOST_TEST(outValues[1] == 0.0, boost::test_tools::tolerance(1e-5));
+    BOOST_TEST(outValues[2] == -2.0, boost::test_tools::tolerance(1e-5));
+    BOOST_TEST(outValues[3] == -2.0, boost::test_tools::tolerance(1e-5));
+
+    // to exclude false or no convergence
+    BOOST_TEST(iterations <= 20);
+    BOOST_TEST(iterations >= 5);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(TestQN1)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
   // serial coupling, IQN-ILS, strict QR2 filter
   std::string config = _pathToTests + "QN1.xml";
   runTestQN(config, context);
+}
+
+BOOST_AUTO_TEST_CASE(TestQN1EmptyPartition)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  // serial coupling, IQN-ILS, strict QR2 filter
+  std::string config = _pathToTests + "QN1.xml";
+  runTestQNEmptyPartition(config, context);
 }
 
 BOOST_AUTO_TEST_CASE(TestQN2)
@@ -407,12 +521,28 @@ BOOST_AUTO_TEST_CASE(TestQN2)
   runTestQN(config, context);
 }
 
+BOOST_AUTO_TEST_CASE(TestQN2EmptyPartition)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  // parallel coupling, IQN-ILS, strict QR2 filter
+  std::string config = _pathToTests + "QN2.xml";
+  runTestQNEmptyPartition(config, context);
+}
+
 BOOST_AUTO_TEST_CASE(TestQN3)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
   // serial coupling, IQN-IMVJ (which is identical to IQN-ILS as only first timestep is considered), relaxed QR2 filter
   std::string config = _pathToTests + "QN3.xml";
   runTestQN(config, context);
+}
+
+BOOST_AUTO_TEST_CASE(TestQN3EmptyPartition)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  // parallel coupling, IQN-ILS, strict QR2 filter
+  std::string config = _pathToTests + "QN3.xml";
+  runTestQNEmptyPartition(config, context);
 }
 
 /// Tests various distributed communication schemes.
