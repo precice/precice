@@ -166,5 +166,68 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   BOOST_TEST(outValues(1) == 0.0);
 }
 
+BOOST_AUTO_TEST_CASE(CorrectedConsistentNonIncremental)
+{
+  PRECICE_TEST(1_rank);
+  int dimensions = 2;
+
+  // Create mesh to map from
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  PtrData inData    = inMesh->createData("InData", 1);
+  int     inDataID  = inData->getID();
+  Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector2d{1.0, 0.0});
+  Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector2d{3.0, 0.0});
+  Vertex &inVertex3 = inMesh->createVertex(Eigen::Vector2d{6.0, 0.0});
+
+  Edge &inEdge0 = inMesh->createEdge(inVertex0, inVertex1);
+  Edge &inEdge1 = inMesh->createEdge(inVertex1, inVertex2);
+  Edge &inEdge2 = inMesh->createEdge(inVertex2, inVertex3);
+
+  inMesh->allocateDataValues();
+  Eigen::VectorXd &inValues = inData->values();
+  inValues(0)               = 1.0;
+  inValues(1)               = 2.0;
+  inValues(2)               = 3.0;
+  inValues(3)               = 4.0;
+
+  // Create mesh to map to
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrData outData    = outMesh->createData("OutData", 1);
+  int     outDataID  = outData->getID();
+  Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  Vertex &outVertex1 = outMesh->createVertex(Eigen::Vector2d(0.8, 0.0));
+  Vertex &outVertex2 = outMesh->createVertex(Eigen::Vector2d(3.0, 0.0));
+  Vertex &outVertex3 = outMesh->createVertex(Eigen::Vector2d(6.2, 0.0));
+
+  Edge &outEdge0 = outMesh->createEdge(outVertex0, outVertex1);
+  Edge &outEdge1 = outMesh->createEdge(outVertex1, outVertex2);
+  Edge &outEdge2 = outMesh->createEdge(outVertex2, outVertex3);
+
+  outMesh->allocateDataValues();
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  // Map data with coinciding vertices, has to result in equal values.
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+  mapping.correctConsistentMapping(inDataID, outDataID);
+  Eigen::VectorXd &outValues = outData->values();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  double inputIntegral = 0.5 * inEdge0.getLength() * (inValues(0) + inValues(1)) +
+                         0.5 * inEdge1.getLength() * (inValues(1) + inValues(2)) +
+                         0.5 * inEdge2.getLength() * (inValues(2) + inValues(3));
+
+  double outputIntegral = 0.5 * outEdge0.getLength() * (outValues(0) + outValues(1)) +
+                          0.5 * outEdge1.getLength() * (outValues(1) + outValues(2)) +
+                          0.5 * outEdge2.getLength() * (outValues(2) + outValues(3));
+
+  BOOST_TEST(inputIntegral == outputIntegral);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

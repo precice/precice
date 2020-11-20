@@ -78,6 +78,64 @@ int Mapping::getDimensions() const
   return _dimensions;
 }
 
+void Mapping::correctConsistentMapping(int inputDataID, int outputDataID) const
+{
+
+  const auto &inputValues  = input()->data(inputDataID)->values();
+  auto &      outputValues = output()->data(outputDataID)->values();
+
+  int valueDimensions = input()->data(inputDataID)->getDimensions();
+  int meshDimensions  = input()->getDimensions();
+
+  std::vector<double> integralInput(valueDimensions);
+  std::vector<double> integralOutput(valueDimensions);
+
+  std::fill(integralInput.begin(), integralInput.end(), 0.0);
+  std::fill(integralOutput.begin(), integralOutput.end(), 0.0);
+
+  // Compute integral on input and output meshes
+  if (meshDimensions == 2) {
+    // Calculate on the input mesh
+    for (const auto &edge : input()->edges()) {
+      double area = edge.getLength();
+      for (int dim = 0; dim < valueDimensions; ++dim) {
+        integralInput.at(dim) += 0.5 * area * (inputValues(edge.vertex(0).getID() + dim) + inputValues(edge.vertex(1).getID() + dim));
+      }
+    }
+    // Calculate on the output mesh
+    for (const auto &edge : output()->edges()) {
+      double area = edge.getLength();
+      for (int dim = 0; dim < valueDimensions; ++dim) {
+        integralOutput.at(dim) += 0.5 * area * (outputValues(edge.vertex(0).getID() + dim) + outputValues(edge.vertex(1).getID() + dim));
+      }
+    }
+  } else {
+    // Calculate on the input mesh
+    for (const auto &face : input()->triangles()) {
+      double area = face.getArea();
+      for (int dim = 0; dim < valueDimensions; ++dim) {
+        integralInput.at(dim) += (area / 3.0) * (inputValues(face.vertex(0).getID() + dim) + inputValues(face.vertex(1).getID() + dim) + inputValues(face.vertex(2).getID()));
+      }
+    }
+    // Calculate on the output mesh
+    for (const auto &face : output()->triangles()) {
+      double area = face.getArea();
+      for (int dim = 0; dim < valueDimensions; ++dim) {
+        integralOutput.at(dim) += (area / 3.0) * (outputValues(face.vertex(0).getID() + dim) + outputValues(face.vertex(1).getID() + dim) + outputValues(face.vertex(2).getID() + dim));
+      }
+    }
+  }
+
+  // Calculate scale in each dimension
+  size_t const outSize = output()->vertices().size();
+  for (int dim = 0; dim < valueDimensions; ++dim) {
+    double scalingFactor = integralInput.at(dim) / integralOutput.at(dim);
+    for (size_t i = 0; i < outSize; i++) {
+      outputValues((i * valueDimensions) + dim) *= scalingFactor;
+    }
+  }
+}
+
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
 {
   switch (lhs) {

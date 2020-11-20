@@ -23,7 +23,8 @@ public:
    */
   enum Constraint {
     CONSISTENT,
-    CONSERVATIVE
+    CONSERVATIVE,
+    CORRECTEDCONSISTENT
   };
 
   /**
@@ -105,6 +106,8 @@ public:
 
   /// Method used by partition. Tags vertices that can be filtered out.
   virtual void tagMeshSecondRound() = 0;
+
+  virtual void correctConsistentMapping(int inputDataID, int outputDataID) const;
 
 protected:
   /// Returns pointer to input mesh.

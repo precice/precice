@@ -46,7 +46,7 @@ void NearestNeighborMapping::computeMapping()
   const std::string     baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
 
-  if (getConstraint() == CONSISTENT) {
+  if (getConstraint() == CONSISTENT or getConstraint() == CORRECTEDCONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
     auto                  rtree = mesh::rtree::getVertexRTree(input());
@@ -144,8 +144,7 @@ void NearestNeighborMapping::map(
         outputValues((i * valueDimensions) + dim) = inputValues(inputIndex + dim);
       }
     }
-  } else {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+  } else if (getConstraint() == CONSERVATIVE) {
     PRECICE_DEBUG("Map conservative");
     size_t const inSize = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {
