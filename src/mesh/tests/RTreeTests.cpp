@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(Query2DVertex)
   tree->query(bgi::nearest(searchVector, 1), std::back_inserter(results));
 
   BOOST_TEST(results.size() == 1);
-  BOOST_TEST(mesh->vertices().at(results[0]).getCoords() == Eigen::Vector2d(0, 1));
+  BOOST_TEST(mesh->vertices().at(results.at(0)).getCoords() == Eigen::Vector2d(0, 1));
 }
 
 BOOST_AUTO_TEST_CASE(Query3DVertex)
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(Query3DVertex)
     tree->query(bgi::nearest(searchVector, 1), std::back_inserter(results));
 
     BOOST_TEST(results.size() == 1);
-    BOOST_TEST(mesh->vertices()[results[0]].getCoords() == Eigen::Vector3d(1, 0, 1));
+    BOOST_TEST(mesh->vertices().at(results.at(0)).getCoords() == Eigen::Vector3d(1, 0, 1));
   }
 }
 
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEmpty)
       searchVector - Eigen::VectorXd::Constant(3, radius),
       searchVector + Eigen::VectorXd::Constant(3, radius));
 
-  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices()[i]) <= radius; }),
+  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices().at(i)) <= radius; }),
               std::back_inserter(results));
 
   BOOST_TEST(results.empty());
@@ -214,12 +214,12 @@ BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
       searchVector - Eigen::VectorXd::Constant(3, radius),
       searchVector + Eigen::VectorXd::Constant(3, radius));
 
-  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices()[i]) <= radius; }),
+  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices().at(i)) <= radius; }),
               std::back_inserter(results));
 
   BOOST_TEST(results.size() == 2);
-  BOOST_TEST(mesh->vertices()[results[0]].getCoords() == Eigen::Vector3d(0, 1, 0));
-  BOOST_TEST(mesh->vertices()[results[1]].getCoords() == Eigen::Vector3d(1, 1, 0));
+  BOOST_TEST(mesh->vertices().at(results.at(0)).getCoords() == Eigen::Vector3d(0, 1, 0));
+  BOOST_TEST(mesh->vertices().at(results.at(1)).getCoords() == Eigen::Vector3d(1, 1, 0));
 }
 
 /// Resembles how boost geometry is used inside the PetRBF
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
       searchVector - Eigen::VectorXd::Constant(3, radius),
       searchVector + Eigen::VectorXd::Constant(3, radius));
 
-  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices()[i]) <= radius; }),
+  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices().at(i)) <= radius; }),
               std::back_inserter(results));
 
   BOOST_TEST(results.size() == 8);
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(Query3DEdge)
   auto match = results.front();
 
   BOOST_TEST(match < mesh->edges().size());
-  auto &          edge = mesh->edges()[match];
+  auto &          edge = mesh->edges().at(match);
   Eigen::Vector3d p1(1, 1, 0);
   Eigen::Vector3d p2(1, 1, 1);
   BOOST_TEST((edge.vertex(0).getCoords() == p1 || edge.vertex(0).getCoords() == p2));
@@ -400,17 +400,17 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
                 results.push_back(std::make_pair(
                     boost::geometry::distance(
                         searchVector,
-                        mesh->triangles()[val.second]),
+                        mesh->triangles().at(val.second)),
                     val.second));
               }));
 
   std::sort(results.begin(), results.end());
   BOOST_TEST_INFO(results);
   BOOST_TEST(results.size() == 3);
-  BOOST_TEST(results[0].second == tlb.getID());
-  BOOST_TEST(results[1].second == tlt.getID());
-  BOOST_TEST(results[2].second == trt.getID());
-  BOOST_TEST(results[2].second != trb.getID());
+  BOOST_TEST(results.at(0).second == tlb.getID());
+  BOOST_TEST(results.at(1).second == tlt.getID());
+  BOOST_TEST(results.at(2).second == trt.getID());
+  BOOST_TEST(results.at(2).second != trb.getID());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Triangle

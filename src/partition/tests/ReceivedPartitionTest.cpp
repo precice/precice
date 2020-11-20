@@ -443,45 +443,45 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
     BOOST_TEST_CONTEXT(*pSolidzMesh)
     {
       BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 6);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[1] == 6);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[2] == 12);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 6);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 6);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 12);
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
 
       // check if the sending and filtering worked right
       if (context.isMaster()) { //Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 6);
         BOOST_TEST(pSolidzMesh->edges().size() == 5);
-        BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[3].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[4].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[5].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 0);
-        BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 1);
-        BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 2);
-        BOOST_TEST(pSolidzMesh->vertices()[3].getGlobalIndex() == 3);
-        BOOST_TEST(pSolidzMesh->vertices()[4].getGlobalIndex() == 4);
-        BOOST_TEST(pSolidzMesh->vertices()[5].getGlobalIndex() == 5);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(5).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 4);
+        BOOST_TEST(pSolidzMesh->vertices().at(5).getGlobalIndex() == 5);
       } else if (context.isRank(1)) { //Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
       } else if (context.isRank(2)) { //Slave3
         BOOST_TEST(pSolidzMesh->vertices().size() == 6);
         BOOST_TEST(pSolidzMesh->edges().size() == 5);
-        BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[3].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[4].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[5].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 0);
-        BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 1);
-        BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 2);
-        BOOST_TEST(pSolidzMesh->vertices()[3].getGlobalIndex() == 3);
-        BOOST_TEST(pSolidzMesh->vertices()[4].getGlobalIndex() == 4);
-        BOOST_TEST(pSolidzMesh->vertices()[5].getGlobalIndex() == 5);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(5).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 4);
+        BOOST_TEST(pSolidzMesh->vertices().at(5).getGlobalIndex() == 5);
       }
     }
   }
@@ -530,33 +530,33 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
     BOOST_TEST_CONTEXT(*pSolidzMesh)
     {
       BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 3);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[1] == 3);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[2] == 6);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 3);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 3);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 6);
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
 
       // check if the sending and filtering worked right
       if (context.isMaster()) { //Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 3);
         BOOST_TEST(pSolidzMesh->edges().size() == 2);
-        BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 0);
-        BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 1);
-        BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
       } else if (context.isRank(1)) { //Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
       } else if (context.isRank(2)) { //Slave3
         BOOST_TEST(pSolidzMesh->vertices().size() == 3);
         BOOST_TEST(pSolidzMesh->edges().size() == 2);
-        BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 3);
-        BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 4);
-        BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 5);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 4);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 5);
       }
     }
   }
@@ -605,39 +605,39 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
     BOOST_TEST_CONTEXT(*pSolidzMesh)
     {
       BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 4);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[1] == 4);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[2] == 9);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 4);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 4);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 9);
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
 
       // check if the sending and filtering worked right
       if (context.isMaster()) { //Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 4);
         BOOST_TEST(pSolidzMesh->edges().size() == 3);
-        BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[3].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 0);
-        BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 1);
-        BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 2);
-        BOOST_TEST(pSolidzMesh->vertices()[3].getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
       } else if (context.isRank(1)) { //Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
       } else if (context.isRank(2)) { //Slave3
         BOOST_TEST(pSolidzMesh->vertices().size() == 5);
         BOOST_TEST(pSolidzMesh->edges().size() == 4);
-        BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[3].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[4].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 1);
-        BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 2);
-        BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 3);
-        BOOST_TEST(pSolidzMesh->vertices()[3].getGlobalIndex() == 4);
-        BOOST_TEST(pSolidzMesh->vertices()[4].getGlobalIndex() == 5);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 4);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 5);
       }
     }
   }
@@ -688,9 +688,9 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
     BOOST_TEST_CONTEXT(*pSolidzMesh)
     {
       BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 5);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[1] == 5);
-      BOOST_TEST(pSolidzMesh->getVertexOffsets()[2] == 10);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 5);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 5);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 10);
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 5);
 
       // check if the sending and filtering worked right
@@ -698,16 +698,16 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
         BOOST_TEST(pSolidzMesh->vertices().size() == 5);
         BOOST_TEST(pSolidzMesh->edges().size() == 6);
         BOOST_TEST(pSolidzMesh->triangles().size() == 2);
-        BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[3].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[4].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 0);
-        BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 1);
-        BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 2);
-        BOOST_TEST(pSolidzMesh->vertices()[3].getGlobalIndex() == 3);
-        BOOST_TEST(pSolidzMesh->vertices()[4].getGlobalIndex() == 4);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 4);
       } else if (context.isRank(1)) { //Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
@@ -716,16 +716,16 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
         BOOST_TEST(pSolidzMesh->vertices().size() == 5);
         BOOST_TEST(pSolidzMesh->edges().size() == 6);
         BOOST_TEST(pSolidzMesh->triangles().size() == 2);
-        BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == false);
-        BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[3].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[4].isOwner() == true);
-        BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 0);
-        BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 1);
-        BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 2);
-        BOOST_TEST(pSolidzMesh->vertices()[3].getGlobalIndex() == 3);
-        BOOST_TEST(pSolidzMesh->vertices()[4].getGlobalIndex() == 4);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 4);
       }
     }
   }
@@ -850,26 +850,26 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
     part.compute();
 
     BOOST_TEST(pMesh->getVertexOffsets().size() == 3);
-    BOOST_TEST(pMesh->getVertexOffsets()[0] == 2);
-    BOOST_TEST(pMesh->getVertexOffsets()[1] == 3);
-    BOOST_TEST(pMesh->getVertexOffsets()[2] == 3);
+    BOOST_TEST(pMesh->getVertexOffsets().at(0) == 2);
+    BOOST_TEST(pMesh->getVertexOffsets().at(1) == 3);
+    BOOST_TEST(pMesh->getVertexOffsets().at(2) == 3);
 
     if (context.isMaster()) { //Master
-      BOOST_TEST(pMesh->getVertexDistribution()[0].size() == 2);
-      BOOST_TEST(pMesh->getVertexDistribution()[1].size() == 1);
-      BOOST_TEST(pMesh->getVertexDistribution()[2].size() == 0);
-      BOOST_TEST(pMesh->getVertexDistribution()[0][0] == 0);
-      BOOST_TEST(pMesh->getVertexDistribution()[0][1] == 1);
-      BOOST_TEST(pMesh->getVertexDistribution()[1][0] == 1);
+      BOOST_TEST(pMesh->getVertexDistribution().at(0).size() == 2);
+      BOOST_TEST(pMesh->getVertexDistribution().at(1).size() == 1);
+      BOOST_TEST(pMesh->getVertexDistribution().at(2).size() == 0);
+      BOOST_TEST(pMesh->getVertexDistribution().at(0).at(0) == 0);
+      BOOST_TEST(pMesh->getVertexDistribution().at(0).at(1) == 1);
+      BOOST_TEST(pMesh->getVertexDistribution().at(1).at(0) == 1);
       BOOST_TEST(pMesh->vertices().size() == 2);
-      BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 0);
-      BOOST_TEST(pMesh->vertices()[1].getGlobalIndex() == 1);
-      BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
-      BOOST_TEST(pMesh->vertices()[1].isOwner() == false);
+      BOOST_TEST(pMesh->vertices().at(0).getGlobalIndex() == 0);
+      BOOST_TEST(pMesh->vertices().at(1).getGlobalIndex() == 1);
+      BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
+      BOOST_TEST(pMesh->vertices().at(1).isOwner() == false);
     } else if (context.isRank(1)) { //Slave2
       BOOST_TEST(pMesh->vertices().size() == 1);
-      BOOST_TEST(pMesh->vertices()[0].getGlobalIndex() == 1);
-      BOOST_TEST(pMesh->vertices()[0].isOwner() == true);
+      BOOST_TEST(pMesh->vertices().at(0).getGlobalIndex() == 1);
+      BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
     } else if (context.isRank(2)) { //Slave3
       BOOST_TEST(pMesh->vertices().size() == 0);
     }
@@ -896,19 +896,19 @@ BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
     BOOST_TEST(pSolidzMesh->vertices().size() == 6);
     BOOST_TEST(pSolidzMesh->edges().size() == 5);
     BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 1);
-    BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 6);
-    BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 0);
-    BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 1);
-    BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 2);
-    BOOST_TEST(pSolidzMesh->vertices()[3].getGlobalIndex() == 3);
-    BOOST_TEST(pSolidzMesh->vertices()[4].getGlobalIndex() == 4);
-    BOOST_TEST(pSolidzMesh->vertices()[5].getGlobalIndex() == 5);
-    BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == true);
-    BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == true);
-    BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == true);
-    BOOST_TEST(pSolidzMesh->vertices()[3].isOwner() == true);
-    BOOST_TEST(pSolidzMesh->vertices()[4].isOwner() == true);
-    BOOST_TEST(pSolidzMesh->vertices()[5].isOwner() == true);
+    BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 6);
+    BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+    BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
+    BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
+    BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
+    BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 4);
+    BOOST_TEST(pSolidzMesh->vertices().at(5).getGlobalIndex() == 5);
+    BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
+    BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == true);
+    BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == true);
+    BOOST_TEST(pSolidzMesh->vertices().at(3).isOwner() == true);
+    BOOST_TEST(pSolidzMesh->vertices().at(4).isOwner() == true);
+    BOOST_TEST(pSolidzMesh->vertices().at(5).isOwner() == true);
   } else {
     BOOST_TEST(context.isNamed("Fluid"));
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
@@ -929,19 +929,19 @@ BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
     BOOST_TEST(pSolidzMesh->vertices().size() == 6);
     BOOST_TEST(pSolidzMesh->edges().size() == 5);
     BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 1);
-    BOOST_TEST(pSolidzMesh->getVertexOffsets()[0] == 6);
-    BOOST_TEST(pSolidzMesh->vertices()[0].getGlobalIndex() == 0);
-    BOOST_TEST(pSolidzMesh->vertices()[1].getGlobalIndex() == 1);
-    BOOST_TEST(pSolidzMesh->vertices()[2].getGlobalIndex() == 2);
-    BOOST_TEST(pSolidzMesh->vertices()[3].getGlobalIndex() == 3);
-    BOOST_TEST(pSolidzMesh->vertices()[4].getGlobalIndex() == 4);
-    BOOST_TEST(pSolidzMesh->vertices()[5].getGlobalIndex() == 5);
-    BOOST_TEST(pSolidzMesh->vertices()[0].isOwner() == true);
-    BOOST_TEST(pSolidzMesh->vertices()[1].isOwner() == true);
-    BOOST_TEST(pSolidzMesh->vertices()[2].isOwner() == true);
-    BOOST_TEST(pSolidzMesh->vertices()[3].isOwner() == true);
-    BOOST_TEST(pSolidzMesh->vertices()[4].isOwner() == true);
-    BOOST_TEST(pSolidzMesh->vertices()[5].isOwner() == true);
+    BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 6);
+    BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+    BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
+    BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
+    BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
+    BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 4);
+    BOOST_TEST(pSolidzMesh->vertices().at(5).getGlobalIndex() == 5);
+    BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
+    BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == true);
+    BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == true);
+    BOOST_TEST(pSolidzMesh->vertices().at(3).isOwner() == true);
+    BOOST_TEST(pSolidzMesh->vertices().at(4).isOwner() == true);
+    BOOST_TEST(pSolidzMesh->vertices().at(5).isOwner() == true);
   }
 }
 
@@ -1059,8 +1059,8 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveConnectionMap(receivedConnectionMap, 0);
 
     // test whether we receive correct connection map
-    BOOST_TEST(receivedConnectionMap[0][0] == 2);
-    BOOST_TEST(receivedConnectionMap[2][0] == 0);
+    BOOST_TEST(receivedConnectionMap.at(0).at(0) == 2);
+    BOOST_TEST(receivedConnectionMap.at(2).at(0) == 0);
 
   } else {
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));

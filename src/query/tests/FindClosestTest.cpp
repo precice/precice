@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToVertices)
     mesh::Mesh mesh("RootMesh", dim, false, testing::nextMeshID());
     mesh.createVertex(Eigen::VectorXd::Zero(dim));
     Eigen::VectorXd queryCoords0 = Eigen::VectorXd::Zero(dim);
-    queryCoords0[0]              = 1.0;
+    queryCoords0(0)              = 1.0;
     FindClosest find(queryCoords0);
     find(mesh);
     query::ClosestElement closest  = find.getClosest();
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(SignOfShortestDistance)
     mesh::Mesh      mesh("Mesh", dim, false, testing::nextMeshID());
     mesh::Vertex &  vertex = mesh.createVertex(Eigen::VectorXd::Zero(dim));
     Eigen::VectorXd normal = Eigen::VectorXd::Zero(dim);
-    normal[0]              = 1.0;
+    normal(0)              = 1.0;
     vertex.setNormal(normal);
 
     // Check point that lies outside of mesh
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(SignOfShortestDistance)
     BOOST_TEST(distance == 1.0);
 
     // Check point that lies inside of mesh
-    normal[0] = -1.0;
+    normal(0) = -1.0;
     vertex.setNormal(normal);
     find.reset();
     find(mesh);
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(IndependenceOfSignOfShortestDistance)
 
     // Invert normal of futher away vertex, should have no influence
     Eigen::VectorXd normal = Eigen::VectorXd::Zero(dim);
-    normal[1]              = -1.0;
+    normal(1)              = -1.0;
     vertex2.setNormal(normal);
     find.reset();
     find(mesh);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges)
     mesh::Vertex &  v2     = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     mesh::Edge &    edge   = mesh.createEdge(v1, v2);
     Eigen::VectorXd normal = Eigen::VectorXd::Constant(dim, -1);
-    normal[1]              = 1.0;
+    normal(1)              = 1.0;
     v1.setNormal(normal);
     v2.setNormal(normal);
     edge.setNormal(normal);
@@ -128,10 +128,10 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges)
     // Create query points
     // Query point 0 lies outside of the mesh
     Eigen::VectorXd queryCoords0 = Eigen::VectorXd::Constant(dim, -1);
-    queryCoords0[1]              = 1.0;
+    queryCoords0(1)              = 1.0;
     // Query point 1 lies inside of the mesh
     Eigen::VectorXd queryCoords1 = Eigen::VectorXd::Constant(dim, 1);
-    queryCoords1[1]              = -1.0;
+    queryCoords1(1)              = -1.0;
     // Query point 2 lies on the query edge
     Eigen::VectorXd queryCoords2 = Eigen::VectorXd::Constant(dim, 0);
     // Query point 3 lies on the same line as the edge, but above
@@ -199,15 +199,15 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToEdges3D)
 
   // Perform queries
   for (size_t i = 0; i < finds.size(); i++) {
-    BOOST_TEST((*finds[i])(mesh));
+    BOOST_TEST((*finds.at(i))(mesh));
   }
 
   // Evaluate query results
-  BOOST_TEST(finds[0]->getClosest().distance == std::sqrt(1.0 / 8.0));
-  BOOST_TEST(finds[1]->getClosest().distance == std::sqrt(1.0 / 8.0));
-  BOOST_TEST(finds[2]->getClosest().distance == Eigen::Vector3d(0.5, -0.5, 0.0).norm());
-  BOOST_TEST(finds[3]->getClosest().distance == Eigen::Vector3d(0.5, -0.5, 0.5).norm());
-  BOOST_TEST(finds[4]->getClosest().distance == Eigen::Vector3d(0.5, -0.5, -0.5).norm());
+  BOOST_TEST(finds.at(0)->getClosest().distance == std::sqrt(1.0 / 8.0));
+  BOOST_TEST(finds.at(1)->getClosest().distance == std::sqrt(1.0 / 8.0));
+  BOOST_TEST(finds.at(2)->getClosest().distance == Eigen::Vector3d(0.5, -0.5, 0.0).norm());
+  BOOST_TEST(finds.at(3)->getClosest().distance == Eigen::Vector3d(0.5, -0.5, 0.5).norm());
+  BOOST_TEST(finds.at(4)->getClosest().distance == Eigen::Vector3d(0.5, -0.5, -0.5).norm());
 
   // Clean up
   for (auto &find : finds) {
@@ -245,30 +245,30 @@ BOOST_AUTO_TEST_CASE(FindClosestDistanceToTriangles)
   queries.push_back(Eigen::Vector3d(1.5, 1.5, 1.5));    // 11: outside vertex2
   std::vector<std::shared_ptr<FindClosest>> findVisitors;
   for (size_t i = 0; i < queries.size(); i++) {
-    std::shared_ptr<FindClosest> find(new FindClosest(queries[i]));
+    std::shared_ptr<FindClosest> find(new FindClosest(queries.at(i)));
     findVisitors.push_back(find);
-    (*findVisitors[i])(mesh);
+    (*findVisitors.at(i))(mesh);
   }
 
   // Validate results
   for (size_t i = 0; i < 7; i++) {
-    BOOST_TEST(findVisitors[i]->getClosest().distance == 0.0);
+    BOOST_TEST(findVisitors.at(i)->getClosest().distance == 0.0);
   }
   Eigen::Vector3d expect(0.5, -0.5, 0.0);
-  BOOST_TEST(testing::equals(findVisitors[7]->getClosest().vectorToElement, expect));
-  BOOST_TEST(findVisitors[7]->getClosest().distance == expect.norm());
+  BOOST_TEST(testing::equals(findVisitors.at(7)->getClosest().vectorToElement, expect));
+  BOOST_TEST(findVisitors.at(7)->getClosest().distance == expect.norm());
   expect << -0.5, 0.5, 0.0;
-  BOOST_TEST(testing::equals(findVisitors[8]->getClosest().vectorToElement, expect));
-  BOOST_TEST(findVisitors[8]->getClosest().distance == -1.0 * expect.norm());
+  BOOST_TEST(testing::equals(findVisitors.at(8)->getClosest().vectorToElement, expect));
+  BOOST_TEST(findVisitors.at(8)->getClosest().distance == -1.0 * expect.norm());
   expect << 0.5, 0.5, 0.5;
-  BOOST_TEST(testing::equals(findVisitors[9]->getClosest().vectorToElement, expect));
-  BOOST_TEST(std::abs(findVisitors[9]->getClosest().distance) == expect.norm());
+  BOOST_TEST(testing::equals(findVisitors.at(9)->getClosest().vectorToElement, expect));
+  BOOST_TEST(std::abs(findVisitors.at(9)->getClosest().distance) == expect.norm());
   expect << -0.5, -0.5, 0.5;
-  BOOST_TEST(testing::equals(findVisitors[10]->getClosest().vectorToElement, expect));
-  BOOST_TEST(std::abs(findVisitors[10]->getClosest().distance) == expect.norm());
+  BOOST_TEST(testing::equals(findVisitors.at(10)->getClosest().vectorToElement, expect));
+  BOOST_TEST(std::abs(findVisitors.at(10)->getClosest().distance) == expect.norm());
   expect << -0.5, -0.5, -0.5;
-  BOOST_TEST(testing::equals(findVisitors[11]->getClosest().vectorToElement, expect));
-  BOOST_TEST(std::abs(findVisitors[11]->getClosest().distance) == expect.norm());
+  BOOST_TEST(testing::equals(findVisitors.at(11)->getClosest().vectorToElement, expect));
+  BOOST_TEST(std::abs(findVisitors.at(11)->getClosest().distance) == expect.norm());
 }
 
 BOOST_AUTO_TEST_CASE(FindClosestDistanceToTrianglesAndVertices)
@@ -330,12 +330,12 @@ BOOST_AUTO_TEST_CASE(WeigthsOfVertices)
 
   // Validate results
   BOOST_TEST(closest.interpolationElements.size() == 2);
-  auto pointerVertex1 = closest.interpolationElements[0].element;
-  auto pointerVertex2 = closest.interpolationElements[1].element;
+  auto pointerVertex1 = closest.interpolationElements.at(0).element;
+  auto pointerVertex2 = closest.interpolationElements.at(1).element;
   BOOST_TEST(testing::equals(pointerVertex1->getCoords(), Eigen::Vector2d(0.0, 0.0)));
   BOOST_TEST(testing::equals(pointerVertex2->getCoords(), Eigen::Vector2d(1.0, 0.0)));
-  BOOST_TEST(closest.interpolationElements[0].weight == 0.7);
-  BOOST_TEST(closest.interpolationElements[1].weight == 0.3);
+  BOOST_TEST(closest.interpolationElements.at(0).weight == 0.7);
+  BOOST_TEST(closest.interpolationElements.at(1).weight == 0.3);
 }
 
 struct MeshFixture {
