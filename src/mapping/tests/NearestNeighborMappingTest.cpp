@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   BOOST_TEST(outValues(1) == 0.0);
 }
 
-BOOST_AUTO_TEST_CASE(CorrectedConsistentNonIncremental)
+BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
 {
   PRECICE_TEST(1_rank);
   int dimensions = 2;
@@ -208,13 +208,15 @@ BOOST_AUTO_TEST_CASE(CorrectedConsistentNonIncremental)
 
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+  mapping.makeScaleConsistent();
+
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   // Map data with coinciding vertices, has to result in equal values.
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  mapping.correctConsistentMapping(inDataID, outDataID);
+
   Eigen::VectorXd &outValues = outData->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
@@ -227,6 +229,13 @@ BOOST_AUTO_TEST_CASE(CorrectedConsistentNonIncremental)
                           0.5 * outEdge2.getLength() * (outValues(2) + outValues(3));
 
   BOOST_TEST(inputIntegral == outputIntegral);
+
+  double scaleFactor = inValues(0) / outValues(0);
+
+  BOOST_TEST(inValues(0) == outValues(0) * scaleFactor);
+  BOOST_TEST(inValues(1) == outValues(1) * scaleFactor);
+  BOOST_TEST(inValues(2) == outValues(2) * scaleFactor);
+  BOOST_TEST(inValues(3) == outValues(3) * scaleFactor);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -799,6 +799,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       for (int i = 0; i < size; i++) {
         outValues[i * valueDim + dim] = vecArray[i];
       }
+
+      if (_isScaleConsistent) {
+        scaleConsistentMapping(inputDataID, outputDataID);
+      }
+
       VecRestoreArrayRead(out, &vecArray);
     }
   }

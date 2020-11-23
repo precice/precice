@@ -78,8 +78,11 @@ int Mapping::getDimensions() const
   return _dimensions;
 }
 
-void Mapping::correctConsistentMapping(int inputDataID, int outputDataID) const
+void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 {
+  // Both input and output mesh should have connectivity information
+  PRECICE_ASSERT(not input()->edges().empty());
+  PRECICE_ASSERT(not output()->edges().empty());
 
   const auto &inputValues  = input()->data(inputDataID)->values();
   auto &      outputValues = output()->data(outputDataID)->values();
@@ -87,9 +90,11 @@ void Mapping::correctConsistentMapping(int inputDataID, int outputDataID) const
   int valueDimensions = input()->data(inputDataID)->getDimensions();
   int meshDimensions  = input()->getDimensions();
 
+  // Integral is calculated on each direction separately
   std::vector<double> integralInput(valueDimensions);
   std::vector<double> integralOutput(valueDimensions);
 
+  // Initialize integral values
   std::fill(integralInput.begin(), integralInput.end(), 0.0);
   std::fill(integralOutput.begin(), integralOutput.end(), 0.0);
 
@@ -109,7 +114,7 @@ void Mapping::correctConsistentMapping(int inputDataID, int outputDataID) const
         integralOutput.at(dim) += 0.5 * area * (outputValues(edge.vertex(0).getID() + dim) + outputValues(edge.vertex(1).getID() + dim));
       }
     }
-  } else {
+  } else { // 3D
     // Calculate on the input mesh
     for (const auto &face : input()->triangles()) {
       double area = face.getArea();
@@ -126,14 +131,24 @@ void Mapping::correctConsistentMapping(int inputDataID, int outputDataID) const
     }
   }
 
-  // Calculate scale in each dimension
+  // Scale in each dimension
   size_t const outSize = output()->vertices().size();
   for (int dim = 0; dim < valueDimensions; ++dim) {
+    PRECICE_ASSERT(std::fabs(integralOutput.at(dim)) > 1e-9, "Surface integral is calculated as zero in consistent mapping scaling.");
+    PRECICE_ASSERT(std::fabs(integralInput.at(dim)) > 1e-9, "Surface integral is calculated as zero in consistent mapping scaling.");
     double scalingFactor = integralInput.at(dim) / integralOutput.at(dim);
+    // Scaling factor is different in each direction, cannot directly multiply
     for (size_t i = 0; i < outSize; i++) {
       outputValues((i * valueDimensions) + dim) *= scalingFactor;
     }
   }
+}
+
+void Mapping::makeScaleConsistent()
+{
+  setInputRequirement(MeshRequirement::FULL);
+  setOutputRequirement(MeshRequirement::FULL);
+  _isScaleConsistent = true;
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)

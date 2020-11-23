@@ -142,6 +142,9 @@ MappingConfiguration::MappingConfiguration(
                         .setDocumentation("This allows to defer the mapping of the data to advance or to a manual call to mapReadDataTo and mapWriteDataFrom.")
                         .setOptions({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE, VALUE_TIMING_ON_DEMAND});
 
+  auto attrScale = makeXMLAttribute(ATTR_SCALE, false)
+                       .setDocumentation("If set to true, consistent mapping is scaled such that the mapping is conservative");
+
   // Add tags that all mappings use and add to parent tag
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrDirection);
@@ -149,6 +152,7 @@ MappingConfiguration::MappingConfiguration(
     tag.addAttribute(attrToMesh);
     tag.addAttribute(attrConstraint);
     tag.addAttribute(attrTiming);
+    tag.addAttribute(attrScale);
     parent.addSubtag(tag);
   }
 }
@@ -169,9 +173,10 @@ void MappingConfiguration::xmlTagCallback(
     double        supportRadius  = 0.0;
     double        solverRtol     = 1e-9;
     bool          xDead = false, yDead = false, zDead = false;
-    bool          useLU         = false;
-    Polynomial    polynomial    = Polynomial::ON;
-    Preallocation preallocation = Preallocation::TREE;
+    bool          useLU             = false;
+    bool          isScaleConsistent = false;
+    Polynomial    polynomial        = Polynomial::ON;
+    Preallocation preallocation     = Preallocation::TREE;
 
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)) {
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -193,6 +198,9 @@ void MappingConfiguration::xmlTagCallback(
     }
     if (tag.hasAttribute(ATTR_USE_QR)) {
       useLU = tag.getBooleanAttributeValue(ATTR_USE_QR);
+    }
+    if (tag.hasAttribute(ATTR_SCALE)) {
+      isScaleConsistent = tag.getBooleanAttributeValue(ATTR_SCALE);
     }
     if (tag.hasAttribute("polynomial")) {
       std::string strPolynomial = tag.getStringAttributeValue("polynomial");
@@ -222,7 +230,7 @@ void MappingConfiguration::xmlTagCallback(
                                                         fromMesh, toMesh, timing,
                                                         shapeParameter, supportRadius, solverRtol,
                                                         xDead, yDead, zDead,
-                                                        useLU,
+                                                        isScaleConsistent, useLU,
                                                         polynomial, preallocation);
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
@@ -253,6 +261,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     bool                             xDead,
     bool                             yDead,
     bool                             zDead,
+    bool                             isScaleConsistent,
     bool                             useLU,
     Polynomial                       polynomial,
     Preallocation                    preallocation) const
@@ -289,11 +298,25 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   if (type == VALUE_NEAREST_NEIGHBOR) {
     configuredMapping.mapping = PtrMapping(
         new NearestNeighborMapping(constraintValue, dimensions));
+    if (isScaleConsistent) {
+      if (constraint == VALUE_CONSISTENT) {
+        configuredMapping.mapping->makeScaleConsistent();
+      } else {
+        PRECICE_WARN("Scaling option is only valid for consistent mappings and it has no effect on conservative mappings.");
+      }
+    }
     configuredMapping.isRBF = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_PROJECTION) {
     configuredMapping.mapping = PtrMapping(
         new NearestProjectionMapping(constraintValue, dimensions));
+    if (isScaleConsistent) {
+      if (constraint == VALUE_CONSISTENT) {
+        configuredMapping.mapping->makeScaleConsistent();
+      } else {
+        PRECICE_WARN("Scaling option is only valid for consistent mappings and it has no effect on conservative mappings.");
+      }
+    }
     configuredMapping.isRBF = false;
     return configuredMapping;
   }
@@ -400,6 +423,14 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   }
 
 #endif
+
+  if (isScaleConsistent) {
+    if (constraint == VALUE_CONSISTENT) {
+      configuredMapping.mapping->makeScaleConsistent();
+    } else {
+      PRECICE_WARN("Scaling option is only valid for consistent mappings and it has no effect on conservative mappings.");
+    }
+  }
 
   PRECICE_ASSERT(configuredMapping.mapping);
   return configuredMapping;

@@ -453,6 +453,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
       }
     }
 
+    if (_isScaleConsistent) {
+      scaleConsistentMapping(inputDataID, outputDataID);
+    }
+
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
 
     // Data scattering to slaves

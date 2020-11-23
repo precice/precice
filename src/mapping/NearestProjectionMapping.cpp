@@ -280,6 +280,9 @@ void NearestProjectionMapping::map(
         }
       }
     }
+    if (_isScaleConsistent) {
+      scaleConsistentMapping(inputDataID, outputDataID);
+    }
   } else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Map conservative");

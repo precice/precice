@@ -23,8 +23,7 @@ public:
    */
   enum Constraint {
     CONSISTENT,
-    CONSERVATIVE,
-    CORRECTEDCONSISTENT
+    CONSERVATIVE
   };
 
   /**
@@ -107,7 +106,11 @@ public:
   /// Method used by partition. Tags vertices that can be filtered out.
   virtual void tagMeshSecondRound() = 0;
 
-  virtual void correctConsistentMapping(int inputDataID, int outputDataID) const;
+  /// Method to scale consistently mapped output data to have same surface integral as input data
+  virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
+
+  /// Method to set scaling flag and modify mesh requirements
+  void makeScaleConsistent();
 
 protected:
   /// Returns pointer to input mesh.
@@ -123,6 +126,8 @@ protected:
   void setOutputRequirement(MeshRequirement requirement);
 
   int getDimensions() const;
+
+  bool _isScaleConsistent = false;
 
 private:
   /// Determines wether mapping is consistent or conservative.
