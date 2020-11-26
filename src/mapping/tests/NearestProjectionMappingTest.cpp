@@ -428,6 +428,75 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   }
 }
 
+BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncrementalPseudo3D)
+{
+    PRECICE_TEST(1_rank);
+    using namespace mesh;
+    int dimensions = 3;
+
+    // Create mesh to map from
+    PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+    PtrData inData   = inMesh->createData("InData", 1);
+    int     inDataID = inData->getID();
+    Vertex &v1       = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+    Vertex &v2       = inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+    Vertex &v3       = inMesh->createVertex(Eigen::Vector3d(2.0, 2.0, 0.0));
+    Edge &  e12      = inMesh->createEdge(v1, v2);
+    Edge &  e23      = inMesh->createEdge(v2, v3);
+    Edge &  e31      = inMesh->createEdge(v3, v1);
+    Triangle & t1    = inMesh->createTriangle(e12, e23, e31);
+
+    inMesh->computeState();
+    inMesh->allocateDataValues();
+    double           valueVertex1 = 1.0;
+    double           valueVertex2 = 2.0;
+    double           valueVertex3 = 3.0;
+    Eigen::VectorXd &inValues       = inData->values();
+    inValues(0)                     = valueVertex1;
+    inValues(1)                     = valueVertex2;
+    inValues(2)                     = valueVertex3;
+
+    double inputIntegral = t1.getArea() * (inValues(0) + inValues(1) + inValues(2)) / 3.0;
+
+    {
+      // Create mesh to map to
+      PtrMesh outMesh(new Mesh("OutMesh1", dimensions, false, testing::nextMeshID()));
+      PtrData outData   = outMesh->createData("OutData1", 1);
+      int     outDataID = outData->getID();
+      auto& outValues = outData->values();
+      // Setup mapping with mapping coordinates and geometry used
+      mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+      mapping.setMeshes(inMesh, outMesh);
+      mapping.makeScaleConsistent();
+      BOOST_TEST(mapping.hasComputedMapping() == false);
+
+      Vertex& outV1 = outMesh->createVertex(Eigen::Vector3d(0.5, 0.5, 0.0));
+      Vertex& outV2 = outMesh->createVertex(Eigen::Vector3d(-0.5, -0.5, 0.0));
+      Vertex& outV3 = outMesh->createVertex(Eigen::Vector3d(1.5, 1.5, 0.0));
+      Edge& outE12 = outMesh->createEdge(outV1, outV2);
+      Edge& outE23 = outMesh->createEdge(outV2, outV3);
+      Edge& outE13 = outMesh->createEdge(outV1, outV3);
+      Triangle& outT1 = outMesh->createTriangle(outE12, outE23, outE13);
+      outMesh->allocateDataValues();
+
+      // Compute and perform mapping
+      mapping.computeMapping();
+      mapping.map(inDataID, outDataID);
+
+      double outputIntegral = outT1.getArea() * (outValues(0) + outValues(1) + outValues(2)) / 3.0;
+      double scaleFactor = outValues(1) / inValues(0);
+      // Validate results
+      BOOST_TEST(mapping.hasComputedMapping() == true);
+      BOOST_TEST_CONTEXT(*inMesh)
+      {
+        BOOST_TEST(outputIntegral == inputIntegral);
+        BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5 * scaleFactor);
+        BOOST_TEST(outData->values()(1) == valueVertex1 * scaleFactor);
+        BOOST_TEST(outData->values()(2) == (valueVertex2 + valueVertex3) * 0.5 * scaleFactor);
+      }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
 {
   PRECICE_TEST(1_rank);
