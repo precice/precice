@@ -230,12 +230,12 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
 
   BOOST_TEST(inputIntegral == outputIntegral);
 
-  double scaleFactor = inValues(0) / outValues(0);
+  double scaleFactor = outValues(0) / inValues(0);
 
-  BOOST_TEST(inValues(0) == outValues(0) * scaleFactor);
-  BOOST_TEST(inValues(1) == outValues(1) * scaleFactor);
-  BOOST_TEST(inValues(2) == outValues(2) * scaleFactor);
-  BOOST_TEST(inValues(3) == outValues(3) * scaleFactor);
+  BOOST_TEST(inValues(0)*scaleFactor == outValues(0));
+  BOOST_TEST(inValues(1)*scaleFactor == outValues(1));
+  BOOST_TEST(inValues(2)*scaleFactor == outValues(2));
+  BOOST_TEST(inValues(3)*scaleFactor == outValues(3));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

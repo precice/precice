@@ -213,6 +213,109 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
   }
 }
 
+BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2D)
+{
+    PRECICE_TEST(1_rank);
+    using namespace mesh;
+    int dimensions = 2;
+
+    // Create mesh to map from
+    PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+    PtrData inData   = inMesh->createData("InData", 1);
+    int     inDataID = inData->getID();
+    Vertex &v1       = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+    Vertex &v2       = inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+    Edge &inE1 = inMesh->createEdge(v1, v2);
+    inMesh->computeState();
+    inMesh->allocateDataValues();
+    double           valueVertex1 = 1.0;
+    double           valueVertex2 = 2.0;
+    Eigen::VectorXd &inValues       = inData->values();
+    inValues(0)                     = valueVertex1;
+    inValues(1)                     = valueVertex2;
+
+    double inputIntegral =  0.5 * inE1.getLength() * (inValues(0) + inValues(1));
+
+    {
+      // Create mesh to map to
+      PtrMesh outMesh(new Mesh("OutMesh0", dimensions, false, testing::nextMeshID()));
+      PtrData outData   = outMesh->createData("OutData", 1);
+      int     outDataID = outData->getID();
+      auto& outValues = outData->values();
+      // Setup mapping with mapping coordinates and geometry used
+      mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+      mapping.setMeshes(inMesh, outMesh);
+      mapping.makeScaleConsistent();
+      BOOST_TEST(mapping.hasComputedMapping() == false);
+
+      Vertex& outV1 = outMesh->createVertex(Eigen::Vector2d(0.5, 0.5));
+      Vertex& outV2 = outMesh->createVertex(Eigen::Vector2d(-0.5, -0.5));
+      Vertex& outV3 = outMesh->createVertex(Eigen::Vector2d(1.5, 1.5));
+
+      Edge& outE1 = outMesh->createEdge(outV1, outV2);
+      Edge& outE2 = outMesh->createEdge(outV1, outV3);
+
+      outMesh->allocateDataValues();
+      outValues = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
+
+      // Compute and perform mapping
+      mapping.computeMapping();
+      mapping.map(inDataID, outDataID);
+
+      double outputIntegral = 0.5 * outE1.getLength() * (outValues(0) + outValues(1)) +
+                              0.5 * outE2.getLength() * (outValues(0) + outValues(2));
+
+      double scaleFactor = outValues(1) / inValues(0);
+
+      // Validate results
+      BOOST_TEST(mapping.hasComputedMapping() == true);
+      BOOST_TEST(inputIntegral == outputIntegral);
+      BOOST_TEST(outValues(0) == (inValues(0) + inValues(1)) * 0.5 * scaleFactor);
+      BOOST_TEST(outValues(1) == inValues(0) * scaleFactor);
+      BOOST_TEST(outValues(2) == inValues(1) * scaleFactor);
+    }
+
+    {
+      // Create mesh to map to
+      PtrMesh outMesh(new Mesh("OutMesh1", dimensions, false, testing::nextMeshID()));
+      PtrData outData   = outMesh->createData("OutData", 1);
+      int     outDataID = outData->getID();
+      auto& outValues = outData->values();
+
+      // Setup mapping with mapping coordinates and geometry used
+      mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+      mapping.setMeshes(inMesh, outMesh);
+      mapping.makeScaleConsistent();
+      BOOST_TEST(mapping.hasComputedMapping() == false);
+
+      Vertex& outV1 = outMesh->createVertex(Eigen::Vector2d(-0.5, -0.5));
+      Vertex& outV2 = outMesh->createVertex(Eigen::Vector2d(1.5, 1.5));
+      Vertex& outV3 = outMesh->createVertex(Eigen::Vector2d(0.5, 0.5));
+
+      Edge& outE1 = outMesh->createEdge(outV3, outV1);
+      Edge& outE2 = outMesh->createEdge(outV3, outV2);
+
+      outMesh->allocateDataValues();
+
+      //assign(outData->values()) = 0.0;
+      outValues = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
+      mapping.computeMapping();
+      mapping.map(inDataID, outDataID);
+
+      double outputIntegral = 0.5 * outE1.getLength() * (outValues(2) + outValues(0)) +
+                              0.5 * outE2.getLength() * (outValues(2) + outValues(1));
+
+      double scaleFactor = outValues(0) / inValues(0);
+
+      // Validate results
+      BOOST_TEST(mapping.hasComputedMapping() == true);
+      BOOST_TEST(inputIntegral == outputIntegral);
+      BOOST_TEST(outValues(0) == inValues(0) * scaleFactor);
+      BOOST_TEST(outValues(1) == inValues(1) * scaleFactor);
+      BOOST_TEST(outValues(2) == (inValues(0) + inValues(1)) * 0.5 * scaleFactor);
+    }
+    }
+
 BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
 {
   PRECICE_TEST(1_rank);
