@@ -52,14 +52,14 @@ BOOST_AUTO_TEST_CASE(SplitCommTest)
 
   const auto &groups = splitComm->groups;
   BOOST_TEST(groups.size() == 2);
-  BOOST_TEST(groups[0].id == 0);
-  BOOST_TEST(groups[1].id == 1);
-  BOOST_TEST(groups[0].name == std::string("GroupOne"));
-  BOOST_TEST(groups[1].name == std::string("GroupTwo"));
-  BOOST_TEST(groups[0].leaderRank == 0);
-  BOOST_TEST(groups[1].leaderRank == 2);
-  BOOST_TEST(groups[0].size == 2);
-  BOOST_TEST(groups[1].size == 1);
+  BOOST_TEST(groups.at(0).id == 0);
+  BOOST_TEST(groups.at(1).id == 1);
+  BOOST_TEST(groups.at(0).name == std::string("GroupOne"));
+  BOOST_TEST(groups.at(1).name == std::string("GroupTwo"));
+  BOOST_TEST(groups.at(0).leaderRank == 0);
+  BOOST_TEST(groups.at(1).leaderRank == 2);
+  BOOST_TEST(groups.at(0).size == 2);
+  BOOST_TEST(groups.at(1).size == 1);
 }
 
 BOOST_AUTO_TEST_CASE(Master1SlaveTest)

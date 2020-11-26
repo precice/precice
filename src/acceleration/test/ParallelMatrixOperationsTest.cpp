@@ -97,47 +97,38 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
   }
 
   // ------ test Allreduce/ Reduce ---------------------------
-  double  res1 = 0;
-  double *aa   = new double[2];
-  aa[0]        = a;
-  aa[1]        = a;
-  double *res2 = new double[2];
-  res2[0]      = 0;
-  res2[1]      = 0;
-  double *res3 = new double[2];
-  res3[0]      = 0;
-  res3[1]      = 0;
+  std::vector<double> aa   = {a, a};
+  std::vector<double> res2 = {0, 0};
+  std::vector<double> res3 = {0, 0};
 
-  int iaa   = (int) a;
-  int ires1 = 0, ires2 = 0;
+  double res1  = 0;
+  int    iaa   = (int) a;
+  int    ires1 = 0, ires2 = 0;
 
   utils::MasterSlave::allreduceSum(a, res1, 1);
   utils::MasterSlave::allreduceSum(iaa, ires2, 1);
-  utils::MasterSlave::allreduceSum(aa, res2, 2);
+  utils::MasterSlave::allreduceSum(aa.data(), res2.data(), 2);
 
-  utils::MasterSlave::reduceSum(aa, res3, 2);
+  utils::MasterSlave::reduceSum(aa.data(), res3.data(), 2);
   utils::MasterSlave::reduceSum(iaa, ires1, 1);
 
   BOOST_TEST(testing::equals(res1, 10.));
   BOOST_TEST(testing::equals(ires2, 10));
-  BOOST_TEST(testing::equals(res2[0], 10.));
-  BOOST_TEST(testing::equals(res2[1], 10.));
+  BOOST_TEST(testing::equals(res2.at(0), 10.));
+  BOOST_TEST(testing::equals(res2.at(1), 10.));
 
   if (utils::MasterSlave::isMaster()) {
-    BOOST_TEST(testing::equals(res3[0], 10.));
-    BOOST_TEST(testing::equals(res3[1], 10.));
+    BOOST_TEST(testing::equals(res3.at(0), 10.));
+    BOOST_TEST(testing::equals(res3.at(1), 10.));
     BOOST_TEST(testing::equals(ires1, 10));
   }
-  delete[] aa;
-  delete[] res2;
-  delete[] res3;
   // ---------------------------------------------------------
 
   Eigen::VectorXd vec1_local(n_local);
   Eigen::VectorXd vec2_local(n_local);
 
   // partition and distribute
-  int off = vertexOffsets[context.rank];
+  int off = vertexOffsets.at(context.rank);
   for (int i = 0; i < n_local; i++) {
     vec1_local(i) = vec1(i + off);
     vec2_local(i) = vec2(i + off);
@@ -267,7 +258,7 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
 
   // partition and distribute matrices
 
-  int off = vertexOffsets[context.rank];
+  int off = vertexOffsets.at(context.rank);
   for (int i = 0; i < n_global; i++)
     for (int j = 0; j < n_local; j++) {
       J_local(i, j)  = J_global(i, j + off);
@@ -302,32 +293,32 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
   // 1.) multiply JW = J * W (n x m), parallel: (n_local x m)
   Eigen::MatrixXd resJW_local(n_local, m_global);
   parMatrixOps.multiply(J_local, W_local, resJW_local, vertexOffsets, n_global, n_global, m_global);
-  validate_result_equals_reference(resJW_local, JW_global, vertexOffsets[context.rank], true);
+  validate_result_equals_reference(resJW_local, JW_global, vertexOffsets.at(context.rank), true);
 
   BOOST_TEST_MESSAGE("Test 2");
   // 2.) multiply WZ = W * Z (n x n), parallel: (n_global x n_local)
   Eigen::MatrixXd resWZ_local(n_global, n_local);
   parMatrixOps.multiply(W_local, Z_local, resWZ_local, vertexOffsets, n_global, m_global, n_global);
-  validate_result_equals_reference(resWZ_local, WZ_global, vertexOffsets[context.rank], false);
+  validate_result_equals_reference(resWZ_local, WZ_global, vertexOffsets.at(context.rank), false);
 
   BOOST_TEST_MESSAGE("Test 3");
   // 3.) multiply Jres = J * res (n x 1), parallel: (n_local x 1)
   Eigen::MatrixXd resJres_local(n_local, 1);
   parMatrixOps.multiply(J_local, res_local, resJres_local, vertexOffsets, n_global, n_global, 1);
-  validate_result_equals_reference(resJres_local, Jres_global, vertexOffsets[context.rank], true);
+  validate_result_equals_reference(resJres_local, Jres_global, vertexOffsets.at(context.rank), true);
 
   BOOST_TEST_MESSAGE("Test 4");
   // 4.) multiply JW = J * W (n x m), parallel: (n_local x m) with block-wise multiplication
   Eigen::MatrixXd resJW_local2(n_local, m_global);
   parMatrixOps.multiply(J_local, W_local, resJW_local2, vertexOffsets, n_global, n_global, m_global, false);
-  validate_result_equals_reference(resJW_local2, JW_global, vertexOffsets[context.rank], true);
+  validate_result_equals_reference(resJW_local2, JW_global, vertexOffsets.at(context.rank), true);
 
   BOOST_TEST_MESSAGE("Test 5");
   // 5.) multiply Jres = J * res (n x 1), parallel: (n_local x 1) with block-wise multiplication
   Eigen::VectorXd resJres_local2(n_local); // use the function with parameter of type Eigen::VectorXd
   parMatrixOps.multiply(J_local, res_local_vec, resJres_local2, vertexOffsets, n_global, n_global, 1, false);
   Eigen::MatrixXd matrix_cast = resJres_local2;
-  validate_result_equals_reference(matrix_cast, Jres_global, vertexOffsets[context.rank], true);
+  validate_result_equals_reference(matrix_cast, Jres_global, vertexOffsets.at(context.rank), true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

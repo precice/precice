@@ -45,12 +45,12 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
     m2n->send(values.data(), numberOfVertices, pMesh->getID(), valueDimension);
     m2n->receive(values.data(), numberOfVertices, pMesh->getID(),
                  valueDimension);
-    BOOST_TEST(values[0] == 2.0);
-    BOOST_TEST(values[1] == 4.0);
-    BOOST_TEST(values[2] == 6.0);
-    BOOST_TEST(values[3] == 16.0);
-    BOOST_TEST(values[4] == 10.0);
-    BOOST_TEST(values[5] == 12.0);
+    BOOST_TEST(values(0) == 2.0);
+    BOOST_TEST(values(1) == 4.0);
+    BOOST_TEST(values(2) == 6.0);
+    BOOST_TEST(values(3) == 16.0);
+    BOOST_TEST(values(4) == 10.0);
+    BOOST_TEST(values(5) == 12.0);
 
   } else {
     BOOST_TEST(context.isNamed("Part2"));
@@ -70,9 +70,9 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
 
       Eigen::Vector3d values(0.0, 0.0, 0.0);
       m2n->receive(values.data(), 3, pMesh->getID(), valueDimension);
-      BOOST_TEST(values[0] == 1.0);
-      BOOST_TEST(values[1] == 2.0);
-      BOOST_TEST(values[2] == 4.0);
+      BOOST_TEST(values(0) == 1.0);
+      BOOST_TEST(values(1) == 2.0);
+      BOOST_TEST(values(2) == 4.0);
       values = values * 2;
       m2n->send(values.data(), 3, pMesh->getID(), valueDimension);
     } else if (context.isRank(1)) { // Slave1
@@ -83,10 +83,10 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
       BOOST_TEST(context.isRank(2));
       Eigen::Vector4d values(0.0, 0.0, 0.0, 0.0);
       m2n->receive(values.data(), 4, pMesh->getID(), valueDimension);
-      BOOST_TEST(values[0] == 3.0);
-      BOOST_TEST(values[1] == 4.0);
-      BOOST_TEST(values[2] == 5.0);
-      BOOST_TEST(values[3] == 6.0);
+      BOOST_TEST(values(0) == 3.0);
+      BOOST_TEST(values(1) == 4.0);
+      BOOST_TEST(values(2) == 5.0);
+      BOOST_TEST(values(3) == 6.0);
       values = values * 2;
       m2n->send(values.data(), 4, pMesh->getID(), valueDimension);
     }
