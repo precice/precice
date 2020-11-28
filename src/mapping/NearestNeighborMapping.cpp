@@ -32,8 +32,13 @@ NearestNeighborMapping::NearestNeighborMapping(
     int        dimensions)
     : Mapping(constraint, dimensions)
 {
-  setInputRequirement(Mapping::MeshRequirement::VERTEX);
-  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  if (constraint == Mapping::SCALEDCONSISTENT) {
+    setInputRequirement(Mapping::MeshRequirement::FULL);
+    setOutputRequirement(Mapping::MeshRequirement::FULL);
+  } else {
+    setInputRequirement(Mapping::MeshRequirement::VERTEX);
+    setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  }
 }
 
 void NearestNeighborMapping::computeMapping()
@@ -46,7 +51,7 @@ void NearestNeighborMapping::computeMapping()
   const std::string     baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
 
-  if (getConstraint() == CONSISTENT) {
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
     auto                  rtree = mesh::rtree::getVertexRTree(input());
@@ -110,7 +115,7 @@ void NearestNeighborMapping::clear()
   PRECICE_TRACE();
   _vertexIndices.clear();
   _hasComputedMapping = false;
-  if (getConstraint() == CONSISTENT) {
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     mesh::rtree::clear(*input());
   } else {
     mesh::rtree::clear(*output());
@@ -135,7 +140,7 @@ void NearestNeighborMapping::map(
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
                  outputValues.size(), valueDimensions, output()->vertices().size());
-  if (getConstraint() == CONSISTENT) {
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     PRECICE_DEBUG("Map consistent");
     size_t const outSize = output()->vertices().size();
     for (size_t i = 0; i < outSize; i++) {
@@ -144,8 +149,7 @@ void NearestNeighborMapping::map(
         outputValues((i * valueDimensions) + dim) = inputValues(inputIndex + dim);
       }
     }
-    if (_isScaleConsistent) {
-      PRECICE_ASSERT(not input()->edges().empty() && not output()->edges().empty());
+    if (getConstraint() == SCALEDCONSISTENT) {
       scaleConsistentMapping(inputDataID, outputDataID);
     }
   } else {
@@ -171,7 +175,7 @@ void NearestNeighborMapping::tagMeshFirstRound()
   // Lookup table of all indices used in the mapping
   const boost::container::flat_set<int> indexSet(_vertexIndices.begin(), _vertexIndices.end());
 
-  if (getConstraint() == CONSISTENT) {
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     for (mesh::Vertex &v : input()->vertices()) {
       if (indexSet.count(v.getID()) != 0)
         v.tag();

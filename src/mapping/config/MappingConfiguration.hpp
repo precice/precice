@@ -114,12 +114,12 @@ private:
   const std::string ATTR_Y_DEAD         = "y-dead";
   const std::string ATTR_Z_DEAD         = "z-dead";
   const std::string ATTR_USE_QR         = "use-qr-decomposition";
-  const std::string ATTR_SCALE          = "scale";
 
-  const std::string VALUE_WRITE        = "write";
-  const std::string VALUE_READ         = "read";
-  const std::string VALUE_CONSISTENT   = "consistent";
-  const std::string VALUE_CONSERVATIVE = "conservative";
+  const std::string VALUE_WRITE            = "write";
+  const std::string VALUE_READ             = "read";
+  const std::string VALUE_CONSISTENT       = "consistent";
+  const std::string VALUE_CONSERVATIVE     = "conservative";
+  const std::string VALUE_SCALEDCONSISTENT = "scaled-consistent";
 
   const std::string VALUE_NEAREST_NEIGHBOR      = "nearest-neighbor";
   const std::string VALUE_NEAREST_PROJECTION    = "nearest-projection";
@@ -154,7 +154,6 @@ private:
       bool                             xDead,
       bool                             yDead,
       bool                             zDead,
-      bool                             isScaleConsistent,
       bool                             useLU,
       Polynomial                       polynomial,
       Preallocation                    preallocation) const;

@@ -1,6 +1,7 @@
 #include "Mapping.hpp"
 #include <boost/config.hpp>
 #include <ostream>
+#include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -103,8 +104,11 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
     // Calculate on the input mesh
     for (const auto &edge : input()->edges()) {
       double area = edge.getLength();
-      for (int dim = 0; dim < valueDimensions; ++dim) {
-        integralInput.at(dim) += 0.5 * area * (inputValues(edge.vertex(0).getID() + dim) + inputValues(edge.vertex(1).getID() + dim));
+      // Input mesh may have overlaps, we only need to include the values on the owned vertices
+      if (edge.vertex(0).isOwner() and edge.vertex(1).isOwner()) {
+        for (int dim = 0; dim < valueDimensions; ++dim) {
+          integralInput.at(dim) += 0.5 * area * (inputValues(edge.vertex(0).getID() + dim) + inputValues(edge.vertex(1).getID() + dim));
+        }
       }
     }
     // Calculate on the output mesh
@@ -115,20 +119,35 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
       }
     }
   } else { // 3D
-    // Calculate on the input mesh
+    // For 3D case, only edge connectivity is not enough. Also the face connectivity is necessary.
+    PRECICE_ASSERT(not input()->triangles().empty() or not output()->triangles().empty());
+    // Calculate integral on the input mesh
     for (const auto &face : input()->triangles()) {
       double area = face.getArea();
-      for (int dim = 0; dim < valueDimensions; ++dim) {
-        integralInput.at(dim) += (area / 3.0) * (inputValues(face.vertex(0).getID() + dim) + inputValues(face.vertex(1).getID() + dim) + inputValues(face.vertex(2).getID()));
+      // Input mesh may have overlaps, we only need to include the values on the owned vertices
+      if (face.vertex(0).isOwner() and face.vertex(1).isOwner() and face.vertex(2).isOwner()) {
+        for (int dim = 0; dim < valueDimensions; ++dim) {
+          integralInput.at(dim) += (area / 3.0) * (inputValues(face.vertex(0).getID() + dim) + inputValues(face.vertex(1).getID() + dim) + inputValues(face.vertex(2).getID()));
+        }
       }
     }
-    // Calculate on the output mesh
+    // Calculate integral on the output mesh
     for (const auto &face : output()->triangles()) {
       double area = face.getArea();
       for (int dim = 0; dim < valueDimensions; ++dim) {
         integralOutput.at(dim) += (area / 3.0) * (outputValues(face.vertex(0).getID() + dim) + outputValues(face.vertex(1).getID() + dim) + outputValues(face.vertex(2).getID() + dim));
       }
     }
+  }
+
+  // If the mesh is distributed, we need to calculate the global integral
+  if (utils::MasterSlave::isMaster() or utils::MasterSlave::isSlave()) {
+    std::vector<double> globalInputIntegral(valueDimensions);
+    std::vector<double> globalOutputIntegral(valueDimensions);
+    utils::MasterSlave::allreduceSum(integralInput.data(), globalInputIntegral.data(), integralInput.size());
+    utils::MasterSlave::allreduceSum(integralOutput.data(), globalOutputIntegral.data(), integralOutput.size());
+    integralInput  = globalInputIntegral;
+    integralOutput = globalOutputIntegral;
   }
 
   // Scale in each dimension
@@ -142,13 +161,6 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
       outputValues((i * valueDimensions) + dim) *= scalingFactor;
     }
   }
-}
-
-void Mapping::makeScaleConsistent()
-{
-  setInputRequirement(MeshRequirement::FULL);
-  setOutputRequirement(MeshRequirement::FULL);
-  _isScaleConsistent = true;
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)

@@ -80,9 +80,9 @@ double Triangle::getArea() const
   Eigen::Vector3d vectorA = edge(1).vertex(1).getCoords() - edge(1).vertex(0).getCoords();
   Eigen::Vector3d vectorB = edge(0).vertex(1).getCoords() - edge(0).vertex(0).getCoords();
   // Compute cross-product of vector A and vector B
-  auto area = 0.5*vectorA.cross(vectorB).norm();
+  auto area = 0.5 * vectorA.cross(vectorB).norm();
   // Check if the vectors are co-linear (Pseudo 3D case)
-  if(area < 1e-9){
+  if (area < 1e-9) {
     // Area is the longest edge.
     std::vector<double> edgeLengths{edge(0).getLength(), edge(1).getLength(), edge(2).getLength()};
     area = *std::max_element(edgeLengths.begin(), edgeLengths.end());

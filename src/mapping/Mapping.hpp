@@ -23,7 +23,8 @@ public:
    */
   enum Constraint {
     CONSISTENT,
-    CONSERVATIVE
+    CONSERVATIVE,
+    SCALEDCONSISTENT
   };
 
   /**
@@ -108,9 +109,6 @@ public:
 
   /// Method to scale consistently mapped output data to have same surface integral as input data
   virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
-
-  /// Method to set scaling flag and modify mesh requirements
-  void makeScaleConsistent();
 
 protected:
   /// Returns pointer to input mesh.

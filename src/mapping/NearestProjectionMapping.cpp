@@ -44,9 +44,12 @@ NearestProjectionMapping::NearestProjectionMapping(
   if (constraint == CONSISTENT) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
-  } else {
-    PRECICE_ASSERT(constraint == CONSERVATIVE, constraint);
+  } else if (constraint == CONSERVATIVE) {
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
+    setOutputRequirement(Mapping::MeshRequirement::FULL);
+  } else {
+    PRECICE_ASSERT(constraint == SCALEDCONSISTENT, constraint);
+    setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
 }
@@ -74,7 +77,7 @@ void NearestProjectionMapping::computeMapping()
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, search_space;
-  if (getConstraint() == CONSISTENT) {
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
     origins      = output();
     search_space = input();
@@ -264,7 +267,7 @@ void NearestProjectionMapping::map(
   int dimensions = inData->getDimensions();
   PRECICE_ASSERT(dimensions == outData->getDimensions());
 
-  if (getConstraint() == CONSISTENT) {
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     PRECICE_DEBUG("Map consistent");
     PRECICE_ASSERT(_weights.size() == output()->vertices().size(),
                    _weights.size(), output()->vertices().size());
@@ -280,7 +283,7 @@ void NearestProjectionMapping::map(
         }
       }
     }
-    if (_isScaleConsistent) {
+    if (getConstraint() == SCALEDCONSISTENT) {
       scaleConsistentMapping(inputDataID, outputDataID);
     }
   } else {
@@ -314,7 +317,7 @@ void NearestProjectionMapping::tagMeshFirstRound()
 
   // Determine the Mesh to Tag
   mesh::PtrMesh origins;
-  if (getConstraint() == CONSISTENT) {
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     origins = input();
   } else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
