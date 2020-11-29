@@ -124,8 +124,13 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     : Mapping(constraint, dimensions),
       _basisFunction(function)
 {
-  setInputRequirement(Mapping::MeshRequirement::VERTEX);
-  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  if (constraint == SCALEDCONSISTENT) {
+    setInputRequirement(Mapping::MeshRequirement::FULL);
+    setOutputRequirement(Mapping::MeshRequirement::FULL);
+  } else {
+    setInputRequirement(Mapping::MeshRequirement::VERTEX);
+    setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  }
   setDeadAxis(xDead, yDead, zDead);
 }
 
@@ -147,7 +152,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   if (getConstraint() == CONSERVATIVE) {
     inMesh  = output();
     outMesh = input();
-  } else { // Consistent
+  } else { // Consistent or scaled consistent
     inMesh  = input();
     outMesh = output();
   }
@@ -249,7 +254,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
 
   if (getConstraint() == CONSERVATIVE) {
     mapConservative(inputDataID, outputDataID, polyparams);
-  } else if (getConstraint() == CONSISTENT) {
+  } else if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     mapConsistent(inputDataID, outputDataID, polyparams);
   }
 }
@@ -453,10 +458,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
       }
     }
 
-    if (_isScaleConsistent) {
-      scaleConsistentMapping(inputDataID, outputDataID);
-    }
-
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
 
     // Data scattering to slaves
@@ -473,6 +474,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     std::vector<double> receivedValues;
     utils::MasterSlave::_communication->receive(receivedValues, 0);
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
+  }
+  if (getConstraint() == SCALEDCONSISTENT) {
+    scaleConsistentMapping(inputDataID, outputDataID);
   }
 }
 

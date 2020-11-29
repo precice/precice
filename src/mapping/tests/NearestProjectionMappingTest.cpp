@@ -709,5 +709,74 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
   BOOST_TEST(outData->values()(0) == 1.0);
 }
 
+BOOST_AUTO_TEST_CASE(ScaledConsistentQuery_3D_FullMesh)
+{
+  PRECICE_TEST(1_rank);
+  using namespace precice::mesh;
+  constexpr int dimensions = 3;
+
+  PtrMesh      inMesh(new mesh::Mesh("InMesh", 3, false, testing::nextMeshID()));
+  PtrData      inData = inMesh->createData("InData", 1);
+  const double z1     = 0.1;
+  const double z2     = -0.1;
+  auto &       v00    = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &       v01    = inMesh->createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &       v10    = inMesh->createVertex(Eigen::Vector3d(1, 0, z1));
+  auto &       v11    = inMesh->createVertex(Eigen::Vector3d(1, 1, z1));
+  auto &       v20    = inMesh->createVertex(Eigen::Vector3d(2, 0, z2));
+  auto &       v21    = inMesh->createVertex(Eigen::Vector3d(2, 1, z2));
+  auto &       ell    = inMesh->createEdge(v00, v01);
+  auto &       elt    = inMesh->createEdge(v01, v11);
+  auto &       elr    = inMesh->createEdge(v11, v10);
+  auto &       elb    = inMesh->createEdge(v10, v00);
+  auto &       eld    = inMesh->createEdge(v00, v11);
+  auto &       erl    = elr;
+  auto &       ert    = inMesh->createEdge(v11, v21);
+  auto &       err    = inMesh->createEdge(v21, v20);
+  auto &       erb    = inMesh->createEdge(v20, v10);
+  auto &       erd    = inMesh->createEdge(v10, v21);
+  inMesh->createTriangle(ell, elt, eld);
+  inMesh->createTriangle(eld, elb, elr);
+  inMesh->createTriangle(erl, ert, erd);
+  inMesh->createTriangle(erd, erb, err);
+
+  inMesh->allocateDataValues();
+  inMesh->computeState();
+  inData->values() = Eigen::VectorXd::Constant(6, 1.0);
+
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrData outData = outMesh->createData("OutData", 1);
+  auto &  outV1   = outMesh->createVertex(Eigen::Vector3d{0.7, 0.5, 0.0});
+  auto &  outV2   = outMesh->createVertex(Eigen::Vector3d{0.5, 0.0, 0.05});
+  auto &  outV3   = outMesh->createVertex(Eigen::Vector3d{0.5, 0.0, 0.0});
+  auto &  outE1   = outMesh->createEdge(outV1, outV2);
+  auto &  outE2   = outMesh->createEdge(outV2, outV3);
+  auto &  outE3   = outMesh->createEdge(outV1, outV3);
+  auto &  outT1   = outMesh->createTriangle(outE1, outE2, outE3);
+  outMesh->allocateDataValues();
+  outMesh->computeState();
+  outData->values() = Eigen::VectorXd::Constant(3, 0.0);
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestProjectionMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  mapping.map(inData->getID(), outData->getID());
+
+  double inputIntegral  = 0.0;
+  double outputIntegral = 0.0;
+  for (auto &face : inMesh->triangles()) {
+    inputIntegral += face.getArea() * (inData->values()(face.vertex(0).getID()) + inData->values()(face.vertex(1).getID()) + inData->values()(face.vertex(2).getID())) / 3.0;
+  }
+  for (auto &face : outMesh->triangles()) {
+    outputIntegral += face.getArea() * (outData->values()(face.vertex(0).getID()) + outData->values()(face.vertex(1).getID()) + outData->values()(face.vertex(2).getID())) / 3.0;
+  }
+  BOOST_TEST(inputIntegral == outputIntegral);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

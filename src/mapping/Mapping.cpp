@@ -82,8 +82,17 @@ int Mapping::getDimensions() const
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 {
   // Both input and output mesh should have connectivity information
-  PRECICE_ASSERT(not input()->edges().empty());
-  PRECICE_ASSERT(not output()->edges().empty());
+  //PRECICE_ASSERT(not input()->edges().empty());
+  //PRECICE_ASSERT(not output()->edges().empty());
+
+  if (input()->edges().empty()) {
+    logging::Logger _log{"mapping::Mapping"};
+    PRECICE_ERROR("There is no connectivity information defined for mesh " << input()->getName() << ". Scaled consistent mapping requires connectivity information.");
+  }
+  if (output()->edges().empty()) {
+    logging::Logger _log{"mapping::Mapping"};
+    PRECICE_ERROR("There is no connectivity information defined for mesh " << output()->getName() << ". Scaled consistent mapping requires connectivity information.");
+  }
 
   const auto &inputValues  = input()->data(inputDataID)->values();
   auto &      outputValues = output()->data(outputDataID)->values();
@@ -104,6 +113,7 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
     // Calculate on the input mesh
     for (const auto &edge : input()->edges()) {
       double area = edge.getLength();
+
       // Input mesh may have overlaps, we only need to include the values on the owned vertices
       if (edge.vertex(0).isOwner() and edge.vertex(1).isOwner()) {
         for (int dim = 0; dim < valueDimensions; ++dim) {
