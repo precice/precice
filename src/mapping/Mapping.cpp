@@ -85,14 +85,14 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   //PRECICE_ASSERT(not input()->edges().empty());
   //PRECICE_ASSERT(not output()->edges().empty());
 
-  if (input()->edges().empty()) {
+  /*if (input()->edges().empty()) {
     logging::Logger _log{"mapping::Mapping"};
     PRECICE_ERROR("There is no connectivity information defined for mesh " << input()->getName() << ". Scaled consistent mapping requires connectivity information.");
   }
   if (output()->edges().empty()) {
     logging::Logger _log{"mapping::Mapping"};
     PRECICE_ERROR("There is no connectivity information defined for mesh " << output()->getName() << ". Scaled consistent mapping requires connectivity information.");
-  }
+  }*/
 
   const auto &inputValues  = input()->data(inputDataID)->values();
   auto &      outputValues = output()->data(outputDataID)->values();
@@ -112,20 +112,23 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   if (meshDimensions == 2) {
     // Calculate on the input mesh
     for (const auto &edge : input()->edges()) {
-      double area = edge.getLength();
-
+      double area    = edge.getLength();
+      int    vertex1 = edge.vertex(0).getID() * valueDimensions;
+      int    vertex2 = edge.vertex(1).getID() * valueDimensions;
       // Input mesh may have overlaps, we only need to include the values on the owned vertices
       if (edge.vertex(0).isOwner() and edge.vertex(1).isOwner()) {
         for (int dim = 0; dim < valueDimensions; ++dim) {
-          integralInput.at(dim) += 0.5 * area * (inputValues(edge.vertex(0).getID() + dim) + inputValues(edge.vertex(1).getID() + dim));
+          integralInput.at(dim) += 0.5 * area * (inputValues(vertex1 + dim) + inputValues(vertex2 + dim));
         }
       }
     }
     // Calculate on the output mesh
     for (const auto &edge : output()->edges()) {
-      double area = edge.getLength();
+      double area    = edge.getLength();
+      int    vertex1 = edge.vertex(0).getID() * valueDimensions;
+      int    vertex2 = edge.vertex(1).getID() * valueDimensions;
       for (int dim = 0; dim < valueDimensions; ++dim) {
-        integralOutput.at(dim) += 0.5 * area * (outputValues(edge.vertex(0).getID() + dim) + outputValues(edge.vertex(1).getID() + dim));
+        integralOutput.at(dim) += 0.5 * area * (outputValues(vertex1 + dim) + outputValues(vertex2 + dim));
       }
     }
   } else { // 3D
@@ -133,19 +136,25 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
     PRECICE_ASSERT(not input()->triangles().empty() or not output()->triangles().empty());
     // Calculate integral on the input mesh
     for (const auto &face : input()->triangles()) {
-      double area = face.getArea();
+      double area    = face.getArea();
+      int    vertex1 = face.vertex(0).getID() * valueDimensions;
+      int    vertex2 = face.vertex(1).getID() * valueDimensions;
+      int    vertex3 = face.vertex(2).getID() * valueDimensions;
       // Input mesh may have overlaps, we only need to include the values on the owned vertices
       if (face.vertex(0).isOwner() and face.vertex(1).isOwner() and face.vertex(2).isOwner()) {
         for (int dim = 0; dim < valueDimensions; ++dim) {
-          integralInput.at(dim) += (area / 3.0) * (inputValues(face.vertex(0).getID() + dim) + inputValues(face.vertex(1).getID() + dim) + inputValues(face.vertex(2).getID()));
+          integralInput.at(dim) += (area / 3.0) * (inputValues(vertex1 + dim) + inputValues(vertex2 + dim) + inputValues(vertex3 + dim));
         }
       }
     }
     // Calculate integral on the output mesh
     for (const auto &face : output()->triangles()) {
-      double area = face.getArea();
+      double area    = face.getArea();
+      int    vertex1 = face.vertex(0).getID() * valueDimensions;
+      int    vertex2 = face.vertex(1).getID() * valueDimensions;
+      int    vertex3 = face.vertex(2).getID() * valueDimensions;
       for (int dim = 0; dim < valueDimensions; ++dim) {
-        integralOutput.at(dim) += (area / 3.0) * (outputValues(face.vertex(0).getID() + dim) + outputValues(face.vertex(1).getID() + dim) + outputValues(face.vertex(2).getID() + dim));
+        integralOutput.at(dim) += (area / 3.0) * (outputValues(vertex1 + dim) + outputValues(vertex2 + dim) + outputValues(vertex3 + dim));
       }
     }
   }
