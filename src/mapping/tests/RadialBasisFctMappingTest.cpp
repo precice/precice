@@ -162,7 +162,7 @@ void testDistributed(const TestContext &    context,
                      Mapping &              mapping,
                      MeshSpecification      inMeshSpec,
                      MeshSpecification      outMeshSpec,
-                     ReferenceSpecification referenceSpec = {},
+                     ReferenceSpecification referenceSpec       = {},
                      int                    inGlobalIndexOffset = 0)
 {
   int meshDimension  = inMeshSpec.vertices.at(0).position.size();
@@ -1101,8 +1101,7 @@ BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV1)
                                      {2, -1, {2, 1}, {0}},
                                      {3, -1, {4.1, 0}, {0}},
                                      {3, -1, {4.2, 1}, {0}}},
-                                    {{{0, 1}, -1}, {{0, 1}, -1}, {{0, 1}, -1}, {{0, 1}, -1}})
-  );
+                                    {{{0, 1}, -1}, {{0, 1}, -1}, {{0, 1}, -1}, {{0, 1}, -1}}));
 }
 
 BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV1Vector)
@@ -1131,8 +1130,7 @@ BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV1Vector)
                                      {2, -1, {2, 1}, {0, 0}},
                                      {3, -1, {3, 0}, {0, 0}},
                                      {3, -1, {3.1, 1.1}, {0, 0}}},
-                                    {{{0, 1}, 0}, {{0, 1}, 1}, {{0, 1}, 2}, {{0, 1}, 3}})
-                                    );
+                                    {{{0, 1}, 0}, {{0, 1}, 1}, {{0, 1}, 2}, {{0, 1}, 3}}));
 }
 
 /// Using a more heterogenous distributon of vertices and owner
@@ -1162,8 +1160,7 @@ BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV2)
                                      {2, -1, {2, 1}, {0}},
                                      {3, -1, {3, 0}, {0}},
                                      {3, -1, {3, 1}, {0}}},
-                                    {{{0, 1}, 0}, {{0, 2}, 0}, {{0, 1}, 2}, {{1, 2}, 2}, {{0, 1}, 3}})
-                                    );
+                                    {{{0, 1}, 0}, {{0, 2}, 0}, {{0, 1}, 2}, {{1, 2}, 2}, {{0, 1}, 3}}));
 }
 
 /// Test with a very heterogenous distributed and non-continues ownership
@@ -1208,8 +1205,7 @@ BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV3)
                                      {2, -1, {2, 1}, {0}},
                                      {3, -1, {3, 0}, {0}},
                                      {3, -1, {3, 1}, {0}}},
-                                    {{{0, 1}, 0}, {{0, 2}, 0}, {{0, 1}, 2}, {{1, 2}, 2}, {{0, 1}, 3}})
-                                    );
+                                    {{{0, 1}, 0}, {{0, 2}, 0}, {{0, 1}, 2}, {{1, 2}, 2}, {{0, 1}, 3}}));
 }
 
 /// Test with a very heterogenous distributed and non-continues ownership
@@ -1299,8 +1295,7 @@ BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV4)
                                      {2, -1, {2, 1}, {0}},
                                      {2, -1, {3, 0}, {0}},
                                      {2, -1, {3, 1}, {0}}},
-                                    {{{0, 1}, 1}, {{1, 2}, 1}, {{2, 3}, 1}, {{0, 1}, 2}, {{1, 2}, 2}, {{2, 3}, 2}})
-                                    );
+                                    {{{0, 1}, 1}, {{1, 2}, 1}, {{2, 3}, 1}, {{0, 1}, 2}, {{1, 2}, 2}, {{2, 3}, 2}}));
 }
 
 // same as 2DV4, but all ranks have vertices
@@ -1358,8 +1353,7 @@ BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV5)
                                      {2, -1, {2, 1}, {0}},
                                      {2, -1, {3, 0}, {0}},
                                      {2, -1, {3, 1}, {0}}},
-                                    {{{0, 1}, 1}, {{1, 2}, 1}, {{2, 3}, 1}, {{0, 1}, 2}, {{1, 2}, 2}, {{2, 3}, 2}})
-                                    );
+                                    {{{0, 1}, 1}, {{1, 2}, 1}, {{2, 3}, 1}, {{0, 1}, 2}, {{1, 2}, 2}, {{2, 3}, 2}}));
 }
 
 void testTagging(const TestContext &context,

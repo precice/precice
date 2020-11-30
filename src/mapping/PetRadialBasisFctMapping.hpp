@@ -219,11 +219,10 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
       _preallocation(preallocation),
       _commState(utils::Parallel::current())
 {
-  if (constraint == SCALEDCONSISTENT){
+  if (constraint == SCALEDCONSISTENT) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
-  }
-  else{
+  } else {
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   }
@@ -893,15 +892,14 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
 {
   std::string constraintName;
-  if(getConstraint() == CONSISTENT){
+  if (getConstraint() == CONSISTENT) {
     constraintName = "consistent";
-  } else if(getConstraint() == SCALEDCONSISTENT){
+  } else if (getConstraint() == SCALEDCONSISTENT) {
     constraintName = "scaled-consistent";
   } else {
     constraintName = "conservative";
   }
-  
-  
+
   const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
   PRECICE_INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName

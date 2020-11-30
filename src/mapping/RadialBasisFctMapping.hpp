@@ -527,8 +527,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 
   if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     mesh = input();
-  }
-  else {
+  } else {
     mesh = output();
   }
 
