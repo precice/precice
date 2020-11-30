@@ -37,17 +37,17 @@ void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, Eig
   double outputIntegral = 0.0;
   if (inMesh->getDimensions() == 2) {
     for (const auto &edge : inMesh->edges()) {
-      inputIntegral += 0.5 * edge.getLength() * (inValues(edge.vertex(0).getID() + inValues(edge.vertex(1).getID())));
+      inputIntegral += 0.5 * edge.getLength() * (inValues(edge.vertex(0).getID()) + inValues(edge.vertex(1).getID()));
     }
     for (const auto &edge : outMesh->edges()) {
-      inputIntegral += 0.5 * edge.getLength() * (outValues(edge.vertex(0).getID() + outValues(edge.vertex(1).getID())));
+      outputIntegral += 0.5 * edge.getLength() * (outValues(edge.vertex(0).getID()) + outValues(edge.vertex(1).getID()));
     }
   } else {
     for (const auto &face : inMesh->triangles()) {
-      inputIntegral += face.getArea() * (inValues(face.vertex(0).getID()) + inValues(face.vertex(1).getID()) + inValues(face.vertex(2).getID()));
+      inputIntegral += face.getArea() * (inValues(face.vertex(0).getID()) + inValues(face.vertex(1).getID()) + inValues(face.vertex(2).getID())) / 3.0;
     }
     for (const auto &face : outMesh->triangles()) {
-      outputIntegral += face.getArea() * (outValues(face.vertex(0).getID()) + outValues(face.vertex(1).getID()) + outValues(face.vertex(2).getID()));
+      outputIntegral += face.getArea() * (outValues(face.vertex(0).getID()) + outValues(face.vertex(1).getID()) + outValues(face.vertex(2).getID())) / 3.0;
     }
   }
   BOOST_TEST(inputIntegral == outputIntegral);
@@ -162,7 +162,7 @@ void testDistributed(const TestContext &    context,
                      Mapping &              mapping,
                      MeshSpecification      inMeshSpec,
                      MeshSpecification      outMeshSpec,
-                     ReferenceSpecification referenceSpec,
+                     ReferenceSpecification referenceSpec = {},
                      int                    inGlobalIndexOffset = 0)
 {
   int meshDimension  = inMeshSpec.vertices.at(0).position.size();
@@ -267,45 +267,6 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
                    {3, {8}}});
 }
 
-/// Test with a homogenous distribution of mesh amoung ranks
-BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV1)
-{
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
-
-  testDistributed(context, mapping,
-                  MeshSpecification({// Consistent mapping: The inMesh is communicated
-                                     {-1, 0, {0, 0}, {1}},
-                                     {-1, 0, {0, 1}, {2}},
-                                     {-1, 1, {1, 0}, {3}},
-                                     {-1, 1, {1, 1}, {4}},
-                                     {-1, 2, {2, 0}, {5}},
-                                     {-1, 2, {2, 1}, {6}},
-                                     {-1, 3, {4, 0}, {7}},
-                                     {-1, 3, {4, 1}, {8}}},
-                                    {{{0, 1}, 0}, {{2, 3}, 1}, {{4, 5}, 2}, {{6, 7}, 3}}),
-                  MeshSpecification({// The outMesh is local, distributed amoung all ranks
-                                     {0, -1, {0, 0}, {0}},
-                                     {0, -1, {0, 1}, {0}},
-                                     {1, -1, {1, 0}, {0}},
-                                     {1, -1, {1, 1}, {0}},
-                                     {2, -1, {2, 0}, {0}},
-                                     {2, -1, {2, 1}, {0}},
-                                     {3, -1, {4.1, 0}, {0}},
-                                     {3, -1, {4.2, 1}, {0}}},
-                                    {{{0, 1}, -1}, {{0, 1}, -1}, {{0, 1}, -1}, {{0, 1}, -1}}),
-                  {// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
-                   {0, {1}},
-                   {0, {2}},
-                   {1, {3}},
-                   {1, {4}},
-                   {2, {5}},
-                   {2, {6}},
-                   {3, {7}},
-                   {3, {8}}});
-}
-
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
@@ -331,44 +292,6 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
                                      {2, -1, {2, 1}, {0, 0}},
                                      {3, -1, {3, 0}, {0, 0}},
                                      {3, -1, {3, 1}, {0, 0}}}),
-                  {// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
-                   {0, {1, 4}},
-                   {0, {2, 5}},
-                   {1, {3, 6}},
-                   {1, {4, 7}},
-                   {2, {5, 8}},
-                   {2, {6, 9}},
-                   {3, {7, 10}},
-                   {3, {8, 11}}});
-}
-
-BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV1Vector)
-{
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
-
-  testDistributed(context, mapping,
-                  MeshSpecification({// Consistent mapping: The inMesh is communicated
-                                     {-1, 0, {0, 0}, {1, 4}},
-                                     {-1, 0, {0, 1}, {2, 5}},
-                                     {-1, 1, {1, 0}, {3, 6}},
-                                     {-1, 1, {1, 1}, {4, 7}},
-                                     {-1, 2, {2, 0}, {5, 8}},
-                                     {-1, 2, {2, 1}, {6, 9}},
-                                     {-1, 3, {3, 0}, {7, 10}},
-                                     {-1, 3, {3, 1}, {8, 11}}},
-                                    {{{0, 1}, -1}, {{2, 3}, -1}, {{4, 5}, -1}, {{6, 7}, -1}}),
-                  MeshSpecification({// The outMesh is local, distributed amoung all ranks
-                                     {0, -1, {0, 0}, {0, 0}},
-                                     {0, -1, {0, 1}, {0, 0}},
-                                     {1, -1, {1, 0}, {0, 0}},
-                                     {1, -1, {1, 1}, {0, 0}},
-                                     {2, -1, {2, 0}, {0, 0}},
-                                     {2, -1, {2, 1}, {0, 0}},
-                                     {3, -1, {3, 0}, {0, 0}},
-                                     {3, -1, {3.1, 1.1}, {0, 0}}},
-                                    {{{0, 1}, 0}, {{0, 1}, 1}, {{0, 1}, 2}, {{0, 1}, 3}}),
                   {// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
                    {0, {1, 4}},
                    {0, {2, 5}},
@@ -406,46 +329,6 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                                      {2, -1, {2, 1}, {0}},
                                      {3, -1, {3, 0}, {0}},
                                      {3, -1, {3, 1}, {0}}}),
-                  {// Tests for {0, 1, 2} on the first rank,
-                   // second rank (consistent with the outMesh) is empty, ...
-                   {0, {1}},
-                   {0, {2}},
-                   {0, {3}},
-                   {2, {4}},
-                   {2, {5}},
-                   {2, {6}},
-                   {3, {7}},
-                   {3, {8}}});
-}
-
-/// Using a more heterogenous distributon of vertices and owner
-BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV2)
-{
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
-
-  testDistributed(context, mapping,
-                  MeshSpecification({// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
-                                     {-1, 0, {0, 0}, {1}},
-                                     {-1, 0, {0, 1}, {2}},
-                                     {-1, 1, {1, 0}, {3}},
-                                     {-1, 1, {1, 1}, {4}},
-                                     {-1, 1, {2, 0}, {5}},
-                                     {-1, 3, {2, 1}, {6}},
-                                     {-1, 3, {3, 0}, {7}},
-                                     {-1, 3, {3, 1}, {8}}},
-                                    {{{0, 1}, -1}, {{2, 3}, -1}, {{3, 4}, -1}, {{5, 6}, -1}, {{6, 7}, -1}}),
-                  MeshSpecification({// The outMesh is local, rank 1 is empty
-                                     {0, -1, {0, 0}, {0}},
-                                     {0, -1, {0, 1}, {0}},
-                                     {0, -1, {1, 0}, {0}},
-                                     {2, -1, {1, 1}, {0}},
-                                     {2, -1, {2, 0}, {0}},
-                                     {2, -1, {2, 1}, {0}},
-                                     {3, -1, {3, 0}, {0}},
-                                     {3, -1, {3, 1}, {0}}},
-                                    {{{0, 1}, 0}, {{0, 2}, 0}, {{0, 1}, 2}, {{1, 2}, 2}, {{0, 1}, 3}}),
                   {// Tests for {0, 1, 2} on the first rank,
                    // second rank (consistent with the outMesh) is empty, ...
                    {0, {1}},
@@ -515,62 +398,6 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 }
 
 /// Test with a very heterogenous distributed and non-continues ownership
-BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV3)
-{
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
-
-  std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
-
-  testDistributed(context, mapping,
-                  MeshSpecification({// Rank 0 has part of the mesh, owns a subpart
-                                     {0, 0, {0, 0}, {1}},
-                                     {0, 0, {0, 1}, {2}},
-                                     {0, 0, {1, 0}, {3}},
-                                     {0, -1, {1, 1}, {4}},
-                                     {0, -1, {2, 0}, {5}},
-                                     {0, -1, {2, 1}, {6}},
-                                     // Rank 1 has no vertices
-                                     // Rank 2 has the entire mesh, but owns just 3 and 5.
-                                     {2, -1, {0, 0}, {1}},
-                                     {2, -1, {0, 1}, {2}},
-                                     {2, -1, {1, 0}, {3}},
-                                     {2, 2, {1, 1}, {4}},
-                                     {2, -1, {2, 0}, {5}},
-                                     {2, 2, {2, 1}, {6}},
-                                     {2, -1, {3, 0}, {7}},
-                                     {2, -1, {3, 1}, {8}},
-                                     // Rank 3 has the last 4 vertices, owns 4, 6 and 7
-                                     {3, 3, {2, 0}, {5}},
-                                     {3, -1, {2, 1}, {6}},
-                                     {3, 3, {3, 0}, {7}},
-                                     {3, 3, {3, 1}, {8}}},
-                                    {{{0, 1}, 0}, {{1, 2}, 0}, {{3, 5}, 2}, {{0, 1}, 3}, {{1, 2}, 3}, {{2, 3}, 3}}),
-                  MeshSpecification({// The outMesh is local, rank 1 is empty
-                                     {0, -1, {0, 0}, {0}},
-                                     {0, -1, {0, 1}, {0}},
-                                     {0, -1, {1, 0}, {0}},
-                                     {2, -1, {1, 1}, {0}},
-                                     {2, -1, {2, 0}, {0}},
-                                     {2, -1, {2, 1}, {0}},
-                                     {3, -1, {3, 0}, {0}},
-                                     {3, -1, {3, 1}, {0}}},
-                                    {{{0, 1}, 0}, {{0, 2}, 0}, {{0, 1}, 2}, {{1, 2}, 2}, {{0, 1}, 3}}),
-                  {// Tests for {0, 1, 2} on the first rank,
-                   // second rank (consistent with the outMesh) is empty, ...
-                   {0, {1}},
-                   {0, {2}},
-                   {0, {3}},
-                   {2, {4}},
-                   {2, {5}},
-                   {2, {6}},
-                   {3, {7}},
-                   {3, {8}}},
-                  globalIndexOffsets.at(context.rank));
-}
-
-/// Test with a very heterogenous distributed and non-continues ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
@@ -613,62 +440,6 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
                                      {2, -1, {2, 1}, {0, 0}},
                                      {3, -1, {3, 0}, {0, 0}},
                                      {3, -1, {3, 1}, {0, 0}}}),
-                  {// Tests for {0, 1, 2} on the first rank,
-                   // second rank (consistent with the outMesh) is empty, ...
-                   {0, {1, 4}},
-                   {0, {2, 5}},
-                   {0, {3, 6}},
-                   {2, {4, 7}},
-                   {2, {5, 8}},
-                   {2, {6, 9}},
-                   {3, {7, 10}},
-                   {3, {8, 11}}},
-                  globalIndexOffsets.at(context.rank));
-}
-
-/// Test with a very heterogenous distributed and non-continues ownership
-BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV3Vector)
-{
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  Gaussian                        fct(5.0);
-  RadialBasisFctMapping<Gaussian> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
-
-  std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
-
-  testDistributed(context, mapping,
-                  MeshSpecification({// Rank 0 has part of the mesh, owns a subpart
-                                     {0, 0, {0, 0}, {1, 4}},
-                                     {0, 0, {0, 1}, {2, 5}},
-                                     {0, 0, {1, 0}, {3, 6}},
-                                     {0, -1, {1, 1}, {4, 7}},
-                                     {0, -1, {2, 0}, {5, 8}},
-                                     {0, -1, {2, 1}, {6, 9}},
-                                     // Rank 1 has no vertices
-                                     // Rank 2 has the entire mesh, but owns just 3 and 5.
-                                     {2, -1, {0, 0}, {1, 4}},
-                                     {2, -1, {0, 1}, {2, 5}},
-                                     {2, -1, {1, 0}, {3, 6}},
-                                     {2, 2, {1, 1}, {4, 7}},
-                                     {2, -1, {2, 0}, {5, 8}},
-                                     {2, 2, {2, 1}, {6, 9}},
-                                     {2, -1, {3, 0}, {7, 10}},
-                                     {2, -1, {3, 1}, {8, 11}},
-                                     // Rank 3 has the last 4 vertices, owns 4, 6 and 7
-                                     {3, 3, {2, 0}, {5, 8}},
-                                     {3, -1, {2, 1}, {6, 9}},
-                                     {3, 3, {3, 0}, {7, 10}},
-                                     {3, 3, {3, 1}, {8, 11}}},
-                                    {{{0, 1}, 0}, {{1, 2}, 0}, {{3, 5}, 2}, {{0, 1}, 3}, {{1, 2}, 3}, {{2, 3}, 3}}),
-                  MeshSpecification({// The outMesh is local, rank 1 is empty
-                                     {0, -1, {0, 0}, {0, 0}},
-                                     {0, -1, {0, 1}, {0, 0}},
-                                     {0, -1, {1, 0}, {0, 0}},
-                                     {2, -1, {1, 1}, {0, 0}},
-                                     {2, -1, {2, 0}, {0, 0}},
-                                     {2, -1, {2, 1}, {0, 0}},
-                                     {3, -1, {3, 0}, {0, 0}},
-                                     {3, -1, {3, 1}, {0, 0}}},
-                                    {{{0, 1}, 0}, {{0, 2}, 0}, {{0, 1}, 2}, {{1, 2}, 2}, {{0, 1}, 3}}),
                   {// Tests for {0, 1, 2} on the first rank,
                    // second rank (consistent with the outMesh) is empty, ...
                    {0, {1, 4}},
@@ -737,52 +508,6 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
                   globalIndexOffsets.at(context.rank));
 }
 
-/// Some ranks are empty, does not converge
-BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV4)
-{
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  ThinPlateSplines                        fct;
-  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
-
-  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
-
-  testDistributed(context, mapping,
-                  MeshSpecification({// Rank 0 has no vertices
-                                     // Rank 1 has the entire mesh, owns a subpart
-                                     {1, 1, {0, 0}, {1.1}},
-                                     {1, 1, {0, 1}, {2.5}},
-                                     {1, 1, {1, 0}, {3}},
-                                     {1, 1, {1, 1}, {4}},
-                                     {1, -1, {2, 0}, {5}},
-                                     {1, -1, {2, 1}, {6}},
-                                     {1, -1, {3, 0}, {7}},
-                                     {1, -1, {3, 1}, {8}},
-                                     // Rank 2 has the entire mesh, owns a subpart
-                                     {2, -1, {0, 0}, {1.1}},
-                                     {2, -1, {0, 1}, {2.5}},
-                                     {2, -1, {1, 0}, {3}},
-                                     {2, -1, {1, 1}, {4}},
-                                     {2, 2, {2, 0}, {5}},
-                                     {2, 2, {2, 1}, {6}},
-                                     {2, 2, {3, 0}, {7}},
-                                     {2, 2, {3, 1}, {8}}},
-                                    // Rank 3 has no vertices
-                                    {{{0, 1}, 1}, {{1, 2}, 1}, {{2, 3}, 1}, {{4, 5}, 2}, {{5, 6}, 2}, {{6, 7}, 2}}),
-                  MeshSpecification({// The outMesh is local, rank 0 and 3 are empty
-                                     // not same order as input mesh and vertex (2,0) appears twice
-                                     {1, -1, {2, 0}, {0}},
-                                     {1, -1, {1, 0}, {0}},
-                                     {1, -1, {0, 1}, {0}},
-                                     {1, -1, {1, 1}, {0}},
-                                     {1, -1, {0, 0}, {0}},
-                                     {2, -1, {2, 0}, {0}},
-                                     {2, -1, {2, 1}, {0}},
-                                     {2, -1, {3, 0}, {0}},
-                                     {2, -1, {3, 1}, {0}}},
-                                    {{{0, 1}, 1}, {{1, 2}, 1}, {{2, 3}, 1}, {{0, 1}, 2}, {{1, 2}, 2}, {{2, 3}, 2}}),
-                  {{1, {5}}, {1, {3}}, {1, {2.5}}, {1, {4}}, {1, {1.1}}, {2, {5}}, {2, {6}}, {2, {7}}, {2, {8}}}, globalIndexOffsets.at(context.rank));
-}
-
 // same as 2DV4, but all ranks have vertices
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
@@ -849,65 +574,6 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
                    {2, {7}},
                    {2, {8}}},
                   globalIndexOffsets.at(context.rank));
-}
-
-// same as 2DV4, but all ranks have vertices
-BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV5)
-{
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  ThinPlateSplines                        fct;
-  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
-
-  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
-
-  testDistributed(context, mapping,
-                  MeshSpecification({// Every rank has the entire mesh and owns a subpart
-                                     {0, 0, {0, 0}, {1.1}},
-                                     {0, 0, {0, 1}, {2.5}},
-                                     {0, -1, {1, 0}, {3}},
-                                     {0, -1, {1, 1}, {4}},
-                                     {0, -1, {2, 0}, {5}},
-                                     {0, -1, {2, 1}, {6}},
-                                     {0, -1, {3, 0}, {7}},
-                                     {0, -1, {3, 1}, {8}},
-                                     {1, -1, {0, 0}, {1.1}},
-                                     {1, -1, {0, 1}, {2.5}},
-                                     {1, 1, {1, 0}, {3}},
-                                     {1, 1, {1, 1}, {4}},
-                                     {1, -1, {2, 0}, {5}},
-                                     {1, -1, {2, 1}, {6}},
-                                     {1, -1, {3, 0}, {7}},
-                                     {1, -1, {3, 1}, {8}},
-                                     {2, -1, {0, 0}, {1.1}},
-                                     {2, -1, {0, 1}, {2.5}},
-                                     {2, -1, {1, 0}, {3}},
-                                     {2, -1, {1, 1}, {4}},
-                                     {2, 2, {2, 0}, {5}},
-                                     {2, 2, {2, 1}, {6}},
-                                     {2, -1, {3, 0}, {7}},
-                                     {2, -1, {3, 1}, {8}},
-                                     {3, -1, {0, 0}, {1.1}},
-                                     {3, -1, {0, 1}, {2.5}},
-                                     {3, -1, {1, 0}, {3}},
-                                     {3, -1, {1, 1}, {4}},
-                                     {3, -1, {2, 0}, {5}},
-                                     {3, -1, {2, 1}, {6}},
-                                     {3, 3, {3, 0}, {7}},
-                                     {3, 3, {3, 1}, {8}}},
-                                    {{{0, 1}, 0}, {{2, 3}, 1}, {{4, 5}, 2}, {{6, 7}, 3}}),
-                  MeshSpecification({// The outMesh is local, rank 0 and 3 are empty
-                                     // not same order as input mesh and vertex (2,0) appears twice
-                                     {1, -1, {2, 0}, {0}},
-                                     {1, -1, {1, 0}, {0}},
-                                     {1, -1, {0, 1}, {0}},
-                                     {1, -1, {1, 1}, {0}},
-                                     {1, -1, {0, 0}, {0}},
-                                     {2, -1, {2, 0}, {0}},
-                                     {2, -1, {2, 1}, {0}},
-                                     {2, -1, {3, 0}, {0}},
-                                     {2, -1, {3, 1}, {0}}},
-                                    {{{0, 1}, 1}, {{1, 2}, 1}, {{2, 3}, 1}, {{0, 1}, 2}, {{1, 2}, 2}, {{2, 3}, 2}}),
-                  {{1, {5}}, {1, {3}}, {1, {2.5}}, {1, {4}}, {1, {1.1}}, {2, {5}}, {2, {6}}, {2, {7}}, {2, {8}}}, globalIndexOffsets.at(context.rank));
 }
 
 /// same as 2DV4, but strictly linear input values, converges and gives correct results
@@ -1408,6 +1074,294 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                   context.rank * 2);
 }
 
+/// Test with a homogenous distribution of mesh amoung ranks
+BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV1)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  Gaussian                        fct(5.0);
+  RadialBasisFctMapping<Gaussian> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
+
+  testDistributed(context, mapping,
+                  MeshSpecification({// Consistent mapping: The inMesh is communicated
+                                     {-1, 0, {0, 0}, {1}},
+                                     {-1, 0, {0, 1}, {2}},
+                                     {-1, 1, {1, 0}, {3}},
+                                     {-1, 1, {1, 1}, {4}},
+                                     {-1, 2, {2, 0}, {5}},
+                                     {-1, 2, {2, 1}, {6}},
+                                     {-1, 3, {4, 0}, {7}},
+                                     {-1, 3, {4, 1}, {8}}},
+                                    {{{0, 1}, 0}, {{2, 3}, 1}, {{4, 5}, 2}, {{6, 7}, 3}}),
+                  MeshSpecification({// The outMesh is local, distributed amoung all ranks
+                                     {0, -1, {0, 0}, {0}},
+                                     {0, -1, {0, 1}, {0}},
+                                     {1, -1, {1, 0}, {0}},
+                                     {1, -1, {1, 1}, {0}},
+                                     {2, -1, {2, 0}, {0}},
+                                     {2, -1, {2, 1}, {0}},
+                                     {3, -1, {4.1, 0}, {0}},
+                                     {3, -1, {4.2, 1}, {0}}},
+                                    {{{0, 1}, -1}, {{0, 1}, -1}, {{0, 1}, -1}, {{0, 1}, -1}})
+  );
+}
+
+BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV1Vector)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  Gaussian                        fct(5.0);
+  RadialBasisFctMapping<Gaussian> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
+
+  testDistributed(context, mapping,
+                  MeshSpecification({// Consistent mapping: The inMesh is communicated
+                                     {-1, 0, {0, 0}, {1, 4}},
+                                     {-1, 0, {0, 1}, {2, 5}},
+                                     {-1, 1, {1, 0}, {3, 6}},
+                                     {-1, 1, {1, 1}, {4, 7}},
+                                     {-1, 2, {2, 0}, {5, 8}},
+                                     {-1, 2, {2, 1}, {6, 9}},
+                                     {-1, 3, {3, 0}, {7, 10}},
+                                     {-1, 3, {3, 1}, {8, 11}}},
+                                    {{{0, 1}, 0}, {{2, 3}, 1}, {{4, 5}, 2}, {{6, 7}, 3}}),
+                  MeshSpecification({// The outMesh is local, distributed amoung all ranks
+                                     {0, -1, {0, 0}, {0, 0}},
+                                     {0, -1, {0, 1}, {0, 0}},
+                                     {1, -1, {1, 0}, {0, 0}},
+                                     {1, -1, {1, 1}, {0, 0}},
+                                     {2, -1, {2, 0}, {0, 0}},
+                                     {2, -1, {2, 1}, {0, 0}},
+                                     {3, -1, {3, 0}, {0, 0}},
+                                     {3, -1, {3.1, 1.1}, {0, 0}}},
+                                    {{{0, 1}, 0}, {{0, 1}, 1}, {{0, 1}, 2}, {{0, 1}, 3}})
+                                    );
+}
+
+/// Using a more heterogenous distributon of vertices and owner
+BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV2)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  Gaussian                        fct(5.0);
+  RadialBasisFctMapping<Gaussian> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
+
+  testDistributed(context, mapping,
+                  MeshSpecification({// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
+                                     {-1, 0, {0, 0}, {1}},
+                                     {-1, 0, {0, 1}, {2}},
+                                     {-1, 1, {1, 0}, {3}},
+                                     {-1, 1, {1, 1}, {4}},
+                                     {-1, 1, {2, 0}, {5}},
+                                     {-1, 3, {2, 1}, {6}},
+                                     {-1, 3, {3, 0}, {7}},
+                                     {-1, 3, {3, 1}, {8}}},
+                                    {{{0, 1}, 0}, {{2, 3}, 1}, {{3, 4}, 1}, {{5, 6}, 2}, {{6, 7}, 3}}),
+                  MeshSpecification({// The outMesh is local, rank 1 is empty
+                                     {0, -1, {0, 0}, {0}},
+                                     {0, -1, {0, 1}, {0}},
+                                     {0, -1, {1, 0}, {0}},
+                                     {2, -1, {1, 1}, {0}},
+                                     {2, -1, {2, 0}, {0}},
+                                     {2, -1, {2, 1}, {0}},
+                                     {3, -1, {3, 0}, {0}},
+                                     {3, -1, {3, 1}, {0}}},
+                                    {{{0, 1}, 0}, {{0, 2}, 0}, {{0, 1}, 2}, {{1, 2}, 2}, {{0, 1}, 3}})
+                                    );
+}
+
+/// Test with a very heterogenous distributed and non-continues ownership
+BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV3)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  Gaussian                        fct(5.0);
+  RadialBasisFctMapping<Gaussian> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
+
+  testDistributed(context, mapping,
+                  MeshSpecification({// Rank 0 has part of the mesh, owns a subpart
+                                     {0, 0, {0, 0}, {1}},
+                                     {0, 0, {0, 1}, {2}},
+                                     {0, 0, {1, 0}, {3}},
+                                     {0, -1, {1, 1}, {4}},
+                                     {0, -1, {2, 0}, {5}},
+                                     {0, -1, {2, 1}, {6}},
+                                     // Rank 1 has no vertices
+                                     // Rank 2 has the entire mesh, but owns just 3 and 5.
+                                     {2, -1, {0, 0}, {1}},
+                                     {2, -1, {0, 1}, {2}},
+                                     {2, -1, {1, 0}, {3}},
+                                     {2, 2, {1, 1}, {4}},
+                                     {2, -1, {2, 0}, {5}},
+                                     {2, 2, {2, 1}, {6}},
+                                     {2, -1, {3, 0}, {7}},
+                                     {2, -1, {3, 1}, {8}},
+                                     // Rank 3 has the last 4 vertices, owns 4, 6 and 7
+                                     {3, 3, {2, 0}, {5}},
+                                     {3, -1, {2, 1}, {6}},
+                                     {3, 3, {3, 0}, {7}},
+                                     {3, 3, {3, 1}, {8}}},
+                                    {{{0, 1}, 0}, {{1, 2}, 0}, {{3, 5}, 2}, {{0, 1}, 3}, {{1, 2}, 3}, {{2, 3}, 3}}),
+                  MeshSpecification({// The outMesh is local, rank 1 is empty
+                                     {0, -1, {0, 0}, {0}},
+                                     {0, -1, {0, 1}, {0}},
+                                     {0, -1, {1, 0}, {0}},
+                                     {2, -1, {1, 1}, {0}},
+                                     {2, -1, {2, 0}, {0}},
+                                     {2, -1, {2, 1}, {0}},
+                                     {3, -1, {3, 0}, {0}},
+                                     {3, -1, {3, 1}, {0}}},
+                                    {{{0, 1}, 0}, {{0, 2}, 0}, {{0, 1}, 2}, {{1, 2}, 2}, {{0, 1}, 3}})
+                                    );
+}
+
+/// Test with a very heterogenous distributed and non-continues ownership
+BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV3Vector)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  Gaussian                        fct(5.0);
+  RadialBasisFctMapping<Gaussian> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
+
+  testDistributed(context, mapping,
+                  MeshSpecification({// Rank 0 has part of the mesh, owns a subpart
+                                     {0, 0, {0, 0}, {1, 4}},
+                                     {0, 0, {0, 1}, {2, 5}},
+                                     {0, 0, {1, 0}, {3, 6}},
+                                     {0, -1, {1, 1}, {4, 7}},
+                                     {0, -1, {2, 0}, {5, 8}},
+                                     {0, -1, {2, 1}, {6, 9}},
+                                     // Rank 1 has no vertices
+                                     // Rank 2 has the entire mesh, but owns just 3 and 5.
+                                     {2, -1, {0, 0}, {1, 4}},
+                                     {2, -1, {0, 1}, {2, 5}},
+                                     {2, -1, {1, 0}, {3, 6}},
+                                     {2, 2, {1, 1}, {4, 7}},
+                                     {2, -1, {2, 0}, {5, 8}},
+                                     {2, 2, {2, 1}, {6, 9}},
+                                     {2, -1, {3, 0}, {7, 10}},
+                                     {2, -1, {3, 1}, {8, 11}},
+                                     // Rank 3 has the last 4 vertices, owns 4, 6 and 7
+                                     {3, 3, {2, 0}, {5, 8}},
+                                     {3, -1, {2, 1}, {6, 9}},
+                                     {3, 3, {3, 0}, {7, 10}},
+                                     {3, 3, {3, 1}, {8, 11}}},
+                                    {{{0, 1}, 0}, {{1, 2}, 0}, {{3, 5}, 2}, {{0, 1}, 3}, {{1, 2}, 3}, {{2, 3}, 3}}),
+                  MeshSpecification({// The outMesh is local, rank 1 is empty
+                                     {0, -1, {0, 0}, {0, 0}},
+                                     {0, -1, {0, 1}, {0, 0}},
+                                     {0, -1, {1, 0}, {0, 0}},
+                                     {2, -1, {1, 1}, {0, 0}},
+                                     {2, -1, {2, 0}, {0, 0}},
+                                     {2, -1, {2, 1}, {0, 0}},
+                                     {3, -1, {3, 0}, {0, 0}},
+                                     {3, -1, {3, 1}, {0, 0}}},
+                                    {{{0, 1}, 0}, {{0, 2}, 0}, {{0, 1}, 2}, {{1, 2}, 2}, {{0, 1}, 3}}));
+}
+
+/// Some ranks are empty, does not converge
+BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV4)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  ThinPlateSplines                        fct;
+  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
+
+  testDistributed(context, mapping,
+                  MeshSpecification({// Rank 0 has no vertices
+                                     // Rank 1 has the entire mesh, owns a subpart
+                                     {1, 1, {0, 0}, {1.1}},
+                                     {1, 1, {0, 1}, {2.5}},
+                                     {1, 1, {1, 0}, {3}},
+                                     {1, 1, {1, 1}, {4}},
+                                     {1, -1, {2, 0}, {5}},
+                                     {1, -1, {2, 1}, {6}},
+                                     {1, -1, {3, 0}, {7}},
+                                     {1, -1, {3, 1}, {8}},
+                                     // Rank 2 has the entire mesh, owns a subpart
+                                     {2, -1, {0, 0}, {1.1}},
+                                     {2, -1, {0, 1}, {2.5}},
+                                     {2, -1, {1, 0}, {3}},
+                                     {2, -1, {1, 1}, {4}},
+                                     {2, 2, {2, 0}, {5}},
+                                     {2, 2, {2, 1}, {6}},
+                                     {2, 2, {3, 0}, {7}},
+                                     {2, 2, {3, 1}, {8}}},
+                                    // Rank 3 has no vertices
+                                    {{{0, 1}, 1}, {{1, 2}, 1}, {{2, 3}, 1}, {{4, 5}, 2}, {{5, 6}, 2}, {{6, 7}, 2}}),
+                  MeshSpecification({// The outMesh is local, rank 0 and 3 are empty
+                                     // not same order as input mesh and vertex (2,0) appears twice
+                                     {1, -1, {2, 0}, {0}},
+                                     {1, -1, {1, 0}, {0}},
+                                     {1, -1, {0, 1}, {0}},
+                                     {1, -1, {1, 1}, {0}},
+                                     {1, -1, {0, 0}, {0}},
+                                     {2, -1, {2, 0}, {0}},
+                                     {2, -1, {2, 1}, {0}},
+                                     {2, -1, {3, 0}, {0}},
+                                     {2, -1, {3, 1}, {0}}},
+                                    {{{0, 1}, 1}, {{1, 2}, 1}, {{2, 3}, 1}, {{0, 1}, 2}, {{1, 2}, 2}, {{2, 3}, 2}})
+                                    );
+}
+
+// same as 2DV4, but all ranks have vertices
+BOOST_AUTO_TEST_CASE(DistributedScaledConsistent2DV5)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  ThinPlateSplines                        fct;
+  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::SCALEDCONSISTENT, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
+
+  testDistributed(context, mapping,
+                  MeshSpecification({// Every rank has the entire mesh and owns a subpart
+                                     {0, 0, {0, 0}, {1.1}},
+                                     {0, 0, {0, 1}, {2.5}},
+                                     {0, -1, {1, 0}, {3}},
+                                     {0, -1, {1, 1}, {4}},
+                                     {0, -1, {2, 0}, {5}},
+                                     {0, -1, {2, 1}, {6}},
+                                     {0, -1, {3, 0}, {7}},
+                                     {0, -1, {3, 1}, {8}},
+                                     {1, -1, {0, 0}, {1.1}},
+                                     {1, -1, {0, 1}, {2.5}},
+                                     {1, 1, {1, 0}, {3}},
+                                     {1, 1, {1, 1}, {4}},
+                                     {1, -1, {2, 0}, {5}},
+                                     {1, -1, {2, 1}, {6}},
+                                     {1, -1, {3, 0}, {7}},
+                                     {1, -1, {3, 1}, {8}},
+                                     {2, -1, {0, 0}, {1.1}},
+                                     {2, -1, {0, 1}, {2.5}},
+                                     {2, -1, {1, 0}, {3}},
+                                     {2, -1, {1, 1}, {4}},
+                                     {2, 2, {2, 0}, {5}},
+                                     {2, 2, {2, 1}, {6}},
+                                     {2, -1, {3, 0}, {7}},
+                                     {2, -1, {3, 1}, {8}},
+                                     {3, -1, {0, 0}, {1.1}},
+                                     {3, -1, {0, 1}, {2.5}},
+                                     {3, -1, {1, 0}, {3}},
+                                     {3, -1, {1, 1}, {4}},
+                                     {3, -1, {2, 0}, {5}},
+                                     {3, -1, {2, 1}, {6}},
+                                     {3, 3, {3, 0}, {7}},
+                                     {3, 3, {3.1, 1.1}, {8}}},
+                                    {{{0, 1}, 0}, {{2, 3}, 1}, {{4, 5}, 2}, {{6, 7}, 3}}),
+                  MeshSpecification({// The outMesh is local, rank 0 and 3 are empty
+                                     // not same order as input mesh and vertex (2,0) appears twice
+                                     {1, -1, {2, 0}, {0}},
+                                     {1, -1, {1, 0}, {0}},
+                                     {1, -1, {0, 1}, {0}},
+                                     {1, -1, {1, 1}, {0}},
+                                     {1, -1, {0, 0}, {0}},
+                                     {2, -1, {2, 0}, {0}},
+                                     {2, -1, {2, 1}, {0}},
+                                     {2, -1, {3, 0}, {0}},
+                                     {2, -1, {3, 1}, {0}}},
+                                    {{{0, 1}, 1}, {{1, 2}, 1}, {{2, 3}, 1}, {{0, 1}, 2}, {{1, 2}, 2}, {{2, 3}, 2}})
+                                    );
+}
+
 void testTagging(const TestContext &context,
                  MeshSpecification  inMeshSpec,
                  MeshSpecification  outMeshSpec,
@@ -1595,53 +1549,6 @@ void perform2DTestConsistentMapping(Mapping &mapping)
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
-}
-
-void perform2DTestScaledConsistentMapping(Mapping &mapping)
-{
-  int dimensions = 2;
-  using Eigen::Vector2d;
-
-  // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1);
-  int           inDataID = inData->getID();
-  auto &        inV1     = inMesh->createVertex(Vector2d(0.0, 0.0));
-  auto &        inV2     = inMesh->createVertex(Vector2d(1.0, 0.0));
-  auto &        inV3     = inMesh->createVertex(Vector2d(1.0, 1.0));
-  auto &        inV4     = inMesh->createVertex(Vector2d(0.0, 1.0));
-
-  auto &inE1 = inMesh->createEdge(inV1, inV2);
-  auto &inE2 = inMesh->createEdge(inV2, inV3);
-  auto &inE3 = inMesh->createEdge(inV3, inV4);
-  auto &inE4 = inMesh->createEdge(inV1, inV4);
-
-  inMesh->allocateDataValues();
-  addGlobalIndex(inMesh);
-
-  auto &inValues = inData->values();
-  inValues << 1.0, 2.0, 2.0, 1.0;
-
-  // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1);
-  int           outDataID = outData->getID();
-  auto &        outV1     = outMesh->createVertex(Vector2d(0, 0));
-  auto &        outV2     = outMesh->createVertex(Vector2d(0, 1.0));
-  outMesh->createEdge(outV1, outV2);
-  outMesh->allocateDataValues();
-  addGlobalIndex(outMesh);
-
-  auto &outValues = outData->values();
-
-  // Setup mapping with mapping coordinates and geometry used
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-
-  mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-
-  testSerialScaledConsistent(inMesh, outMesh, inValues, outValues);
 }
 
 void perform2DTestConsistentMappingVector(Mapping &mapping)
@@ -1890,6 +1797,58 @@ void perform3DTestConsistentMapping(Mapping &mapping)
   BOOST_TEST(value == 1.5);
 }
 
+void perform2DTestScaledConsistentMapping(Mapping &mapping)
+{
+  int dimensions = 2;
+  using Eigen::Vector2d;
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  int           inDataID = inData->getID();
+  auto &        inV1     = inMesh->createVertex(Vector2d(0.0, 0.0));
+  auto &        inV2     = inMesh->createVertex(Vector2d(1.0, 0.0));
+  auto &        inV3     = inMesh->createVertex(Vector2d(1.0, 1.0));
+  auto &        inV4     = inMesh->createVertex(Vector2d(0.0, 1.0));
+
+  auto &inE1 = inMesh->createEdge(inV1, inV2);
+  auto &inE2 = inMesh->createEdge(inV2, inV3);
+  auto &inE3 = inMesh->createEdge(inV3, inV4);
+  auto &inE4 = inMesh->createEdge(inV1, inV4);
+
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+
+  auto &inValues = inData->values();
+  inValues << 1.0, 2.0, 2.0, 1.0;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  int           outDataID = outData->getID();
+  auto &        outV1     = outMesh->createVertex(Vector2d(0.0, 0.0));
+  auto &        outV2     = outMesh->createVertex(Vector2d(0.0, 1.0));
+  auto &        outV3     = outMesh->createVertex(Vector2d(1.1, 1.1));
+  auto &        outV4     = outMesh->createVertex(Vector2d(0.1, 1.1));
+  outMesh->createEdge(outV1, outV2);
+  outMesh->createEdge(outV2, outV3);
+  outMesh->createEdge(outV3, outV4);
+  outMesh->createEdge(outV1, outV4);
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  auto &outValues = outData->values();
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+
+  testSerialScaledConsistent(inMesh, outMesh, inValues, outValues);
+}
+
 void perform3DTestScaledConsistentMapping(Mapping &mapping)
 {
   int dimensions = 3;
@@ -1901,27 +1860,34 @@ void perform3DTestScaledConsistentMapping(Mapping &mapping)
   auto &        inV1     = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   auto &        inV2     = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
   auto &        inV3     = inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.5));
+  auto &        inV4     = inMesh->createVertex(Eigen::Vector3d(2.0, 0.0, 0.0));
+  auto &        inV5     = inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 0.0));
+  auto &        inV6     = inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 1.0));
   auto &        inE1     = inMesh->createEdge(inV1, inV2);
   auto &        inE2     = inMesh->createEdge(inV2, inV3);
   auto &        inE3     = inMesh->createEdge(inV1, inV3);
+  auto &        inE4     = inMesh->createEdge(inV4, inV5);
+  auto &        inE5     = inMesh->createEdge(inV5, inV6);
+  auto &        inE6     = inMesh->createEdge(inV4, inV6);
   inMesh->createTriangle(inE1, inE2, inE3);
+  inMesh->createTriangle(inE4, inE5, inE6);
 
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
 
   auto &inValues = inData->values();
-  inValues << 1.0, 2.0, 4.0;
+  inValues << 1.0, 2.0, 4.0, 6.0, 8.0, 9.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", 1);
   int           outDataID = outData->getID();
-  auto &        outV1     = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-  auto &        outV2     = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
-  auto &        outV3     = inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.5));
-  auto &        outE1     = inMesh->createEdge(outV1, outV2);
-  auto &        outE2     = inMesh->createEdge(outV2, outV3);
-  auto &        outE3     = inMesh->createEdge(outV1, outV3);
+  auto &        outV1     = outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &        outV2     = outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  auto &        outV3     = outMesh->createVertex(Eigen::Vector3d(0.0, 1.1, 0.6));
+  auto &        outE1     = outMesh->createEdge(outV1, outV2);
+  auto &        outE2     = outMesh->createEdge(outV2, outV3);
+  auto &        outE3     = outMesh->createEdge(outV1, outV3);
   outMesh->createTriangle(outE1, outE2, outE3);
 
   outMesh->allocateDataValues();
@@ -2137,6 +2103,10 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
   perform2DTestConsistentMappingVector(consistentMap2DVector);
   RadialBasisFctMapping<ThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  RadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  RadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<ThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   RadialBasisFctMapping<ThinPlateSplines> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
@@ -2156,6 +2126,10 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
   perform2DTestConsistentMapping(consistentMap2D);
   RadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  RadialBasisFctMapping<Multiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  RadialBasisFctMapping<Multiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   RadialBasisFctMapping<Multiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -2173,6 +2147,10 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
   perform2DTestConsistentMapping(consistentMap2D);
   RadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   RadialBasisFctMapping<InverseMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -2190,6 +2168,10 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines)
   perform2DTestConsistentMapping(consistentMap2D);
   RadialBasisFctMapping<VolumeSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  RadialBasisFctMapping<VolumeSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  RadialBasisFctMapping<VolumeSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<VolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   RadialBasisFctMapping<VolumeSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -2207,6 +2189,10 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
   perform2DTestConsistentMapping(consistentMap2D);
   RadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  RadialBasisFctMapping<Gaussian> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  RadialBasisFctMapping<Gaussian> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   RadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -2226,6 +2212,10 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -2245,6 +2235,10 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -2264,6 +2258,10 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);

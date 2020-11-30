@@ -219,8 +219,14 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
       _preallocation(preallocation),
       _commState(utils::Parallel::current())
 {
-  setInputRequirement(Mapping::MeshRequirement::VERTEX);
-  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  if (constraint == SCALEDCONSISTENT){
+    setInputRequirement(Mapping::MeshRequirement::FULL);
+    setOutputRequirement(Mapping::MeshRequirement::FULL);
+  }
+  else{
+    setInputRequirement(Mapping::MeshRequirement::VERTEX);
+    setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  }
 
   if (getDimensions() == 2) {
     _deadAxis = {xDead, yDead};
@@ -723,7 +729,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       }
       VecRestoreArrayRead(out, &outArray);
     }
-  } else { // Map CONSISTENT
+  } else { // Map CONSISTENT or SCALEDCONSISTENT
     auto out = petsc::Vector::allocate(_matrixA, "out");
     auto in  = petsc::Vector::allocate(_matrixC, "in");
     auto a   = petsc::Vector::allocate(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
@@ -800,7 +806,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         outValues[i * valueDim + dim] = vecArray[i];
       }
 
-      if (_isScaleConsistent) {
+      if (getConstraint() == SCALEDCONSISTENT) {
         scaleConsistentMapping(inputDataID, outputDataID);
       }
 
@@ -818,7 +824,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
   PRECICE_TRACE();
   mesh::PtrMesh filterMesh, otherMesh;
-  if (getConstraint() == CONSISTENT) {
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     filterMesh = input();  // remote
     otherMesh  = output(); // local
   } else if (getConstraint() == CONSERVATIVE) {
@@ -860,7 +866,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 
   mesh::PtrMesh mesh; // The mesh we want to filter
 
-  if (getConstraint() == CONSISTENT)
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT)
     mesh = input();
   else if (getConstraint() == CONSERVATIVE)
     mesh = output();
@@ -886,7 +892,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
 {
-  const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
+  std::string constraintName;
+  if(getConstraint() == CONSISTENT){
+    constraintName = "consistent";
+  } else if(getConstraint() == SCALEDCONSISTENT){
+    constraintName = "scaled-consistent";
+  } else {
+    constraintName = "conservative";
+  }
+  
+  
   const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
   PRECICE_INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName

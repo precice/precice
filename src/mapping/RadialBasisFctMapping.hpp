@@ -254,7 +254,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
 
   if (getConstraint() == CONSERVATIVE) {
     mapConservative(inputDataID, outputDataID, polyparams);
-  } else if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
+  } else {
     mapConsistent(inputDataID, outputDataID, polyparams);
   }
 }
@@ -485,10 +485,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
   PRECICE_TRACE();
   mesh::PtrMesh filterMesh, otherMesh;
-  if (getConstraint() == CONSISTENT) {
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     filterMesh = input();  // remote
     otherMesh  = output(); // local
-  } else if (getConstraint() == CONSERVATIVE) {
+  } else {
     filterMesh = output(); // remote
     otherMesh  = input();  // local
   }
@@ -525,10 +525,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 
   mesh::PtrMesh mesh; // The mesh we want to filter
 
-  if (getConstraint() == CONSISTENT)
+  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
     mesh = input();
-  else if (getConstraint() == CONSERVATIVE)
+  }
+  else {
     mesh = output();
+  }
 
   mesh::BoundingBox bb(mesh->getDimensions());
 
