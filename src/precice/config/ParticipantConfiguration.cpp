@@ -397,6 +397,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                   "Participant \"" << participant->getName() << "\" has mapping"
                                    << " to mesh \"" << confMapping.toMesh->getName() << "\", without using this mesh. "
                                    << "Please add a use-mesh tag with name=\"" << confMapping.toMesh->getName() << "\"");
+    PRECICE_CHECK((participant->isMeshProvided(toMeshID) || participant->isMeshProvided(toMeshID)),
+                  "Participant \"" << participant->getName() << "\" has mapping"
+                                   << " from mesh \"" << confMapping.fromMesh->getName() << "\", "
+                                   << " to mesh \"" << confMapping.toMesh->getName() << "\", but neither are provided. "
+                                   << "Please mark the mesh provided by this participant by configuring its use-mesh tag with provided=\"true\".");
+
     if (context.size > 1) {
       if ((confMapping.direction == mapping::MappingConfiguration::WRITE &&
            confMapping.mapping->getConstraint() == mapping::Mapping::CONSISTENT) ||
