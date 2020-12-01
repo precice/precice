@@ -30,8 +30,8 @@
         from="SquareTwo"
         to="Square"
         constraint="conservative" />
-      <write-data name="Velocities" mesh="Square" />
-      <read-data name="Forces" mesh="Square" />
+      <write-data name="Velocities" mesh="SquareTwo" />
+      <read-data name="Forces" mesh="SquareTwo" />
     </participant>
 
     <coupling-scheme:serial-implicit>
