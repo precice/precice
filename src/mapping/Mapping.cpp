@@ -81,18 +81,15 @@ int Mapping::getDimensions() const
 
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 {
-  // Both input and output mesh should have connectivity information
-  //PRECICE_ASSERT(not input()->edges().empty());
-  //PRECICE_ASSERT(not output()->edges().empty());
-
-  /*if (input()->edges().empty()) {
+  // If rank is not empty and do not contain connectivity information, raise error
+  if (input()->edges().empty() and (not input()->vertices().empty())) {
     logging::Logger _log{"mapping::Mapping"};
     PRECICE_ERROR("There is no connectivity information defined for mesh " << input()->getName() << ". Scaled consistent mapping requires connectivity information.");
   }
-  if (output()->edges().empty()) {
+  if (output()->edges().empty() and (not output()->vertices().empty())) {
     logging::Logger _log{"mapping::Mapping"};
     PRECICE_ERROR("There is no connectivity information defined for mesh " << output()->getName() << ". Scaled consistent mapping requires connectivity information.");
-  }*/
+  }
 
   const auto &inputValues  = input()->data(inputDataID)->values();
   auto &      outputValues = output()->data(outputDataID)->values();
@@ -110,7 +107,7 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 
   // Compute integral on input and output meshes
   if (meshDimensions == 2) {
-    // Calculate on the input mesh
+    // Calculate integral on the input mesh
     for (const auto &edge : input()->edges()) {
       double area    = edge.getLength();
       int    vertex1 = edge.vertex(0).getID() * valueDimensions;
