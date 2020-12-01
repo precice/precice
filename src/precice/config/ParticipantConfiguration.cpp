@@ -479,10 +479,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // Set participant data for data contexts
   for (impl::DataContext &dataContext : participant->writeDataContexts()) {
     int fromMeshID = dataContext.mesh->getID();
-    PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
-                  "Participant \"" << participant->getName() << "\" has to use mesh \""
+    PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
+                  "Participant \"" << participant->getName() << "\" has to use and provide mesh \""
                                    << dataContext.mesh->getName() << "\" to be able to write data to it. "
-                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\".");
+                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\" and provide=\"true\".");
 
     for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
       if (mappingContext.fromMeshID == fromMeshID) {
@@ -503,10 +503,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   for (impl::DataContext &dataContext : participant->readDataContexts()) {
     int toMeshID = dataContext.mesh->getID();
-    PRECICE_CHECK(participant->isMeshUsed(toMeshID),
-                  "Participant \"" << participant->getName() << "\" has to use mesh \""
+    PRECICE_CHECK(participant->isMeshProvided(toMeshID),
+                  "Participant \"" << participant->getName() << "\" has to use and provide mesh \""
                                    << dataContext.mesh->getName() << "\" in order to read data from it. "
-                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\".");
+                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\" and provide=\"true\".");
 
     for (impl::MappingContext &mappingContext : participant->readMappingContexts()) {
       if (mappingContext.toMeshID == toMeshID) {
