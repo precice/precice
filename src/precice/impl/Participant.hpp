@@ -87,6 +87,8 @@ public:
 
   bool isMeshUsed(int meshID) const;
 
+  bool isMeshProvided(int meshID) const;
+
   bool isDataUsed(int dataID) const;
 
   bool isDataRead(int dataID) const;
