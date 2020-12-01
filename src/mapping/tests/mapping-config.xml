@@ -14,7 +14,7 @@
     direction="read"
     from="TestMeshThree"
     to="TestMeshTwo"
-    constraint="consistent"/>
+    constraint="consistent" />
   <mapping:nearest-projection
     direction="write"
     from="TestMeshTwo"
