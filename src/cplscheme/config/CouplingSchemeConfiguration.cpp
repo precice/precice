@@ -807,7 +807,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
 {
   PRECICE_TRACE(accessor);
 
-  const auto first = _config.participants[0];
+  const auto first  = _config.participants[0];
   const auto second = _config.participants[1];
 
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
