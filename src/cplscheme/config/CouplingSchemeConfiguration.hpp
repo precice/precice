@@ -260,6 +260,9 @@ private:
   void checkIfDataIsExchanged(
       int dataID) const;
 
+  void checkSerialImplicitAccelerationData(
+      int dataID, const std::string &first, const std::string &second) const;
+
   friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;   // For whitebox tests
 };

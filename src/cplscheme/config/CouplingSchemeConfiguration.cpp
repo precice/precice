@@ -836,8 +836,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
       _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
     }
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
-      //checkIfDataIsExchangedBetween(dataID, _config.participants[1], _config.participants[0]);
-      checkIfDataIsExchanged(dataID);
+      checkSerialImplicitAccelerationData(dataID, _config.participants[0], _config.participants[1]);
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
@@ -1115,6 +1114,39 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 << "acceleration. Please check the <exchange ... /> and "
                 << "<...-convergence-measure ... /> tags in the "
                 << "<coupling-scheme:... /> of your precice-config.xml.");
+}
+
+void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
+    int                dataID,
+    const std::string &first,
+    const std::string &second) const
+{
+  checkIfDataIsExchanged(dataID);
+  const auto match = std::find_if(_config.exchanges.begin(),
+                                  _config.exchanges.end(),
+                                  [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
+  PRECICE_ASSERT(match != _config.exchanges.end());
+  const auto &exchange = *match;
+
+  // In serial implicit cplschemes, data is only accelerated on the second participant.
+  if (second == exchange.from) {
+    return;
+  }
+
+  std::string dataName = "";
+  auto        dataptr  = findDataByID(dataID);
+  if (dataptr) {
+    dataName = dataptr->getName();
+  }
+
+  // clang-format off
+  PRECICE_ERROR(
+      "You configured acceleration data \"" << dataName << "\" in the serial implicit coupling scheme between participants \"" << first << "\" and \"" << second << "\". "
+      "In this case, only the data from the second participant \"" << second << "\" is accelerated. "
+      "However, you also configured data \"" << dataName << "\" to be exchanged from \"" << first << "\" to \"" << second << "\". "
+      "This combination is illegal. "
+      "Please select an acceleration data which is exchanged from \"" << second << "\" to \"" << first << "\" using the <exchange> tag in your precice configuration.");
+  // clang-format on
 }
 
 } // namespace cplscheme
