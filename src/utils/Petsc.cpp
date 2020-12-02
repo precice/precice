@@ -330,6 +330,7 @@ void Vector::sort()
   ierr = VecGetArray(vector, &a);
   CHKERRV(ierr);
   ierr = VecGetSize(vector, &size);
+  CHKERRV(ierr);
   ierr = PetscSortReal(size, a);
   CHKERRV(ierr);
   ierr = VecRestoreArray(vector, &a);
