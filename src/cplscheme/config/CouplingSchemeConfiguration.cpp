@@ -807,11 +807,14 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
 {
   PRECICE_TRACE(accessor);
 
+  const auto first = _config.participants[0];
+  const auto second = _config.participants[1];
+
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
-      _config.participants[0], _config.participants[1]);
+      first, second);
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, _config.participants[0], _config.participants[1],
+      _config.validDigits, first, second,
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
   scheme->setExtrapolationOrder(_config.extrapolationOrder);
 
@@ -825,7 +828,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
   for (auto &elem : _config.convergenceMeasureDefinitions) {
-    _meshConfig->addNeededMesh(_config.participants[1], elem.meshName);
+    _meshConfig->addNeededMesh(second, elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
     scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
   }
@@ -833,10 +836,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   // Set relaxation parameters
   if (_accelerationConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
-      _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
+      _meshConfig->addNeededMesh(second, neededMesh);
     }
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
-      checkSerialImplicitAccelerationData(dataID, _config.participants[0], _config.participants[1]);
+      checkSerialImplicitAccelerationData(dataID, first, second);
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
