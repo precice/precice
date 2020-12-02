@@ -279,8 +279,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                                                 << "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
     _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
     _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
-    _config.exchanges.push_back(std::make_tuple(exchangeData, exchangeMesh,
-                                                nameParticipantFrom, nameParticipantTo, initialize));
+    _config.exchanges.emplace_back(Config::Exchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize});
   } else if (tag.getName() == TAG_MAX_ITERATIONS) {
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     _config.maxIterations = tag.getIntAttributeValue(ATTR_VALUE);
@@ -837,6 +836,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
       _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
     }
     for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
+      //checkIfDataIsExchangedBetween(dataID, _config.participants[1], _config.participants[0]);
       checkIfDataIsExchanged(dataID);
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
@@ -983,17 +983,16 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     const std::string &accessor) const
 {
   PRECICE_TRACE();
-  using std::get;
-  for (const Config::Exchange &tuple : _config.exchanges) {
-    mesh::PtrData      data = get<0>(tuple);
-    mesh::PtrMesh      mesh = get<1>(tuple);
-    const std::string &from = get<2>(tuple);
-    const std::string &to   = get<3>(tuple);
+  for (const Config::Exchange &exchange : _config.exchanges) {
+    const std::string &from     = exchange.from;
+    const std::string &to       = exchange.to;
+    const std::string &dataName = exchange.data->getName();
+    const std::string &meshName = exchange.mesh->getName();
 
     PRECICE_CHECK(to != from, "You cannot define an exchange from and to the same participant. "
                                   << "Please check the <exchange "
-                                  << "data=\"" << data->getName() << "\" "
-                                  << "mesh=\"" << mesh->getName() << "\" "
+                                  << "data=\"" << dataName << "\" "
+                                  << "mesh=\"" << meshName << "\" "
                                   << "from=\"" << from << "\" "
                                   << "to=\"" << to << "\" "
                                   << "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
@@ -1001,8 +1000,8 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     if (not(utils::contained(from, _config.participants) || from == _config.controller)) {
       PRECICE_CHECK(false, "Participant \"" + from + "\" is not configured for coupling scheme. "
                                                      "Please check the <exchange "
-                               << "data=\"" << data->getName() << "\" "
-                               << "mesh=\"" << mesh->getName() << "\" "
+                               << "data=\"" << dataName << "\" "
+                               << "mesh=\"" << meshName << "\" "
                                << "from=\"" << from << "\" "
                                << "to=\"" << to << "\" "
                                << "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
@@ -1011,33 +1010,33 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
     if (not(utils::contained(to, _config.participants) || to == _config.controller)) {
       PRECICE_CHECK(false, "Participant \"" + to + "\" is not configured for coupling scheme. "
                                << "Please check the <exchange "
-                               << "data=\"" << data->getName() << "\" "
-                               << "mesh=\"" << mesh->getName() << "\" "
+                               << "data=\"" << dataName << "\" "
+                               << "mesh=\"" << meshName << "\" "
                                << "from=\"" << from << "\" "
                                << "to=\"" << to << "\" "
                                << "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
     }
 
-    bool requiresInitialization = get<4>(tuple);
+    const bool requiresInitialization = exchange.requiresInitialization;
     if (from == accessor) {
-      scheme.addDataToSend(data, mesh, requiresInitialization);
+      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(not scheme.doesFirstStep(), "In serial coupling only second participant can initialize data and send it. "
                                                       << "Please check the <exchange "
-                                                      << "data=\"" << data->getName() << "\" "
-                                                      << "mesh=\"" << mesh->getName() << "\" "
+                                                      << "data=\"" << dataName << "\" "
+                                                      << "mesh=\"" << meshName << "\" "
                                                       << "from=\"" << from << "\" "
                                                       << "to=\"" << to << "\" "
                                                       << "initialize=\"" << requiresInitialization << "\" "
                                                       << "/> tag in the <coupling-scheme:... /> of your precice-config.xml.");
       }
     } else if (to == accessor) {
-      scheme.addDataToReceive(data, mesh, requiresInitialization);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(scheme.doesFirstStep(), "In serial coupling only first participant can receive initial data. "
                                                   << "Please check the <exchange "
-                                                  << "data=\"" << data->getName() << "\" "
-                                                  << "mesh=\"" << mesh->getName() << "\" "
+                                                  << "data=\"" << dataName << "\" "
+                                                  << "mesh=\"" << meshName << "\" "
                                                   << "from=\"" << from << "\" "
                                                   << "to=\"" << to << "\" "
                                                   << "initialize=\"" << requiresInitialization << "\" "
@@ -1054,12 +1053,9 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     const std::string &  accessor) const
 {
   PRECICE_TRACE();
-  using std::get;
-  for (const Config::Exchange &tuple : _config.exchanges) {
-    mesh::PtrData      data = get<0>(tuple);
-    mesh::PtrMesh      mesh = get<1>(tuple);
-    const std::string &from = get<2>(tuple);
-    const std::string &to   = get<3>(tuple);
+  for (const Config::Exchange &exchange : _config.exchanges) {
+    const std::string &from = exchange.from;
+    const std::string &to   = exchange.to;
 
     if (not(utils::contained(from, _config.participants) || from == _config.controller)) {
       throw std::runtime_error{"Participant \"" + from + "\" is not configured for coupling scheme"};
@@ -1069,7 +1065,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
       throw std::runtime_error{"Participant \"" + to + "\" is not configured for coupling scheme"};
     }
 
-    bool initialize = get<4>(tuple);
+    const bool initialize = exchange.requiresInitialization;
     if (from == accessor) {
       size_t index = 0;
       for (const std::string &participant : _config.participants) {
@@ -1080,7 +1076,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
         index++;
       }
       PRECICE_ASSERT(index < _config.participants.size(), index, _config.participants.size());
-      scheme.addDataToSend(data, mesh, initialize, index);
+      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, index);
     } else {
       size_t index = 0;
       for (const std::string &participant : _config.participants) {
@@ -1091,7 +1087,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
         index++;
       }
       PRECICE_ASSERT(index < _config.participants.size(), index, _config.participants.size());
-      scheme.addDataToReceive(data, mesh, initialize, index);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, index);
     }
   }
 }
@@ -1099,26 +1095,26 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 void CouplingSchemeConfiguration::checkIfDataIsExchanged(
     int dataID) const
 {
-  bool hasFound = false;
-  for (const Config::Exchange &tuple : _config.exchanges) {
-    mesh::PtrData data = std::get<0>(tuple);
-    if (data->getID() == dataID) {
-      hasFound = true;
-    }
+  const auto match = std::find_if(_config.exchanges.begin(),
+                                  _config.exchanges.end(),
+                                  [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
+  if (match != _config.exchanges.end()) {
+    return;
   }
 
+  // Data is not being exchanged
   std::string dataName = "";
   auto        dataptr  = findDataByID(dataID);
   if (dataptr) {
     dataName = dataptr->getName();
   }
 
-  PRECICE_CHECK(hasFound, "You need to exchange every data that you use for convergence measures "
-                              << "and/or the iteration acceleration. Data \"" << dataName << "\" is "
-                              << "currently not exchanged, but used for convergence measures and/or iteration "
-                              << "acceleration. Please check the <exchange ... /> and "
-                              << "<...-convergence-measure ... /> tags in the "
-                              << "<coupling-scheme:... /> of your precice-config.xml.");
+  PRECICE_ERROR("You need to exchange every data that you use for convergence measures "
+                << "and/or the iteration acceleration. Data \"" << dataName << "\" is "
+                << "currently not exchanged, but used for convergence measures and/or iteration "
+                << "acceleration. Please check the <exchange ... /> and "
+                << "<...-convergence-measure ... /> tags in the "
+                << "<coupling-scheme:... /> of your precice-config.xml.");
 }
 
 } // namespace cplscheme
