@@ -42,7 +42,7 @@ template <size_t Dimension>
 struct access<Eigen::VectorXd, Dimension> {
   static double get(Eigen::VectorXd const &p)
   {
-    if (Dimension > static_cast<size_t>(p.rows()) - 1)
+    if (Dimension >= static_cast<size_t>(p.rows()))
       return 0;
 
     return p[Dimension];
@@ -84,7 +84,7 @@ template <size_t Dimension>
 struct access<pm::Vertex, Dimension> {
   static double get(pm::Vertex const &p)
   {
-    if (Dimension > static_cast<size_t>(p.getDimensions()) - 1)
+    if (Dimension >= static_cast<size_t>(p.getDimensions()))
       return 0;
 
     return p.getCoords()[Dimension];
