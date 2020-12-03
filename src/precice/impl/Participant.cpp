@@ -197,6 +197,14 @@ bool Participant::isMeshUsed(
   return _meshContexts[meshID] != nullptr;
 }
 
+bool Participant::isMeshProvided(
+    int meshID) const
+{
+  PRECICE_ASSERT((meshID >= 0) && (meshID < (int) _meshContexts.size()));
+  auto context = _meshContexts[meshID];
+  return (context != nullptr) && context->provideMesh;
+}
+
 bool Participant::isDataUsed(
     int dataID) const
 {
