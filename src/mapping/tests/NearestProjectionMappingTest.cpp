@@ -8,6 +8,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Utils.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
@@ -234,7 +235,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2D)
   inValues(0)                   = valueVertex1;
   inValues(1)                   = valueVertex2;
 
-  double inputIntegral = 0.5 * inE1.getLength() * (inValues(0) + inValues(1));
+  auto inputIntegral = mesh::integrate(inMesh, inData);
 
   {
     // Create mesh to map to
@@ -261,14 +262,14 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2D)
     mapping.computeMapping();
     mapping.map(inDataID, outDataID);
 
-    double outputIntegral = 0.5 * outE1.getLength() * (outValues(0) + outValues(1)) +
-                            0.5 * outE2.getLength() * (outValues(0) + outValues(2));
-
+    auto outputIntegral = mesh::integrate(outMesh, outData);
     double scaleFactor = outValues(1) / inValues(0);
 
     // Validate results
     BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(inputIntegral == outputIntegral);
+    for(int dim = 0; dim < inputIntegral.size(); ++dim){
+      BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
+    }
     BOOST_TEST(outValues(0) == (inValues(0) + inValues(1)) * 0.5 * scaleFactor);
     BOOST_TEST(outValues(1) == inValues(0) * scaleFactor);
     BOOST_TEST(outValues(2) == inValues(1) * scaleFactor);
@@ -300,14 +301,14 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2D)
     mapping.computeMapping();
     mapping.map(inDataID, outDataID);
 
-    double outputIntegral = 0.5 * outE1.getLength() * (outValues(2) + outValues(0)) +
-                            0.5 * outE2.getLength() * (outValues(2) + outValues(1));
-
+    auto outputIntegral = mesh::integrate(outMesh, outData);
     double scaleFactor = outValues(0) / inValues(0);
 
     // Validate results
     BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(inputIntegral == outputIntegral);
+    for(int dim = 0; dim < inputIntegral.size(); ++dim){
+      BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
+    }
     BOOST_TEST(outValues(0) == inValues(0) * scaleFactor);
     BOOST_TEST(outValues(1) == inValues(1) * scaleFactor);
     BOOST_TEST(outValues(2) == (inValues(0) + inValues(1)) * 0.5 * scaleFactor);
@@ -454,7 +455,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncrementalPseudo3D)
   inValues(1)                   = valueVertex2;
   inValues(2)                   = valueVertex3;
 
-  double inputIntegral = t1.getArea() * (inValues(0) + inValues(1) + inValues(2)) / 3.0;
+  auto inputIntegral = mesh::integrate(inMesh, inData);
 
   {
     // Create mesh to map to
@@ -480,17 +481,16 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncrementalPseudo3D)
     mapping.computeMapping();
     mapping.map(inDataID, outDataID);
 
-    double outputIntegral = outT1.getArea() * (outValues(0) + outValues(1) + outValues(2)) / 3.0;
+    auto outputIntegral = mesh::integrate(outMesh, outData);
     double scaleFactor    = outValues(1) / inValues(0);
     // Validate results
     BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST_CONTEXT(*inMesh)
-    {
-      BOOST_TEST(outputIntegral == inputIntegral);
-      BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5 * scaleFactor);
-      BOOST_TEST(outData->values()(1) == valueVertex1 * scaleFactor);
-      BOOST_TEST(outData->values()(2) == (valueVertex2 + valueVertex3) * 0.5 * scaleFactor);
+    for(int dim = 0; dim < inputIntegral.size(); ++dim){
+      BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
     }
+    BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5 * scaleFactor);
+    BOOST_TEST(outData->values()(1) == valueVertex1 * scaleFactor);
+    BOOST_TEST(outData->values()(2) == (valueVertex2 + valueVertex3) * 0.5 * scaleFactor);
   }
 }
 
@@ -767,15 +767,12 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery_3D_FullMesh)
 
   mapping.map(inData->getID(), outData->getID());
 
-  double inputIntegral  = 0.0;
-  double outputIntegral = 0.0;
-  for (auto &face : inMesh->triangles()) {
-    inputIntegral += face.getArea() * (inData->values()(face.vertex(0).getID()) + inData->values()(face.vertex(1).getID()) + inData->values()(face.vertex(2).getID())) / 3.0;
+  auto inputIntegral  = mesh::integrate(inMesh, inData);
+  auto outputIntegral = mesh::integrate(outMesh, outData);
+
+  for(int dim = 0; dim < inputIntegral.size(); ++dim){
+    BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
   }
-  for (auto &face : outMesh->triangles()) {
-    outputIntegral += face.getArea() * (outData->values()(face.vertex(0).getID()) + outData->values()(face.vertex(1).getID()) + outData->values()(face.vertex(2).getID())) / 3.0;
-  }
-  BOOST_TEST(inputIntegral == outputIntegral);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

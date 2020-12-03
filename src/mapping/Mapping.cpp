@@ -3,6 +3,7 @@
 #include <ostream>
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
+#include "mesh/Utils.hpp"
 
 namespace precice {
 namespace mapping {
@@ -98,64 +99,9 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   int meshDimensions  = input()->getDimensions();
 
   // Integral is calculated on each direction separately
-  std::vector<double> integralInput(valueDimensions);
-  std::vector<double> integralOutput(valueDimensions);
-
-  // Initialize integral values
-  std::fill(integralInput.begin(), integralInput.end(), 0.0);
-  std::fill(integralOutput.begin(), integralOutput.end(), 0.0);
-
-  // Compute integral on input and output meshes
-  if (meshDimensions == 2) {
-    // Calculate integral on the input mesh
-    for (const auto &edge : input()->edges()) {
-      double area    = edge.getLength();
-      int    vertex1 = edge.vertex(0).getID() * valueDimensions;
-      int    vertex2 = edge.vertex(1).getID() * valueDimensions;
-      // Input mesh may have overlaps, we only need to include the values on the owned vertices
-      if (edge.vertex(0).isOwner() and edge.vertex(1).isOwner()) {
-        for (int dim = 0; dim < valueDimensions; ++dim) {
-          integralInput.at(dim) += 0.5 * area * (inputValues(vertex1 + dim) + inputValues(vertex2 + dim));
-        }
-      }
-    }
-    // Calculate on the output mesh
-    for (const auto &edge : output()->edges()) {
-      double area    = edge.getLength();
-      int    vertex1 = edge.vertex(0).getID() * valueDimensions;
-      int    vertex2 = edge.vertex(1).getID() * valueDimensions;
-      for (int dim = 0; dim < valueDimensions; ++dim) {
-        integralOutput.at(dim) += 0.5 * area * (outputValues(vertex1 + dim) + outputValues(vertex2 + dim));
-      }
-    }
-  } else { // 3D
-    // For 3D case, only edge connectivity is not enough. Also the face connectivity is necessary.
-    PRECICE_ASSERT(not input()->triangles().empty() or not output()->triangles().empty());
-    // Calculate integral on the input mesh
-    for (const auto &face : input()->triangles()) {
-      double area    = face.getArea();
-      int    vertex1 = face.vertex(0).getID() * valueDimensions;
-      int    vertex2 = face.vertex(1).getID() * valueDimensions;
-      int    vertex3 = face.vertex(2).getID() * valueDimensions;
-      // Input mesh may have overlaps, we only need to include the values on the owned vertices
-      if (face.vertex(0).isOwner() and face.vertex(1).isOwner() and face.vertex(2).isOwner()) {
-        for (int dim = 0; dim < valueDimensions; ++dim) {
-          integralInput.at(dim) += (area / 3.0) * (inputValues(vertex1 + dim) + inputValues(vertex2 + dim) + inputValues(vertex3 + dim));
-        }
-      }
-    }
-    // Calculate integral on the output mesh
-    for (const auto &face : output()->triangles()) {
-      double area    = face.getArea();
-      int    vertex1 = face.vertex(0).getID() * valueDimensions;
-      int    vertex2 = face.vertex(1).getID() * valueDimensions;
-      int    vertex3 = face.vertex(2).getID() * valueDimensions;
-      for (int dim = 0; dim < valueDimensions; ++dim) {
-        integralOutput.at(dim) += (area / 3.0) * (outputValues(vertex1 + dim) + outputValues(vertex2 + dim) + outputValues(vertex3 + dim));
-      }
-    }
-  }
-
+  std::vector<double> integralInput = mesh::integrateOverlap(input(), input()->data(inputDataID));
+  std::vector<double> integralOutput = mesh::integrate(output(), output()->data(outputDataID));
+  
   // If the mesh is distributed, we need to calculate the global integral
   if (utils::MasterSlave::isMaster() or utils::MasterSlave::isSlave()) {
     std::vector<double> globalInputIntegral(valueDimensions);

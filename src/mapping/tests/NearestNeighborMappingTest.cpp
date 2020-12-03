@@ -8,6 +8,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -219,15 +220,12 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   Eigen::VectorXd &outValues = outData->values();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  double inputIntegral = 0.5 * inEdge0.getLength() * (inValues(0) + inValues(1)) +
-                         0.5 * inEdge1.getLength() * (inValues(1) + inValues(2)) +
-                         0.5 * inEdge2.getLength() * (inValues(2) + inValues(3));
+  auto inputIntegral = mesh::integrate(inMesh, inData);
+  auto outputIntegral = mesh::integrate(outMesh, outData);
 
-  double outputIntegral = 0.5 * outEdge0.getLength() * (outValues(0) + outValues(1)) +
-                          0.5 * outEdge1.getLength() * (outValues(1) + outValues(2)) +
-                          0.5 * outEdge2.getLength() * (outValues(2) + outValues(3));
-
-  BOOST_TEST(inputIntegral == outputIntegral);
+  for(int dim = 0; dim < inputIntegral.size(); ++dim){
+    BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
+  }
 
   double scaleFactor = outValues(0) / inValues(0);
 

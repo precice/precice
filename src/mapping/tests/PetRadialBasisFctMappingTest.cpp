@@ -18,6 +18,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
+#include "mesh/Utils.hpp"
 #include "precice/impl/versions.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -39,26 +40,14 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
   }
 }
 
-void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, Eigen::VectorXd &inValues, Eigen::VectorXd &outValues)
+void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, PtrData inData, PtrData outData)
 {
-  double inputIntegral  = 0.0;
-  double outputIntegral = 0.0;
-  if (inMesh->getDimensions() == 2) {
-    for (const auto &edge : inMesh->edges()) {
-      inputIntegral += 0.5 * edge.getLength() * (inValues(edge.vertex(0).getID()) + inValues(edge.vertex(1).getID()));
-    }
-    for (const auto &edge : outMesh->edges()) {
-      outputIntegral += 0.5 * edge.getLength() * (outValues(edge.vertex(0).getID()) + outValues(edge.vertex(1).getID()));
-    }
-  } else {
-    for (const auto &face : inMesh->triangles()) {
-      inputIntegral += face.getArea() * (inValues(face.vertex(0).getID()) + inValues(face.vertex(1).getID()) + inValues(face.vertex(2).getID())) / 3.0;
-    }
-    for (const auto &face : outMesh->triangles()) {
-      outputIntegral += face.getArea() * (outValues(face.vertex(0).getID()) + outValues(face.vertex(1).getID()) + outValues(face.vertex(2).getID())) / 3.0;
-    }
+  auto inputIntegral  = mesh::integrate(inMesh, inData);
+  auto outputIntegral = mesh::integrate(outMesh, outData);
+  
+  for(int dim = 0; dim < inputIntegral.size(); ++dim){
+    BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
   }
-  BOOST_TEST(inputIntegral == outputIntegral);
 }
 
 BOOST_AUTO_TEST_SUITE(Parallel)
@@ -201,33 +190,16 @@ void testDistributed(const TestContext &    context,
 
   if (mapping.getConstraint() == Mapping::SCALEDCONSISTENT) {
 
-    std::vector<double> inputIntegral(valueDimension);
-    std::vector<double> outputIntegral(valueDimension);
+    std::vector<double> inputIntegral = mesh::integrateOverlap(inMesh, inData);
+    std::vector<double> outputIntegral = mesh::integrate(outMesh, outData);
     std::vector<double> globalInputIntegral(valueDimension);
     std::vector<double> globalOutputIntegral(valueDimension);
-
-    std::fill(inputIntegral.begin(), inputIntegral.end(), 0.0);
-    std::fill(outputIntegral.begin(), outputIntegral.end(), 0.0);
-
-    if (meshDimension == 2) {
-      for (int dim = 0; dim < valueDimension; ++dim) {
-        int edgeIndex = 0;
-        for (auto &edge : inMesh->edges()) {
-          if (edge.vertex(0).isOwner() and edge.vertex(1).isOwner())
-            inputIntegral.at(dim) += 0.5 * edge.getLength() * (inData->values()(edge.vertex(0).getID() * valueDimension + dim) + inData->values()(edge.vertex(1).getID() * valueDimension + dim));
-        }
-        for (auto &edge : outMesh->edges()) {
-          outputIntegral.at(dim) += 0.5 * edge.getLength() * (outData->values()(edge.vertex(0).getID() * valueDimension + dim) + outData->values()(edge.vertex(1).getID() * valueDimension + dim));
-        }
-      }
-    }
 
     utils::MasterSlave::allreduceSum(inputIntegral.data(), globalInputIntegral.data(), valueDimension);
     utils::MasterSlave::allreduceSum(outputIntegral.data(), globalOutputIntegral.data(), valueDimension);
     for (int dim = 0; dim < valueDimension; ++dim) {
       BOOST_TEST(globalInputIntegral.at(dim) == globalOutputIntegral.at(dim));
     }
-
   } else {
     int index = 0;
     for (auto &referenceVertex : referenceSpec) {
@@ -1883,7 +1855,7 @@ void perform2DTestScaledConsistentMapping(Mapping &mapping)
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 
-  testSerialScaledConsistent(inMesh, outMesh, inValues, outValues);
+  testSerialScaledConsistent(inMesh, outMesh, inData, outData);
 }
 
 void perform3DTestScaledConsistentMapping(Mapping &mapping)
@@ -1939,7 +1911,7 @@ void perform3DTestScaledConsistentMapping(Mapping &mapping)
   BOOST_TEST(mapping.hasComputedMapping() == true);
   mapping.map(inDataID, outDataID);
 
-  testSerialScaledConsistent(inMesh, outMesh, inValues, outValues);
+  testSerialScaledConsistent(inMesh, outMesh, inData, outData);
 }
 
 void perform2DTestConservativeMapping(Mapping &mapping)
