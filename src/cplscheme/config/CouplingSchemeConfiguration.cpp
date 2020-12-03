@@ -1145,7 +1145,7 @@ void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
   // clang-format off
   PRECICE_ERROR(
       "You configured acceleration data \"" << dataName << "\" in the serial implicit coupling scheme between participants \"" << first << "\" and \"" << second << "\". "
-      "In this case, only the data from the second participant \"" << second << "\" is accelerated. "
+      "For serial implicit coupling schemes, only data exchanged from the second to the first participant can be used for acceleration. Here, from \"" << second << "\" to \"" << first "\". "
       "However, you also configured data \"" << dataName << "\" to be exchanged from \"" << first << "\" to \"" << second << "\". "
       "This combination is illegal. "
       "Please select an acceleration data which is exchanged from \"" << second << "\" to \"" << first << "\" using the <exchange> tag in your precice configuration.");
