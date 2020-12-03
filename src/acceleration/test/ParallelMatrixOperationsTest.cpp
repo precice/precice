@@ -91,7 +91,8 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
   } else if (context.isRank(2)) {
     n_local = 0;
     a       = 3;
-  } else if (context.isRank(3)) {
+  } else {
+    BOOST_REQUIRE(context.isRank(3));
     n_local = 3;
     a       = 4;
   }
@@ -243,7 +244,8 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
     n_local = 4;
   } else if (context.isRank(2)) {
     n_local = 0;
-  } else if (context.isRank(3)) {
+  } else {
+    BOOST_REQUIRE(context.isRank(3));
     n_local = 3;
   }
 
