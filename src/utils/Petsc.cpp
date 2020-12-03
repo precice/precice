@@ -150,7 +150,7 @@ struct Viewer {
   }
 
   int         popformats{0};
-  PetscViewer viewer;
+  PetscViewer viewer{nullptr};
 };
 
 template <class T>
