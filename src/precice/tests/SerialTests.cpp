@@ -296,10 +296,10 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
   if (context.isNamed("SolverOne")) {
     int meshOneID = cplInterface.getMeshID("MeshOne");
     /* int squareID = */ cplInterface.getMeshID("Test-Square");
-    int forcesID     = cplInterface.getDataID("Forces", meshOneID);
-    int velocitiesID = cplInterface.getDataID("Velocities", meshOneID);
-    std::vector<int>indices(8);
-    int i = 0;
+    int              forcesID     = cplInterface.getDataID("Forces", meshOneID);
+    int              velocitiesID = cplInterface.getDataID("Velocities", meshOneID);
+    std::vector<int> indices(8);
+    int              i = 0;
 
     //need one vertex to start
     Vector3d vertex = Vector3d::Zero();
