@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
     /* int squareID = */ cplInterface.getMeshID("Test-Square");
     int forcesID     = cplInterface.getDataID("Forces", meshOneID);
     int velocitiesID = cplInterface.getDataID("Velocities", meshOneID);
-    int indices[8];
+    std::vector<int>indices(8);
     int i = 0;
 
     //need one vertex to start
@@ -309,11 +309,12 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
     const auto &vertices = impl(cplInterface).mesh("Test-Square").vertices();
     while (cplInterface.isCouplingOngoing()) {
       impl(cplInterface).resetMesh(meshOneID);
+
       i = 0;
       for (auto &vertex : vertices) {
         int index = cplInterface.setMeshVertex(meshOneID, vertex.getCoords().data());
         BOOST_TEST(index == vertex.getID());
-        indices[i] = index;
+        indices.at(i) = index;
         i++;
       }
       //for (VertexIterator it = vertices.begin(); it != vertices.end(); it++) {
@@ -326,7 +327,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
         i = 0;
         for (auto &vertex : vertices) {
           Vector3d vel   = Vector3d::Zero();
-          int      index = indices[i];
+          int      index = indices.at(i);
           i++;
           cplInterface.readVectorData(velocitiesID, index, vel.data());
           BOOST_TEST(vel == Vector3d::Constant(counter) + vertex.getCoords());
