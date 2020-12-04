@@ -17,8 +17,8 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "mesh/Vertex.hpp"
 #include "mesh/Utils.hpp"
+#include "mesh/Vertex.hpp"
 #include "precice/impl/versions.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -44,9 +44,9 @@ void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, Ptr
 {
   auto inputIntegral  = mesh::integrate(inMesh, inData);
   auto outputIntegral = mesh::integrate(outMesh, outData);
-  
-  for(int dim = 0; dim < inputIntegral.size(); ++dim){
-    BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
+
+  for (int dim = 0; dim < inputIntegral.size(); ++dim) {
+    BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
   }
 }
 
@@ -190,15 +190,15 @@ void testDistributed(const TestContext &    context,
 
   if (mapping.getConstraint() == Mapping::SCALEDCONSISTENT) {
 
-    std::vector<double> inputIntegral = mesh::integrateOverlap(inMesh, inData);
-    std::vector<double> outputIntegral = mesh::integrate(outMesh, outData);
-    std::vector<double> globalInputIntegral(valueDimension);
-    std::vector<double> globalOutputIntegral(valueDimension);
+    auto            inputIntegral  = mesh::integrateOverlap(inMesh, inData);
+    auto            outputIntegral = mesh::integrate(outMesh, outData);
+    Eigen::VectorXd globalInputIntegral(valueDimension);
+    Eigen::VectorXd globalOutputIntegral(valueDimension);
 
     utils::MasterSlave::allreduceSum(inputIntegral.data(), globalInputIntegral.data(), valueDimension);
     utils::MasterSlave::allreduceSum(outputIntegral.data(), globalOutputIntegral.data(), valueDimension);
     for (int dim = 0; dim < valueDimension; ++dim) {
-      BOOST_TEST(globalInputIntegral.at(dim) == globalOutputIntegral.at(dim));
+      BOOST_TEST(globalInputIntegral(dim) == globalOutputIntegral(dim));
     }
   } else {
     int index = 0;

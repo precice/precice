@@ -262,13 +262,13 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2D)
     mapping.computeMapping();
     mapping.map(inDataID, outDataID);
 
-    auto outputIntegral = mesh::integrate(outMesh, outData);
-    double scaleFactor = outValues(1) / inValues(0);
+    auto   outputIntegral = mesh::integrate(outMesh, outData);
+    double scaleFactor    = outValues(1) / inValues(0);
 
     // Validate results
     BOOST_TEST(mapping.hasComputedMapping() == true);
-    for(int dim = 0; dim < inputIntegral.size(); ++dim){
-      BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
+    for (int dim = 0; dim < inputIntegral.size(); ++dim) {
+      BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
     }
     BOOST_TEST(outValues(0) == (inValues(0) + inValues(1)) * 0.5 * scaleFactor);
     BOOST_TEST(outValues(1) == inValues(0) * scaleFactor);
@@ -301,13 +301,13 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2D)
     mapping.computeMapping();
     mapping.map(inDataID, outDataID);
 
-    auto outputIntegral = mesh::integrate(outMesh, outData);
-    double scaleFactor = outValues(0) / inValues(0);
+    auto   outputIntegral = mesh::integrate(outMesh, outData);
+    double scaleFactor    = outValues(0) / inValues(0);
 
     // Validate results
     BOOST_TEST(mapping.hasComputedMapping() == true);
-    for(int dim = 0; dim < inputIntegral.size(); ++dim){
-      BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
+    for (int dim = 0; dim < inputIntegral.size(); ++dim) {
+      BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
     }
     BOOST_TEST(outValues(0) == inValues(0) * scaleFactor);
     BOOST_TEST(outValues(1) == inValues(1) * scaleFactor);
@@ -481,12 +481,12 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncrementalPseudo3D)
     mapping.computeMapping();
     mapping.map(inDataID, outDataID);
 
-    auto outputIntegral = mesh::integrate(outMesh, outData);
+    auto   outputIntegral = mesh::integrate(outMesh, outData);
     double scaleFactor    = outValues(1) / inValues(0);
     // Validate results
     BOOST_TEST(mapping.hasComputedMapping() == true);
-    for(int dim = 0; dim < inputIntegral.size(); ++dim){
-      BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
+    for (int dim = 0; dim < inputIntegral.size(); ++dim) {
+      BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
     }
     BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5 * scaleFactor);
     BOOST_TEST(outData->values()(1) == valueVertex1 * scaleFactor);
@@ -770,8 +770,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery_3D_FullMesh)
   auto inputIntegral  = mesh::integrate(inMesh, inData);
   auto outputIntegral = mesh::integrate(outMesh, outData);
 
-  for(int dim = 0; dim < inputIntegral.size(); ++dim){
-    BOOST_TEST(inputIntegral.at(dim) == outputIntegral.at(dim));
+  for (int dim = 0; dim < inputIntegral.size(); ++dim) {
+    BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
   }
 }
 

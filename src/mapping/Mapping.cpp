@@ -1,9 +1,9 @@
 #include "Mapping.hpp"
 #include <boost/config.hpp>
 #include <ostream>
+#include "mesh/Utils.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
-#include "mesh/Utils.hpp"
 
 namespace precice {
 namespace mapping {
@@ -99,30 +99,25 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   int meshDimensions  = input()->getDimensions();
 
   // Integral is calculated on each direction separately
-  std::vector<double> integralInput = mesh::integrateOverlap(input(), input()->data(inputDataID));
-  std::vector<double> integralOutput = mesh::integrate(output(), output()->data(outputDataID));
-  
+  auto integralInput  = mesh::integrateOverlap(input(), input()->data(inputDataID));
+  auto integralOutput = mesh::integrate(output(), output()->data(outputDataID));
+
   // If the mesh is distributed, we need to calculate the global integral
   if (utils::MasterSlave::isMaster() or utils::MasterSlave::isSlave()) {
-    std::vector<double> globalInputIntegral(valueDimensions);
-    std::vector<double> globalOutputIntegral(valueDimensions);
+    Eigen::VectorXd globalInputIntegral(valueDimensions);
+    Eigen::VectorXd globalOutputIntegral(valueDimensions);
     utils::MasterSlave::allreduceSum(integralInput.data(), globalInputIntegral.data(), integralInput.size());
     utils::MasterSlave::allreduceSum(integralOutput.data(), globalOutputIntegral.data(), integralOutput.size());
     integralInput  = globalInputIntegral;
     integralOutput = globalOutputIntegral;
   }
 
-  // Scale in each dimension
-  size_t const outSize = output()->vertices().size();
-  for (int dim = 0; dim < valueDimensions; ++dim) {
-    PRECICE_ASSERT(std::fabs(integralOutput.at(dim)) > 1e-9, "Surface integral is calculated as zero in consistent mapping scaling.");
-    PRECICE_ASSERT(std::fabs(integralInput.at(dim)) > 1e-9, "Surface integral is calculated as zero in consistent mapping scaling.");
-    double scalingFactor = integralInput.at(dim) / integralOutput.at(dim);
-    // Scaling factor is different in each direction, cannot directly multiply
-    for (size_t i = 0; i < outSize; i++) {
-      outputValues((i * valueDimensions) + dim) *= scalingFactor;
-    }
-  }
+  // Create reshape the output values vector to matrix
+  Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
+
+  // Scale in each direction
+  Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
+  outputValuesMatrix.array().colwise() *= scalingFactor.array();
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)

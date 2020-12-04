@@ -113,8 +113,8 @@ public:
    * @brief Scales the consistently mapped output data such that the surface integral
    * of the values on input mesh and output mesh are equal
    *
-   * Pre-conditions:
-   * - Input and output mesh should have full connectivity information.
+   * 
+   * @pre Input and output mesh should have full connectivity information.
    */
   virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
 

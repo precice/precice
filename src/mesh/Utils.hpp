@@ -50,7 +50,7 @@ inline double edgeLength(const Edge &e)
  *
  * @returns surface area of the triangle. If the points are co-linear, the length of the edge.
  */
-inline double triangleArea(const Triangle& t)
+inline double triangleArea(const Triangle &t)
 {
   Eigen::Vector3d vectorA = t.edge(1).vertex(1).getCoords() - t.edge(1).vertex(0).getCoords();
   Eigen::Vector3d vectorB = t.edge(0).vertex(1).getCoords() - t.edge(0).vertex(0).getCoords();
@@ -154,28 +154,28 @@ std::array<Eigen::VectorXd, n> coordsFor(const std::array<Vertex *, n> &vertexPt
 }
 
 /// Given the data and the mesh, this function returns the surface integral. Assumes no overlap exists for the mesh
-inline std::vector<double> integrate(PtrMesh mesh, PtrData data){
-  const int valueDimensions = data->getDimensions();
-  const int meshDimensions = mesh->getDimensions();
-  const auto& values = data->values();  
-  std::vector<double> integral(valueDimensions);
-  std::fill(integral.begin(), integral.end(), 0.0);
+inline Eigen::VectorXd integrate(PtrMesh mesh, PtrData data)
+{
+  const int       valueDimensions = data->getDimensions();
+  const int       meshDimensions  = mesh->getDimensions();
+  const auto &    values          = data->values();
+  Eigen::VectorXd integral        = Eigen::VectorXd::Zero(valueDimensions);
 
-  if(meshDimensions == 2){  
+  if (meshDimensions == 2) {
     for (const auto &edge : mesh->edges()) {
-      int    vertex1 = edge.vertex(0).getID() * valueDimensions;
-      int    vertex2 = edge.vertex(1).getID() * valueDimensions;
+      int vertex1 = edge.vertex(0).getID() * valueDimensions;
+      int vertex2 = edge.vertex(1).getID() * valueDimensions;
       for (int dim = 0; dim < valueDimensions; ++dim) {
-        integral.at(dim) += 0.5 * edgeLength(edge) * (values(vertex1 + dim) + values(vertex2 + dim));
+        integral(dim) += 0.5 * edgeLength(edge) * (values(vertex1 + dim) + values(vertex2 + dim));
       }
     }
   } else {
     for (const auto &face : mesh->triangles()) {
-      int    vertex1 = face.vertex(0).getID() * valueDimensions;
-      int    vertex2 = face.vertex(1).getID() * valueDimensions;
-      int    vertex3 = face.vertex(2).getID() * valueDimensions;
+      int vertex1 = face.vertex(0).getID() * valueDimensions;
+      int vertex2 = face.vertex(1).getID() * valueDimensions;
+      int vertex3 = face.vertex(2).getID() * valueDimensions;
       for (int dim = 0; dim < valueDimensions; ++dim) {
-        integral.at(dim) += (triangleArea(face) / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
+        integral(dim) += (triangleArea(face) / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
       }
     }
   }
@@ -183,38 +183,37 @@ inline std::vector<double> integrate(PtrMesh mesh, PtrData data){
 }
 
 /// Given the data and the mesh, this function returns the surface integral
-inline std::vector<double> integrateOverlap(PtrMesh mesh, PtrData data){
-  const int valueDimensions = data->getDimensions();
-  const int meshDimensions = mesh->getDimensions();
-  const auto& values = data->values();  
-  std::vector<double> integral(valueDimensions);
-  
-  if(meshDimensions == 2){  
+inline Eigen::VectorXd integrateOverlap(PtrMesh mesh, PtrData data)
+{
+  const int       valueDimensions = data->getDimensions();
+  const int       meshDimensions  = mesh->getDimensions();
+  const auto &    values          = data->values();
+  Eigen::VectorXd integral        = Eigen::VectorXd::Zero(valueDimensions);
+
+  if (meshDimensions == 2) {
     for (const auto &edge : mesh->edges()) {
-      int    vertex1 = edge.vertex(0).getID() * valueDimensions;
-      int    vertex2 = edge.vertex(1).getID() * valueDimensions;
+      int vertex1 = edge.vertex(0).getID() * valueDimensions;
+      int vertex2 = edge.vertex(1).getID() * valueDimensions;
       if (edge.vertex(0).isOwner() and edge.vertex(1).isOwner()) {
         for (int dim = 0; dim < valueDimensions; ++dim) {
-          integral.at(dim) += 0.5 * edgeLength(edge) * (values(vertex1 + dim) + values(vertex2 + dim));
+          integral(dim) += 0.5 * edgeLength(edge) * (values(vertex1 + dim) + values(vertex2 + dim));
         }
       }
     }
   } else {
     for (const auto &face : mesh->triangles()) {
-      int    vertex1 = face.vertex(0).getID() * valueDimensions;
-      int    vertex2 = face.vertex(1).getID() * valueDimensions;
-      int    vertex3 = face.vertex(2).getID() * valueDimensions;
-      if (face.vertex(0).isOwner() and face.vertex(1).isOwner() and face.vertex(2).isOwner()) {  
+      int vertex1 = face.vertex(0).getID() * valueDimensions;
+      int vertex2 = face.vertex(1).getID() * valueDimensions;
+      int vertex3 = face.vertex(2).getID() * valueDimensions;
+      if (face.vertex(0).isOwner() and face.vertex(1).isOwner() and face.vertex(2).isOwner()) {
         for (int dim = 0; dim < valueDimensions; ++dim) {
-          integral.at(dim) += (triangleArea(face) / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
+          integral(dim) += (triangleArea(face) / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
         }
       }
     }
   }
   return std::move(integral);
 }
-
-
 
 } // namespace mesh
 } // namespace precice
