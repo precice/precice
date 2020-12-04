@@ -823,12 +823,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
   PRECICE_TRACE();
   mesh::PtrMesh filterMesh, otherMesh;
-  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
-    filterMesh = input();  // remote
-    otherMesh  = output(); // local
-  } else if (getConstraint() == CONSERVATIVE) {
+  if (getConstraint() == CONSERVATIVE) {
     filterMesh = output(); // remote
     otherMesh  = input();  // local
+  } else {
+    filterMesh = input();  // remote
+    otherMesh  = output(); // local
   }
 
   if (otherMesh->vertices().empty())
@@ -865,10 +865,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 
   mesh::PtrMesh mesh; // The mesh we want to filter
 
-  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT)
-    mesh = input();
-  else if (getConstraint() == CONSERVATIVE)
+  if (getConstraint() == CONSERVATIVE) {
     mesh = output();
+  }
+  else {
+    mesh = input();
+  }
 
   mesh::BoundingBox bb(mesh->getDimensions());
 

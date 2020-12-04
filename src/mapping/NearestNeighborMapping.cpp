@@ -51,32 +51,7 @@ void NearestNeighborMapping::computeMapping()
   const std::string     baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
 
-  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
-    PRECICE_DEBUG("Compute consistent mapping");
-    precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = mesh::rtree::getVertexRTree(input());
-    e2.stop();
-    size_t verticesSize = output()->vertices().size();
-    _vertexIndices.resize(verticesSize);
-    utils::statistics::DistanceAccumulator distanceStatistics;
-    const mesh::Mesh::VertexContainer &    outputVertices = output()->vertices();
-    for (size_t i = 0; i < verticesSize; i++) {
-      const Eigen::VectorXd &coords = outputVertices[i].getCoords();
-      // Search for the output vertex inside the input mesh and add index to _vertexIndices
-      rtree->query(boost::geometry::index::nearest(coords, 1),
-                   boost::make_function_output_iterator([&](size_t const &val) {
-                     const auto &match = input()->vertices()[val];
-                     _vertexIndices[i] = match.getID();
-                     distanceStatistics(bg::distance(match, coords));
-                   }));
-    }
-    if (distanceStatistics.empty()) {
-      PRECICE_INFO("Mapping distance not available due to empty partition.");
-    } else {
-      PRECICE_INFO("Mapping distance " << distanceStatistics);
-    }
-  } else {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+  if (getConstraint() == CONSERVATIVE){
     PRECICE_DEBUG("Compute conservative mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
     auto                  rtree = mesh::rtree::getVertexRTree(output());
@@ -100,7 +75,31 @@ void NearestNeighborMapping::computeMapping()
     } else {
       PRECICE_INFO("Mapping distance " << distanceStatistics);
     }
-  }
+  } else {
+    PRECICE_DEBUG("Compute consistent mapping");
+    precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
+    auto                  rtree = mesh::rtree::getVertexRTree(input());
+    e2.stop();
+    size_t verticesSize = output()->vertices().size();
+    _vertexIndices.resize(verticesSize);
+    utils::statistics::DistanceAccumulator distanceStatistics;
+    const mesh::Mesh::VertexContainer &    outputVertices = output()->vertices();
+    for (size_t i = 0; i < verticesSize; i++) {
+      const Eigen::VectorXd &coords = outputVertices[i].getCoords();
+      // Search for the output vertex inside the input mesh and add index to _vertexIndices
+      rtree->query(boost::geometry::index::nearest(coords, 1),
+                   boost::make_function_output_iterator([&](size_t const &val) {
+                     const auto &match = input()->vertices()[val];
+                     _vertexIndices[i] = match.getID();
+                     distanceStatistics(bg::distance(match, coords));
+                   }));
+    }
+    if (distanceStatistics.empty()) {
+      PRECICE_INFO("Mapping distance not available due to empty partition.");
+    } else {
+      PRECICE_INFO("Mapping distance " << distanceStatistics);
+    }
+  } 
   _hasComputedMapping = true;
 }
 
@@ -115,11 +114,11 @@ void NearestNeighborMapping::clear()
   PRECICE_TRACE();
   _vertexIndices.clear();
   _hasComputedMapping = false;
-  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
-    mesh::rtree::clear(*input());
-  } else {
+  if (getConstraint() == CONSERVATIVE){
     mesh::rtree::clear(*output());
-  }
+  } else {
+    mesh::rtree::clear(*input());
+  } 
 }
 
 void NearestNeighborMapping::map(
@@ -140,7 +139,17 @@ void NearestNeighborMapping::map(
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
                  outputValues.size(), valueDimensions, output()->vertices().size());
-  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
+  if (getConstraint() == CONSERVATIVE) {
+    PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
+    PRECICE_DEBUG("Map conservative");
+    size_t const inSize = input()->vertices().size();
+    for (size_t i = 0; i < inSize; i++) {
+      int const outputIndex = _vertexIndices[i] * valueDimensions;
+      for (int dim = 0; dim < valueDimensions; dim++) {
+        outputValues(outputIndex + dim) += inputValues((i * valueDimensions) + dim);
+      }
+    }
+  } else {
     PRECICE_DEBUG("Map consistent");
     size_t const outSize = output()->vertices().size();
     for (size_t i = 0; i < outSize; i++) {
@@ -152,17 +161,7 @@ void NearestNeighborMapping::map(
     if (getConstraint() == SCALEDCONSISTENT) {
       scaleConsistentMapping(inputDataID, outputDataID);
     }
-  } else {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
-    PRECICE_DEBUG("Map conservative");
-    size_t const inSize = input()->vertices().size();
-    for (size_t i = 0; i < inSize; i++) {
-      int const outputIndex = _vertexIndices[i] * valueDimensions;
-      for (int dim = 0; dim < valueDimensions; dim++) {
-        outputValues(outputIndex + dim) += inputValues((i * valueDimensions) + dim);
-      }
-    }
-  }
+  } 
 }
 
 void NearestNeighborMapping::tagMeshFirstRound()
@@ -175,18 +174,18 @@ void NearestNeighborMapping::tagMeshFirstRound()
   // Lookup table of all indices used in the mapping
   const boost::container::flat_set<int> indexSet(_vertexIndices.begin(), _vertexIndices.end());
 
-  if (getConstraint() == CONSISTENT or getConstraint() == SCALEDCONSISTENT) {
-    for (mesh::Vertex &v : input()->vertices()) {
-      if (indexSet.count(v.getID()) != 0)
-        v.tag();
-    }
-  } else {
+  if (getConstraint() == CONSERVATIVE) {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     for (mesh::Vertex &v : output()->vertices()) {
       if (indexSet.count(v.getID()) != 0)
         v.tag();
     }
-  }
+  } else {
+    for (mesh::Vertex &v : input()->vertices()) {
+      if (indexSet.count(v.getID()) != 0)
+        v.tag();
+    }
+  } 
 
   clear();
 }

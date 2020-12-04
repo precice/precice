@@ -44,27 +44,6 @@ inline double edgeLength(const Edge &e)
   return (e.vertex(0).getCoords() - e.vertex(1).getCoords()).norm();
 }
 
-/** Calulates the area of an Triangle
- *
- * @param[in] e the triangle
- *
- * @returns surface area of the triangle. If the points are co-linear, the length of the edge.
- */
-inline double triangleArea(const Triangle &t)
-{
-  Eigen::Vector3d vectorA = t.edge(1).vertex(1).getCoords() - t.edge(1).vertex(0).getCoords();
-  Eigen::Vector3d vectorB = t.edge(0).vertex(1).getCoords() - t.edge(0).vertex(0).getCoords();
-  // Compute cross-product of vector A and vector B
-  auto area = 0.5 * vectorA.cross(vectorB).norm();
-  // Check if the vectors are co-linear (Pseudo 3D case)
-  if (area < 1e-9) {
-    // Area is the longest edge.
-    std::vector<double> edgeLengths{edgeLength(t.edge(0)), edgeLength(t.edge(1)), edgeLength(t.edge(2))};
-    area = *std::max_element(edgeLengths.begin(), edgeLengths.end());
-  }
-  return area;
-}
-
 template <std::size_t n>
 struct Chain {
   /// true if the chain is connected or closed and thus valid
@@ -166,7 +145,7 @@ inline Eigen::VectorXd integrate(PtrMesh mesh, PtrData data)
       int vertex1 = edge.vertex(0).getID() * valueDimensions;
       int vertex2 = edge.vertex(1).getID() * valueDimensions;
       for (int dim = 0; dim < valueDimensions; ++dim) {
-        integral(dim) += 0.5 * edgeLength(edge) * (values(vertex1 + dim) + values(vertex2 + dim));
+        integral(dim) += 0.5 * edge.getLength() * (values(vertex1 + dim) + values(vertex2 + dim));
       }
     }
   } else {
@@ -175,15 +154,15 @@ inline Eigen::VectorXd integrate(PtrMesh mesh, PtrData data)
       int vertex2 = face.vertex(1).getID() * valueDimensions;
       int vertex3 = face.vertex(2).getID() * valueDimensions;
       for (int dim = 0; dim < valueDimensions; ++dim) {
-        integral(dim) += (triangleArea(face) / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
+        integral(dim) += (face.getArea() / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
       }
     }
   }
-  return std::move(integral);
+  return integral;
 }
 
 /// Given the data and the mesh, this function returns the surface integral
-inline Eigen::VectorXd integrateOverlap(PtrMesh mesh, PtrData data)
+inline Eigen::VectorXd integrateOwner(PtrMesh mesh, PtrData data)
 {
   const int       valueDimensions = data->getDimensions();
   const int       meshDimensions  = mesh->getDimensions();
@@ -196,7 +175,7 @@ inline Eigen::VectorXd integrateOverlap(PtrMesh mesh, PtrData data)
       int vertex2 = edge.vertex(1).getID() * valueDimensions;
       if (edge.vertex(0).isOwner() and edge.vertex(1).isOwner()) {
         for (int dim = 0; dim < valueDimensions; ++dim) {
-          integral(dim) += 0.5 * edgeLength(edge) * (values(vertex1 + dim) + values(vertex2 + dim));
+          integral(dim) += 0.5 * edge.getLength() * (values(vertex1 + dim) + values(vertex2 + dim));
         }
       }
     }
@@ -207,12 +186,12 @@ inline Eigen::VectorXd integrateOverlap(PtrMesh mesh, PtrData data)
       int vertex3 = face.vertex(2).getID() * valueDimensions;
       if (face.vertex(0).isOwner() and face.vertex(1).isOwner() and face.vertex(2).isOwner()) {
         for (int dim = 0; dim < valueDimensions; ++dim) {
-          integral(dim) += (triangleArea(face) / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
+          integral(dim) += (face.getArea() / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
         }
       }
     }
   }
-  return std::move(integral);
+  return integral;
 }
 
 } // namespace mesh

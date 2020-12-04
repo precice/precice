@@ -20,6 +20,7 @@
 using namespace precice;
 using namespace precice::mesh;
 using namespace precice::mapping;
+using namespace precice::testing;
 using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
@@ -43,55 +44,6 @@ void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, mes
 }
 
 BOOST_AUTO_TEST_SUITE(Parallel)
-
-/// Holds rank, owner, position, value of a single vertex, index of vertices for the edge connectivity and indices of the edges for the face connectivity
-struct VertexSpecification {
-  int                 rank;
-  int                 owner;
-  std::vector<double> position;
-  std::vector<double> value;
-};
-
-/*
-MeshSpecification format:
-{ {rank, owner rank, {x, y, z}, {v}}, ... }
-
-also see struct VertexSpecification.
-
-- -1 on rank means all ranks
-- -1 on owner rank means no rank
-- x, y, z is position of vertex, z is optional, 2D mesh will be created then
-- v is the value of the respective vertex. Only 1D supported at this time.
-
-ReferenceSpecification format:
-{ {rank, {v}, ... }
-- -1 on rank means all ranks
-- v is the expected value of n-th vertex on that particular rank
-*/
-using FaceSpecification = std::vector<int>;
-
-struct EdgeSpecification {
-  std::vector<int> vertices;
-  int              rank;
-};
-
-struct MeshSpecification {
-  std::vector<VertexSpecification> vertices;
-  std::vector<EdgeSpecification>   edges;
-  std::vector<FaceSpecification>   faces;
-
-  MeshSpecification(std::vector<VertexSpecification> vertices_)
-      : vertices(vertices_) {}
-
-  MeshSpecification(std::vector<VertexSpecification> vertices_, std::vector<EdgeSpecification> edges_)
-      : vertices(vertices_), edges(edges_) {}
-
-  MeshSpecification(std::vector<VertexSpecification> vertices_, std::vector<EdgeSpecification> edges_, std::vector<FaceSpecification> faces_)
-      : vertices(vertices_), edges(edges_), faces(faces_) {}
-};
-
-/// Contains which values are expected on which rank: rank -> vector of data.
-using ReferenceSpecification = std::vector<std::pair<int, std::vector<double>>>;
 
 void getDistributedMesh(const TestContext &      context,
                         MeshSpecification const &meshSpec,
@@ -139,7 +91,7 @@ void getDistributedMesh(const TestContext &      context,
 
   if (not meshSpec.faces.empty()) {
     for (auto face : meshSpec.faces) {
-      mesh->createTriangle(mesh->edges().at(face.at(0)), mesh->edges().at(face.at(1)), mesh->edges().at(face.at(2)));
+      mesh->createTriangle(mesh->edges().at(face.edges.at(0)), mesh->edges().at(face.edges.at(1)), mesh->edges().at(face.edges.at(2)));
     }
   }
 
@@ -177,7 +129,7 @@ void testDistributed(const TestContext &    context,
 
   if (mapping.getConstraint() == Mapping::SCALEDCONSISTENT) {
 
-    auto            inputIntegral  = mesh::integrateOverlap(inMesh, inData);
+    auto            inputIntegral  = mesh::integrateOwner(inMesh, inData);
     auto            outputIntegral = mesh::integrate(outMesh, outData);
     Eigen::VectorXd globalInputIntegral(valueDimension);
     Eigen::VectorXd globalOutputIntegral(valueDimension);

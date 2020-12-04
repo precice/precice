@@ -119,7 +119,7 @@ private:
   const std::string VALUE_READ             = "read";
   const std::string VALUE_CONSISTENT       = "consistent";
   const std::string VALUE_CONSERVATIVE     = "conservative";
-  const std::string VALUE_SCALEDCONSISTENT = "scaled-consistent";
+  const std::string VALUE_SCALED_CONSISTENT = "scaled-consistent";
 
   const std::string VALUE_NEAREST_NEIGHBOR      = "nearest-neighbor";
   const std::string VALUE_NEAREST_PROJECTION    = "nearest-projection";

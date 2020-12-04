@@ -136,7 +136,7 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
                             .setDocumentation("Use conservative or scaled-consistent to conserve the quantity of the data over the interface such as force or mass. Use consistent for normalized quantities such as temperature or pressure.")
-                            .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT, VALUE_SCALEDCONSISTENT});
+                            .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT, VALUE_SCALED_CONSISTENT});
 
   auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
                         .setDocumentation("This allows to defer the mapping of the data to advance or to a manual call to mapReadDataTo and mapWriteDataFrom.")
@@ -283,7 +283,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     constraintValue = Mapping::CONSERVATIVE;
   } else if (constraint == VALUE_CONSISTENT) {
     constraintValue = Mapping::CONSISTENT;
-  } else if (constraint == VALUE_SCALEDCONSISTENT) {
+  } else if (constraint == VALUE_SCALED_CONSISTENT) {
     constraintValue = Mapping::SCALEDCONSISTENT;
   } else {
     PRECICE_ASSERT(false, "Unknown mapping constraint \"" << constraint << "\". Please check the documentation for available options.");

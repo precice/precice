@@ -99,7 +99,7 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   int meshDimensions  = input()->getDimensions();
 
   // Integral is calculated on each direction separately
-  auto integralInput  = mesh::integrateOverlap(input(), input()->data(inputDataID));
+  auto integralInput  = mesh::integrateOwner(input(), input()->data(inputDataID));
   auto integralOutput = mesh::integrate(output(), output()->data(outputDataID));
 
   // If the mesh is distributed, we need to calculate the global integral

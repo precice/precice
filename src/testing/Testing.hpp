@@ -9,6 +9,7 @@
 #include "testing/TestContext.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
+#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace testing {
@@ -106,6 +107,59 @@ inline int nextMeshID()
   static utils::ManageUniqueIDs manager;
   return manager.getFreeID();
 }
+
+/// Holds rank, owner, position, value of a single vertex
+struct VertexSpecification {
+  int                 rank;
+  int                 owner;
+  std::vector<double> position;
+  std::vector<double> value;
+
+  const Eigen::Map<const Eigen::VectorXd> asEigen() const
+  {
+    return Eigen::Map<const Eigen::VectorXd>{position.data(), static_cast<Eigen::Index>(position.size())};
+  }
+};
+
+/// Holds the indices of the vertices of the edge and the rank in which the edge is going to be created
+struct EdgeSpecification {
+  std::vector<int> vertices;
+  int              rank;
+};
+
+/// Holds the indices of the edges of the face and the rank in which the face is going to be created
+struct FaceSpecification {
+  std::vector<int>              edges;
+  int                           rank;
+};
+
+/*
+- -1 on rank means all ranks
+- -1 on owner rank means no rank
+- x, y, z is position of vertex, z is optional, 2D mesh will be created then
+*/
+struct MeshSpecification {
+  std::vector<VertexSpecification> vertices;
+  std::vector<EdgeSpecification>   edges;
+  std::vector<FaceSpecification>   faces;
+
+  MeshSpecification(std::vector<VertexSpecification> vertices_)
+      : vertices(vertices_) {}
+
+  MeshSpecification(std::vector<VertexSpecification> vertices_, std::vector<EdgeSpecification> edges_)
+      : vertices(vertices_), edges(edges_) {}
+
+  MeshSpecification(std::vector<VertexSpecification> vertices_, std::vector<EdgeSpecification> edges_, std::vector<FaceSpecification> faces_)
+      : vertices(vertices_), edges(edges_), faces(faces_) {}
+};
+
+/*
+ReferenceSpecification format:
+{ {rank, {v}, ... }
+- -1 on rank means all ranks
+- v is the expected value of n-th vertex on that particular rank
+*/
+using ReferenceSpecification = std::vector<std::pair<int, std::vector<double>>>;
 
 } // namespace testing
 } // namespace precice
