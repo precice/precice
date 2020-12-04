@@ -867,8 +867,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 
   if (getConstraint() == CONSERVATIVE) {
     mesh = output();
-  }
-  else {
+  } else {
     mesh = input();
   }
 

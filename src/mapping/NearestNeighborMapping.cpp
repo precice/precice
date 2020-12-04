@@ -51,7 +51,7 @@ void NearestNeighborMapping::computeMapping()
   const std::string     baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
 
-  if (getConstraint() == CONSERVATIVE){
+  if (getConstraint() == CONSERVATIVE) {
     PRECICE_DEBUG("Compute conservative mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
     auto                  rtree = mesh::rtree::getVertexRTree(output());
@@ -99,7 +99,7 @@ void NearestNeighborMapping::computeMapping()
     } else {
       PRECICE_INFO("Mapping distance " << distanceStatistics);
     }
-  } 
+  }
   _hasComputedMapping = true;
 }
 
@@ -114,11 +114,11 @@ void NearestNeighborMapping::clear()
   PRECICE_TRACE();
   _vertexIndices.clear();
   _hasComputedMapping = false;
-  if (getConstraint() == CONSERVATIVE){
+  if (getConstraint() == CONSERVATIVE) {
     mesh::rtree::clear(*output());
   } else {
     mesh::rtree::clear(*input());
-  } 
+  }
 }
 
 void NearestNeighborMapping::map(
@@ -161,7 +161,7 @@ void NearestNeighborMapping::map(
     if (getConstraint() == SCALEDCONSISTENT) {
       scaleConsistentMapping(inputDataID, outputDataID);
     }
-  } 
+  }
 }
 
 void NearestNeighborMapping::tagMeshFirstRound()
@@ -185,7 +185,7 @@ void NearestNeighborMapping::tagMeshFirstRound()
       if (indexSet.count(v.getID()) != 0)
         v.tag();
     }
-  } 
+  }
 
   clear();
 }

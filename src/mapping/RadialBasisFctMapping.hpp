@@ -488,8 +488,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   if (getConstraint() == CONSERVATIVE) {
     filterMesh = output(); // remote
     otherMesh  = input();  // local
-  }
-  else {
+  } else {
     filterMesh = input();  // remote
     otherMesh  = output(); // local
   }

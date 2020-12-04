@@ -81,7 +81,7 @@ void NearestProjectionMapping::computeMapping()
     PRECICE_DEBUG("Compute conservative mapping");
     origins      = input();
     search_space = output();
-  } else  {
+  } else {
     PRECICE_DEBUG("Compute consistent mapping");
     origins      = output();
     search_space = input();
@@ -284,8 +284,7 @@ void NearestProjectionMapping::map(
         }
       }
     }
-  }
-  else {
+  } else {
     PRECICE_DEBUG("Map consistent");
     PRECICE_ASSERT(_weights.size() == output()->vertices().size(),
                    _weights.size(), output()->vertices().size());
@@ -304,7 +303,7 @@ void NearestProjectionMapping::map(
     if (getConstraint() == SCALEDCONSISTENT) {
       scaleConsistentMapping(inputDataID, outputDataID);
     }
-  } 
+  }
 }
 
 void NearestProjectionMapping::tagMeshFirstRound()
@@ -322,7 +321,7 @@ void NearestProjectionMapping::tagMeshFirstRound()
     origins = output();
   } else {
     origins = input();
-  } 
+  }
 
   // Gather all vertices to be tagged in a first phase.
   // max_count is used to shortcut if all vertices have been tagged.

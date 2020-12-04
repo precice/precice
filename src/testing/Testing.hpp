@@ -6,10 +6,10 @@
 #include <type_traits>
 #include "math/differences.hpp"
 #include "math/math.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
-#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace testing {
@@ -129,8 +129,8 @@ struct EdgeSpecification {
 
 /// Holds the indices of the edges of the face and the rank in which the face is going to be created
 struct FaceSpecification {
-  std::vector<int>              edges;
-  int                           rank;
+  std::vector<int> edges;
+  int              rank;
 };
 
 /*
