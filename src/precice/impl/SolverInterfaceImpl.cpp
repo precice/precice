@@ -388,6 +388,8 @@ double SolverInterfaceImpl::advance(
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
   PRECICE_CHECK((not _couplingScheme->receivesInitializedData() && not _couplingScheme->sendsInitializedData()) || (_hasInitializedData),
                 "initializeData() needs to be called before advance if data has to be initialized.");
+  PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
+  PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size " << computedTimestepLength << '.');
   _numberAdvanceCalls++;
 
 #ifndef NDEBUG
