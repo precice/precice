@@ -32,7 +32,7 @@ NearestNeighborMapping::NearestNeighborMapping(
     int        dimensions)
     : Mapping(constraint, dimensions)
 {
-  if (constraint == Mapping::SCALEDCONSISTENT) {
+  if (hasConstraint(SCALEDCONSISTENT)) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {
@@ -51,7 +51,7 @@ void NearestNeighborMapping::computeMapping()
   const std::string     baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
 
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Compute conservative mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
     auto                  rtree = mesh::rtree::getVertexRTree(output());
@@ -114,7 +114,7 @@ void NearestNeighborMapping::clear()
   PRECICE_TRACE();
   _vertexIndices.clear();
   _hasComputedMapping = false;
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     mesh::rtree::clear(*output());
   } else {
     mesh::rtree::clear(*input());
@@ -139,8 +139,7 @@ void NearestNeighborMapping::map(
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
                  outputValues.size(), valueDimensions, output()->vertices().size());
-  if (getConstraint() == CONSERVATIVE) {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
+  if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Map conservative");
     size_t const inSize = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {
@@ -158,7 +157,7 @@ void NearestNeighborMapping::map(
         outputValues((i * valueDimensions) + dim) = inputValues(inputIndex + dim);
       }
     }
-    if (getConstraint() == SCALEDCONSISTENT) {
+    if (hasConstraint(SCALEDCONSISTENT)) {
       scaleConsistentMapping(inputDataID, outputDataID);
     }
   }
@@ -174,7 +173,7 @@ void NearestNeighborMapping::tagMeshFirstRound()
   // Lookup table of all indices used in the mapping
   const boost::container::flat_set<int> indexSet(_vertexIndices.begin(), _vertexIndices.end());
 
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     for (mesh::Vertex &v : output()->vertices()) {
       if (indexSet.count(v.getID()) != 0)

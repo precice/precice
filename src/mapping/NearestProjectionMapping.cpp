@@ -77,7 +77,7 @@ void NearestProjectionMapping::computeMapping()
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, search_space;
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Compute conservative mapping");
     origins      = input();
     search_space = output();
@@ -267,7 +267,7 @@ void NearestProjectionMapping::map(
   int dimensions = inData->getDimensions();
   PRECICE_ASSERT(dimensions == outData->getDimensions());
 
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Map conservative");
     PRECICE_ASSERT(_weights.size() == input()->vertices().size(),
@@ -300,7 +300,7 @@ void NearestProjectionMapping::map(
         }
       }
     }
-    if (getConstraint() == SCALEDCONSISTENT) {
+    if (hasConstraint(SCALEDCONSISTENT)) {
       scaleConsistentMapping(inputDataID, outputDataID);
     }
   }
@@ -317,7 +317,7 @@ void NearestProjectionMapping::tagMeshFirstRound()
 
   // Determine the Mesh to Tag
   mesh::PtrMesh origins;
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     origins = output();
   } else {
     origins = input();

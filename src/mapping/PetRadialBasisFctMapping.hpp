@@ -279,7 +279,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int const     dimensions = input()->getDimensions();
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     inMesh  = output();
     outMesh = input();
   } else {
@@ -649,7 +649,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
                  valueDim, output()->data(outputDataID)->getDimensions());
 
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     auto au = petsc::Vector::allocate(_matrixA, "au", petsc::Vector::RIGHT);
     auto in = petsc::Vector::allocate(_matrixA, "in");
     int  inRangeStart, inRangeEnd;
@@ -805,7 +805,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         outValues[i * valueDim + dim] = vecArray[i];
       }
 
-      if (getConstraint() == SCALEDCONSISTENT) {
+      if (hasConstraint(SCALEDCONSISTENT)) {
         scaleConsistentMapping(inputDataID, outputDataID);
       }
 
@@ -823,7 +823,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
   PRECICE_TRACE();
   mesh::PtrMesh filterMesh, otherMesh;
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     filterMesh = output(); // remote
     otherMesh  = input();  // local
   } else {
@@ -865,7 +865,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 
   mesh::PtrMesh mesh; // The mesh we want to filter
 
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     mesh = output();
   } else {
     mesh = input();
@@ -893,9 +893,9 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
 {
   std::string constraintName;
-  if (getConstraint() == CONSISTENT) {
+  if (hasConstraint(CONSISTENT)) {
     constraintName = "consistent";
-  } else if (getConstraint() == SCALEDCONSISTENT) {
+  } else if (hasConstraint(SCALEDCONSISTENT)) {
     constraintName = "scaled-consistent";
   } else {
     constraintName = "conservative";

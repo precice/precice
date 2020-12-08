@@ -83,13 +83,15 @@ int Mapping::getDimensions() const
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 {
   // If rank is not empty and do not contain connectivity information, raise error
-  if (input()->edges().empty() and (not input()->vertices().empty())) {
+  if ((input()->edges().empty() and (not input()->vertices().empty())) or
+      ((input()->getDimensions() == 3) and input()->triangles().empty())) {
     logging::Logger _log{"mapping::Mapping"};
-    PRECICE_ERROR("There is no connectivity information defined for mesh " << input()->getName() << ". Scaled consistent mapping requires connectivity information.");
+    PRECICE_ERROR("Connectivity information is missing for the mesh " << input()->getName() << ". Scaled consistent mapping requires connectivity information.");
   }
-  if (output()->edges().empty() and (not output()->vertices().empty())) {
+  if ((output()->edges().empty() and (not output()->vertices().empty())) or
+      ((output()->getDimensions() == 3) and output()->triangles().empty())) {
     logging::Logger _log{"mapping::Mapping"};
-    PRECICE_ERROR("There is no connectivity information defined for mesh " << output()->getName() << ". Scaled consistent mapping requires connectivity information.");
+    PRECICE_ERROR("Connectivity information is missing for the mesh " << output()->getName() << ". Scaled consistent mapping requires connectivity information.");
   }
 
   const auto &inputValues  = input()->data(inputDataID)->values();
@@ -118,6 +120,11 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   // Scale in each direction
   Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
   outputValuesMatrix.array().colwise() *= scalingFactor.array();
+}
+
+bool Mapping::hasConstraint(const Constraint &constraint) const
+{
+  return (getConstraint() == constraint);
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)

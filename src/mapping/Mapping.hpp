@@ -87,6 +87,9 @@ public:
    */
   virtual bool hasComputedMapping() const = 0;
 
+  /// Checks whether the mapping has the given constraint or not
+  virtual bool hasConstraint(const Constraint &constraint) const;
+
   /// Removes a computed mapping.
   virtual void clear() = 0;
 
