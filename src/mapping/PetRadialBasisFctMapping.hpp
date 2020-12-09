@@ -557,7 +557,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // -- CONFIGURE SOLVER FOR SYSTEM MATRIX --
   KSPSetOperators(_solver, _matrixC, _matrixC);
   CHKERRV(ierr);
-  KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+  KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, 1e30, PETSC_DEFAULT);
   KSPSetInitialGuessNonzero(_solver, PETSC_TRUE);
   CHKERRV(ierr);                            // Reuse the results from the last iteration, held in the out vector.
   KSPSetOptionsPrefix(_solver, "solverC_"); // s.t. options for only this solver can be set on the command line
