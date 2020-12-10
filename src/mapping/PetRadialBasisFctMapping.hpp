@@ -561,10 +561,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // considered as diverged and the computation is aborted. The PETSC_DEFAULT value is 1e9. However, the
   // divergence residual is scaled using the RHS b of the system. In case the RHS is (still nonzero) very small
   // and we have a (bad) nonzero initial guess x as defined below, the divergence tolerance might be exceeded
-  // in the first iteration, although the system could be solved in the usual way. Therefore, we select a very
-  // high value (1e30) in order to disable the divergence check. In practice, the check is very rarely needed
-  // with Krylov methods. According to the PETSc people, even the rare use cases aim for a bad preconditioner,
-  // which is not used in our configuration. Hence, we can disable the divergence check without concerns.
+  // in the first iteration, although the system could be solved in the usual way. This behavior is essentially
+  // a glitch in the divergence check. Therefore, we select a very high value (1e30) in order to disable the
+  // divergence check. In practice, the check is very rarely needed with Krylov methods. According to the PETSc
+  // people, the rare use cases aim for a bad preconditioner, which is not even used in our configuration.
+  // Hence, we can disable the divergence check without concerns.
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, 1e30, PETSC_DEFAULT);
   KSPSetInitialGuessNonzero(_solver, PETSC_TRUE);
   CHKERRV(ierr);                            // Reuse the results from the last iteration, held in the out vector.
