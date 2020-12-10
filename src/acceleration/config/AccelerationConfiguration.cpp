@@ -448,7 +448,7 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                               .setDocumentation(
                                   "After the given number of time steps, the preconditioner weights "
-                                  "are freezed and the preconditioner acts like a constant preconditioner.");
+                                  "are frozen and the preconditioner acts like a constant preconditioner.");
     tagPreconditioner.addAttribute(nonconstTSteps);
     tag.addSubtag(tagPreconditioner);
 
@@ -518,7 +518,7 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                       .setDocumentation("Type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
-                              .setDocumentation("After the given number of time steps, the preconditioner weights are freezed and the preconditioner acts like a constant preconditioner.");
+                              .setDocumentation("After the given number of time steps, the preconditioner weights are frozen and the preconditioner acts like a constant preconditioner.");
     tagPreconditioner.addAttribute(nonconstTSteps);
     tag.addSubtag(tagPreconditioner);
 
