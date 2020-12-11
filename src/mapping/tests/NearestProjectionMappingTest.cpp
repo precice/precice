@@ -661,7 +661,7 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
   BOOST_TEST(outData->values()(0) == 1.0);
 }
 
-BOOST_AUTO_TEST_CASE(ScaledConsistentQuery_3D_FullMesh)
+BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
 {
   PRECICE_TEST(1_rank);
   using namespace precice::mesh;
