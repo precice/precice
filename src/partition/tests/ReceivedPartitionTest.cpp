@@ -1087,6 +1087,147 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
   tearDownParallelEnvironment();
 }
 
+BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
+{
+  PRECICE_TEST("Solid"_on(2_ranks).setupMasterSlaves(), "Fluid"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  //mesh creation
+  int           dimensions   = 2;
+  bool          flipNormals  = true;
+  double        safetyFactor = 0;
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
+
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = false;
+  options.useTwoLevelInit  = true;
+  options.type             = testing::ConnectionType::PointToPoint;
+  auto m2n                 = context.connectMasters("Fluid", "Solid", options);
+
+  if (context.isNamed("Solid")) {
+    if (context.isMaster()) {
+      Eigen::VectorXd position(dimensions);
+      position << -0.5, 0.0;
+      mesh->createVertex(position);
+      position << -1.0, 0.0;
+      mesh->createVertex(position);
+      position << -2.0, 0.0;
+      mesh->createVertex(position);
+      position << 0.0, 1.0;
+      mesh->createVertex(position);
+      position << -1.0, 1.0;
+      mesh->createVertex(position);
+      position << -2.0, 1.0;
+      mesh->createVertex(position);
+
+      
+    } else {
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 0.0;
+      mesh->createVertex(position);
+      position << 1.0, 0.0;
+      mesh->createVertex(position);
+      position << 2.0, 0.0;
+      mesh->createVertex(position);
+      position << 1.0, 1.0;
+      mesh->createVertex(position);
+      position << 2.0, 1.0;
+      mesh->createVertex(position);
+    }
+  } else {
+    BOOST_TEST(context.isNamed("Fluid"));
+    if (context.isMaster()) {
+      Eigen::VectorXd position(dimensions);
+      position << -0.5, 0.0;
+      mesh->createVertex(position);
+      position << -1.0, 0.0;
+      mesh->createVertex(position);
+      position << -2.0, 0.0;
+      mesh->createVertex(position);
+      position << -1.0, -1.0;
+      mesh->createVertex(position);
+      position << -2.0, -1.0;
+      mesh->createVertex(position);
+    } else {
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 0.0;
+      mesh->createVertex(position);
+      position << 1.0, 0.0;
+      mesh->createVertex(position);
+      position << 2.0, 0.0;
+      mesh->createVertex(position);
+      position << -0.75, -1.0;
+      mesh->createVertex(position);
+      position << 0.0, -1.0;
+      mesh->createVertex(position);
+      position << 1.0, -1.0;
+      mesh->createVertex(position);
+      position << 2.0, -1.0;
+      mesh->createVertex(position);
+    }
+  }
+  mesh->computeState();
+  mesh->computeBoundingBox();
+
+  if (context.isNamed("Solid")) {
+    m2n->createDistributedCommunication(mesh);
+    ProvidedPartition part(mesh);
+    part.addM2N(m2n);
+
+    part.compareBoundingBoxes();
+
+    if (context.isMaster()) {
+      BOOST_TEST(mesh->getConnectedRanks().size() == 2);
+      BOOST_TEST(mesh->getConnectedRanks()[0] == 0);
+      BOOST_TEST(mesh->getConnectedRanks()[1] == 1);
+    } else {
+      BOOST_TEST(mesh->getConnectedRanks().size() == 1);
+      BOOST_TEST(mesh->getConnectedRanks()[0] == 1);      
+    }
+
+    m2n->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
+
+    part.communicate();
+    part.compute();
+
+    if (context.isMaster()) {
+      BOOST_TEST(mesh->getCommunicationMap()[0][0] == 0);
+      BOOST_TEST(mesh->getCommunicationMap()[0][1] == 1);
+      BOOST_TEST(mesh->getCommunicationMap()[0][2] == 2);
+
+      // std::cout<<"master sends vertices: " << mesh->getCommunicationMap()[0] << " to rank 0 and verticees " << mesh->getCommunicationMap()[1] << " to rank 1 " << std::endl; 
+      
+      
+    } else {
+      // BOOST_TEST(mesh->getCommunicationMap()[0].size() == 0);
+      BOOST_TEST(mesh->getCommunicationMap()[1][0] == 0);
+      BOOST_TEST(mesh->getCommunicationMap()[1][1] == 1);
+      BOOST_TEST(mesh->getCommunicationMap()[1][2] == 2);
+      // std::cout<<"slave sends vertices: " << mesh->getCommunicationMap()[0] << " to rank 0 and verticees " << mesh->getCommunicationMap()[1] << " to rank 1 " << std::endl; 
+    }
+  } else {
+    m2n->createDistributedCommunication(receivedMesh);
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
+    mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
+    boundingFromMapping->setMeshes(receivedMesh, mesh);
+    boundingToMapping->setMeshes(mesh, receivedMesh);
+
+    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+
+    part.addM2N(m2n);
+
+    part.setFromMapping(boundingFromMapping);
+    part.setToMapping(boundingToMapping);
+
+    part.compareBoundingBoxes();
+
+    m2n->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
+
+    part.communicate();
+    part.compute();
+  }
+  tearDownParallelEnvironment();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
