@@ -510,7 +510,10 @@ void ReceivedPartition::createOwnerInformation()
     mesh::Mesh::BoundingBoxMap localConnectedBBMap;
 
     // store global IDs and list of possible shared vertices
+
+    // Global IDs to be saved in: 
     std::vector<int> sharedVerticesList;
+    // Local IDs to be saved in:
     std::vector<int> sharedVerticesIndex;
     
     // store possible shared vertices in a map to communicate with neighbors, map: rank -> vertex_global_id
@@ -537,6 +540,7 @@ void ReceivedPartition::createOwnerInformation()
       // slaves receive localBBMap from master
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBoxMap(localBBMap, 0);
     }    
+
     // #2: filter bb map to keep the connected ranks
     // remove the current bb from the map
     localBBMap.erase(utils::MasterSlave::getRank());
@@ -582,9 +586,9 @@ void ReceivedPartition::createOwnerInformation()
       } 
     }
 
-    // #4: communicate number of already owned vertices to the neighbors
-    int receivedCounter=0;
-    std::map<int, int> neighborRanksVertexCount; // for load balancing 
+    // #4: Exchange number of already owned vertices with the neighbors
+    std::map<int, int> neighborRanksVertexCount; // for load balancing
+    int receivedCounter = 0;
     for (auto & neighborRank: localConnectedBBMap)
     {
       utils::MasterSlave::_communication->aSend(counter, neighborRank.first);
@@ -596,12 +600,12 @@ void ReceivedPartition::createOwnerInformation()
       neighborRanksVertexCount.emplace(neighborRank.first, receivedCounter);
     }
 
-    // #5: communicate list of shared vertices to the neighbor
+    // #5: Exchange list of shared vertices with the neighbor
     for (auto & receivingRank: sharedVerticesSendMap)
     {
-      int size = receivingRank.second.size();
-      utils::MasterSlave::_communication->aSend(size, receivingRank.first);
-      if (size != 0)
+      int sendSize = receivingRank.second.size();
+      utils::MasterSlave::_communication->aSend(sendSize, receivingRank.first);
+      if (sendSize != 0)
       {
         utils::MasterSlave::_communication->aSend(receivingRank.second, receivingRank.first);
       }
@@ -609,9 +613,9 @@ void ReceivedPartition::createOwnerInformation()
 
     for (auto & neighborRank: sharedVerticesSendMap)
     {
-      receivedCounter = 0;
-      utils::MasterSlave::_communication->receive(receivedCounter, neighborRank.first);
-      if (receivedCounter != 0)
+      int receiveSize = 0;
+      utils::MasterSlave::_communication->receive(receiveSize, neighborRank.first);
+      if (receiveSize != 0)
       {
         std::vector<double> receivedSharedVertices;
         utils::MasterSlave::_communication->receive(receivedSharedVertices, neighborRank.first);
