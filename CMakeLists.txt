@@ -265,8 +265,8 @@ endif()
 # Add precice as an empty target
 add_library(precice ${preCICE_DUMMY})
 set_target_properties(precice PROPERTIES
-  # precice is a C++11 project
-  CXX_STANDARD 11
+  # precice is a C++14 project
+  CXX_STANDARD 14
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   VERSION ${preCICE_VERSION}
@@ -366,8 +366,10 @@ target_link_libraries(binprecice
   Boost::unit_test_framework
   )
 set_target_properties(binprecice PROPERTIES
-  # precice is a C++11 project
-  CXX_STANDARD 11
+  # precice is a C++14 project
+  CXX_STANDARD 14
+  CXX_STANDARD_REQUIRED Yes
+  CXX_EXTENSIONS No
   )
 # Copy needed properties from the lib to the executatble. This is necessary as
 # this executable uses the library source, not only the interface.
@@ -402,8 +404,10 @@ IF (BUILD_TESTING)
     Boost::unit_test_framework
     )
   set_target_properties(testprecice PROPERTIES
-    # precice is a C++11 project
-    CXX_STANDARD 11
+    # precice is a C++14 project
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
     )
   # Copy needed properties from the lib to the executatble. This is necessary as
   # this executable uses the library source, not only the interface.
