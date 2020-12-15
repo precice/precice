@@ -17,12 +17,6 @@ constexpr bool equals(const Eigen::MatrixBase<DerivedA> &A,
   return A.isApprox(B, tolerance);
 }
 
-/// Compares two doubles for equality up to tolerance
-constexpr inline bool equals(double a, double b, double tolerance = NUMERICAL_ZERO_DIFFERENCE)
-{
-  return std::abs(a - b) < tolerance;
-}
-
 /// Compares two scalar (arithmetic) types
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type equals(const Scalar a, const Scalar b, const Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
