@@ -28,8 +28,8 @@
         to="MeshOne"
         constraint="consistent"
         timing="onadvance" />
-      <write-data name="Forces" mesh="Test-Square" />
-      <read-data name="Velocities" mesh="Test-Square" />
+      <write-data name="Forces" mesh="MeshOne" />
+      <read-data name="Velocities" mesh="MeshOne" />
     </participant>
 
     <participant name="SolverTwo">

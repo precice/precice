@@ -24,6 +24,7 @@
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
+#include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/PointerVector.hpp"
@@ -102,6 +103,25 @@ ParticipantConfiguration::ParticipantConfiguration(
                                 "linearly to that point.");
   tagWatchPoint.addAttribute(attrCoordinate);
   tag.addSubtag(tagWatchPoint);
+
+  auto attrScaleWitConn = XMLAttribute<bool>(ATTR_SCALE_WITH_CONN)
+                              .setDocumentation("Whether the vertex data is scaled with the element area before "
+                                                "summing up or not. In 2D, vertex data is scaled with the average length of "
+                                                "neighboring edges. In 3D, vertex data is scaled with the average surface of "
+                                                "neighboring triangles. If false, vertex data is directly summed up.");
+  XMLTag tagWatchIntegral(*this, TAG_WATCH_INTEGRAL, XMLTag::OCCUR_ARBITRARY);
+  doc = "A watch integral can be used to follow the transient change of integral data ";
+  doc += "and surface area for a given coupling mesh.";
+  tagWatchIntegral.setDocumentation(doc);
+  doc = "Name of the watch integral. Is taken in combination with the participant ";
+  doc += "name to construct the filename the watch integral data is written to.";
+  attrName.setDocumentation(doc);
+  tagWatchIntegral.addAttribute(attrName);
+  doc = "Mesh to be watched.";
+  attrMesh.setDocumentation(doc);
+  tagWatchIntegral.addAttribute(attrMesh);
+  tagWatchIntegral.addAttribute(attrScaleWitConn);
+  tag.addSubtag(tagWatchIntegral);
 
   XMLTag tagUseMesh(*this, TAG_USE_MESH, XMLTag::OCCUR_ARBITRARY);
   doc = "Makes a mesh (see tag <mesh> available to a participant.";
@@ -285,6 +305,13 @@ void ParticipantConfiguration::xmlTagCallback(
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
     config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _dimensions);
     _watchPointConfigs.push_back(config);
+  } else if (tag.getName() == TAG_WATCH_INTEGRAL) {
+    PRECICE_ASSERT(_dimensions != 0);
+    WatchIntegralConfig config;
+    config.name        = tag.getStringAttributeValue(ATTR_NAME);
+    config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
+    config.isScalingOn = tag.getBooleanAttributeValue(ATTR_SCALE_WITH_CONN);
+    _watchIntegralConfigs.push_back(config);
   } else if (tag.getNamespace() == TAG_MASTER) {
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com = comConfig.createCommunication(tag);
@@ -370,6 +397,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                   "Participant \"" << participant->getName() << "\" has mapping"
                                    << " to mesh \"" << confMapping.toMesh->getName() << "\", without using this mesh. "
                                    << "Please add a use-mesh tag with name=\"" << confMapping.toMesh->getName() << "\"");
+    PRECICE_CHECK((participant->isMeshProvided(fromMeshID) || participant->isMeshProvided(toMeshID)),
+                  "Participant \"" << participant->getName() << "\" has mapping"
+                                   << " from mesh \"" << confMapping.fromMesh->getName() << "\", "
+                                   << " to mesh \"" << confMapping.toMesh->getName() << "\", but neither are provided. "
+                                   << "Please mark the mesh provided by this participant by configuring its use-mesh tag with provided=\"true\".");
+
     if (context.size > 1) {
       if ((confMapping.direction == mapping::MappingConfiguration::WRITE &&
            confMapping.mapping->getConstraint() == mapping::Mapping::CONSISTENT) ||
@@ -446,10 +479,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // Set participant data for data contexts
   for (impl::DataContext &dataContext : participant->writeDataContexts()) {
     int fromMeshID = dataContext.mesh->getID();
-    PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
-                  "Participant \"" << participant->getName() << "\" has to use mesh \""
+    PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
+                  "Participant \"" << participant->getName() << "\" has to use and provide mesh \""
                                    << dataContext.mesh->getName() << "\" to be able to write data to it. "
-                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\".");
+                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\" and provide=\"true\".");
 
     for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
       if (mappingContext.fromMeshID == fromMeshID) {
@@ -470,10 +503,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   for (impl::DataContext &dataContext : participant->readDataContexts()) {
     int toMeshID = dataContext.mesh->getID();
-    PRECICE_CHECK(participant->isMeshUsed(toMeshID),
-                  "Participant \"" << participant->getName() << "\" has to use mesh \""
+    PRECICE_CHECK(participant->isMeshProvided(toMeshID),
+                  "Participant \"" << participant->getName() << "\" has to use and provide mesh \""
                                    << dataContext.mesh->getName() << "\" in order to read data from it. "
-                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\".");
+                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\" and provide=\"true\".");
 
     for (impl::MappingContext &mappingContext : participant->readMappingContexts()) {
       if (mappingContext.toMeshID == toMeshID) {
@@ -544,6 +577,28 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     participant->addWatchPoint(watchPoint);
   }
   _watchPointConfigs.clear();
+
+  // Create watch integrals
+  for (const WatchIntegralConfig &config : _watchIntegralConfigs) {
+    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
+
+    PRECICE_CHECK(meshContext && meshContext->mesh,
+                  "Participant \"" << participant->getName()
+                                   << "\" defines watch integral \"" << config.name
+                                   << "\" for mesh \"" << config.nameMesh
+                                   << "\" which is not used by the participant. "
+                                   << "Please add a use-mesh node with name=\"" << config.nameMesh << "\".");
+    PRECICE_CHECK(meshContext->provideMesh,
+                  "Participant \"" << participant->getName()
+                                   << "\" defines watch integral \"" << config.name
+                                   << "\" for the received mesh \"" << config.nameMesh << "\", which is not allowed. "
+                                   << "Please move the watchpoint definition to the participant providing mesh \"" << config.nameMesh << "\".");
+
+    std::string            filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
+    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext->mesh, filename, config.isScalingOn));
+    participant->addWatchIntegral(watchIntegral);
+  }
+  _watchIntegralConfigs.clear();
 
   // create default master communication if needed
   if (context.size > 1 && not _isMasterDefined && participant->getName() == context.name) {

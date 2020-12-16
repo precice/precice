@@ -23,9 +23,9 @@ BOOST_AUTO_TEST_CASE(MakeArray)
   PRECICE_TEST(1_rank);
   auto a = pu::make_array(1, 2, 3);
   BOOST_TEST(a.size() == 3);
-  BOOST_TEST(a[0] == 1);
-  BOOST_TEST(a[1] == 2);
-  BOOST_TEST(a[2] == 3);
+  BOOST_TEST(a.at(0) == 1);
+  BOOST_TEST(a.at(1) == 2);
+  BOOST_TEST(a.at(2) == 3);
 }
 
 BOOST_AUTO_TEST_CASE(UniqueElements)

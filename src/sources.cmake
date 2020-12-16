@@ -234,6 +234,8 @@ target_sources(precice
     src/precice/impl/SolverInterfaceImpl.cpp
     src/precice/impl/SolverInterfaceImpl.hpp
     src/precice/impl/ValidationMacros.hpp
+    src/precice/impl/WatchIntegral.cpp
+    src/precice/impl/WatchIntegral.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
