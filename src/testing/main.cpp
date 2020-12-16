@@ -104,12 +104,12 @@ int main(int argc, char *argv[])
   const auto size = utils::Parallel::current()->size();
   logging::setMPIRank(rank);
 
-  if (size < 4) {
-    if (rank == 0) {
-      std::cerr << "ERROR: The tests require at least 4 MPI processes.\n";
-    }
-    return 2;
-  }
+  //if (size < 4) {
+  //  if (rank == 0) {
+  //    std::cerr << "ERROR: The tests require at least 4 MPI processes.\n";
+  //  }
+  //  return 2;
+  //}
 
   std::cout << "This test suite runs on rank " << rank << " of " << size << '\n';
 

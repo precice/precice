@@ -36,6 +36,7 @@ target_sources(testprecice
     src/m2n/tests/PointToPointCommunicationTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
     src/mapping/tests/NearestNeighborMappingTest.cpp
+    src/mapping/tests/NearestNeighborGradientMappingTest.cpp
     src/mapping/tests/NearestProjectionMappingTest.cpp
     src/mapping/tests/PetRadialBasisFctMappingTest.cpp
     src/mapping/tests/RadialBasisFctMappingTest.cpp

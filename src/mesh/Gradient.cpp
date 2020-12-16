@@ -25,6 +25,8 @@ Gradient::Gradient(
       _dimensions(dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
+  _values.resize(dimensions,0);
+  PRECICE_ASSERT(_values.rows() == dimensions, _values.rows(), dimensions);
   _gradientCount++;
 }
 

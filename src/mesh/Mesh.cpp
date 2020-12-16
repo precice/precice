@@ -287,16 +287,26 @@ void Mesh::allocateGradientValues()
     */
     const SizeType expectedColumnCount = expectedCount * spaceDim;
     const auto     actualColumnCount   = static_cast<SizeType>(grad->values().cols());
+    
+    /*
+    Eigen::MatrixXd& values = grad->values();
+    values.resize(valueDim, expectedColumnCount);
+    values.setZero(); // is this correct? If this is used to re-allocate, it won't work
+                      // but the approach below doesn't work either with utils::append
+    //*/
     // Shrink Buffer
+    
     if (expectedColumnCount < actualColumnCount) {
-      grad->values().resize(valueDim, expectedColumnCount);
+      grad->values().resize(spaceDim, expectedColumnCount);
     }
     // Enlarge Buffer
     if (expectedColumnCount > actualColumnCount) {
       const auto leftToAllocate = expectedColumnCount - actualColumnCount;
       utils::append(grad->values(), (Eigen::MatrixXd) Eigen::MatrixXd::Zero(valueDim, leftToAllocate));
-    }
+    }//*/
     PRECICE_DEBUG("Gradient " << grad->getName() << " now has " << grad->values().size() << " values");
+    PRECICE_DEBUG("Gradient " << grad->getName() << " now has " << grad->values().rows() << " rows");
+    PRECICE_DEBUG("Gradient " << grad->getName() << " now has " << grad->values().cols() << " columns");
   }
 }
 

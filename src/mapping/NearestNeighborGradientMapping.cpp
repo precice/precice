@@ -142,28 +142,28 @@ void NearestNeighborGradientMapping::map(
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
                  outputValues.size(), valueDimensions, output()->vertices().size());
-  PRECICE_ASSERT(inputGradient.cols() / valueDimensions == (int) input()->vertices().size(),
-                 inputGradient.cols(), valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT(inputGradient.rows() == spaceDimensions,
-                 inputGradient.rows(), spaceDimensions);
+  PRECICE_ASSERT(inputGradient.cols() / spaceDimensions == (int) input()->vertices().size(),
+                 inputGradient.cols(), spaceDimensions, input()->vertices().size());
+  PRECICE_ASSERT(inputGradient.rows() == valueDimensions,
+                 inputGradient.rows(), valueDimensions);
 
 
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Map consistent");
     size_t const outSize = output()->vertices().size();
     for (size_t i = 0; i < outSize; i++) {
-      int inputIndex = _vertexIndices[i] * valueDimensions;
+      int inputIndex = _vertexIndices[i];// * valueDimensions;
 
       // get a view on the required gradient tensor
       const Eigen::MatrixXd &grad  = inputGradient.block(0,i*spaceDimensions,valueDimensions,spaceDimensions);
 
       // compute the distance between the required point and the found point
-      const Eigen::VectorXd &delta = output()->vertices()[i].getCoords() - input()->vertices()[inputIndex].getCoords();
+      const Eigen::VectorXd &delta = input()->vertices()[inputIndex].getCoords() - output()->vertices()[i].getCoords();
 
       PRECICE_ASSERT(delta.size() == spaceDimensions, delta.size(), spaceDimensions);
 
-      // get the input value
-      const Eigen::VectorXd &value = inputValues.block(0, inputIndex, 1, valueDimensions);
+      // get the input value 
+      const Eigen::VectorXd &value = inputValues.block(inputIndex*valueDimensions, 0, valueDimensions, 1);
 
       PRECICE_ASSERT(value.size() == valueDimensions, value.size(), valueDimensions);
 
@@ -176,7 +176,7 @@ void NearestNeighborGradientMapping::map(
       Eigen::VectorXd out = value + product;
 
       // store output value
-      outputValues.block(0, i*valueDimensions, 1, valueDimensions) = out;
+      outputValues.block(i*valueDimensions, 0, valueDimensions, 1) = out;
     }
   } else {
     // does a CONSERVATIVE mapping even make sense, there is nothing to conserve?
