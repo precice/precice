@@ -542,6 +542,7 @@ bool BaseCouplingScheme::measureConvergence()
     if (not utils::MasterSlave::isSlave() && convMeasure.doesLogging) {
       _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());
     }
+    PRECICE_INFO("Convergence value: " << convMeasure.measure->getNormResidual());
 
     if (not convMeasure.measure->isConvergence()) {
       allConverged = false;

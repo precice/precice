@@ -105,6 +105,8 @@ public:
     */
   virtual void performAcceleration(DataMap &cplData);
 
+  virtual void stagnatingCheck();
+
   /**
     * @brief Marks a iteration sequence as converged.
     *
