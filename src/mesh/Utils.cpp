@@ -61,9 +61,12 @@ Eigen::VectorXd integrateOwner(PtrMesh mesh, PtrData data)
       int vertex2 = face.vertex(1).getID() * valueDimensions;
       int vertex3 = face.vertex(2).getID() * valueDimensions;
 
-      if (face.vertex(0).isOwner() and face.vertex(1).isOwner() and face.vertex(2).isOwner()) {
+      // If the rank owns at least two of the vertices of the triangle, calculate the integral
+      if ((face.vertex(0).isOwner() + face.vertex(1).isOwner() + face.vertex(2).isOwner()) > 1) {
         for (int dim = 0; dim < valueDimensions; ++dim) {
-          integral(dim) += (face.getArea() / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
+          integral(dim) += (face.getArea() / 3.0) * (values(vertex1 + dim) + 
+                                                     values(vertex2 + dim) + 
+                                                     values(vertex3 + dim));
         }
       }
     }
