@@ -122,7 +122,7 @@ PtrData &Mesh::createData(
     int                dimension)
 {
   PRECICE_TRACE(name, dimension);
-  for (const PtrData data : _data) {
+  for (const PtrData &data : _data) {
     PRECICE_CHECK(data->getName() != name,
                   "Data \"" << name << "\" cannot be created twice for "
                             << "mesh \"" << _name << "\". Please rename or remove one of the use-data tags with name \"" << name << "\".");
