@@ -1700,8 +1700,8 @@ void testWatchIntegral(const std::string &configFile, TestContext &context)
     int idB = cplInterface.setMeshVertex(meshID, coordB.data());
     int idC = cplInterface.setMeshVertex(meshID, coordC.data());
 
-    int e1 = cplInterface.setMeshEdge(meshID, idA, idB);
-    int e2 = cplInterface.setMeshEdge(meshID, idB, idC);
+    cplInterface.setMeshEdge(meshID, idA, idB);
+    cplInterface.setMeshEdge(meshID, idB, idC);
 
     // Initialize, the mesh
     double dt = cplInterface.initialize();
@@ -1741,8 +1741,8 @@ void testWatchIntegral(const std::string &configFile, TestContext &context)
     int idB = cplInterface.setMeshVertex(meshTwoID, coordB.data());
     int idC = cplInterface.setMeshVertex(meshTwoID, coordC.data());
 
-    int e1 = cplInterface.setMeshEdge(meshTwoID, idA, idB);
-    int e2 = cplInterface.setMeshEdge(meshTwoID, idB, idC);
+    cplInterface.setMeshEdge(meshTwoID, idA, idB);
+    cplInterface.setMeshEdge(meshTwoID, idB, idC);
 
     // Initialize the mesh
     double dt = cplInterface.initialize();

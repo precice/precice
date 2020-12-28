@@ -152,7 +152,7 @@ Eigen::VectorXd WatchIntegral::calculateVectorData(mesh::PtrData data)
       }
     }
   }
-  return std::move(sum);
+  return sum;
 }
 
 double WatchIntegral::calculateScalarData(mesh::PtrData data)
