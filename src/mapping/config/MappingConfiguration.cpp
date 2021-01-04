@@ -169,10 +169,9 @@ void MappingConfiguration::xmlTagCallback(
     double        supportRadius  = 0.0;
     double        solverRtol     = 1e-9;
     bool          xDead = false, yDead = false, zDead = false;
-    bool          useLU             = false;
-    bool          isScaleConsistent = false;
-    Polynomial    polynomial        = Polynomial::ON;
-    Preallocation preallocation     = Preallocation::TREE;
+    bool          useLU         = false;
+    Polynomial    polynomial    = Polynomial::ON;
+    Preallocation preallocation = Preallocation::TREE;
 
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)) {
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);

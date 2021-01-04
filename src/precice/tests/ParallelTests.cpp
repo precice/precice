@@ -1221,7 +1221,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase1)
   }
 }
 
-
 // Simple 2 triangles. Read mapping on parallel participant B.
 // This test does not pass. When the from-mesh is repartitioned, ranks does not own all the vertices in the corresponding triangles.
 BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase2)
@@ -1284,18 +1283,17 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase2)
     SolverInterface cplInterface(context.name, configFilename, context.rank, context.size);
     const int       meshID = cplInterface.getMeshID("MeshTwo");
     const int       dataID = cplInterface.getDataID("DataOne", meshID);
-    double calculatedIntegral;
+    double          calculatedIntegral;
 
     if (context.isMaster()) {
       int vA = cplInterface.setMeshVertex(meshID, coordTwoA.data());
       int vB = cplInterface.setMeshVertex(meshID, coordTwoB.data());
       int vC = cplInterface.setMeshVertex(meshID, coordTwoC.data());
-      int vD = cplInterface.setMeshVertex(meshID, coordTwoD.data());
 
       int eAB = cplInterface.setMeshEdge(meshID, vA, vB);
       int eBC = cplInterface.setMeshEdge(meshID, vB, vC);
       int eAC = cplInterface.setMeshEdge(meshID, vA, vC);
-    
+
       cplInterface.setMeshTriangle(meshID, eAB, eBC, eAC);
 
       double maxDt = cplInterface.initialize();
@@ -1306,7 +1304,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase2)
       cplInterface.readScalarData(dataID, vC, valueC);
 
       double localCalculatedIntegral = (math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC)) /
-                                        3.0;
+                                       3.0;
 
       utils::MasterSlave::allreduceSum(localCalculatedIntegral, calculatedIntegral, 1);
 
@@ -1316,14 +1314,13 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase2)
 
     } else {
       int vA = cplInterface.setMeshVertex(meshID, coordTwoA.data());
-      int vB = cplInterface.setMeshVertex(meshID, coordTwoB.data());
       int vC = cplInterface.setMeshVertex(meshID, coordTwoC.data());
       int vD = cplInterface.setMeshVertex(meshID, coordTwoD.data());
 
       int eAC = cplInterface.setMeshEdge(meshID, vA, vC);
       int eAD = cplInterface.setMeshEdge(meshID, vA, vD);
       int eCD = cplInterface.setMeshEdge(meshID, vC, vD);
-    
+
       cplInterface.setMeshTriangle(meshID, eAC, eAD, eCD);
 
       double maxDt = cplInterface.initialize();
@@ -1334,8 +1331,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase2)
       cplInterface.readScalarData(dataID, vC, valueC);
       cplInterface.readScalarData(dataID, vD, valueD);
 
-      double localCalculatedIntegral = ( math::geometry::triangleArea(coordTwoA, coordTwoC, coordTwoD) * (valueA + valueC + valueD)) /
-                                    3.0;
+      double localCalculatedIntegral = (math::geometry::triangleArea(coordTwoA, coordTwoC, coordTwoD) * (valueA + valueC + valueD)) /
+                                       3.0;
 
       utils::MasterSlave::allreduceSum(localCalculatedIntegral, calculatedIntegral, 1);
 
@@ -1444,7 +1441,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase3)
 
     double maxDt = cplInterface.initialize();
 
-    double valueA, valueB, valueC, valueD, valueE, valueF;
+    double valueA, valueB, valueC, valueD;
     cplInterface.readScalarData(dataID, vA, valueA);
     cplInterface.readScalarData(dataID, vB, valueB);
     cplInterface.readScalarData(dataID, vC, valueC);
@@ -1461,7 +1458,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase3)
     cplInterface.finalize();
   }
 }
-
 
 // Diamond shaped 2 triangles. Read mapping on parallel participant B
 BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase4)
@@ -1524,13 +1520,12 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase4)
     SolverInterface cplInterface(context.name, configFilename, context.rank, context.size);
     const int       meshID = cplInterface.getMeshID("MeshTwo");
     const int       dataID = cplInterface.getDataID("DataOne", meshID);
-    double calculatedIntegral;
+    double          calculatedIntegral;
 
     if (context.isMaster()) {
       int vA = cplInterface.setMeshVertex(meshID, coordTwoA.data());
       int vB = cplInterface.setMeshVertex(meshID, coordTwoB.data());
       int vC = cplInterface.setMeshVertex(meshID, coordTwoC.data());
-      int vD = cplInterface.setMeshVertex(meshID, coordTwoD.data());
 
       int eAB = cplInterface.setMeshEdge(meshID, vA, vB);
       int eBC = cplInterface.setMeshEdge(meshID, vB, vC);
@@ -1546,7 +1541,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase4)
       cplInterface.readScalarData(dataID, vC, valueC);
 
       double localCalculatedIntegral = (math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC)) /
-                                        3.0;
+                                       3.0;
 
       utils::MasterSlave::allreduceSum(localCalculatedIntegral, calculatedIntegral, 1);
 
@@ -1556,7 +1551,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase4)
 
     } else {
       int vA = cplInterface.setMeshVertex(meshID, coordTwoA.data());
-      int vB = cplInterface.setMeshVertex(meshID, coordTwoB.data());
       int vC = cplInterface.setMeshVertex(meshID, coordTwoC.data());
       int vD = cplInterface.setMeshVertex(meshID, coordTwoD.data());
 
@@ -1574,8 +1568,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase4)
       cplInterface.readScalarData(dataID, vC, valueC);
       cplInterface.readScalarData(dataID, vD, valueD);
 
-      double localCalculatedIntegral = ( math::geometry::triangleArea(coordTwoA, coordTwoC, coordTwoD) * (valueA + valueC + valueD)) /
-                                    3.0;
+      double localCalculatedIntegral = (math::geometry::triangleArea(coordTwoA, coordTwoC, coordTwoD) * (valueA + valueC + valueD)) /
+                                       3.0;
 
       utils::MasterSlave::allreduceSum(localCalculatedIntegral, calculatedIntegral, 1);
 
@@ -1730,7 +1724,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase5)
   }
 }
 
-
 BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase6)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(2_ranks));
@@ -1851,15 +1844,15 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase6)
       cplInterface.finalize();
 
     } else {
-        int vB = cplInterface.setMeshVertex(meshID, coordTwoB.data());
-        int vE = cplInterface.setMeshVertex(meshID, coordTwoE.data());
-        int vF = cplInterface.setMeshVertex(meshID, coordTwoF.data());
+      int vB = cplInterface.setMeshVertex(meshID, coordTwoB.data());
+      int vE = cplInterface.setMeshVertex(meshID, coordTwoE.data());
+      int vF = cplInterface.setMeshVertex(meshID, coordTwoF.data());
 
-        int eBE = cplInterface.setMeshEdge(meshID, vB, vE);
-        int eBF = cplInterface.setMeshEdge(meshID, vB, vF);
-        int eEF = cplInterface.setMeshEdge(meshID, vE, vF);
+      int eBE = cplInterface.setMeshEdge(meshID, vB, vE);
+      int eBF = cplInterface.setMeshEdge(meshID, vB, vF);
+      int eEF = cplInterface.setMeshEdge(meshID, vE, vF);
 
-        cplInterface.setMeshTriangle(meshID, eBE, eEF, eBF);
+      cplInterface.setMeshTriangle(meshID, eBE, eEF, eBF);
 
       double maxDt = cplInterface.initialize();
 

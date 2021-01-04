@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
   int     inDataID = inData->getID();
   Vertex &v1       = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v2       = inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
-  Edge &  inE1     = inMesh->createEdge(v1, v2);
+  inMesh->createEdge(v1, v2);
   inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
@@ -250,8 +250,8 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
   Vertex &outV2 = outMesh->createVertex(Eigen::Vector2d(-0.5, -0.5));
   Vertex &outV3 = outMesh->createVertex(Eigen::Vector2d(1.5, 1.5));
 
-  Edge &outE1 = outMesh->createEdge(outV1, outV2);
-  Edge &outE2 = outMesh->createEdge(outV1, outV3);
+  outMesh->createEdge(outV1, outV2);
+  outMesh->createEdge(outV1, outV3);
 
   outMesh->allocateDataValues();
   outValues = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   int     inDataID = inData->getID();
   Vertex &v1       = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v2       = inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
-  Edge &  inE1     = inMesh->createEdge(v1, v2);
+  inMesh->createEdge(v1, v2);
   inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
@@ -311,8 +311,8 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   Vertex &outV2 = outMesh->createVertex(Eigen::Vector2d(1.5, 1.5));
   Vertex &outV3 = outMesh->createVertex(Eigen::Vector2d(0.5, 0.5));
 
-  Edge &outE1 = outMesh->createEdge(outV3, outV1);
-  Edge &outE2 = outMesh->createEdge(outV3, outV2);
+  outMesh->createEdge(outV3, outV1);
+  outMesh->createEdge(outV3, outV2);
 
   outMesh->allocateDataValues();
 
@@ -704,7 +704,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
   auto &  outE1   = outMesh->createEdge(outV1, outV2);
   auto &  outE2   = outMesh->createEdge(outV2, outV3);
   auto &  outE3   = outMesh->createEdge(outV1, outV3);
-  auto &  outT1   = outMesh->createTriangle(outE1, outE2, outE3);
+  outMesh->createTriangle(outE1, outE2, outE3);
   outMesh->allocateDataValues();
   outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(3, 0.0);

@@ -1729,10 +1729,10 @@ void perform2DTestScaledConsistentMapping(Mapping &mapping)
   auto &        inV3     = inMesh->createVertex(Vector2d(1.0, 1.0));
   auto &        inV4     = inMesh->createVertex(Vector2d(0.0, 1.0));
 
-  auto &inE1 = inMesh->createEdge(inV1, inV2);
-  auto &inE2 = inMesh->createEdge(inV2, inV3);
-  auto &inE3 = inMesh->createEdge(inV3, inV4);
-  auto &inE4 = inMesh->createEdge(inV1, inV4);
+  inMesh->createEdge(inV1, inV2);
+  inMesh->createEdge(inV2, inV3);
+  inMesh->createEdge(inV3, inV4);
+  inMesh->createEdge(inV1, inV4);
 
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
@@ -1754,8 +1754,6 @@ void perform2DTestScaledConsistentMapping(Mapping &mapping)
   outMesh->createEdge(outV1, outV4);
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
-
-  auto &outValues = outData->values();
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);
@@ -1810,8 +1808,6 @@ void perform3DTestScaledConsistentMapping(Mapping &mapping)
 
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
-
-  auto &outValues = outData->values();
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);

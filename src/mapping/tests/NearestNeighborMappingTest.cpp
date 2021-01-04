@@ -181,9 +181,9 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector2d{3.0, 0.0});
   Vertex &inVertex3 = inMesh->createVertex(Eigen::Vector2d{6.0, 0.0});
 
-  Edge &inEdge0 = inMesh->createEdge(inVertex0, inVertex1);
-  Edge &inEdge1 = inMesh->createEdge(inVertex1, inVertex2);
-  Edge &inEdge2 = inMesh->createEdge(inVertex2, inVertex3);
+  inMesh->createEdge(inVertex0, inVertex1);
+  inMesh->createEdge(inVertex1, inVertex2);
+  inMesh->createEdge(inVertex2, inVertex3);
 
   inMesh->allocateDataValues();
   Eigen::VectorXd &inValues = inData->values();
@@ -201,9 +201,9 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   Vertex &outVertex2 = outMesh->createVertex(Eigen::Vector2d(3.0, 0.0));
   Vertex &outVertex3 = outMesh->createVertex(Eigen::Vector2d(6.2, 0.0));
 
-  Edge &outEdge0 = outMesh->createEdge(outVertex0, outVertex1);
-  Edge &outEdge1 = outMesh->createEdge(outVertex1, outVertex2);
-  Edge &outEdge2 = outMesh->createEdge(outVertex2, outVertex3);
+  outMesh->createEdge(outVertex0, outVertex1);
+  outMesh->createEdge(outVertex1, outVertex2);
+  outMesh->createEdge(outVertex2, outVertex3);
 
   outMesh->allocateDataValues();
 
