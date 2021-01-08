@@ -12,15 +12,16 @@
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/RTree.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/impl/BBUtils.hpp"
+#include "query/RTree.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
 using namespace precice;
+using namespace precice::query;
 using namespace precice::mesh;
 
 namespace bg  = boost::geometry;
@@ -90,7 +91,7 @@ PtrMesh vertexMesh3D()
 }
 } // namespace
 
-BOOST_AUTO_TEST_SUITE(MeshTests)
+BOOST_AUTO_TEST_SUITE(QueryTests)
 BOOST_AUTO_TEST_SUITE(RTree)
 
 BOOST_AUTO_TEST_SUITE(Query)
@@ -396,7 +397,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
   Eigen::VectorXd                        searchVector(Eigen::Vector3d(0.7, 0.5, 0.0));
   std::vector<std::pair<double, size_t>> results;
 
-  tree->query(bgi::nearest(searchVector, 3), boost::make_function_output_iterator([&](const precice::mesh::rtree::triangle_traits::IndexType &val) {
+  tree->query(bgi::nearest(searchVector, 3), boost::make_function_output_iterator([&](const precice::query::rtree::triangle_traits::IndexType &val) {
                 results.push_back(std::make_pair(
                     boost::geometry::distance(
                         searchVector,
@@ -424,7 +425,7 @@ BOOST_FIXTURE_TEST_CASE(ClearOnChange, precice::testing::accessors::rtree)
   mesh->createVertex(Eigen::Vector2d(0, 0));
 
   // The Cache should clear whenever a mesh changes
-  auto vTree = mesh::rtree::getVertexRTree(mesh);
+  auto vTree = query::rtree::getVertexRTree(mesh);
   BOOST_TEST(getCache().size() == 1);
   mesh->meshChanged(*mesh); // Emit signal, that mesh has changed
   BOOST_TEST(getCache().empty());
@@ -437,7 +438,7 @@ BOOST_FIXTURE_TEST_CASE(ClearOnDestruction, precice::testing::accessors::rtree)
   mesh->createVertex(Eigen::Vector2d(0, 0));
 
   // The Cache should clear whenever we destroy the Mesh
-  auto vTree = mesh::rtree::getVertexRTree(mesh);
+  auto vTree = query::rtree::getVertexRTree(mesh);
   BOOST_TEST(getCache().size() == 1);
   mesh.reset(); // Destroy mesh object, signal is emitted to clear cache
   BOOST_TEST(getCache().empty());
