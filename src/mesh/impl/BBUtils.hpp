@@ -1,14 +1,14 @@
 #pragma once
 
 #include "mesh/BoundingBox.hpp"
-#include "mesh/RTree.hpp"
+#include "query/RTree.hpp"
 
 namespace precice {
 namespace mesh {
 
-inline RTreeBox toRTreeBox(BoundingBox const &bb)
+inline query::RTreeBox toRTreeBox(BoundingBox const &bb)
 {
-  return RTreeBox{bb.minCorner(), bb.maxCorner()};
+  return query::RTreeBox{bb.minCorner(), bb.maxCorner()};
 }
 
 } // namespace mesh

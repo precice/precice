@@ -10,11 +10,11 @@
 #include <utility>
 #include <vector>
 #include "Edge.hpp"
-#include "RTree.hpp"
 #include "Triangle.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
+#include "query/RTree.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -34,8 +34,8 @@ Mesh::Mesh(
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
 
-  meshChanged.connect([](Mesh &m) { rtree::clear(m); });
-  meshDestroyed.connect([](Mesh &m) { rtree::clear(m); });
+  meshChanged.connect([](Mesh &m) { query::rtree::clear(m); });
+  meshDestroyed.connect([](Mesh &m) { query::rtree::clear(m); });
 }
 
 Mesh::~Mesh()
