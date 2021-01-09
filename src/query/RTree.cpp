@@ -88,6 +88,45 @@ rtree::triangle_traits::Ptr rtree::getTriangleRTree(const mesh::PtrMesh &mesh)
   return tree;
 }
 
+std::vector<MatchType> rtree::getClosest(const mesh::Vertex &source, const vertex_traits::Ptr &tree, const mesh::Mesh::VertexContainer &targetContainer, int n)
+{
+  std::vector<MatchType> matches;
+  tree->query(boost::geometry::index::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
+                matches.emplace_back(boost::geometry::distance(source, targetContainer[matchID]), matchID);
+              }));
+  std::sort(matches.begin(), matches.end());
+  return matches;
+}
+
+std::vector<MatchType> rtree::getClosest(const mesh::Vertex &source, const edge_traits::Ptr &tree, const mesh::Mesh::EdgeContainer &targetContainer, int n)
+{
+  std::vector<MatchType> matches;
+  tree->query(boost::geometry::index::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
+                matches.emplace_back(boost::geometry::distance(source, targetContainer[matchID]), matchID);
+              }));
+  std::sort(matches.begin(), matches.end());
+  return matches;
+}
+
+std::vector<MatchType> rtree::getClosest(const mesh::Vertex &source, const triangle_traits::Ptr &tree, const mesh::Mesh::TriangleContainer &targetContainer, int n)
+{
+  std::vector<MatchType> matches;
+  tree->query(bg::index::nearest(source, n),
+              boost::make_function_output_iterator([&](query::rtree::triangle_traits::IndexType const &match) {
+                matches.emplace_back(bg::distance(source, targetContainer[match.second]), match.second);
+              }));
+  std::sort(matches.begin(), matches.end());
+  return matches;
+}
+
+std::vector<size_t> rtree::getVerticesInsideBox(const Box3d &searchBox, const vertex_traits::Ptr &tree, const mesh::Mesh::VertexContainer &vertices, const mesh::Vertex &centerVertex, double supportRadius)
+{
+  std::vector<size_t> matches;
+  tree->query(bg::index::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, vertices[i]) <= supportRadius; }),
+              std::back_inserter(matches));
+  return matches;
+}
+
 void rtree::clear(mesh::Mesh &mesh)
 {
   _cached_trees.erase(mesh.getID());

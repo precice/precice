@@ -58,12 +58,9 @@ void NearestNeighborMapping::computeMapping()
     for (size_t i = 0; i < verticesSize; i++) {
       const Eigen::VectorXd &coords = outputVertices[i].getCoords();
       // Search for the output vertex inside the input mesh and add index to _vertexIndices
-      rtree->query(boost::geometry::index::nearest(coords, 1),
-                   boost::make_function_output_iterator([&](size_t const &val) {
-                     const auto &match = input()->vertices()[val];
-                     _vertexIndices[i] = match.getID();
-                     distanceStatistics(bg::distance(match, coords));
-                   }));
+      auto matches      = query::rtree::getClosest(outputVertices[i], rtree, input()->vertices());
+      _vertexIndices[i] = matches[0].index;
+      distanceStatistics(matches[0].distance);
     }
     if (distanceStatistics.empty()) {
       PRECICE_INFO("Mapping distance not available due to empty partition.");
@@ -83,12 +80,9 @@ void NearestNeighborMapping::computeMapping()
     for (size_t i = 0; i < verticesSize; i++) {
       const Eigen::VectorXd &coords = inputVertices[i].getCoords();
       // Search for the input vertex inside the output mesh and add index to _vertexIndices
-      rtree->query(boost::geometry::index::nearest(coords, 1),
-                   boost::make_function_output_iterator([&](size_t const &val) {
-                     const auto &match = output()->vertices()[val];
-                     _vertexIndices[i] = match.getID();
-                     distanceStatistics(bg::distance(match, coords));
-                   }));
+      auto matches      = query::rtree::getClosest(inputVertices[i], rtree, output()->vertices());
+      _vertexIndices[i] = matches[0].index;
+      distanceStatistics(matches[0].distance);
     }
     if (distanceStatistics.empty()) {
       PRECICE_INFO("Mapping distance not available due to empty partition.");
