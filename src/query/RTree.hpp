@@ -10,6 +10,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "query/impl/RTreeAdapter.hpp"
+#include "utils/Statistics.hpp"
 
 namespace precice {
 namespace mesh {
@@ -74,6 +75,19 @@ struct RTreeTraits {
   using Ptr   = std::shared_ptr<RTree>;
 };
 
+struct MatchType {
+  double distance;
+  int    index;
+
+  MatchType() = default;
+  MatchType(double d, int i)
+      : distance(d), index(i){};
+  constexpr bool operator<(MatchType const &other) const
+  {
+    return distance < other.distance;
+  };
+};
+
 class rtree {
 public:
   using vertex_traits   = RTreeTraits<mesh::Vertex>;
@@ -89,6 +103,14 @@ public:
   static edge_traits::Ptr getEdgeRTree(const mesh::PtrMesh &mesh);
 
   static triangle_traits::Ptr getTriangleRTree(const mesh::PtrMesh &mesh);
+
+  /// Get the closest vertex/edge/triangle to a vertex, return index and distance
+  static std::vector<MatchType> getClosest(const mesh::Vertex &source, const vertex_traits::Ptr &tree, const mesh::Mesh::VertexContainer &targetContainer, int n = 1);
+  static std::vector<MatchType> getClosest(const mesh::Vertex &source, const edge_traits::Ptr &tree, const mesh::Mesh::EdgeContainer &targetContainer, int n = 1);
+  static std::vector<MatchType> getClosest(const mesh::Vertex &source, const triangle_traits::Ptr &tree, const mesh::Mesh::TriangleContainer &targetContainer, int n = 1);
+
+  /// Get all the vertices inside the box and surrounded by support radius
+  static std::vector<size_t> getVerticesInsideBox(const Box3d &searchBox, const vertex_traits::Ptr &tree, const mesh::Mesh::VertexContainer &vertices, const mesh::Vertex &centerVertex, double supportRadius);
 
   /// Only clear the trees of that specific mesh
   static void clear(mesh::Mesh &mesh);
