@@ -350,7 +350,7 @@ void precicef_set_vertex_(
  * OUT: meshSize
  */
 void precicef_get_mesh_vertex_size_(
-    int *meshID,
+    const int *meshID,
     int *meshSize);
 
 /**
