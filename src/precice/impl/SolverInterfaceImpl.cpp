@@ -1067,11 +1067,12 @@ void SolverInterfaceImpl::writeBlockVectorData(
                 "You cannot call writeBlockVectorData on the scalar data type \"" << data.getName()
                                                                                   << "\". Use writeBlockScalarData or change the data type for \""
                                                                                   << data.getName() << "\" to vector.");
-  auto &valuesInternal = data.values();
+  auto &     valuesInternal = data.values();
+  const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size() / data.getDimensions(), "Value index out of range. Please check that the size of "
-                                                                                                    << data.getName() << " is correct.");
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the size of "
+                                                                   << data.getName() << " is correct.");
     int offsetInternal = valueIndex * _dimensions;
     int offset         = i * _dimensions;
     for (int dim = 0; dim < _dimensions; dim++) {
@@ -1099,9 +1100,10 @@ void SolverInterfaceImpl::writeVectorData(
                 "You cannot call writeVectorData on the scalar data type \"" << data.getName()
                                                                              << "\". Use writeScalarData or change the data type for \""
                                                                              << data.getName() << "\" to vector.");
-  auto &values = data.values();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size() / data.getDimensions(), "Value index out of range. Please check that the valueIndex for "
-                                                                                          << data.getName() << " is in the correct range.");
+  auto &     values      = data.values();
+  const auto vertexCount = values.size() / data.getDimensions();
+  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the valueIndex for "
+                                                                 << data.getName() << " is in the correct range.");
   int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
     values[offset + dim] = value[dim];
@@ -1129,12 +1131,12 @@ void SolverInterfaceImpl::writeBlockScalarData(
                 "You cannot call writeBlockScalarData on the vector data type \"" << data.getName()
                                                                                   << "\". Use writeBlockVectorData or change the data type for \""
                                                                                   << data.getName() << "\" to scalar.");
-  auto &valuesInternal = data.values();
+  auto &     valuesInternal = data.values();
+  const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size() / data.getDimensions(), "Value index out of range. Please check that the size of "
-                                                                                                    << data.getName() << " is correct.");
-    PRECICE_ASSERT(i < valuesInternal.size(), i, valuesInternal.size());
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the size of "
+                                                                   << data.getName() << " is correct.");
     valuesInternal[valueIndex] = values[i];
   }
 }
@@ -1158,10 +1160,11 @@ void SolverInterfaceImpl::writeScalarData(
                 "You cannot call writeScalarData on the vector data type \"" << data.getName()
                                                                              << "\". Use writeVectorData or change the data type for \""
                                                                              << data.getName() << "\" to scalar.");
-  auto &values = data.values();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size() / data.getDimensions(), "Value index out of range. Please check that the valueIndex for "
-                                                                                          << data.getName() << " is in the correct range.")
-  values[valueIndex] = value;
+  auto &     values      = data.values();
+  const auto vertexCount = values.size() / data.getDimensions()
+                                               PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the valueIndex for "
+                                                                                                              << data.getName() << " is in the correct range.")
+                                                   values[valueIndex] = value;
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
@@ -1185,16 +1188,15 @@ void SolverInterfaceImpl::readBlockVectorData(
                 "You cannot call readBlockVectorData on the scalar data type \"" << data.getName()
                                                                                  << "\". Use readBlockScalarData or change the data type for \""
                                                                                  << data.getName() << "\" to vector.");
-  auto &valuesInternal = data.values();
+  auto &     valuesInternal = data.values();
+  const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size() / data.getDimensions(), "Value index out of range. Please check that the size of "
-                                                                                                    << data.getName() << " is correct.");
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the size of "
+                                                                   << data.getName() << " is correct.");
     int offsetInternal = valueIndex * _dimensions;
     int offset         = i * _dimensions;
     for (int dim = 0; dim < _dimensions; dim++) {
-      PRECICE_ASSERT(offsetInternal + dim < valuesInternal.size(),
-                     offsetInternal + dim, valuesInternal.size());
       values[offset + dim] = valuesInternal[offsetInternal + dim];
     }
   }
@@ -1219,9 +1221,10 @@ void SolverInterfaceImpl::readVectorData(
                 "You cannot call readVectorData on the scalar data type \"" << data.getName()
                                                                             << "\". Use readScalarData or change the data type for \""
                                                                             << data.getName() << "\" to vector.");
-  auto &values = data.values();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size() / data.getDimensions(), "Value index out of range. Please check that the valueIndex for "
-                                                                                          << data.getName() << " is in the correct range.");
+  auto &     values      = data.values();
+  const auto vertexCount = values.size() / data.getDimensions();
+  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the valueIndex for "
+                                                                 << data.getName() << " is in the correct range.");
   int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
     value[dim] = values[offset + dim];
@@ -1250,11 +1253,12 @@ void SolverInterfaceImpl::readBlockScalarData(
   PRECICE_CHECK(data.getDimensions() == 1,
                 "You cannot call readBlockScalarData on the vector data type \"" << data.getName()
                                                                                  << "\". Use readBlockVectorData or change the data type for \"" << data.getName() << "\" to scalar.");
-  auto &valuesInternal = data.values();
+  auto &     valuesInternal = data.values();
+  const auto vertexCount    = valuesInternal.size();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < valuesInternal.size(), "Value index out of range. Please check that the size of "
-                                                                             << data.getName() << " is correct.");
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the size of "
+                                                                   << data.getName() << " is correct.");
     values[i] = valuesInternal[valueIndex];
   }
 }
