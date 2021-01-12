@@ -1071,8 +1071,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the size of "
-                                                                   << data.getName() << " is correct.");
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot write data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
     int offsetInternal = valueIndex * _dimensions;
     int offset         = i * _dimensions;
     for (int dim = 0; dim < _dimensions; dim++) {
@@ -1102,8 +1101,7 @@ void SolverInterfaceImpl::writeVectorData(
                                                                              << data.getName() << "\" to vector.");
   auto &     values      = data.values();
   const auto vertexCount = values.size() / data.getDimensions();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the valueIndex for "
-                                                                 << data.getName() << " is in the correct range.");
+  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot write data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
   int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
     values[offset + dim] = value[dim];
@@ -1135,8 +1133,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the size of "
-                                                                   << data.getName() << " is correct.");
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot write data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
     valuesInternal[valueIndex] = values[i];
   }
 }
@@ -1161,10 +1158,9 @@ void SolverInterfaceImpl::writeScalarData(
                                                                              << "\". Use writeVectorData or change the data type for \""
                                                                              << data.getName() << "\" to scalar.");
   auto &     values      = data.values();
-  const auto vertexCount = values.size() / data.getDimensions()
-                                               PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the valueIndex for "
-                                                                                                              << data.getName() << " is in the correct range.")
-                                                   values[valueIndex] = value;
+  const auto vertexCount = values.size() / data.getDimensions();
+  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot write data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
+  values[valueIndex] = value;
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
@@ -1192,8 +1188,7 @@ void SolverInterfaceImpl::readBlockVectorData(
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the size of "
-                                                                   << data.getName() << " is correct.");
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
     int offsetInternal = valueIndex * _dimensions;
     int offset         = i * _dimensions;
     for (int dim = 0; dim < _dimensions; dim++) {
@@ -1223,8 +1218,7 @@ void SolverInterfaceImpl::readVectorData(
                                                                             << data.getName() << "\" to vector.");
   auto &     values      = data.values();
   const auto vertexCount = values.size() / data.getDimensions();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the valueIndex for "
-                                                                 << data.getName() << " is in the correct range.");
+  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
   int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
     value[dim] = values[offset + dim];
@@ -1257,8 +1251,7 @@ void SolverInterfaceImpl::readBlockScalarData(
   const auto vertexCount    = valuesInternal.size();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Value index out of range. Please check that the size of "
-                                                                   << data.getName() << " is correct.");
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
     values[i] = valuesInternal[valueIndex];
   }
 }
@@ -1282,9 +1275,9 @@ void SolverInterfaceImpl::readScalarData(
                 "You cannot call readScalarData on the vector data type \"" << data.getName()
                                                                             << "\". Use readVectorData or change the data type for \""
                                                                             << data.getName() << "\" to scalar.");
-  auto &values = data.values();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < values.size(), "Value index out of range. Please check that the valueIndex for "
-                                                                   << data.getName() << " is in the correct range.");
+  auto &     values      = data.values();
+  const auto vertexCount = values.size();
+  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
   value = values[valueIndex];
   PRECICE_DEBUG("Read value = " << value);
 }
