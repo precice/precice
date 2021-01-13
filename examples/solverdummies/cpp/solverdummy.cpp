@@ -54,9 +54,9 @@ int main(int argc, char **argv)
 
   for (int i = 0; i < numberOfVertices; i++) {
     for (int j = 0; j < dimensions; j++) {
-      vertices.at(j + numberOfVertices * i)  = i;
-      readData.at(j + numberOfVertices * i)  = i;
-      writeData.at(j + numberOfVertices * i) = i;
+      vertices.at(j + dimensions * i)  = i;
+      readData.at(j + dimensions * i)  = i;
+      writeData.at(j + dimensions * i) = i;
     }
   }
 
