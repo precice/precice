@@ -53,6 +53,7 @@
 #include "precice/impl/WatchPoint.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/EigenIO.hpp"
 #include "utils/Event.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/Helpers.hpp"
@@ -675,7 +676,7 @@ int SolverInterfaceImpl::setMeshVertex(
   PRECICE_TRACE(meshID);
   Eigen::VectorXd internalPosition{
       Eigen::Map<const Eigen::VectorXd>{position, _dimensions}};
-  PRECICE_DEBUG("Position = " << internalPosition);
+  PRECICE_DEBUG("Position = " << internalPosition.format(utils::eigenio::debug()));
   int index = -1;
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext & context = _accessor->meshContext(meshID);
@@ -1085,7 +1086,7 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_TRACE(fromDataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called before finalize().");
   PRECICE_VALIDATE_DATA_ID(fromDataID);
-  PRECICE_DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
+  PRECICE_DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
   PRECICE_REQUIRE_DATA_WRITE(fromDataID);
   DataContext &context = _accessor->dataContext(fromDataID);
   PRECICE_CHECK(context.fromData->getDimensions() == _dimensions,
@@ -1216,7 +1217,7 @@ void SolverInterfaceImpl::readVectorData(
   for (int dim = 0; dim < _dimensions; dim++) {
     value[dim] = values[offset + dim];
   }
-  PRECICE_DEBUG("read value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions));
+  PRECICE_DEBUG("read value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
