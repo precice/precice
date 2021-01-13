@@ -11,8 +11,8 @@ namespace acceleration {
 namespace impl {
 
 ResidualSumPreconditioner::ResidualSumPreconditioner(
-    int maxNonConstTimesteps)
-    : Preconditioner(maxNonConstTimesteps)
+    int maxNonConstTimeWindows)
+    : Preconditioner(maxNonConstTimeWindows)
 {
 }
 
@@ -24,11 +24,11 @@ void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs)
   _residualSum.resize(_subVectorSizes.size(), 0.0);
 }
 
-void ResidualSumPreconditioner::_update_(bool                   timestepComplete,
+void ResidualSumPreconditioner::_update_(bool                   timeWindowComplete,
                                          const Eigen::VectorXd &oldValues,
                                          const Eigen::VectorXd &res)
 {
-  if (not timestepComplete) {
+  if (not timeWindowComplete) {
     std::vector<double> norms(_subVectorSizes.size(), 0.0);
 
     double sum = 0.0;

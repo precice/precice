@@ -33,7 +33,7 @@ BaseQNAcceleration::BaseQNAcceleration(
     double                  initialRelaxation,
     bool                    forceInitialRelaxation,
     int                     maxIterationsUsed,
-    int                     timestepsReused,
+    int                     pastTimeWindowsReused,
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
@@ -41,7 +41,7 @@ BaseQNAcceleration::BaseQNAcceleration(
     : _preconditioner(preconditioner),
       _initialRelaxation(initialRelaxation),
       _maxIterationsUsed(maxIterationsUsed),
-      _timestepsReused(timestepsReused),
+      _pastTimeWindowsReused(pastTimeWindowsReused),
       _dataIDs(dataIDs),
       _forceInitialRelaxation(forceInitialRelaxation),
       _qrV(filter),
@@ -55,9 +55,9 @@ BaseQNAcceleration::BaseQNAcceleration(
   PRECICE_CHECK(_maxIterationsUsed > 0,
                 "Maximum number of iterations used in the quasi-Newton acceleration "
                     << "scheme has to be larger than zero. Current maximum reused iterations is: " << _maxIterationsUsed);
-  PRECICE_CHECK(_timestepsReused >= 0,
+  PRECICE_CHECK(_pastTimeWindowsReused >= 0,
                 "Number of previous time windows to be reused for quasi-Newton acceleration has to be larger than or equal to zero. "
-                    << "Current number of time windows reused is " << _timestepsReused);
+                    << "Current number of time windows reused is " << _pastTimeWindowsReused);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -100,8 +100,8 @@ void BaseQNAcceleration::initialize(
   }
 
   _matrixCols.push_front(0);
-  _firstIteration = true;
-  _firstTimeStep  = true;
+  _firstIteration  = true;
+  _firstTimeWindow = true;
 
   PRECICE_ASSERT(_oldXTilde.size() == 0);
   PRECICE_ASSERT(_oldResiduals.size() == 0);
@@ -201,8 +201,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
                  "Or you just converge much further than actually necessary.");
   }
 
-  //if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
-  if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
+  //if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
+  if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
   } else {
     PRECICE_DEBUG("   Update Difference Matrices");
@@ -285,19 +285,6 @@ void BaseQNAcceleration::performAcceleration(
   PRECICE_ASSERT(_oldValues.size() == _oldXTilde.size(), _oldValues.size(), _oldXTilde.size());
   PRECICE_ASSERT(_residuals.size() == _oldXTilde.size(), _residuals.size(), _oldXTilde.size());
 
-  /*
-  Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-  _debugOut<<"iteration: "<<its<<" tStep: "<<tSteps<<"   cplData entry:\n";
-  for (int id : _dataIDs) {
-      const auto& values = *cplData[id]->values;
-      const auto& oldValues = cplData[id]->oldValues.col(0);
-
-      _debugOut<<"id: "<<id<<"     values: "<<values.format(CommaInitFmt)<<'\n';
-      _debugOut<<"id: "<<id<<" old values: "<<oldValues.format(CommaInitFmt)<<'\n';
-    }
-  _debugOut<<"\n";
-  */
-
   // assume data structures associated with the LS system can be updated easily.
 
   // scale data values (and secondary data values)
@@ -310,7 +297,7 @@ void BaseQNAcceleration::performAcceleration(
    */
   updateDifferenceMatrices(cplData);
 
-  if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
+  if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     PRECICE_DEBUG("   Performing underrelaxation");
     _oldXTilde    = _values;    // Store x tilde
     _oldResiduals = _residuals; // Store current residual
@@ -325,10 +312,10 @@ void BaseQNAcceleration::performAcceleration(
   } else {
     PRECICE_DEBUG("   Performing quasi-Newton Step");
 
-    // If the previous time step converged within one single iteration, nothing was added
+    // If the previous time window converged within one single iteration, nothing was added
     // to the LS system matrices and they need to be restored from the backup at time T-2
-    if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0) && not _forceInitialRelaxation) {
-      PRECICE_DEBUG("   Last time step converged after one iteration. Need to restore the matrices from backup.");
+    if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_pastTimeWindowsReused == 0) && not _forceInitialRelaxation) {
+      PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the matrices from backup.");
 
       _matrixCols = _matrixColsBackup;
       _matrixV    = _matrixVBackup;
@@ -336,7 +323,7 @@ void BaseQNAcceleration::performAcceleration(
 
       // re-computation of QR decomposition from _matrixV = _matrixVBackup
       // this occurs very rarely, to be precise, it occurs only if the coupling terminates
-      // after the first iteration and the matrix data from time step t-2 has to be used
+      // after the first iteration and the matrix data from time window t-2 has to be used
       _preconditioner->apply(_matrixV);
       _qrV.reset(_matrixV, getLSSystemRows());
       _preconditioner->revert(_matrixV);
@@ -385,20 +372,20 @@ void BaseQNAcceleration::performAcceleration(
      */
     _values = _oldValues + xUpdate + _residuals; // = x^k + delta_x + r^k - q^k
 
-    // pending deletion: delete old V, W matrices if timestepsReused = 0
+    // pending deletion: delete old V, W matrices if pastTimeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
-    if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
-      // save current matrix data in case the coupling for the next time step will terminate
+    if (_firstIteration && _pastTimeWindowsReused == 0 && not _forceInitialRelaxation) {
+      // save current matrix data in case the coupling for the next time window will terminate
       // after the first iteration (no new data, i.e., V = W = 0)
       if (getLSSystemCols() > 0) {
         _matrixColsBackup = _matrixCols;
         _matrixVBackup    = _matrixV;
         _matrixWBackup    = _matrixW;
       }
-      // if no time steps reused, the matrix data needs to be cleared as it was only needed for the
+      // if no time windows reused, the matrix data needs to be cleared as it was only needed for the
       // QN-step in the first iteration (idea: rather perform QN-step with information from last converged
-      // time step instead of doing a underrelaxation)
-      if (not _firstTimeStep) {
+      // time window instead of doing a underrelaxation)
+      if (not _firstTimeWindow) {
         _matrixV.resize(0, 0);
         _matrixW.resize(0, 0);
         _matrixCols.clear();
@@ -454,7 +441,7 @@ void BaseQNAcceleration::applyFilter()
 
       removeMatrixColumn(delIndices[i]);
 
-      PRECICE_DEBUG(" Filter: removing column with index " << delIndices[i] << " in iteration " << its << " of time step: " << tSteps);
+      PRECICE_DEBUG(" Filter: removing column with index " << delIndices[i] << " in iteration " << its << " of time window: " << tWindows);
     }
     PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
@@ -502,7 +489,7 @@ void BaseQNAcceleration::splitCouplingData(
  *
  * @brief: Is called when the convergence criterion for the coupling is fullfilled and finalizes
  *         the quasi Newton acceleration. Stores new differences in F and C, clears or
- *         updates F and C according to the number of reused time steps
+ *         updates F and C according to the number of reused time windows
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::iterationsConverged(
@@ -511,11 +498,11 @@ void BaseQNAcceleration::iterationsConverged(
   PRECICE_TRACE();
 
   if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
-    _infostringstream << "# time step " << tSteps << " converged #\n iterations: " << its
+    _infostringstream << "# time window " << tWindows << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
 
   its = 0;
-  tSteps++;
+  tWindows++;
 
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
@@ -542,17 +529,17 @@ void BaseQNAcceleration::iterationsConverged(
   // - save the old Jacobian matrix
   specializedIterationsConverged(cplData);
 
-  // if we already have convergence in the first iteration of the first timestep
-  // we need to do underrelax in the first iteration of the second timesteps
-  // so "_firstTimeStep" is slightly misused, but still the best way to understand
+  // if we already have convergence in the first iteration of the first time window
+  // we need to do underrelaxation in the first iteration of the second time window
+  // so "_firstTimeWindow" is slightly misused, but still the best way to understand
   // the concept
   if (not _firstIteration)
-    _firstTimeStep = false;
+    _firstTimeWindow = false;
 
   // update preconditioner depending on residuals or values (must be after specialized iterations converged --> IMVJ)
   _preconditioner->update(true, _values, _residuals);
 
-  if (_timestepsReused == 0) {
+  if (_pastTimeWindowsReused == 0) {
     if (_forceInitialRelaxation) {
       _matrixV.resize(0, 0);
       _matrixW.resize(0, 0);
@@ -562,12 +549,12 @@ void BaseQNAcceleration::iterationsConverged(
       _matrixCols.clear(); // _matrixCols.push_front() at the end of the method.
     } else {
       /**
-       * pending deletion (after first iteration of next time step
-       * Using the matrices from the old time step for the first iteration
-       * is better than doing underrelaxation as first iteration of every time step
+       * pending deletion (after first iteration of next time window
+       * Using the matrices from the old time window for the first iteration
+       * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _timestepsReused) {
+  } else if ((int) _matrixCols.size() > _pastTimeWindowsReused) {
     int toRemove = _matrixCols.back();
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
