@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
+#include <boost/range/irange.hpp>
 #include <iosfwd>
 #include <map>
 #include <memory>
@@ -55,6 +56,19 @@ template <class Primitive>
 struct IsDirectIndexable : impl::IsDirectIndexableHelper<Primitive>::type {
 };
 
+struct MatchType {
+  double distance;
+  int    index;
+
+  MatchType() = default;
+  MatchType(double d, int i)
+      : distance(d), index(i){};
+  constexpr bool operator<(MatchType const &other) const
+  {
+    return distance < other.distance;
+  };
+};
+
 /// The type traits of a rtree based on a Primitive
 template <class Primitive>
 struct RTreeTraits {
@@ -75,19 +89,6 @@ struct RTreeTraits {
   using Ptr   = std::shared_ptr<RTree>;
 };
 
-struct MatchType {
-  double distance;
-  int    index;
-
-  MatchType() = default;
-  MatchType(double d, int i)
-      : distance(d), index(i){};
-  constexpr bool operator<(MatchType const &other) const
-  {
-    return distance < other.distance;
-  };
-};
-
 class rtree {
 public:
   using vertex_traits   = RTreeTraits<mesh::Vertex>;
@@ -99,18 +100,16 @@ public:
    * Creates and fills the tree, if it wasn't requested before, otherwise it returns the cached tree.
    */
   static vertex_traits::Ptr getVertexRTree(const mesh::PtrMesh &mesh);
-
   static edge_traits::Ptr getEdgeRTree(const mesh::PtrMesh &mesh);
-
   static triangle_traits::Ptr getTriangleRTree(const mesh::PtrMesh &mesh);
 
-  /// Get the closest vertex/edge/triangle to a vertex, return index and distance
-  static std::vector<MatchType> getClosest(const mesh::Vertex &source, const vertex_traits::Ptr &tree, const mesh::Mesh::VertexContainer &targetContainer, int n = 1);
-  static std::vector<MatchType> getClosest(const mesh::Vertex &source, const edge_traits::Ptr &tree, const mesh::Mesh::EdgeContainer &targetContainer, int n = 1);
-  static std::vector<MatchType> getClosest(const mesh::Vertex &source, const triangle_traits::Ptr &tree, const mesh::Mesh::TriangleContainer &targetContainer, int n = 1);
+  /// Get the closest vertex/edge/triangle to a vertex, return indices and distance
+  static std::vector<MatchType> getClosestVertex(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n = 1);
+  static std::vector<MatchType> getClosestEdge(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n = 1);
+  static std::vector<MatchType> getClosestTriangle(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n = 1);
 
   /// Get all the vertices inside the box and surrounded by support radius
-  static std::vector<size_t> getVerticesInsideBox(const Box3d &searchBox, const vertex_traits::Ptr &tree, const mesh::Mesh::VertexContainer &vertices, const mesh::Vertex &centerVertex, double supportRadius);
+  static std::vector<size_t> getVerticesInsideBox(const Box3d &searchBox, const mesh::PtrMesh& targetMesh, const mesh::Vertex &centerVertex, double supportRadius);
 
   /// Only clear the trees of that specific mesh
   static void clear(mesh::Mesh &mesh);
@@ -121,6 +120,7 @@ public:
   friend struct testing::accessors::rtree;
 
 private:
+
   struct MeshIndices {
     vertex_traits::Ptr   vertices;
     edge_traits::Ptr     edges;
@@ -135,6 +135,35 @@ private:
 
 /// Returns a boost::geometry box that encloses a sphere of given radius around a middle point
 Box3d getEnclosingBox(mesh::Vertex const &middlePoint, double sphereRadius);
+
+/**
+ * @brief Weighting and reference to target element for a value to interpolate
+ */
+struct InterpolationElement {
+  const mesh::Vertex *element = nullptr;
+  double              weight  = 0.0;
+
+  InterpolationElement() = default;
+  InterpolationElement(const mesh::Vertex *element_, double weight_)
+      : element(element_), weight(weight_) {}
+  InterpolationElement(const mesh::Vertex &element_, double weight_)
+      : element(&element_), weight(weight_) {}
+};
+
+/// Generates the InterpolationElements for directly projecting a Vertex on another Vertex
+std::vector<InterpolationElement> generateInterpolationElements(
+    const mesh::Vertex &location,
+    const mesh::Vertex &element);
+
+/// Generates the InterpolationElements for projecting a Vertex on an Edge
+std::vector<InterpolationElement> generateInterpolationElements(
+    const mesh::Vertex &location,
+    const mesh::Edge &  element);
+
+/// Generates the InterpolationElements for projecting a Vertex on a Triangle
+std::vector<InterpolationElement> generateInterpolationElements(
+    const mesh::Vertex &  location,
+    const mesh::Triangle &element);
 
 } // namespace query
 

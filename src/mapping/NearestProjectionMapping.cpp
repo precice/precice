@@ -22,7 +22,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
-#include "query/FindClosest.hpp"
 #include "query/RTree.hpp"
 #include "utils/Event.hpp"
 #include "utils/Statistics.hpp"
@@ -58,20 +57,20 @@ void NearestProjectionMapping::computeMapping()
   precice::utils::Event e(baseEvent, precice::syncMode);
 
   // Setup Direction of Mapping
-  mesh::PtrMesh origins, search_space;
+  mesh::PtrMesh origins, searchSpace;
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
     origins      = output();
-    search_space = input();
+    searchSpace = input();
   } else {
     PRECICE_DEBUG("Compute conservative mapping");
     origins      = input();
-    search_space = output();
+    searchSpace = output();
   }
 
   const auto &fVertices = origins->vertices();
-  const auto &tVertices = search_space->vertices();
-  const auto &tEdges    = search_space->edges();
+  const auto &tVertices = searchSpace->vertices();
+  const auto &tEdges    = searchSpace->edges();
 
   _weights.resize(fVertices.size());
 
@@ -83,12 +82,8 @@ void NearestProjectionMapping::computeMapping()
 
   if (getDimensions() == 2) {
     if (!fVertices.empty() && tEdges.empty()) {
-      PRECICE_WARN("2D Mesh \"" << search_space->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
+      PRECICE_WARN("2D Mesh \"" << searchSpace->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
     }
-
-    precice::utils::Event e2(baseEvent + ".getIndexOnEdges", precice::syncMode);
-    auto                  indexEdges = query::rtree::getEdgeRTree(search_space);
-    e2.stop();
 
     // Lazy evaluation of the vertex index.
     // This is not necessary in the case of matching meshes.
@@ -98,7 +93,7 @@ void NearestProjectionMapping::computeMapping()
 
     for (size_t i = 0; i < fVertices.size(); i++) {
       // Search for the origin inside the destination meshes edges
-      auto matches = query::rtree::getClosest(fVertices[i], indexEdges, tEdges, nnearest);
+      auto matches = query::rtree::getClosestEdge(fVertices[i], searchSpace, nnearest);
       bool found   = false;
       for (const auto &match : matches) {
         auto weights = query::generateInterpolationElements(fVertices[i], tEdges[match.index]);
@@ -111,12 +106,8 @@ void NearestProjectionMapping::computeMapping()
       }
 
       if (not found) {
-        if (!indexVertices) {
-          precice::utils::Event e3(baseEvent + ".getIndexOnVertices", precice::syncMode);
-          indexVertices = query::rtree::getVertexRTree(search_space);
-        }
         // Search for the origin inside the destination meshes vertices
-        auto matchedVertices = query::rtree::getClosest(fVertices[i], indexVertices, tVertices);
+        auto matchedVertices = query::rtree::getClosestVertex(fVertices[i], searchSpace);
         _weights[i]          = query::generateInterpolationElements(fVertices[i], tVertices[matchedVertices.at(0).index]);
         distanceStatistics(matchedVertices.at(0).distance);
       }
@@ -127,14 +118,10 @@ void NearestProjectionMapping::computeMapping()
       PRECICE_INFO("Mapping distance " << distanceStatistics);
     }
   } else {
-    const auto &tTriangles = search_space->triangles();
+    const auto &tTriangles = searchSpace->triangles();
     if (!fVertices.empty() && tTriangles.empty()) {
-      PRECICE_WARN("3D Mesh \"" << search_space->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
+      PRECICE_WARN("3D Mesh \"" << searchSpace->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
     }
-
-    precice::utils::Event e2(baseEvent + ".getIndexOnTriangles", precice::syncMode);
-    auto                  indexTriangles = query::rtree::getTriangleRTree(search_space);
-    e2.stop();
 
     // Lazy evaluation of indices for edges and vertices.
     // These are not necessary in the case of matching meshes.
@@ -145,7 +132,7 @@ void NearestProjectionMapping::computeMapping()
 
     for (size_t i = 0; i < fVertices.size(); i++) {
       // Search for the vertex inside the destination meshes triangles
-      auto matches = query::rtree::getClosest(fVertices[i], indexTriangles, tTriangles, nnearest);
+      auto matches = query::rtree::getClosestTriangle(fVertices[i], searchSpace, nnearest);
       bool found   = false;
       for (const auto &match : matches) {
         auto weights = query::generateInterpolationElements(fVertices[i], tTriangles[match.index]);
@@ -158,13 +145,9 @@ void NearestProjectionMapping::computeMapping()
       }
 
       if (not found) {
-        if (!indexEdges) {
-          precice::utils::Event e3(baseEvent + ".getIndexOnEdges", precice::syncMode);
-          indexEdges = query::rtree::getEdgeRTree(search_space);
-        }
         // Search for the vertex inside the destination meshes edges
         matches.clear();
-        matches = query::rtree::getClosest(fVertices[i], indexEdges, tEdges, nnearest);
+        matches = query::rtree::getClosestEdge(fVertices[i], searchSpace, nnearest);
         for (const auto &match : matches) {
           auto weights = query::generateInterpolationElements(fVertices[i], tEdges[match.index]);
           if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
@@ -177,12 +160,8 @@ void NearestProjectionMapping::computeMapping()
       }
 
       if (not found) {
-        if (!indexVertices) {
-          precice::utils::Event e4(baseEvent + ".getIndexOnVertices", precice::syncMode);
-          indexVertices = query::rtree::getVertexRTree(search_space);
-        }
         // Search for the vertex inside the destination meshes vertices
-        auto matchedVertices = query::rtree::getClosest(fVertices[i], indexVertices, tVertices);
+        auto matchedVertices = query::rtree::getClosestVertex(fVertices[i], searchSpace);
         _weights[i]          = query::generateInterpolationElements(fVertices[i], tVertices[matchedVertices.at(0).index]);
         distanceStatistics(matchedVertices.at(0).distance);
       }

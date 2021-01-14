@@ -1340,8 +1340,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
     results.clear();
 
     // -- PREALLOCATES THE COEFFICIENTS --
-    auto search_box = query::getEnclosingBox(inVertex, supportRadius);
-    results         = query::rtree::getVerticesInsideBox(search_box, tree, inMesh->vertices(), inVertex, supportRadius);
+    auto searchBox = query::getEnclosingBox(inVertex, supportRadius);
+    results         = query::rtree::getVerticesInsideBox(searchBox, inMesh, inVertex, supportRadius);
 
     // for (mesh::Vertex& vj : inMesh->vertices()) {
     for (auto const i : results) {
@@ -1435,8 +1435,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
 
     // -- PREALLOCATE THE COEFFICIENTS --
     results.clear();
-    auto search_box = query::getEnclosingBox(oVertex, supportRadius);
-    results         = query::rtree::getVerticesInsideBox(search_box, tree, inMesh->vertices(), oVertex, supportRadius);
+    auto searchBox = query::getEnclosingBox(oVertex, supportRadius);
+    results         = query::rtree::getVerticesInsideBox(searchBox, inMesh, oVertex, supportRadius);
 
     for (auto i : results) {
       const mesh::Vertex &inVertex = inMesh->vertices()[i];

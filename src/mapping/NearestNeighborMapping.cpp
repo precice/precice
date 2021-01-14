@@ -48,9 +48,6 @@ void NearestNeighborMapping::computeMapping()
 
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
-    precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = query::rtree::getVertexRTree(input());
-    e2.stop();
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
     utils::statistics::DistanceAccumulator distanceStatistics;
@@ -58,7 +55,7 @@ void NearestNeighborMapping::computeMapping()
     for (size_t i = 0; i < verticesSize; i++) {
       const Eigen::VectorXd &coords = outputVertices[i].getCoords();
       // Search for the output vertex inside the input mesh and add index to _vertexIndices
-      auto matches      = query::rtree::getClosest(outputVertices[i], rtree, input()->vertices());
+      auto matches      = query::rtree::getClosestVertex(outputVertices[i], input());
       _vertexIndices[i] = matches[0].index;
       distanceStatistics(matches[0].distance);
     }
@@ -70,9 +67,6 @@ void NearestNeighborMapping::computeMapping()
   } else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Compute conservative mapping");
-    precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = query::rtree::getVertexRTree(output());
-    e2.stop();
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
     utils::statistics::DistanceAccumulator distanceStatistics;
@@ -80,7 +74,7 @@ void NearestNeighborMapping::computeMapping()
     for (size_t i = 0; i < verticesSize; i++) {
       const Eigen::VectorXd &coords = inputVertices[i].getCoords();
       // Search for the input vertex inside the output mesh and add index to _vertexIndices
-      auto matches      = query::rtree::getClosest(inputVertices[i], rtree, output()->vertices());
+      auto matches      = query::rtree::getClosestVertex(inputVertices[i], output());
       _vertexIndices[i] = matches[0].index;
       distanceStatistics(matches[0].distance);
     }

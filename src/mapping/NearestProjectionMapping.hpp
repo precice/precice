@@ -5,7 +5,7 @@
 #include <vector>
 #include "Mapping.hpp"
 #include "logging/Logger.hpp"
-#include "query/FindClosest.hpp"
+#include "query/RTree.hpp"
 
 namespace precice {
 namespace mapping {
