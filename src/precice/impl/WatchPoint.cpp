@@ -13,9 +13,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "query/FindClosestEdge.hpp"
-#include "query/FindClosestTriangle.hpp"
-#include "query/FindClosestVertex.hpp"
+#include "query/RTree.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -61,13 +59,14 @@ void WatchPoint::initialize()
   _weights.clear();
   _vertices.clear();
 
+  auto pointVertex = mesh::Vertex(_point, 0);
+
   // Find closest vertex
-  if (_mesh->vertices().size() > 0) {
-    query::FindClosestVertex findVertex(_point);
-    findVertex(*_mesh);
-    _vertices.push_back(&findVertex.getClosestVertex());
-    _shortestDistance = findVertex.getEuclidianDistance();
-    _weights.push_back(1.0);
+  if (not _mesh->vertices().empty()) {
+    auto closestVertex = query::rtree::getClosestVertex(pointVertex, _mesh).at(0);
+    _vertices.push_back(&_mesh->vertices()[closestVertex.index]);
+    _shortestDistance = closestVertex.distance;
+    _weights.emplace_back(_mesh->vertices()[closestVertex.index], 1.0);
   }
 
   if (utils::MasterSlave::isSlave()) {
@@ -99,33 +98,37 @@ void WatchPoint::initialize()
   }
 
   // Find closest edge
-  query::FindClosestEdge findEdge(_point);
-  if (findEdge(*_mesh)) {
-    if (findEdge.getEuclidianDistance() < _shortestDistance) {
+  auto closestEdge = query::rtree::getClosestEdge(pointVertex, _mesh);
+  if (not closestEdge.empty()) {
+    if (closestEdge.at(0).distance < _shortestDistance) {
       //         _closestEdge = & findEdge.getClosestEdge ();
       _vertices.clear();
-      _vertices.push_back(&findEdge.getClosestEdge().vertex(0));
-      _vertices.push_back(&findEdge.getClosestEdge().vertex(1));
-      _shortestDistance = findEdge.getEuclidianDistance();
+      _vertices.push_back(&_mesh->edges()[closestEdge.at(0).index].vertex(0));
+      _vertices.push_back(&_mesh->edges()[closestEdge.at(0).index].vertex(1));
+      _shortestDistance = closestEdge.at(0).distance;
       _weights.clear();
-      _weights.push_back(findEdge.getProjectionPointParameter(0));
-      _weights.push_back(findEdge.getProjectionPointParameter(1));
+      auto interpolationElements = query::generateInterpolationElements(pointVertex, _mesh->edges()[closestEdge.at(0).index]);
+      _weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
+      //_weights.push_back(findEdge.getProjectionPointParameter(0));
+      //_weights.push_back(findEdge.getProjectionPointParameter(1));
     }
   }
   if (_mesh->getDimensions() == 3) {
     // Find closest triangle
-    query::FindClosestTriangle findTriangle(_point);
-    if (findTriangle(*_mesh)) {
-      if (findTriangle.getEuclidianDistance() < _shortestDistance) {
+    auto closestTriangle = query::rtree::getClosestTriangle(pointVertex, _mesh);
+    if (not closestTriangle.empty()) {
+      if (closestTriangle.at(0).distance < _shortestDistance) {
         _vertices.clear();
-        _vertices.push_back(&findTriangle.getClosestTriangle().vertex(0));
-        _vertices.push_back(&findTriangle.getClosestTriangle().vertex(1));
-        _vertices.push_back(&findTriangle.getClosestTriangle().vertex(2));
-        _shortestDistance = findTriangle.getEuclidianDistance();
+        _vertices.push_back(&_mesh->triangles()[closestTriangle.at(0).index].vertex(0));
+        _vertices.push_back(&_mesh->triangles()[closestTriangle.at(0).index].vertex(1));
+        _vertices.push_back(&_mesh->triangles()[closestTriangle.at(0).index].vertex(2));
+        _shortestDistance = closestTriangle.at(0).distance;
         _weights.clear();
-        _weights.push_back(findTriangle.getProjectionPointParameter(0));
-        _weights.push_back(findTriangle.getProjectionPointParameter(1));
-        _weights.push_back(findTriangle.getProjectionPointParameter(2));
+        auto interpolationElements = query::generateInterpolationElements(pointVertex, _mesh->triangles()[closestTriangle.at(0).index]);
+        _weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
+        //_weights.push_back(findTriangle.getProjectionPointParameter(0));
+        //_weights.push_back(findTriangle.getProjectionPointParameter(1));
+        //_weights.push_back(findTriangle.getProjectionPointParameter(2));
       }
     }
   }
@@ -143,7 +146,7 @@ void WatchPoint::exportPointData(
   // Export watch point coordinates
   Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
   for (size_t i = 0; i < _vertices.size(); i++) {
-    coords += _weights[i] * _vertices[i]->getCoords();
+    coords += _weights[i].weight * _vertices[i]->getCoords();
   }
   if (coords.size() == 2) {
     _txtWriter.writeData("Coordinate", Eigen::Vector2d(coords));
@@ -182,7 +185,7 @@ void WatchPoint::getValue(
     for (int i = 0; i < dim; i++) {
       temp[i] = values[offset + i];
     }
-    temp *= _weights[index];
+    temp *= _weights[index].weight;
     value += temp;
     index++;
   }
@@ -195,7 +198,7 @@ void WatchPoint::getValue(
   size_t                 index  = 0;
   const Eigen::VectorXd &values = data->values();
   for (mesh::Vertex *vertex : _vertices) {
-    value += _weights[index] * values[vertex->getID()];
+    value += _weights[index].weight * values[vertex->getID()];
     index++;
   }
 }

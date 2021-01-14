@@ -57,8 +57,6 @@ target_sources(testprecice
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
     src/precice/tests/WatchPointTest.cpp
-    src/query/tests/FindClosestTest.cpp
-    src/query/tests/FindClosestVertexVisitorTest.cpp
     src/testing/TestContext.cpp
     src/testing/TestContext.hpp
     src/testing/Testing.cpp

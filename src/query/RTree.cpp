@@ -6,6 +6,7 @@
 #include <vector>
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"
+#include "math/barycenter.hpp"
 
 namespace precice {
 namespace query {
@@ -88,41 +89,45 @@ rtree::triangle_traits::Ptr rtree::getTriangleRTree(const mesh::PtrMesh &mesh)
   return tree;
 }
 
-std::vector<MatchType> rtree::getClosest(const mesh::Vertex &source, const vertex_traits::Ptr &tree, const mesh::Mesh::VertexContainer &targetContainer, int n)
+std::vector<MatchType> rtree::getClosestVertex(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n)
 {
+  auto tree = getVertexRTree(targetMesh);
   std::vector<MatchType> matches;
   tree->query(boost::geometry::index::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
-                matches.emplace_back(boost::geometry::distance(source, targetContainer[matchID]), matchID);
+                matches.emplace_back(boost::geometry::distance(source, targetMesh->vertices()[matchID]), matchID);
               }));
   std::sort(matches.begin(), matches.end());
   return matches;
 }
 
-std::vector<MatchType> rtree::getClosest(const mesh::Vertex &source, const edge_traits::Ptr &tree, const mesh::Mesh::EdgeContainer &targetContainer, int n)
+std::vector<MatchType> rtree::getClosestEdge(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n)
 {
+  auto tree = getEdgeRTree(targetMesh);
   std::vector<MatchType> matches;
   tree->query(boost::geometry::index::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
-                matches.emplace_back(boost::geometry::distance(source, targetContainer[matchID]), matchID);
+                matches.emplace_back(boost::geometry::distance(source, targetMesh->edges()[matchID]), matchID);
               }));
   std::sort(matches.begin(), matches.end());
   return matches;
 }
 
-std::vector<MatchType> rtree::getClosest(const mesh::Vertex &source, const triangle_traits::Ptr &tree, const mesh::Mesh::TriangleContainer &targetContainer, int n)
+std::vector<MatchType> rtree::getClosestTriangle(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n)
 {
+  auto tree = getTriangleRTree(targetMesh);
   std::vector<MatchType> matches;
   tree->query(bg::index::nearest(source, n),
               boost::make_function_output_iterator([&](query::rtree::triangle_traits::IndexType const &match) {
-                matches.emplace_back(bg::distance(source, targetContainer[match.second]), match.second);
+                matches.emplace_back(bg::distance(source, targetMesh->triangles()[match.second]), match.second);
               }));
   std::sort(matches.begin(), matches.end());
   return matches;
 }
 
-std::vector<size_t> rtree::getVerticesInsideBox(const Box3d &searchBox, const vertex_traits::Ptr &tree, const mesh::Mesh::VertexContainer &vertices, const mesh::Vertex &centerVertex, double supportRadius)
+std::vector<size_t> rtree::getVerticesInsideBox(const Box3d &searchBox, const mesh::PtrMesh& targetMesh, const mesh::Vertex &centerVertex, double supportRadius)
 {
+  auto tree = getVertexRTree(targetMesh);
   std::vector<size_t> matches;
-  tree->query(bg::index::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, vertices[i]) <= supportRadius; }),
+  tree->query(bg::index::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, targetMesh->vertices()[i]) <= supportRadius; }),
               std::back_inserter(matches));
   return matches;
 }
@@ -152,6 +157,56 @@ Box3d getEnclosingBox(mesh::Vertex const &middlePoint, double sphereRadius)
   bg::set<bg::max_corner, 2>(box, bg::get<2>(coords) + sphereRadius);
 
   return box;
+}
+
+std::vector<InterpolationElement> generateInterpolationElements(
+    const mesh::Vertex & /*location*/,
+    const mesh::Vertex &element)
+{
+  return {{element, 1.0}};
+}
+
+std::vector<InterpolationElement> generateInterpolationElements(
+    const mesh::Vertex &location,
+    const mesh::Edge &  element)
+{
+  auto &A = element.vertex(0);
+  auto &B = element.vertex(1);
+
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForEdge(
+                           A.getCoords(),
+                           B.getCoords(),
+                           element.getNormal(),
+                           location.getCoords())
+                           .barycentricCoords;
+
+  std::vector<InterpolationElement> elems;
+  elems.emplace_back(A, bcoords(0));
+  elems.emplace_back(B, bcoords(1));
+  return elems;
+}
+
+std::vector<InterpolationElement> generateInterpolationElements(
+    const mesh::Vertex &  location,
+    const mesh::Triangle &element)
+{
+  auto &A = element.vertex(0);
+  auto &B = element.vertex(1);
+  auto &C = element.vertex(2);
+
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForTriangle(
+                           A.getCoords(),
+                           B.getCoords(),
+                           C.getCoords(),
+                           element.getNormal(),
+                           location.getCoords())
+                           .barycentricCoords;
+
+  std::vector<InterpolationElement> elems;
+  elems.emplace_back(A, bcoords(0));
+  elems.emplace_back(B, bcoords(1));
+  elems.emplace_back(C, bcoords(2));
+  return elems;
 }
 
 } // namespace query
