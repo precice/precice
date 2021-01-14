@@ -81,6 +81,9 @@ Run all these tests manually on your system. If you succeed, please write a comm
 
 ## Post-release
 
+* [ ] Update version in the website:
+   * `_config.yml`
+   * `_data/sidebars/docs_sidebar.yml`
 * [ ] Update Arch Linux AUR Package
 * [ ] Update Spack recipe
 
