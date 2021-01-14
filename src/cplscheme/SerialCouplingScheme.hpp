@@ -29,7 +29,7 @@ public:
  * @param[in] secondParticipant Name of second participant in coupling.
  * @param[in] localParticipant Name of participant using this coupling scheme.
  * @param[in] m2n Communication object for com. between participants.
- * @param[in] dtMethod Method used for determining the time window size, see https://github.com/precice/precice/wiki/Adapter's-Time-Step-Sizes
+ * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
  * @param[in] cplMode Set implicit or explicit coupling
  * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
  */

@@ -27,7 +27,10 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Fix potential problems in the hotfix branch (all)
 * [ ] Draft message to mailing list
 * [ ] Update documentation (all)
-  * [ ] Update markdown configuration reference in wiki
+   * [ ] Update [XML configuration reference](https://github.com/precice/precice.github.io/blob/master/_includes/xmlreference.md)
+   * [ ] Update version in [precice/precice.github.io](https://github.com/precice/precice.github.io):
+      * `_config.yml`
+      * `_data/sidebars/docs_sidebar.yml`
 * [ ] Approve the PR with at least two reviews (all)
 * [ ] Merge PR to master ( use `git merge --no-ff hotfix-N` )
 * [ ] Tag hotfix on master `vN` and verify by running `git describe --tags`
