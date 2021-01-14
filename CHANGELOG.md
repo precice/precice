@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
 
+## latest
+
+- Improved documenation of [`action:scale-by-computed-dt-ratio`](https://www.precice.org/configuration-xml-reference.html#actionscale-by-computed-dt-ratio), [`action:scale-by-computed-dt-part-ratio`](https://www.precice.org/configuration-xml-reference.html#actionscale-by-computed-dt-part-ratio) and [`action:scale-by-dt`](https://www.precice.org/configuration-xml-reference.html#actionscale-by-dt) with respect to time step size vs. time window. size.
+
 ## 2.1.1
 
 - Fixed a compilation error emitted by intel compilers when compiling tests.

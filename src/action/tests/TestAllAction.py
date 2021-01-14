@@ -7,7 +7,7 @@ myIteration = 0
 # parameters are the source data, followed by the target data, which are
 # omitted (selectively or both) if not mentioned in the preCICE configuration.
 #
-def performAction(time, dt, sourceData, targetData):
+def performAction(time, timeWindowSize, sourceData, targetData):
     global mySourceData
     global myTargetData
     mySourceData = sourceData # store (reference to) sourceData for later use

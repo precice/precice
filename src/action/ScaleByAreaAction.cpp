@@ -26,9 +26,9 @@ ScaleByAreaAction::ScaleByAreaAction(
 
 void ScaleByAreaAction::performAction(
     double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double timeStepSize,
+    double computedTimeWindowPart,
+    double timeWindowSize)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(getMesh()->getDimensions() == 2, "The ScaleByAreaAction requires a mesh of dimensionality 2.");

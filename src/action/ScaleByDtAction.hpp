@@ -11,12 +11,12 @@ namespace action {
 class ScaleByDtAction : public Action {
 public:
   enum Scaling {
-    /// Scales data by ratio of last computed timestep to full timestep length.
-    SCALING_BY_COMPUTED_DT_RATIO,
-    /// Scales data by last computed timestep
-    SCALING_BY_DT,
-    /// Scales data by ratio of computed part of full timestep.
-    SCALING_BY_COMPUTED_DT_PART_RATIO
+    /// Scales data by ratio of last computed time step to time window size.
+    SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO,
+    /// Scales data by time window size.
+    SCALING_BY_TIME_WINDOW_SIZE,
+    /// Scales data by ratio of computed part of time window to length of time window.
+    SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO
   };
 
   /**
@@ -36,15 +36,12 @@ public:
 
   /**
    * @brief Scales data on mesh nodes according to selected scaling type.
-   *
-   * At the moment, only a division of a property value by the associated area
-   * of the neighboring edges (2D) is possible.
    */
   virtual void performAction(
       double time,
-      double dt,
-      double computedPartFullDt,
-      double fullDt);
+      double timeStepSize,
+      double computedTimeWindowPart,
+      double timeWindowSize);
 
 private:
   logging::Logger _log{"action::ScaleByDtAction"};

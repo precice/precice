@@ -30,9 +30,9 @@ SummationAction::SummationAction(
 
 void SummationAction::performAction(
     double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double timeStepSize,
+    double computedTimeWindowPart,
+    double timeWindowSize)
 {
   PRECICE_TRACE();
 
