@@ -153,7 +153,7 @@ protected:
   int _maxIterationsUsed;
 
   /// Maximum number of old time windows (with data values) kept.
-  int _pastTimewindowsReused;
+  int _pastTimeWindowsReused;
 
   /// Data IDs of data to be involved in the IQN algorithm.
   std::vector<int> _dataIDs;
