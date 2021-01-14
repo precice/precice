@@ -22,12 +22,12 @@ BOOST_AUTO_TEST_CASE(DataConfig)
   dataConfig.setDimensions(dim);
   xml::configure(tag, xml::ConfigurationContext{}, filename);
   BOOST_TEST(dataConfig.data().size() == 3);
-  BOOST_TEST(dataConfig.data()[0].name == "vector-data");
-  BOOST_TEST(dataConfig.data()[0].dimensions == 3);
-  BOOST_TEST(dataConfig.data()[1].name == "floating-data");
-  BOOST_TEST(dataConfig.data()[1].dimensions == 1);
-  BOOST_TEST(dataConfig.data()[2].name == "second-vector-data");
-  BOOST_TEST(dataConfig.data()[2].dimensions == 3);
+  BOOST_TEST(dataConfig.data().at(0).name == "vector-data");
+  BOOST_TEST(dataConfig.data().at(0).dimensions == 3);
+  BOOST_TEST(dataConfig.data().at(1).name == "floating-data");
+  BOOST_TEST(dataConfig.data().at(1).dimensions == 1);
+  BOOST_TEST(dataConfig.data().at(2).name == "second-vector-data");
+  BOOST_TEST(dataConfig.data().at(2).dimensions == 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

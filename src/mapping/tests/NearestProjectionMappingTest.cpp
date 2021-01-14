@@ -163,18 +163,18 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
 
     // Validate results
     BOOST_TEST(mapping.hasComputedMapping() == true);
-    BOOST_TEST(outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5);
-    BOOST_TEST(outData->values()[1] == valueVertex1);
-    BOOST_TEST(outData->values()[2] == valueVertex2);
+    BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5);
+    BOOST_TEST(outData->values()(1) == valueVertex1);
+    BOOST_TEST(outData->values()(2) == valueVertex2);
 
     // Redo mapping, results should be
     //assign(outData->values()) = 0.0;
     outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
     mapping.map(inDataID, outDataID);
-    BOOST_TEST(outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5);
-    BOOST_TEST(outData->values()[1] == valueVertex1);
-    BOOST_TEST(outData->values()[2] == valueVertex2);
+    BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5);
+    BOOST_TEST(outData->values()(1) == valueVertex1);
+    BOOST_TEST(outData->values()(2) == valueVertex2);
   }
 
   {
@@ -198,18 +198,18 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
 
     mapping.computeMapping();
     mapping.map(inDataID, outDataID);
-    BOOST_TEST(outData->values()[0] == valueVertex1);
-    BOOST_TEST(outData->values()[1] == valueVertex2);
-    BOOST_TEST(outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5);
+    BOOST_TEST(outData->values()(0) == valueVertex1);
+    BOOST_TEST(outData->values()(1) == valueVertex2);
+    BOOST_TEST(outData->values()(2) == (valueVertex1 + valueVertex2) * 0.5);
 
     // Reset output data to zero and redo the mapping
     //assign(outData->values()) = 0.0;
     outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
     mapping.map(inDataID, outDataID);
-    BOOST_TEST(outData->values()[0] == valueVertex1);
-    BOOST_TEST(outData->values()[1] == valueVertex2);
-    BOOST_TEST(outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5);
+    BOOST_TEST(outData->values()(0) == valueVertex1);
+    BOOST_TEST(outData->values()(1) == valueVertex2);
+    BOOST_TEST(outData->values()(2) == (valueVertex1 + valueVertex2) * 0.5);
   }
 }
 
@@ -265,9 +265,9 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
     BOOST_TEST(mapping.hasComputedMapping() == true);
     BOOST_TEST_CONTEXT(*inMesh)
     {
-      BOOST_TEST(outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5);
-      BOOST_TEST(outData->values()[1] == valueVertex1);
-      BOOST_TEST(outData->values()[2] == (valueVertex2 + valueVertex3) * 0.5);
+      BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5);
+      BOOST_TEST(outData->values()(1) == valueVertex1);
+      BOOST_TEST(outData->values()(2) == (valueVertex2 + valueVertex3) * 0.5);
     }
 
     // Redo mapping, results should be
@@ -277,9 +277,9 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
     mapping.map(inDataID, outDataID);
     BOOST_TEST_CONTEXT(*inMesh)
     {
-      BOOST_TEST(outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5);
-      BOOST_TEST(outData->values()[1] == valueVertex1);
-      BOOST_TEST(outData->values()[2] == (valueVertex2 + valueVertex3) * 0.5);
+      BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5);
+      BOOST_TEST(outData->values()(1) == valueVertex1);
+      BOOST_TEST(outData->values()(2) == (valueVertex2 + valueVertex3) * 0.5);
     }
   }
   {
@@ -306,9 +306,9 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
     mapping.map(inDataID, outDataID);
     BOOST_TEST_CONTEXT(*inMesh)
     {
-      BOOST_TEST(outData->values()[0] == valueVertex1);
-      BOOST_TEST(outData->values()[1] == (valueVertex2 + valueVertex3) * 0.5);
-      BOOST_TEST(outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5);
+      BOOST_TEST(outData->values()(0) == valueVertex1);
+      BOOST_TEST(outData->values()(1) == (valueVertex2 + valueVertex3) * 0.5);
+      BOOST_TEST(outData->values()(2) == (valueVertex1 + valueVertex2) * 0.5);
     }
 
     // Reset output data to zero and redo the mapping
@@ -318,9 +318,9 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
     mapping.map(inDataID, outDataID);
     BOOST_TEST_CONTEXT(*inMesh)
     {
-      BOOST_TEST(outData->values()[0] == valueVertex1);
-      BOOST_TEST(outData->values()[1] == (valueVertex2 + valueVertex3) * 0.5);
-      BOOST_TEST(outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5);
+      BOOST_TEST(outData->values()(0) == valueVertex1);
+      BOOST_TEST(outData->values()(1) == (valueVertex2 + valueVertex3) * 0.5);
+      BOOST_TEST(outData->values()(2) == (valueVertex1 + valueVertex2) * 0.5);
     }
   }
 }
@@ -375,9 +375,9 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST_CONTEXT(*inMesh)
   {
-    BOOST_TEST(outData->values()[0] == (valueVertex1 + valueVertex2) * 0.5);
-    BOOST_TEST(outData->values()[1] == (valueVertex1 + valueVertex3) * 0.5);
-    BOOST_TEST(outData->values()[2] == (valueVertex2 + valueVertex3) * 0.5);
+    BOOST_TEST(outData->values()(0) == (valueVertex1 + valueVertex2) * 0.5);
+    BOOST_TEST(outData->values()(1) == (valueVertex1 + valueVertex3) * 0.5);
+    BOOST_TEST(outData->values()(2) == (valueVertex2 + valueVertex3) * 0.5);
   }
 }
 
@@ -428,9 +428,9 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnVertices)
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST_CONTEXT(*inMesh)
   {
-    BOOST_TEST(outData->values()[0] == valueVertex1);
-    BOOST_TEST(outData->values()[1] == valueVertex2);
-    BOOST_TEST(outData->values()[2] == valueVertex3);
+    BOOST_TEST(outData->values()(0) == valueVertex1);
+    BOOST_TEST(outData->values()(1) == valueVertex2);
+    BOOST_TEST(outData->values()(2) == valueVertex3);
   }
 }
 
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
   BOOST_TEST_INFO("Out Data before Mapping:" << outData->values());
   mapping.map(inData->getID(), outData->getID());
   BOOST_TEST_INFO("Out Data after Mapping:" << outData->values());
-  BOOST_TEST(outData->values()[0] == 1.0);
+  BOOST_TEST(outData->values()(0) == 1.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

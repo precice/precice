@@ -350,8 +350,8 @@ void precicef_set_vertex_(
  * OUT: meshSize
  */
 void precicef_get_mesh_vertex_size_(
-    int *meshID,
-    int *meshSize);
+    const int *meshID,
+    int *      meshSize);
 
 /**
  * @brief See precice::SolverInterface::setMeshVertices().

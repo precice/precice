@@ -101,7 +101,7 @@ void getDistributedMesh(const TestContext &      context,
       d.conservativeResize(i * valueDimension + valueDimension);
       // Get data in every dimension
       for (int dim = 0; dim < valueDimension; ++dim) {
-        d[i * valueDimension + dim] = vertex.value[dim];
+        d(i * valueDimension + dim) = vertex.value.at(dim);
       }
       i++;
     }
@@ -118,8 +118,8 @@ void testDistributed(const TestContext &    context,
                      ReferenceSpecification referenceSpec,
                      int                    inGlobalIndexOffset = 0)
 {
-  int meshDimension  = inMeshSpec[0].position.size();
-  int valueDimension = inMeshSpec[0].value.size();
+  int meshDimension  = inMeshSpec.at(0).position.size();
+  int valueDimension = inMeshSpec.at(0).value.size();
 
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, false, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", valueDimension);
@@ -145,7 +145,7 @@ void testDistributed(const TestContext &    context,
     if (referenceVertex.first == context.rank or referenceVertex.first == -1) {
       for (int dim = 0; dim < valueDimension; ++dim) {
         BOOST_TEST_INFO("Index of vertex: " << index << " - Dimension: " << dim);
-        BOOST_TEST(outData->values()[index * valueDimension + dim] == referenceVertex.second[dim]);
+        BOOST_TEST(outData->values()(index * valueDimension + dim) == referenceVertex.second.at(dim));
       }
       ++index;
     }
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
                    {2, {6}},
                    {3, {7}},
                    {3, {8}}},
-                  globalIndexOffsets[context.rank]);
+                  globalIndexOffsets.at(context.rank));
 }
 
 /// Test with a very heterogenous distributed and non-continues ownership
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
                    {2, {6, 9}},
                    {3, {7, 10}},
                    {3, {8, 11}}},
-                  globalIndexOffsets[context.rank]);
+                  globalIndexOffsets.at(context.rank));
 }
 
 /// Some ranks are empty, does not converge
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
                    {2, {6}},
                    {2, {7}},
                    {2, {8}}},
-                  globalIndexOffsets[context.rank]);
+                  globalIndexOffsets.at(context.rank));
 }
 
 // same as 2DV4, but all ranks have vertices
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
                    {2, {6}},
                    {2, {7}},
                    {2, {8}}},
-                  globalIndexOffsets[context.rank]);
+                  globalIndexOffsets.at(context.rank));
 }
 
 /// same as 2DV4, but strictly linear input values, converges and gives correct results
@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                    {2, {6}},
                    {2, {7}},
                    {2, {8}}},
-                  globalIndexOffsets[context.rank]);
+                  globalIndexOffsets.at(context.rank));
 }
 
 /// Test with a homogenous distribution of mesh amoung ranks
@@ -743,7 +743,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
                    {3, {0}},
                    {3, {7}},
                    {3, {8}}},
-                  globalIndexOffsets[context.rank]);
+                  globalIndexOffsets.at(context.rank));
 }
 
 /// Using meshes of different sizes, inMesh is smaller then outMesh
@@ -807,7 +807,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
                    {3, {0}},
                    {3, {7}},
                    {3, {8}}}, // Sum of reference is also 34
-                  globalIndexOffsets[context.rank]);
+                  globalIndexOffsets.at(context.rank));
 }
 
 /// Using meshes of different sizes, outMesh is smaller then inMesh
@@ -868,7 +868,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                    {3, {0}},
                    {3, {7.047619}},
                    {3, {7.571428}}}, // Sum is ~36
-                  globalIndexOffsets[context.rank]);
+                  globalIndexOffsets.at(context.rank));
 }
 
 /// Tests a non-contigous owner distributed at the outMesh
@@ -1004,8 +1004,8 @@ void testTagging(const TestContext &context,
                  MeshSpecification  shouldTagSecondRound,
                  bool               consistent)
 {
-  int meshDimension  = inMeshSpec[0].position.size();
-  int valueDimension = inMeshSpec[0].value.size();
+  int meshDimension  = inMeshSpec.at(0).position.size();
+  int valueDimension = inMeshSpec.at(0).value.size();
 
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, false, testing::nextMeshID()));
   mesh::PtrData inData = inMesh->createData("InData", valueDimension);
@@ -1158,63 +1158,63 @@ void perform2DTestConsistentMapping(Mapping &mapping)
   vertex.setCoords(Vector2d(0.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  double value = outData->values()[0];
+  double value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
 
   vertex.setCoords(Vector2d(0.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
 
   vertex.setCoords(Vector2d(0.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
 
   vertex.setCoords(Vector2d(1.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
 
   vertex.setCoords(Vector2d(1.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
 
   vertex.setCoords(Vector2d(1.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
 
   vertex.setCoords(Vector2d(0.5, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
 
   vertex.setCoords(Vector2d(0.5, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
 
   vertex.setCoords(Vector2d(0.5, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
 }
@@ -1253,8 +1253,8 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   vertex.setCoords(Vector2d(0.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  double value1 = outData->values()[0];
-  double value2 = outData->values()[1];
+  double value1 = outData->values()(0);
+  double value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.0);
   BOOST_TEST(value2 == 4.0);
@@ -1262,8 +1262,8 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   vertex.setCoords(Vector2d(0.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value1 = outData->values()[0];
-  value2 = outData->values()[1];
+  value1 = outData->values()(0);
+  value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.0);
   BOOST_TEST(value2 == 4.0);
@@ -1271,8 +1271,8 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   vertex.setCoords(Vector2d(0.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value1 = outData->values()[0];
-  value2 = outData->values()[1];
+  value1 = outData->values()(0);
+  value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.0);
   BOOST_TEST(value2 == 4.0);
@@ -1280,8 +1280,8 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   vertex.setCoords(Vector2d(1.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value1 = outData->values()[0];
-  value2 = outData->values()[1];
+  value1 = outData->values()(0);
+  value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 2.0);
   BOOST_TEST(value2 == 5.0);
@@ -1289,8 +1289,8 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   vertex.setCoords(Vector2d(1.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value1 = outData->values()[0];
-  value2 = outData->values()[1];
+  value1 = outData->values()(0);
+  value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 2.0);
   BOOST_TEST(value2 == 5.0);
@@ -1298,8 +1298,8 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   vertex.setCoords(Vector2d(1.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value1 = outData->values()[0];
-  value2 = outData->values()[1];
+  value1 = outData->values()(0);
+  value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 2.0);
   BOOST_TEST(value2 == 5.0);
@@ -1307,8 +1307,8 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   vertex.setCoords(Vector2d(0.5, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value1 = outData->values()[0];
-  value2 = outData->values()[1];
+  value1 = outData->values()(0);
+  value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.5);
   BOOST_TEST(value2 == 4.5);
@@ -1316,8 +1316,8 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   vertex.setCoords(Vector2d(0.5, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value1 = outData->values()[0];
-  value2 = outData->values()[1];
+  value1 = outData->values()(0);
+  value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.5);
   BOOST_TEST(value2 == 4.5);
@@ -1325,8 +1325,8 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   vertex.setCoords(Vector2d(0.5, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value1 = outData->values()[0];
-  value2 = outData->values()[1];
+  value1 = outData->values()(0);
+  value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.5);
   BOOST_TEST(value2 == 4.5);
@@ -1369,98 +1369,98 @@ void perform3DTestConsistentMapping(Mapping &mapping)
   vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  double value = outData->values()[0];
+  double value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
 
   vertex.setCoords(Eigen::Vector3d(0.0, 0.5, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
 
   vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
 
   vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
 
   vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
 
   vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value, 1.5);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
 
   vertex.setCoords(Eigen::Vector3d(0.0, 1.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
 
   vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  value = outData->values()[0];
+  value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
 }
@@ -1839,7 +1839,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   vertex.setCoords(Vector2d(0.0, 3.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  double value = outData->values()[0];
+  double value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
 }
@@ -1891,10 +1891,10 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  BOOST_TEST(outData->values()[0] == 1.0);
-  BOOST_TEST(outData->values()[1] == 2.0);
-  BOOST_TEST(outData->values()[2] == 2.9);
-  BOOST_TEST(outData->values()[3] == 4.3);
+  BOOST_TEST(outData->values()(0) == 1.0);
+  BOOST_TEST(outData->values()(1) == 2.0);
+  BOOST_TEST(outData->values()(2) == 2.9);
+  BOOST_TEST(outData->values()(3) == 4.3);
 }
 
 BOOST_AUTO_TEST_CASE(SolutionCaching)
@@ -1938,7 +1938,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching)
   BOOST_TEST(mapping.previousSolution.empty());
   mapping.map(inDataID, outDataID);
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outData->values()[0] == 1.0);
+  BOOST_TEST(outData->values()(0) == 1.0);
 
   PetscInt its;
   KSPGetIterationNumber(mapping._solver, &its);
@@ -1989,7 +1989,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   mappingOff.computeMapping();
   mappingOff.map(inDataID, outDataID);
 
-  BOOST_TEST(outData->values()[0] <= 0.01); // Mapping to almost 0 since almost no basis function at (3,3) and no polynomial
+  BOOST_TEST(outData->values()(0) <= 0.01); // Mapping to almost 0 since almost no basis function at (3,3) and no polynomial
 
   // Test integrated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingOn(Mapping::CONSISTENT, dimensions, fct,
@@ -2000,7 +2000,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   mappingOn.computeMapping();
   mappingOn.map(inDataID, outDataID);
 
-  BOOST_TEST(outData->values()[0] == 1.0); // Mapping to 1 since there is the polynomial
+  BOOST_TEST(outData->values()(0) == 1.0); // Mapping to 1 since there is the polynomial
 
   // Test separated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingSep(Mapping::CONSISTENT, dimensions, fct,
@@ -2011,7 +2011,7 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   mappingSep.computeMapping();
   mappingSep.map(inDataID, outDataID);
 
-  BOOST_TEST(outData->values()[0] == 1.0); // Mapping to 1 since there is the polynomial
+  BOOST_TEST(outData->values()(0) == 1.0); // Mapping to 1 since there is the polynomial
 }
 
 BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
@@ -2056,9 +2056,9 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
   mappingOff.computeMapping();
   mappingOff.map(inDataID, outDataID);
 
-  BOOST_TEST(outData->values()[0] == 2.119967); // Conservativness is not retained, because no polynomial
-  BOOST_TEST(outData->values()[1] == 0.0);      // Mapping to 0 since no basis function at (5,5) and no polynomial
-  BOOST_TEST(outData->values()[2] == 0.0);      // Mapping to 0 since no basis function at (5,5) and no polynomial
+  BOOST_TEST(outData->values()(0) == 2.119967); // Conservativness is not retained, because no polynomial
+  BOOST_TEST(outData->values()(1) == 0.0);      // Mapping to 0 since no basis function at (5,5) and no polynomial
+  BOOST_TEST(outData->values()(2) == 0.0);      // Mapping to 0 since no basis function at (5,5) and no polynomial
 
   // Test integrated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingOn(Mapping::CONSERVATIVE, dimensions, fct,
@@ -2069,9 +2069,9 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
   mappingOn.computeMapping();
   mappingOn.map(inDataID, outDataID);
 
-  BOOST_TEST(outData->values()[0] == 0);
-  BOOST_TEST(outData->values()[1] == 26.0);
-  BOOST_TEST(outData->values()[2] == -22.0);
+  BOOST_TEST(outData->values()(0) == 0);
+  BOOST_TEST(outData->values()(1) == 26.0);
+  BOOST_TEST(outData->values()(2) == -22.0);
 
   // Test separated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingSep(Mapping::CONSERVATIVE, dimensions, fct,
@@ -2082,9 +2082,9 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
   mappingSep.computeMapping();
   mappingSep.map(inDataID, outDataID);
 
-  BOOST_TEST(outData->values()[0] == 0);
-  BOOST_TEST(outData->values()[1] == 26.0);
-  BOOST_TEST(outData->values()[2] == -22.0);
+  BOOST_TEST(outData->values()(0) == 0);
+  BOOST_TEST(outData->values()(1) == 26.0);
+  BOOST_TEST(outData->values()(2) == -22.0);
 }
 
 BOOST_AUTO_TEST_CASE(NoMapping)
@@ -2163,7 +2163,7 @@ BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
   mapping1.computeMapping();
   mapping1.map(inDataID, outDataID);
 
-  BOOST_TEST(outData->values()[0] == 1);
+  BOOST_TEST(outData->values()(0) == 1);
 
   PetRadialBasisFctMapping<Gaussian> mapping2(Mapping::CONSERVATIVE, dimensions, fct,
                                               xDead, yDead, zDead);
@@ -2173,10 +2173,10 @@ BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
   mapping2.computeMapping();
   mapping2.map(outDataID, inDataID);
 
-  BOOST_TEST(inData->values()[0] == 1.0);
-  BOOST_TEST(inData->values()[1] == 1.0);
-  BOOST_TEST(inData->values()[2] == 1.0);
-  BOOST_TEST(inData->values()[3] == 1.0);
+  BOOST_TEST(inData->values()(0) == 1.0);
+  BOOST_TEST(inData->values()(1) == 1.0);
+  BOOST_TEST(inData->values()(2) == 1.0);
+  BOOST_TEST(inData->values()(3) == 1.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Serial

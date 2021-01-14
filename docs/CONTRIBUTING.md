@@ -25,7 +25,7 @@ In order to get your contributions into the code base as smoothly as possible, p
   The content of the file is a markdown list of the entries using `*` as marker. Write 1 entry per line to simplify the merging process. Each entry should start with a verb in the past tense such as `Added`, `Fixed`, `Updated`, `Simplified`, `Improved`. This simplifies sorting the changelog and finding interesting content in it.
 
 ## Taking code from other projects
-We believe in the power of Open Source or Free Software Software to share and reuse code from other projects. However, Free Software is not public domain, and not every code could be reused in every other project.
+We believe in the power of Open Source or Free Software to share and reuse code from other projects. However, Free Software is not public domain, and not every code could be reused in every other project.
 
 Please contact the maintainers before integrating non-trivial amount of code from other projects, so we can ensure the compatibility of licences. Same holds true for additional dependencies, libraries etc.
 

@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
 
     for (int rank = 0; rank < 3; rank++) {
 
-      BOOST_TEST(fbm[rank] == fbmCompare[rank]);
+      BOOST_TEST(fbm.at(rank) == fbmCompare.at(rank));
     }
   }
 }
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
 
     for (int rank = 0; rank < 3; rank++) {
 
-      BOOST_TEST(fbm[rank] == fbmCompare[rank]);
+      BOOST_TEST(fbm.at(rank) == fbmCompare.at(rank));
     }
   }
 }

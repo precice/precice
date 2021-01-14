@@ -326,11 +326,10 @@ void SocketCommunication::closeConnection()
 
   for (auto &socket : _sockets) {
     PRECICE_ASSERT(socket.second->is_open());
-    
-    try{
+
+    try {
       socket.second->shutdown(Socket::shutdown_send);
-    }
-    catch(std::exception &e){
+    } catch (std::exception &e) {
       PRECICE_WARN("Socket shutdown failed with system error: " << e.what());
     }
     socket.second->close();

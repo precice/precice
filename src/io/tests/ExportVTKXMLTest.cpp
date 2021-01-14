@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
     mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
-    coords3[0]              = 1.0;
+    coords3(0)              = 1.0;
     mesh::Vertex &v3        = mesh.createVertex(coords3);
 
     mesh.createEdge(v1, v2);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
     Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
-    coords3[1]              = 1.0;
+    coords3(1)              = 1.0;
     mesh::Vertex &v3        = mesh.createVertex(coords3);
 
     mesh.createEdge(v1, v2);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
     mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
-    coords3[0]              = 1.0;
+    coords3(0)              = 1.0;
     mesh::Vertex &v3        = mesh.createVertex(coords3);
 
     mesh::Edge &e1 = mesh.createEdge(v1, v2);
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
     Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
-    coords3[1]              = 1.0;
+    coords3(1)              = 1.0;
     mesh::Vertex &v3        = mesh.createVertex(coords3);
 
     mesh::Edge &e1 = mesh.createEdge(v1, v2);

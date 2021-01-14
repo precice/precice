@@ -46,8 +46,8 @@ bool init_unit_test()
   auto logConfigs = logging::readLogConfFile("log.conf");
 
   if (logConfigs.empty()) { // nothing has been read from log.conf
-#if BOOST_VERSION == 106900 || BOOST_VERSION == 107300
-    std::cerr << "Boost 1.69 and 1.73 get log_level is broken, preCICE log level set to debug.\n";
+#if BOOST_VERSION == 106900 || __APPLE__ && __MACH__
+    std::cerr << "Boost 1.69 and macOS get log_level is broken, preCICE log level set to debug.\n";
     auto logLevel = log_successful_tests;
 #else
     auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);

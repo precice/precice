@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
   BOOST_TEST(referenceBox == bBox);
 
   for (decltype(cog.size()) d = 0; d < cog.size(); d++) {
-    BOOST_TEST(referenceCOG[d] == cog[d]);
+    BOOST_TEST(referenceCOG.at(d) == cog(d));
   }
 }
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   BOOST_TEST(referenceBox == bBox);
 
   for (decltype(cog.size()) d = 0; d < cog.size(); d++) {
-    BOOST_TEST(referenceCOG[d] == cog[d]);
+    BOOST_TEST(referenceCOG.at(d) == cog(d));
   }
 }
 
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(Demonstration)
 
     // Validate state of mesh with data
     BOOST_TEST(mesh.data().size() == 1);
-    BOOST_TEST(mesh.data()[0]->getName() == dataName);
+    BOOST_TEST(mesh.data().at(0)->getName() == dataName);
 
     // Compute the state of the mesh elements (vertices, edges, triangles)
     mesh.computeState();
@@ -297,11 +297,11 @@ BOOST_AUTO_TEST_CASE(Demonstration)
 BOOST_AUTO_TEST_CASE(MeshEquality)
 {
   PRECICE_TEST(1_rank);
-  int   dim = 3;
-  Mesh  mesh1("Mesh1", dim, false, testing::nextMeshID());
-  Mesh  mesh1flipped("Mesh1flipped", dim, true, testing::nextMeshID());
-  Mesh  mesh2("Mesh2", dim, false, testing::nextMeshID());
-  Mesh *meshes[3] = {&mesh1, &mesh1flipped, &mesh2};
+  int                   dim = 3;
+  Mesh                  mesh1("Mesh1", dim, false, testing::nextMeshID());
+  Mesh                  mesh1flipped("Mesh1flipped", dim, true, testing::nextMeshID());
+  Mesh                  mesh2("Mesh2", dim, false, testing::nextMeshID());
+  std::array<Mesh *, 3> meshes = {&mesh1, &mesh1flipped, &mesh2};
   for (auto ptr : meshes) {
     auto &          mesh = *ptr;
     Eigen::VectorXd coords0(dim);
@@ -514,15 +514,15 @@ BOOST_AUTO_TEST_CASE(AsChain)
 
   BOOST_REQUIRE(chain.connected);
 
-  BOOST_TEST(chain.edges[0] == &e0);
-  BOOST_TEST(chain.edges[1] == &e2);
-  BOOST_TEST(chain.edges[2] == &e1);
-  BOOST_TEST(chain.edges[3] == &e3);
+  BOOST_TEST(chain.edges.at(0) == &e0);
+  BOOST_TEST(chain.edges.at(1) == &e2);
+  BOOST_TEST(chain.edges.at(2) == &e1);
+  BOOST_TEST(chain.edges.at(3) == &e3);
 
-  BOOST_TEST(chain.vertices[0] == &v1);
-  BOOST_TEST(chain.vertices[1] == &v3);
-  BOOST_TEST(chain.vertices[2] == &v2);
-  BOOST_TEST(chain.vertices[3] == &v0);
+  BOOST_TEST(chain.vertices.at(0) == &v1);
+  BOOST_TEST(chain.vertices.at(1) == &v3);
+  BOOST_TEST(chain.vertices.at(2) == &v2);
+  BOOST_TEST(chain.vertices.at(3) == &v0);
 }
 
 BOOST_AUTO_TEST_CASE(ShareVertex)
