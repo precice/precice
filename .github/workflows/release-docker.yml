@@ -6,7 +6,7 @@ jobs:
   latest:
     runs-on: ubuntu-latest
     env:
-        docker_username: benjaminrueth
+        docker_username: precice
     steps:
       - uses: actions/checkout@v2
       - name: Set up Docker Buildx
