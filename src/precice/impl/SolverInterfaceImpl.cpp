@@ -1550,7 +1550,7 @@ void SolverInterfaceImpl::performDataActions(
     double                                  time,
     double                                  timeStepSize,
     double                                  computedTimeWindowPart,
-    double                                  timeWindowSize);
+    double                                  timeWindowSize)
 {
   PRECICE_TRACE();
   for (action::PtrAction &action : _accessor->actions()) {
