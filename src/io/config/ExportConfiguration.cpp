@@ -50,14 +50,14 @@ void ExportConfiguration::xmlTagCallback(
     xml::XMLTag &                    tag)
 {
   if (tag.getNamespace() == TAG) {
-    ExportContext context;
-    context.location          = tag.getStringAttributeValue(ATTR_LOCATION);
-    context.triggerSolverPlot = tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
-    context.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
-    context.plotNormals       = tag.getBooleanAttributeValue(ATTR_NORMALS);
-    context.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
-    context.type              = tag.getName();
-    _contexts.push_back(context);
+    ExportContext econtext;
+    econtext.location          = tag.getStringAttributeValue(ATTR_LOCATION);
+    econtext.triggerSolverPlot = tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
+    econtext.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
+    econtext.plotNormals       = tag.getBooleanAttributeValue(ATTR_NORMALS);
+    econtext.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
+    econtext.type              = tag.getName();
+    _contexts.push_back(econtext);
   }
 }
 
