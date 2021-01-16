@@ -87,8 +87,6 @@ void NearestProjectionMapping::computeMapping()
 
     // Lazy evaluation of the vertex index.
     // This is not necessary in the case of matching meshes.
-    query::rtree::vertex_traits::Ptr indexVertices;
-
     utils::statistics::DistanceAccumulator distanceStatistics;
 
     for (size_t i = 0; i < fVertices.size(); i++) {
@@ -125,9 +123,6 @@ void NearestProjectionMapping::computeMapping()
 
     // Lazy evaluation of indices for edges and vertices.
     // These are not necessary in the case of matching meshes.
-    query::rtree::edge_traits::Ptr   indexEdges;
-    query::rtree::vertex_traits::Ptr indexVertices;
-
     utils::statistics::DistanceAccumulator distanceStatistics;
 
     for (size_t i = 0; i < fVertices.size(); i++) {

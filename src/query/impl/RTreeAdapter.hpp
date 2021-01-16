@@ -230,7 +230,71 @@ private:
 public:
   using type = decltype(test<Primitive>(nullptr));
 };
-
 } // namespace impl
+
+using RTreeBox        = boost::geometry::model::box<Eigen::VectorXd>;
+using Box3d           = boost::geometry::model::box<boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>>;
+using RTreeParameters = boost::geometry::index::rstar<16>;
+
+/// Type trait to extract information based on the type of a Primitive
+template <class T>
+struct PrimitiveTraits;
+
+template <>
+struct PrimitiveTraits<mesh::Vertex> {
+  using MeshContainer = mesh::Mesh::VertexContainer;
+};
+
+template <>
+struct PrimitiveTraits<mesh::Edge> {
+  using MeshContainer = mesh::Mesh::EdgeContainer;
+};
+
+template <>
+struct PrimitiveTraits<mesh::Triangle> {
+  using MeshContainer = mesh::Mesh::TriangleContainer;
+};
+
+template <class Primitive>
+struct IsDirectIndexable : impl::IsDirectIndexableHelper<Primitive>::type {
+};
+
+struct MatchType {
+  double distance;
+  int    index;
+
+  MatchType() = default;
+  MatchType(double d, int i)
+      : distance(d), index(i){};
+  constexpr bool operator<(MatchType const &other) const
+  {
+    return distance < other.distance;
+  };
+};
+
+/// The type traits of a rtree based on a Primitive
+template <class Primitive>
+struct RTreeTraits {
+  using MeshContainer      = typename PrimitiveTraits<Primitive>::MeshContainer;
+  using MeshContainerIndex = typename MeshContainer::size_type;
+
+  using IndexType = typename std::conditional<
+      IsDirectIndexable<Primitive>::value,
+      MeshContainerIndex,
+      std::pair<RTreeBox, MeshContainerIndex>>::type;
+
+  using IndexGetter = typename std::conditional<
+      IsDirectIndexable<Primitive>::value,
+      impl::VectorIndexable<MeshContainer>,
+      boost::geometry::index::indexable<IndexType>>::type;
+
+  using RTree = boost::geometry::index::rtree<IndexType, RTreeParameters, IndexGetter>;
+  using Ptr   = std::shared_ptr<RTree>;
+};
+
+using VertexTraits   = RTreeTraits<mesh::Vertex>;
+using EdgeTraits     = RTreeTraits<mesh::Edge>;
+using TriangleTraits = RTreeTraits<mesh::Triangle>;
+
 } // namespace query
 } // namespace precice

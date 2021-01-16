@@ -12,17 +12,18 @@ namespace precice {
 namespace query {
 
 namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
 
 // Initialize static member
-std::map<int, rtree::MeshIndices> precice::query::rtree::_cached_trees;
+std::map<int, rtree::MeshIndices> precice::query::rtree::_cachedTrees;
 
 rtree::MeshIndices &rtree::cacheEntry(int meshID)
 {
-  auto result = _cached_trees.emplace(std::make_pair(meshID, rtree::MeshIndices{}));
+  auto result = _cachedTrees.emplace(std::make_pair(meshID, rtree::MeshIndices{}));
   return result.first->second;
 }
 
-rtree::vertex_traits::Ptr rtree::getVertexRTree(const mesh::PtrMesh &mesh)
+VertexTraits::Ptr rtree::getVertexRTree(const mesh::PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
@@ -34,15 +35,15 @@ rtree::vertex_traits::Ptr rtree::getVertexRTree(const mesh::PtrMesh &mesh)
   // the best we can do. Even passing an index range instead of calling
   // tree->insert repeatedly is about 10x faster.
   RTreeParameters            params;
-  vertex_traits::IndexGetter ind(mesh->vertices());
-  auto                       tree = std::make_shared<vertex_traits::RTree>(
+  VertexTraits::IndexGetter ind(mesh->vertices());
+  auto                       tree = std::make_shared<VertexTraits::RTree>(
       boost::irange<std::size_t>(0lu, mesh->vertices().size()), params, ind);
 
   cache.vertices = tree;
   return tree;
 }
 
-rtree::edge_traits::Ptr rtree::getEdgeRTree(const mesh::PtrMesh &mesh)
+EdgeTraits::Ptr rtree::getEdgeRTree(const mesh::PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
@@ -54,15 +55,15 @@ rtree::edge_traits::Ptr rtree::getEdgeRTree(const mesh::PtrMesh &mesh)
   // the best we can do. Even passing an index range instead of calling
   // tree->insert repeatedly is about 10x faster.
   RTreeParameters          params;
-  edge_traits::IndexGetter ind(mesh->edges());
-  auto                     tree = std::make_shared<edge_traits::RTree>(
+  EdgeTraits::IndexGetter ind(mesh->edges());
+  auto                     tree = std::make_shared<EdgeTraits::RTree>(
       boost::irange<std::size_t>(0lu, mesh->edges().size()), params, ind);
 
   cache.edges = tree;
   return tree;
 }
 
-rtree::triangle_traits::Ptr rtree::getTriangleRTree(const mesh::PtrMesh &mesh)
+TriangleTraits::Ptr rtree::getTriangleRTree(const mesh::PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
@@ -73,7 +74,7 @@ rtree::triangle_traits::Ptr rtree::getTriangleRTree(const mesh::PtrMesh &mesh)
   // We first generate the values for the triangle rtree.
   // The resulting vector is a random access range, which can be passed to the
   // constructor of the rtree for more efficient indexing.
-  std::vector<triangle_traits::IndexType> elements;
+  std::vector<TriangleTraits::IndexType> elements;
   elements.reserve(mesh->triangles().size());
   for (size_t i = 0; i < mesh->triangles().size(); ++i) {
     auto box = bg::return_envelope<RTreeBox>(mesh->triangles()[i]);
@@ -83,8 +84,8 @@ rtree::triangle_traits::Ptr rtree::getTriangleRTree(const mesh::PtrMesh &mesh)
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do.
   RTreeParameters              params;
-  triangle_traits::IndexGetter ind;
-  auto                         tree = std::make_shared<triangle_traits::RTree>(elements, params, ind);
+  TriangleTraits::IndexGetter ind;
+  auto                         tree = std::make_shared<TriangleTraits::RTree>(elements, params, ind);
   cache.triangles                   = tree;
   return tree;
 }
@@ -93,7 +94,7 @@ std::vector<MatchType> rtree::getClosestVertex(const mesh::Vertex &source, const
 {
   auto tree = getVertexRTree(targetMesh);
   std::vector<MatchType> matches;
-  tree->query(boost::geometry::index::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
+  tree->query(bgi::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
                 matches.emplace_back(boost::geometry::distance(source, targetMesh->vertices()[matchID]), matchID);
               }));
   std::sort(matches.begin(), matches.end());
@@ -104,7 +105,7 @@ std::vector<MatchType> rtree::getClosestEdge(const mesh::Vertex &source, const m
 {
   auto tree = getEdgeRTree(targetMesh);
   std::vector<MatchType> matches;
-  tree->query(boost::geometry::index::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
+  tree->query(bgi::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
                 matches.emplace_back(boost::geometry::distance(source, targetMesh->edges()[matchID]), matchID);
               }));
   std::sort(matches.begin(), matches.end());
@@ -115,8 +116,8 @@ std::vector<MatchType> rtree::getClosestTriangle(const mesh::Vertex &source, con
 {
   auto tree = getTriangleRTree(targetMesh);
   std::vector<MatchType> matches;
-  tree->query(bg::index::nearest(source, n),
-              boost::make_function_output_iterator([&](query::rtree::triangle_traits::IndexType const &match) {
+  tree->query(bgi::nearest(source, n),
+              boost::make_function_output_iterator([&](TriangleTraits::IndexType const &match) {
                 matches.emplace_back(bg::distance(source, targetMesh->triangles()[match.second]), match.second);
               }));
   std::sort(matches.begin(), matches.end());
@@ -127,19 +128,27 @@ std::vector<size_t> rtree::getVerticesInsideBox(const Box3d &searchBox, const me
 {
   auto tree = getVertexRTree(targetMesh);
   std::vector<size_t> matches;
-  tree->query(bg::index::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, targetMesh->vertices()[i]) <= supportRadius; }),
+  tree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, targetMesh->vertices()[i]) <= supportRadius; }),
               std::back_inserter(matches));
   return matches;
 }
 
+void rtree::tagAllInsideBox(const mesh::BoundingBox &boundingBox, const mesh::PtrMesh& targetMesh){
+  auto tree = getVertexRTree(targetMesh);
+  tree->query(bgi::intersects(RTreeBox(boundingBox.minCorner(), boundingBox.maxCorner())),
+                 boost::make_function_output_iterator([&targetMesh](size_t idx) {
+                   targetMesh->vertices()[idx].tag();
+                 }));
+}
+
 void rtree::clear(mesh::Mesh &mesh)
 {
-  _cached_trees.erase(mesh.getID());
+  _cachedTrees.erase(mesh.getID());
 }
 
 void rtree::clear()
 {
-  _cached_trees.clear();
+  _cachedTrees.clear();
 }
 
 Box3d getEnclosingBox(mesh::Vertex const &middlePoint, double sphereRadius)

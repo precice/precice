@@ -491,16 +491,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
 
   if (_basisFunction.hasCompactSupport()) {
-
-    auto rtree    = query::rtree::getVertexRTree(filterMesh);
-    namespace bgi = boost::geometry::index;
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
     bb.expandBy(_basisFunction.getSupportRadius());
-    rtree->query(bgi::intersects(toRTreeBox(bb)),
-                 boost::make_function_output_iterator([&filterMesh](size_t idx) {
-                   filterMesh->vertices()[idx].tag();
-                 }));
+    query::rtree::tagAllInsideBox(bb, filterMesh);
   } else {
     filterMesh->tagAll();
   }
@@ -510,7 +504,6 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
   PRECICE_TRACE();
-  namespace bgi = boost::geometry::index;
 
   if (not _basisFunction.hasCompactSupport())
     return; // Tags should not be changed
@@ -533,12 +526,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   }
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
-  auto rtree = query::rtree::getVertexRTree(mesh);
-
-  rtree->query(bgi::intersects(toRTreeBox(bb)),
-               boost::make_function_output_iterator([&mesh](size_t idx) {
-                 mesh->vertices()[idx].tag();
-               }));
+  query::rtree::tagAllInsideBox(bb, mesh);
 }
 
 // ------- Non-Member Functions ---------

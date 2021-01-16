@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
   Eigen::VectorXd                        searchVector(Eigen::Vector3d(0.7, 0.5, 0.0));
   std::vector<std::pair<double, size_t>> results;
 
-  tree->query(bgi::nearest(searchVector, 3), boost::make_function_output_iterator([&](const precice::query::rtree::triangle_traits::IndexType &val) {
+  tree->query(bgi::nearest(searchVector, 3), boost::make_function_output_iterator([&](const precice::query::TriangleTraits::IndexType &val) {
                 results.push_back(std::make_pair(
                     boost::geometry::distance(
                         searchVector,
