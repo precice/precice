@@ -757,13 +757,13 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
                           << meshName << "\" is not configured.");
 }
 
-mesh::PtrData CouplingSchemeConfiguration::findDataByID(
+std::pair<mesh::PtrData, mesh::PtrMesh> CouplingSchemeConfiguration::findDataByID(
     int ID) const
 {
   for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
     for (mesh::PtrData data : mesh->data()) {
       if (data->getID() == ID) {
-        return data;
+        return {data, mesh};
       }
     }
   }
@@ -1113,7 +1113,7 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
 
   PRECICE_ERROR("You need to exchange every data that you use for convergence measures "
                 << "and/or the iteration acceleration. Data \"" << dataName << "\" is "
-                << "currently not exchanged, but used for convergence measures and/or iteration "
+                << "currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration "
                 << "acceleration. Please check the <exchange ... /> and "
                 << "<...-convergence-measure ... /> tags in the "
                 << "<coupling-scheme:... /> of your precice-config.xml.");
