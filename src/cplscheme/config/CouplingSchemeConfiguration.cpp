@@ -757,13 +757,13 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
                           << meshName << "\" is not configured.");
 }
 
-std::pair<mesh::PtrData, mesh::PtrMesh> CouplingSchemeConfiguration::findDataByID(
+mesh::PtrData CouplingSchemeConfiguration::findDataByID(
     int ID) const
 {
   for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
     for (mesh::PtrData data : mesh->data()) {
       if (data->getID() == ID) {
-        return {data, mesh};
+        return data;
       }
     }
   }
