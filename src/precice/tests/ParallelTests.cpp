@@ -1222,7 +1222,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase1)
 }
 
 // Simple 2 triangles. Read mapping on parallel participant B.
-// This test does not pass. When the from-mesh is repartitioned, ranks does not own all the vertices in the corresponding triangles.
 BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase2)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(2_ranks));
@@ -1344,7 +1343,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase2)
   }
 }
 
-// Diamond shped 2 triangles. Read mapping on serial participant B
+// Diamond shaped 2 triangles. Read mapping on serial participant B
 BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase3)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(1_rank));

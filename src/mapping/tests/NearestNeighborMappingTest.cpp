@@ -213,7 +213,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
-  // Map data with coinciding vertices, has to result in equal values.
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
 

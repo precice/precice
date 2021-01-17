@@ -135,7 +135,7 @@ MappingConfiguration::MappingConfiguration(
                         .setDocumentation("The mesh to map the data to.");
 
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
-                            .setDocumentation("Use conservative or scaled-consistent to conserve the quantity of the data over the interface such as force or mass. Use consistent for normalized quantities such as temperature or pressure.")
+                            .setDocumentation("Use conservative to conserve the nodal sum of the data over the interface (needed e.g. for force mapping).  Use consistent for normalized quantities such as temperature or pressure. Use scaled-consistent for normalized quantities where conservation of integral values is needed (e.g. velocities when the mass flow rate needs to be conserved). Mesh connectivity is required to use scaled-consistent.")
                             .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT, VALUE_SCALED_CONSISTENT});
 
   auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
