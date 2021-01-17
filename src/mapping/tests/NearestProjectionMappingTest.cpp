@@ -262,6 +262,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
 
   auto   outputIntegral = mesh::integrate(outMesh, outData);
   double scaleFactor    = outValues(1) / inValues(0);
+  BOOST_TEST(scaleFactor != 1.0);
 
   // Validate results
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -323,6 +324,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
 
   auto   outputIntegral = mesh::integrate(outMesh, outData);
   double scaleFactor    = outValues(0) / inValues(0);
+  BOOST_TEST(scaleFactor != 1.0);
 
   // Validate results
   BOOST_TEST(mapping.hasComputedMapping() == true);
