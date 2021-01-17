@@ -347,8 +347,7 @@ public:
    * 
    * @returns the set of ids.
    */
-  [[deprecated("Use getMeshID() for each meshName instead.")]]
-  std::set<int> getMeshIDs() const;
+  [[deprecated("Use getMeshID() for each meshName instead.")]] std::set<int> getMeshIDs() const;
 
   /**
    * @brief Creates a mesh vertex
