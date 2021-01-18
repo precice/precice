@@ -46,7 +46,6 @@ private:
 
   const std::string ATTR_EVERY_N_TIME_WINDOWS = "every-n-time-windows";
   const std::string ATTR_NEIGHBORS            = "neighbors";
-  const std::string ATTR_TRIGGER_SOLVER       = "trigger-solver";
   const std::string ATTR_NORMALS              = "normals";
   const std::string ATTR_EVERY_ITERATION      = "every-iteration";
 

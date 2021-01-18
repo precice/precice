@@ -358,9 +358,6 @@ void SolverInterfaceImpl::initializeData()
       std::ostringstream suffix;
       suffix << _accessorName << ".init";
       exportMesh(suffix.str());
-      if (context.triggerSolverPlot) {
-        _couplingScheme->requireAction(std::string("plot-output"));
-      }
     }
   }
   solverInitEvent.start(precice::syncMode);
@@ -470,9 +467,6 @@ void SolverInterfaceImpl::finalize()
         std::ostringstream suffix;
         suffix << _accessorName << ".final";
         exportMesh(suffix.str());
-        if (context.triggerSolverPlot) {
-          _couplingScheme->requireAction(std::string("plot-output"));
-        }
       }
     }
     // Apply some final ping-pong to synch solver that run e.g. with a uni-directional coupling only
@@ -1586,9 +1580,6 @@ void SolverInterfaceImpl::handleExports()
           std::ostringstream suffix;
           suffix << _accessorName << ".dt" << _couplingScheme->getTimeWindows() - 1;
           exportMesh(suffix.str());
-          if (context.triggerSolverPlot) {
-            _couplingScheme->requireAction(std::string("plot-output"));
-          }
         }
       }
     }
