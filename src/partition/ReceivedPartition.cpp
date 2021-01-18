@@ -493,7 +493,7 @@ void ReceivedPartition::createOwnerInformation()
       std::vector<int> ownerVec(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(ownerVec, 0);
       PRECICE_DEBUG("My owner information: " << ownerVec);
-      PRECICE_ASSERT(ownerVec.size() == numberOfVertices);
+      PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfVertices));
       setOwnerInformation(ownerVec);
     }
   }
