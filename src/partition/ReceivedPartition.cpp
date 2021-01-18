@@ -455,7 +455,7 @@ void ReceivedPartition::prepareBoundingBox()
   PRECICE_DEBUG("Merge bounding boxes and increase by safety factor");
 
   // Create BB around all "other" meshes
-  for (mapping::PtrMapping fromMapping : _fromMappings) {
+  for (mapping::PtrMapping& fromMapping : _fromMappings) {
     auto other_bb = fromMapping->getOutputMesh()->getBoundingBox();
     _bb.expandBy(other_bb);
     _bb.scaleBy(_safetyFactor);
