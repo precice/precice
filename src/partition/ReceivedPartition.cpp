@@ -104,7 +104,7 @@ void ReceivedPartition::compute()
 
   // check to prevent false configuration
   if (not utils::MasterSlave::isSlave()) {
-    PRECICE_CHECK(_fromMapping || _toMapping,
+    PRECICE_CHECK(hasAnyMapping(),
                   "The received mesh " << _mesh->getName()
                                        << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
   }
@@ -119,10 +119,7 @@ void ReceivedPartition::compute()
   PRECICE_DEBUG("Tag vertices for filtering: 1st round.");
   _mesh->computeState(); // normals need to be ready for NP mapping
   // go to both meshes, vertex is tagged if already one mesh tags him
-  if (_fromMapping)
-    _fromMapping->tagMeshFirstRound();
-  if (_toMapping)
-    _toMapping->tagMeshFirstRound();
+  tagMeshFirstRound();
 
   // (3) Define which vertices are owned by this rank
   PRECICE_DEBUG("Create owner information.");
@@ -130,10 +127,7 @@ void ReceivedPartition::compute()
 
   // (4) Tag vertices 2nd round (what should be filtered out)
   PRECICE_DEBUG("Tag vertices for filtering: 2nd round.");
-  if (_fromMapping)
-    _fromMapping->tagMeshSecondRound();
-  if (_toMapping)
-    _toMapping->tagMeshSecondRound();
+  tagMeshSecondRound();
 
   // (5) Filter mesh according to tag
   PRECICE_INFO("Filter mesh " << _mesh->getName() << " by mappings");
@@ -281,7 +275,7 @@ void ReceivedPartition::filterByBoundingBox()
       PRECICE_DEBUG("Receive filtered mesh");
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
 
-      if (areProvidedMeshesEmpty()) {
+      if (isAnyProvidedMeshNonEmpty()) {
         PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
       }
 
@@ -310,7 +304,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
 
-      if (areProvidedMeshesEmpty()) {
+      if (isAnyProvidedMeshNonEmpty()) {
         PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
       }
     }
@@ -334,7 +328,7 @@ void ReceivedPartition::filterByBoundingBox()
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
 
-      if (areProvidedMeshesEmpty()) {
+      if (isAnyProvidedMeshNonEmpty()) {
         PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
       }
 
@@ -450,15 +444,15 @@ void ReceivedPartition::prepareBoundingBox()
 
   PRECICE_DEBUG("Merge bounding boxes and increase by safety factor");
 
-  // Create BB around both "other" meshes
-  if (_fromMapping) {
-    auto other_bb = _fromMapping->getOutputMesh()->getBoundingBox();
+  // Create BB around all "other" meshes
+  for (mapping::PtrMapping &fromMapping : _fromMappings) {
+    auto other_bb = fromMapping->getOutputMesh()->getBoundingBox();
     _bb.expandBy(other_bb);
     _bb.scaleBy(_safetyFactor);
     _boundingBoxPrepared = true;
   }
-  if (_toMapping) {
-    auto other_bb = _toMapping->getInputMesh()->getBoundingBox();
+  for (mapping::PtrMapping &toMapping : _toMappings) {
+    auto other_bb = toMapping->getInputMesh()->getBoundingBox();
     _bb.expandBy(other_bb);
     _bb.scaleBy(_safetyFactor);
     _boundingBoxPrepared = true;
@@ -610,10 +604,44 @@ void ReceivedPartition::createOwnerInformation()
   }
 }
 
-bool ReceivedPartition::areProvidedMeshesEmpty() const
+bool ReceivedPartition::isAnyProvidedMeshNonEmpty() const
 {
-  return (_fromMapping && not _fromMapping->getOutputMesh()->vertices().empty()) ||
-         (_toMapping && not _toMapping->getInputMesh()->vertices().empty());
+  for (const auto &fromMapping : _fromMappings) {
+    if (not fromMapping->getOutputMesh()->vertices().empty()) {
+      return true;
+    }
+  }
+  for (const auto &toMapping : _toMappings) {
+    if (not toMapping->getInputMesh()->vertices().empty()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ReceivedPartition::hasAnyMapping() const
+{
+  return not(_fromMappings.empty() && _toMappings.empty());
+}
+
+void ReceivedPartition::tagMeshFirstRound()
+{
+  for (mapping::PtrMapping fromMapping : _fromMappings) {
+    fromMapping->tagMeshFirstRound();
+  }
+  for (mapping::PtrMapping toMapping : _toMappings) {
+    toMapping->tagMeshFirstRound();
+  }
+}
+
+void ReceivedPartition::tagMeshSecondRound()
+{
+  for (mapping::PtrMapping fromMapping : _fromMappings) {
+    fromMapping->tagMeshSecondRound();
+  }
+  for (mapping::PtrMapping toMapping : _toMappings) {
+    toMapping->tagMeshSecondRound();
+  }
 }
 
 void ReceivedPartition::setOwnerInformation(const std::vector<int> &ownerVec)
