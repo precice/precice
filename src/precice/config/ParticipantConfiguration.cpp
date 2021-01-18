@@ -581,27 +581,29 @@ void ParticipantConfiguration::checkIllDefinedMappings(
         for (const mesh::PtrData &configuredData : configuredMapping.fromMesh->data()) {
           bool sameFromData = data->getName() == configuredData->getName();
 
-          if (sameFromData) {
-            bool sameDirection = false;
-
-            if (mapping.direction == mapping::MappingConfiguration::WRITE) {
-              for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
-                sameDirection |= data->getName() == dataContext.getName();
-              }
-            }
-            if (mapping.direction == mapping::MappingConfiguration::READ) {
-              for (const impl::DataContext &dataContext : participant->readDataContexts()) {
-                sameDirection |= data->getName() == dataContext.getName();
-              }
-            }
-            PRECICE_CHECK(!sameDirection, "There cannot be two mappings to mesh \""
-                                              << mapping.toMesh->getName() << "\" "
-                                              << "if the meshes from which is mapped contain duplicated data fields "
-                                              << "that are also actually mapped on this participant. "
-                                              << "Here, both from meshes contain data \"" << data->getName() << "\". "
-                                              << "The mapping is not well defined. Which data \"" << data->getName() << "\" "
-                                              << "should be mapped to mesh \"" << mapping.toMesh->getName() << "\"?");
+          if (not sameFromData) {
+            continue;
           }
+
+          bool sameDirection = false;
+
+          if (mapping.direction == mapping::MappingConfiguration::WRITE) {
+            for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
+              sameDirection |= data->getName() == dataContext.getName();
+            }
+          }
+          if (mapping.direction == mapping::MappingConfiguration::READ) {
+            for (const impl::DataContext &dataContext : participant->readDataContexts()) {
+              sameDirection |= data->getName() == dataContext.getName();
+            }
+          }
+          PRECICE_CHECK(!sameDirection, "There cannot be two mappings to mesh \""
+                                            << mapping.toMesh->getName() << "\" "
+                                            << "if the meshes from which is mapped contain duplicated data fields "
+                                            << "that are also actually mapped on this participant. "
+                                            << "Here, both from meshes contain data \"" << data->getName() << "\". "
+                                            << "The mapping is not well defined. Which data \"" << data->getName() << "\" "
+                                            << "should be mapped to mesh \"" << mapping.toMesh->getName() << "\"?");
         }
       }
     }
