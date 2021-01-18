@@ -572,13 +572,13 @@ void ParticipantConfiguration::checkIllDefinedMappings(
     bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
     bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     if (sameToMesh && sameFromMesh) {
-      // It's really the same mapping, duplicated mappings are already checked for in MappingConfiguration
+      // It's really the same mapping, not a duplicated one. Those are already checked for in MappingConfiguration.
       return;
     }
 
     if (sameToMesh) {
-      for (const mesh::PtrData& data : mapping.fromMesh->data()) {
-        for (const mesh::PtrData& configuredData : configuredMapping.fromMesh->data()) {
+      for (const mesh::PtrData &data : mapping.fromMesh->data()) {
+        for (const mesh::PtrData &configuredData : configuredMapping.fromMesh->data()) {
           bool sameFromData = data->getName() == configuredData->getName();
 
           if (sameFromData) {
