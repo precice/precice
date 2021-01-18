@@ -363,7 +363,7 @@ void precice::impl::checkCorrectUsage(int useFluid)
 }
 
 #ifdef __GNUC__
-#pragma GCC diagnostic push
+#pragma GCC diagnostic pop
 #endif
 #ifdef __clang__
 #pragma clang diagnostic pop
