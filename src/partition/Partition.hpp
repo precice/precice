@@ -47,7 +47,7 @@ public:
 
   void addFromMapping(mapping::PtrMapping fromMapping)
   {
-    _fromMappings.push_back(fromMapping);
+    _fromMappings.push_back(std::move(fromMapping));
   }
 
   void addToMapping(mapping::PtrMapping toMapping)
