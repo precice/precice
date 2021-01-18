@@ -621,7 +621,7 @@ bool ReceivedPartition::isAnyProvidedMeshNonEmpty() const
       return true;
     }
   }
-  for (mapping::PtrMapping toMapping : _toMappings) {
+  for (const auto& toMapping : _toMappings) {
     if (not toMapping->getInputMesh()->vertices().empty()) {
       return true;
     }
