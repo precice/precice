@@ -590,7 +590,7 @@ void ParticipantConfiguration::checkIllDefinedMappings(
               }
             }
             if (mapping.direction == mapping::MappingConfiguration::READ) {
-              for (impl::DataContext &dataContext : participant->readDataContexts()) {
+              for (const impl::DataContext &dataContext : participant->readDataContexts()) {
                 sameDirection |= data->getName() == dataContext.getName();
               }
             }
