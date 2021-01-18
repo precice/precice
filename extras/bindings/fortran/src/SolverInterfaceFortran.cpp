@@ -519,7 +519,7 @@ void precicef_get_version_information_(
 }
 
 #ifdef __GNUC__
-#pragma GCC diagnostic push
+#pragma GCC diagnostic pop
 #endif
 #ifdef __clang__
 #pragma clang diagnostic pop
