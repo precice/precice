@@ -60,7 +60,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, "mpi", occ, TAG);
+    XMLTag tag(*this, "mpi-multiple-ports", occ, TAG);
     doc = "Communication via MPI with startup in separated communication spaces, using multiple communicators.";
     tag.setDocumentation(doc);
 
@@ -73,7 +73,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, "mpi-singleports", occ, TAG);
+    XMLTag tag(*this, "mpi", occ, TAG);
     doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
     tag.setDocumentation(doc);
 
@@ -151,10 +151,10 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
       comFactory      = std::make_shared<com::SocketCommunicationFactory>(port, false, network, dir);
       com             = comFactory->newCommunication();
-    } else if (tag.getName() == "mpi") {
+    } else if (tag.getName() == "mpi-multiple-ports") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      PRECICE_ERROR("Communication type \"mpi\" can only be used if preCICE was compiled with MPI support enabled. "
+      PRECICE_ERROR("Communication type \"mpi-multiple-ports\" can only be used if preCICE was compiled with MPI support enabled. "
                     "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
 #ifdef OMPI_MAJOR_VERSION
@@ -163,10 +163,10 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
-    } else if (tag.getName() == "mpi-singleports") {
+    } else if (tag.getName() == "mpi") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      PRECICE_ERROR("Communication type \"mpi-singleports\" can only be used if preCICE was compiled with MPI support enabled. "
+      PRECICE_ERROR("Communication type \"mpi\" can only be used if preCICE was compiled with MPI support enabled. "
                     "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
 #ifdef OMPI_MAJOR_VERSION
