@@ -585,7 +585,7 @@ void ParticipantConfiguration::checkIllDefinedMappings(
             bool sameDirection = false;
 
             if (mapping.direction == mapping::MappingConfiguration::WRITE) {
-              for (impl::DataContext &dataContext : participant->writeDataContexts()) {
+              for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
                 sameDirection |= data->getName() == dataContext.getName();
               }
             }
