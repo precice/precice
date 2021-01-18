@@ -51,11 +51,11 @@ struct MeshContext {
   /// Partition creating the parallel decomposition of the mesh
   partition::PtrPartition partition;
 
-  /// Mapping used when mapping data from the mesh. Can be empty.
-  MappingContext fromMappingContext;
+  /// Mappings used when mapping data from the mesh. Can be empty.
+  std::vector<MappingContext> fromMappingContexts;
 
-  /// Mapping used when mapping data to the mesh. Can be empty.
-  MappingContext toMappingContext;
+  /// Mappings used when mapping data to the mesh. Can be empty.
+  std::vector<MappingContext> toMappingContexts;
 };
 
 inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement)
