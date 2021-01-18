@@ -343,11 +343,11 @@ public:
    * @brief Returns a id-set of all used meshes by this participant.
    *
    * @deprecated Unclear use case and difficult to port to other languages.
-   *             Prefer calling getMeshID for each meshName.
+   *             Prefer calling getMeshID for specific mesh names.
    * 
    * @returns the set of ids.
    */
-  [[deprecated("Use getMeshID() for each meshName instead.")]] std::set<int> getMeshIDs() const;
+  [[deprecated("Use getMeshID() for specific mesh names instead.")]] std::set<int> getMeshIDs() const;
 
   /**
    * @brief Creates a mesh vertex
