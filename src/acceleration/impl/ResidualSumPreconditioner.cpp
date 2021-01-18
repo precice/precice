@@ -64,7 +64,7 @@ void ResidualSumPreconditioner::_update_(bool                   timestepComplete
 
     offset = 0;
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
-      if (!math::equals(_residualSum[k], 0.0)) {
+      if (not math::equals(_residualSum[k], 0.0)) {
         for (size_t i = 0; i < _subVectorSizes[k]; i++) {
           _weights[i + offset]    = 1 / _residualSum[k];
           _invWeights[i + offset] = _residualSum[k];
