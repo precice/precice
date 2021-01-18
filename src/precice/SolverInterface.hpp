@@ -272,7 +272,7 @@ public:
    *
    * @see hasToEvaluateSurrogateModel()
    */
-  [[deprecated("The manifold mapping feature is currently not maintained.")]] bool hasToEvaluateFineModel() const;
+  [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateFineModel() const;
 
   ///@}
 
