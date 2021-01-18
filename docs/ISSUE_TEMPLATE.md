@@ -1,6 +1,6 @@
 <!-- You are very welcome to open issues (mainly for bug reports) here! 
      If you need help building or using preCICE, please contact us:
-     https://www.precice.org/resources/#contact
+     https://www.precice.org/community-channels.html
      
      Don't forget to attach your preCICE configuration file!
      
@@ -10,5 +10,5 @@
        https://www.precice.org/configuration-logging.html
      * Any relevant solver configuration
      * Your preCICE version or commit number
-     * Information about your platform/OS and dependecies (e.g. MPI implementation and version, PETSc, Boost etc)
+     * Information about your platform/OS and dependencies (e.g. MPI implementation and version, PETSc, Boost etc)
 -->
