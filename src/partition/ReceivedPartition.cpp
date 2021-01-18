@@ -461,7 +461,7 @@ void ReceivedPartition::prepareBoundingBox()
     _bb.scaleBy(_safetyFactor);
     _boundingBoxPrepared = true;
   }
-  for (mapping::PtrMapping toMapping : _toMappings) {
+  for (mapping::PtrMapping& toMapping : _toMappings) {
     auto other_bb = toMapping->getInputMesh()->getBoundingBox();
     _bb.expandBy(other_bb);
     _bb.scaleBy(_safetyFactor);
