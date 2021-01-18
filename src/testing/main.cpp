@@ -79,9 +79,9 @@ bool init_unit_test()
     config.output = "test.log";
     logConfigs.push_back(config);
 
-    // The full log
-    config.output = "test.full.log";
-    config.filter = "";
+    // The full debug log
+    config.output = "test.debug.log";
+    config.filter = "%Severity% >= debug";
     logConfigs.push_back(config);
   }
 
