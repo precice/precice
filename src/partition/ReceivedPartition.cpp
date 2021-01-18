@@ -616,7 +616,7 @@ void ReceivedPartition::createOwnerInformation()
 
 bool ReceivedPartition::isAnyProvidedMeshNonEmpty() const
 {
-  for (mapping::PtrMapping fromMapping : _fromMappings) {
+  for (const auto& fromMapping : _fromMappings) {
     if (not fromMapping->getOutputMesh()->vertices().empty()) {
       return true;
     }
