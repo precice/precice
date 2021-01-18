@@ -998,13 +998,11 @@ void SolverInterfaceImpl::mapWriteDataFrom(
         continue;
       }
 
-      int inDataID             = context.fromData->getID();
-      int outDataID            = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" from mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
-      mappingContext.mapping->map(inDataID, outDataID);
+      mappingContext.mapping->map(context.fromData->getID(), context.toData->getID());
     }
     mappingContext.hasMappedData = true;
   }
@@ -1036,13 +1034,11 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.mesh->getID() != toMeshID) {
         continue;
       }
-      int inDataID             = context.fromData->getID();
-      int outDataID            = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" to mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
-      mappingContext.mapping->map(inDataID, outDataID);
+      mappingContext.mapping->map(context.fromData->getID(), context.toData->getID());
       PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
     }
     mappingContext.hasMappedData = true;
