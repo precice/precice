@@ -978,13 +978,11 @@ void SolverInterfaceImpl::mapWriteDataFrom(
   PRECICE_VALIDATE_MESH_ID(fromMeshID);
   impl::MeshContext &context = _accessor->meshContext(fromMeshID);
 
-  if (context.fromMappingContexts.empty()) {
-    PRECICE_ERROR("You attempt to \"mapWriteDataFrom\" mesh "
-                  << context.mesh->getName()
-                  << ", but there is no mapping from this mesh configured."
-                     "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
-    return;
-  }
+  PRECICE_CHECK(not context.fromMappingContexts.empty(),
+                "You attempt to \"mapWriteDataFrom\" mesh "
+                    << context.mesh->getName()
+                    << ", but there is no mapping from this mesh configured."
+                       "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
 
   double time = _couplingScheme->getTime();
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0, 0, 0);
@@ -1020,13 +1018,11 @@ void SolverInterfaceImpl::mapReadDataTo(
   PRECICE_VALIDATE_MESH_ID(toMeshID);
   impl::MeshContext &context = _accessor->meshContext(toMeshID);
 
-  if (context.toMappingContexts.empty()) {
-    PRECICE_ERROR("You attempt to \"mapReadDataTo\" mesh "
-                  << context.mesh->getName()
-                  << ", but there is no mapping to this mesh configured."
-                     "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
-    return;
-  }
+  PRECICE_CHECK(not context.toMappingContexts.empty(),
+                "You attempt to \"mapReadDataTo\" mesh "
+                    << context.mesh->getName()
+                    << ", but there is no mapping to this mesh configured."
+                       "Maybe you don't want to call this function at all or you forgot to configure the mapping.");
 
   double time = _couplingScheme->getTime();
   performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0, 0, 0);
