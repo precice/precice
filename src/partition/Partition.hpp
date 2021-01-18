@@ -52,7 +52,7 @@ public:
 
   void addToMapping(mapping::PtrMapping toMapping)
   {
-    _toMappings.push_back(toMapping);
+    _toMappings.push_back(std::move(toMapping));
   }
 
   void addM2N(m2n::PtrM2N m2n)
