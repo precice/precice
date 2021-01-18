@@ -578,7 +578,7 @@ void ParticipantConfiguration::checkIllDefinedMappings(
 
     if (sameToMesh) {
       for (const mesh::PtrData& data : mapping.fromMesh->data()) {
-        for (const mesh::PtrData configuredData : configuredMapping.fromMesh->data()) {
+        for (const mesh::PtrData& configuredData : configuredMapping.fromMesh->data()) {
           bool sameFromData = data->getName() == configuredData->getName();
 
           if (sameFromData) {
