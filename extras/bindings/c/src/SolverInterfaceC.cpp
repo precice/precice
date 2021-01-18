@@ -9,7 +9,6 @@ extern "C" {
 #include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 
-
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
