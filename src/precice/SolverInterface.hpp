@@ -257,7 +257,7 @@ public:
    *
    * @see hasToEvaluateFineModel()
    */
-  [[deprecated("The manifold mapping feature is currently not maintained.")]] bool hasToEvaluateSurrogateModel() const;
+  [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateSurrogateModel() const;
 
   /**
    * @brief Checks if the solver has to evaluate the fine model representation.
