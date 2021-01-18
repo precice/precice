@@ -1380,10 +1380,10 @@ void SolverInterfaceImpl::configurePartitions(
       m2n::PtrM2N m2n = m2nConfig->getM2N(receiver, provider);
       m2n->createDistributedCommunication(context->mesh);
       context->partition->addM2N(m2n);
-      for (MappingContext &mappingContext : context->fromMappingContexts) {
+      for (const MappingContext &mappingContext : context->fromMappingContexts) {
         context->partition->addFromMapping(mappingContext.mapping);
       }
-      for (MappingContext &mappingContext : context->toMappingContexts) {
+      for (const MappingContext &mappingContext : context->toMappingContexts) {
         context->partition->addToMapping(mappingContext.mapping);
       }
     }
