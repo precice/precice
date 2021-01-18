@@ -63,6 +63,15 @@ private:
    */
   bool isAnyProvidedMeshNonEmpty() const;
 
+  /// Returns whether any mapping is defined
+  bool hasAnyMapping() const;
+
+  /// Tag mesh in first round accoring to all mappings
+  void tagMeshFirstRound();
+
+  /// Tag mesh in second round accoring to all mappings
+  void tagMeshSecondRound();
+
   void createOwnerInformation();
 
   /// Helper function for 'createOwnerFunction' to set local owner information
