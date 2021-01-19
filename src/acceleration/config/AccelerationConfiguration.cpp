@@ -393,6 +393,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     XMLAttribute<double> attrValue(ATTR_VALUE);
     attrValue.setDocumentation("Initial relaxation factor.");
     tagInitRelax.addAttribute(attrValue);
+    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE, false);
+    attrEnforce.setDocumentation("For Aitken underrelaxation, this attribute has no effect.");
+    tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
     XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
