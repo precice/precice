@@ -38,8 +38,8 @@
       <time-window-size value="1.0" />
       <exchange data="Data" mesh="B-Mesh" from="A" to="B" />
       <exchange data="Data2" mesh="B-Mesh" from="B" to="A" />
-      <max-iterations value="2"/>
-      <relative-convergence-measure limit="1.0e-5" data="Data" mesh="B-Mesh"/>
+      <max-iterations value="2" />
+      <relative-convergence-measure limit="1.0e-5" data="Data" mesh="B-Mesh" />
       <acceleration:aitken>
         <data mesh="B-Mesh" name="Data" />
         <initial-relaxation value="0.1" />
