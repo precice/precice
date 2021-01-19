@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file. For future 
 - Extended configuration and repartitioning to allow the user to define multiple mappings from and/or to the same mesh.
 - Fixed MacOS compilation and test errors.
 - Fixed a bug in ReceivedPartition which led to problems when coupling multiple participants.
+- Fixed a bug in the configuration of Aitken underrelexation.
 - Fixed an issue when running the tests with Intel MPI.
 - Fixed an occasional issue solving the system matrix in PETSc-based RBF mappings.
 - Fixed boost log_level issues on MacOS.
