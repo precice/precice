@@ -1,22 +1,25 @@
-<?xml version="1.0"?>
-
-<!--
-  Configuration for test with explicit coupling scheme and fixed timestepping.
-  -->
+<?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-   <data:scalar name="Data0"/>
-   <data:vector name="Data1"/>
-   <mesh name="Mesh">
-      <use-data name="Data0"/>
-      <use-data name="Data1"/>
-   </mesh>
-   <m2n:sockets from="Participant0" to="Participant1"/>
-   <coupling-scheme:serial-explicit>
-      <participants first="Participant0" second="Participant1"/>
-      <time-window-size value="0.1" method="fixed"/>
-      <max-time value="1.0"/>
-      <max-time-windows value="10"/>
-      <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1"/>
-      <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0"/>
-   </coupling-scheme:serial-explicit>
+  <data:scalar name="Data0" />
+  <data:vector name="Data1" />
+
+  <mesh name="Mesh">
+    <use-data name="Data0" />
+    <use-data name="Data1" />
+  </mesh>
+
+  <m2n:sockets from="Participant0" to="Participant1" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="Participant0" second="Participant1" />
+
+    <time-window-size value="0.1" method="fixed" />
+
+    <max-time value="1.0" />
+
+    <max-time-windows value="10" />
+
+    <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1" />
+    <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0" />
+  </coupling-scheme:serial-explicit>
 </configuration>

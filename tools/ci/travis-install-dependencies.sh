@@ -20,7 +20,7 @@ if [ ! -f $CACHE_EIGEN_TOKEN ]; then
     rm -rf $LOCAL_INSTALL/eigen3
     mkdir $LOCAL_INSTALL/eigen3
     # Download
-    wget -nv http://bitbucket.org/eigen/eigen/get/3.3.2.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/eigen3 --strip-components=1 eigen-eigen-da9b4e14c255
+    wget -nv https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/eigen3 --strip-components=1
     # Create token
     touch $CACHE_EIGEN_TOKEN
 fi
@@ -47,8 +47,9 @@ fi
 if [ ! -f $CACHE_PETSC_TOKEN ]; then
     # Cleanup
     rm -rf $LOCAL_INSTALL/petsc
+    mkdir $LOCAL_INSTALL/petsc
     # Download
-    git clone -b maint https://gitlab.com/petsc/petsc $LOCAL_INSTALL/petsc
+    wget -nv 'https://gitlab.com/petsc/petsc/-/archive/maint/petsc-maint.tar.bz2' -O - | tar xj -C $LOCAL_INSTALL/petsc --strip-components=1
     # Configure and compile
     cd $LOCAL_INSTALL/petsc
     export PETSC_ARCH=arch-linux2-c-debug

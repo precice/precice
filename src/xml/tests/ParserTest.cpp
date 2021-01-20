@@ -4,6 +4,7 @@
 #include "math/constants.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/ValueParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
@@ -179,6 +180,19 @@ BOOST_AUTO_TEST_CASE(Context)
   BOOST_TEST(cl.endContext.name == "test");
   BOOST_TEST(cl.endContext.rank == 12);
   BOOST_TEST(cl.endContext.size == 32);
+}
+
+BOOST_AUTO_TEST_CASE(Decode)
+{
+  PRECICE_TEST(1_rank);
+
+  BOOST_TEST(decodeXML("Less than &lt; test") == "Less than < test");
+  BOOST_TEST(decodeXML("Greater than &gt; test") == "Greater than > test");
+  BOOST_TEST(decodeXML("Ampersand &amp; test") == "Ampersand & test");
+  BOOST_TEST(decodeXML("Quotation &quot; test") == "Quotation \" test");
+  BOOST_TEST(decodeXML("Apostrophe &apos; test") == "Apostrophe ' test");
+
+  BOOST_TEST(decodeXML("&quot; &lt; &gt; &gt; &lt; &amp; &quot; &amp; &apos;") == "\" < > > < & \" & '");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -104,6 +104,9 @@ public:
   /// Returns a among triangles globally unique ID.
   int getID() const;
 
+  /// Returns the surface area of the triangle
+  double getArea() const;
+
   /**
    * @brief Returns the outer normal of the triangle.
    *

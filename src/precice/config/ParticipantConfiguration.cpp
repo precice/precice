@@ -15,7 +15,6 @@
 #include "io/config/ExportConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"
-#include "mapping/config/MappingConfiguration.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -24,6 +23,7 @@
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
+#include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/PointerVector.hpp"
@@ -102,6 +102,25 @@ ParticipantConfiguration::ParticipantConfiguration(
                                 "linearly to that point.");
   tagWatchPoint.addAttribute(attrCoordinate);
   tag.addSubtag(tagWatchPoint);
+
+  auto attrScaleWitConn = XMLAttribute<bool>(ATTR_SCALE_WITH_CONN)
+                              .setDocumentation("Whether the vertex data is scaled with the element area before "
+                                                "summing up or not. In 2D, vertex data is scaled with the average length of "
+                                                "neighboring edges. In 3D, vertex data is scaled with the average surface of "
+                                                "neighboring triangles. If false, vertex data is directly summed up.");
+  XMLTag tagWatchIntegral(*this, TAG_WATCH_INTEGRAL, XMLTag::OCCUR_ARBITRARY);
+  doc = "A watch integral can be used to follow the transient change of integral data ";
+  doc += "and surface area for a given coupling mesh.";
+  tagWatchIntegral.setDocumentation(doc);
+  doc = "Name of the watch integral. Is taken in combination with the participant ";
+  doc += "name to construct the filename the watch integral data is written to.";
+  attrName.setDocumentation(doc);
+  tagWatchIntegral.addAttribute(attrName);
+  doc = "Mesh to be watched.";
+  attrMesh.setDocumentation(doc);
+  tagWatchIntegral.addAttribute(attrMesh);
+  tagWatchIntegral.addAttribute(attrScaleWitConn);
+  tag.addSubtag(tagWatchIntegral);
 
   XMLTag tagUseMesh(*this, TAG_USE_MESH, XMLTag::OCCUR_ARBITRARY);
   doc = "Makes a mesh (see tag <mesh> available to a participant.";
@@ -285,6 +304,13 @@ void ParticipantConfiguration::xmlTagCallback(
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
     config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _dimensions);
     _watchPointConfigs.push_back(config);
+  } else if (tag.getName() == TAG_WATCH_INTEGRAL) {
+    PRECICE_ASSERT(_dimensions != 0);
+    WatchIntegralConfig config;
+    config.name        = tag.getStringAttributeValue(ATTR_NAME);
+    config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
+    config.isScalingOn = tag.getBooleanAttributeValue(ATTR_SCALE_WITH_CONN);
+    _watchIntegralConfigs.push_back(config);
   } else if (tag.getNamespace() == TAG_MASTER) {
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com = comConfig.createCommunication(tag);
@@ -359,6 +385,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // Set input/output meshes for data mappings and mesh requirements
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
   for (const ConfMapping &confMapping : _mappingConfig->mappings()) {
+
+    checkIllDefinedMappings(confMapping, participant);
+
     int fromMeshID = confMapping.fromMesh->getID();
     int toMeshID   = confMapping.toMesh->getID();
 
@@ -370,6 +399,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                   "Participant \"" << participant->getName() << "\" has mapping"
                                    << " to mesh \"" << confMapping.toMesh->getName() << "\", without using this mesh. "
                                    << "Please add a use-mesh tag with name=\"" << confMapping.toMesh->getName() << "\"");
+    PRECICE_CHECK((participant->isMeshProvided(fromMeshID) || participant->isMeshProvided(toMeshID)),
+                  "Participant \"" << participant->getName() << "\" has mapping"
+                                   << " from mesh \"" << confMapping.fromMesh->getName() << "\", "
+                                   << " to mesh \"" << confMapping.toMesh->getName() << "\", but neither are provided. "
+                                   << "Please mark the mesh provided by this participant by configuring its use-mesh tag with provided=\"true\".");
+
     if (context.size > 1) {
       if ((confMapping.direction == mapping::MappingConfiguration::WRITE &&
            confMapping.mapping->getConstraint() == mapping::Mapping::CONSISTENT) ||
@@ -438,18 +473,18 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     toMeshContext.meshRequirement = std::max(
         toMeshContext.meshRequirement, map->getOutputRequirement());
 
-    fromMeshContext.fromMappingContext = *mappingContext;
-    toMeshContext.toMappingContext     = *mappingContext;
+    fromMeshContext.fromMappingContexts.push_back(*mappingContext);
+    toMeshContext.toMappingContexts.push_back(*mappingContext);
   }
   _mappingConfig->resetMappings();
 
   // Set participant data for data contexts
   for (impl::DataContext &dataContext : participant->writeDataContexts()) {
     int fromMeshID = dataContext.mesh->getID();
-    PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
-                  "Participant \"" << participant->getName() << "\" has to use mesh \""
+    PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
+                  "Participant \"" << participant->getName() << "\" has to use and provide mesh \""
                                    << dataContext.mesh->getName() << "\" to be able to write data to it. "
-                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\".");
+                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\" and provide=\"true\".");
 
     for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
       if (mappingContext.fromMeshID == fromMeshID) {
@@ -470,10 +505,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   for (impl::DataContext &dataContext : participant->readDataContexts()) {
     int toMeshID = dataContext.mesh->getID();
-    PRECICE_CHECK(participant->isMeshUsed(toMeshID),
-                  "Participant \"" << participant->getName() << "\" has to use mesh \""
+    PRECICE_CHECK(participant->isMeshProvided(toMeshID),
+                  "Participant \"" << participant->getName() << "\" has to use and provide mesh \""
                                    << dataContext.mesh->getName() << "\" in order to read data from it. "
-                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\".");
+                                   << "Please add a use-mesh node with name=\"" << dataContext.mesh->getName() << "\" and provide=\"true\".");
 
     for (impl::MappingContext &mappingContext : participant->readMappingContexts()) {
       if (mappingContext.toMeshID == toMeshID) {
@@ -545,6 +580,28 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
   _watchPointConfigs.clear();
 
+  // Create watch integrals
+  for (const WatchIntegralConfig &config : _watchIntegralConfigs) {
+    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
+
+    PRECICE_CHECK(meshContext && meshContext->mesh,
+                  "Participant \"" << participant->getName()
+                                   << "\" defines watch integral \"" << config.name
+                                   << "\" for mesh \"" << config.nameMesh
+                                   << "\" which is not used by the participant. "
+                                   << "Please add a use-mesh node with name=\"" << config.nameMesh << "\".");
+    PRECICE_CHECK(meshContext->provideMesh,
+                  "Participant \"" << participant->getName()
+                                   << "\" defines watch integral \"" << config.name
+                                   << "\" for the received mesh \"" << config.nameMesh << "\", which is not allowed. "
+                                   << "Please move the watchpoint definition to the participant providing mesh \"" << config.nameMesh << "\".");
+
+    std::string            filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
+    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext->mesh, filename, config.isScalingOn));
+    participant->addWatchIntegral(watchIntegral);
+  }
+  _watchIntegralConfigs.clear();
+
   // create default master communication if needed
   if (context.size > 1 && not _isMasterDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
@@ -557,6 +614,55 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 #endif
   }
   _isMasterDefined = false; // to not mess up with previous participant
+}
+
+void ParticipantConfiguration::checkIllDefinedMappings(
+    const mapping::MappingConfiguration::ConfiguredMapping &mapping,
+    const impl::PtrParticipant &                            participant)
+{
+  PRECICE_TRACE();
+  using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
+
+  for (const ConfMapping &configuredMapping : _mappingConfig->mappings()) {
+    bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
+    bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
+    if (sameToMesh && sameFromMesh) {
+      // It's really the same mapping, not a duplicated one. Those are already checked for in MappingConfiguration.
+      return;
+    }
+
+    if (sameToMesh) {
+      for (const mesh::PtrData &data : mapping.fromMesh->data()) {
+        for (const mesh::PtrData &configuredData : configuredMapping.fromMesh->data()) {
+          bool sameFromData = data->getName() == configuredData->getName();
+
+          if (not sameFromData) {
+            continue;
+          }
+
+          bool sameDirection = false;
+
+          if (mapping.direction == mapping::MappingConfiguration::WRITE) {
+            for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
+              sameDirection |= data->getName() == dataContext.getName();
+            }
+          }
+          if (mapping.direction == mapping::MappingConfiguration::READ) {
+            for (const impl::DataContext &dataContext : participant->readDataContexts()) {
+              sameDirection |= data->getName() == dataContext.getName();
+            }
+          }
+          PRECICE_CHECK(!sameDirection, "There cannot be two mappings to mesh \""
+                                            << mapping.toMesh->getName() << "\" "
+                                            << "if the meshes from which is mapped contain duplicated data fields "
+                                            << "that are also actually mapped on this participant. "
+                                            << "Here, both from meshes contain data \"" << data->getName() << "\". "
+                                            << "The mapping is not well defined. Which data \"" << data->getName() << "\" "
+                                            << "should be mapped to mesh \"" << mapping.toMesh->getName() << "\"?");
+        }
+      }
+    }
+  }
 }
 
 } // namespace config

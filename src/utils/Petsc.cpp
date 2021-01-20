@@ -111,19 +111,47 @@ namespace precice {
 namespace utils {
 namespace petsc {
 
-void openViewer(PetscViewer &viewer, std::string filename, VIEWERFORMAT format, MPI_Comm comm)
-{
-  PetscErrorCode ierr = 0;
-  if (format == ASCII) {
-    ierr = PetscViewerASCIIOpen(comm, filename.c_str(), &viewer);
+struct Viewer {
+  Viewer(const std::string &filename, VIEWERFORMAT format, MPI_Comm comm)
+  {
+    PetscErrorCode ierr = 0;
+    if (format == ASCII) {
+      ierr = PetscViewerASCIIOpen(comm, filename.c_str(), &viewer);
+      CHKERRV(ierr);
+    } else if (format == BINARY) {
+      ierr = PetscViewerBinaryOpen(comm, filename.c_str(), FILE_MODE_WRITE, &viewer);
+      CHKERRV(ierr);
+      pushFormat(PETSC_VIEWER_NATIVE);
+    }
+  }
+
+  Viewer(PetscViewerType type, MPI_Comm comm)
+  {
+    PetscErrorCode ierr = 0;
+    ierr                = PetscViewerCreate(comm, &viewer);
     CHKERRV(ierr);
-  } else if (format == BINARY) {
-    ierr = PetscViewerBinaryOpen(comm, filename.c_str(), FILE_MODE_WRITE, &viewer);
-    CHKERRV(ierr);
-    ierr = PetscViewerPushFormat(viewer, PETSC_VIEWER_NATIVE);
+    ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII);
     CHKERRV(ierr);
   }
-}
+
+  ~Viewer()
+  {
+    while (popformats--) {
+      PetscViewerPopFormat(viewer);
+    }
+    PetscViewerDestroy(&viewer);
+  }
+
+  void pushFormat(PetscViewerFormat format)
+  {
+    auto ierr = PetscViewerPushFormat(viewer, format);
+    CHKERRV(ierr);
+    popformats++;
+  }
+
+  int         popformats{0};
+  PetscViewer viewer{nullptr};
+};
 
 template <class T>
 MPI_Comm getCommunicator(T obj)
@@ -330,6 +358,7 @@ void Vector::sort()
   ierr = VecGetArray(vector, &a);
   CHKERRV(ierr);
   ierr = VecGetSize(vector, &size);
+  CHKERRV(ierr);
   ierr = PetscSortReal(size, a);
   CHKERRV(ierr);
   ierr = VecRestoreArray(vector, &a);
@@ -354,23 +383,14 @@ std::pair<PetscInt, PetscInt> Vector::ownerRange() const
 
 void Vector::write(std::string filename, VIEWERFORMAT format) const
 {
-  PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  openViewer(viewer, filename, format, getCommunicator(vector));
-  VecView(vector, viewer);
-  CHKERRV(ierr);
-  PetscViewerDestroy(&viewer);
+  Viewer viewer{filename, format, getCommunicator(vector)};
+  VecView(vector, viewer.viewer);
 }
 
 void Vector::read(std::string filename, VIEWERFORMAT format)
 {
-  PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  openViewer(viewer, filename, format, getCommunicator(vector));
-  VecLoad(vector, viewer);
-  CHKERRV(ierr);
-  CHKERRV(ierr);
-  PetscViewerDestroy(&viewer);
+  Viewer viewer{filename, format, getCommunicator(vector)};
+  VecLoad(vector, viewer.viewer);
 }
 
 void Vector::view() const
@@ -539,58 +559,41 @@ PetscInt Matrix::blockSize() const
 void Matrix::write(std::string filename, VIEWERFORMAT format) const
 {
   PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  openViewer(viewer, filename, format, getCommunicator(matrix));
-  ierr = MatView(matrix, viewer);
+  Viewer         viewer{filename, format, getCommunicator(matrix)};
+  ierr = MatView(matrix, viewer.viewer);
   CHKERRV(ierr);
-  PetscViewerDestroy(&viewer);
 }
 
 void Matrix::read(std::string filename)
 {
   PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  openViewer(viewer, filename, BINARY, getCommunicator(matrix));
-  ierr = MatLoad(matrix, viewer);
+  Viewer         viewer{filename, BINARY, getCommunicator(matrix)};
+  ierr = MatLoad(matrix, viewer.viewer);
   CHKERRV(ierr);
-  PetscViewerDestroy(&viewer);
 }
 
 void Matrix::view() const
 {
-  PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  ierr = PetscViewerCreate(getCommunicator(matrix), &viewer);
-  CHKERRV(ierr);
-  ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII);
-  CHKERRV(ierr);
-  ierr = PetscViewerPushFormat(viewer, PETSC_VIEWER_ASCII_DENSE);
-  CHKERRV(ierr);
-  ierr = MatView(matrix, viewer);
-  CHKERRV(ierr);
-  ierr = PetscViewerPopFormat(viewer);
-  CHKERRV(ierr);
-  ierr = PetscViewerDestroy(&viewer);
+  Viewer viewer{PETSCVIEWERASCII, getCommunicator(matrix)};
+  viewer.pushFormat(PETSC_VIEWER_ASCII_DENSE);
+  PetscErrorCode ierr = MatView(matrix, viewer.viewer);
   CHKERRV(ierr);
 }
 
 void Matrix::viewDraw() const
 {
-  PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  PetscDraw      draw;
-  ierr = PetscViewerCreate(getCommunicator(matrix), &viewer);
+  Viewer viewer{PETSCVIEWERDRAW, getCommunicator(matrix)};
+  viewer.pushFormat(PETSC_VIEWER_ASCII_DENSE);
+  PetscErrorCode ierr = MatView(matrix, viewer.viewer);
   CHKERRV(ierr);
-  ierr = PetscViewerSetType(viewer, PETSCVIEWERDRAW);
+  ierr = MatView(matrix, viewer.viewer);
   CHKERRV(ierr);
-  ierr = MatView(matrix, viewer);
-  CHKERRV(ierr);
-  ierr = PetscViewerDrawGetDraw(viewer, 0, &draw);
+
+  PetscDraw draw;
+  ierr = PetscViewerDrawGetDraw(viewer.viewer, 0, &draw);
   CHKERRV(ierr);
   ierr = PetscDrawSetPause(draw, -1);
   CHKERRV(ierr); // Wait for user
-  ierr = PetscViewerDestroy(&viewer);
-  CHKERRV(ierr);
 }
 
 /////////////////////////////////////////////////////////////////////////

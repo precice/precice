@@ -100,36 +100,37 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
                                     timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
                                     restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
 
-  Eigen::VectorXd dvalues;
   Eigen::VectorXd dcol1;
-  Eigen::VectorXd fvalues;
   Eigen::VectorXd fcol1;
 
+  mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
+  mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
+
   //init displacements
-  utils::append(dvalues, 1.0);
-  utils::append(dvalues, 2.0);
-  utils::append(dvalues, 3.0);
-  utils::append(dvalues, 4.0);
+  utils::append(displacements->values(), 1.0);
+  utils::append(displacements->values(), 2.0);
+  utils::append(displacements->values(), 3.0);
+  utils::append(displacements->values(), 4.0);
 
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
 
-  PtrCouplingData dpcd(new CouplingData(&dvalues, dummyMesh, false, 1));
+  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
 
   //init forces
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
 
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
 
-  PtrCouplingData fpcd(new CouplingData(&fvalues, dummyMesh, false, 1));
+  PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
   DataMap data;
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
@@ -142,14 +143,14 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
 
   pp.performAcceleration(data);
 
-  BOOST_TEST(testing::equals((*data.at(0)->values)(0), 1.00000000000000000000));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(1), 1.01000000000000000888));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(2), 1.02000000000000001776));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(3), 1.03000000000000002665));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(0), 0.199000000000000010214));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(1), 0.199000000000000010214));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(2), 0.199000000000000010214));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(3), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00000000000000000000));
+  BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01000000000000000888));
+  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02000000000000001776));
+  BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03000000000000002665));
+  BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199000000000000010214));
 
   Eigen::VectorXd newdvalues;
   utils::append(newdvalues, 10.0);
@@ -157,18 +158,18 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
 
-  data.begin()->second->values = &newdvalues;
+  data.begin()->second->values() = newdvalues;
 
   pp.performAcceleration(data);
 
-  BOOST_TEST(testing::equals((*data.at(0)->values)(0), -5.63401340929695848558e-01));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(1), 6.10309919173602111186e-01));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(2), 1.78402117927690184729e+00));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(3), 2.95773243938020247157e+00));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(0), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(1), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(2), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(3), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929695848558e-01));
+  BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173602111186e-01));
+  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.78402117927690184729e+00));
+  BOOST_TEST(testing::equals(data.at(0)->values()(3), 2.95773243938020247157e+00));
+  BOOST_TEST(testing::equals(data.at(1)->values()(0), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(1), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(2), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733250157e-02));
 }
 
 BOOST_AUTO_TEST_CASE(testVIQNPP)
@@ -197,36 +198,37 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   acceleration::IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                                       timestepsReused, filter, singularityLimit, dataIDs, prec);
 
-  Eigen::VectorXd dvalues;
   Eigen::VectorXd dcol1;
-  Eigen::VectorXd fvalues;
   Eigen::VectorXd fcol1;
 
+  mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
+  mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
+
   //init displacements
-  utils::append(dvalues, 1.0);
-  utils::append(dvalues, 2.0);
-  utils::append(dvalues, 3.0);
-  utils::append(dvalues, 4.0);
+  utils::append(displacements->values(), 1.0);
+  utils::append(displacements->values(), 2.0);
+  utils::append(displacements->values(), 3.0);
+  utils::append(displacements->values(), 4.0);
 
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
 
-  PtrCouplingData dpcd(new CouplingData(&dvalues, dummyMesh, false, 1));
+  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
 
   //init forces
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
-  utils::append(fvalues, 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
+  utils::append(forces->values(), 0.1);
 
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
 
-  PtrCouplingData fpcd(new CouplingData(&fvalues, dummyMesh, false, 1));
+  PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
   DataMap data;
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
@@ -239,32 +241,32 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 
   pp.performAcceleration(data);
 
-  BOOST_TEST(testing::equals((*data.at(0)->values)(0), 1.00));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(1), 1.01));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(2), 1.02));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(3), 1.03));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(0), 0.199));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(1), 0.199));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(2), 0.199));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(3), 0.199));
+  BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00));
+  BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01));
+  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02));
+  BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03));
+  BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199));
 
   Eigen::VectorXd newdvalues;
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
-  data.begin()->second->values = &newdvalues;
+  data.begin()->second->values() = newdvalues;
 
   pp.performAcceleration(data);
 
-  BOOST_TEST(testing::equals((*data.at(0)->values)(0), -5.63401340929692295845e-01));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(1), 6.10309919173607440257e-01));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(2), 1.78402117927690717636e+00));
-  BOOST_TEST(testing::equals((*data.at(0)->values)(3), 2.95773243938020513610e+00));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(0), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(1), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(2), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals((*data.at(1)->values)(3), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929692295845e-01));
+  BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173607440257e-01));
+  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.78402117927690717636e+00));
+  BOOST_TEST(testing::equals(data.at(0)->values()(3), 2.95773243938020513610e+00));
+  BOOST_TEST(testing::equals(data.at(1)->values()(0), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(1), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(2), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733944046e-02));
 }
 
 BOOST_AUTO_TEST_CASE(testInitializeData)
@@ -314,8 +316,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   ParallelCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, dataRequiresInitialization);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, dataRequiresInitialization);
+  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, dataRequiresInitialization);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -323,8 +325,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure2(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, minIterationConvMeasure1, true);
-  cplScheme.addConvergenceMeasure(mesh->data()[0], false, false, minIterationConvMeasure2, true);
+  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, minIterationConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(mesh->data().at(0), false, false, minIterationConvMeasure2, true);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());

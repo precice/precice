@@ -8,22 +8,38 @@
 namespace precice {
 namespace cplscheme {
 
-struct CouplingData {
+struct CouplingData { // @todo: should be a class from a design standpoint. See https://github.com/precice/precice/pull/865#discussion_r495825098
   using DataMatrix = Eigen::MatrixXd;
 
-  /// Data values of current iteration.
-  Eigen::VectorXd *values;
+  /// Returns a reference to the data values.
+  Eigen::VectorXd &values()
+  {
+    PRECICE_ASSERT(data != nullptr);
+    return data->values();
+  }
+
+  /// Returns a const reference to the data values.
+  const Eigen::VectorXd &values() const
+  {
+    PRECICE_ASSERT(data != nullptr);
+    return data->values();
+  }
 
   /// Data values of previous iteration (1st col) and previous time windows.
   DataMatrix oldValues;
+
+  mesh::PtrData data;
 
   mesh::PtrMesh mesh;
 
   ///  True, if the data values if this CouplingData requires to be initialized by a participant.
   bool requiresInitialization;
 
-  /// dimension of one data value (scalar=1, or vectorial=interface-dimension)
-  int dimension;
+  int getDimensions()
+  {
+    PRECICE_ASSERT(data != nullptr);
+    return data->getDimensions();
+  }
 
   /**
    * @brief Default constructor, not to be used!
@@ -36,16 +52,15 @@ struct CouplingData {
   }
 
   CouplingData(
-      Eigen::VectorXd *values,
-      mesh::PtrMesh    mesh,
-      bool             requiresInitialization,
-      int              dimension)
-      : values(values),
+      mesh::PtrData data,
+      mesh::PtrMesh mesh,
+      bool          requiresInitialization)
+      : data(data),
         mesh(mesh),
-        requiresInitialization(requiresInitialization),
-        dimension(dimension)
+        requiresInitialization(requiresInitialization)
   {
-    PRECICE_ASSERT(values != NULL);
+    PRECICE_ASSERT(data != nullptr);
+    PRECICE_ASSERT(mesh != nullptr);
     PRECICE_ASSERT(mesh.use_count() > 0);
   }
 };

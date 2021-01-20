@@ -90,7 +90,7 @@ void ExportVTKXML::writeMasterFile(
   outMasterFile << "   <PUnstructuredGrid GhostLevel=\"0\">\n";
 
   outMasterFile << "      <PPoints>\n";
-  outMasterFile << "         <PDataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\"/>\n";
+  outMasterFile << "         <PDataArray type=\"Float64\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\"/>\n";
   outMasterFile << "      </PPoints>\n";
 
   outMasterFile << "      <PCells>\n";
@@ -112,11 +112,11 @@ void ExportVTKXML::writeMasterFile(
   outMasterFile << "\">\n";
 
   for (size_t i = 0; i < _scalarDataNames.size(); ++i) {
-    outMasterFile << "         <PDataArray type=\"Float32\" Name=\"" << _scalarDataNames[i] << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
+    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << _scalarDataNames[i] << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
   }
 
   for (size_t i = 0; i < _vectorDataNames.size(); ++i) {
-    outMasterFile << "         <PDataArray type=\"Float32\" Name=\"" << _vectorDataNames[i] << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
+    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << _vectorDataNames[i] << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
   }
   outMasterFile << "      </PPointData>\n";
 
@@ -159,7 +159,7 @@ void ExportVTKXML::writeSubFile(
   outSubFile << "   <UnstructuredGrid>\n";
   outSubFile << "      <Piece NumberOfPoints=\"" << numPoints << "\" NumberOfCells=\"" << numCells << "\"> \n";
   outSubFile << "         <Points> \n";
-  outSubFile << "            <DataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\" format=\"ascii\"> \n";
+  outSubFile << "            <DataArray type=\"Float64\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\" format=\"ascii\"> \n";
   for (const mesh::Vertex &vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outSubFile);
   }
@@ -252,7 +252,7 @@ void ExportVTKXML::exportData(
   // Print VertexNormals
   if (_writeNormals) {
     const auto dimensions = mesh.getDimensions();
-    outFile << "            <DataArray type=\"Float32\" Name=\"VertexNormals\" NumberOfComponents=\"";
+    outFile << "            <DataArray type=\"Float64\" Name=\"VertexNormals\" NumberOfComponents=\"";
     outFile << std::max(3, dimensions) << "\" format=\"ascii\">\n";
     outFile << "               ";
     for (const auto &vertex : mesh.vertices()) {
@@ -274,7 +274,7 @@ void ExportVTKXML::exportData(
     int              dataDimensions = data->getDimensions();
     std::string      dataName(data->getName());
     int              numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
-    outFile << "            <DataArray type=\"Float32\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
+    outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
     outFile << "\" format=\"ascii\">\n";
     outFile << "               ";
     if (dataDimensions > 1) {

@@ -23,7 +23,6 @@ BOOST_AUTO_TEST_CASE(Configuration)
     const io::ExportContext &context = config.exportContexts().front();
     BOOST_TEST(context.type == "vtk");
     BOOST_TEST(context.everyNTimeWindows == 10);
-    BOOST_TEST(context.triggerSolverPlot);
   }
   {
     tag.clear();
@@ -34,7 +33,6 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(context.type == "vtk");
     BOOST_TEST(context.everyNTimeWindows == 1);
     BOOST_TEST(context.location == "somepath");
-    BOOST_TEST(not context.triggerSolverPlot);
   }
 }
 
