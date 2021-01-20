@@ -164,9 +164,9 @@ void SolverInterfaceImpl::configure(
     PRECICE_INFO("This is preCICE version " << PRECICE_VERSION);
     PRECICE_INFO("Revision info: " << precice::preciceRevision);
 #ifndef NDEBUG
-    PRECICE_INFO("Configuration: Release (Debug and Trace log unavailable)");
-#else
     PRECICE_INFO("Configuration: Debug");
+#else
+    PRECICE_INFO("Configuration: Release (Debug and Trace log unavailable)");
 #endif
     PRECICE_INFO("Configuring preCICE with configuration \"" << configurationFileName << "\"");
     PRECICE_INFO("I am participant \"" << _accessorName << "\"");

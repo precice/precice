@@ -188,8 +188,12 @@ void AccelerationConfiguration::xmlTagCallback(
     }
     _neededMeshes.push_back(_meshName);
   } else if (callingTag.getName() == TAG_INIT_RELAX) {
-    _config.relaxationFactor       = callingTag.getDoubleAttributeValue(ATTR_VALUE);
-    _config.forceInitialRelaxation = callingTag.getBooleanAttributeValue(ATTR_ENFORCE);
+    _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
+    if (callingTag.hasAttribute(ATTR_ENFORCE)) {
+      _config.forceInitialRelaxation = callingTag.getBooleanAttributeValue(ATTR_ENFORCE);
+    } else {
+      _config.forceInitialRelaxation = false;
+    }
   } else if (callingTag.getName() == TAG_MAX_USED_ITERATIONS) {
     _config.maxIterationsUsed = callingTag.getIntAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_TIME_WINDOWS_REUSED) {
