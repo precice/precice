@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 #include "precice/config/Configuration.hpp"
+#include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 #include "xml/Printer.hpp"
-#include "precice/impl/versions.hpp"
 
 void printUsage()
 {
