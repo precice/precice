@@ -34,7 +34,8 @@ public:
   static VertexTraits::Ptr getVertexRTree(const mesh::PtrMesh &mesh);
   static EdgeTraits::Ptr getEdgeRTree(const mesh::PtrMesh &mesh);
   static TriangleTraits::Ptr getTriangleRTree(const mesh::PtrMesh &mesh);
-
+  
+  // MAYBE ENUMED CALLS
   /// Get the closest vertex/edge/triangle to a vertex, return indices and distance
   static std::vector<MatchType> getClosestVertex(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n = 1);
   static std::vector<MatchType> getClosestEdge(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n = 1);
@@ -56,6 +57,7 @@ public:
 
 private:
 
+  // REMOVE THESE FROM INTERFACE/HEADERS
   struct MeshIndices {
     VertexTraits::Ptr   vertices;
     EdgeTraits::Ptr     edges;
