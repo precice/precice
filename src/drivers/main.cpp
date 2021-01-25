@@ -3,6 +3,7 @@
 #include "precice/config/Configuration.hpp"
 #include "utils/assertion.hpp"
 #include "xml/Printer.hpp"
+#include "precice/impl/versions.hpp"
 
 void printUsage()
 {
@@ -49,6 +50,7 @@ int main(int argc, char **argv)
     precice::xml::toDTD(std::cout, config.getXMLTag());
   } else if (runMD) {
     precice::config::Configuration config;
+    std::cout << "<!-- generated with preCICE " PRECICE_VERSION " -->\n";
     precice::xml::toMarkdown(std::cout, config.getXMLTag());
   } else {
     PRECICE_ASSERT(false);
