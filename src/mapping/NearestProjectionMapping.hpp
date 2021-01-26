@@ -5,6 +5,7 @@
 #include <vector>
 #include "Mapping.hpp"
 #include "logging/Logger.hpp"
+#include "query/Interpolation.hpp"
 #include "query/RTree.hpp"
 
 namespace precice {

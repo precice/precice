@@ -236,6 +236,8 @@ target_sources(precice
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
+    src/query/Interpolation.hpp
+    src/query/Interpolation.cpp
     src/query/RTree.hpp
 	  src/query/RTree.cpp
 	  src/query/impl/RTreeAdapter.hpp

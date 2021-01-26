@@ -491,7 +491,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
 
   if (_basisFunction.hasCompactSupport()) {
-    auto bb       = otherMesh->getBoundingBox();
+    auto bb = otherMesh->getBoundingBox();
     // Enlarge by support radius
     bb.expandBy(_basisFunction.getSupportRadius());
     query::rtree::tagAllInsideBox(bb, filterMesh);

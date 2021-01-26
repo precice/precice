@@ -22,6 +22,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
+#include "query/Interpolation.hpp"
 #include "query/RTree.hpp"
 #include "utils/Event.hpp"
 #include "utils/Statistics.hpp"
@@ -60,11 +61,11 @@ void NearestProjectionMapping::computeMapping()
   mesh::PtrMesh origins, searchSpace;
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
-    origins      = output();
+    origins     = output();
     searchSpace = input();
   } else {
     PRECICE_DEBUG("Compute conservative mapping");
-    origins      = input();
+    origins     = input();
     searchSpace = output();
   }
 

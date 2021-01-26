@@ -4,14 +4,14 @@
 #include <cstddef>
 #include <utility>
 #include <vector>
+#include "math/barycenter.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"
-#include "math/barycenter.hpp"
 
 namespace precice {
 namespace query {
 
-namespace bg = boost::geometry;
+namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
 
 // Initialize static member
@@ -34,9 +34,9 @@ VertexTraits::Ptr rtree::getVertexRTree(const mesh::PtrMesh &mesh)
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do. Even passing an index range instead of calling
   // tree->insert repeatedly is about 10x faster.
-  RTreeParameters            params;
+  RTreeParameters           params;
   VertexTraits::IndexGetter ind(mesh->vertices());
-  auto                       tree = std::make_shared<VertexTraits::RTree>(
+  auto                      tree = std::make_shared<VertexTraits::RTree>(
       boost::irange<std::size_t>(0lu, mesh->vertices().size()), params, ind);
 
   cache.vertices = tree;
@@ -54,9 +54,9 @@ EdgeTraits::Ptr rtree::getEdgeRTree(const mesh::PtrMesh &mesh)
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do. Even passing an index range instead of calling
   // tree->insert repeatedly is about 10x faster.
-  RTreeParameters          params;
+  RTreeParameters         params;
   EdgeTraits::IndexGetter ind(mesh->edges());
-  auto                     tree = std::make_shared<EdgeTraits::RTree>(
+  auto                    tree = std::make_shared<EdgeTraits::RTree>(
       boost::irange<std::size_t>(0lu, mesh->edges().size()), params, ind);
 
   cache.edges = tree;
@@ -83,16 +83,16 @@ TriangleTraits::Ptr rtree::getTriangleRTree(const mesh::PtrMesh &mesh)
 
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do.
-  RTreeParameters              params;
+  RTreeParameters             params;
   TriangleTraits::IndexGetter ind;
-  auto                         tree = std::make_shared<TriangleTraits::RTree>(elements, params, ind);
-  cache.triangles                   = tree;
+  auto                        tree = std::make_shared<TriangleTraits::RTree>(elements, params, ind);
+  cache.triangles                  = tree;
   return tree;
 }
 
-std::vector<MatchType> rtree::getClosestVertex(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n)
+std::vector<MatchType> rtree::getClosestVertex(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n)
 {
-  auto tree = getVertexRTree(targetMesh);
+  auto                   tree = getVertexRTree(targetMesh);
   std::vector<MatchType> matches;
   tree->query(bgi::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
                 matches.emplace_back(boost::geometry::distance(source, targetMesh->vertices()[matchID]), matchID);
@@ -101,9 +101,9 @@ std::vector<MatchType> rtree::getClosestVertex(const mesh::Vertex &source, const
   return matches;
 }
 
-std::vector<MatchType> rtree::getClosestEdge(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n)
+std::vector<MatchType> rtree::getClosestEdge(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n)
 {
-  auto tree = getEdgeRTree(targetMesh);
+  auto                   tree = getEdgeRTree(targetMesh);
   std::vector<MatchType> matches;
   tree->query(bgi::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
                 matches.emplace_back(boost::geometry::distance(source, targetMesh->edges()[matchID]), matchID);
@@ -112,9 +112,9 @@ std::vector<MatchType> rtree::getClosestEdge(const mesh::Vertex &source, const m
   return matches;
 }
 
-std::vector<MatchType> rtree::getClosestTriangle(const mesh::Vertex &source, const mesh::PtrMesh& targetMesh, int n)
+std::vector<MatchType> rtree::getClosestTriangle(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n)
 {
-  auto tree = getTriangleRTree(targetMesh);
+  auto                   tree = getTriangleRTree(targetMesh);
   std::vector<MatchType> matches;
   tree->query(bgi::nearest(source, n),
               boost::make_function_output_iterator([&](TriangleTraits::IndexType const &match) {
@@ -124,21 +124,22 @@ std::vector<MatchType> rtree::getClosestTriangle(const mesh::Vertex &source, con
   return matches;
 }
 
-std::vector<size_t> rtree::getVerticesInsideBox(const Box3d &searchBox, const mesh::PtrMesh& targetMesh, const mesh::Vertex &centerVertex, double supportRadius)
+std::vector<size_t> rtree::getVerticesInsideBox(const Box3d &searchBox, const mesh::PtrMesh &targetMesh, const mesh::Vertex &centerVertex, double supportRadius)
 {
-  auto tree = getVertexRTree(targetMesh);
+  auto                tree = getVertexRTree(targetMesh);
   std::vector<size_t> matches;
   tree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, targetMesh->vertices()[i]) <= supportRadius; }),
               std::back_inserter(matches));
   return matches;
 }
 
-void rtree::tagAllInsideBox(const mesh::BoundingBox &boundingBox, const mesh::PtrMesh& targetMesh){
+void rtree::tagAllInsideBox(const mesh::BoundingBox &boundingBox, const mesh::PtrMesh &targetMesh)
+{
   auto tree = getVertexRTree(targetMesh);
   tree->query(bgi::intersects(RTreeBox(boundingBox.minCorner(), boundingBox.maxCorner())),
-                 boost::make_function_output_iterator([&targetMesh](size_t idx) {
-                   targetMesh->vertices()[idx].tag();
-                 }));
+              boost::make_function_output_iterator([&targetMesh](size_t idx) {
+                targetMesh->vertices()[idx].tag();
+              }));
 }
 
 void rtree::clear(mesh::Mesh &mesh)
@@ -166,56 +167,6 @@ Box3d getEnclosingBox(mesh::Vertex const &middlePoint, double sphereRadius)
   bg::set<bg::max_corner, 2>(box, bg::get<2>(coords) + sphereRadius);
 
   return box;
-}
-
-std::vector<InterpolationElement> generateInterpolationElements(
-    const mesh::Vertex & /*location*/,
-    const mesh::Vertex &element)
-{
-  return {{element, 1.0}};
-}
-
-std::vector<InterpolationElement> generateInterpolationElements(
-    const mesh::Vertex &location,
-    const mesh::Edge &  element)
-{
-  auto &A = element.vertex(0);
-  auto &B = element.vertex(1);
-
-  const auto bcoords = math::barycenter::calcBarycentricCoordsForEdge(
-                           A.getCoords(),
-                           B.getCoords(),
-                           element.getNormal(),
-                           location.getCoords())
-                           .barycentricCoords;
-
-  std::vector<InterpolationElement> elems;
-  elems.emplace_back(A, bcoords(0));
-  elems.emplace_back(B, bcoords(1));
-  return elems;
-}
-
-std::vector<InterpolationElement> generateInterpolationElements(
-    const mesh::Vertex &  location,
-    const mesh::Triangle &element)
-{
-  auto &A = element.vertex(0);
-  auto &B = element.vertex(1);
-  auto &C = element.vertex(2);
-
-  const auto bcoords = math::barycenter::calcBarycentricCoordsForTriangle(
-                           A.getCoords(),
-                           B.getCoords(),
-                           C.getCoords(),
-                           element.getNormal(),
-                           location.getCoords())
-                           .barycentricCoords;
-
-  std::vector<InterpolationElement> elems;
-  elems.emplace_back(A, bcoords(0));
-  elems.emplace_back(B, bcoords(1));
-  elems.emplace_back(C, bcoords(2));
-  return elems;
 }
 
 } // namespace query
