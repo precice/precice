@@ -3,12 +3,21 @@
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
 #include "mesh/Edge.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 
 namespace precice {
 namespace mesh {
 class Triangle;
 }
+} // namespace precice
+
+namespace precice {
+namespace testing {
+namespace accessors {
+class rtree;
+} // namespace accessors
+} // namespace testing
 } // namespace precice
 
 namespace pm = precice::mesh;
@@ -259,19 +268,6 @@ template <class Primitive>
 struct IsDirectIndexable : impl::IsDirectIndexableHelper<Primitive>::type {
 };
 
-struct MatchType {
-  double distance;
-  int    index;
-
-  MatchType() = default;
-  MatchType(double d, int i)
-      : distance(d), index(i){};
-  constexpr bool operator<(MatchType const &other) const
-  {
-    return distance < other.distance;
-  };
-};
-
 /// The type traits of a rtree based on a Primitive
 template <class Primitive>
 struct RTreeTraits {
@@ -295,6 +291,12 @@ struct RTreeTraits {
 using VertexTraits   = RTreeTraits<mesh::Vertex>;
 using EdgeTraits     = RTreeTraits<mesh::Edge>;
 using TriangleTraits = RTreeTraits<mesh::Triangle>;
+
+struct MeshIndices {
+  VertexTraits::Ptr   vertices;
+  EdgeTraits::Ptr     edges;
+  TriangleTraits::Ptr triangles;
+};
 
 } // namespace query
 } // namespace precice

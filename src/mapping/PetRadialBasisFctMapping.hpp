@@ -7,17 +7,9 @@
 #include <numeric>
 #include <vector>
 
-#include <boost/version.hpp>
-#if BOOST_VERSION < 106600
-#include <boost/function_output_iterator.hpp>
-#else
-#include <boost/iterator/function_output_iterator.hpp>
-#endif
-
 #include "config/MappingConfiguration.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "math/math.hpp"
-#include "mesh/impl/BBUtils.hpp"
 #include "precice/impl/versions.hpp"
 #include "query/RTree.hpp"
 #include "utils/Petsc.hpp"
@@ -852,7 +844,6 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
   PRECICE_TRACE();
-  namespace bgi = boost::geometry::index;
 
   if (not _basisFunction.hasCompactSupport())
     return; // Tags should not be changed
@@ -1292,7 +1283,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
 {
   PRECICE_INFO("Using tree-based preallocation for matrix C");
   precice::utils::Event ePreallocC("map.pet.preallocC.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  namespace bg = boost::geometry;
 
   PetscInt n;
   std::tie(n, std::ignore) = _matrixC.getLocalSize();
@@ -1329,8 +1319,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
     results.clear();
 
     // -- PREALLOCATES THE COEFFICIENTS --
-    auto searchBox = query::getEnclosingBox(inVertex, supportRadius);
-    results        = query::rtree::getVerticesInsideBox(searchBox, inMesh, inVertex, supportRadius);
+    results = query::rtree::getVerticesInsideBox(inMesh, inVertex, supportRadius);
 
     // for (mesh::Vertex& vj : inMesh->vertices()) {
     for (auto const i : results) {
@@ -1378,7 +1367,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
 {
   PRECICE_INFO("Using tree-based preallocation for matrix A");
   precice::utils::Event ePreallocA("map.pet.preallocA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  namespace bg = boost::geometry;
 
   PetscInt       ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt const outputSize    = _matrixA.getLocalSize().first;
@@ -1423,8 +1411,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
 
     // -- PREALLOCATE THE COEFFICIENTS --
     results.clear();
-    auto searchBox = query::getEnclosingBox(oVertex, supportRadius);
-    results        = query::rtree::getVerticesInsideBox(searchBox, inMesh, oVertex, supportRadius);
+    results = query::rtree::getVerticesInsideBox(inMesh, oVertex, supportRadius);
 
     for (auto i : results) {
       const mesh::Vertex &inVertex = inMesh->vertices()[i];

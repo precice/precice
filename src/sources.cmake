@@ -203,7 +203,6 @@ target_sources(precice
     src/mesh/config/DataConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
-    src/mesh/impl/BBUtils.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
     src/partition/ProvidedPartition.cpp
@@ -239,8 +238,10 @@ target_sources(precice
     src/query/Interpolation.hpp
     src/query/Interpolation.cpp
     src/query/RTree.hpp
-	  src/query/RTree.cpp
-	  src/query/impl/RTreeAdapter.hpp
+    src/query/RTree.cpp
+    src/query/RTreeTools.cpp
+    src/query/RTreeTools.hpp
+    src/query/impl/RTreeAdapter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp
