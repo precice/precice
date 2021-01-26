@@ -15,8 +15,9 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "mesh/impl/BBUtils.hpp"
 #include "query/RTree.hpp"
+#include "query/RTreeTools.hpp"
+#include "query/impl/RTreeAdapter.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE(Query2DVertex)
 {
   PRECICE_TEST(1_rank);
   auto mesh = edgeMesh2D();
-  auto tree = rtree::getVertexRTree(mesh);
+  auto tree = RTreeTools::getVertexRTree(mesh);
 
   BOOST_TEST(tree->size() == 4);
 
@@ -120,7 +121,7 @@ BOOST_AUTO_TEST_CASE(Query3DVertex)
   PRECICE_TEST(1_rank);
   auto mesh = edgeMesh3D();
   {
-    auto tree = rtree::getVertexRTree(mesh);
+    auto tree = RTreeTools::getVertexRTree(mesh);
 
     BOOST_TEST(tree->size() == 8);
 
@@ -161,7 +162,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
   mesh->createTriangle(erl, ert, erd);
   mesh->createTriangle(erd, erb, err);
 
-  auto tree = rtree::getVertexRTree(mesh);
+  auto tree = RTreeTools::getVertexRTree(mesh);
 
   BOOST_TEST(tree->size() == 6);
 
@@ -181,7 +182,7 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEmpty)
   PRECICE_TEST(1_rank);
   auto mesh = vertexMesh3D();
 
-  auto tree = rtree::getVertexRTree(mesh);
+  auto tree = RTreeTools::getVertexRTree(mesh);
   BOOST_TEST(tree->size() == 8);
 
   Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 1, 0));
@@ -204,7 +205,7 @@ BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
   PRECICE_TEST(1_rank);
   auto mesh = vertexMesh3D();
 
-  auto tree = rtree::getVertexRTree(mesh);
+  auto tree = RTreeTools::getVertexRTree(mesh);
   BOOST_TEST(tree->size() == 8);
 
   Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 1, 0));
@@ -229,7 +230,7 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
   PRECICE_TEST(1_rank);
   auto mesh = vertexMesh3D();
 
-  auto tree = rtree::getVertexRTree(mesh);
+  auto tree = RTreeTools::getVertexRTree(mesh);
   BOOST_TEST(tree->size() == 8);
 
   Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 1, 0));
@@ -251,14 +252,15 @@ BOOST_AUTO_TEST_CASE(QueryWithBoundingBox)
   PRECICE_TEST(1_rank);
   auto mesh = vertexMesh3D();
 
-  auto tree = rtree::getVertexRTree(mesh);
+  auto tree = RTreeTools::getVertexRTree(mesh);
   BOOST_TEST(tree->size() == 8);
 
   Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 1, 0));
 
   std::vector<size_t> results;
 
-  auto search_box = toRTreeBox(mesh->getBoundingBox());
+  auto bb         = mesh->getBoundingBox();
+  auto search_box = query::RTreeBox({bb.minCorner(), bb.maxCorner()});
   tree->query(bg::index::intersects(search_box), std::back_inserter(results));
 
   BOOST_TEST(results.size() == tree->size());
@@ -272,7 +274,7 @@ BOOST_AUTO_TEST_CASE(Query2DEdge)
 {
   PRECICE_TEST(1_rank);
   auto mesh = edgeMesh2D();
-  auto tree = rtree::getEdgeRTree(mesh);
+  auto tree = RTreeTools::getEdgeRTree(mesh);
 
   BOOST_TEST(tree->size() == 1);
 
@@ -292,7 +294,7 @@ BOOST_AUTO_TEST_CASE(Query3DEdge)
 {
   PRECICE_TEST(1_rank);
   auto mesh = edgeMesh3D();
-  auto tree = rtree::getEdgeRTree(mesh);
+  auto tree = RTreeTools::getEdgeRTree(mesh);
 
   BOOST_TEST(tree->size() == 1);
 
@@ -343,7 +345,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullEdge)
   mesh->createTriangle(erl, ert, erd);
   mesh->createTriangle(erd, erb, err);
 
-  auto tree = rtree::getEdgeRTree(mesh);
+  auto tree = RTreeTools::getEdgeRTree(mesh);
 
   BOOST_TEST(tree->size() == 9);
 
@@ -390,7 +392,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
   auto &       trt = mesh->createTriangle(erl, ert, erd);
   auto &       trb = mesh->createTriangle(erd, erb, err);
 
-  auto tree = rtree::getTriangleRTree(mesh);
+  auto tree = RTreeTools::getTriangleRTree(mesh);
 
   BOOST_TEST(tree->size() == 4);
 
@@ -425,7 +427,7 @@ BOOST_FIXTURE_TEST_CASE(ClearOnChange, precice::testing::accessors::rtree)
   mesh->createVertex(Eigen::Vector2d(0, 0));
 
   // The Cache should clear whenever a mesh changes
-  auto vTree = query::rtree::getVertexRTree(mesh);
+  auto vTree = query::RTreeTools::getVertexRTree(mesh);
   BOOST_TEST(getCache().size() == 1);
   mesh->meshChanged(*mesh); // Emit signal, that mesh has changed
   BOOST_TEST(getCache().empty());
@@ -438,7 +440,7 @@ BOOST_FIXTURE_TEST_CASE(ClearOnDestruction, precice::testing::accessors::rtree)
   mesh->createVertex(Eigen::Vector2d(0, 0));
 
   // The Cache should clear whenever we destroy the Mesh
-  auto vTree = query::rtree::getVertexRTree(mesh);
+  auto vTree = query::RTreeTools::getVertexRTree(mesh);
   BOOST_TEST(getCache().size() == 1);
   mesh.reset(); // Destroy mesh object, signal is emitted to clear cache
   BOOST_TEST(getCache().empty());
@@ -449,8 +451,8 @@ BOOST_AUTO_TEST_CASE(CacheVertices)
   PRECICE_TEST(1_rank);
   auto ptr = fullMesh();
 
-  auto vt1 = rtree::getVertexRTree(ptr);
-  auto vt2 = rtree::getVertexRTree(ptr);
+  auto vt1 = RTreeTools::getVertexRTree(ptr);
+  auto vt2 = RTreeTools::getVertexRTree(ptr);
   BOOST_TEST(vt1 == vt2);
 }
 
@@ -459,8 +461,8 @@ BOOST_AUTO_TEST_CASE(CacheEdges)
   PRECICE_TEST(1_rank);
   auto ptr = fullMesh();
 
-  auto et1 = rtree::getEdgeRTree(ptr);
-  auto et2 = rtree::getEdgeRTree(ptr);
+  auto et1 = RTreeTools::getEdgeRTree(ptr);
+  auto et2 = RTreeTools::getEdgeRTree(ptr);
   BOOST_TEST(et1 == et2);
 }
 
@@ -469,8 +471,8 @@ BOOST_AUTO_TEST_CASE(CacheTriangles)
   PRECICE_TEST(1_rank);
   auto ptr = fullMesh();
 
-  auto tt1 = rtree::getTriangleRTree(ptr);
-  auto tt2 = rtree::getTriangleRTree(ptr);
+  auto tt1 = RTreeTools::getTriangleRTree(ptr);
+  auto tt2 = RTreeTools::getTriangleRTree(ptr);
   BOOST_TEST(tt1 == tt2);
 }
 
@@ -479,13 +481,13 @@ BOOST_AUTO_TEST_CASE(CacheAll)
   PRECICE_TEST(1_rank);
   auto ptr = fullMesh();
 
-  auto vt1 = rtree::getVertexRTree(ptr);
-  auto et1 = rtree::getEdgeRTree(ptr);
-  auto tt1 = rtree::getTriangleRTree(ptr);
+  auto vt1 = RTreeTools::getVertexRTree(ptr);
+  auto et1 = RTreeTools::getEdgeRTree(ptr);
+  auto tt1 = RTreeTools::getTriangleRTree(ptr);
 
-  auto vt2 = rtree::getVertexRTree(ptr);
-  auto et2 = rtree::getEdgeRTree(ptr);
-  auto tt2 = rtree::getTriangleRTree(ptr);
+  auto vt2 = RTreeTools::getVertexRTree(ptr);
+  auto et2 = RTreeTools::getEdgeRTree(ptr);
+  auto tt2 = RTreeTools::getTriangleRTree(ptr);
 
   BOOST_TEST(vt1 == vt2);
   BOOST_TEST(et1 == et2);

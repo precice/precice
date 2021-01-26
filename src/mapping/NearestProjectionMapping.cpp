@@ -8,13 +8,6 @@
 #include <unordered_set>
 #include <utility>
 
-#include <boost/version.hpp>
-#if BOOST_VERSION < 106600
-#include <boost/function_output_iterator.hpp>
-#else
-#include <boost/iterator/function_output_iterator.hpp>
-#endif
-
 #include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"
 #include "math/differences.hpp"
@@ -27,9 +20,6 @@
 #include "utils/Event.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
-
-namespace bg  = boost::geometry;
-namespace bgi = boost::geometry::index;
 
 namespace precice {
 extern bool syncMode;
