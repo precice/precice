@@ -63,6 +63,25 @@ bool init_unit_test()
     if (logLevel >= log_all_errors)
       config.filter = "%Severity% >= warning"; // log warnings in any case
 
+    const std::string prefix{"%TimeStamp(format=\"%H:%M:%S.%f\")%|%Participant%|%Rank%|%Module%|l%Line%|%Function%|"};
+
+    // Console output
+    config.format = prefix + "%ColorizedSeverity%%Message%";
+    config.type   = "stream";
+    config.output = "stdout";
+    logConfigs.push_back(config);
+
+    // File Outputs
+    config.format = prefix + "%Severity%%Message%";
+    config.type   = "file";
+
+    // Same as console output
+    config.output = "test.log";
+    logConfigs.push_back(config);
+
+    // The full debug log
+    config.output = "test.debug.log";
+    config.filter = "%Severity% >= debug";
     logConfigs.push_back(config);
   }
 

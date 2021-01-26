@@ -17,9 +17,6 @@ struct ExportContext {
   // @brief Exporting every N time windows (equals -1 when not set).
   int everyNTimeWindows;
 
-  // @brief Flag for synchronuous triggering of solver plots.
-  bool triggerSolverPlot;
-
   // @brief If true, export is done in every iteration (also implicit).
   bool everyIteration;
 
@@ -36,7 +33,6 @@ struct ExportContext {
       : exporter(),
         location(),
         everyNTimeWindows(-1),
-        triggerSolverPlot(false),
         everyIteration(false),
         type(),
         plotNormals(false) {}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <solver-interface dimensions="2">
+    <data:scalar name="Data" />
+    <data:scalar name="Data2" />
+
+    <mesh name="A-Mesh">
+      <use-data name="Data" />
+      <use-data name="Data2" />
+    </mesh>
+
+    <mesh name="B-Mesh">
+      <use-data name="Data" />
+      <use-data name="Data2" />
+    </mesh>
+
+    <participant name="A">
+      <use-mesh name="A-Mesh" provide="yes" />
+      <use-mesh name="B-Mesh" from="B" />
+      <write-data name="Data" mesh="A-Mesh" />
+      <mapping:nearest-neighbor
+        direction="write"
+        from="A-Mesh"
+        to="B-Mesh"
+        constraint="consistent" />
+    </participant>
+
+    <participant name="B">
+      <use-mesh name="B-Mesh" provide="yes" />
+      <read-data name="Data" mesh="B-Mesh" />
+    </participant>
+
+    <m2n:sockets from="B" to="A" />
+
+    <coupling-scheme:serial-implicit>
+      <participants first="B" second="A" />
+      <max-time value="1.0" />
+      <time-window-size value="1.0" />
+      <exchange data="Data" mesh="B-Mesh" from="A" to="B" />
+      <exchange data="Data2" mesh="B-Mesh" from="B" to="A" />
+      <max-iterations value="2" />
+      <relative-convergence-measure limit="1.0e-5" data="Data" mesh="B-Mesh" />
+      <acceleration:aitken>
+        <data mesh="B-Mesh" name="Data" />
+        <initial-relaxation value="0.1" />
+      </acceleration:aitken>
+    </coupling-scheme:serial-implicit>
+  </solver-interface>
+</precice-configuration>

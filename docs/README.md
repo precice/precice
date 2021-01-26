@@ -37,10 +37,10 @@
 
 preCICE stands for Precise Code Interaction Coupling Environment. Its main component is a library that can be used by simulation programs to be coupled together in a partitioned way, enabling multi-physics simulations, such as fluid-structure interaction.
 
-If you are new to preCICE, please have a look at our [wiki (documentation)](https://github.com/precice/precice/wiki) and at [precice.org](https://www.precice.org). You may also prefer to [get and install a binary package for the latest release](https://github.com/precice/precice/releases/latest) ([master branch](https://github.com/precice/precice/tree/master)).
+If you are new to preCICE, please have a look at our [documentation](https://www.precice.org/docs.html) and at [precice.org](https://www.precice.org). You may also prefer to [get and install a binary package for the latest release](https://github.com/precice/precice/releases/latest) ([master branch](https://github.com/precice/precice/tree/master)).
 
 <div align="center" style="margin-bottom:30px">
-<img src="https://www.precice.org/assets/precice_overview.png" alt="preCICE overview" style="max-height: 100%; max-width: 100%">
+<img src="https://www.precice.org/material/overview/preCICE_overview.png" alt="preCICE overview" style="max-height: 100%; max-width: 100%">
 </div>
 
 preCICE is an academic project, developed at the [Technical University of Munich](https://www5.in.tum.de/) and at the [University of Stuttgart](https://www.ipvs.uni-stuttgart.de/). If you use preCICE, please [cite us](https://www.precice.org/publications/):

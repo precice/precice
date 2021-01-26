@@ -55,7 +55,7 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
   PRECICE_TRACE(mesh.getName());
 
   // Plot vertices
-  outFile << "POINTS " << mesh.vertices().size() << " float \n\n";
+  outFile << "POINTS " << mesh.vertices().size() << " double \n\n";
   for (const mesh::Vertex &vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outFile);
   }
@@ -102,7 +102,7 @@ void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
   outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
 
   if (_writeNormals) { // Plot vertex normals
-    outFile << "VECTORS VertexNormals float\n\n";
+    outFile << "VECTORS VertexNormals double\n\n";
     for (auto const &vertex : mesh.vertices()) {
       int i = 0;
       for (; i < mesh.getDimensions(); i++) {
@@ -136,7 +136,7 @@ void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
     Eigen::VectorXd &values = data->values();
     if (data->getDimensions() > 1) {
       Eigen::VectorXd viewTemp(data->getDimensions());
-      outFile << "VECTORS " << data->getName() << " float\n";
+      outFile << "VECTORS " << data->getName() << " double\n";
       for (const mesh::Vertex &vertex : mesh.vertices()) {
         int offset = vertex.getID() * data->getDimensions();
         for (int i = 0; i < data->getDimensions(); i++) {
@@ -153,7 +153,7 @@ void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
       }
       outFile << '\n';
     } else if (data->getDimensions() == 1) {
-      outFile << "SCALARS " << data->getName() << " float\n";
+      outFile << "SCALARS " << data->getName() << " double\n";
       outFile << "LOOKUP_TABLE default\n";
       for (const mesh::Vertex &vertex : mesh.vertices()) {
         outFile << values(vertex.getID()) << '\n';
@@ -172,7 +172,7 @@ void ExportVTK::initializeWriting(
   //}
   filestream.setf(std::ios::showpoint);
   filestream.setf(std::ios::scientific);
-  filestream << std::setprecision(16);
+  filestream << std::setprecision(std::numeric_limits<double>::max_digits10);
 }
 
 void ExportVTK::writeHeader(

@@ -14,6 +14,7 @@
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
@@ -408,14 +409,13 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
 {
   for (const ConfiguredMapping &configuredMapping : _mappings) {
-    bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
-    PRECICE_CHECK(!sameFromMesh, "There cannot be two mappings from mesh \""
-                                     << mapping.fromMesh->getName() << "\". "
-                                     << "Please remove any duplicate mapping definitions with from=\"" << mapping.fromMesh->getName() << "\" or use a different mesh.");
-    PRECICE_CHECK(!sameToMesh, "There cannot be two mappings to mesh \""
-                                   << mapping.toMesh->getName() << "\". "
-                                   << "Please remove any duplicate mapping definitions with to=\"" << mapping.toMesh->getName() << "\" or use a different mesh.");
+    bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
+    bool sameMapping  = sameToMesh && sameFromMesh;
+    PRECICE_CHECK(!sameMapping, "There cannot be two mappings from mesh \""
+                                    << mapping.fromMesh->getName() << "\" to mesh \""
+                                    << mapping.toMesh->getName() << "\". "
+                                    << "Please remove one of the duplicated meshes. ");
   }
 }
 
