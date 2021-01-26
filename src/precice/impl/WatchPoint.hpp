@@ -8,6 +8,7 @@
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "query/Interpolation.hpp"
 #include "query/RTree.hpp"
 
 namespace precice {

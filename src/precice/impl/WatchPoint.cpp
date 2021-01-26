@@ -13,6 +13,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "query/Interpolation.hpp"
 #include "query/RTree.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
