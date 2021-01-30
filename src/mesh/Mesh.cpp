@@ -36,9 +36,6 @@ Mesh::Mesh(
 
   meshChanged.connect([](Mesh &m) { query::clearRTreeCache(m); });
   meshDestroyed.connect([](Mesh &m) { query::clearRTreeCache(m); });
-  vertexAdded.connect([](Mesh &m) { query::addVertexToRTree(m.vertices().back(), m.getID()); });
-  edgeAdded.connect([](Mesh &m) { query::addEdgeToRTree(m.edges().back(), m.getID()); });
-  triangleAdded.connect([](Mesh &m) { query::addTriangleToRTree(m.triangles().back(), m.getID()); });
 }
 
 Mesh::~Mesh()
@@ -86,7 +83,7 @@ Edge &Mesh::createEdge(
     Vertex &vertexTwo)
 {
   _edges.emplace_back(vertexOne, vertexTwo, _manageEdgeIDs.getFreeID());
-  edgeAdded(*this);
+  query::addEdgeToRTree(_edges.back(), _id);
   return _edges.back();
 }
 
@@ -118,7 +115,7 @@ Triangle &Mesh::createTriangle(
       edgeTwo.connectedTo(edgeThree) &&
       edgeThree.connectedTo(edgeOne));
   _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
-  triangleAdded(*this);
+  query::addTriangleToRTree(_triangles.back(), _id);
   return _triangles.back();
 }
 
