@@ -55,7 +55,7 @@ void NearestNeighborMapping::computeMapping()
     for (size_t i = 0; i < verticesSize; i++) {
       const Eigen::VectorXd &coords = outputVertices[i].getCoords();
       // Search for the output vertex inside the input mesh and add index to _vertexIndices
-      auto matches      = query::rtree::getClosestVertex(outputVertices[i], input());
+      auto matches      = query::getClosestVertex(outputVertices[i], input());
       _vertexIndices[i] = matches[0].index;
       distanceStatistics(matches[0].distance);
     }
@@ -74,7 +74,7 @@ void NearestNeighborMapping::computeMapping()
     for (size_t i = 0; i < verticesSize; i++) {
       const Eigen::VectorXd &coords = inputVertices[i].getCoords();
       // Search for the input vertex inside the output mesh and add index to _vertexIndices
-      auto matches      = query::rtree::getClosestVertex(inputVertices[i], output());
+      auto matches      = query::getClosestVertex(inputVertices[i], output());
       _vertexIndices[i] = matches[0].index;
       distanceStatistics(matches[0].distance);
     }
@@ -99,9 +99,9 @@ void NearestNeighborMapping::clear()
   _vertexIndices.clear();
   _hasComputedMapping = false;
   if (getConstraint() == CONSISTENT) {
-    query::rtree::clear(*input());
+    query::clearRTreeCache(*input());
   } else {
-    query::rtree::clear(*output());
+    query::clearRTreeCache(*output());
   }
 }
 

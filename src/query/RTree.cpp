@@ -25,13 +25,40 @@ namespace query {
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
 
-// Initialize static member
-std::map<int, MeshIndices> precice::query::RTreeTools::_cachedTrees;
-
-std::vector<MatchType> rtree::getClosestVertex(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n)
+void addVertexToRTree(const mesh::Vertex &vertex, int meshID)
 {
-  auto                   tree = RTreeTools::getVertexRTree(targetMesh);
-  std::vector<MatchType> matches;
+  auto &cache = RTreeTools::cacheEntry(meshID);
+  if (not cache.vertices) {
+    return;
+  } else {
+    cache.vertices->insert(vertex.getID());
+  }
+}
+
+void addEdgeToRTree(const mesh::Edge &edge, int meshID)
+{
+  auto &cache = RTreeTools::cacheEntry(meshID);
+  if (not cache.edges) {
+    return;
+  } else {
+    cache.edges->insert(edge.getID());
+  }
+}
+
+void addTriangleToRTree(const mesh::Triangle &triangle, int meshID)
+{
+  auto &cache = RTreeTools::cacheEntry(meshID);
+  if (not cache.triangles) {
+    return;
+  } else {
+    cache.triangles->insert(TriangleTraits::IndexType(bg::return_envelope<RTreeBox>(triangle), triangle.getID()));
+  }
+}
+
+std::vector<VertexMatch> getClosestVertex(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n)
+{
+  auto                     tree = RTreeTools::getVertexRTree(targetMesh);
+  std::vector<VertexMatch> matches;
   tree->query(bgi::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
                 matches.emplace_back(boost::geometry::distance(source, targetMesh->vertices()[matchID]), matchID);
               }));
@@ -39,10 +66,10 @@ std::vector<MatchType> rtree::getClosestVertex(const mesh::Vertex &source, const
   return matches;
 }
 
-std::vector<MatchType> rtree::getClosestEdge(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n)
+std::vector<EdgeMatch> getClosestEdge(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n)
 {
   auto                   tree = RTreeTools::getEdgeRTree(targetMesh);
-  std::vector<MatchType> matches;
+  std::vector<EdgeMatch> matches;
   tree->query(bgi::nearest(source, n), boost::make_function_output_iterator([&](size_t matchID) {
                 matches.emplace_back(boost::geometry::distance(source, targetMesh->edges()[matchID]), matchID);
               }));
@@ -50,10 +77,10 @@ std::vector<MatchType> rtree::getClosestEdge(const mesh::Vertex &source, const m
   return matches;
 }
 
-std::vector<MatchType> rtree::getClosestTriangle(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n)
+std::vector<TriangleMatch> getClosestTriangle(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n)
 {
-  auto                   tree = RTreeTools::getTriangleRTree(targetMesh);
-  std::vector<MatchType> matches;
+  auto                       tree = RTreeTools::getTriangleRTree(targetMesh);
+  std::vector<TriangleMatch> matches;
   tree->query(bgi::nearest(source, n),
               boost::make_function_output_iterator([&](TriangleTraits::IndexType const &match) {
                 matches.emplace_back(bg::distance(source, targetMesh->triangles()[match.second]), match.second);
@@ -62,7 +89,7 @@ std::vector<MatchType> rtree::getClosestTriangle(const mesh::Vertex &source, con
   return matches;
 }
 
-std::vector<size_t> rtree::getVerticesInsideBox(const mesh::PtrMesh &targetMesh, const mesh::Vertex &centerVertex, double supportRadius)
+std::vector<size_t> getVerticesInsideBox(const mesh::PtrMesh &targetMesh, const mesh::Vertex &centerVertex, double supportRadius)
 {
   auto                searchBox = RTreeTools::getEnclosingBox(centerVertex, supportRadius);
   auto                tree      = RTreeTools::getVertexRTree(targetMesh);
@@ -72,7 +99,7 @@ std::vector<size_t> rtree::getVerticesInsideBox(const mesh::PtrMesh &targetMesh,
   return matches;
 }
 
-void rtree::tagAllInsideBox(const mesh::BoundingBox &boundingBox, const mesh::PtrMesh &targetMesh)
+void tagAllInsideBox(const mesh::BoundingBox &boundingBox, const mesh::PtrMesh &targetMesh)
 {
   auto tree = RTreeTools::getVertexRTree(targetMesh);
   tree->query(bgi::intersects(RTreeBox(boundingBox.minCorner(), boundingBox.maxCorner())),
@@ -81,12 +108,12 @@ void rtree::tagAllInsideBox(const mesh::BoundingBox &boundingBox, const mesh::Pt
               }));
 }
 
-void rtree::clear(mesh::Mesh &mesh)
+void clearRTreeCache(mesh::Mesh &mesh)
 {
   RTreeTools::clear(mesh);
 }
 
-void rtree::clear()
+void clearRTreeCache()
 {
   RTreeTools::clear();
 }

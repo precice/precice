@@ -15,6 +15,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "query/RTree.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
@@ -98,6 +99,7 @@ public:
   {
     PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
     _vertices.emplace_back(coords, _manageVertexIDs.getFreeID());
+    vertexAdded(*this);
     return _vertices.back();
   }
 
@@ -295,6 +297,15 @@ private:
   CommunicationMap _communicationMap;
 
   BoundingBox _boundingBox;
+
+  /// Signal is emitted when a vertex is added to mesh
+  boost::signals2::signal<void(Mesh &)> vertexAdded;
+
+  /// Signal is emitted when an edge is added to mesh
+  boost::signals2::signal<void(Mesh &)> edgeAdded;
+
+  /// Signal is emitted when a triangle is added to mesh
+  boost::signals2::signal<void(Mesh &)> triangleAdded;
 };
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);

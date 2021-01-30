@@ -7,8 +7,6 @@
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
 
-using namespace precice;
-
 /// Generic test function that is called from the tests for
 /// MPIPortsCommunication, MPIDirectCommunication and SocketCommunication
 
