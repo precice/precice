@@ -82,7 +82,7 @@ void NearestProjectionMapping::computeMapping()
 
     for (size_t i = 0; i < fVertices.size(); i++) {
       // Search for the origin inside the destination meshes edges
-      auto matches = query::rtree::getClosestEdge(fVertices[i], searchSpace, nnearest);
+      auto matches = query::getClosestEdge(fVertices[i], searchSpace, nnearest);
       bool found   = false;
       for (const auto &match : matches) {
         auto weights = query::generateInterpolationElements(fVertices[i], tEdges[match.index]);
@@ -96,7 +96,7 @@ void NearestProjectionMapping::computeMapping()
 
       if (not found) {
         // Search for the origin inside the destination meshes vertices
-        auto matchedVertices = query::rtree::getClosestVertex(fVertices[i], searchSpace);
+        auto matchedVertices = query::getClosestVertex(fVertices[i], searchSpace);
         _weights[i]          = query::generateInterpolationElements(fVertices[i], tVertices[matchedVertices.at(0).index]);
         distanceStatistics(matchedVertices.at(0).distance);
       }
@@ -118,9 +118,9 @@ void NearestProjectionMapping::computeMapping()
 
     for (size_t i = 0; i < fVertices.size(); i++) {
       // Search for the vertex inside the destination meshes triangles
-      auto matches = query::rtree::getClosestTriangle(fVertices[i], searchSpace, nnearest);
-      bool found   = false;
-      for (const auto &match : matches) {
+      auto triangleMatches = query::getClosestTriangle(fVertices[i], searchSpace, nnearest);
+      bool found           = false;
+      for (const auto &match : triangleMatches) {
         auto weights = query::generateInterpolationElements(fVertices[i], tTriangles[match.index]);
         if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
           _weights[i] = std::move(weights);
@@ -132,9 +132,9 @@ void NearestProjectionMapping::computeMapping()
 
       if (not found) {
         // Search for the vertex inside the destination meshes edges
-        matches.clear();
-        matches = query::rtree::getClosestEdge(fVertices[i], searchSpace, nnearest);
-        for (const auto &match : matches) {
+        triangleMatches.clear();
+        auto edgeMatches = query::getClosestEdge(fVertices[i], searchSpace, nnearest);
+        for (const auto &match : edgeMatches) {
           auto weights = query::generateInterpolationElements(fVertices[i], tEdges[match.index]);
           if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
             _weights[i] = std::move(weights);
@@ -147,9 +147,9 @@ void NearestProjectionMapping::computeMapping()
 
       if (not found) {
         // Search for the vertex inside the destination meshes vertices
-        auto matchedVertices = query::rtree::getClosestVertex(fVertices[i], searchSpace);
-        _weights[i]          = query::generateInterpolationElements(fVertices[i], tVertices[matchedVertices.at(0).index]);
-        distanceStatistics(matchedVertices.at(0).distance);
+        auto vertexMatches = query::getClosestVertex(fVertices[i], searchSpace);
+        _weights[i]        = query::generateInterpolationElements(fVertices[i], tVertices[vertexMatches.at(0).index]);
+        distanceStatistics(vertexMatches.at(0).distance);
       }
     }
     if (distanceStatistics.empty()) {

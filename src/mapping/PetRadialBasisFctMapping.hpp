@@ -830,7 +830,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb = otherMesh->getBoundingBox();
     // Enlarge by support radius
     bb.expandBy(_basisFunction.getSupportRadius());
-    query::rtree::tagAllInsideBox(bb, filterMesh);
+    query::tagAllInsideBox(bb, filterMesh);
   } else {
     filterMesh->tagAll();
   }
@@ -866,7 +866,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   }
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
-  query::rtree::tagAllInsideBox(bb, mesh);
+  query::tagAllInsideBox(bb, mesh);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -1319,7 +1319,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
     results.clear();
 
     // -- PREALLOCATES THE COEFFICIENTS --
-    results = query::rtree::getVerticesInsideBox(inMesh, inVertex, supportRadius);
+    results = query::getVerticesInsideBox(inMesh, inVertex, supportRadius);
 
     // for (mesh::Vertex& vj : inMesh->vertices()) {
     for (auto const i : results) {
@@ -1411,7 +1411,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
 
     // -- PREALLOCATE THE COEFFICIENTS --
     results.clear();
-    results = query::rtree::getVerticesInsideBox(inMesh, oVertex, supportRadius);
+    results = query::getVerticesInsideBox(inMesh, oVertex, supportRadius);
 
     for (auto i : results) {
       const mesh::Vertex &inVertex = inMesh->vertices()[i];

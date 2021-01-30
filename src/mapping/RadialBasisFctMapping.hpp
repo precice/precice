@@ -486,7 +486,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb = otherMesh->getBoundingBox();
     // Enlarge by support radius
     bb.expandBy(_basisFunction.getSupportRadius());
-    query::rtree::tagAllInsideBox(bb, filterMesh);
+    query::tagAllInsideBox(bb, filterMesh);
   } else {
     filterMesh->tagAll();
   }
@@ -518,7 +518,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   }
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
-  query::rtree::tagAllInsideBox(bb, mesh);
+  query::tagAllInsideBox(bb, mesh);
 }
 
 // ------- Non-Member Functions ---------

@@ -40,7 +40,7 @@ TestContext::~TestContext() noexcept
   }
 
   // Clear caches
-  query::rtree::clear();
+  query::clearRTreeCache();
 
   // Reset static ids and counters
   mesh::Data::resetDataCount();

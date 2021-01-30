@@ -12,7 +12,7 @@ public:
   static VertexTraits::Ptr   getVertexRTree(const mesh::PtrMesh &mesh);
   static EdgeTraits::Ptr     getEdgeRTree(const mesh::PtrMesh &mesh);
   static TriangleTraits::Ptr getTriangleRTree(const mesh::PtrMesh &mesh);
-
+  static MeshIndices &       cacheEntry(int MeshID);
   /// Returns a boost::geometry box that encloses a sphere of given radius around a middle point
   static Box3d getEnclosingBox(mesh::Vertex const &middlePoint, double sphereRadius);
 
@@ -25,7 +25,6 @@ public:
   friend struct testing::accessors::rtree;
 
 private:
-  static MeshIndices &                     cacheEntry(int MeshID);
   static std::map<int, query::MeshIndices> _cachedTrees; ///< Cache for all index trees
 };
 

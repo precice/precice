@@ -64,7 +64,7 @@ void WatchPoint::initialize()
 
   // Find closest vertex
   if (not _mesh->vertices().empty()) {
-    auto closestVertex = query::rtree::getClosestVertex(pointVertex, _mesh).at(0);
+    auto closestVertex = query::getClosestVertex(pointVertex, _mesh).at(0);
     _vertices.push_back(&_mesh->vertices()[closestVertex.index]);
     _shortestDistance = closestVertex.distance;
     _weights.emplace_back(_mesh->vertices()[closestVertex.index], 1.0);
@@ -99,24 +99,23 @@ void WatchPoint::initialize()
   }
 
   // Find closest edge
-  auto closestEdge = query::rtree::getClosestEdge(pointVertex, _mesh);
+  auto closestEdge = query::getClosestEdge(pointVertex, _mesh);
   if (not closestEdge.empty()) {
     if (closestEdge.at(0).distance < _shortestDistance) {
-      //         _closestEdge = & findEdge.getClosestEdge ();
       _vertices.clear();
       _vertices.push_back(&_mesh->edges()[closestEdge.at(0).index].vertex(0));
       _vertices.push_back(&_mesh->edges()[closestEdge.at(0).index].vertex(1));
       _shortestDistance = closestEdge.at(0).distance;
       _weights.clear();
       auto interpolationElements = query::generateInterpolationElements(pointVertex, _mesh->edges()[closestEdge.at(0).index]);
-      _weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
-      //_weights.push_back(findEdge.getProjectionPointParameter(0));
-      //_weights.push_back(findEdge.getProjectionPointParameter(1));
+      //_weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
+      _weights.push_back(interpolationElements.at(0));
+      _weights.push_back(interpolationElements.at(1));
     }
   }
   if (_mesh->getDimensions() == 3) {
     // Find closest triangle
-    auto closestTriangle = query::rtree::getClosestTriangle(pointVertex, _mesh);
+    auto closestTriangle = query::getClosestTriangle(pointVertex, _mesh);
     if (not closestTriangle.empty()) {
       if (closestTriangle.at(0).distance < _shortestDistance) {
         _vertices.clear();
@@ -126,10 +125,10 @@ void WatchPoint::initialize()
         _shortestDistance = closestTriangle.at(0).distance;
         _weights.clear();
         auto interpolationElements = query::generateInterpolationElements(pointVertex, _mesh->triangles()[closestTriangle.at(0).index]);
-        _weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
-        //_weights.push_back(findTriangle.getProjectionPointParameter(0));
-        //_weights.push_back(findTriangle.getProjectionPointParameter(1));
-        //_weights.push_back(findTriangle.getProjectionPointParameter(2));
+        //_weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
+        _weights.push_back(interpolationElements.at(0));
+        _weights.push_back(interpolationElements.at(1));
+        _weights.push_back(interpolationElements.at(2));
       }
     }
   }

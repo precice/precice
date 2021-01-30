@@ -34,8 +34,11 @@ Mesh::Mesh(
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
 
-  meshChanged.connect([](Mesh &m) { query::rtree::clear(m); });
-  meshDestroyed.connect([](Mesh &m) { query::rtree::clear(m); });
+  meshChanged.connect([](Mesh &m) { query::clearRTreeCache(m); });
+  meshDestroyed.connect([](Mesh &m) { query::clearRTreeCache(m); });
+  vertexAdded.connect([](Mesh &m) { query::addVertexToRTree(m.vertices().back(), m.getID()); });
+  edgeAdded.connect([](Mesh &m) { query::addEdgeToRTree(m.edges().back(), m.getID()); });
+  triangleAdded.connect([](Mesh &m) { query::addTriangleToRTree(m.triangles().back(), m.getID()); });
 }
 
 Mesh::~Mesh()
@@ -83,6 +86,7 @@ Edge &Mesh::createEdge(
     Vertex &vertexTwo)
 {
   _edges.emplace_back(vertexOne, vertexTwo, _manageEdgeIDs.getFreeID());
+  edgeAdded(*this);
   return _edges.back();
 }
 
@@ -114,6 +118,7 @@ Triangle &Mesh::createTriangle(
       edgeTwo.connectedTo(edgeThree) &&
       edgeThree.connectedTo(edgeOne));
   _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
+  triangleAdded(*this);
   return _triangles.back();
 }
 

@@ -5,6 +5,9 @@
 namespace precice {
 namespace query {
 
+// Initialize static member
+std::map<int, MeshIndices> precice::query::RTreeTools::_cachedTrees;
+
 MeshIndices &RTreeTools::cacheEntry(int meshID)
 {
   auto result = _cachedTrees.emplace(std::make_pair(meshID, MeshIndices{}));
