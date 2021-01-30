@@ -99,7 +99,7 @@ public:
   {
     PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
     _vertices.emplace_back(coords, _manageVertexIDs.getFreeID());
-    vertexAdded(*this);
+    query::addVertexToRTree(_vertices.back(), _id);
     return _vertices.back();
   }
 
@@ -297,15 +297,6 @@ private:
   CommunicationMap _communicationMap;
 
   BoundingBox _boundingBox;
-
-  /// Signal is emitted when a vertex is added to mesh
-  boost::signals2::signal<void(Mesh &)> vertexAdded;
-
-  /// Signal is emitted when an edge is added to mesh
-  boost::signals2::signal<void(Mesh &)> edgeAdded;
-
-  /// Signal is emitted when a triangle is added to mesh
-  boost::signals2::signal<void(Mesh &)> triangleAdded;
 };
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);
