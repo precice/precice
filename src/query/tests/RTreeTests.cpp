@@ -103,36 +103,36 @@ BOOST_AUTO_TEST_CASE(Query2DVertex)
 {
   PRECICE_TEST(1_rank);
   auto mesh = edgeMesh2D();
-  auto tree = RTreeTools::getVertexRTree(mesh);
 
-  BOOST_TEST(tree->size() == 4);
+  mesh::Vertex searchVertex(Eigen::Vector2d(0.2, 0.8), 0);
 
-  Eigen::VectorXd     searchVector(Eigen::Vector2d(0.2, 0.8));
-  std::vector<size_t> results;
-
-  tree->query(bgi::nearest(searchVector, 1), std::back_inserter(results));
-
+  auto results = query::getClosestVertex(searchVertex, mesh);
   BOOST_TEST(results.size() == 1);
-  BOOST_TEST(mesh->vertices().at(results.at(0)).getCoords() == Eigen::Vector2d(0, 1));
+  BOOST_TEST(mesh->vertices().at(results.at(0).index).getCoords() == Eigen::Vector2d(0, 1));
+  BOOST_TEST(results.at(0).distance == 0.28284271247461906);
+
+  results = query::getClosestVertex(searchVertex, mesh, 2);
+  BOOST_TEST(results.size() == 2);
+  BOOST_TEST(mesh->vertices().at(results.at(0).index).getCoords() == Eigen::Vector2d(0, 1));
+  BOOST_TEST(mesh->vertices().at(results.at(1).index).getCoords() == Eigen::Vector2d(0, 0));
 }
 
 BOOST_AUTO_TEST_CASE(Query3DVertex)
 {
   PRECICE_TEST(1_rank);
   auto mesh = edgeMesh3D();
-  {
-    auto tree = RTreeTools::getVertexRTree(mesh);
 
-    BOOST_TEST(tree->size() == 8);
+  mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 0.0, 0.8), 0);
 
-    Eigen::VectorXd     searchVector(Eigen::Vector3d(0.8, 0.0, 0.8));
-    std::vector<size_t> results;
+  auto results = query::getClosestVertex(searchVertex, mesh);
+  BOOST_TEST(results.size() == 1);
+  BOOST_TEST(mesh->vertices().at(results.at(0).index).getCoords() == Eigen::Vector3d(1, 0, 1));
+  BOOST_TEST(results.at(0).distance == 0.28284271247461906);
 
-    tree->query(bgi::nearest(searchVector, 1), std::back_inserter(results));
-
-    BOOST_TEST(results.size() == 1);
-    BOOST_TEST(mesh->vertices().at(results.at(0)).getCoords() == Eigen::Vector3d(1, 0, 1));
-  }
+  results = query::getClosestVertex(searchVertex, mesh, 2);
+  BOOST_TEST(results.size() == 2);
+  BOOST_TEST(mesh->vertices().at(results.at(0).index).getCoords() == Eigen::Vector3d(1, 0, 1));
+  BOOST_TEST(mesh->vertices().at(results.at(1).index).getCoords() == Eigen::Vector3d(1, 0, 0));
 }
 
 BOOST_AUTO_TEST_CASE(Query3DFullVertex)
@@ -162,18 +162,12 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
   mesh->createTriangle(erl, ert, erd);
   mesh->createTriangle(erd, erb, err);
 
-  auto tree = RTreeTools::getVertexRTree(mesh);
+  mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 0.0, 0.8), 0);
 
-  BOOST_TEST(tree->size() == 6);
+  auto results = query::getClosestVertex(searchVertex, mesh);
 
-  Eigen::VectorXd     searchVector(Eigen::Vector3d(0.8, 0.0, 0.8));
-  std::vector<size_t> results;
-
-  tree->query(bgi::nearest(searchVector, 1), std::back_inserter(results));
-
-  BOOST_TEST_INFO(results);
   BOOST_TEST(results.size() == 1);
-  BOOST_TEST(mesh->vertices().at(results.front()).getID() == v10.getID());
+  BOOST_TEST(mesh->vertices().at(results.at(0).index).getID() == v10.getID());
 }
 
 /// Resembles how boost geometry is used inside the PetRBF
@@ -182,20 +176,10 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEmpty)
   PRECICE_TEST(1_rank);
   auto mesh = vertexMesh3D();
 
-  auto tree = RTreeTools::getVertexRTree(mesh);
-  BOOST_TEST(tree->size() == 8);
+  mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 1, 0), 0);
+  double       radius = 0.1; // No vertices in radius
 
-  Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 1, 0));
-
-  std::vector<size_t>             results;
-  double                          radius = 0.1; // No vertices in radius
-  bg::model::box<Eigen::VectorXd> search_box(
-      searchVector - Eigen::VectorXd::Constant(3, radius),
-      searchVector + Eigen::VectorXd::Constant(3, radius));
-
-  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices().at(i)) <= radius; }),
-              std::back_inserter(results));
-
+  auto results = query::getVerticesInsideBox(mesh, searchVertex, radius);
   BOOST_TEST(results.empty());
 }
 
@@ -208,17 +192,10 @@ BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
   auto tree = RTreeTools::getVertexRTree(mesh);
   BOOST_TEST(tree->size() == 8);
 
-  Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 1, 0));
+  mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 1, 0), 0);
+  double       radius = 0.81; // Two vertices in radius
 
-  std::vector<size_t>             results;
-  double                          radius = 0.81; // Two vertices in radius
-  bg::model::box<Eigen::VectorXd> search_box(
-      searchVector - Eigen::VectorXd::Constant(3, radius),
-      searchVector + Eigen::VectorXd::Constant(3, radius));
-
-  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices().at(i)) <= radius; }),
-              std::back_inserter(results));
-
+  auto results = query::getVerticesInsideBox(mesh, searchVertex, radius);
   BOOST_TEST(results.size() == 2);
   BOOST_TEST(mesh->vertices().at(results.at(0)).getCoords() == Eigen::Vector3d(0, 1, 0));
   BOOST_TEST(mesh->vertices().at(results.at(1)).getCoords() == Eigen::Vector3d(1, 1, 0));
@@ -233,37 +210,11 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
   auto tree = RTreeTools::getVertexRTree(mesh);
   BOOST_TEST(tree->size() == 8);
 
-  Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 1, 0));
+  mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 1, 0), 0);
+  double       radius = std::numeric_limits<double>::max();
 
-  std::vector<size_t>             results;
-  double                          radius = std::numeric_limits<double>::max();
-  bg::model::box<Eigen::VectorXd> search_box(
-      searchVector - Eigen::VectorXd::Constant(3, radius),
-      searchVector + Eigen::VectorXd::Constant(3, radius));
-
-  tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(searchVector, mesh->vertices().at(i)) <= radius; }),
-              std::back_inserter(results));
-
+  auto results = query::getVerticesInsideBox(mesh, searchVertex, radius);
   BOOST_TEST(results.size() == 8);
-}
-
-BOOST_AUTO_TEST_CASE(QueryWithBoundingBox)
-{
-  PRECICE_TEST(1_rank);
-  auto mesh = vertexMesh3D();
-
-  auto tree = RTreeTools::getVertexRTree(mesh);
-  BOOST_TEST(tree->size() == 8);
-
-  Eigen::VectorXd searchVector(Eigen::Vector3d(0.8, 1, 0));
-
-  std::vector<size_t> results;
-
-  auto bb         = mesh->getBoundingBox();
-  auto search_box = query::RTreeBox({bb.minCorner(), bb.maxCorner()});
-  tree->query(bg::index::intersects(search_box), std::back_inserter(results));
-
-  BOOST_TEST(results.size() == tree->size());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Vertex
@@ -273,18 +224,12 @@ BOOST_AUTO_TEST_SUITE(Edge)
 BOOST_AUTO_TEST_CASE(Query2DEdge)
 {
   PRECICE_TEST(1_rank);
-  auto mesh = edgeMesh2D();
-  auto tree = RTreeTools::getEdgeRTree(mesh);
+  auto         mesh = edgeMesh2D();
+  mesh::Vertex searchVertex(Eigen::Vector2d(0.2, 0.8), 0);
 
-  BOOST_TEST(tree->size() == 1);
-
-  Eigen::VectorXd     searchVector(Eigen::Vector2d(0.2, 0.8));
-  std::vector<size_t> results;
-
-  tree->query(bgi::nearest(searchVector, 1), std::back_inserter(results));
-
+  auto results = query::getClosestEdge(searchVertex, mesh);
   BOOST_TEST(results.size() == 1);
-  auto &edge = mesh->edges().at(results.front());
+  auto &edge = mesh->edges().at(results.front().index);
 
   BOOST_TEST(edge.vertex(0).getCoords() == Eigen::Vector2d(1, 0));
   BOOST_TEST(edge.vertex(1).getCoords() == Eigen::Vector2d(1, 1));
@@ -294,17 +239,13 @@ BOOST_AUTO_TEST_CASE(Query3DEdge)
 {
   PRECICE_TEST(1_rank);
   auto mesh = edgeMesh3D();
-  auto tree = RTreeTools::getEdgeRTree(mesh);
 
-  BOOST_TEST(tree->size() == 1);
+  mesh::Vertex searchVertex(Eigen::Vector3d(1.8, 0.0, 0.8), 0);
 
-  Eigen::VectorXd     searchVector(Eigen::Vector3d(1.8, 0.0, 0.8));
-  std::vector<size_t> results;
-
-  tree->query(bgi::nearest(searchVector, 1), std::back_inserter(results));
+  auto results = query::getClosestEdge(searchVertex, mesh);
 
   BOOST_TEST(results.size() == 1);
-  auto match = results.front();
+  auto match = results.front().index;
 
   BOOST_TEST(match < mesh->edges().size());
   auto &          edge = mesh->edges().at(match);
@@ -345,19 +286,12 @@ BOOST_AUTO_TEST_CASE(Query3DFullEdge)
   mesh->createTriangle(erl, ert, erd);
   mesh->createTriangle(erd, erb, err);
 
-  auto tree = RTreeTools::getEdgeRTree(mesh);
+  mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 0.5, 0.0), 0);
+  auto         results = query::getClosestEdge(searchVertex, mesh, 2);
 
-  BOOST_TEST(tree->size() == 9);
-
-  Eigen::VectorXd  searchVector(Eigen::Vector3d(0.8, 0.5, 0.0));
-  std::set<size_t> results;
-
-  tree->query(bgi::nearest(searchVector, 2), std::inserter(results, results.begin()));
-
-  BOOST_TEST_INFO(results);
   BOOST_TEST(results.size() == 2);
-  BOOST_TEST(results.count(eld.getID()) == 1);
-  BOOST_TEST(results.count(elr.getID()) == 1);
+  BOOST_TEST(results.at(0).index == eld.getID());
+  BOOST_TEST(results.at(1).index == elr.getID());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Edge
@@ -392,28 +326,14 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
   auto &       trt = mesh->createTriangle(erl, ert, erd);
   auto &       trb = mesh->createTriangle(erd, erb, err);
 
-  auto tree = RTreeTools::getTriangleRTree(mesh);
+  mesh::Vertex searchVertex(Eigen::Vector3d(0.7, 0.5, 0.0), 0);
 
-  BOOST_TEST(tree->size() == 4);
-
-  Eigen::VectorXd                        searchVector(Eigen::Vector3d(0.7, 0.5, 0.0));
-  std::vector<std::pair<double, size_t>> results;
-
-  tree->query(bgi::nearest(searchVector, 3), boost::make_function_output_iterator([&](const precice::query::TriangleTraits::IndexType &val) {
-                results.push_back(std::make_pair(
-                    boost::geometry::distance(
-                        searchVector,
-                        mesh->triangles().at(val.second)),
-                    val.second));
-              }));
-
-  std::sort(results.begin(), results.end());
-  BOOST_TEST_INFO(results);
+  auto results = query::getClosestTriangle(searchVertex, mesh, 3);
   BOOST_TEST(results.size() == 3);
-  BOOST_TEST(results.at(0).second == tlb.getID());
-  BOOST_TEST(results.at(1).second == tlt.getID());
-  BOOST_TEST(results.at(2).second == trt.getID());
-  BOOST_TEST(results.at(2).second != trb.getID());
+  BOOST_TEST(results.at(0).index == tlb.getID());
+  BOOST_TEST(results.at(1).index == tlt.getID());
+  BOOST_TEST(results.at(2).index == trt.getID());
+  BOOST_TEST(results.at(2).index != trb.getID());
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Triangle
@@ -492,6 +412,81 @@ BOOST_AUTO_TEST_CASE(CacheAll)
   BOOST_TEST(vt1 == vt2);
   BOOST_TEST(et1 == et2);
   BOOST_TEST(tt1 == tt2);
+}
+
+BOOST_AUTO_TEST_CASE(AddNewVertex)
+{
+  auto mesh = edgeMesh2D();
+
+  mesh::Vertex searchVertex(Eigen::Vector2d(0.2, 0.8), 0);
+
+  // Generate tree
+  auto results = query::getClosestVertex(searchVertex, mesh);
+
+  BOOST_TEST(results.size() == 1);
+  BOOST_TEST(mesh->vertices().at(results.at(0).index).getCoords() == Eigen::Vector2d(0, 1));
+
+  mesh->createVertex(Eigen::Vector2d(0.3, 0.7));
+
+  // Result should be the added vertex
+  results = query::getClosestVertex(searchVertex, mesh);
+  BOOST_TEST(mesh->vertices().at(results.at(0).index).getCoords() == Eigen::Vector2d(0.3, 0.7));
+}
+
+BOOST_AUTO_TEST_CASE(AddNewEdge)
+{
+  auto mesh = edgeMesh2D();
+
+  mesh::Vertex searchVertex(Eigen::Vector2d(0.2, 0.8), 0);
+
+  // Generate tree
+  auto  results = query::getClosestEdge(searchVertex, mesh);
+  auto &edge    = mesh->edges().at(results.at(0).index);
+
+  BOOST_TEST(edge.vertex(0).getCoords() == Eigen::Vector2d(1, 0));
+  BOOST_TEST(edge.vertex(1).getCoords() == Eigen::Vector2d(1, 1));
+
+  auto &v1 = mesh->createVertex(Eigen::Vector2d(0.3, 0.7));
+  auto &v2 = mesh->createVertex(Eigen::Vector2d(0.4, 0.9));
+  mesh->createEdge(v1, v2);
+
+  // Result should be the added edge
+  results = query::getClosestEdge(searchVertex, mesh);
+  edge    = mesh->edges().at(results.at(0).index);
+
+  BOOST_TEST(edge.vertex(0).getCoords() == Eigen::Vector2d(0.3, 0.7));
+  BOOST_TEST(edge.vertex(1).getCoords() == Eigen::Vector2d(0.4, 0.9));
+}
+
+BOOST_AUTO_TEST_CASE(AddNewTriangle)
+{
+  auto mesh = fullMesh();
+
+  mesh::Vertex searchVertex(Eigen::Vector3d(0.2, 0.8, 0.2), 0);
+
+  // Generate tree
+  auto  results  = query::getClosestTriangle(searchVertex, mesh);
+  auto &triangle = mesh->triangles().at(results.at(0).index);
+
+  BOOST_TEST(triangle.vertex(0).getCoords() == Eigen::Vector3d(0, 2, 0));
+  BOOST_TEST(triangle.vertex(1).getCoords() == Eigen::Vector3d(2, 1, 0));
+  BOOST_TEST(triangle.vertex(2).getCoords() == Eigen::Vector3d(1, 0, 0));
+
+  auto &v1 = mesh->createVertex(Eigen::Vector3d(0.3, 0.7, 0.1));
+  auto &v2 = mesh->createVertex(Eigen::Vector3d(0.4, 0.9, 0.2));
+  auto &v3 = mesh->createVertex(Eigen::Vector3d(0.4, 0.9, 0.1));
+  auto &e1 = mesh->createEdge(v1, v2);
+  auto &e2 = mesh->createEdge(v2, v3);
+  auto &e3 = mesh->createEdge(v1, v3);
+  mesh->createTriangle(e1, e2, e3);
+
+  // Result should be the added edge
+  results  = query::getClosestTriangle(searchVertex, mesh);
+  triangle = mesh->triangles().at(results.at(0).index);
+
+  BOOST_TEST(triangle.vertex(0).getCoords() == Eigen::Vector3d(0.3, 0.7, 0.1));
+  BOOST_TEST(triangle.vertex(1).getCoords() == Eigen::Vector3d(0.4, 0.9, 0.2));
+  BOOST_TEST(triangle.vertex(2).getCoords() == Eigen::Vector3d(0.4, 0.9, 0.1));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Cache
