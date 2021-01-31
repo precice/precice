@@ -15,6 +15,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "query/RTree.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
@@ -98,6 +99,7 @@ public:
   {
     PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
     _vertices.emplace_back(coords, _manageVertexIDs.getFreeID());
+    query::addVertexToRTree(_vertices.back(), _id);
     return _vertices.back();
   }
 

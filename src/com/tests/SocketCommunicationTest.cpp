@@ -6,7 +6,7 @@
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
-using namespace precice;
+//using namespace precice;
 using namespace precice::com;
 
 BOOST_TEST_SPECIALIZED_COLLECTION_COMPARE(std::vector<int>)

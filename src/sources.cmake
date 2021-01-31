@@ -192,8 +192,6 @@ target_sources(precice
     src/mesh/Filter.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
-    src/mesh/RTree.cpp
-    src/mesh/RTree.hpp
     src/mesh/RangeAccessor.hpp
     src/mesh/SharedPointer.hpp
     src/mesh/Triangle.cpp
@@ -205,8 +203,6 @@ target_sources(precice
     src/mesh/config/DataConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
-    src/mesh/impl/BBUtils.hpp
-    src/mesh/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
     src/partition/ProvidedPartition.cpp
@@ -239,14 +235,13 @@ target_sources(precice
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
-    src/query/FindClosest.cpp
-    src/query/FindClosest.hpp
-    src/query/FindClosestEdge.cpp
-    src/query/FindClosestEdge.hpp
-    src/query/FindClosestTriangle.cpp
-    src/query/FindClosestTriangle.hpp
-    src/query/FindClosestVertex.cpp
-    src/query/FindClosestVertex.hpp
+    src/math/interpolation.hpp
+    src/math/interpolation.cpp
+    src/query/RTree.hpp
+    src/query/RTree.cpp
+    src/query/RTreeTools.cpp
+    src/query/RTreeTools.hpp
+    src/query/impl/RTreeAdapter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp

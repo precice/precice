@@ -7,7 +7,9 @@
 #include "SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
+#include "math/interpolation.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "query/RTree.hpp"
 
 namespace precice {
 namespace mesh {
@@ -55,7 +57,7 @@ private:
 
   double _shortestDistance = std::numeric_limits<double>::max();
 
-  std::vector<double> _weights;
+  std::vector<math::interpolation::InterpolationElement> _weights;
 
   std::vector<mesh::Vertex *> _vertices;
 
