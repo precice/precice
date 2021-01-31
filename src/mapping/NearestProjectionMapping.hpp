@@ -5,7 +5,7 @@
 #include <vector>
 #include "Mapping.hpp"
 #include "logging/Logger.hpp"
-#include "query/Interpolation.hpp"
+#include "math/interpolation.hpp"
 #include "query/RTree.hpp"
 
 namespace precice {
@@ -50,7 +50,7 @@ public:
 private:
   logging::Logger _log{"mapping::NearestProjectionMapping"};
 
-  using InterpolationElements = std::vector<query::InterpolationElement>;
+  using InterpolationElements = std::vector<math::interpolation::InterpolationElement>;
   std::vector<InterpolationElements> _weights;
 
   bool _hasComputedMapping = false;

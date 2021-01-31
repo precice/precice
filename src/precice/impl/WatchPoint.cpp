@@ -8,12 +8,12 @@
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
+#include "math/interpolation.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "query/Interpolation.hpp"
 #include "query/RTree.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -107,10 +107,10 @@ void WatchPoint::initialize()
       _vertices.push_back(&_mesh->edges()[closestEdge.at(0).index].vertex(1));
       _shortestDistance = closestEdge.at(0).distance;
       _weights.clear();
-      auto interpolationElements = query::generateInterpolationElements(pointVertex, _mesh->edges()[closestEdge.at(0).index]);
-      //_weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
-      _weights.push_back(interpolationElements.at(0));
-      _weights.push_back(interpolationElements.at(1));
+      auto interpolationElements = math::interpolation::generateInterpolationElements(pointVertex, _mesh->edges()[closestEdge.at(0).index]);
+      _weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
+      //_weights.push_back(interpolationElements.at(0));
+      //_weights.push_back(interpolationElements.at(1));
     }
   }
   if (_mesh->getDimensions() == 3) {
@@ -124,11 +124,11 @@ void WatchPoint::initialize()
         _vertices.push_back(&_mesh->triangles()[closestTriangle.at(0).index].vertex(2));
         _shortestDistance = closestTriangle.at(0).distance;
         _weights.clear();
-        auto interpolationElements = query::generateInterpolationElements(pointVertex, _mesh->triangles()[closestTriangle.at(0).index]);
-        //_weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
-        _weights.push_back(interpolationElements.at(0));
-        _weights.push_back(interpolationElements.at(1));
-        _weights.push_back(interpolationElements.at(2));
+        auto interpolationElements = math::interpolation::generateInterpolationElements(pointVertex, _mesh->triangles()[closestTriangle.at(0).index]);
+        _weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
+        //_weights.push_back(interpolationElements.at(0));
+        //_weights.push_back(interpolationElements.at(1));
+        //_weights.push_back(interpolationElements.at(2));
       }
     }
   }

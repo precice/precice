@@ -1,7 +1,8 @@
-#include "query/Interpolation.hpp"
+#include "math/interpolation.hpp"
 
 namespace precice {
-namespace query {
+namespace math {
+namespace interpolation {
 
 std::vector<InterpolationElement> generateInterpolationElements(
     const mesh::Vertex & /*location*/,
@@ -53,5 +54,6 @@ std::vector<InterpolationElement> generateInterpolationElements(
   return elems;
 }
 
-} // namespace query
+} // namespace interpolation
+} // namespace math
 } // namespace precice

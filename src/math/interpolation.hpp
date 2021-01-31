@@ -6,7 +6,8 @@
 #include "mesh/Vertex.hpp"
 
 namespace precice {
-namespace query {
+namespace math {
+namespace interpolation {
 
 /**
  * @brief Weighting and reference to target element for a value to interpolate
@@ -37,5 +38,6 @@ std::vector<InterpolationElement> generateInterpolationElements(
     const mesh::Vertex &  location,
     const mesh::Triangle &element);
 
-} // namespace query
+} // namespace interpolation
+} // namespace math
 } // namespace precice
