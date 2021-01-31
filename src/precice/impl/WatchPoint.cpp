@@ -109,8 +109,6 @@ void WatchPoint::initialize()
       _weights.clear();
       auto interpolationElements = math::interpolation::generateInterpolationElements(pointVertex, _mesh->edges()[closestEdge.at(0).index]);
       _weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
-      //_weights.push_back(interpolationElements.at(0));
-      //_weights.push_back(interpolationElements.at(1));
     }
   }
   if (_mesh->getDimensions() == 3) {
@@ -126,9 +124,6 @@ void WatchPoint::initialize()
         _weights.clear();
         auto interpolationElements = math::interpolation::generateInterpolationElements(pointVertex, _mesh->triangles()[closestTriangle.at(0).index]);
         _weights.insert(_weights.end(), interpolationElements.begin(), interpolationElements.end());
-        //_weights.push_back(interpolationElements.at(0));
-        //_weights.push_back(interpolationElements.at(1));
-        //_weights.push_back(interpolationElements.at(2));
       }
     }
   }

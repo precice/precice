@@ -8,8 +8,10 @@
 #include "mesh/Vertex.hpp"
 
 namespace precice {
+/// Contains query functions for index trees of meshes
 namespace query {
 
+/// Struct to hold index and distance information of the closest primitive
 template <class Tag>
 struct MatchType {
   double distance;
@@ -24,15 +26,19 @@ struct MatchType {
   };
 };
 
+/// Match tags for each primitive type
 using VertexMatch   = MatchType<struct VertexMatchTag>;
 using EdgeMatch     = MatchType<struct EdgeMatchTag>;
 using TriangleMatch = MatchType<struct TriangleTag>;
 
+/// Inserts a new vertex to an existing RTree. If cache is empty, it does nothing
 void addVertexToRTree(const mesh::Vertex &vertex, int meshID);
+/// Inserts a new edge to an existing RTree. If cache is empty, it does nothing
 void addEdgeToRTree(const mesh::Edge &vertex, int meshID);
+/// Inserts a new triangle to an existing RTree. If cache is empty, it does nothing
 void addTriangleToRTree(const mesh::Triangle &vertex, int meshID);
 
-/// Get the closest vertex/edge/triangle to a vertex, return indices and distance
+/// Get the closest vertex/edge/triangle(s) to a vertex, return distance sorted vector of n matches
 std::vector<VertexMatch>   getClosestVertex(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n = 1);
 std::vector<EdgeMatch>     getClosestEdge(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n = 1);
 std::vector<TriangleMatch> getClosestTriangle(const mesh::Vertex &source, const mesh::PtrMesh &targetMesh, int n = 1);

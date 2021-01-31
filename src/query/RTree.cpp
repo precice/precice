@@ -29,6 +29,7 @@ void addVertexToRTree(const mesh::Vertex &vertex, int meshID)
 {
   auto &cache = RTreeTools::cacheEntry(meshID);
   if (not cache.vertices) {
+    // Tree is not generated before, no operation
     return;
   } else {
     cache.vertices->insert(vertex.getID());
@@ -39,6 +40,7 @@ void addEdgeToRTree(const mesh::Edge &edge, int meshID)
 {
   auto &cache = RTreeTools::cacheEntry(meshID);
   if (not cache.edges) {
+    // Tree is not generated before, no operation
     return;
   } else {
     cache.edges->insert(edge.getID());
@@ -49,6 +51,7 @@ void addTriangleToRTree(const mesh::Triangle &triangle, int meshID)
 {
   auto &cache = RTreeTools::cacheEntry(meshID);
   if (not cache.triangles) {
+    // Tree is not generated before, no operation
     return;
   } else {
     cache.triangles->insert(TriangleTraits::IndexType(bg::return_envelope<RTreeBox>(triangle), triangle.getID()));
