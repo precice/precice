@@ -219,8 +219,13 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
       _preallocation(preallocation),
       _commState(utils::Parallel::current())
 {
-  setInputRequirement(Mapping::MeshRequirement::VERTEX);
-  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  if (constraint == SCALEDCONSISTENT) {
+    setInputRequirement(Mapping::MeshRequirement::FULL);
+    setOutputRequirement(Mapping::MeshRequirement::FULL);
+  } else {
+    setInputRequirement(Mapping::MeshRequirement::VERTEX);
+    setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  }
 
   if (getDimensions() == 2) {
     _deadAxis = {xDead, yDead};
@@ -274,7 +279,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int const     dimensions = input()->getDimensions();
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     inMesh  = output();
     outMesh = input();
   } else {
@@ -557,7 +562,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // -- CONFIGURE SOLVER FOR SYSTEM MATRIX --
   KSPSetOperators(_solver, _matrixC, _matrixC);
   CHKERRV(ierr);
-  KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+  // The fourth argument defines the divergence tolerance, i.e. the tolerance, for which the linear system is
+  // considered as diverged and the computation is aborted. The PETSC_DEFAULT value is 1e9. However, the
+  // divergence residual is scaled using the RHS b of the system. In case the RHS is (still nonzero) very small
+  // and we have a (bad) nonzero initial guess x as defined below, the divergence tolerance might be exceeded
+  // in the first iteration, although the system could be solved in the usual way. This behavior is essentially
+  // a glitch in the divergence check. Therefore, we select a very high value (1e30) in order to disable the
+  // divergence check. In practice, the check is very rarely needed with Krylov methods. According to the PETSc
+  // people, the rare use cases aim for a bad preconditioner, which is not even used in our configuration.
+  // Hence, we can disable the divergence check without concerns.
+  KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, 1e30, PETSC_DEFAULT);
   KSPSetInitialGuessNonzero(_solver, PETSC_TRUE);
   CHKERRV(ierr);                            // Reuse the results from the last iteration, held in the out vector.
   KSPSetOptionsPrefix(_solver, "solverC_"); // s.t. options for only this solver can be set on the command line
@@ -644,7 +658,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
                  valueDim, output()->data(outputDataID)->getDimensions());
 
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     auto au = petsc::Vector::allocate(_matrixA, "au", petsc::Vector::RIGHT);
     auto in = petsc::Vector::allocate(_matrixA, "in");
     int  inRangeStart, inRangeEnd;
@@ -723,7 +737,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       }
       VecRestoreArrayRead(out, &outArray);
     }
-  } else { // Map CONSISTENT
+  } else { // Map CONSISTENT or SCALEDCONSISTENT
     auto out = petsc::Vector::allocate(_matrixA, "out");
     auto in  = petsc::Vector::allocate(_matrixC, "in");
     auto a   = petsc::Vector::allocate(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
@@ -799,6 +813,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       for (int i = 0; i < size; i++) {
         outValues[i * valueDim + dim] = vecArray[i];
       }
+
+      if (hasConstraint(SCALEDCONSISTENT)) {
+        scaleConsistentMapping(inputDataID, outputDataID);
+      }
+
       VecRestoreArrayRead(out, &vecArray);
     }
   }
@@ -813,12 +832,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
   PRECICE_TRACE();
   mesh::PtrMesh filterMesh, otherMesh;
-  if (getConstraint() == CONSISTENT) {
-    filterMesh = input();  // remote
-    otherMesh  = output(); // local
-  } else if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     filterMesh = output(); // remote
     otherMesh  = input();  // local
+  } else {
+    filterMesh = input();  // remote
+    otherMesh  = output(); // local
   }
 
   if (otherMesh->vertices().empty())
@@ -855,10 +874,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 
   mesh::PtrMesh mesh; // The mesh we want to filter
 
-  if (getConstraint() == CONSISTENT)
-    mesh = input();
-  else if (getConstraint() == CONSERVATIVE)
+  if (hasConstraint(CONSERVATIVE)) {
     mesh = output();
+  } else {
+    mesh = input();
+  }
 
   mesh::BoundingBox bb(mesh->getDimensions());
 
@@ -881,7 +901,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
 {
-  const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
+  std::string constraintName;
+  if (hasConstraint(CONSISTENT)) {
+    constraintName = "consistent";
+  } else if (hasConstraint(SCALEDCONSISTENT)) {
+    constraintName = "scaled-consistent";
+  } else {
+    constraintName = "conservative";
+  }
+
   const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
   PRECICE_INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName

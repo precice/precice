@@ -50,10 +50,10 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
   int         dimensions  = 2;
   PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
 
-  mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
-  mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
-  mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
-  mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+  mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+  mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
   PtrData doubleData   = mesh->createData("DoubleData", 1);
   auto &  doubleValues = doubleData->values();
@@ -115,10 +115,10 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
   int         dimensions  = 2;
   PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
 
-  mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
-  mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
-  mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
-  mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+  mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+  mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
   PtrData doubleData   = mesh->createData("DoubleData", 2);
   auto &  doubleValues = doubleData->values();
@@ -192,8 +192,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
 
-  mesh::Edge &e1 = mesh->createEdge(v1, v2);
-  mesh::Edge &e2 = mesh->createEdge(v2, v3);
+  mesh->createEdge(v1, v2);
+  mesh->createEdge(v2, v3);
 
   PtrData doubleData   = mesh->createData("DoubleData", 1);
   auto &  doubleValues = doubleData->values();
@@ -257,8 +257,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityNoScale)
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
 
-  mesh::Edge &e1 = mesh->createEdge(v1, v2);
-  mesh::Edge &e2 = mesh->createEdge(v2, v3);
+  mesh->createEdge(v1, v2);
+  mesh->createEdge(v2, v3);
 
   PtrData doubleData   = mesh->createData("DoubleData", 1);
   auto &  doubleValues = doubleData->values();
@@ -322,8 +322,8 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
 
-  mesh::Edge &e1 = mesh->createEdge(v1, v2);
-  mesh::Edge &e2 = mesh->createEdge(v2, v3);
+  mesh->createEdge(v1, v2);
+  mesh->createEdge(v2, v3);
 
   PtrData doubleData   = mesh->createData("DoubleData", 2);
   auto &  doubleValues = doubleData->values();
@@ -395,8 +395,8 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
 
-  mesh::Edge &e1 = mesh->createEdge(v1, v2);
-  mesh::Edge &e2 = mesh->createEdge(v2, v3);
+  mesh->createEdge(v1, v2);
+  mesh->createEdge(v2, v3);
 
   PtrData doubleData   = mesh->createData("DoubleData", 2);
   auto &  doubleValues = doubleData->values();
@@ -475,8 +475,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
   mesh::Edge &e4 = mesh->createEdge(v4, v1);
   mesh::Edge &e5 = mesh->createEdge(v1, v3);
 
-  mesh::Triangle &t1 = mesh->createTriangle(e1, e2, e5);
-  mesh::Triangle &t2 = mesh->createTriangle(e3, e4, e5);
+  mesh->createTriangle(e1, e2, e5);
+  mesh->createTriangle(e3, e4, e5);
 
   PtrData doubleData   = mesh->createData("DoubleData", 1);
   auto &  doubleValues = doubleData->values();
@@ -549,8 +549,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityNoScale)
   mesh::Edge &e4 = mesh->createEdge(v4, v1);
   mesh::Edge &e5 = mesh->createEdge(v1, v3);
 
-  mesh::Triangle &t1 = mesh->createTriangle(e1, e2, e5);
-  mesh::Triangle &t2 = mesh->createTriangle(e3, e4, e5);
+  mesh->createTriangle(e1, e2, e5);
+  mesh->createTriangle(e3, e4, e5);
 
   PtrData doubleData   = mesh->createData("DoubleData", 1);
   auto &  doubleValues = doubleData->values();
@@ -623,8 +623,8 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
   mesh::Edge &e4 = mesh->createEdge(v4, v1);
   mesh::Edge &e5 = mesh->createEdge(v1, v3);
 
-  mesh::Triangle &t1 = mesh->createTriangle(e1, e2, e5);
-  mesh::Triangle &t2 = mesh->createTriangle(e3, e4, e5);
+  mesh->createTriangle(e1, e2, e5);
+  mesh->createTriangle(e3, e4, e5);
 
   PtrData doubleData   = mesh->createData("DoubleData", 2);
   auto &  doubleValues = doubleData->values();
@@ -705,8 +705,8 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
   mesh::Edge &e4 = mesh->createEdge(v4, v1);
   mesh::Edge &e5 = mesh->createEdge(v1, v3);
 
-  mesh::Triangle &t1 = mesh->createTriangle(e1, e2, e5);
-  mesh::Triangle &t2 = mesh->createTriangle(e3, e4, e5);
+  mesh->createTriangle(e1, e2, e5);
+  mesh->createTriangle(e3, e4, e5);
 
   PtrData doubleData   = mesh->createData("DoubleData", 2);
   auto &  doubleValues = doubleData->values();
@@ -787,8 +787,8 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
   mesh::Edge &e4 = mesh->createEdge(v4, v1);
   mesh::Edge &e5 = mesh->createEdge(v1, v3);
 
-  mesh::Triangle &t1 = mesh->createTriangle(e1, e2, e5);
-  mesh::Triangle &t2 = mesh->createTriangle(e3, e4, e5);
+  mesh->createTriangle(e1, e2, e5);
+  mesh->createTriangle(e3, e4, e5);
 
   PtrData doubleData   = mesh->createData("DoubleData", 1);
   auto &  doubleValues = doubleData->values();
@@ -850,17 +850,17 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
   auto &      doubleValues = doubleData->values();
 
   if (utils::MasterSlave::isMaster()) {
-    mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
-    mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+    mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+    mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
   } else if (context.isRank(1)) {
-    mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
-    mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+    mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+    mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   } else if (context.isRank(2)) {
-    mesh::Vertex &v5 = mesh->createVertex(Eigen::Vector2d(2.0, 0.0));
-    mesh::Vertex &v6 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+    mesh->createVertex(Eigen::Vector2d(2.0, 0.0));
+    mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   } else if (context.isRank(3)) {
-    mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(3.0, 0.0));
-    mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+    mesh->createVertex(Eigen::Vector2d(3.0, 0.0));
+    mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
   }
 
   mesh->computeState();
@@ -943,17 +943,17 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
   auto &      doubleValues = doubleData->values();
 
   if (utils::MasterSlave::isMaster()) {
-    mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
-    mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+    mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+    mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
   } else if (context.isRank(1)) {
-    mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
-    mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+    mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+    mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   } else if (context.isRank(2)) {
-    mesh::Vertex &v5 = mesh->createVertex(Eigen::Vector2d(2.0, 0.0));
-    mesh::Vertex &v6 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+    mesh->createVertex(Eigen::Vector2d(2.0, 0.0));
+    mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   } else if (context.isRank(3)) {
-    mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(3.0, 0.0));
-    mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+    mesh->createVertex(Eigen::Vector2d(3.0, 0.0));
+    mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
   }
 
   mesh->computeState();
@@ -1052,22 +1052,22 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
   if (utils::MasterSlave::isMaster()) {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
     mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
-    mesh::Edge &  e1 = mesh->createEdge(v1, v2);
+    mesh->createEdge(v1, v2);
   }
   if (context.isRank(1)) {
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
     mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
-    mesh::Edge &  e2 = mesh->createEdge(v3, v4);
+    mesh->createEdge(v3, v4);
   }
   if (context.isRank(2)) {
     mesh::Vertex &v5 = mesh->createVertex(Eigen::Vector2d(2.0, 1.0));
     mesh::Vertex &v6 = mesh->createVertex(Eigen::Vector2d(2.0, 2.0));
-    mesh::Edge &  e3 = mesh->createEdge(v5, v6);
+    mesh->createEdge(v5, v6);
   }
   if (context.isRank(3)) {
     mesh::Vertex &v7 = mesh->createVertex(Eigen::Vector2d(3.0, 1.0));
     mesh::Vertex &v8 = mesh->createVertex(Eigen::Vector2d(3.0, 3.0));
-    mesh::Edge &  e4 = mesh->createEdge(v7, v8);
+    mesh->createEdge(v7, v8);
   }
 
   PtrData doubleData   = mesh->createData("DoubleData", 1);
@@ -1159,22 +1159,22 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
   if (utils::MasterSlave::isMaster()) {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
     mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
-    mesh::Edge &  e1 = mesh->createEdge(v1, v2);
+    mesh->createEdge(v1, v2);
   }
   if (context.isRank(1)) {
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
     mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
-    mesh::Edge &  e2 = mesh->createEdge(v3, v4);
+    mesh->createEdge(v3, v4);
   }
   if (context.isRank(2)) {
     mesh::Vertex &v5 = mesh->createVertex(Eigen::Vector2d(2.0, 1.0));
     mesh::Vertex &v6 = mesh->createVertex(Eigen::Vector2d(2.0, 2.0));
-    mesh::Edge &  e3 = mesh->createEdge(v5, v6);
+    mesh->createEdge(v5, v6);
   }
   if (context.isRank(3)) {
     mesh::Vertex &v7 = mesh->createVertex(Eigen::Vector2d(3.0, 1.0));
     mesh::Vertex &v8 = mesh->createVertex(Eigen::Vector2d(3.0, 3.0));
-    mesh::Edge &  e4 = mesh->createEdge(v7, v8);
+    mesh->createEdge(v7, v8);
   }
 
   PtrData doubleData   = mesh->createData("DoubleData", 2);
@@ -1280,26 +1280,26 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
   PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
 
   if (utils::MasterSlave::isMaster()) {
-    mesh::Vertex &  v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-    mesh::Vertex &  v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
-    mesh::Vertex &  v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
-    mesh::Edge &    e1 = mesh->createEdge(v1, v2);
-    mesh::Edge &    e2 = mesh->createEdge(v2, v3);
-    mesh::Edge &    e5 = mesh->createEdge(v1, v3);
-    mesh::Triangle &t1 = mesh->createTriangle(e1, e2, e5);
+    mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+    mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
+    mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
+    mesh::Edge &  e1 = mesh->createEdge(v1, v2);
+    mesh::Edge &  e2 = mesh->createEdge(v2, v3);
+    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh->createTriangle(e1, e2, e5);
   }
   if (context.isRank(1)) {
   }
   if (context.isRank(2)) {
   }
   if (context.isRank(3)) {
-    mesh::Vertex &  v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-    mesh::Vertex &  v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
-    mesh::Vertex &  v4 = mesh->createVertex(Eigen::Vector3d(0.0, 4.0, 0.0));
-    mesh::Edge &    e3 = mesh->createEdge(v3, v4);
-    mesh::Edge &    e4 = mesh->createEdge(v4, v1);
-    mesh::Edge &    e5 = mesh->createEdge(v1, v3);
-    mesh::Triangle &t2 = mesh->createTriangle(e3, e4, e5);
+    mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+    mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
+    mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector3d(0.0, 4.0, 0.0));
+    mesh::Edge &  e3 = mesh->createEdge(v3, v4);
+    mesh::Edge &  e4 = mesh->createEdge(v4, v1);
+    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh->createTriangle(e3, e4, e5);
   }
 
   PtrData doubleData   = mesh->createData("DoubleData", 1);
@@ -1385,26 +1385,26 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
   PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
 
   if (utils::MasterSlave::isMaster()) {
-    mesh::Vertex &  v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-    mesh::Vertex &  v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
-    mesh::Vertex &  v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
-    mesh::Edge &    e1 = mesh->createEdge(v1, v2);
-    mesh::Edge &    e2 = mesh->createEdge(v2, v3);
-    mesh::Edge &    e5 = mesh->createEdge(v1, v3);
-    mesh::Triangle &t1 = mesh->createTriangle(e1, e2, e5);
+    mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+    mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
+    mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
+    mesh::Edge &  e1 = mesh->createEdge(v1, v2);
+    mesh::Edge &  e2 = mesh->createEdge(v2, v3);
+    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh->createTriangle(e1, e2, e5);
   }
   if (context.isRank(1)) {
   }
   if (context.isRank(2)) {
   }
   if (context.isRank(3)) {
-    mesh::Vertex &  v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-    mesh::Vertex &  v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
-    mesh::Vertex &  v4 = mesh->createVertex(Eigen::Vector3d(0.0, 4.0, 0.0));
-    mesh::Edge &    e3 = mesh->createEdge(v3, v4);
-    mesh::Edge &    e4 = mesh->createEdge(v4, v1);
-    mesh::Edge &    e5 = mesh->createEdge(v1, v3);
-    mesh::Triangle &t2 = mesh->createTriangle(e3, e4, e5);
+    mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+    mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
+    mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector3d(0.0, 4.0, 0.0));
+    mesh::Edge &  e3 = mesh->createEdge(v3, v4);
+    mesh::Edge &  e4 = mesh->createEdge(v4, v1);
+    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh->createTriangle(e3, e4, e5);
   }
 
   PtrData doubleData   = mesh->createData("DoubleData", 2);

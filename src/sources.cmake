@@ -198,6 +198,7 @@ target_sources(precice
     src/mesh/SharedPointer.hpp
     src/mesh/Triangle.cpp
     src/mesh/Triangle.hpp
+    src/mesh/Utils.cpp
     src/mesh/Utils.hpp
     src/mesh/Vertex.cpp
     src/mesh/Vertex.hpp

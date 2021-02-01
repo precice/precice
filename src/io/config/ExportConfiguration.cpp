@@ -24,11 +24,6 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   auto attrEveryNTimeWindows = makeXMLAttribute(ATTR_EVERY_N_TIME_WINDOWS, 1)
                                    .setDocumentation("preCICE does an export every X time windows. Choose -1 for no exports.");
 
-  auto attrTriggerSolver = makeXMLAttribute(ATTR_TRIGGER_SOLVER, false)
-                               .setDocumentation(
-                                   std::string("If set to on/yes, an action requirement is set for the participant ") +
-                                   "with frequency defined by attribute " + ATTR_EVERY_N_TIME_WINDOWS + ".");
-
   auto attrNormals = makeXMLAttribute(ATTR_NORMALS, true)
                          .setDocumentation("If set to on/yes, mesh normals (if available) are added to the export.");
 
@@ -38,7 +33,6 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrLocation);
     tag.addAttribute(attrEveryNTimeWindows);
-    tag.addAttribute(attrTriggerSolver);
     tag.addAttribute(attrNormals);
     tag.addAttribute(attrEveryIteration);
     parent.addSubtag(tag);
@@ -50,14 +44,13 @@ void ExportConfiguration::xmlTagCallback(
     xml::XMLTag &                    tag)
 {
   if (tag.getNamespace() == TAG) {
-    ExportContext context;
-    context.location          = tag.getStringAttributeValue(ATTR_LOCATION);
-    context.triggerSolverPlot = tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
-    context.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
-    context.plotNormals       = tag.getBooleanAttributeValue(ATTR_NORMALS);
-    context.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
-    context.type              = tag.getName();
-    _contexts.push_back(context);
+    ExportContext econtext;
+    econtext.location          = tag.getStringAttributeValue(ATTR_LOCATION);
+    econtext.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
+    econtext.plotNormals       = tag.getBooleanAttributeValue(ATTR_NORMALS);
+    econtext.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
+    econtext.type              = tag.getName();
+    _contexts.push_back(econtext);
   }
 }
 

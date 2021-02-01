@@ -14,6 +14,7 @@
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
@@ -135,8 +136,8 @@ MappingConfiguration::MappingConfiguration(
                         .setDocumentation("The mesh to map the data to.");
 
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
-                            .setDocumentation("Use conservative to conserve the quantity of the data over the interface such as force or mass. Use consistent for normalized quantities such as temperature or pressure.")
-                            .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT});
+                            .setDocumentation("Use conservative to conserve the nodal sum of the data over the interface (needed e.g. for force mapping).  Use consistent for normalized quantities such as temperature or pressure. Use scaled-consistent for normalized quantities where conservation of integral values is needed (e.g. velocities when the mass flow rate needs to be conserved). Mesh connectivity is required to use scaled-consistent.")
+                            .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT, VALUE_SCALED_CONSISTENT});
 
   auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
                         .setDocumentation("This allows to defer the mapping of the data to advance or to a manual call to mapReadDataTo and mapWriteDataFrom.")
@@ -282,6 +283,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     constraintValue = Mapping::CONSERVATIVE;
   } else if (constraint == VALUE_CONSISTENT) {
     constraintValue = Mapping::CONSISTENT;
+  } else if (constraint == VALUE_SCALED_CONSISTENT) {
+    constraintValue = Mapping::SCALEDCONSISTENT;
   } else {
     PRECICE_ASSERT(false, "Unknown mapping constraint \"" << constraint << "\". Please check the documentation for available options.");
   }
@@ -408,14 +411,13 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
 {
   for (const ConfiguredMapping &configuredMapping : _mappings) {
-    bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
-    PRECICE_CHECK(!sameFromMesh, "There cannot be two mappings from mesh \""
-                                     << mapping.fromMesh->getName() << "\". "
-                                     << "Please remove any duplicate mapping definitions with from=\"" << mapping.fromMesh->getName() << "\" or use a different mesh.");
-    PRECICE_CHECK(!sameToMesh, "There cannot be two mappings to mesh \""
-                                   << mapping.toMesh->getName() << "\". "
-                                   << "Please remove any duplicate mapping definitions with to=\"" << mapping.toMesh->getName() << "\" or use a different mesh.");
+    bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
+    bool sameMapping  = sameToMesh && sameFromMesh;
+    PRECICE_CHECK(!sameMapping, "There cannot be two mappings from mesh \""
+                                    << mapping.fromMesh->getName() << "\" to mesh \""
+                                    << mapping.toMesh->getName() << "\". "
+                                    << "Please remove one of the duplicated meshes. ");
   }
 }
 

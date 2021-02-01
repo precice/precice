@@ -1,5 +1,5 @@
+#include <boost/filesystem/operations.hpp>
 #ifndef PRECICE_NO_PYTHON
-#include "PythonAction.hpp"
 #include <Eigen/Core>
 #include <Python.h>
 #include <cstdlib>
@@ -8,6 +8,7 @@
 #include <ostream>
 #include <pthread.h>
 #include <string>
+#include "PythonAction.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -58,6 +59,8 @@ PythonAction::PythonAction(
       _modulePath(modulePath),
       _moduleName(moduleName)
 {
+  PRECICE_CHECK(boost::filesystem::is_directory(_modulePath),
+                "The module path of the python action \"" << _moduleName << "\" does not exist. The configured path is \"" << _modulePath << "\".");
   if (targetDataID != -1) {
     _targetData = getMesh()->data(targetDataID);
     _numberArguments++;

@@ -44,9 +44,12 @@ NearestProjectionMapping::NearestProjectionMapping(
   if (constraint == CONSISTENT) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
-  } else {
-    PRECICE_ASSERT(constraint == CONSERVATIVE, constraint);
+  } else if (constraint == CONSERVATIVE) {
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
+    setOutputRequirement(Mapping::MeshRequirement::FULL);
+  } else {
+    PRECICE_ASSERT(constraint == SCALEDCONSISTENT, constraint);
+    setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
 }
@@ -74,14 +77,14 @@ void NearestProjectionMapping::computeMapping()
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, search_space;
-  if (getConstraint() == CONSISTENT) {
-    PRECICE_DEBUG("Compute consistent mapping");
-    origins      = output();
-    search_space = input();
-  } else {
+  if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Compute conservative mapping");
     origins      = input();
     search_space = output();
+  } else {
+    PRECICE_DEBUG("Compute consistent mapping");
+    origins      = output();
+    search_space = input();
   }
 
   const auto &fVertices = origins->vertices();
@@ -264,23 +267,7 @@ void NearestProjectionMapping::map(
   int dimensions = inData->getDimensions();
   PRECICE_ASSERT(dimensions == outData->getDimensions());
 
-  if (getConstraint() == CONSISTENT) {
-    PRECICE_DEBUG("Map consistent");
-    PRECICE_ASSERT(_weights.size() == output()->vertices().size(),
-                   _weights.size(), output()->vertices().size());
-    for (size_t i = 0; i < output()->vertices().size(); i++) {
-      InterpolationElements &elems     = _weights[i];
-      size_t                 outOffset = i * dimensions;
-      for (query::InterpolationElement &elem : elems) {
-        size_t inOffset = (size_t) elem.element->getID() * dimensions;
-        for (int dim = 0; dim < dimensions; dim++) {
-          PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
-          PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
-          outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
-        }
-      }
-    }
-  } else {
+  if (hasConstraint(CONSERVATIVE)) {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Map conservative");
     PRECICE_ASSERT(_weights.size() == input()->vertices().size(),
@@ -297,6 +284,25 @@ void NearestProjectionMapping::map(
         }
       }
     }
+  } else {
+    PRECICE_DEBUG("Map consistent");
+    PRECICE_ASSERT(_weights.size() == output()->vertices().size(),
+                   _weights.size(), output()->vertices().size());
+    for (size_t i = 0; i < output()->vertices().size(); i++) {
+      InterpolationElements &elems     = _weights[i];
+      size_t                 outOffset = i * dimensions;
+      for (query::InterpolationElement &elem : elems) {
+        size_t inOffset = (size_t) elem.element->getID() * dimensions;
+        for (int dim = 0; dim < dimensions; dim++) {
+          PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
+          PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
+          outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
+        }
+      }
+    }
+    if (hasConstraint(SCALEDCONSISTENT)) {
+      scaleConsistentMapping(inputDataID, outputDataID);
+    }
   }
 }
 
@@ -311,11 +317,10 @@ void NearestProjectionMapping::tagMeshFirstRound()
 
   // Determine the Mesh to Tag
   mesh::PtrMesh origins;
-  if (getConstraint() == CONSISTENT) {
-    origins = input();
-  } else {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
+  if (hasConstraint(CONSERVATIVE)) {
     origins = output();
+  } else {
+    origins = input();
   }
 
   // Gather all vertices to be tagged in a first phase.
