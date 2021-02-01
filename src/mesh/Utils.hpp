@@ -135,8 +135,5 @@ std::array<Eigen::VectorXd, n> coordsFor(const std::array<Vertex *, n> &vertexPt
 /// Given the data and the mesh, this function returns the surface integral. Assumes no overlap exists for the mesh
 Eigen::VectorXd integrate(PtrMesh mesh, PtrData data);
 
-/// Given the data and the mesh, this function returns the surface integral
-Eigen::VectorXd integrateOwner(PtrMesh mesh, PtrData data);
-
 } // namespace mesh
 } // namespace precice
