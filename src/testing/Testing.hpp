@@ -6,7 +6,6 @@
 #include <type_traits>
 #include "math/differences.hpp"
 #include "math/math.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
