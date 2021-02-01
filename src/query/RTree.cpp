@@ -1,4 +1,4 @@
-#include "mesh/RTree.hpp"
+#include "query/RTree.hpp"
 #include <algorithm>
 #include <boost/range/irange.hpp>
 #include <cstddef>
@@ -8,12 +8,12 @@
 #include "utils/assertion.hpp"
 
 namespace precice {
-namespace mesh {
+namespace query {
 
 namespace bg = boost::geometry;
 
 // Initialize static member
-std::map<int, rtree::MeshIndices> precice::mesh::rtree::_cached_trees;
+std::map<int, rtree::MeshIndices> precice::query::rtree::_cached_trees;
 
 rtree::MeshIndices &rtree::cacheEntry(int meshID)
 {
@@ -21,7 +21,7 @@ rtree::MeshIndices &rtree::cacheEntry(int meshID)
   return result.first->second;
 }
 
-rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh &mesh)
+rtree::vertex_traits::Ptr rtree::getVertexRTree(const mesh::PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
@@ -32,7 +32,7 @@ rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh &mesh)
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do. Even passing an index range instead of calling
   // tree->insert repeatedly is about 10x faster.
-  RTreeParameters            params;
+  impl::RTreeParameters      params;
   vertex_traits::IndexGetter ind(mesh->vertices());
   auto                       tree = std::make_shared<vertex_traits::RTree>(
       boost::irange<std::size_t>(0lu, mesh->vertices().size()), params, ind);
@@ -41,7 +41,7 @@ rtree::vertex_traits::Ptr rtree::getVertexRTree(const PtrMesh &mesh)
   return tree;
 }
 
-rtree::edge_traits::Ptr rtree::getEdgeRTree(const PtrMesh &mesh)
+rtree::edge_traits::Ptr rtree::getEdgeRTree(const mesh::PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
@@ -52,7 +52,7 @@ rtree::edge_traits::Ptr rtree::getEdgeRTree(const PtrMesh &mesh)
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do. Even passing an index range instead of calling
   // tree->insert repeatedly is about 10x faster.
-  RTreeParameters          params;
+  impl::RTreeParameters    params;
   edge_traits::IndexGetter ind(mesh->edges());
   auto                     tree = std::make_shared<edge_traits::RTree>(
       boost::irange<std::size_t>(0lu, mesh->edges().size()), params, ind);
@@ -61,7 +61,7 @@ rtree::edge_traits::Ptr rtree::getEdgeRTree(const PtrMesh &mesh)
   return tree;
 }
 
-rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh &mesh)
+rtree::triangle_traits::Ptr rtree::getTriangleRTree(const mesh::PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
@@ -81,14 +81,14 @@ rtree::triangle_traits::Ptr rtree::getTriangleRTree(const PtrMesh &mesh)
 
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do.
-  RTreeParameters              params;
+  impl::RTreeParameters        params;
   triangle_traits::IndexGetter ind;
   auto                         tree = std::make_shared<triangle_traits::RTree>(elements, params, ind);
   cache.triangles                   = tree;
   return tree;
 }
 
-void rtree::clear(Mesh &mesh)
+void rtree::clear(mesh::Mesh &mesh)
 {
   _cached_trees.erase(mesh.getID());
 }
@@ -98,7 +98,7 @@ void rtree::clear()
   _cached_trees.clear();
 }
 
-Box3d getEnclosingBox(Vertex const &middlePoint, double sphereRadius)
+Box3d getEnclosingBox(mesh::Vertex const &middlePoint, double sphereRadius)
 {
   namespace bg = boost::geometry;
   auto &coords = middlePoint.getCoords();
@@ -115,5 +115,5 @@ Box3d getEnclosingBox(Vertex const &middlePoint, double sphereRadius)
   return box;
 }
 
-} // namespace mesh
+} // namespace query
 } // namespace precice

@@ -15,9 +15,9 @@
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/RTree.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
+#include "query/RTree.hpp"
 #include "utils/Event.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
@@ -49,7 +49,7 @@ void NearestNeighborMapping::computeMapping()
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = mesh::rtree::getVertexRTree(input());
+    auto                  rtree = query::rtree::getVertexRTree(input());
     e2.stop();
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
@@ -74,7 +74,7 @@ void NearestNeighborMapping::computeMapping()
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Compute conservative mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = mesh::rtree::getVertexRTree(output());
+    auto                  rtree = query::rtree::getVertexRTree(output());
     e2.stop();
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
@@ -111,9 +111,9 @@ void NearestNeighborMapping::clear()
   _vertexIndices.clear();
   _hasComputedMapping = false;
   if (getConstraint() == CONSISTENT) {
-    mesh::rtree::clear(*input());
+    query::rtree::clear(*input());
   } else {
-    mesh::rtree::clear(*output());
+    query::rtree::clear(*output());
   }
 }
 
