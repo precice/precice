@@ -45,14 +45,14 @@ public:
   /// The partition is computed, i.e. the mesh re-partitioned if required and all data structures are set up.
   virtual void compute() = 0;
 
-  void setFromMapping(mapping::PtrMapping fromMapping)
+  void addFromMapping(mapping::PtrMapping fromMapping)
   {
-    _fromMapping = fromMapping;
+    _fromMappings.push_back(std::move(fromMapping));
   }
 
-  void setToMapping(mapping::PtrMapping toMapping)
+  void addToMapping(mapping::PtrMapping toMapping)
   {
-    _toMapping = toMapping;
+    _toMappings.push_back(std::move(toMapping));
   }
 
   void addM2N(m2n::PtrM2N m2n)
@@ -63,9 +63,9 @@ public:
 protected:
   mesh::PtrMesh _mesh;
 
-  mapping::PtrMapping _fromMapping;
+  std::vector<mapping::PtrMapping> _fromMappings;
 
-  mapping::PtrMapping _toMapping;
+  std::vector<mapping::PtrMapping> _toMappings;
 
   /// m2n connection to each connected participant
   std::vector<m2n::PtrM2N> _m2ns;

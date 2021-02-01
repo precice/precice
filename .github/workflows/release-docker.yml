@@ -5,6 +5,8 @@ on:
 jobs:
   latest:
     runs-on: ubuntu-latest
+    env:
+        docker_username: precice
     steps:
       - uses: actions/checkout@v2
       - name: Set up Docker Buildx
@@ -12,7 +14,7 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: precice
+          username: ${{ env.docker_username }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push Dockerfile
         uses: docker/build-push-action@v2
@@ -21,6 +23,6 @@ jobs:
         with:
           push: true
           file: "./tools/releasing/packaging/docker/Dockerfile"
-          tags: precice/precice:${{ env.version }},precice/precice:latest
+          tags: ${{ env.docker_username }}/precice:${{ env.version }},${{ env.docker_username }}/precice:latest
           build-args: |
             version=${{ env.version }}

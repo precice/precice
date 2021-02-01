@@ -257,7 +257,7 @@ public:
    *
    * @see hasToEvaluateFineModel()
    */
-  bool hasToEvaluateSurrogateModel() const;
+  [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateSurrogateModel() const;
 
   /**
    * @brief Checks if the solver has to evaluate the fine model representation.
@@ -272,7 +272,7 @@ public:
    *
    * @see hasToEvaluateSurrogateModel()
    */
-  bool hasToEvaluateFineModel() const;
+  [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateFineModel() const;
 
   ///@}
 
@@ -342,9 +342,12 @@ public:
   /**
    * @brief Returns a id-set of all used meshes by this participant.
    *
+   * @deprecated Unclear use case and difficult to port to other languages.
+   *             Prefer calling getMeshID for specific mesh names.
+   * 
    * @returns the set of ids.
    */
-  std::set<int> getMeshIDs() const;
+  [[deprecated("Use getMeshID() for specific mesh names instead.")]] std::set<int> getMeshIDs() const;
 
   /**
    * @brief Creates a mesh vertex

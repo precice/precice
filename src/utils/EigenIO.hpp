@@ -16,6 +16,11 @@ inline Eigen::IOFormat wkt()
   );
 }
 
+inline Eigen::IOFormat debug()
+{
+  return wkt();
+}
+
 } // namespace eigenio
 } // namespace utils
 } // namespace precice

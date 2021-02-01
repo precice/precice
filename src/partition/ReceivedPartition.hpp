@@ -61,7 +61,16 @@ private:
    * Empty provided meshes mean that the re-partitioning completely filtered
    * out the mesh received on this rank at the coupling interface.
    */
-  bool areProvidedMeshesEmpty() const;
+  bool isAnyProvidedMeshNonEmpty() const;
+
+  /// Returns whether any mapping is defined
+  bool hasAnyMapping() const;
+
+  /// Tag mesh in first round accoring to all mappings
+  void tagMeshFirstRound();
+
+  /// Tag mesh in second round accoring to all mappings
+  void tagMeshSecondRound();
 
   void createOwnerInformation();
 
