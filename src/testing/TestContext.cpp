@@ -15,7 +15,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/RTree.hpp"
+#include "query/RTree.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
@@ -40,7 +40,7 @@ TestContext::~TestContext() noexcept
   }
 
   // Clear caches
-  mesh::rtree::clear();
+  query::rtree::clear();
 
   // Reset static ids and counters
   mesh::Data::resetDataCount();
