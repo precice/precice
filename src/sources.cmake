@@ -247,6 +247,13 @@ target_sources(precice
     src/query/FindClosestTriangle.hpp
     src/query/FindClosestVertex.cpp
     src/query/FindClosestVertex.hpp
+    src/query/Index.hpp
+    src/query/Index.cpp
+    src/query/RTree.cpp
+    src/query/RTree.hpp
+    src/query/impl/RTreeAdapter.hpp
+    src/query/impl/RTreeWrapper.hpp
+    src/query/impl/RTreeWrapper.cpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp

@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
 #include "mesh/Edge.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 
 namespace precice {
