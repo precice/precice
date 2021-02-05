@@ -592,7 +592,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     rhs.assemble();
     switch (_solver.solve(rhs, rescalingCoeffs)) {
     case (petsc::KSPSolver::SolverResult::Converged):
-      PRECICE_INFO("Using rescaling, " << _solver.summaryFor(rhs));
+      PRECICE_INFO("Using rescaling. " << _solver.summaryFor(rhs));
       break;
     case (petsc::KSPSolver::SolverResult::Stopped):
       PRECICE_WARN("Using rescaling, but beware. " << _solver.summaryFor(rhs));
