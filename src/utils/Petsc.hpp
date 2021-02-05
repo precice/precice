@@ -259,8 +259,8 @@ public:
   /// The state of the KSP after returning from solve()
   enum struct SolverResult {
     Converged, ///< The solver converged
-    Stopped, ///< The solver reached the maximum iterations
-    Diverged ///< The solver diverged 
+    Stopped,   ///< The solver reached the maximum iterations
+    Diverged   ///< The solver diverged
   };
 
   /// Returns the current convergence reason as a SolverRestult
@@ -277,7 +277,7 @@ public:
 
   /// Returns the iteration number of solver, either during or after the solve call.
   PetscInt getIterationNumber();
-  
+
   /// Returns the relavtive tolerance of the KSP
   PetscReal getRealtiveTolerance();
 

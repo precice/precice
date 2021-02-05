@@ -7,19 +7,19 @@
 #include <memory>
 #include <mpi.h>
 #include <numeric>
+#include <sstream>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <sstream>
 
 #include "logging/LogMacros.hpp"
 #include "petsc.h"
 #include "petscdrawtypes.h"
 #include "petscis.h"
-#include "petscviewertypes.h"
-#include "utils/Parallel.hpp"
 #include "petscksp.h"
 #include "petscsystypes.h"
+#include "petscviewertypes.h"
+#include "utils/Parallel.hpp"
 
 #endif // not PRECICE_NO_PETSC
 
@@ -639,10 +639,11 @@ void KSPSolver::reset()
   CHKERRV(ierr);
 }
 
-KSPSolver::SolverResult KSPSolver::getSolverResult() {
+KSPSolver::SolverResult KSPSolver::getSolverResult()
+{
   KSPConvergedReason convReason;
-  PetscErrorCode ierr = 0;
-  ierr = KSPGetConvergedReason(ksp, &convReason);
+  PetscErrorCode     ierr = 0;
+  ierr                    = KSPGetConvergedReason(ksp, &convReason);
   if (ierr != 0) {
     return SolverResult::Diverged;
   }
@@ -667,7 +668,6 @@ KSPSolver::SolverResult KSPSolver::solveTranspose(Vector &b, Vector &x)
   KSPSolveTranspose(ksp, b, x);
   return getSolverResult();
 }
-
 
 std::string KSPSolver::summaryFor(Vector &b)
 {
