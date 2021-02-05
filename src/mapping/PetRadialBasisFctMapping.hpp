@@ -843,9 +843,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       switch (solverResult) {
       case (petsc::KSPSolver::SolverResult::Converged):
-        PRECICE_WARN("The linear system of the RBF mapping from mesh "
-                     << input()->getName() << " to mesh " << output()->getName()
-                     << " converged. " << _QRsolver.summaryFor(in));
+        PRECICE_DEBUG("The linear system of the RBF mapping from mesh "
+                      << input()->getName() << " to mesh " << output()->getName()
+                      << " converged. " << _QRsolver.summaryFor(in));
         break;
       case (petsc::KSPSolver::SolverResult::Stopped):
         PRECICE_WARN("The linear system of the RBF mapping from mesh "
