@@ -30,8 +30,8 @@ VertexTraits::Ptr RTreeWrapper::getVertexRTree(const mesh::PtrMesh &mesh)
   auto                      tree = std::make_shared<VertexTraits::RTree>(
       boost::irange<std::size_t>(0lu, mesh->vertices().size()), params, ind);
 
-  cache.vertexRTree = tree;
-  return tree;
+  cache.vertexRTree = std::move(tree);
+  return cache.vertexRTree;
 }
 
 EdgeTraits::Ptr RTreeWrapper::getEdgeRTree(const mesh::PtrMesh &mesh)
@@ -50,8 +50,8 @@ EdgeTraits::Ptr RTreeWrapper::getEdgeRTree(const mesh::PtrMesh &mesh)
   auto                    tree = std::make_shared<EdgeTraits::RTree>(
       boost::irange<std::size_t>(0lu, mesh->edges().size()), params, ind);
 
-  cache.edgeRTree = tree;
-  return tree;
+  cache.edgeRTree = std::move(tree);
+  return cache.edgeRTree;
 }
 
 TriangleTraits::Ptr RTreeWrapper::getTriangleRTree(const mesh::PtrMesh &mesh)
@@ -77,8 +77,8 @@ TriangleTraits::Ptr RTreeWrapper::getTriangleRTree(const mesh::PtrMesh &mesh)
   impl::RTreeParameters       params;
   TriangleTraits::IndexGetter ind;
   auto                        tree = std::make_shared<TriangleTraits::RTree>(elements, params, ind);
-  cache.triangleRTree              = tree;
-  return tree;
+  cache.triangleRTree              = std::move(tree);
+  return cache.triangleRTree;
 }
 
 Box3d RTreeWrapper::getEnclosingBox(mesh::Vertex const &middlePoint, double sphereRadius)

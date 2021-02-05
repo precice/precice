@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include "logging/Logger.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -67,7 +68,9 @@ public:
   static void clearCache(mesh::Mesh &mesh);
 
 private:
-  const mesh::PtrMesh _mesh;
+  std::unique_ptr<impl::MeshIndices> _cache;
+  const mesh::PtrMesh                _mesh;
+  static precice::logging::Logger    _log;
 };
 
 } // namespace query

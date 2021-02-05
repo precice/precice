@@ -4,14 +4,6 @@
 #include <boost/container/flat_set.hpp>
 #include <functional>
 #include <memory>
-
-#include <boost/version.hpp>
-#if BOOST_VERSION < 106600
-#include <boost/function_output_iterator.hpp>
-#else
-#include <boost/iterator/function_output_iterator.hpp>
-#endif
-
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
