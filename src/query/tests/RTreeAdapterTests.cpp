@@ -11,7 +11,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "query/RTree.hpp"
 #include "query/impl/RTreeAdapter.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"

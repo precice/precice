@@ -1,6 +1,8 @@
 #pragma once
 
+#include <memory>
 #include <vector>
+#include "mesh/BoundingBox.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
@@ -33,22 +35,39 @@ namespace impl {
 struct MeshIndices;
 }
 
+/// Class to query the index trees of the mesh
 class Index {
 
 public:
   Index(const mesh::PtrMesh &mesh);
+  ~Index();
 
-  std::vector<VertexMatch>   getClosestVertex(const mesh::Vertex &sourceVertex, int n = 1);
-  std::vector<EdgeMatch>     getClosestEdge(const mesh::Vertex &sourcesVertex, int n = 1);
+  /// Get n number of closest vertices to the given vertex
+  std::vector<VertexMatch> getClosestVertex(const mesh::Vertex &sourceVertex, int n = 1);
+
+  /// Get n number of closest edges to the given vertex
+  std::vector<EdgeMatch> getClosestEdge(const mesh::Vertex &sourcesVertex, int n = 1);
+
+  /// Get n number of closest triangles to the given vertex
   std::vector<TriangleMatch> getClosestTriangle(const mesh::Vertex &sourceVertex, int n = 1);
-  std::vector<size_t>        getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius);
 
+  /// Return all the vertices inside the box formed by vertex and radius
+  std::vector<size_t> getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius);
+
+  /// Return all the vertices inside a bounding box
+  std::vector<size_t> getVerticesInsideBox(const mesh::BoundingBox &bb);
+
+  /// Clear all the cache
   static void clearCache();
+
+  /// Clear the cache of given mesh
   static void clearCache(int meshID);
 
+  /// Clear the cache of given mesh
+  static void clearCache(mesh::Mesh &mesh);
+
 private:
-  std::unique_ptr<impl::MeshIndices> _cache;
-  const mesh::PtrMesh                _mesh;
+  const mesh::PtrMesh _mesh;
 };
 
 } // namespace query

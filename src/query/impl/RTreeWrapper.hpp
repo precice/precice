@@ -4,6 +4,13 @@
 #include "RTreeAdapter.hpp"
 
 namespace precice {
+
+namespace testing {
+namespace accessors {
+struct rtree;
+}
+} // namespace testing
+
 namespace query {
 namespace impl {
 
@@ -17,21 +24,47 @@ struct MeshIndices {
   TriangleTraits::Ptr triangleRTree;
 };
 
+/// Class to encapsulate boost::geometry implementations
 class RTreeWrapper {
 public:
-  static VertexTraits::Ptr   getVertexRTree(const mesh::PtrMesh &mesh);
-  static EdgeTraits::Ptr     getEdgeRTree(const mesh::PtrMesh &mesh);
-  static TriangleTraits::Ptr getTriangleRTree(const mesh::PtrMesh &mesh);
-  static Box3d               getEnclosingBox(const mesh::Vertex &middlePoint, double sphereRadius);
+  /// Return vertex index tree from cache, if cache is empty, create the tree
+  static VertexTraits::Ptr getVertexRTree(const mesh::PtrMesh &mesh);
 
+  /// Return edge index tree from cache, if cache is empty, create the tree
+  static EdgeTraits::Ptr getEdgeRTree(const mesh::PtrMesh &mesh);
+
+  /// Return triangle index tree from cache, if cache is empty, create the tree
+  static TriangleTraits::Ptr getTriangleRTree(const mesh::PtrMesh &mesh);
+
+  /// Return boost::geometry version of enclosing box around a point
+  static Box3d getEnclosingBox(const mesh::Vertex &middlePoint, double sphereRadius);
+
+  /// Clear the whole cache
   static void clearCache();
+
+  /// Clear the cache only for the given mesh
   static void clearCache(int meshID);
 
 private:
+  friend struct testing::accessors::rtree;
+
   static MeshIndices &              cacheEntry(int meshID);
   static std::map<int, MeshIndices> _cachedTrees;
 };
 
 } // namespace impl
 } // namespace query
+
+namespace testing {
+namespace accessors {
+struct rtree {
+  static std::map<int, query::impl::MeshIndices> &getCache()
+  {
+    return query::impl::RTreeWrapper::_cachedTrees;
+  }
+};
+
+} // namespace accessors
+} // namespace testing
+
 } // namespace precice

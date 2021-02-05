@@ -1,5 +1,6 @@
 #include "RTreeWrapper.hpp"
 #include <boost/range/irange.hpp>
+#include "mesh/BoundingBox.hpp"
 
 namespace precice {
 namespace query {
