@@ -1,7 +1,4 @@
 #include "Petsc.hpp"
-#include <petscksp.h>
-#include <petscsystypes.h>
-#include <sstream>
 
 // A logger is always required
 #include "logging/Logger.hpp"
@@ -13,6 +10,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <sstream>
 
 #include "logging/LogMacros.hpp"
 #include "petsc.h"
@@ -20,6 +18,9 @@
 #include "petscis.h"
 #include "petscviewertypes.h"
 #include "utils/Parallel.hpp"
+#include "petscksp.h"
+#include "petscsystypes.h"
+
 #endif // not PRECICE_NO_PETSC
 
 namespace precice {
