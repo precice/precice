@@ -167,6 +167,7 @@ namespace impl {
 
 /// The general rtree parameter type used in precice
 using RTreeParameters = boost::geometry::index::rstar<16>;
+using Box3d           = boost::geometry::model::box<boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>>;
 
 /// Type trait to extract information based on the type of a Primitive
 template <class T>

@@ -41,9 +41,14 @@ public:
   std::vector<VertexMatch>   getClosestVertex(const mesh::Vertex &sourceVertex, int n = 1);
   std::vector<EdgeMatch>     getClosestEdge(const mesh::Vertex &sourcesVertex, int n = 1);
   std::vector<TriangleMatch> getClosestTriangle(const mesh::Vertex &sourceVertex, int n = 1);
+  std::vector<size_t>        getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius);
+
+  static void clearCache();
+  static void clearCache(int meshID);
 
 private:
-  const mesh::PtrMesh _mesh;
+  std::unique_ptr<impl::MeshIndices> _cache;
+  const mesh::PtrMesh                _mesh;
 };
 
 } // namespace query

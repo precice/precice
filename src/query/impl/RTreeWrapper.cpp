@@ -80,6 +80,33 @@ TriangleTraits::Ptr RTreeWrapper::getTriangleRTree(const mesh::PtrMesh &mesh)
   return tree;
 }
 
+Box3d RTreeWrapper::getEnclosingBox(mesh::Vertex const &middlePoint, double sphereRadius)
+{
+  namespace bg = boost::geometry;
+  auto &coords = middlePoint.getCoords();
+
+  Box3d box;
+  bg::set<bg::min_corner, 0>(box, bg::get<0>(coords) - sphereRadius);
+  bg::set<bg::min_corner, 1>(box, bg::get<1>(coords) - sphereRadius);
+  bg::set<bg::min_corner, 2>(box, bg::get<2>(coords) - sphereRadius);
+
+  bg::set<bg::max_corner, 0>(box, bg::get<0>(coords) + sphereRadius);
+  bg::set<bg::max_corner, 1>(box, bg::get<1>(coords) + sphereRadius);
+  bg::set<bg::max_corner, 2>(box, bg::get<2>(coords) + sphereRadius);
+
+  return box;
+}
+
+void RTreeWrapper::clearCache()
+{
+  _cachedTrees.clear();
+}
+
+void RTreeWrapper::clearCache(int meshID)
+{
+  _cachedTrees.erase(meshID);
+}
+
 } // namespace impl
 } // namespace query
 } // namespace precice
