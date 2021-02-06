@@ -718,7 +718,7 @@ std::string KSPSolver::summaryFor(Vector &b)
   double dlim  = bnorm * dtol;
   double rlim  = bnorm * rtol;
 
-  oss << ". Last residual norm: " << getResidualNorm() << ", limits: relative " << rlim << " (rtol " << rtol << "), absolute " << atol << ", divergence " << dlim << "(dtol "<< dtol << ')';
+  oss << ". Last residual norm: " << getResidualNorm() << ", limits: relative " << rlim << " (rtol " << rtol << "), absolute " << atol << ", divergence " << dlim << "(dtol " << dtol << ')';
 
   return oss.str();
 }
