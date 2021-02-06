@@ -671,6 +671,8 @@ KSPSolver::SolverResult KSPSolver::solveTranspose(Vector &b, Vector &x)
 
 std::string KSPSolver::summaryFor(Vector &b)
 {
+  // See PETSc manual page for KSPGetConvergedReason to understand this function
+  // We treat divergence due to reaching max iterations as "stopped"
   KSPConvergedReason convReason;
   KSPGetConvergedReason(ksp, &convReason);
 
@@ -678,10 +680,12 @@ std::string KSPSolver::summaryFor(Vector &b)
   PetscInt  miter;
   KSPGetTolerances(ksp, &rtol, &atol, &dtol, &miter);
 
-  bool converged = (convReason >= 0);
-
   std::ostringstream oss;
-  oss << "Solver " << (converged ? "converged" : "diverged");
+  {
+    bool converged = (convReason >= 0);
+    bool stopped   = (convReason == KSP_DIVERGED_ITS);
+    oss << "Solver " << (converged ? "converged" : (stopped ? "stopped" : "diverged"));
+  }
   oss << " after " << getIterationNumber() << " of " << miter << " iterations due to";
 
   switch (convReason) {
@@ -697,10 +701,13 @@ std::string KSPSolver::summaryFor(Vector &b)
     oss << " reaching the maximum iterations";
     break;
   case (KSP_DIVERGED_DTOL):
-    oss << " sufficient relaive divergence";
+    oss << " sufficient divergence";
     break;
   case (KSP_DIVERGED_NANORINF):
-    oss << " a residual norm of nan or inf";
+    oss << " the residual norm becoming nan or inf";
+    break;
+  case (KSP_DIVERGED_BREAKDOWN):
+    oss << " a generic breakdown of the method";
     break;
   default:
     oss << " the PETSc reason " << KSPConvergedReasons[convReason];
@@ -711,7 +718,7 @@ std::string KSPSolver::summaryFor(Vector &b)
   double dlim  = bnorm * dtol;
   double rlim  = bnorm * rtol;
 
-  oss << ". Residual norm: " << getResidualNorm() << ", limits: relative " << rlim << ", absolute " << atol << ", divergence " << dlim;
+  oss << ". Last residual norm: " << getResidualNorm() << ", limits: relative " << rlim << " (rtol " << rtol << "), absolute " << atol << ", divergence " << dlim << "(dtol "<< dtol << ')';
 
   return oss.str();
 }
