@@ -16,7 +16,8 @@ namespace bgi = boost::geometry::index;
 Index::Index(const mesh::PtrMesh &mesh)
     : _mesh(mesh)
 {
-  _cache = std::make_unique<impl::MeshIndices>(impl::MeshIndices{});
+  _rtreeWrapper = std::make_unique<impl::RTreeWrapper>(impl::RTreeWrapper{});
+  _cache        = std::make_unique<impl::MeshIndices>(impl::MeshIndices{});
 }
 
 Index::~Index()
@@ -29,7 +30,7 @@ std::vector<VertexMatch> Index::getClosestVertex(const mesh::Vertex &sourceVerte
   precice::utils::Event event("query.index.getClosestVerticesOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (not _cache->vertexRTree) {
-    _cache->vertexRTree = impl::RTreeWrapper::getVertexRTree(_mesh);
+    _cache->vertexRTree = _rtreeWrapper->getVertexRTree(_mesh);
   }
 
   std::vector<VertexMatch> matches;
@@ -47,7 +48,7 @@ std::vector<EdgeMatch> Index::getClosestEdge(const mesh::Vertex &sourceVertex, i
   precice::utils::Event event("query.index.getClosestEdgesOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (not _cache->edgeRTree) {
-    _cache->edgeRTree = impl::RTreeWrapper::getEdgeRTree(_mesh);
+    _cache->edgeRTree = _rtreeWrapper->getEdgeRTree(_mesh);
   }
 
   std::vector<EdgeMatch> matches;
@@ -65,7 +66,7 @@ std::vector<TriangleMatch> Index::getClosestTriangle(const mesh::Vertex &sourceV
   precice::utils::Event event("query.index.getClosestTrianglesOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (not _cache->triangleRTree) {
-    _cache->triangleRTree = impl::RTreeWrapper::getTriangleRTree(_mesh);
+    _cache->triangleRTree = _rtreeWrapper->getTriangleRTree(_mesh);
   }
 
   std::vector<TriangleMatch> matches;
@@ -84,10 +85,10 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::Vertex &centerVertex
   precice::utils::Event event("query.index.getVerticesInsideBoxOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (_cache->vertexRTree == nullptr) {
-    _cache->vertexRTree = impl::RTreeWrapper::getVertexRTree(_mesh);
+    _cache->vertexRTree = _rtreeWrapper->getVertexRTree(_mesh);
   }
 
-  auto                searchBox = impl::RTreeWrapper::getEnclosingBox(centerVertex, radius);
+  auto                searchBox = _rtreeWrapper->getEnclosingBox(centerVertex, radius);
   std::vector<size_t> matches;
   _cache->vertexRTree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
                              std::back_inserter(matches));
@@ -101,7 +102,7 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
   precice::utils::Event event("query.index.getVerticesInsideBoxOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (not _cache->vertexRTree) {
-    _cache->vertexRTree = impl::RTreeWrapper::getVertexRTree(_mesh);
+    _cache->vertexRTree = _rtreeWrapper->getVertexRTree(_mesh);
   }
   std::vector<size_t> matches;
   _cache->vertexRTree->query(bgi::intersects(query::RTreeBox{bb.minCorner(), bb.maxCorner()}), std::back_inserter(matches));

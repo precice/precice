@@ -28,16 +28,16 @@ struct MeshIndices {
 class RTreeWrapper {
 public:
   /// Return vertex index tree from cache, if cache is empty, create the tree
-  static VertexTraits::Ptr getVertexRTree(const mesh::PtrMesh &mesh);
+  VertexTraits::Ptr getVertexRTree(const mesh::PtrMesh &mesh);
 
   /// Return edge index tree from cache, if cache is empty, create the tree
-  static EdgeTraits::Ptr getEdgeRTree(const mesh::PtrMesh &mesh);
+  EdgeTraits::Ptr getEdgeRTree(const mesh::PtrMesh &mesh);
 
   /// Return triangle index tree from cache, if cache is empty, create the tree
-  static TriangleTraits::Ptr getTriangleRTree(const mesh::PtrMesh &mesh);
+  TriangleTraits::Ptr getTriangleRTree(const mesh::PtrMesh &mesh);
 
   /// Return boost::geometry version of enclosing box around a point
-  static Box3d getEnclosingBox(const mesh::Vertex &middlePoint, double sphereRadius);
+  Box3d getEnclosingBox(const mesh::Vertex &middlePoint, double sphereRadius);
 
   /// Clear the whole cache
   static void clearCache();
@@ -48,7 +48,7 @@ public:
 private:
   friend struct testing::accessors::rtree;
 
-  static MeshIndices &              cacheEntry(int meshID);
+  MeshIndices &                     cacheEntry(int meshID);
   static std::map<int, MeshIndices> _cachedTrees;
 };
 

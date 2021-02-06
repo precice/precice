@@ -184,9 +184,10 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEmpty)
 BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
 {
   PRECICE_TEST(1_rank);
-  auto  mesh = vertexMesh3D();
-  Index indexTree(mesh);
-  auto  tree = impl::RTreeWrapper::getVertexRTree(mesh);
+  auto               mesh = vertexMesh3D();
+  Index              indexTree(mesh);
+  impl::RTreeWrapper wrapper;
+  auto               tree = wrapper.getVertexRTree(mesh);
   BOOST_TEST(tree->size() == 8);
 
   mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 1, 0), 0);
@@ -202,9 +203,10 @@ BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
 BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
 {
   PRECICE_TEST(1_rank);
-  auto  mesh = vertexMesh3D();
-  Index indexTree(mesh);
-  auto  tree = impl::RTreeWrapper::getVertexRTree(mesh);
+  auto               mesh = vertexMesh3D();
+  Index              indexTree(mesh);
+  impl::RTreeWrapper wrapper;
+  auto               tree = wrapper.getVertexRTree(mesh);
   BOOST_TEST(tree->size() == 8);
 
   mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 1, 0), 0);
@@ -348,7 +350,8 @@ BOOST_FIXTURE_TEST_CASE(ClearOnChange, precice::testing::accessors::rtree)
   mesh->createVertex(Eigen::Vector2d(0, 0));
 
   // The Cache should clear whenever a mesh changes
-  auto vTree = query::impl::RTreeWrapper::getVertexRTree(mesh);
+  query::impl::RTreeWrapper wrapper;
+  auto                      vTree = wrapper.getVertexRTree(mesh);
   BOOST_TEST(getCache().size() == 1);
   mesh->meshChanged(*mesh); // Emit signal, that mesh has changed
   BOOST_TEST(getCache().empty());
@@ -361,7 +364,8 @@ BOOST_FIXTURE_TEST_CASE(ClearOnDestruction, precice::testing::accessors::rtree)
   mesh->createVertex(Eigen::Vector2d(0, 0));
 
   // The Cache should clear whenever we destroy the Mesh
-  auto vTree = query::impl::RTreeWrapper::getVertexRTree(mesh);
+  query::impl::RTreeWrapper wrapper;
+  auto                      vTree = wrapper.getVertexRTree(mesh);
   BOOST_TEST(getCache().size() == 1);
   mesh.reset(); // Destroy mesh object, signal is emitted to clear cache
   BOOST_TEST(getCache().empty());
@@ -372,8 +376,9 @@ BOOST_AUTO_TEST_CASE(CacheVertices)
   PRECICE_TEST(1_rank);
   auto ptr = fullMesh();
 
-  auto vt1 = impl::RTreeWrapper::getVertexRTree(ptr);
-  auto vt2 = impl::RTreeWrapper::getVertexRTree(ptr);
+  impl::RTreeWrapper wrapper;
+  auto               vt1 = wrapper.getVertexRTree(ptr);
+  auto               vt2 = wrapper.getVertexRTree(ptr);
   BOOST_TEST(vt1 == vt2);
 }
 
@@ -382,8 +387,9 @@ BOOST_AUTO_TEST_CASE(CacheEdges)
   PRECICE_TEST(1_rank);
   auto ptr = fullMesh();
 
-  auto et1 = impl::RTreeWrapper::getEdgeRTree(ptr);
-  auto et2 = impl::RTreeWrapper::getEdgeRTree(ptr);
+  impl::RTreeWrapper wrapper;
+  auto               et1 = wrapper.getEdgeRTree(ptr);
+  auto               et2 = wrapper.getEdgeRTree(ptr);
   BOOST_TEST(et1 == et2);
 }
 
@@ -392,8 +398,9 @@ BOOST_AUTO_TEST_CASE(CacheTriangles)
   PRECICE_TEST(1_rank);
   auto ptr = fullMesh();
 
-  auto tt1 = impl::RTreeWrapper::getTriangleRTree(ptr);
-  auto tt2 = impl::RTreeWrapper::getTriangleRTree(ptr);
+  impl::RTreeWrapper wrapper;
+  auto               tt1 = wrapper.getTriangleRTree(ptr);
+  auto               tt2 = wrapper.getTriangleRTree(ptr);
   BOOST_TEST(tt1 == tt2);
 }
 
@@ -402,13 +409,14 @@ BOOST_AUTO_TEST_CASE(CacheAll)
   PRECICE_TEST(1_rank);
   auto ptr = fullMesh();
 
-  auto vt1 = impl::RTreeWrapper::getVertexRTree(ptr);
-  auto et1 = impl::RTreeWrapper::getEdgeRTree(ptr);
-  auto tt1 = impl::RTreeWrapper::getTriangleRTree(ptr);
+  impl::RTreeWrapper wrapper;
+  auto               vt1 = wrapper.getVertexRTree(ptr);
+  auto               et1 = wrapper.getEdgeRTree(ptr);
+  auto               tt1 = wrapper.getTriangleRTree(ptr);
 
-  auto vt2 = impl::RTreeWrapper::getVertexRTree(ptr);
-  auto et2 = impl::RTreeWrapper::getEdgeRTree(ptr);
-  auto tt2 = impl::RTreeWrapper::getTriangleRTree(ptr);
+  auto vt2 = wrapper.getVertexRTree(ptr);
+  auto et2 = wrapper.getEdgeRTree(ptr);
+  auto tt2 = wrapper.getTriangleRTree(ptr);
 
   BOOST_TEST(vt1 == vt2);
   BOOST_TEST(et1 == et2);

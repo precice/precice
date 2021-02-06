@@ -33,8 +33,9 @@ using EdgeMatch     = MatchType<struct EdgeMatchTag>;
 using TriangleMatch = MatchType<struct TriangleTag>;
 
 namespace impl {
+class RTreeWrapper;
 struct MeshIndices;
-}
+} // namespace impl
 
 /// Class to query the index trees of the mesh
 class Index {
@@ -68,9 +69,10 @@ public:
   static void clearCache(mesh::Mesh &mesh);
 
 private:
-  std::unique_ptr<impl::MeshIndices> _cache;
-  const mesh::PtrMesh                _mesh;
-  static precice::logging::Logger    _log;
+  std::unique_ptr<impl::RTreeWrapper> _rtreeWrapper;
+  std::unique_ptr<impl::MeshIndices>  _cache;
+  const mesh::PtrMesh                 _mesh;
+  static precice::logging::Logger     _log;
 };
 
 } // namespace query
