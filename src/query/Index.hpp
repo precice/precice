@@ -33,7 +33,6 @@ using EdgeMatch     = MatchType<struct EdgeMatchTag>;
 using TriangleMatch = MatchType<struct TriangleTag>;
 
 namespace impl {
-class RTreeWrapper;
 struct MeshIndices;
 } // namespace impl
 
@@ -45,13 +44,16 @@ public:
   ~Index();
 
   /// Get n number of closest vertices to the given vertex
-  std::vector<VertexMatch> getClosestVertex(const mesh::Vertex &sourceVertex, int n = 1);
+  VertexMatch getClosestVertex(const mesh::Vertex &sourceVertex);
+
+  /// Get n number of closest vertices to the given vertex
+  std::vector<VertexMatch> getClosestVertices(const mesh::Vertex &sourceVertex, int n);
 
   /// Get n number of closest edges to the given vertex
-  std::vector<EdgeMatch> getClosestEdge(const mesh::Vertex &sourcesVertex, int n = 1);
+  std::vector<EdgeMatch> getClosestEdges(const mesh::Vertex &sourcesVertex, int n);
 
   /// Get n number of closest triangles to the given vertex
-  std::vector<TriangleMatch> getClosestTriangle(const mesh::Vertex &sourceVertex, int n = 1);
+  std::vector<TriangleMatch> getClosestTriangles(const mesh::Vertex &sourceVertex, int n);
 
   /// Return all the vertices inside the box formed by vertex and radius
   std::vector<size_t> getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius);
@@ -59,21 +61,22 @@ public:
   /// Return all the vertices inside a bounding box
   std::vector<size_t> getVerticesInsideBox(const mesh::BoundingBox &bb);
 
-  /// Clear all the cache
-  static void clearCache();
-
-  /// Clear the cache of given mesh
-  static void clearCache(int meshID);
-
-  /// Clear the cache of given mesh
-  static void clearCache(mesh::Mesh &mesh);
-
 private:
-  std::unique_ptr<impl::RTreeWrapper> _rtreeWrapper;
-  std::unique_ptr<impl::MeshIndices>  _cache;
-  const mesh::PtrMesh                 _mesh;
-  static precice::logging::Logger     _log;
+  std::unique_ptr<impl::MeshIndices> _cache;
+  const mesh::PtrMesh                _mesh;
+  static precice::logging::Logger    _log;
 };
+
+namespace rtree {
+/// Clear all the cache
+void clearCache();
+
+/// Clear the cache of given mesh
+void clearCache(int meshID);
+
+/// Clear the cache of given mesh
+void clearCache(mesh::Mesh &mesh);
+} // namespace rtree
 
 } // namespace query
 } // namespace precice

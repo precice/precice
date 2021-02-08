@@ -49,9 +49,9 @@ void NearestNeighborMapping::computeMapping()
     const mesh::Mesh::VertexContainer &    outputVertices = output()->vertices();
     // Search for the output vertex inside the input mesh and add index to _vertexIndices
     for (size_t i = 0; i < verticesSize; i++) {
-      auto matches      = indexTree.getClosestVertex(outputVertices[i]);
-      _vertexIndices[i] = matches.at(0).index;
-      distanceStatistics(matches.at(0).distance);
+      auto matchedVertex = indexTree.getClosestVertex(outputVertices[i]);
+      _vertexIndices[i]  = matchedVertex.index;
+      distanceStatistics(matchedVertex.distance);
     }
     if (distanceStatistics.empty()) {
       PRECICE_INFO("Mapping distance not available due to empty partition.");
@@ -69,9 +69,9 @@ void NearestNeighborMapping::computeMapping()
     utils::statistics::DistanceAccumulator distanceStatistics;
     const mesh::Mesh::VertexContainer &    inputVertices = input()->vertices();
     for (size_t i = 0; i < verticesSize; i++) {
-      auto matches      = indexTree.getClosestVertex(inputVertices[i]);
-      _vertexIndices[i] = matches.at(0).index;
-      distanceStatistics(matches.at(0).distance);
+      auto matchedVertex = indexTree.getClosestVertex(inputVertices[i]);
+      _vertexIndices[i]  = matchedVertex.index;
+      distanceStatistics(matchedVertex.distance);
     }
     if (distanceStatistics.empty()) {
       PRECICE_INFO("Mapping distance not available due to empty partition.");
@@ -94,9 +94,9 @@ void NearestNeighborMapping::clear()
   _vertexIndices.clear();
   _hasComputedMapping = false;
   if (getConstraint() == CONSISTENT) {
-    query::Index::clearCache(input()->getID());
+    query::rtree::clearCache(input()->getID());
   } else {
-    query::Index::clearCache(output()->getID());
+    query::rtree::clearCache(output()->getID());
   }
 }
 

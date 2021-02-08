@@ -4,13 +4,6 @@
 #include "RTreeAdapter.hpp"
 
 namespace precice {
-
-namespace testing {
-namespace accessors {
-struct rtree;
-}
-} // namespace testing
-
 namespace query {
 namespace impl {
 
@@ -25,8 +18,13 @@ struct MeshIndices {
 };
 
 /// Class to encapsulate boost::geometry implementations
-class RTreeWrapper {
+class Indexer {
 public:
+  Indexer(const Indexer &) = delete;
+  Indexer &operator=(const Indexer &) = delete;
+
+  static std::shared_ptr<Indexer> instance();
+
   /// Return vertex index tree from cache, if cache is empty, create the tree
   VertexTraits::Ptr getVertexRTree(const mesh::PtrMesh &mesh);
 
@@ -39,32 +37,21 @@ public:
   /// Return boost::geometry version of enclosing box around a point
   Box3d getEnclosingBox(const mesh::Vertex &middlePoint, double sphereRadius);
 
+  size_t getCacheSize();
+
   /// Clear the whole cache
-  static void clearCache();
+  void clearCache();
 
   /// Clear the cache only for the given mesh
-  static void clearCache(int meshID);
+  void clearCache(int meshID);
 
 private:
-  friend struct testing::accessors::rtree;
-
-  MeshIndices &                     cacheEntry(int meshID);
-  static std::map<int, MeshIndices> _cachedTrees;
+  Indexer(){};
+  MeshIndices &              cacheEntry(int meshID);
+  std::map<int, MeshIndices> _cachedTrees;
 };
 
 } // namespace impl
 } // namespace query
-
-namespace testing {
-namespace accessors {
-struct rtree {
-  static std::map<int, query::impl::MeshIndices> &getCache()
-  {
-    return query::impl::RTreeWrapper::_cachedTrees;
-  }
-};
-
-} // namespace accessors
-} // namespace testing
 
 } // namespace precice

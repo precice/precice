@@ -1,4 +1,4 @@
-#include "RTreeWrapper.hpp"
+#include "Indexer.hpp"
 #include <boost/range/irange.hpp>
 #include "mesh/BoundingBox.hpp"
 
@@ -6,15 +6,19 @@ namespace precice {
 namespace query {
 namespace impl {
 
-std::map<int, MeshIndices> precice::query::impl::RTreeWrapper::_cachedTrees;
+std::shared_ptr<Indexer> Indexer::instance()
+{
+  static std::shared_ptr<Indexer> indexer{new Indexer};
+  return indexer;
+}
 
-MeshIndices &RTreeWrapper::cacheEntry(int meshID)
+MeshIndices &Indexer::cacheEntry(int meshID)
 {
   auto result = _cachedTrees.emplace(std::make_pair(meshID, MeshIndices{}));
   return result.first->second;
 }
 
-VertexTraits::Ptr RTreeWrapper::getVertexRTree(const mesh::PtrMesh &mesh)
+VertexTraits::Ptr Indexer::getVertexRTree(const mesh::PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
@@ -34,7 +38,7 @@ VertexTraits::Ptr RTreeWrapper::getVertexRTree(const mesh::PtrMesh &mesh)
   return cache.vertexRTree;
 }
 
-EdgeTraits::Ptr RTreeWrapper::getEdgeRTree(const mesh::PtrMesh &mesh)
+EdgeTraits::Ptr Indexer::getEdgeRTree(const mesh::PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
@@ -54,7 +58,7 @@ EdgeTraits::Ptr RTreeWrapper::getEdgeRTree(const mesh::PtrMesh &mesh)
   return cache.edgeRTree;
 }
 
-TriangleTraits::Ptr RTreeWrapper::getTriangleRTree(const mesh::PtrMesh &mesh)
+TriangleTraits::Ptr Indexer::getTriangleRTree(const mesh::PtrMesh &mesh)
 {
   PRECICE_ASSERT(mesh);
   auto &cache = cacheEntry(mesh->getID());
@@ -81,7 +85,7 @@ TriangleTraits::Ptr RTreeWrapper::getTriangleRTree(const mesh::PtrMesh &mesh)
   return cache.triangleRTree;
 }
 
-Box3d RTreeWrapper::getEnclosingBox(mesh::Vertex const &middlePoint, double sphereRadius)
+Box3d Indexer::getEnclosingBox(mesh::Vertex const &middlePoint, double sphereRadius)
 {
   namespace bg = boost::geometry;
   auto &coords = middlePoint.getCoords();
@@ -98,12 +102,17 @@ Box3d RTreeWrapper::getEnclosingBox(mesh::Vertex const &middlePoint, double sphe
   return box;
 }
 
-void RTreeWrapper::clearCache()
+size_t Indexer::getCacheSize()
+{
+  return _cachedTrees.size();
+}
+
+void Indexer::clearCache()
 {
   _cachedTrees.clear();
 }
 
-void RTreeWrapper::clearCache(int meshID)
+void Indexer::clearCache(int meshID)
 {
   _cachedTrees.erase(meshID);
 }

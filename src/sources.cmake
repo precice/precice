@@ -247,8 +247,8 @@ target_sources(precice
     src/query/Index.hpp
     src/query/Index.cpp
     src/query/impl/RTreeAdapter.hpp
-    src/query/impl/RTreeWrapper.hpp
-    src/query/impl/RTreeWrapper.cpp
+    src/query/impl/Indexer.hpp
+    src/query/impl/Indexer.cpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp
