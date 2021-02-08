@@ -192,8 +192,8 @@ target_sources(precice
     src/mesh/Filter.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
-    src/mesh/RTree.cpp
-    src/mesh/RTree.hpp
+    src/query/RTree.cpp
+    src/query/RTree.hpp
     src/mesh/RangeAccessor.hpp
     src/mesh/SharedPointer.hpp
     src/mesh/Triangle.cpp
@@ -207,7 +207,7 @@ target_sources(precice
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
     src/mesh/impl/BBUtils.hpp
-    src/mesh/impl/RTreeAdapter.hpp
+    src/query/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
     src/partition/ProvidedPartition.cpp

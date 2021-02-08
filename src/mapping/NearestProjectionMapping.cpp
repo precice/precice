@@ -20,10 +20,10 @@
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/RTree.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "query/FindClosest.hpp"
+#include "query/RTree.hpp"
 #include "utils/Event.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
@@ -105,12 +105,12 @@ void NearestProjectionMapping::computeMapping()
     }
 
     precice::utils::Event e2(baseEvent + ".getIndexOnEdges", precice::syncMode);
-    auto                  indexEdges = mesh::rtree::getEdgeRTree(search_space);
+    auto                  indexEdges = query::rtree::getEdgeRTree(search_space);
     e2.stop();
 
     // Lazy evaluation of the vertex index.
     // This is not necessary in the case of matching meshes.
-    mesh::rtree::vertex_traits::Ptr indexVertices;
+    query::rtree::vertex_traits::Ptr indexVertices;
 
     utils::statistics::DistanceAccumulator distanceStatistics;
 
@@ -139,7 +139,7 @@ void NearestProjectionMapping::computeMapping()
       if (not found) {
         if (!indexVertices) {
           precice::utils::Event e3(baseEvent + ".getIndexOnVertices", precice::syncMode);
-          indexVertices = mesh::rtree::getVertexRTree(search_space);
+          indexVertices = query::rtree::getVertexRTree(search_space);
         }
         // Search for the origin inside the destination meshes vertices
         indexVertices->query(bg::index::nearest(coords, 1),
@@ -161,13 +161,13 @@ void NearestProjectionMapping::computeMapping()
     }
 
     precice::utils::Event e2(baseEvent + ".getIndexOnTriangles", precice::syncMode);
-    auto                  indexTriangles = mesh::rtree::getTriangleRTree(search_space);
+    auto                  indexTriangles = query::rtree::getTriangleRTree(search_space);
     e2.stop();
 
     // Lazy evaluation of indices for edges and vertices.
     // These are not necessary in the case of matching meshes.
-    mesh::rtree::edge_traits::Ptr   indexEdges;
-    mesh::rtree::vertex_traits::Ptr indexVertices;
+    query::rtree::edge_traits::Ptr   indexEdges;
+    query::rtree::vertex_traits::Ptr indexVertices;
 
     utils::statistics::DistanceAccumulator distanceStatistics;
 
@@ -179,7 +179,7 @@ void NearestProjectionMapping::computeMapping()
       // Search for the vertex inside the destination meshes triangles
       matches.clear();
       indexTriangles->query(bg::index::nearest(coords, nnearest),
-                            boost::make_function_output_iterator([&](mesh::rtree::triangle_traits::IndexType const &match) {
+                            boost::make_function_output_iterator([&](query::rtree::triangle_traits::IndexType const &match) {
                               matches.emplace_back(bg::distance(coords, tTriangles[match.second]), match.second);
                             }));
       std::sort(matches.begin(), matches.end());
@@ -197,7 +197,7 @@ void NearestProjectionMapping::computeMapping()
       if (not found) {
         if (!indexEdges) {
           precice::utils::Event e3(baseEvent + ".getIndexOnEdges", precice::syncMode);
-          indexEdges = mesh::rtree::getEdgeRTree(search_space);
+          indexEdges = query::rtree::getEdgeRTree(search_space);
         }
         // Search for the vertex inside the destination meshes edges
         matches.clear();
@@ -220,7 +220,7 @@ void NearestProjectionMapping::computeMapping()
       if (not found) {
         if (!indexVertices) {
           precice::utils::Event e4(baseEvent + ".getIndexOnVertices", precice::syncMode);
-          indexVertices = mesh::rtree::getVertexRTree(search_space);
+          indexVertices = query::rtree::getVertexRTree(search_space);
         }
         // Search for the vertex inside the destination meshes vertices
         indexVertices->query(bg::index::nearest(coords, 1),

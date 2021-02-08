@@ -16,8 +16,8 @@
 #include "com/Communication.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "mesh/Filter.hpp"
-#include "mesh/RTree.hpp"
 #include "mesh/impl/BBUtils.hpp"
+#include "query/RTree.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
@@ -500,7 +500,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 
   if (_basisFunction.hasCompactSupport()) {
 
-    auto rtree    = mesh::rtree::getVertexRTree(filterMesh);
+    auto rtree    = query::rtree::getVertexRTree(filterMesh);
     namespace bgi = boost::geometry::index;
     auto bb       = otherMesh->getBoundingBox();
     // Enlarge by support radius
@@ -542,7 +542,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   }
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
-  auto rtree = mesh::rtree::getVertexRTree(mesh);
+  auto rtree = query::rtree::getVertexRTree(mesh);
 
   rtree->query(bgi::intersects(toRTreeBox(bb)),
                boost::make_function_output_iterator([&mesh](size_t idx) {

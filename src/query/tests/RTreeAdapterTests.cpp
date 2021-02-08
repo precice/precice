@@ -9,10 +9,10 @@
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/RTree.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "mesh/impl/RTreeAdapter.hpp"
+#include "query/RTree.hpp"
+#include "query/impl/RTreeAdapter.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
   auto &              e2  = mesh.createEdge(v2, v3);
   auto &              e3  = mesh.createEdge(v3, v1);
   auto &              t   = mesh.createTriangle(e1, e2, e3);
-  auto                box = bg::return_envelope<precice::mesh::RTreeBox>(t);
+  auto                box = bg::return_envelope<precice::query::RTreeBox>(t);
   BOOST_TEST(equals(box.min_corner(), Eigen::Vector3d{0, 0, 0}));
   BOOST_TEST(equals(box.max_corner(), Eigen::Vector3d{1, 1, 1}));
 }
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
   auto &              e2  = mesh.createEdge(v3, v2);
   auto &              e3  = mesh.createEdge(v2, v1);
   auto &              t   = mesh.createTriangle(e1, e2, e3);
-  auto                box = bg::return_envelope<precice::mesh::RTreeBox>(t);
+  auto                box = bg::return_envelope<precice::query::RTreeBox>(t);
   BOOST_TEST(equals(box.min_corner(), Eigen::Vector3d{0, 0, 0}));
   BOOST_TEST(equals(box.max_corner(), Eigen::Vector3d{1, 1, 1}));
 }
