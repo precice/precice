@@ -414,7 +414,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
             "For a parallel participant, only the mapping"
             << " combinations read-consistent and write-conservative are allowed");
       } else if (confMapping.mapping->getConstraint() == mapping::Mapping::SCALEDCONSISTENT) {
-        PRECICE_ERROR("Scaled consistent mapping is not supported for a parallel participant. Instead use write-conservative for a conservative mapping");
+        PRECICE_ERROR("Scaled consistent mapping is not yet supported for a parallel participant. You could run in serial or use a plain (read-)consistent mapping instead.");
       }
     }
 
