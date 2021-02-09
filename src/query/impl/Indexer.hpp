@@ -34,9 +34,6 @@ public:
   /// Return triangle index tree from cache, if cache is empty, create the tree
   TriangleTraits::Ptr getTriangleRTree(const mesh::PtrMesh &mesh);
 
-  /// Return boost::geometry version of enclosing box around a point
-  Box3d getEnclosingBox(const mesh::Vertex &middlePoint, double sphereRadius);
-
   size_t getCacheSize();
 
   /// Clear the whole cache
@@ -53,5 +50,4 @@ private:
 
 } // namespace impl
 } // namespace query
-
 } // namespace precice

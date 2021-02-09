@@ -62,9 +62,11 @@ public:
   std::vector<size_t> getVerticesInsideBox(const mesh::BoundingBox &bb);
 
 private:
-  std::unique_ptr<impl::MeshIndices> _cache;
-  const mesh::PtrMesh                _mesh;
-  static precice::logging::Logger    _log;
+  struct IndexImpl;
+  std::unique_ptr<IndexImpl> _pimpl;
+
+  const mesh::PtrMesh             _mesh;
+  static precice::logging::Logger _log;
 };
 
 namespace rtree {
