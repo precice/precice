@@ -32,10 +32,6 @@ using VertexMatch   = MatchType<struct VertexMatchTag>;
 using EdgeMatch     = MatchType<struct EdgeMatchTag>;
 using TriangleMatch = MatchType<struct TriangleTag>;
 
-namespace impl {
-struct MeshIndices;
-} // namespace impl
-
 /// Class to query the index trees of the mesh
 class Index {
 
