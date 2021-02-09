@@ -34,8 +34,8 @@ Mesh::Mesh(
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
 
-  meshChanged.connect([](Mesh &m) { query::rtree::clearCache(m); });
-  meshDestroyed.connect([](Mesh &m) { query::rtree::clearCache(m); });
+  meshChanged.connect([](Mesh &m) { query::clearCache(m); });
+  meshDestroyed.connect([](Mesh &m) { query::clearCache(m); });
 }
 
 Mesh::~Mesh()

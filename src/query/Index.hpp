@@ -65,7 +65,6 @@ private:
   static precice::logging::Logger _log;
 };
 
-namespace rtree {
 /// Clear all the cache
 void clearCache();
 
@@ -74,7 +73,6 @@ void clearCache(int meshID);
 
 /// Clear the cache of given mesh
 void clearCache(mesh::Mesh &mesh);
-} // namespace rtree
 
 } // namespace query
 } // namespace precice

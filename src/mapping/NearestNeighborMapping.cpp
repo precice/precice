@@ -94,9 +94,9 @@ void NearestNeighborMapping::clear()
   _vertexIndices.clear();
   _hasComputedMapping = false;
   if (getConstraint() == CONSISTENT) {
-    query::rtree::clearCache(input()->getID());
+    query::clearCache(input()->getID());
   } else {
-    query::rtree::clearCache(output()->getID());
+    query::clearCache(output()->getID());
   }
 }
 

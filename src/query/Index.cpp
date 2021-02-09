@@ -133,17 +133,17 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
   return matches;
 }
 
-void rtree::clearCache()
+void clearCache()
 {
   impl::Indexer::instance()->clearCache();
 }
 
-void rtree::clearCache(int meshID)
+void clearCache(int meshID)
 {
   impl::Indexer::instance()->clearCache(meshID);
 }
 
-void rtree::clearCache(mesh::Mesh &mesh)
+void clearCache(mesh::Mesh &mesh)
 {
   impl::Indexer::instance()->clearCache(mesh.getID());
 }
