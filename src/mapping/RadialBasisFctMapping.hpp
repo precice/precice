@@ -124,8 +124,13 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     : Mapping(constraint, dimensions),
       _basisFunction(function)
 {
-  setInputRequirement(Mapping::MeshRequirement::VERTEX);
-  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  if (constraint == SCALEDCONSISTENT) {
+    setInputRequirement(Mapping::MeshRequirement::FULL);
+    setOutputRequirement(Mapping::MeshRequirement::FULL);
+  } else {
+    setInputRequirement(Mapping::MeshRequirement::VERTEX);
+    setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  }
   setDeadAxis(xDead, yDead, zDead);
 }
 
@@ -144,10 +149,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
 
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     inMesh  = output();
     outMesh = input();
-  } else { // Consistent
+  } else { // Consistent or scaled consistent
     inMesh  = input();
     outMesh = output();
   }
@@ -247,9 +252,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
   }
   int polyparams = 1 + getDimensions() - deadDimensions;
 
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     mapConservative(inputDataID, outputDataID, polyparams);
-  } else if (getConstraint() == CONSISTENT) {
+  } else {
     mapConsistent(inputDataID, outputDataID, polyparams);
   }
 }
@@ -470,6 +475,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     utils::MasterSlave::_communication->receive(receivedValues, 0);
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
+  if (hasConstraint(SCALEDCONSISTENT)) {
+    scaleConsistentMapping(inputDataID, outputDataID);
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -477,12 +485,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
   PRECICE_TRACE();
   mesh::PtrMesh filterMesh, otherMesh;
-  if (getConstraint() == CONSISTENT) {
-    filterMesh = input();  // remote
-    otherMesh  = output(); // local
-  } else if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     filterMesh = output(); // remote
     otherMesh  = input();  // local
+  } else {
+    filterMesh = input();  // remote
+    otherMesh  = output(); // local
   }
 
   if (otherMesh->vertices().empty())
@@ -517,10 +525,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 
   mesh::PtrMesh mesh; // The mesh we want to filter
 
-  if (getConstraint() == CONSISTENT)
-    mesh = input();
-  else if (getConstraint() == CONSERVATIVE)
+  if (hasConstraint(CONSERVATIVE)) {
     mesh = output();
+  } else {
+    mesh = input();
+  }
 
   mesh::BoundingBox bb(mesh->getDimensions());
 

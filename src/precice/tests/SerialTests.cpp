@@ -12,6 +12,7 @@
 #include "action/RecorderAction.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/constants.hpp"
+#include "math/geometry.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -2505,6 +2506,120 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
   }
+}
+
+void testQuadMappingScaledConsistent(const std::string configFile, const TestContext &context)
+{
+  using Eigen::Vector3d;
+
+  const double z = 0.3;
+
+  // MeshOne
+  Vector3d coordOneA{0.0, 0.0, z};
+  Vector3d coordOneB{1.0, 0.0, z};
+  Vector3d coordOneC{0.999999999, 1.0, z}; // Forces diagonal 0-2 to be shorter.
+  Vector3d coordOneD{0.0, 1.0, z};
+  double   valOneA = 1.0;
+  double   valOneB = 3.0;
+  double   valOneC = 5.0;
+  double   valOneD = 7.0;
+
+  // MeshTwo
+  Vector3d coordTwoA{0.0, 0.0, z + 0.1};               // Maps to vertex A
+  Vector3d coordTwoB{0.0, 0.5, z - 0.01};              // Maps to edge AD
+  Vector3d coordTwoC{2.0 / 3.0, 1.0 / 3.0, z + 0.001}; // Maps to triangle ABC
+
+  double expectedIntegral = math::geometry::triangleArea(coordOneA, coordOneB, coordOneC) * (valOneA + valOneB + valOneC) / 3.0 +
+                            math::geometry::triangleArea(coordOneA, coordOneC, coordOneD) * (valOneA + valOneC + valOneD) / 3.0;
+
+  if (context.isNamed("SolverOne")) {
+    SolverInterface cplInterface("SolverOne", configFile, 0, 1);
+    // namespace is required because we are outside the fixture
+    const int meshOneID = cplInterface.getMeshID("MeshOne");
+
+    // Setup mesh one.
+    int idA = cplInterface.setMeshVertex(meshOneID, coordOneA.data());
+    int idB = cplInterface.setMeshVertex(meshOneID, coordOneB.data());
+    int idC = cplInterface.setMeshVertex(meshOneID, coordOneC.data());
+    int idD = cplInterface.setMeshVertex(meshOneID, coordOneD.data());
+
+    int idAB = cplInterface.setMeshEdge(meshOneID, idA, idB);
+    int idBC = cplInterface.setMeshEdge(meshOneID, idB, idC);
+    int idCD = cplInterface.setMeshEdge(meshOneID, idC, idD);
+    int idDA = cplInterface.setMeshEdge(meshOneID, idD, idA);
+
+    cplInterface.setMeshQuad(meshOneID, idAB, idBC, idCD, idDA);
+
+    auto &mesh = testing::WhiteboxAccessor::impl(cplInterface).mesh("MeshOne");
+    BOOST_REQUIRE(mesh.vertices().size() == 4);
+    BOOST_REQUIRE(mesh.edges().size() == 5);
+    BOOST_REQUIRE(mesh.triangles().size() == 2);
+
+    // Initialize, thus sending the mesh.
+    double maxDt = cplInterface.initialize();
+    BOOST_TEST(cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
+
+    // Write the data to be send.
+    int dataAID = cplInterface.getDataID("DataOne", meshOneID);
+    cplInterface.writeScalarData(dataAID, idA, valOneA);
+    cplInterface.writeScalarData(dataAID, idB, valOneB);
+    cplInterface.writeScalarData(dataAID, idC, valOneC);
+    cplInterface.writeScalarData(dataAID, idD, valOneD);
+
+    // Advance, thus send the data to the receiving partner.
+    cplInterface.advance(maxDt);
+    BOOST_TEST(!cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
+    cplInterface.finalize();
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    SolverInterface cplInterface("SolverTwo", configFile, 0, 1);
+    // namespace is required because we are outside the fixture
+    int meshTwoID = cplInterface.getMeshID("MeshTwo");
+
+    // Setup receiving mesh.
+    int idA = cplInterface.setMeshVertex(meshTwoID, coordTwoA.data());
+    int idB = cplInterface.setMeshVertex(meshTwoID, coordTwoB.data());
+    int idC = cplInterface.setMeshVertex(meshTwoID, coordTwoC.data());
+
+    int idAB = cplInterface.setMeshEdge(meshTwoID, idA, idB);
+    int idBC = cplInterface.setMeshEdge(meshTwoID, idB, idC);
+    int idAC = cplInterface.setMeshEdge(meshTwoID, idA, idC);
+
+    cplInterface.setMeshTriangle(meshTwoID, idAB, idBC, idAC);
+
+    // Initialize, thus receive the data and map.
+    double maxDt = cplInterface.initialize();
+    BOOST_TEST(cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
+
+    // Read the mapped data from the mesh.
+    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
+    double valueA, valueB, valueC;
+    cplInterface.readScalarData(dataAID, idA, valueA);
+    cplInterface.readScalarData(dataAID, idB, valueB);
+    cplInterface.readScalarData(dataAID, idC, valueC);
+
+    double calculatedIntegral = math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC) / 3.0;
+    BOOST_TEST(expectedIntegral == calculatedIntegral);
+
+    // Verify that there is only one time step necessary.
+    cplInterface.advance(maxDt);
+    BOOST_TEST(!cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
+    cplInterface.finalize();
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testQuadMappingScaledConsistentOnA)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  const std::string configFile = _pathToTests + "mapping-scaled-consistent-onA.xml";
+  testQuadMappingScaledConsistent(configFile, context);
+}
+
+BOOST_AUTO_TEST_CASE(testQuadMappingScaledConsistentOnB)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  const std::string configFile = _pathToTests + "mapping-scaled-consistent-onB.xml";
+  testQuadMappingScaledConsistent(configFile, context);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

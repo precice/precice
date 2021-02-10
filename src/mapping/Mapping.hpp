@@ -17,13 +17,16 @@ public:
    *
    * A consistent mapping retains mean values. When mapping displacements, e.g.
    * rigid body motions are retained. A conservative mapping retains the sum of
-   * the values. Values integrated over some area should be mapped conservative,
-   * while area independent values such as pressure or stresses should be mapped
-   * consistent.
+   * the values. The scaled-consistent mapping first map the values consistently,
+   * then scales the mapped such that the integrals on both sides of the interface
+   * are equal. Values integrated over some area should be mapped conservative or 
+   * scaled-consistent, while area independent values such as pressure or stresses 
+   * should be mapped consistent.
    */
   enum Constraint {
     CONSISTENT,
-    CONSERVATIVE
+    CONSERVATIVE,
+    SCALEDCONSISTENT
   };
 
   /**
@@ -84,6 +87,9 @@ public:
    */
   virtual bool hasComputedMapping() const = 0;
 
+  /// Checks whether the mapping has the given constraint or not
+  virtual bool hasConstraint(const Constraint &constraint) const;
+
   /// Removes a computed mapping.
   virtual void clear() = 0;
 
@@ -105,6 +111,15 @@ public:
 
   /// Method used by partition. Tags vertices that can be filtered out.
   virtual void tagMeshSecondRound() = 0;
+
+  /**
+   * @brief Scales the consistently mapped output data such that the surface integral
+   * of the values on input mesh and output mesh are equal
+   *
+   * 
+   * @pre Input and output mesh should have full connectivity information.
+   */
+  virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
 
 protected:
   /// Returns pointer to input mesh.

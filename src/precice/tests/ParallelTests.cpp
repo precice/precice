@@ -9,6 +9,7 @@
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/constants.hpp"
+#include "math/geometry.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/config/Configuration.hpp"
