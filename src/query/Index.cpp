@@ -30,27 +30,28 @@ Index::~Index()
 VertexMatch Index::getClosestVertex(const mesh::Vertex &sourceVertex)
 {
   PRECICE_TRACE();
-  precice::utils::Event event("query.index.getClosestVerticesOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (not _pimpl->indices.vertexRTree) {
+    precice::utils::Event event("query.index.getVertexIndexTree." + _mesh->getName(), precice::syncMode);
     _pimpl->indices.vertexRTree = impl::Indexer::instance()->getVertexRTree(_mesh);
+    event.stop();
   }
 
   std::vector<VertexMatch> matches;
   _pimpl->indices.vertexRTree->query(bgi::nearest(sourceVertex, 1), boost::make_function_output_iterator([&](size_t matchID) {
                                        matches.emplace_back(bg::distance(sourceVertex, _mesh->vertices()[matchID]), matchID);
                                      }));
-  event.stop();
   return matches.back();
 }
 
 std::vector<VertexMatch> Index::getClosestVertices(const mesh::Vertex &sourceVertex, int n)
 {
   PRECICE_TRACE();
-  precice::utils::Event event("query.index.getClosestVerticesOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (not _pimpl->indices.vertexRTree) {
+    precice::utils::Event event("query.index.getVertexIndexTree." + _mesh->getName(), precice::syncMode);
     _pimpl->indices.vertexRTree = impl::Indexer::instance()->getVertexRTree(_mesh);
+    event.stop();
   }
 
   std::vector<VertexMatch> matches;
@@ -58,17 +59,17 @@ std::vector<VertexMatch> Index::getClosestVertices(const mesh::Vertex &sourceVer
                                        matches.emplace_back(bg::distance(sourceVertex, _mesh->vertices()[matchID]), matchID);
                                      }));
   std::sort(matches.begin(), matches.end());
-  event.stop();
   return matches;
 }
 
 std::vector<EdgeMatch> Index::getClosestEdges(const mesh::Vertex &sourceVertex, int n)
 {
   PRECICE_TRACE();
-  precice::utils::Event event("query.index.getClosestEdgesOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (not _pimpl->indices.edgeRTree) {
+    precice::utils::Event event("query.index.getEdgeIndexTree." + _mesh->getName(), precice::syncMode);
     _pimpl->indices.edgeRTree = impl::Indexer::instance()->getEdgeRTree(_mesh);
+    event.stop();
   }
 
   std::vector<EdgeMatch> matches;
@@ -76,17 +77,17 @@ std::vector<EdgeMatch> Index::getClosestEdges(const mesh::Vertex &sourceVertex, 
                                      matches.emplace_back(bg::distance(sourceVertex, _mesh->edges()[matchID]), matchID);
                                    }));
   std::sort(matches.begin(), matches.end());
-  event.stop();
   return matches;
 }
 
 std::vector<TriangleMatch> Index::getClosestTriangles(const mesh::Vertex &sourceVertex, int n)
 {
   PRECICE_TRACE();
-  precice::utils::Event event("query.index.getClosestTrianglesOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (not _pimpl->indices.triangleRTree) {
+    precice::utils::Event event("query.index.getTriangleIndexTree." + _mesh->getName(), precice::syncMode);
     _pimpl->indices.triangleRTree = impl::Indexer::instance()->getTriangleRTree(_mesh);
+    event.stop();
   }
 
   std::vector<TriangleMatch> matches;
@@ -95,17 +96,17 @@ std::vector<TriangleMatch> Index::getClosestTriangles(const mesh::Vertex &source
                                          matches.emplace_back(bg::distance(sourceVertex, _mesh->triangles()[match.second]), match.second);
                                        }));
   std::sort(matches.begin(), matches.end());
-  event.stop();
   return matches;
 }
 
 std::vector<size_t> Index::getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius)
 {
   PRECICE_TRACE();
-  precice::utils::Event event("query.index.getVerticesInsideBoxOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (_pimpl->indices.vertexRTree == nullptr) {
+    precice::utils::Event event("query.index.getVertexIndexTree." + _mesh->getName(), precice::syncMode);
     _pimpl->indices.vertexRTree = impl::Indexer::instance()->getVertexRTree(_mesh);
+    event.stop();
   }
 
   // Prepare boost::geometry box
@@ -115,21 +116,20 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::Vertex &centerVertex
   std::vector<size_t> matches;
   _pimpl->indices.vertexRTree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
                                      std::back_inserter(matches));
-  event.stop();
   return matches;
 }
 
 std::vector<size_t> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
 {
   PRECICE_TRACE();
-  precice::utils::Event event("query.index.getVerticesInsideBoxOnMesh." + _mesh->getName(), precice::syncMode);
   // Add tree to the local cache
   if (not _pimpl->indices.vertexRTree) {
+    precice::utils::Event event("query.index.getVertexIndexTree." + _mesh->getName(), precice::syncMode);
     _pimpl->indices.vertexRTree = impl::Indexer::instance()->getVertexRTree(_mesh);
+    event.stop();
   }
   std::vector<size_t> matches;
   _pimpl->indices.vertexRTree->query(bgi::intersects(query::RTreeBox{bb.minCorner(), bb.maxCorner()}), std::back_inserter(matches));
-  event.stop();
   return matches;
 }
 
