@@ -32,6 +32,9 @@ public:
 private:
   void prepare();
 
+  void prepareEdges();
+  void prepareTriangles();
+
   logging::Logger _log{"partition::ProvidedPartition"};
 };
 

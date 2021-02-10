@@ -74,8 +74,18 @@ private:
 
   void createOwnerInformation();
 
+  void createEdgeOwnerInformation();
+
+  void createTriangleOwnerInformation();
+
   /// Helper function for 'createOwnerFunction' to set local owner information
   void setOwnerInformation(const std::vector<int> &ownerVec);
+
+  /// Helper function for 'createOwnerFunction' to set local owner information
+  void setEdgeOwnerInformation(const std::vector<int> &ownerVec);
+
+  /// Helper function for 'createOwnerFunction' to set local owner information
+  void setTriangleOwnerInformation(const std::vector<int> &ownerVec);
 
   /// Is the local other (i.e. provided) bounding box already prepared (i.e. has prepareBoundingBox() been called)
   bool _boundingBoxPrepared = false;
@@ -87,6 +97,8 @@ private:
   int _dimensions;
 
   double _safetyFactor;
+
+  int _ranksAtInterface = 0;
 
   logging::Logger _log{"partition::ReceivedPartition"};
 

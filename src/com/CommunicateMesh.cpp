@@ -58,11 +58,14 @@ void CommunicateMesh::sendMesh(
     _communication->send(vertexIDs, rankReceiver);
 
     std::vector<int> edgeIDs(numberOfEdges * 2);
+    std::vector<int> globalEdgeIDs(numberOfEdges);
     for (int i = 0; i < numberOfEdges; i++) {
       edgeIDs[i * 2]     = mesh.edges()[i].vertex(0).getID();
       edgeIDs[i * 2 + 1] = mesh.edges()[i].vertex(1).getID();
+      globalEdgeIDs[i]   = mesh.edges()[i].getGlobalIndex();
     }
     _communication->send(edgeIDs, rankReceiver);
+    _communication->send(globalEdgeIDs, rankReceiver);
   }
 
   if (dim == 3) {
@@ -78,12 +81,15 @@ void CommunicateMesh::sendMesh(
       _communication->send(edgeIDs, rankReceiver);
 
       std::vector<int> triangleIDs(numberOfTriangles * 3);
+      std::vector<int> globalTriangleIDs(numberOfTriangles);
       for (int i = 0; i < numberOfTriangles; i++) {
         triangleIDs[i * 3]     = mesh.triangles()[i].edge(0).getID();
         triangleIDs[i * 3 + 1] = mesh.triangles()[i].edge(1).getID();
         triangleIDs[i * 3 + 2] = mesh.triangles()[i].edge(2).getID();
+        globalTriangleIDs[i]   = mesh.triangles()[i].getGlobalIndex();
       }
       _communication->send(triangleIDs, rankReceiver);
+      _communication->send(globalTriangleIDs, rankReceiver);
     }
   }
 }
@@ -133,12 +139,15 @@ void CommunicateMesh::receiveMesh(
     }
 
     std::vector<int> edgeIDs;
+    std::vector<int> globalEdgeIDs;
     _communication->receive(edgeIDs, rankSender);
+    _communication->receive(globalEdgeIDs, rankSender);
     for (int i = 0; i < numberOfEdges; i++) {
       PRECICE_ASSERT(vertexMap.count((edgeIDs[i * 2])) == 1);
       PRECICE_ASSERT(vertexMap.count(edgeIDs[i * 2 + 1]) == 1);
       PRECICE_ASSERT(edgeIDs[i * 2] != edgeIDs[i * 2 + 1]);
       mesh::Edge &e = mesh.createEdge(*vertexMap[edgeIDs[i * 2]], *vertexMap[edgeIDs[i * 2 + 1]]);
+      e.setGlobalIndex(globalEdgeIDs[i]);
       edges.push_back(&e);
     }
   }
@@ -159,8 +168,9 @@ void CommunicateMesh::receiveMesh(
       }
 
       std::vector<int> triangleIDs;
+      std::vector<int> globalTriangleIDs;
       _communication->receive(triangleIDs, rankSender);
-
+      _communication->receive(globalTriangleIDs, rankSender);
       for (int i = 0; i < numberOfTriangles; i++) {
         PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3]) == 1);
         PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3 + 1]) == 1);
@@ -168,7 +178,8 @@ void CommunicateMesh::receiveMesh(
         PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
-        mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
+        auto &t = mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
+        t.setGlobalIndex(globalTriangleIDs[i]);
       }
     }
   }
@@ -206,11 +217,14 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     _communication->broadcast(vertexIDs);
 
     std::vector<int> edgeIDs(numberOfEdges * 2);
+    std::vector<int> globalEdgeIDs(numberOfEdges);
     for (int i = 0; i < numberOfEdges; i++) {
       edgeIDs[i * 2]     = mesh.edges()[i].vertex(0).getID();
       edgeIDs[i * 2 + 1] = mesh.edges()[i].vertex(1).getID();
+      globalEdgeIDs[i]   = mesh.edges()[i].getGlobalIndex();
     }
     _communication->broadcast(edgeIDs);
+    _communication->broadcast(globalEdgeIDs);
   }
 
   if (dim == 3) {
@@ -226,12 +240,15 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
       _communication->broadcast(edgeIDs);
 
       std::vector<int> triangleIDs(numberOfTriangles * 3);
+      std::vector<int> globalTriangleIDs(numberOfTriangles);
       for (int i = 0; i < numberOfTriangles; i++) {
         triangleIDs[i * 3]     = mesh.triangles()[i].edge(0).getID();
         triangleIDs[i * 3 + 1] = mesh.triangles()[i].edge(1).getID();
         triangleIDs[i * 3 + 2] = mesh.triangles()[i].edge(2).getID();
+        globalTriangleIDs[i]   = mesh.triangles()[i].getGlobalIndex();
       }
       _communication->broadcast(triangleIDs);
+      _communication->broadcast(globalTriangleIDs);
     }
   }
 }
@@ -276,12 +293,15 @@ void CommunicateMesh::broadcastReceiveMesh(
     }
 
     std::vector<int> edgeIDs;
+    std::vector<int> globalEdgeIDs;
     _communication->broadcast(edgeIDs, rankBroadcaster);
+    _communication->broadcast(globalEdgeIDs, rankBroadcaster);
     for (int i = 0; i < numberOfEdges; i++) {
       PRECICE_ASSERT(vertexMap.find(edgeIDs[i * 2]) != vertexMap.end());
       PRECICE_ASSERT(vertexMap.find(edgeIDs[i * 2 + 1]) != vertexMap.end());
       PRECICE_ASSERT(edgeIDs[i * 2] != edgeIDs[i * 2 + 1]);
       mesh::Edge &e = mesh.createEdge(*vertexMap[edgeIDs[i * 2]], *vertexMap[edgeIDs[i * 2 + 1]]);
+      e.setGlobalIndex(globalEdgeIDs[i]);
       edges.push_back(&e);
     }
   }
@@ -299,7 +319,9 @@ void CommunicateMesh::broadcastReceiveMesh(
       }
 
       std::vector<int> triangleIDs;
+      std::vector<int> globalTriangleIDs;
       _communication->broadcast(triangleIDs, rankBroadcaster);
+      _communication->broadcast(globalTriangleIDs, rankBroadcaster);
 
       for (int i = 0; i < numberOfTriangles; i++) {
         PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
@@ -308,7 +330,8 @@ void CommunicateMesh::broadcastReceiveMesh(
         PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
-        mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
+        auto &t = mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
+        t.setGlobalIndex(globalTriangleIDs[i]);
       }
     }
   }

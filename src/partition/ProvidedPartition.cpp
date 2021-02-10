@@ -38,6 +38,11 @@ void ProvidedPartition::communicate()
   PRECICE_TRACE();
 
   prepare();
+  if (_mesh->getDimensions() == 2) {
+    prepareEdges();
+  } else {
+    prepareTriangles();
+  }
 
   if (_m2ns.empty())
     return;
@@ -62,6 +67,8 @@ void ProvidedPartition::communicate()
       // communicate the total number of vertices to the other participants master
       if (utils::MasterSlave::isMaster()) {
         _m2ns[0]->getMasterCommunication()->send(_mesh->getGlobalNumberOfVertices(), 0);
+        _m2ns[0]->getMasterCommunication()->send(_mesh->getGlobalNumberOfEdges(), 0);
+        _m2ns[0]->getMasterCommunication()->send(_mesh->getGlobalNumberOfTriangles(), 0);
       }
 
       // the min and max of global vertex IDs of this rank's partition
@@ -205,6 +212,134 @@ void ProvidedPartition::prepare()
   PRECICE_DEBUG("Set owner information");
   for (mesh::Vertex &v : _mesh->vertices()) {
     v.setOwner(true);
+  }
+}
+
+void ProvidedPartition::prepareEdges()
+{
+  PRECICE_TRACE();
+  PRECICE_INFO("Prepare edges partition for mesh " << _mesh->getName());
+  Event e("partition.prepareMesh." + _mesh->getName(), precice::syncMode);
+
+  int numberOfEdges = _mesh->edges().size();
+
+  if (utils::MasterSlave::isMaster()) {
+    PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
+
+    // set globals IDs on master
+    for (int i = 0; i < numberOfEdges; i++) {
+      _mesh->edges()[i].setGlobalIndex(i);
+    }
+
+    int globalNumberOfEdges = numberOfEdges;
+
+    // receive number of slave edges
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+      int numberOfSlaveEdges = -1;
+      utils::MasterSlave::_communication->receive(numberOfSlaveEdges, rankSlave);
+      utils::MasterSlave::_communication->send(globalNumberOfEdges, rankSlave);
+      globalNumberOfEdges += numberOfSlaveEdges;
+    }
+
+    // set and broadcast global number of edges
+    _mesh->setGlobalNumberOfEdges(globalNumberOfEdges);
+    PRECICE_DEBUG("Broadcast global number of edges: " << globalNumberOfEdges);
+    utils::MasterSlave::_communication->broadcast(globalNumberOfEdges);
+
+  } else if (utils::MasterSlave::isSlave()) {
+
+    // send number of own edges
+    PRECICE_DEBUG("Send number of edges: " << numberOfEdges);
+    utils::MasterSlave::_communication->send(numberOfEdges, 0);
+
+    // set global IDs
+    int globalEdgeCounter = -1;
+    utils::MasterSlave::_communication->receive(globalEdgeCounter, 0);
+    PRECICE_DEBUG("Set global edge indices");
+    for (int i = 0; i < numberOfEdges; i++) {
+      _mesh->edges()[i].setGlobalIndex(globalEdgeCounter + i);
+    }
+
+    // set global number of edges
+    int globalNumberOfEdges = -1;
+    utils::MasterSlave::_communication->broadcast(globalNumberOfEdges, 0);
+    _mesh->setGlobalNumberOfEdges(globalNumberOfEdges);
+
+  } else { // Coupling mode
+
+    for (int i = 0; i < numberOfEdges; i++) {
+      _mesh->edges()[i].setGlobalIndex(i);
+    }
+    _mesh->setGlobalNumberOfEdges(numberOfEdges);
+  }
+
+  PRECICE_DEBUG("Set owner information");
+  for (mesh::Edge &e : _mesh->edges()) {
+    e.setOwner(true);
+  }
+}
+
+void ProvidedPartition::prepareTriangles()
+{
+  PRECICE_TRACE();
+  PRECICE_INFO("Prepare triangles partition for mesh " << _mesh->getName());
+  Event e("partition.prepareMesh." + _mesh->getName(), precice::syncMode);
+
+  int numberOfTriangles = _mesh->triangles().size();
+
+  if (utils::MasterSlave::isMaster()) {
+    PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
+
+    // set globals IDs on master
+    for (int i = 0; i < numberOfTriangles; i++) {
+      _mesh->triangles()[i].setGlobalIndex(i);
+    }
+
+    int globalNumberOfTriangles = numberOfTriangles;
+
+    // receive number of slave triangles
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+      int numberOfSlaveTriangles = -1;
+      utils::MasterSlave::_communication->receive(numberOfSlaveTriangles, rankSlave);
+      utils::MasterSlave::_communication->send(globalNumberOfTriangles, rankSlave);
+      globalNumberOfTriangles += numberOfSlaveTriangles;
+    }
+
+    // set and broadcast global number of triangles
+    _mesh->setGlobalNumberOfEdges(globalNumberOfTriangles);
+    PRECICE_DEBUG("Broadcast global number of triangles: " << globalNumberOfTriangles);
+    utils::MasterSlave::_communication->broadcast(globalNumberOfTriangles);
+
+  } else if (utils::MasterSlave::isSlave()) {
+
+    // send number of own triangles
+    PRECICE_DEBUG("Send number of triangles: " << numberOfTriangles);
+    utils::MasterSlave::_communication->send(numberOfTriangles, 0);
+
+    // set global IDs
+    int globalTriangleCounter = -1;
+    utils::MasterSlave::_communication->receive(globalTriangleCounter, 0);
+    PRECICE_DEBUG("Set global triangle indices");
+    for (int i = 0; i < numberOfTriangles; i++) {
+      _mesh->edges()[i].setGlobalIndex(globalTriangleCounter + i);
+    }
+
+    // set global number of triangles
+    int globalNumberOfTriangles = -1;
+    utils::MasterSlave::_communication->broadcast(globalNumberOfTriangles, 0);
+    _mesh->setGlobalNumberOfEdges(globalNumberOfTriangles);
+
+  } else { // Coupling mode
+
+    for (int i = 0; i < numberOfTriangles; i++) {
+      _mesh->triangles()[i].setGlobalIndex(i);
+    }
+    _mesh->setGlobalNumberOfTriangles(numberOfTriangles);
+  }
+
+  PRECICE_DEBUG("Set owner information");
+  for (mesh::Triangle &t : _mesh->triangles()) {
+    t.setOwner(true);
   }
 }
 

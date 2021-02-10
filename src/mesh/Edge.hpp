@@ -49,6 +49,15 @@ public:
   /// Returns the (among edges) unique ID of the edge.
   int getID() const;
 
+  /// Globally unique index
+  int getGlobalIndex() const;
+
+  void setGlobalIndex(int globalIndex);
+
+  bool isOwner() const;
+
+  void setOwner(bool owner);
+
   /// Returns the length of the edge
   double getLength() const;
 
@@ -84,6 +93,12 @@ private:
 
   /// Normal of the edge.
   Eigen::VectorXd _normal;
+
+  /// global (unique) index for parallel simulations
+  int _globalIndex = -1;
+
+  /// true if this processors is the owner of the triangle (for parallel simulations)
+  bool _owner = true;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
