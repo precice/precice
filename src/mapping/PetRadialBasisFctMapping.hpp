@@ -6,20 +6,11 @@
 #include <map>
 #include <numeric>
 #include <vector>
-
-#include <boost/version.hpp>
-#if BOOST_VERSION < 106600
-#include <boost/function_output_iterator.hpp>
-#else
-#include <boost/iterator/function_output_iterator.hpp>
-#endif
-
 #include "config/MappingConfiguration.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "math/math.hpp"
-#include "mesh/impl/BBUtils.hpp"
 #include "precice/impl/versions.hpp"
-#include "query/RTree.hpp"
+#include "query/Index.hpp"
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
 #include "utils/Event.hpp"
@@ -835,15 +826,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
   if (_basisFunction.hasCompactSupport()) {
-    auto rtree    = query::rtree::getVertexRTree(filterMesh);
-    namespace bgi = boost::geometry::index;
-    auto bb       = otherMesh->getBoundingBox();
-    // Enlarge by support radius
+    auto bb = otherMesh->getBoundingBox();
     bb.expandBy(_basisFunction.getSupportRadius());
-    rtree->query(bgi::intersects(toRTreeBox(bb)),
-                 boost::make_function_output_iterator([&filterMesh](size_t idx) {
-                   filterMesh->vertices()[idx].tag();
-                 }));
+
+    query::Index indexTree(filterMesh);
+    auto         vertices = indexTree.getVerticesInsideBox(bb);
+    std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertices()[v].tag(); });
   } else {
     filterMesh->tagAll();
   }
@@ -857,7 +845,6 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
   PRECICE_TRACE();
-  namespace bgi = boost::geometry::index;
 
   if (not _basisFunction.hasCompactSupport())
     return; // Tags should not be changed
@@ -880,11 +867,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   }
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
-  auto rtree = query::rtree::getVertexRTree(mesh);
-  rtree->query(bgi::intersects(toRTreeBox(bb)),
-               boost::make_function_output_iterator([&mesh](size_t idx) {
-                 mesh->vertices()[idx].tag();
-               }));
+
+  query::Index indexTree(mesh);
+  auto         vertices = indexTree.getVerticesInsideBox(bb);
+  std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertices()[v].tag(); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -1301,13 +1287,10 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
 {
   PRECICE_INFO("Using tree-based preallocation for matrix C");
   precice::utils::Event ePreallocC("map.pet.preallocC.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  namespace bg = boost::geometry;
 
   PetscInt n;
   std::tie(n, std::ignore) = _matrixC.getLocalSize();
   std::vector<PetscInt> d_nnz(n), o_nnz(n);
-
-  auto tree = query::rtree::getVertexRTree(inMesh);
 
   double const supportRadius = _basisFunction.getSupportRadius();
 
@@ -1340,10 +1323,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
     results.clear();
 
     // -- PREALLOCATES THE COEFFICIENTS --
-    auto search_box = query::getEnclosingBox(inVertex, supportRadius);
-
-    tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(inVertex, inMesh->vertices()[i]) <= supportRadius; }),
-                std::back_inserter(results));
+    query::Index indexTree(inMesh);
+    results = indexTree.getVerticesInsideBox(inVertex, supportRadius);
 
     // for (mesh::Vertex& vj : inMesh->vertices()) {
     for (auto const i : results) {
@@ -1391,11 +1372,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
 {
   PRECICE_INFO("Using tree-based preallocation for matrix A");
   precice::utils::Event ePreallocA("map.pet.preallocA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  namespace bg = boost::geometry;
 
   PetscInt       ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt const outputSize    = _matrixA.getLocalSize().first;
-  auto           tree          = query::rtree::getVertexRTree(inMesh);
   double const   supportRadius = _basisFunction.getSupportRadius();
 
   std::tie(ownerRangeABegin, ownerRangeAEnd)       = _matrixA.ownerRange();
@@ -1406,8 +1385,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
   Eigen::VectorXd       distance(dimensions);
 
   // Contains localRow<localCols<colPosition, distance>>>
-  VertexData          vertexData(outputSize);
-  std::vector<size_t> results;
+  VertexData vertexData(outputSize);
 
   for (int localRow = 0; localRow < ownerRangeAEnd - ownerRangeABegin; ++localRow) {
     d_nnz[localRow]             = 0;
@@ -1436,11 +1414,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
     }
 
     // -- PREALLOCATE THE COEFFICIENTS --
-    results.clear();
-    auto search_box = query::getEnclosingBox(oVertex, supportRadius);
-
-    tree->query(bg::index::intersects(search_box) and bg::index::satisfies([&](size_t const i) { return bg::distance(oVertex, inMesh->vertices()[i]) <= supportRadius; }),
-                std::back_inserter(results));
+    query::Index indexTree(inMesh);
+    auto         results = indexTree.getVerticesInsideBox(oVertex, supportRadius);
 
     for (auto i : results) {
       const mesh::Vertex &inVertex = inMesh->vertices()[i];

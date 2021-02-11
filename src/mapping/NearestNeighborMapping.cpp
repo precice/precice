@@ -4,20 +4,12 @@
 #include <boost/container/flat_set.hpp>
 #include <functional>
 #include <memory>
-
-#include <boost/version.hpp>
-#if BOOST_VERSION < 106600
-#include <boost/function_output_iterator.hpp>
-#else
-#include <boost/iterator/function_output_iterator.hpp>
-#endif
-
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
-#include "query/RTree.hpp"
+#include "query/Index.hpp"
 #include "utils/Event.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
@@ -49,21 +41,17 @@ void NearestNeighborMapping::computeMapping()
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = query::rtree::getVertexRTree(input());
+    query::Index          indexTree(input());
     e2.stop();
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
     utils::statistics::DistanceAccumulator distanceStatistics;
     const mesh::Mesh::VertexContainer &    outputVertices = output()->vertices();
+    // Search for the output vertex inside the input mesh and add index to _vertexIndices
     for (size_t i = 0; i < verticesSize; i++) {
-      const Eigen::VectorXd &coords = outputVertices[i].getCoords();
-      // Search for the output vertex inside the input mesh and add index to _vertexIndices
-      rtree->query(boost::geometry::index::nearest(coords, 1),
-                   boost::make_function_output_iterator([&](size_t const &val) {
-                     const auto &match = input()->vertices()[val];
-                     _vertexIndices[i] = match.getID();
-                     distanceStatistics(bg::distance(match, coords));
-                   }));
+      auto matchedVertex = indexTree.getClosestVertex(outputVertices[i]);
+      _vertexIndices[i]  = matchedVertex.index;
+      distanceStatistics(matchedVertex.distance);
     }
     if (distanceStatistics.empty()) {
       PRECICE_INFO("Mapping distance not available due to empty partition.");
@@ -74,21 +62,16 @@ void NearestNeighborMapping::computeMapping()
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Compute conservative mapping");
     precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = query::rtree::getVertexRTree(output());
+    query::Index          indexTree(output());
     e2.stop();
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
     utils::statistics::DistanceAccumulator distanceStatistics;
     const mesh::Mesh::VertexContainer &    inputVertices = input()->vertices();
     for (size_t i = 0; i < verticesSize; i++) {
-      const Eigen::VectorXd &coords = inputVertices[i].getCoords();
-      // Search for the input vertex inside the output mesh and add index to _vertexIndices
-      rtree->query(boost::geometry::index::nearest(coords, 1),
-                   boost::make_function_output_iterator([&](size_t const &val) {
-                     const auto &match = output()->vertices()[val];
-                     _vertexIndices[i] = match.getID();
-                     distanceStatistics(bg::distance(match, coords));
-                   }));
+      auto matchedVertex = indexTree.getClosestVertex(inputVertices[i]);
+      _vertexIndices[i]  = matchedVertex.index;
+      distanceStatistics(matchedVertex.distance);
     }
     if (distanceStatistics.empty()) {
       PRECICE_INFO("Mapping distance not available due to empty partition.");
@@ -111,9 +94,9 @@ void NearestNeighborMapping::clear()
   _vertexIndices.clear();
   _hasComputedMapping = false;
   if (getConstraint() == CONSISTENT) {
-    query::rtree::clear(*input());
+    query::clearCache(input()->getID());
   } else {
-    query::rtree::clear(*output());
+    query::clearCache(output()->getID());
   }
 }
 

@@ -14,7 +14,7 @@
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
-#include "query/RTree.hpp"
+#include "query/Index.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -34,8 +34,8 @@ Mesh::Mesh(
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
 
-  meshChanged.connect([](Mesh &m) { query::rtree::clear(m); });
-  meshDestroyed.connect([](Mesh &m) { query::rtree::clear(m); });
+  meshChanged.connect([](Mesh &m) { query::clearCache(m); });
+  meshDestroyed.connect([](Mesh &m) { query::clearCache(m); });
 }
 
 Mesh::~Mesh()
