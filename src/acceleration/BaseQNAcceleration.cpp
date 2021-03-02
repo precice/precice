@@ -220,12 +220,9 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
       Eigen::VectorXd deltaR = _residuals;
       deltaR -= _oldResiduals;
-      PRECICE_INFO("deltaR values: " << utils::MasterSlave::l2norm(deltaR));
 
       Eigen::VectorXd deltaXTilde = _values;
-      PRECICE_INFO("Magnitude values: " << utils::MasterSlave::l2norm(_values));
       deltaXTilde -= _oldXTilde;
-      PRECICE_INFO("deltaXTilde values: " << utils::MasterSlave::l2norm(deltaXTilde));
 
       PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0), "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
                                                                                "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
@@ -270,43 +267,6 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   }
 }
 
-/**
- *        Check if convergence is stagnating
- * 
- */
-void BaseQNAcceleration::stagnatingCheck()
-{
-  int kC = _matrixCols[0];
-
-  if (kC > 20 && kC <= 40){
-    double averageFirst = 0.0;
-    double averageLast = 0.0;
-    for (int i = 0; i < 3; i++){
-      Eigen::VectorXd vFirst = _matrixV.col(i);
-      averageFirst += utils::MasterSlave::l2norm(vFirst);
-      Eigen::VectorXd vLast = _matrixV.col(i + 8);
-      averageLast += utils::MasterSlave::l2norm(vLast);
-    }
-    PRECICE_INFO("Convergence Rate for stagnating Check -> 20+: " << averageLast/averageFirst);
-  }
-  if (kC > 40){
-    double averageFirst = 0.0;
-    double averageLast = 0.0;
-    double averageMiddle = 0.0;
-    for (int i = 0; i < 3; i++){
-      Eigen::VectorXd vFirst = _matrixV.col(i);
-      averageFirst += utils::MasterSlave::l2norm(vFirst);
-      Eigen::VectorXd vLast = _matrixV.col(i + 16);
-      averageLast += utils::MasterSlave::l2norm(vLast);
-      Eigen::VectorXd vMiddle = _matrixV.col(i + 8);
-      averageMiddle += utils::MasterSlave::l2norm(vMiddle);
-    }
-    PRECICE_INFO("Convergence Rate for stagnating Check -> 40+: " << averageLast/averageFirst);
-    PRECICE_INFO("Convergence Rate for stagnating Check -> 20+: " << averageMiddle/averageFirst);
-  }
-
-}
-
 /** ---------------------------------------------------------------------------------------------
  *         performAcceleration()
  *
@@ -349,7 +309,6 @@ void BaseQNAcceleration::performAcceleration(
    * appending the difference matrices
    */
   updateDifferenceMatrices(cplData);
-  stagnatingCheck();
 
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
     PRECICE_DEBUG("   Performing underrelaxation");
@@ -406,25 +365,6 @@ void BaseQNAcceleration::performAcceleration(
       _nbDelCols  = 0;
       _nbDropCols = 0;
     }
-
-    if(tSteps == 0){
-      if(its == 3){
-        removeMatrixColumn(2);
-        _qrV.deleteColumn(2);
-      }
-    }else if(tSteps > 1){
-      if(its == 2){
-        removeMatrixColumn(_matrixCols[1]);
-        _qrV.deleteColumn(_matrixCols[1]);
-        removeMatrixColumn(_matrixCols[1] - 1);
-        _qrV.deleteColumn(_matrixCols[1] - 1);
-      }
-    }
-    if(tSteps == 5 && its == 0)
-      _timestepsReused = 10;
-    else if (tSteps < 5)
-      _timestepsReused = 3;
-
 
     // apply the configured filter to the LS system
     applyFilter();
@@ -514,7 +454,7 @@ void BaseQNAcceleration::applyFilter()
 
       removeMatrixColumn(delIndices[i]);
 
-      PRECICE_INFO(" Filter: removing column with index " << delIndices[i] << " in iteration " << its << " of time step: " << tSteps);
+      PRECICE_DEBUG(" Filter: removing column with index " << delIndices[i] << " in iteration " << its << " of time step: " << tSteps);
     }
     PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
