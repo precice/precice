@@ -590,17 +590,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     auto                  rescalingCoeffs = petsc::Vector::allocate(_matrixC);
     VecSet(rhs, 1);
     rhs.assemble();
-    switch (_solver.solve(rhs, rescalingCoeffs)) {
-    case (petsc::KSPSolver::SolverResult::Converged):
+    if (_solver.solve(rhs, rescalingCoeffs) == petsc::KSPSolver::SolverResult::Converged) {
       PRECICE_INFO("Using rescaling. " << _solver.summaryFor(rhs));
-      break;
-    case (petsc::KSPSolver::SolverResult::Stopped):
-      PRECICE_WARN("Using rescaling, but beware. " << _solver.summaryFor(rhs));
-      break;
-    case (petsc::KSPSolver::SolverResult::Diverged):
+    } else {
       PRECICE_WARN("Deactivating rescaling! " << _solver.summaryFor(rhs));
       useRescaling = false;
-      break;
     }
 
     eRescaling.addData("Iterations", _solver.getIterationNumber());
