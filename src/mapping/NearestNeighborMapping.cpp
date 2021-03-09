@@ -54,7 +54,7 @@ void NearestNeighborMapping::computeMapping()
     const mesh::Mesh::VertexContainer &    inputVertices = input()->vertices();
     // Search for the output vertex inside the input mesh and add index to _vertexIndices
     for (size_t i = 0; i < verticesSize; i++) {
-      auto matchedVertex = indexTree.getClosestVertex(inputVertices[i]);
+      auto matchedVertex = indexTree.getClosestVertex(inputVertices[i].getCoords());
       _vertexIndices[i]  = matchedVertex.index;
       distanceStatistics(matchedVertex.distance);
     }
@@ -73,7 +73,7 @@ void NearestNeighborMapping::computeMapping()
     utils::statistics::DistanceAccumulator distanceStatistics;
     const mesh::Mesh::VertexContainer &    outputVertices = output()->vertices();
     for (size_t i = 0; i < verticesSize; i++) {
-      auto matchedVertex = indexTree.getClosestVertex(outputVertices[i]);
+      auto matchedVertex = indexTree.getClosestVertex(outputVertices[i].getCoords());
       _vertexIndices[i]  = matchedVertex.index;
       distanceStatistics(matchedVertex.distance);
     }

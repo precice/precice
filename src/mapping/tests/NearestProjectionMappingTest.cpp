@@ -761,15 +761,15 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
   PtrMesh inMesh(new mesh::Mesh("InMesh", 3, false, testing::nextMeshID()));
   PtrData inData = inMesh->createData("InData", 1);
   // Close triangle - extrapolating
-  auto &       vc0 = inMesh->createVertex(Eigen::Vector3d(3, 0, 0));
-  auto &       vc1 = inMesh->createVertex(Eigen::Vector3d(3, 2, 0));
-  auto &       vc2 = inMesh->createVertex(Eigen::Vector3d(4, 1, 0));
+  auto &vc0 = inMesh->createVertex(Eigen::Vector3d(3, 0, 0));
+  auto &vc1 = inMesh->createVertex(Eigen::Vector3d(3, 2, 0));
+  auto &vc2 = inMesh->createVertex(Eigen::Vector3d(4, 1, 0));
   makeTriangle(inMesh, vc0, vc1, vc2);
 
   // Far triangle - interpolating
-  auto &       vf0 = inMesh->createVertex(Eigen::Vector3d(0, 0, -1));
-  auto &       vf1 = inMesh->createVertex(Eigen::Vector3d(0, 2, -1));
-  auto &       vf2 = inMesh->createVertex(Eigen::Vector3d(0, 1, 1));
+  auto &vf0 = inMesh->createVertex(Eigen::Vector3d(0, 0, -1));
+  auto &vf1 = inMesh->createVertex(Eigen::Vector3d(0, 2, -1));
+  auto &vf2 = inMesh->createVertex(Eigen::Vector3d(0, 1, 1));
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();
@@ -796,15 +796,15 @@ BOOST_AUTO_TEST_CASE(PickClosestTriangle)
   PtrMesh inMesh(new mesh::Mesh("InMesh", 3, false, testing::nextMeshID()));
   PtrData inData = inMesh->createData("InData", 1);
   // Far triangle - interpolating
-  auto &       vf0 = inMesh->createVertex(Eigen::Vector3d(0, 0, -1));
-  auto &       vf1 = inMesh->createVertex(Eigen::Vector3d(0, 1, 1));
-  auto &       vf2 = inMesh->createVertex(Eigen::Vector3d(0, 2, -1));
+  auto &vf0 = inMesh->createVertex(Eigen::Vector3d(0, 0, -1));
+  auto &vf1 = inMesh->createVertex(Eigen::Vector3d(0, 1, 1));
+  auto &vf2 = inMesh->createVertex(Eigen::Vector3d(0, 2, -1));
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   // Close triangle - extrapolating
-  auto &       vc0 = inMesh->createVertex(Eigen::Vector3d(3, 0, 0));
-  auto &       vc1 = inMesh->createVertex(Eigen::Vector3d(3, 2, 0));
-  auto &       vc2 = inMesh->createVertex(Eigen::Vector3d(4, 1, 0));
+  auto &vc0 = inMesh->createVertex(Eigen::Vector3d(3, 0, 0));
+  auto &vc1 = inMesh->createVertex(Eigen::Vector3d(3, 2, 0));
+  auto &vc2 = inMesh->createVertex(Eigen::Vector3d(4, 1, 0));
   makeTriangle(inMesh, vc0, vc1, vc2);
 
   inMesh->allocateDataValues();
@@ -832,14 +832,14 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
   PtrMesh inMesh(new mesh::Mesh("InMesh", 3, false, testing::nextMeshID()));
   PtrData inData = inMesh->createData("InData", 1);
   // Close edge
-  auto &       vc0 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
-  auto &       vc1 = inMesh->createVertex(Eigen::Vector3d(0, 2, 0));
-  inMesh->createEdge(vc0,vc1);
+  auto &vc0 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &vc1 = inMesh->createVertex(Eigen::Vector3d(0, 2, 0));
+  inMesh->createEdge(vc0, vc1);
 
   // Far triangle - interpolating
-  auto &       vf0 = inMesh->createVertex(Eigen::Vector3d(3, 0, 0));
-  auto &       vf1 = inMesh->createVertex(Eigen::Vector3d(3, 2, 2));
-  auto &       vf2 = inMesh->createVertex(Eigen::Vector3d(3, 1, 0));
+  auto &vf0 = inMesh->createVertex(Eigen::Vector3d(3, 0, 0));
+  auto &vf1 = inMesh->createVertex(Eigen::Vector3d(3, 2, 2));
+  auto &vf2 = inMesh->createVertex(Eigen::Vector3d(3, 1, 0));
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();
@@ -868,15 +868,15 @@ BOOST_AUTO_TEST_CASE(TriangleDistances)
   PtrData inData = inMesh->createData("InData", 1);
 
   // Close triangle
-  auto &       vc0 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
-  auto &       vc1 = inMesh->createVertex(Eigen::Vector3d(0, 2, 2));
-  auto &       vc2 = inMesh->createVertex(Eigen::Vector3d(0, 1, 0));
+  auto &vc0 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
+  auto &vc1 = inMesh->createVertex(Eigen::Vector3d(0, 2, 2));
+  auto &vc2 = inMesh->createVertex(Eigen::Vector3d(0, 1, 0));
   makeTriangle(inMesh, vc0, vc1, vc2);
 
   // Far triangle
-  auto &       vf0 = inMesh->createVertex(Eigen::Vector3d(3, 0, 0));
-  auto &       vf1 = inMesh->createVertex(Eigen::Vector3d(3, 2, 2));
-  auto &       vf2 = inMesh->createVertex(Eigen::Vector3d(3, 1, 0));
+  auto &vf0 = inMesh->createVertex(Eigen::Vector3d(3, 0, 0));
+  auto &vf1 = inMesh->createVertex(Eigen::Vector3d(3, 2, 2));
+  auto &vf2 = inMesh->createVertex(Eigen::Vector3d(3, 1, 0));
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();

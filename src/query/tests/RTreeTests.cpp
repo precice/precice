@@ -106,11 +106,6 @@ BOOST_AUTO_TEST_CASE(Query2DVertex)
   auto result = indexTree.getClosestVertex(searchVertex);
   BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector2d(0, 1));
   BOOST_TEST(result.distance == 0.28284271247461906);
-
-  auto results = indexTree.getClosestVertices(searchVertex, 2);
-  BOOST_TEST(results.size() == 2);
-  BOOST_TEST(mesh->vertices().at(results.at(0).index).getCoords() == Eigen::Vector2d(0, 1));
-  BOOST_TEST(mesh->vertices().at(results.at(1).index).getCoords() == Eigen::Vector2d(0, 0));
 }
 
 BOOST_AUTO_TEST_CASE(Query3DVertex)
@@ -123,11 +118,6 @@ BOOST_AUTO_TEST_CASE(Query3DVertex)
   auto result = indexTree.getClosestVertex(searchVertex);
   BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
   BOOST_TEST(result.distance == 0.28284271247461906);
-
-  auto results = indexTree.getClosestVertices(searchVertex, 2);
-  BOOST_TEST(results.size() == 2);
-  BOOST_TEST(mesh->vertices().at(results.at(0).index).getCoords() == Eigen::Vector3d(1, 0, 1));
-  BOOST_TEST(mesh->vertices().at(results.at(1).index).getCoords() == Eigen::Vector3d(1, 0, 0));
 }
 
 BOOST_AUTO_TEST_CASE(Query3DFullVertex)
