@@ -66,22 +66,28 @@ void NearestProjectionMapping::computeMapping()
   precice::utils::Event e(baseEvent, precice::syncMode);
 
   // Setup Direction of Mapping
-  mesh::PtrMesh origins, search_space;
+  mesh::PtrMesh origins, searchSpace;
   if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Compute conservative mapping");
-    origins      = input();
-    search_space = output();
+    origins     = input();
+    searchSpace = output();
   } else {
     PRECICE_DEBUG("Compute consistent mapping");
-    origins      = output();
-    search_space = input();
+    origins     = output();
+    searchSpace = input();
   }
 
   const auto &fVertices = origins->vertices();
-  const auto &tVertices = search_space->vertices();
-  const auto &tEdges    = search_space->edges();
 
-  _weights.resize(fVertices.size());
+  if (getDimensions() == 2) {
+    if (!fVertices.empty() && searchSpace->edges().empty()) {
+      PRECICE_WARN("2D Mesh \"" << searchSpace->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
+    }
+  } else {
+    if (!fVertices.empty() && searchSpace->triangles().empty()) {
+      PRECICE_WARN("3D Mesh \"" << searchSpace->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
+    }
+  }
 
   // Amount of nearest elements to fetch for detailed comparison.
   // This safety margin results in a candidate set which forms the base for the
@@ -89,88 +95,25 @@ void NearestProjectionMapping::computeMapping()
   // @TODO Add a configuration option for this factor
   constexpr int nnearest = 4;
 
-  query::Index indexTree(search_space);
+  query::Index                           indexTree(searchSpace);
+  utils::statistics::DistanceAccumulator distanceStatistics;
 
-  if (getDimensions() == 2) {
-    if (!fVertices.empty() && tEdges.empty()) {
-      PRECICE_WARN("2D Mesh \"" << search_space->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
-    }
+  _weights.resize(fVertices.size());
 
-    utils::statistics::DistanceAccumulator distanceStatistics;
-
-    for (size_t i = 0; i < fVertices.size(); i++) {
-      auto matchedEdges = indexTree.getClosestEdges(fVertices[i], nnearest);
-      bool found        = false;
-      for (const auto &match : matchedEdges) {
-        auto weights = query::generateInterpolationElements(fVertices[i], tEdges[match.index]);
-        if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
-          _weights[i] = std::move(weights);
-          distanceStatistics(match.distance);
-          found = true;
-          break;
-        }
-      }
-
-      if (not found) {
-        // Search for the origin inside the destination meshes vertices
-        auto matchedVertex = indexTree.getClosestVertex(fVertices[i]);
-        _weights[i]        = query::generateInterpolationElements(fVertices[i], tVertices[matchedVertex.index]);
-        distanceStatistics(matchedVertex.distance);
-      }
-    }
-    if (distanceStatistics.empty()) {
-      PRECICE_INFO("Mapping distance not available due to empty partition.");
-    } else {
-      PRECICE_INFO("Mapping distance " << distanceStatistics);
-    }
-  } else {
-    const auto &tTriangles = search_space->triangles();
-    if (!fVertices.empty() && tTriangles.empty()) {
-      PRECICE_WARN("3D Mesh \"" << search_space->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
-    }
-
-    utils::statistics::DistanceAccumulator distanceStatistics;
-
-    for (size_t i = 0; i < fVertices.size(); i++) {
-      auto matchedTriangles = indexTree.getClosestTriangles(fVertices[i], nnearest);
-      bool found            = false;
-      for (const auto &match : matchedTriangles) {
-        auto weights = query::generateInterpolationElements(fVertices[i], tTriangles[match.index]);
-        if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
-          _weights[i] = std::move(weights);
-          found       = true;
-          distanceStatistics(match.distance);
-          break;
-        }
-      }
-
-      if (not found) {
-        // Search for the vertex inside the destination meshes edges
-        auto matchedEdges = indexTree.getClosestEdges(fVertices[i], nnearest);
-        for (const auto &match : matchedEdges) {
-          auto weights = query::generateInterpolationElements(fVertices[i], tEdges[match.index]);
-          if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
-            _weights[i] = std::move(weights);
-            found       = true;
-            distanceStatistics(match.distance);
-            break;
-          }
-        }
-      }
-
-      if (not found) {
-        // Search for the vertex inside the destination meshes vertices
-        auto matchedVertex = indexTree.getClosestVertex(fVertices[i]);
-        _weights[i]        = query::generateInterpolationElements(fVertices[i], tVertices[matchedVertex.index]);
-        distanceStatistics(matchedVertex.distance);
-      }
-    }
-    if (distanceStatistics.empty()) {
-      PRECICE_INFO("Mapping distance not available due to empty partition.");
-    } else {
-      PRECICE_INFO("Mapping distance " << distanceStatistics);
-    }
+  for (size_t i = 0; i < fVertices.size(); i++) {
+    // Nearest projection element is edge for 2d if exists, if not, it is the nearest vertex
+    // Nearest projection element is triangle for 3d if exists, if not the edge and at the worst case it is the nearest vertex
+    auto interpolationElements = indexTree.findNearestProjection(fVertices[i], nnearest);
+    _weights[i]                = std::move(interpolationElements.first);
+    distanceStatistics(interpolationElements.second);
   }
+
+  if (distanceStatistics.empty()) {
+    PRECICE_INFO("Mapping distance not available due to empty partition.");
+  } else {
+    PRECICE_INFO("Mapping distance " << distanceStatistics);
+  }
+
   _hasComputedMapping = true;
 }
 
