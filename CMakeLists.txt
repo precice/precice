@@ -498,11 +498,6 @@ write_basic_package_version_file("preciceConfigVersion.cmake"
   COMPATIBILITY SameMajorVersion
   )
 
-# Install the Config and the ConfigVersion files
-install(FILES "cmake/preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/precice
-  )
-
 # Setup the config in the build directory
 set(_precice_bin_dir ${CMAKE_BINARY_DIR})
 set(_precice_lib_dir ${CMAKE_BINARY_DIR})
@@ -511,13 +506,25 @@ if(PRECICE_ENABLE_C)
   set(_precice_include_dirs ${_precice_include_dirs} "${preCICE_SOURCE_DIR}/extras/bindings/c/include")
 endif()
 set(_precice_pre_petsc_hook "list(APPEND CMAKE_MODULE_PATH ${preCICE_SOURCE_DIR}/cmake/modules)")
-
 configure_file("cmake/preciceConfig.cmake.in" "${preCICE_BINARY_DIR}/preciceConfig.cmake" @ONLY)
 
+# Setup the config for the install directory
+set(_precice_bin_dir ${CMAKE_INSTALL_FULL_BINDIR})
+set(_precice_lib_dir ${CMAKE_INSTALL_FULL_LIBDIR})
+set(_precice_include_dirs "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
+set(_precice_pre_petsc_hook "list(APPEND CMAKE_MODULE_PATH \${CMAKE_CURRENT_LIST_DIR})")
+configure_file("cmake/preciceConfig.cmake.in" "${preCICE_BINARY_DIR}/cmake/preciceConfig.cmake" @ONLY)
+
+# Cleanup
 unset(_precice_include_dirs)
 unset(_precice_pre_petsc_hook)
 unset(_precice_lib_dir)
 unset(_precice_bin_dir)
+
+# Install the Config and the ConfigVersion files
+install(FILES "${preCICE_BINARY_DIR}/cmake/preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVersion.cmake" "cmake/modules/FindPETSc.cmake"
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/precice
+  )
 
 # Add an alias to allow subprojects to use the namespaced name
 add_library(precice::precice ALIAS precice)
