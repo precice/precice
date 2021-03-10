@@ -45,6 +45,7 @@ set(_precice_build_type @CMAKE_BUILD_TYPE@)
 
 set(_precice_include_dirs @_precice_include_dirs@)
 set(_precice_bin_dir @_precice_bin_dir@)
+unset(_precice_lib CACHE)
 find_library(_precice_lib NAMES precice PATHS @_precice_lib_dir@ NO_DEFAULT_PATH)
 
 # Create imported target precice::precice
