@@ -142,6 +142,7 @@ feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "=== DISABLED FEATURES ===" Q
 print_section("DEPENDENCIES")
 
 find_package (Threads REQUIRED)
+set(_precice_boost_libs filesystem log log_setup program_options system thread unit_test_framework)
 
 if(TPL_ENABLE_BOOST)
   xsdk_tpl_require(BOOST BOOST_ROOT)
@@ -150,7 +151,7 @@ if(TPL_ENABLE_BOOST)
   unset(ENV{BOOST_ROOT})
 endif()
 find_package(Boost 1.65.1 REQUIRED
-  COMPONENTS filesystem log log_setup program_options system thread unit_test_framework
+  COMPONENTS ${_precice_boost_libs}
   )
 
 # Eigen
@@ -503,11 +504,20 @@ install(FILES "cmake/preciceConfig.cmake" "${preCICE_BINARY_DIR}/preciceConfigVe
   )
 
 # Setup the config in the build directory
-export(EXPORT preciceTargets
-  NAMESPACE precice::
-  FILE "preciceTargets.cmake")
-file(COPY "cmake/preciceConfig.cmake"
-  DESTINATION "${preCICE_BINARY_DIR}")
+set(_precice_bin_dir ${CMAKE_BINARY_DIR})
+set(_precice_lib_dir ${CMAKE_BINARY_DIR})
+set(_precice_include_dirs "${preCICE_SOURCE_DIR}/src" "${preCICE_BINARY_DIR}/src")
+if(PRECICE_ENABLE_C)
+  set(_precice_include_dirs ${_precice_include_dirs} "${preCICE_SOURCE_DIR}/extras/bindings/c/include")
+endif()
+set(_precice_pre_petsc_hook "list(APPEND CMAKE_MODULE_PATH ${preCICE_SOURCE_DIR}/cmake/modules)")
+
+configure_file("cmake/preciceConfig.cmake.in" "${preCICE_BINARY_DIR}/preciceConfig.cmake" @ONLY)
+
+unset(_precice_include_dirs)
+unset(_precice_pre_petsc_hook)
+unset(_precice_lib_dir)
+unset(_precice_bin_dir)
 
 # Add an alias to allow subprojects to use the namespaced name
 add_library(precice::precice ALIAS precice)
