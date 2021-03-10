@@ -1,0 +1,112 @@
+if("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" LESS 2.5)
+   message(FATAL_ERROR "CMake >= 2.6.0 required")
+endif()
+cmake_policy(PUSH)
+cmake_policy(VERSION 2.6...3.17)
+
+# Commands may need to know the format version.
+set(CMAKE_IMPORT_FILE_VERSION 1)
+
+# Protect against multiple inclusion, which would fail when already imported targets are added once more.
+set(_targetsDefined)
+set(_targetsNotDefined)
+set(_expectedTargets)
+foreach(_expectedTarget precice::precice precice::binprecice)
+  list(APPEND _expectedTargets ${_expectedTarget})
+  if(NOT TARGET ${_expectedTarget})
+    list(APPEND _targetsNotDefined ${_expectedTarget})
+  endif()
+  if(TARGET ${_expectedTarget})
+    list(APPEND _targetsDefined ${_expectedTarget})
+  endif()
+endforeach()
+if("${_targetsDefined}" STREQUAL "${_expectedTargets}")
+  unset(_targetsDefined)
+  unset(_targetsNotDefined)
+  unset(_expectedTargets)
+  set(CMAKE_IMPORT_FILE_VERSION)
+  cmake_policy(POP)
+  return()
+endif()
+if(NOT "${_targetsDefined}" STREQUAL "")
+  message(FATAL_ERROR "Some (but not all) targets in this export set were already defined.\nTargets Defined: ${_targetsDefined}\nTargets not yet defined: ${_targetsNotDefined}\n")
+endif()
+unset(_targetsDefined)
+unset(_targetsNotDefined)
+unset(_expectedTargets)
+
+set(PRECICE_MPICommunication @PRECICE_MPICommunication@)
+set(PRECICE_PETScMapping @PRECICE_PETScMapping@)
+set(PRECICE_PythonActions @PRECICE_PythonActions@)
+
+set(_precice_is_shared @BUILD_SHARED_LIBS@)
+set(_precice_build_type @CMAKE_BUILD_TYPE@)
+
+set(_precice_include_dirs @_precice_include_dirs@)
+set(_precice_lib_dir @_precice_lib_dir@)
+set(_precice_bin_dir @_precice_bin_dir@)
+
+
+set(_precice_lib_name @_precice_lib_name@) # libprecice.a
+
+# Create imported target precice::precice
+set(_precice_lib_type)
+if(_precice_is_shared)
+  set(_precice_lib_type SHARED)
+else()
+  set(_precice_lib_type STATIC)
+endif()
+add_library(precice::precice ${_precice_lib_type} IMPORTED)
+unset(_precice_lib_type)
+
+include(CMakeFindDependencyMacro)
+# find_dependency(Threads)
+find_dependency(Boost)
+set_target_properties(precice::precice 
+  INTERFACE_LINK_LIBRARIES Boost
+  INTERFACE_INCLUDE_DIRECTORIES "${_precice_include_dirs}"
+  )
+
+if(NOT _precice_is_shared)
+  find_dependency(LibXml2)
+  set_property(TARGET precice::precice APPEND PROPERTY INTERFACE_LINK_LIBRARIES ${LIBXML2_LIBRARIES})
+
+  if(PRECICE_PythonActions)
+    find_dependency(PythonLibs)
+    set_property(TARGET precice::precice APPEND PROPERTY INTERFACE_LINK_LIBRARIES ${PYTHON_LIBRARIES})
+  endif()
+
+  if(PRECICE_MPICommunication)
+    find_dependency(MPI)
+    set_property(TARGET precice::precice APPEND PROPERTY INTERFACE_LINK_LIBRARIES MPI::MPI_CXX)
+  endif()
+
+  if(PRECICE_PETScMapping)
+    find_dependency(PETSc)
+    set_property(TARGET precice::precice APPEND PROPERTY INTERFACE_LINK_LIBRARIES PETSc::PETSc)
+  endif()
+
+endif()
+
+
+# Import target "precice::precice" for configuration "Debug"
+# set_property(TARGET precice::precice APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
+set_target_properties(precice::precice PROPERTIES
+  # IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "CXX"
+  # IMPORTED_LOCATION_DEBUG "/home/simonis/dev/precice/second/bs/libprecice.a"
+  IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+  IMPORTED_LOCATION "${_precice_lib_dir}/${_precice_lib_name}"
+  )
+
+# Create imported target precice::binprecice
+add_executable(precice::binprecice IMPORTED)
+set_target_properties(precice::binprecice PROPERTIES
+  IMPORTED_LOCATION "${_precice_bin_dir}/binprecice"
+  )
+
+# This file does not depend on other imported targets which have
+# been exported from the same project but in a separate export set.
+
+# Commands beyond this point should not need to know the version.
+set(CMAKE_IMPORT_FILE_VERSION)
+cmake_policy(POP)
