@@ -43,46 +43,40 @@ void NearestNeighborMapping::computeMapping()
   const std::string     baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
 
+  // Setup Direction of Mapping
+  mesh::PtrMesh origins, searchSpace;
   if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Compute conservative mapping");
-    precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    query::Index          indexTree(output());
-    e2.stop();
-    size_t verticesSize = input()->vertices().size();
-    _vertexIndices.resize(verticesSize);
-    utils::statistics::DistanceAccumulator distanceStatistics;
-    const mesh::Mesh::VertexContainer &    inputVertices = input()->vertices();
-    // Search for the output vertex inside the input mesh and add index to _vertexIndices
-    for (size_t i = 0; i < verticesSize; i++) {
-      auto matchedVertex = indexTree.getClosestVertex(inputVertices[i].getCoords());
-      _vertexIndices[i]  = matchedVertex.index;
-      distanceStatistics(matchedVertex.distance);
-    }
-    if (distanceStatistics.empty()) {
-      PRECICE_INFO("Mapping distance not available due to empty partition.");
-    } else {
-      PRECICE_INFO("Mapping distance " << distanceStatistics);
-    }
+    origins     = input();
+    searchSpace = output();
   } else {
     PRECICE_DEBUG("Compute consistent mapping");
-    precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    query::Index          indexTree(input());
-    e2.stop();
-    size_t verticesSize = output()->vertices().size();
-    _vertexIndices.resize(verticesSize);
-    utils::statistics::DistanceAccumulator distanceStatistics;
-    const mesh::Mesh::VertexContainer &    outputVertices = output()->vertices();
-    for (size_t i = 0; i < verticesSize; i++) {
-      auto matchedVertex = indexTree.getClosestVertex(outputVertices[i].getCoords());
-      _vertexIndices[i]  = matchedVertex.index;
-      distanceStatistics(matchedVertex.distance);
-    }
-    if (distanceStatistics.empty()) {
-      PRECICE_INFO("Mapping distance not available due to empty partition.");
-    } else {
-      PRECICE_INFO("Mapping distance " << distanceStatistics);
-    }
+    origins     = output();
+    searchSpace = input();
   }
+
+  precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
+  query::Index          indexTree(searchSpace);
+  e2.stop();
+
+  const size_t verticesSize   = origins->vertices().size();
+  const auto & sourceVertices = origins->vertices();
+
+  _vertexIndices.resize(verticesSize);
+  utils::statistics::DistanceAccumulator distanceStatistics;
+
+  for (size_t i = 0; i < verticesSize; ++i) {
+    auto matchedVertex = indexTree.getClosestVertex(sourceVertices[i].getCoords());
+    _vertexIndices[i]  = matchedVertex.index;
+    distanceStatistics(matchedVertex.distance);
+  }
+
+  if (distanceStatistics.empty()) {
+    PRECICE_INFO("Mapping distance not available due to empty partition.");
+  } else {
+    PRECICE_INFO("Mapping distance " << distanceStatistics);
+  }
+
   _hasComputedMapping = true;
 }
 
