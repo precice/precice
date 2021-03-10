@@ -35,6 +35,7 @@ unset(_targetsDefined)
 unset(_targetsNotDefined)
 unset(_expectedTargets)
 
+# Information about the configuration etc
 set(PRECICE_MPICommunication @PRECICE_MPICommunication@)
 set(PRECICE_PETScMapping @PRECICE_PETScMapping@)
 set(PRECICE_PythonActions @PRECICE_PythonActions@)
@@ -56,21 +57,26 @@ endif()
 add_library(precice::precice ${_precice_lib_type} IMPORTED)
 unset(_precice_lib_type)
 
-include(CMakeFindDependencyMacro)
-enable_language(CXX) # Otherwise the boost config errors
-find_dependency(Boost COMPONENTS @_precice_boost_libs@)
-
+# Set some initial properties
 set_target_properties(precice::precice PROPERTIES
   INTERFACE_LINK_LIBRARIES ${CMAKE_DL_LIBS}
   INTERFACE_INCLUDE_DIRECTORIES "${_precice_include_dirs}"
+  IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+  IMPORTED_LOCATION "${_precice_lib}"
   )
 
+# Start finding dependencies
+include(CMakeFindDependencyMacro)
 
+# Find required boost libraries 
+# The CMake config shipped with Boost fails if CXX is not enabled. (state: 1.75.0)
+enable_language(CXX)
+find_dependency(Boost COMPONENTS @_precice_boost_libs@)
 foreach(_boost_lib @_precice_boost_libs@)
   set_property(TARGET precice::precice APPEND PROPERTY INTERFACE_LINK_LIBRARIES Boost::${_boost_lib})
 endforeach()
 
-
+# Most dependencies are only required if preCICE is build as a static library
 if(NOT _precice_is_shared)
   find_dependency(LibXml2)
   set_property(TARGET precice::precice APPEND PROPERTY INTERFACE_LINK_LIBRARIES ${LIBXML2_LIBRARIES})
@@ -86,34 +92,17 @@ if(NOT _precice_is_shared)
   endif()
 
   if(PRECICE_PETScMapping)
-    #set(_old_modules ${CMAKE_MODULE_PATH})
     @_precice_pre_petsc_hook@
     find_dependency(PETSc)
     set_property(TARGET precice::precice APPEND PROPERTY INTERFACE_LINK_LIBRARIES PETSc::PETSc)
-    #set(CMAKE_MODULE_PATH ${_old_modules})
-    #unset(_old_modules)
   endif()
-
 endif()
-
-
-# Import target "precice::precice" for configuration "Debug"
-# set_property(TARGET precice::precice APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
-set_target_properties(precice::precice PROPERTIES
-  # IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "CXX"
-  # IMPORTED_LOCATION_DEBUG "/home/simonis/dev/precice/second/bs/libprecice.a"
-  IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-  IMPORTED_LOCATION "${_precice_lib}"
-  )
 
 # Create imported target precice::binprecice
 add_executable(precice::binprecice IMPORTED)
 set_target_properties(precice::binprecice PROPERTIES
   IMPORTED_LOCATION "${_precice_bin_dir}/binprecice"
   )
-
-# This file does not depend on other imported targets which have
-# been exported from the same project but in a separate export set.
 
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)
