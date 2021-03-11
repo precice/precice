@@ -50,7 +50,7 @@ void NearestNeighborMapping::computeMapping()
     origins     = input();
     searchSpace = output();
   } else {
-    PRECICE_DEBUG("Compute consistent mapping");
+    PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Compute consistent mapping" : "Compute scaled-consistent mapping"));
     origins     = output();
     searchSpace = input();
   }
@@ -116,6 +116,7 @@ void NearestNeighborMapping::map(
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
                  outputValues.size(), valueDimensions, output()->vertices().size());
+
   if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Map conservative");
     size_t const inSize = input()->vertices().size();
@@ -126,7 +127,7 @@ void NearestNeighborMapping::map(
       }
     }
   } else {
-    PRECICE_DEBUG("Map consistent");
+    PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
     size_t const outSize = output()->vertices().size();
     for (size_t i = 0; i < outSize; i++) {
       int inputIndex = _vertexIndices[i] * valueDimensions;
@@ -150,16 +151,13 @@ void NearestNeighborMapping::tagMeshFirstRound()
   // Lookup table of all indices used in the mapping
   const boost::container::flat_set<int> indexSet(_vertexIndices.begin(), _vertexIndices.end());
 
-  if (hasConstraint(CONSERVATIVE)) {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
-    for (mesh::Vertex &v : output()->vertices()) {
-      if (indexSet.count(v.getID()) != 0)
-        v.tag();
-    }
-  } else {
-    for (mesh::Vertex &v : input()->vertices()) {
-      if (indexSet.count(v.getID()) != 0)
-        v.tag();
+  // Get the source mesh depending on the constraint
+  const mesh::PtrMesh &source = hasConstraint(CONSERVATIVE) ? output() : input();
+
+  // Tag all vertices used in the mapping
+  for (mesh::Vertex &v : source->vertices()) {
+    if (indexSet.count(v.getID()) != 0) {
+      v.tag();
     }
   }
 
