@@ -552,7 +552,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PCSetType(pc, PCNONE);
     KSPSetType(_QRsolver, KSPLSQR);
     KSPSetOperators(_QRsolver, _matrixQ, _matrixQ);
-    KSPSetTolerances(_QRsolver, _solverRtol, PETSC_DEFAULT, 1e30, PETSC_DEFAULT);
   }
 
   // -- CONFIGURE SOLVER FOR SYSTEM MATRIX --
@@ -840,22 +839,22 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       case (petsc::KSPSolver::SolverResult::Converged):
         PRECICE_DEBUG("The linear system of the RBF mapping from mesh "
                       << input()->getName() << " to mesh " << output()->getName()
-                      << " converged. " << _QRsolver.summaryFor(in));
+                      << " converged. " << _solver.summaryFor(in));
         break;
       case (petsc::KSPSolver::SolverResult::Stopped):
         PRECICE_WARN("The linear system of the RBF mapping from mesh "
                      << input()->getName() << " to mesh " << output()->getName()
                      << " has not converged. This means most probably that the mapping problem is not well-posed or your relative tolerance is too conservative. "
                      << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
-                     << "by marking perpendicular axes as dead? " << _QRsolver.summaryFor(in));
+                     << "by marking perpendicular axes as dead? " << _solver.summaryFor(in));
         break;
       case (petsc::KSPSolver::SolverResult::Diverged):
-        KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
+        KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
         PRECICE_ERROR("The linear system of the RBF mapping from mesh "
                       << input()->getName() << " to mesh " << output()->getName()
                       << " has diverged. This means most probably that the mapping problem is not well-posed. "
                       << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
-                      << "by marking perpendicular axes as dead? " << _QRsolver.summaryFor(in));
+                      << "by marking perpendicular axes as dead? " << _solver.summaryFor(in));
         break;
       }
 
