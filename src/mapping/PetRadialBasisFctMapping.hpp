@@ -552,6 +552,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PCSetType(pc, PCNONE);
     KSPSetType(_QRsolver, KSPLSQR);
     KSPSetOperators(_QRsolver, _matrixQ, _matrixQ);
+    KSPSetTolerances(_QRsolver, _solverRtol, PETSC_DEFAULT, 1e30, PETSC_DEFAULT);
   }
 
   // -- CONFIGURE SOLVER FOR SYSTEM MATRIX --
