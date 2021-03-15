@@ -1,6 +1,5 @@
 #include "Index.hpp"
 #include <boost/range/irange.hpp>
-#include "FindClosest.hpp"
 #include "impl/Indexer.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/Event.hpp"
@@ -82,21 +81,6 @@ std::vector<TriangleMatch> Index::getClosestTriangles(const Eigen::VectorXd &sou
   return matches;
 }
 
-VertexMatch Index::getClosestVertex(const mesh::Vertex &sourceVertex)
-{
-  return getClosestVertex(sourceVertex.getCoords());
-}
-
-std::vector<EdgeMatch> Index::getClosestEdges(const mesh::Vertex &sourceVertex, int n)
-{
-  return getClosestEdges(sourceVertex.getCoords(), n);
-}
-
-std::vector<TriangleMatch> Index::getClosestTriangles(const mesh::Vertex &sourceVertex, int n)
-{
-  return getClosestTriangles(sourceVertex.getCoords(), n);
-}
-
 std::vector<size_t> Index::getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius)
 {
   PRECICE_TRACE();
@@ -131,45 +115,46 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
   return matches;
 }
 
-std::pair<InterpolationElements, double> Index::findNearestProjection(const mesh::Vertex &sourceVertex, int n)
+std::pair<mapping::Polation, double> Index::findNearestProjection(const Eigen::VectorXd &location, int n)
 {
   if (_mesh->getDimensions() == 2) {
-    return findEdgeProjection(sourceVertex, n);
+    return findEdgeProjection(location, n);
   } else {
-    return findTriangleProjection(sourceVertex, n);
+    return findTriangleProjection(location, n);
   }
 }
 
-std::pair<InterpolationElements, double> Index::findVertexProjection(const mesh::Vertex &sourceVertex)
+std::pair<mapping::Polation, double> Index::findVertexProjection(const Eigen::VectorXd &location)
 {
-  auto match = getClosestVertex(sourceVertex.getCoords());
-  return std::pair<InterpolationElements, double>(generateInterpolationElements(sourceVertex, _mesh->vertices()[match.index]), match.distance);
+  auto match = getClosestVertex(location);
+  return std::pair<mapping::Polation, double>(mapping::Polation(_mesh->vertices()[match.index]), match.distance);
 }
 
-std::pair<InterpolationElements, double> Index::findEdgeProjection(const mesh::Vertex &sourceVertex, int n)
+std::pair<mapping::Polation, double> Index::findEdgeProjection(const Eigen::VectorXd &location, int n)
 {
-  auto matchedEdges = getClosestEdges(sourceVertex.getCoords(), n);
+  auto matchedEdges = getClosestEdges(location, n);
   for (const auto &match : matchedEdges) {
-    auto weights = query::generateInterpolationElements(sourceVertex, _mesh->edges()[match.index]);
-    if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
-      return std::pair<InterpolationElements, double>(weights, match.distance);
+    auto polation = mapping::Polation(location, _mesh->edges()[match.index]);
+    if (polation.isInterpolation()) {
+      return std::pair<mapping::Polation, double>(polation, match.distance);
     }
   }
   // Could not find edge projection element, fall back to vertex projection
-  return findVertexProjection(sourceVertex);
+  return findVertexProjection(location);
 }
 
-std::pair<InterpolationElements, double> Index::findTriangleProjection(const mesh::Vertex &sourceVertex, int n)
+std::pair<mapping::Polation, double> Index::findTriangleProjection(const Eigen::VectorXd &location, int n)
 {
-  auto matchedTriangles = getClosestTriangles(sourceVertex.getCoords(), n);
+  auto matchedTriangles = getClosestTriangles(location, n);
   for (const auto &match : matchedTriangles) {
-    auto weights = query::generateInterpolationElements(sourceVertex, _mesh->triangles()[match.index]);
-    if (std::all_of(weights.begin(), weights.end(), [](query::InterpolationElement const &elem) { return elem.weight >= 0.0; })) {
-      return std::pair<InterpolationElements, double>(weights, match.distance);
+    auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
+    if (polation.isInterpolation()) {
+      return std::pair<mapping::Polation, double>(polation, match.distance);
     }
   }
+
   // Could not triangle find projection element, fall back to edge projection
-  return findEdgeProjection(sourceVertex, n);
+  return findEdgeProjection(location, n);
 }
 
 void clearCache()

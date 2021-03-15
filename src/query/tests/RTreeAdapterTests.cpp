@@ -21,8 +21,9 @@ using namespace precice::mesh;
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
 
+BOOST_AUTO_TEST_SUITE(QueryTests)
 BOOST_AUTO_TEST_SUITE(MeshTests)
-BOOST_AUTO_TEST_SUITE(RTree)
+BOOST_AUTO_TEST_SUITE(RTreeTests)
 BOOST_AUTO_TEST_SUITE(BGAdapters)
 
 BOOST_AUTO_TEST_CASE(VectorAdapter)
@@ -247,3 +248,4 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
 BOOST_AUTO_TEST_SUITE_END() // BG Adapters
 BOOST_AUTO_TEST_SUITE_END() // RTree
 BOOST_AUTO_TEST_SUITE_END() // Mesh
+BOOST_AUTO_TEST_SUITE_END() // Query
