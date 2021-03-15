@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iosfwd>
 #include <vector>
 #include "Eigen/Core"
 #include "mesh/Edge.hpp"
@@ -11,11 +12,8 @@ namespace mapping {
 
 /// Struct that contains weight and index of a vertex
 struct WeightedElement {
-  const int    vertexID;
-  const double weight;
-
-  WeightedElement(int index, double weight)
-      : vertexID(index), weight(weight){};
+  int    vertexID;
+  double weight;
 };
 
 /**
@@ -46,7 +44,7 @@ private:
 /// Make the WeightedElement printable
 std::ostream &operator<<(std::ostream &os, const WeightedElement &w);
 
-/// Make the polation class printable
+/// Make the Polation class printable
 std::ostream &operator<<(std::ostream &os, const Polation &p);
 
 } // namespace mapping

@@ -6,7 +6,7 @@ namespace mapping {
 
 Polation::Polation(const mesh::Vertex &element)
 {
-  _weightedElements.emplace_back(element.getID(), 1.0);
+  _weightedElements.emplace_back(WeightedElement{element.getID(), 1.0});
 }
 
 Polation::Polation(const Eigen::VectorXd &location, const mesh::Edge &element)
@@ -21,8 +21,8 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Edge &element)
                            location)
                            .barycentricCoords;
 
-  _weightedElements.emplace_back(A.getID(), bcoords(0));
-  _weightedElements.emplace_back(B.getID(), bcoords(1));
+  _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
+  _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
 }
 
 Polation::Polation(const Eigen::VectorXd &location, const mesh::Triangle &element)
@@ -39,9 +39,9 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Triangle &elemen
                            location)
                            .barycentricCoords;
 
-  _weightedElements.emplace_back(A.getID(), bcoords(0));
-  _weightedElements.emplace_back(B.getID(), bcoords(1));
-  _weightedElements.emplace_back(C.getID(), bcoords(2));
+  _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
+  _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
+  _weightedElements.emplace_back(WeightedElement{C.getID(), bcoords(2)});
 }
 
 const std::vector<WeightedElement> &Polation::getWeightedElements() const
