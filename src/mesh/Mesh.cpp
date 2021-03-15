@@ -78,6 +78,14 @@ int Mesh::getDimensions() const
   return _dimensions;
 }
 
+Vertex &Mesh::createVertex(const Eigen::VectorXd &coords)
+{
+  PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
+  auto nextID = _vertices.size();
+  _vertices.emplace_back(coords, nextID);
+  return _vertices.back();
+}
+
 Edge &Mesh::createEdge(
     Vertex &vertexOne,
     Vertex &vertexTwo)
