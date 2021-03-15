@@ -97,7 +97,8 @@ public:
   Vertex &createVertex(const VECTOR_T &coords)
   {
     PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
-    _vertices.emplace_back(coords, _manageVertexIDs.getFreeID());
+    auto nextID = _vertices.size();
+    _vertices.emplace_back(coords, nextID);
     return _vertices.back();
   }
 
@@ -254,12 +255,6 @@ private:
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;
-
-  utils::ManageUniqueIDs _manageVertexIDs;
-
-  utils::ManageUniqueIDs _manageEdgeIDs;
-
-  utils::ManageUniqueIDs _manageTriangleIDs;
 
   /**
    * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
