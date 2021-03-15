@@ -82,7 +82,8 @@ Edge &Mesh::createEdge(
     Vertex &vertexOne,
     Vertex &vertexTwo)
 {
-  _edges.emplace_back(vertexOne, vertexTwo, _manageEdgeIDs.getFreeID());
+  auto nextID = _edges.size();
+  _edges.emplace_back(vertexOne, vertexTwo, nextID);
   return _edges.back();
 }
 
@@ -113,7 +114,8 @@ Triangle &Mesh::createTriangle(
       edgeOne.connectedTo(edgeTwo) &&
       edgeTwo.connectedTo(edgeThree) &&
       edgeThree.connectedTo(edgeOne));
-  _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, _manageTriangleIDs.getFreeID());
+  auto nextID = _triangles.size();
+  _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, nextID);
   return _triangles.back();
 }
 
@@ -278,10 +280,6 @@ void Mesh::clear()
   _triangles.clear();
   _edges.clear();
   _vertices.clear();
-
-  _manageTriangleIDs.resetIDs();
-  _manageEdgeIDs.resetIDs();
-  _manageVertexIDs.resetIDs();
 
   meshChanged(*this);
 
