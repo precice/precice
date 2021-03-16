@@ -194,7 +194,7 @@ void Mesh::allocateDataValues()
   PRECICE_TRACE(_vertices.size());
   const auto expectedCount = _vertices.size();
   using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
-  for (PtrData data : _data) {
+  for (PtrData &data : _data) {
     const SizeType expectedSize = expectedCount * data->getDimensions();
     const auto     actualSize   = static_cast<SizeType>(data->values().size());
     // Shrink Buffer
@@ -291,7 +291,7 @@ void Mesh::clear()
 
   meshChanged(*this);
 
-  for (mesh::PtrData data : _data) {
+  for (mesh::PtrData &data : _data) {
     data->values().resize(0);
   }
 }
