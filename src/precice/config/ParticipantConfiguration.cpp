@@ -537,9 +537,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                             << "\" uses mesh \"" << action->getMesh()->getName()
                             << "\", which is not used by the participant. "
                             << "Please add a use-mesh node with name=\"" << action->getMesh()->getName() << "\".");
-    _participants.back()->addAction(action);
   }
-  _actionConfig->resetActions();
+  for (action::PtrAction &action : _actionConfig->extractActions()) {
+    _participants.back()->addAction(std::move(action));
+  }
 
   // Add export contexts
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
