@@ -290,7 +290,7 @@ void ActionConfiguration::createAction()
   }
 #endif
   PRECICE_ASSERT(action.get() != nullptr);
-  _actions.push_back(action);
+  _actions.push_back(std::move(action));
 }
 
 action::Action::Timing ActionConfiguration::getTiming() const
