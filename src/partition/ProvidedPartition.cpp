@@ -242,6 +242,7 @@ void ProvidedPartition::compareBoundingBoxes()
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
     PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
+    Event e0("partition.gatherBB." + _mesh->getName(), precice::syncMode);
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
     mesh::BoundingBox          bb(_mesh->getDimensions());
@@ -255,9 +256,15 @@ void ProvidedPartition::compareBoundingBoxes()
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm.at(rankSlave), rankSlave);
     }
 
+    e0.stop();
+
+    Event e1("partition.sendBBsSets." + _mesh->getName(), precice::syncMode);
+
     // master sends number of ranks and bbm to the other master
     _m2ns[0]->getMasterCommunication()->send(utils::MasterSlave::getSize(), 0);
     com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
+
+    e1.stop();
   }
 
   // size of the feedbackmap

@@ -373,6 +373,8 @@ void ReceivedPartition::compareBoundingBoxes()
     remoteBBMap.emplace(remoteRank, initialBB);
   }
 
+  Event e0("partition.receiveBBsSetAndBroadcast." + _mesh->getName(), precice::syncMode);
+
   // receive and broadcast remote bounding box map
   if (utils::MasterSlave::isMaster()) {
     com::CommunicateBoundingBox(m2n().getMasterCommunication()).receiveBoundingBoxMap(remoteBBMap, 0);
@@ -382,9 +384,13 @@ void ReceivedPartition::compareBoundingBoxes()
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveBoundingBoxMap(remoteBBMap);
   }
 
+  e0.stop();
+
+  
   // prepare local bounding box
   prepareBoundingBox();
 
+  Event e1("partition.compareBBs." + _mesh->getName(), precice::syncMode);
   if (utils::MasterSlave::isMaster()) {                 // Master
     std::map<int, std::vector<int>> connectionMap;      //local ranks -> {remote ranks}
     std::vector<int>                connectedRanksList; // local ranks with any connection
@@ -433,6 +439,7 @@ void ReceivedPartition::compareBoundingBoxes()
       utils::MasterSlave::_communication->send(_mesh->getConnectedRanks(), 0);
     }
   }
+  e1.stop();
 }
 
 void ReceivedPartition::prepareBoundingBox()

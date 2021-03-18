@@ -126,6 +126,8 @@ void M2N::acceptSlavesPreConnection(
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyMasterCom);
+  Event e("m2n.acceptSlavesPreConnection", precice::syncMode);
+  
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->acceptPreConnection(acceptorName, requesterName);
@@ -140,6 +142,8 @@ void M2N::requestSlavesPreConnection(
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyMasterCom);
+  Event e("m2n.requestSlavesPreConnection", precice::syncMode);
+  
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->requestPreConnection(acceptorName, requesterName);
@@ -151,6 +155,8 @@ void M2N::requestSlavesPreConnection(
 void M2N::completeSlavesConnection()
 {
   PRECICE_ASSERT(not _useOnlyMasterCom);
+  
+  Event e("m2n.completeSlavesConnection", precice::syncMode);
   for (const auto &pair : _distComs) {
     pair.second->completeSlavesConnection();
   }
