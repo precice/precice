@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
-    auto& action = config.actions().front();
+    auto &action = config.actions().front();
     BOOST_TEST(static_cast<bool>(action));
   }
   {
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
-    auto& action = config.actions().front();
+    auto &action = config.actions().front();
     BOOST_TEST(static_cast<bool>(action));
   }
   {
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
-    auto& action = config.actions().front();
+    auto &action = config.actions().front();
     BOOST_TEST(static_cast<bool>(action));
   }
   {
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(Configuration)
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
-    auto& action = config.actions().front();
+    auto &action = config.actions().front();
     BOOST_TEST(static_cast<bool>(action));
   }
 }
