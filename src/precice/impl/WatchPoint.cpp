@@ -101,7 +101,7 @@ void WatchPoint::exportPointData(
   _txtWriter.writeData("Time", time);
   // Export watch point coordinates
   Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
-  for (const auto elem : _interpolation->getWeightedElements()) {
+  for (const auto& elem : _interpolation->getWeightedElements()) {
     coords += elem.weight * _mesh->vertices()[elem.vertexID].getCoords();
   }
   if (coords.size() == 2) {
