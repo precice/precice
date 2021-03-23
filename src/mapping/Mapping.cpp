@@ -82,9 +82,6 @@ int Mapping::getDimensions() const
 
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 {
-  // Only serial participant is supported for scale-consistent mapping
-  PRECICE_ASSERT((not utils::MasterSlave::isMaster()) and (not utils::MasterSlave::isSlave()));
-
   // If rank is not empty and do not contain connectivity information, raise error
   if ((input()->edges().empty() and (not input()->vertices().empty())) or
       (((input()->getDimensions() == 3) and input()->triangles().empty()) and (not input()->vertices().empty()))) {
