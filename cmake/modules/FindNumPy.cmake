@@ -43,8 +43,8 @@ if(NOT NumPy_FOUND)
       ERROR_QUIET
       )
     find_path(NumPy_INCLUDE_DIR
-      numpy/arrayobject.h
-      PATH "${_numpy_include_dir}"
+      NAMES numpy/arrayobject.h
+      PATHS "${_numpy_include_dir}"
       NO_DEFAULT_PATH
       )
     unset(_numpy_include_dir)

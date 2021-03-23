@@ -48,9 +48,14 @@ public:
     return _actions;
   }
 
-  void resetActions()
+  /**
+   * @brief Extracts the configured action.
+   *
+   * @post The configured actions are empty
+   */
+  std::list<PtrAction> extractActions()
   {
-    _actions.clear();
+    return std::exchange(_actions, std::list<PtrAction>{});
   }
 
 private:

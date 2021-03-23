@@ -274,12 +274,11 @@ MeshContext const *Participant::usedMeshContextByName(const std::string &name) c
   return (pos == _usedMeshContexts.end()) ? nullptr : *pos;
 }
 
-void Participant::addAction(
-    const action::PtrAction &action)
+void Participant::addAction(action::PtrAction &&action)
 {
-  _actions.push_back(action);
   auto &context = meshContext(action->getMesh()->getID());
   context.require(action->getMeshRequirement());
+  _actions.push_back(std::move(action));
 }
 
 std::vector<action::PtrAction> &Participant::actions()

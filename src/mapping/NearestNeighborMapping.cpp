@@ -4,20 +4,12 @@
 #include <boost/container/flat_set.hpp>
 #include <functional>
 #include <memory>
-
-#include <boost/version.hpp>
-#if BOOST_VERSION < 106600
-#include <boost/function_output_iterator.hpp>
-#else
-#include <boost/iterator/function_output_iterator.hpp>
-#endif
-
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
-#include "query/RTree.hpp"
+#include "query/Index.hpp"
 #include "utils/Event.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
@@ -51,55 +43,40 @@ void NearestNeighborMapping::computeMapping()
   const std::string     baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
 
+  // Setup Direction of Mapping
+  mesh::PtrMesh origins, searchSpace;
   if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Compute conservative mapping");
-    precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = query::rtree::getVertexRTree(output());
-    e2.stop();
-    size_t verticesSize = input()->vertices().size();
-    _vertexIndices.resize(verticesSize);
-    utils::statistics::DistanceAccumulator distanceStatistics;
-    const mesh::Mesh::VertexContainer &    inputVertices = input()->vertices();
-    for (size_t i = 0; i < verticesSize; i++) {
-      const Eigen::VectorXd &coords = inputVertices[i].getCoords();
-      // Search for the input vertex inside the output mesh and add index to _vertexIndices
-      rtree->query(boost::geometry::index::nearest(coords, 1),
-                   boost::make_function_output_iterator([&](size_t const &val) {
-                     const auto &match = output()->vertices()[val];
-                     _vertexIndices[i] = match.getID();
-                     distanceStatistics(bg::distance(match, coords));
-                   }));
-    }
-    if (distanceStatistics.empty()) {
-      PRECICE_INFO("Mapping distance not available due to empty partition.");
-    } else {
-      PRECICE_INFO("Mapping distance " << distanceStatistics);
-    }
+    origins     = input();
+    searchSpace = output();
   } else {
-    PRECICE_DEBUG("Compute consistent mapping");
-    precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-    auto                  rtree = query::rtree::getVertexRTree(input());
-    e2.stop();
-    size_t verticesSize = output()->vertices().size();
-    _vertexIndices.resize(verticesSize);
-    utils::statistics::DistanceAccumulator distanceStatistics;
-    const mesh::Mesh::VertexContainer &    outputVertices = output()->vertices();
-    for (size_t i = 0; i < verticesSize; i++) {
-      const Eigen::VectorXd &coords = outputVertices[i].getCoords();
-      // Search for the output vertex inside the input mesh and add index to _vertexIndices
-      rtree->query(boost::geometry::index::nearest(coords, 1),
-                   boost::make_function_output_iterator([&](size_t const &val) {
-                     const auto &match = input()->vertices()[val];
-                     _vertexIndices[i] = match.getID();
-                     distanceStatistics(bg::distance(match, coords));
-                   }));
-    }
-    if (distanceStatistics.empty()) {
-      PRECICE_INFO("Mapping distance not available due to empty partition.");
-    } else {
-      PRECICE_INFO("Mapping distance " << distanceStatistics);
-    }
+    PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Compute consistent mapping" : "Compute scaled-consistent mapping"));
+    origins     = output();
+    searchSpace = input();
   }
+
+  precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
+  query::Index          indexTree(searchSpace);
+  e2.stop();
+
+  const size_t verticesSize   = origins->vertices().size();
+  const auto & sourceVertices = origins->vertices();
+
+  _vertexIndices.resize(verticesSize);
+  utils::statistics::DistanceAccumulator distanceStatistics;
+
+  for (size_t i = 0; i < verticesSize; ++i) {
+    auto matchedVertex = indexTree.getClosestVertex(sourceVertices[i].getCoords());
+    _vertexIndices[i]  = matchedVertex.index;
+    distanceStatistics(matchedVertex.distance);
+  }
+
+  if (distanceStatistics.empty()) {
+    PRECICE_INFO("Mapping distance not available due to empty partition.");
+  } else {
+    PRECICE_INFO("Mapping distance " << distanceStatistics);
+  }
+
   _hasComputedMapping = true;
 }
 
@@ -114,10 +91,10 @@ void NearestNeighborMapping::clear()
   PRECICE_TRACE();
   _vertexIndices.clear();
   _hasComputedMapping = false;
-  if (hasConstraint(CONSISTENT)) {
-    query::rtree::clear(*input());
+  if (getConstraint() == CONSISTENT) {
+    query::clearCache(input()->getID());
   } else {
-    query::rtree::clear(*output());
+    query::clearCache(output()->getID());
   }
 }
 
@@ -149,7 +126,7 @@ void NearestNeighborMapping::map(
       }
     }
   } else {
-    PRECICE_DEBUG("Map consistent");
+    PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
     size_t const outSize = output()->vertices().size();
     for (size_t i = 0; i < outSize; i++) {
       int inputIndex = _vertexIndices[i] * valueDimensions;
@@ -173,16 +150,13 @@ void NearestNeighborMapping::tagMeshFirstRound()
   // Lookup table of all indices used in the mapping
   const boost::container::flat_set<int> indexSet(_vertexIndices.begin(), _vertexIndices.end());
 
-  if (hasConstraint(CONSERVATIVE)) {
-    PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
-    for (mesh::Vertex &v : output()->vertices()) {
-      if (indexSet.count(v.getID()) != 0)
-        v.tag();
-    }
-  } else {
-    for (mesh::Vertex &v : input()->vertices()) {
-      if (indexSet.count(v.getID()) != 0)
-        v.tag();
+  // Get the source mesh depending on the constraint
+  const mesh::PtrMesh &source = hasConstraint(CONSERVATIVE) ? output() : input();
+
+  // Tag all vertices used in the mapping
+  for (mesh::Vertex &v : source->vertices()) {
+    if (indexSet.count(v.getID()) != 0) {
+      v.tag();
     }
   }
 
