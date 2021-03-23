@@ -1105,6 +1105,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
 }
 #endif // PRECICE_NO_PETSC
 
+/*
 // Simple 2 triangles. Read mapping on serial participant B
 BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase1)
 {
@@ -1998,7 +1999,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase7)
     BOOST_TEST(calculatedIntegral == expectedIntegral);
   }
 }
-
+*/
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

@@ -153,6 +153,13 @@ void ReceivedPartition::compute()
   PRECICE_DEBUG("Create owner information.");
   createOwnerInformation();
 
+  if (_mesh->getGlobalNumberOfEdges() > 0) {
+    createEdgeOwnerInformation();
+  }
+  if ((_dimensions == 3) and (_mesh->getGlobalNumberOfTriangles() > 0)) {
+    createTriangleOwnerInformation();
+  }
+
   // (4) Tag vertices 2nd round (what should be filtered out)
   PRECICE_DEBUG("Tag vertices for filtering: 2nd round.");
   tagMeshSecondRound();
@@ -633,11 +640,6 @@ void ReceivedPartition::createOwnerInformation()
       PRECICE_WARN(filteredVertices << " of " << _mesh->getGlobalNumberOfVertices()
                                     << " vertices of mesh " << _mesh->getName() << " have been filtered out "
                                     << "since they have no influence on the mapping.");
-  }
-
-  createEdgeOwnerInformation();
-  if (_dimensions == 3) {
-    createTriangleOwnerInformation();
   }
 }
 
