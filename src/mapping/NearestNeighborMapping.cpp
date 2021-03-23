@@ -116,6 +116,7 @@ void NearestNeighborMapping::map(
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
                  outputValues.size(), valueDimensions, output()->vertices().size());
+  
   if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Map conservative");
     size_t const inSize = input()->vertices().size();
