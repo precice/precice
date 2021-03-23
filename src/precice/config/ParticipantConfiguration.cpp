@@ -413,6 +413,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         PRECICE_ERROR(
             "For a parallel participant, only the mapping"
             << " combinations read-consistent and write-conservative are allowed");
+      } else if (confMapping.mapping->getConstraint() == mapping::Mapping::SCALEDCONSISTENT) {
+        PRECICE_ERROR("Scaled consistent mapping is not yet supported for a parallel participant. You could run in serial or use a plain (read-)consistent mapping instead.");
       }
     }
 
@@ -535,9 +537,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                             << "\" uses mesh \"" << action->getMesh()->getName()
                             << "\", which is not used by the participant. "
                             << "Please add a use-mesh node with name=\"" << action->getMesh()->getName() << "\".");
-    _participants.back()->addAction(action);
   }
-  _actionConfig->resetActions();
+  for (action::PtrAction &action : _actionConfig->extractActions()) {
+    _participants.back()->addAction(std::move(action));
+  }
 
   // Add export contexts
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {

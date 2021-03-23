@@ -93,13 +93,8 @@ public:
 
   int getDimensions() const;
 
-  template <typename VECTOR_T>
-  Vertex &createVertex(const VECTOR_T &coords)
-  {
-    PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
-    _vertices.emplace_back(coords, _manageVertexIDs.getFreeID());
-    return _vertices.back();
-  }
+  /// Creates and initializes a Vertex object.
+  Vertex &createVertex(const Eigen::VectorXd &coords);
 
   /**
    * @brief Creates and initializes an Edge object.
@@ -262,12 +257,6 @@ private:
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;
-
-  utils::ManageUniqueIDs _manageVertexIDs;
-
-  utils::ManageUniqueIDs _manageEdgeIDs;
-
-  utils::ManageUniqueIDs _manageTriangleIDs;
 
   /**
    * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.

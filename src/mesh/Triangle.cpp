@@ -6,6 +6,7 @@
 #include <boost/concept/assert.hpp>
 #include <boost/range/concepts.hpp>
 #include "math/differences.hpp"
+#include "math/geometry.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenIO.hpp"
@@ -77,11 +78,7 @@ Triangle::Triangle(
 
 double Triangle::getArea() const
 {
-  Eigen::Vector3d vectorA = edge(1).vertex(1).getCoords() - edge(1).vertex(0).getCoords();
-  Eigen::Vector3d vectorB = edge(0).vertex(1).getCoords() - edge(0).vertex(0).getCoords();
-  // Compute cross-product of vector A and vector B
-  auto normal = vectorA.cross(vectorB);
-  return (0.5 * normal.norm());
+  return math::geometry::triangleArea(vertex(0).getCoords(), vertex(1).getCoords(), vertex(2).getCoords());
 }
 
 const Eigen::VectorXd Triangle::computeNormal(bool flip)

@@ -13,9 +13,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "query/FindClosestEdge.hpp"
-#include "query/FindClosestTriangle.hpp"
-#include "query/FindClosestVertex.hpp"
+#include "query/Index.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -58,16 +56,13 @@ void WatchPoint::initialize()
 {
   PRECICE_TRACE();
   // Clear to allow reinitialization
-  _weights.clear();
-  _vertices.clear();
+  mesh::Vertex watchVertex(_point, 1);
+  query::Index indexTree(_mesh);
 
-  // Find closest vertex
   if (_mesh->vertices().size() > 0) {
-    query::FindClosestVertex findVertex(_point);
-    findVertex(*_mesh);
-    _vertices.push_back(&findVertex.getClosestVertex());
-    _shortestDistance = findVertex.getEuclidianDistance();
-    _weights.push_back(1.0);
+    auto projectionElement = indexTree.findNearestProjection(watchVertex, 4);
+    _interpolationElements = std::move(projectionElement.first);
+    _shortestDistance      = projectionElement.second;
   }
 
   if (utils::MasterSlave::isSlave()) {
@@ -92,43 +87,11 @@ void WatchPoint::initialize()
     }
   }
 
+  if (not _isClosest) {
+    _interpolationElements.clear();
+  }
+
   PRECICE_DEBUG("Rank: " << utils::MasterSlave::getRank() << ", isClosest: " << _isClosest);
-
-  if (!_isClosest) {
-    return;
-  }
-
-  // Find closest edge
-  query::FindClosestEdge findEdge(_point);
-  if (findEdge(*_mesh)) {
-    if (findEdge.getEuclidianDistance() < _shortestDistance) {
-      //         _closestEdge = & findEdge.getClosestEdge ();
-      _vertices.clear();
-      _vertices.push_back(&findEdge.getClosestEdge().vertex(0));
-      _vertices.push_back(&findEdge.getClosestEdge().vertex(1));
-      _shortestDistance = findEdge.getEuclidianDistance();
-      _weights.clear();
-      _weights.push_back(findEdge.getProjectionPointParameter(0));
-      _weights.push_back(findEdge.getProjectionPointParameter(1));
-    }
-  }
-  if (_mesh->getDimensions() == 3) {
-    // Find closest triangle
-    query::FindClosestTriangle findTriangle(_point);
-    if (findTriangle(*_mesh)) {
-      if (findTriangle.getEuclidianDistance() < _shortestDistance) {
-        _vertices.clear();
-        _vertices.push_back(&findTriangle.getClosestTriangle().vertex(0));
-        _vertices.push_back(&findTriangle.getClosestTriangle().vertex(1));
-        _vertices.push_back(&findTriangle.getClosestTriangle().vertex(2));
-        _shortestDistance = findTriangle.getEuclidianDistance();
-        _weights.clear();
-        _weights.push_back(findTriangle.getProjectionPointParameter(0));
-        _weights.push_back(findTriangle.getProjectionPointParameter(1));
-        _weights.push_back(findTriangle.getProjectionPointParameter(2));
-      }
-    }
-  }
 }
 
 void WatchPoint::exportPointData(
@@ -138,12 +101,12 @@ void WatchPoint::exportPointData(
     return;
   }
 
-  PRECICE_ASSERT(_vertices.size() == _weights.size());
+  //PRECICE_ASSERT(_vertices.size() == _weights.size());
   _txtWriter.writeData("Time", time);
   // Export watch point coordinates
   Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
-  for (size_t i = 0; i < _vertices.size(); i++) {
-    coords += _weights[i] * _vertices[i]->getCoords();
+  for (const auto elem : _interpolationElements) {
+    coords += elem.weight * elem.element->getCoords();
   }
   if (coords.size() == 2) {
     _txtWriter.writeData("Coordinate", Eigen::Vector2d(coords));
@@ -175,16 +138,14 @@ void WatchPoint::getValue(
 {
   int                    dim = _mesh->getDimensions();
   Eigen::VectorXd        temp(dim);
-  size_t                 index  = 0;
   const Eigen::VectorXd &values = data->values();
-  for (mesh::Vertex *vertex : _vertices) {
-    int offset = vertex->getID() * dim;
+  for (const auto &elem : _interpolationElements) {
+    int offset = elem.element->getID() * dim;
     for (int i = 0; i < dim; i++) {
       temp[i] = values[offset + i];
     }
-    temp *= _weights[index];
+    temp *= elem.weight;
     value += temp;
-    index++;
   }
 }
 
@@ -192,11 +153,9 @@ void WatchPoint::getValue(
     double &       value,
     mesh::PtrData &data)
 {
-  size_t                 index  = 0;
   const Eigen::VectorXd &values = data->values();
-  for (mesh::Vertex *vertex : _vertices) {
-    value += _weights[index] * values[vertex->getID()];
-    index++;
+  for (const auto &elem : _interpolationElements) {
+    value += elem.weight * values[elem.element->getID()];
   }
 }
 

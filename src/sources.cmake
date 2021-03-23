@@ -192,12 +192,11 @@ target_sources(precice
     src/mesh/Filter.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
-    src/query/RTree.cpp
-    src/query/RTree.hpp
     src/mesh/RangeAccessor.hpp
     src/mesh/SharedPointer.hpp
     src/mesh/Triangle.cpp
     src/mesh/Triangle.hpp
+    src/mesh/Utils.cpp
     src/mesh/Utils.hpp
     src/mesh/Vertex.cpp
     src/mesh/Vertex.hpp
@@ -205,7 +204,6 @@ target_sources(precice
     src/mesh/config/DataConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
-    src/mesh/impl/BBUtils.hpp
     src/query/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
@@ -247,6 +245,11 @@ target_sources(precice
     src/query/FindClosestTriangle.hpp
     src/query/FindClosestVertex.cpp
     src/query/FindClosestVertex.hpp
+    src/query/Index.hpp
+    src/query/Index.cpp
+    src/query/impl/RTreeAdapter.hpp
+    src/query/impl/Indexer.hpp
+    src/query/impl/Indexer.cpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp

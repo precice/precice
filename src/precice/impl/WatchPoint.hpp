@@ -8,6 +8,7 @@
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "query/FindClosest.hpp"
 
 namespace precice {
 namespace mesh {
@@ -55,9 +56,7 @@ private:
 
   double _shortestDistance = std::numeric_limits<double>::max();
 
-  std::vector<double> _weights;
-
-  std::vector<mesh::Vertex *> _vertices;
+  query::InterpolationElements _interpolationElements;
 
   std::vector<mesh::PtrData> _dataToExport;
 
