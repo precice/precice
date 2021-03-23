@@ -1151,7 +1151,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase1)
 
       double maxDt = cplInterface.initialize();
 
-      // Should I use writeScalarData for both ranks, or only one?
       cplInterface.writeScalarData(dataID, vA, valOneA);
       cplInterface.writeScalarData(dataID, vB, valOneB);
       cplInterface.writeScalarData(dataID, vC, valOneC);
