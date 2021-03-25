@@ -38,9 +38,8 @@ void ProvidedPartition::communicate()
   PRECICE_TRACE();
 
   prepare();
-  if (_mesh->getDimensions() == 2) {
-    prepareEdges();
-  } else {
+  prepareEdges();
+  if (_mesh->getDimensions() == 3) {
     prepareTriangles();
   }
 
@@ -306,7 +305,7 @@ void ProvidedPartition::prepareTriangles()
     }
 
     // set and broadcast global number of triangles
-    _mesh->setGlobalNumberOfEdges(globalNumberOfTriangles);
+    _mesh->setGlobalNumberOfTriangles(globalNumberOfTriangles);
     PRECICE_DEBUG("Broadcast global number of triangles: " << globalNumberOfTriangles);
     utils::MasterSlave::_communication->broadcast(globalNumberOfTriangles);
 
@@ -321,13 +320,13 @@ void ProvidedPartition::prepareTriangles()
     utils::MasterSlave::_communication->receive(globalTriangleCounter, 0);
     PRECICE_DEBUG("Set global triangle indices");
     for (int i = 0; i < numberOfTriangles; i++) {
-      _mesh->edges()[i].setGlobalIndex(globalTriangleCounter + i);
+      _mesh->triangles()[i].setGlobalIndex(globalTriangleCounter + i);
     }
 
     // set global number of triangles
     int globalNumberOfTriangles = -1;
     utils::MasterSlave::_communication->broadcast(globalNumberOfTriangles, 0);
-    _mesh->setGlobalNumberOfEdges(globalNumberOfTriangles);
+    _mesh->setGlobalNumberOfTriangles(globalNumberOfTriangles);
 
   } else { // Coupling mode
 

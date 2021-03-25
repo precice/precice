@@ -1176,6 +1176,121 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
   tearDownParallelEnvironment();
 }
 
+BOOST_AUTO_TEST_CASE(MeshFiltering)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks).setupMasterSlaves(), "SolverTwo"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  auto m2n = context.connectMasters("SolverOne", "SolverTwo");
+
+  int  dimensions  = 3;
+  bool flipNormals = false;
+
+  if (context.isNamed("SolverOne")) {
+    mesh::PtrMesh meshOne(new mesh::Mesh("MeshOne", dimensions, flipNormals, testing::nextMeshID()));
+    // MeshOne
+    Eigen::Vector3d coordOneA{0.0, 0.0, 0.1};
+    Eigen::Vector3d coordOneB{1.2, 0.0, 0.1};
+    Eigen::Vector3d coordOneC{1.3, 1.0, 0.11};
+    Eigen::Vector3d coordOneD{0.0, 1.0, 0.1};
+    Eigen::Vector3d coordOneE{2.1, 0.0, 0.1};
+    Eigen::Vector3d coordOneF{2.3, 1.0, -0.1};
+
+    if (context.isMaster()) {
+      auto &vA  = meshOne->createVertex(coordOneA);
+      auto &vB  = meshOne->createVertex(coordOneB);
+      auto &vC  = meshOne->createVertex(coordOneC);
+      auto &vD  = meshOne->createVertex(coordOneD);
+      auto &eAB = meshOne->createEdge(vA, vB);
+      auto &eBC = meshOne->createEdge(vB, vC);
+      auto &eAC = meshOne->createEdge(vA, vC);
+      auto &eCD = meshOne->createEdge(vC, vD);
+      auto &eAD = meshOne->createEdge(vA, vD);
+      meshOne->createTriangle(eAB, eBC, eAC);
+      meshOne->createTriangle(eAD, eAC, eCD);
+    } else {
+      auto &vB  = meshOne->createVertex(coordOneB);
+      auto &vC  = meshOne->createVertex(coordOneC);
+      auto &vE  = meshOne->createVertex(coordOneE);
+      auto &vF  = meshOne->createVertex(coordOneF);
+      auto &eBC = meshOne->createEdge(vB, vC);
+      auto &eBE = meshOne->createEdge(vB, vE);
+      auto &eBF = meshOne->createEdge(vB, vF);
+      auto &eEF = meshOne->createEdge(vE, vF);
+      auto &eFC = meshOne->createEdge(vF, vC);
+      meshOne->createTriangle(eBC, eFC, eBF);
+      meshOne->createTriangle(eBE, eEF, eBF);
+    }
+
+    ProvidedPartition part(meshOne);
+    part.addM2N(m2n);
+    part.communicate();
+
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    mesh::PtrMesh meshOne(new mesh::Mesh("MeshOne", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh meshTwo(new mesh::Mesh("MeshTwo", dimensions, flipNormals, testing::nextMeshID()));
+
+    // Mesh Two
+    Eigen::Vector3d coordTwoA{0.0, 0.0, 0.01};
+    Eigen::Vector3d coordTwoB{1.01, 0.0, 0.0};
+    Eigen::Vector3d coordTwoC{1.5, 1.0, 0.01};
+    Eigen::Vector3d coordTwoD{0.0, 1.0, 0.01};
+    Eigen::Vector3d coordTwoE{2.2, 0.0, -0.01};
+    Eigen::Vector3d coordTwoF{2.5, 1.0, 0.01};
+
+    double supportRadius = 2.45;
+
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
+        new mapping::NearestProjectionMapping(mapping::Mapping::SCALEDCONSISTENT, dimensions));
+    mapping::PtrMapping boundingToMapping = mapping::PtrMapping(
+        new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
+
+    boundingFromMapping->setMeshes(meshOne, meshTwo);
+    boundingToMapping->setMeshes(meshTwo, meshOne);
+
+    if (context.isMaster()) {
+      auto &vA  = meshTwo->createVertex(coordTwoA);
+      auto &vB  = meshTwo->createVertex(coordTwoB);
+      auto &vC  = meshTwo->createVertex(coordTwoC);
+      auto &vD  = meshTwo->createVertex(coordTwoD);
+      auto &vF  = meshTwo->createVertex(coordTwoF);
+      auto &eAB = meshTwo->createEdge(vA, vB);
+      auto &eBC = meshTwo->createEdge(vB, vC);
+      auto &eAC = meshTwo->createEdge(vA, vC);
+      auto &eCD = meshTwo->createEdge(vC, vD);
+      auto &eAD = meshTwo->createEdge(vA, vD);
+      auto &eBF = meshTwo->createEdge(vB, vF);
+      auto &eFC = meshTwo->createEdge(vF, vC);
+      meshTwo->createTriangle(eAB, eBC, eAC);
+      meshTwo->createTriangle(eAD, eAC, eCD);
+      meshTwo->createTriangle(eBC, eFC, eBF);
+    } else {
+      auto &vB  = meshTwo->createVertex(coordTwoB);
+      auto &vE  = meshTwo->createVertex(coordTwoE);
+      auto &vF  = meshTwo->createVertex(coordTwoF);
+      auto &eBE = meshTwo->createEdge(vB, vE);
+      auto &eBF = meshTwo->createEdge(vB, vF);
+      auto &eEF = meshTwo->createEdge(vE, vF);
+      meshTwo->createTriangle(eBE, eEF, eBF);
+    }
+
+    double            safetyFactor = 20.0;
+    ReceivedPartition part(meshOne, ReceivedPartition::NO_FILTER, safetyFactor);
+    part.addM2N(m2n);
+    part.addFromMapping(boundingFromMapping);
+    part.addToMapping(boundingToMapping);
+    part.communicate();
+    part.compute();
+
+    BOOST_TEST_CONTEXT(*meshOne)
+    {
+      for (auto triangle : meshOne->triangles()) {
+        std::cout << context.rank << ": " << triangle << " " << triangle.getGlobalIndex() << " " << triangle.isOwner() << std::endl;
+      }
+    }
+  }
+  tearDownParallelEnvironment();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
