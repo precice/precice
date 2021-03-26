@@ -4,12 +4,13 @@ on:
     branches:
       - master
       - develop
+      - fix-macos-ci
   workflow_dispatch:
 
 jobs:
   build:
     name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, OSX]
     strategy:
       fail-fast: false
       matrix:
