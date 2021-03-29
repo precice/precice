@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
 #include "mesh/Edge.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 
 namespace precice {
@@ -157,8 +158,35 @@ struct closure<pm::Triangle> {
 } // namespace boost
 
 namespace precice {
-namespace mesh {
+namespace query {
+
+/// The RTree box type
+using RTreeBox = boost::geometry::model::box<Eigen::VectorXd>;
+
 namespace impl {
+
+/// The general rtree parameter type used in precice
+using RTreeParameters = boost::geometry::index::rstar<16>;
+using Box3d           = boost::geometry::model::box<boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>>;
+
+/// Type trait to extract information based on the type of a Primitive
+template <class T>
+struct PrimitiveTraits;
+
+template <>
+struct PrimitiveTraits<mesh::Vertex> {
+  using MeshContainer = mesh::Mesh::VertexContainer;
+};
+
+template <>
+struct PrimitiveTraits<mesh::Edge> {
+  using MeshContainer = mesh::Mesh::EdgeContainer;
+};
+
+template <>
+struct PrimitiveTraits<mesh::Triangle> {
+  using MeshContainer = mesh::Mesh::TriangleContainer;
+};
 
 /// Makes a utils::PtrVector indexable and thus be usable in boost::geometry::rtree
 template <typename Container>
@@ -202,6 +230,59 @@ public:
   }
 };
 
+template <typename Primitive>
+class IsDirectIndexableHelper {
+private:
+  template <typename T, typename = typename std::enable_if<
+                            std::is_same<
+                                typename boost::geometry::traits::tag<T>::type,
+                                boost::geometry::point_tag>::value,
+                            std::nullptr_t>::type>
+  static std::true_type test(char *);
+  template <typename T, typename = typename std::enable_if<
+                            std::is_same<
+                                typename boost::geometry::traits::tag<T>::type,
+                                boost::geometry::segment_tag>::value,
+                            std::nullptr_t>::type>
+  static std::true_type test(int *);
+  template <typename T, typename = typename std::enable_if<
+                            std::is_same<
+                                typename boost::geometry::traits::tag<T>::type,
+                                boost::geometry::box_tag>::value,
+                            std::nullptr_t>::type>
+  static std::true_type test(void *);
+
+  template <typename T>
+  static std::false_type test(...);
+
+public:
+  using type = decltype(test<Primitive>(nullptr));
+};
+
+template <class Primitive>
+struct IsDirectIndexable : impl::IsDirectIndexableHelper<Primitive>::type {
+};
+
+/// The type traits of a rtree based on a Primitive
+template <class Primitive>
+struct RTreeTraits {
+  using MeshContainer      = typename PrimitiveTraits<Primitive>::MeshContainer;
+  using MeshContainerIndex = typename MeshContainer::size_type;
+
+  using IndexType = typename std::conditional<
+      IsDirectIndexable<Primitive>::value,
+      MeshContainerIndex,
+      std::pair<RTreeBox, MeshContainerIndex>>::type;
+
+  using IndexGetter = typename std::conditional<
+      IsDirectIndexable<Primitive>::value,
+      impl::VectorIndexable<MeshContainer>,
+      boost::geometry::index::indexable<IndexType>>::type;
+
+  using RTree = boost::geometry::index::rtree<IndexType, RTreeParameters, IndexGetter>;
+  using Ptr   = std::shared_ptr<RTree>;
+};
+
 } // namespace impl
-} // namespace mesh
+} // namespace query
 } // namespace precice

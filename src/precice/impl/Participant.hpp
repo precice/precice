@@ -141,7 +141,7 @@ public:
       bool                                          provideMesh,
       partition::ReceivedPartition::GeometricFilter geoFilter);
 
-  void addAction(const action::PtrAction &action);
+  void addAction(action::PtrAction &&action);
 
   std::vector<action::PtrAction> &actions();
 

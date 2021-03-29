@@ -7,6 +7,7 @@
 #include <memory>
 #include <mpi.h>
 #include <numeric>
+#include <sstream>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -15,8 +16,11 @@
 #include "petsc.h"
 #include "petscdrawtypes.h"
 #include "petscis.h"
+#include "petscksp.h"
+#include "petscsystypes.h"
 #include "petscviewertypes.h"
 #include "utils/Parallel.hpp"
+
 #endif // not PRECICE_NO_PETSC
 
 namespace precice {
@@ -387,6 +391,13 @@ void Vector::write(std::string filename, VIEWERFORMAT format) const
   VecView(vector, viewer.viewer);
 }
 
+double Vector::l2norm() const
+{
+  PetscReal val;
+  VecNorm(vector, NORM_2, &val);
+  return val;
+}
+
 void Vector::read(std::string filename, VIEWERFORMAT format)
 {
   Viewer viewer{filename, format, getCommunicator(vector)};
@@ -628,24 +639,88 @@ void KSPSolver::reset()
   CHKERRV(ierr);
 }
 
-bool KSPSolver::solve(Vector &b, Vector &x)
+KSPSolver::SolverResult KSPSolver::getSolverResult()
 {
-  PetscErrorCode     ierr = 0;
   KSPConvergedReason convReason;
-  KSPSolve(ksp, b, x);
-  ierr = KSPGetConvergedReason(ksp, &convReason);
-  CHKERRQ(ierr);
-  return (convReason > 0);
+  PetscErrorCode     ierr = 0;
+  ierr                    = KSPGetConvergedReason(ksp, &convReason);
+  if (ierr != 0) {
+    return SolverResult::Diverged;
+  }
+  if (convReason > 0) {
+    return SolverResult::Converged;
+  }
+  if (convReason == KSP_DIVERGED_ITS) {
+    return SolverResult::Stopped;
+  } else {
+    return SolverResult::Diverged;
+  }
 }
 
-bool KSPSolver::solveTranspose(Vector &b, Vector &x)
+KSPSolver::SolverResult KSPSolver::solve(Vector &b, Vector &x)
 {
-  PetscErrorCode     ierr = 0;
-  KSPConvergedReason convReason;
+  KSPSolve(ksp, b, x);
+  return getSolverResult();
+}
+
+KSPSolver::SolverResult KSPSolver::solveTranspose(Vector &b, Vector &x)
+{
   KSPSolveTranspose(ksp, b, x);
-  ierr = KSPGetConvergedReason(ksp, &convReason);
-  CHKERRQ(ierr);
-  return (convReason > 0);
+  return getSolverResult();
+}
+
+std::string KSPSolver::summaryFor(Vector &b)
+{
+  // See PETSc manual page for KSPGetConvergedReason to understand this function
+  // We treat divergence due to reaching max iterations as "stopped"
+  KSPConvergedReason convReason;
+  KSPGetConvergedReason(ksp, &convReason);
+
+  PetscReal rtol, atol, dtol;
+  PetscInt  miter;
+  KSPGetTolerances(ksp, &rtol, &atol, &dtol, &miter);
+
+  std::ostringstream oss;
+  {
+    bool converged = (convReason >= 0);
+    bool stopped   = (convReason == KSP_DIVERGED_ITS);
+    oss << "Solver " << (converged ? "converged" : (stopped ? "stopped" : "diverged"));
+  }
+  oss << " after " << getIterationNumber() << " of " << miter << " iterations due to";
+
+  switch (convReason) {
+  case (KSP_CONVERGED_RTOL):
+  case (KSP_CONVERGED_RTOL_NORMAL):
+    oss << " sufficient relative convergence";
+    break;
+  case (KSP_CONVERGED_ATOL):
+  case (KSP_CONVERGED_ATOL_NORMAL):
+    oss << " sufficient absolute convergence";
+    break;
+  case (KSP_DIVERGED_ITS):
+    oss << " reaching the maximum iterations";
+    break;
+  case (KSP_DIVERGED_DTOL):
+    oss << " sufficient divergence";
+    break;
+  case (KSP_DIVERGED_NANORINF):
+    oss << " the residual norm becoming nan or inf";
+    break;
+  case (KSP_DIVERGED_BREAKDOWN):
+    oss << " a generic breakdown of the method";
+    break;
+  default:
+    oss << " the PETSc reason " << KSPConvergedReasons[convReason];
+    break;
+  }
+
+  double bnorm = b.l2norm();
+  double dlim  = bnorm * dtol;
+  double rlim  = bnorm * rtol;
+
+  oss << ". Last residual norm: " << getResidualNorm() << ", limits: relative " << rlim << " (rtol " << rtol << "), absolute " << atol << ", divergence " << dlim << "(dtol " << dtol << ')';
+
+  return oss.str();
 }
 
 PetscInt KSPSolver::getIterationNumber()
@@ -655,6 +730,24 @@ PetscInt KSPSolver::getIterationNumber()
   ierr = KSPGetIterationNumber(ksp, &its);
   CHKERRQ(ierr);
   return its;
+}
+
+PetscReal KSPSolver::getResidualNorm()
+{
+  PetscErrorCode ierr = 0;
+  PetscReal      val;
+  ierr = KSPGetResidualNorm(ksp, &val);
+  CHKERRQ(ierr);
+  return val;
+}
+
+PetscReal KSPSolver::getRealtiveTolerance()
+{
+  PetscErrorCode ierr = 0;
+  PetscReal      rtol;
+  ierr = KSPGetTolerances(ksp, &rtol, NULL, NULL, NULL);
+  CHKERRQ(ierr);
+  return rtol;
 }
 
 /////////////////////////////////////////////////////////////////////////

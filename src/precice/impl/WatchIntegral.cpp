@@ -6,6 +6,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -63,35 +64,21 @@ void WatchIntegral::exportIntegralData(
   }
 
   for (auto &elem : _dataToExport) {
+    const int dataDimensions = elem->getDimensions();
+    auto      integral       = calculateIntegral(elem);
 
-    int dataDimensions = elem->getDimensions();
-
-    if (dataDimensions > 1) {
-
-      Eigen::VectorXd value = calculateVectorData(elem);
-
-      if (utils::MasterSlave::getSize() > 1) {
-        Eigen::VectorXd valueRecv = Eigen::VectorXd::Zero(dataDimensions);
-        utils::MasterSlave::reduceSum(value.data(), valueRecv.data(), value.size());
-        value = valueRecv;
-      }
-
-      if (not utils::MasterSlave::isSlave()) {
-        if (dataDimensions == 2) {
-          _txtWriter.writeData(elem->getName(), Eigen::Vector2d(value));
-        } else {
-          _txtWriter.writeData(elem->getName(), Eigen::Vector3d(value));
-        }
-      }
-    } else {
-      double value = calculateScalarData(elem);
-      if (utils::MasterSlave::getSize() > 1) {
-        double valueSum = 0.0;
-        utils::MasterSlave::reduceSum(&value, &valueSum, 1);
-        value = valueSum;
-      }
-      if (not utils::MasterSlave::isSlave()) {
-        _txtWriter.writeData(elem->getName(), value);
+    if (utils::MasterSlave::getSize() > 1) {
+      Eigen::VectorXd valueRecv = Eigen::VectorXd::Zero(dataDimensions);
+      utils::MasterSlave::reduceSum(integral.data(), valueRecv.data(), integral.size());
+      integral = std::move(valueRecv);
+    }
+    if (not utils::MasterSlave::isSlave()) {
+      if (dataDimensions == 1) {
+        _txtWriter.writeData(elem->getName(), integral[0]);
+      } else if (dataDimensions == 2) {
+        _txtWriter.writeData(elem->getName(), Eigen::Vector2d(integral));
+      } else {
+        _txtWriter.writeData(elem->getName(), Eigen::Vector3d(integral));
       }
     }
   }
@@ -117,9 +104,8 @@ void WatchIntegral::exportIntegralData(
   }
 }
 
-Eigen::VectorXd WatchIntegral::calculateVectorData(mesh::PtrData data)
+Eigen::VectorXd WatchIntegral::calculateIntegral(mesh::PtrData data) const
 {
-
   int                    dim    = data->getDimensions();
   const Eigen::VectorXd &values = data->values();
   Eigen::VectorXd        sum    = Eigen::VectorXd::Zero(dim);
@@ -131,64 +117,14 @@ Eigen::VectorXd WatchIntegral::calculateVectorData(mesh::PtrData data)
         sum[i] += values[offset + i];
       }
     }
+    return sum;
   } else { // Connectivity information is given
-    // For 2D, connectivity elements are edges
-    // Calculate the average and multiply by edge length (midpoint rule)
-    if (_mesh->getDimensions() == 2) {
-      for (const auto &edge : _mesh->edges()) {
-
-        const auto &vertex1 = edge.vertex(0);
-        const auto &vertex2 = edge.vertex(1);
-
-        for (int i = 0; i < dim; i++) {
-          sum[i] += 0.5 * (values[vertex1.getID() * dim + i] + values[vertex2.getID() * dim + i]) * edge.getLength();
-        }
-      }
-    } else { // For 3D, connectivity elements are faces, calculate the average and multply by face area
-      for (const auto &face : _mesh->triangles()) {
-        for (int i = 0; i < dim; ++i) {
-          sum[i] += face.getArea() * (values[face.vertex(0).getID() * dim + i] + values[face.vertex(1).getID() * dim + i] + values[face.vertex(2).getID() * dim + i]) / 3.0;
-        }
-      }
-    }
+    return mesh::integrate(_mesh, data);
   }
-  return std::move(sum);
 }
 
-double WatchIntegral::calculateScalarData(mesh::PtrData data)
+double WatchIntegral::calculateSurfaceArea() const
 {
-
-  const Eigen::VectorXd &values = data->values();
-  double                 sum    = 0.0;
-
-  if (_mesh->edges().empty() || not _isScalingOn) {
-    for (const auto &vertex : _mesh->vertices()) {
-      sum += values[vertex.getID()];
-    }
-  } else { // Connectivity information is given
-    // For 2D, connectivity elements are edges
-    // Calculate the average and multiply by edge length (midpoint rule)
-    if (_mesh->getDimensions() == 2) {
-      for (const auto &edge : _mesh->edges()) {
-
-        const auto &vertex1 = edge.vertex(0);
-        const auto &vertex2 = edge.vertex(1);
-
-        sum += 0.5 * (values[vertex1.getID()] + values[vertex2.getID()]) * edge.getLength();
-      }
-    } else { // For 3D, connectivity elements are faces, calculate the average and multply by face area
-      for (const auto &face : _mesh->triangles()) {
-        double localValue = values[face.vertex(0).getID()] + values[face.vertex(1).getID()] + values[face.vertex(2).getID()];
-        sum += (localValue * face.getArea()) / 3.0;
-      }
-    }
-  }
-  return sum;
-}
-
-double WatchIntegral::calculateSurfaceArea()
-{
-
   PRECICE_ASSERT(not _mesh->edges().empty());
   double surfaceArea = 0.0;
   if (_mesh->getDimensions() == 3) {

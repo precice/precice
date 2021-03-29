@@ -12,7 +12,7 @@ Only the release manager should update this post (even tickboxes, due to race co
    * Extract summary
    * Fix wording and tense
    * Sort the entries lexicographically
-* [ ] Look over the [Roadmap](https://github.com/precice/precice/wiki/Roadmap) and update entries.
+* [ ] Look over the [Roadmap](https://www.precice.org/fundamentals-roadmap.html) and update entries.
 * [ ] Merge master to develop (No commits after the release on master)
 * [ ] Check code base w.r.t code formatting (run [`precice/tools/formatting/check-format`](https://github.com/precice/precice/blob/develop/tools/formatting/check-format)) and reformat if required (run [`precice/tools/formatting/format-all`](https://github.com/precice/precice/blob/develop/tools/formatting/format-all))
 * [ ] Create branch `release-N` from develop. If needed, `git rebase develop`.
@@ -30,7 +30,10 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Draft message to mailing list
 * [ ] Write a draft "blog post" on [Discourse](https://precice.discourse.group/)
 * [ ] Update documentation (all)
-  * [ ] Update markdown configuration reference in wiki
+   * [ ] Update [XML configuration reference](https://github.com/precice/precice.github.io/blob/master/_includes/xmlreference.md)
+   * [ ] Update version in [precice/precice.github.io](https://github.com/precice/precice.github.io):
+      * `_config.yml`
+      * `_data/sidebars/docs_sidebar.yml`
 * [ ] Approve the PR with at least two reviews (all)
 * [ ] Merge PR to master ( use `git merge --no-ff release-N` )
 * [ ] Tag release on master `vN` and verify by running `git describe --tags`
@@ -122,7 +125,7 @@ Run all these tests manually on your system. If you succeed, please write a comm
 * [ ] Post on [Twitter](https://twitter.com/preCICE_org) (additionally to the automatic)
 * [ ] Post on [ResearchGate](https://www.researchgate.net/project/preCICE)
 * [ ] Post on LinkedIn (individuals)
-* [ ] Submit a short article to the [Quartl](https://www5.in.tum.de/wiki/index.php/Quartl)
+* [ ] Submit a short article to the [Quartl](https://www.in.tum.de/en/i05/further-activities/quartl/)
 
 
 ### Misc
