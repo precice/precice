@@ -2,8 +2,8 @@
 
 #include <memory>
 #include <vector>
-#include "FindClosest.hpp"
 #include "logging/Logger.hpp"
+#include "mapping/Polation.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -41,15 +41,12 @@ public:
   ~Index();
 
   /// Get n number of closest vertices to the given vertex
-  VertexMatch getClosestVertex(const mesh::Vertex &sourceVertex);
   VertexMatch getClosestVertex(const Eigen::VectorXd &sourceCoord);
 
   /// Get n number of closest edges to the given vertex
-  std::vector<EdgeMatch> getClosestEdges(const mesh::Vertex &sourceVertex, int n);
   std::vector<EdgeMatch> getClosestEdges(const Eigen::VectorXd &sourceCoord, int n);
 
   /// Get n number of closest triangles to the given vertex
-  std::vector<TriangleMatch> getClosestTriangles(const mesh::Vertex &sourceVertex, int n);
   std::vector<TriangleMatch> getClosestTriangles(const Eigen::VectorXd &sourceCoord, int n);
 
   /// Return all the vertices inside the box formed by vertex and radius
@@ -59,16 +56,16 @@ public:
   std::vector<size_t> getVerticesInsideBox(const mesh::BoundingBox &bb);
 
   /**
-   * @brief Find the closest interpolation element to a vertex. 
-   * If exists, triangle or edge projection element is returned. If not vertex projection element, which is the neares neighbor is returned.
+   * @brief Find the closest interpolation element to the given location. 
+   * If exists, triangle or edge projection element is returned. If not vertex projection element, which is the nearest neighbor is returned.
    * 
    * param[in] sourceVertex 
    * param[in] n how many nearest edges/faces are going to be checked
    * 
-   * param[out] pair of interpolation elements and the distance to corresponding vertex/edge/triangle
+   * param[out] pair of interpolation and the distance to corresponding vertex/edge/triangle
    *
   */
-  std::pair<InterpolationElements, double> findNearestProjection(const mesh::Vertex &sourceVertex, int n);
+  std::pair<mapping::Polation, double> findNearestProjection(const Eigen::VectorXd &location, int n);
 
 private:
   struct IndexImpl;
@@ -78,13 +75,13 @@ private:
   static precice::logging::Logger _log;
 
   /// Closest vertex projection element is always the nearest neighbor
-  std::pair<InterpolationElements, double> findVertexProjection(const mesh::Vertex &sourceVertex);
+  std::pair<mapping::Polation, double> findVertexProjection(const Eigen::VectorXd &location);
 
   /// Find closest edge interpolation element. If cannot be found, it falls back to vertex projection
-  std::pair<InterpolationElements, double> findEdgeProjection(const mesh::Vertex &sourceVertex, int n);
+  std::pair<mapping::Polation, double> findEdgeProjection(const Eigen::VectorXd &location, int n);
 
   /// Find closest face interpolation element. If cannot be found, it falls back to first edge interpolation element, then vertex if necessary
-  std::pair<InterpolationElements, double> findTriangleProjection(const mesh::Vertex &sourceVertex, int n);
+  std::pair<mapping::Polation, double> findTriangleProjection(const Eigen::VectorXd &location, int n);
 };
 
 /// Clear all the cache
