@@ -137,6 +137,10 @@ void ReceivedPartition::compute()
                                        << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
   }
 
+  // If at least one of the mappings is a scaled-consistent mapping, we communicate full ownership and do relaxed filtering
+  bool communicateFullOwnership = std::any_of(_fromMappings.begin(), _fromMappings.end(), [](const mapping::PtrMapping &fromMapping) { return fromMapping->hasConstraint(mapping::Mapping::SCALEDCONSISTENT); }) or
+                                  std::any_of(_toMappings.begin(), _toMappings.end(), [](const mapping::PtrMapping &toMapping) { return toMapping->hasConstraint(mapping::Mapping::SCALEDCONSISTENT); });
+
   // To better understand steps (2) to (5), it is recommended to look at BU's thesis, especially Figure 69 on page 89
   // for RBF-based filtering. https://mediatum.ub.tum.de/doc/1320661/document.pdf
 
@@ -153,20 +157,21 @@ void ReceivedPartition::compute()
   PRECICE_DEBUG("Create owner information.");
   createOwnerInformation();
 
-  if (_mesh->getGlobalNumberOfEdges() > 0) {
-    createEdgeOwnerInformation();
-  }
-  if ((_dimensions == 3) and (_mesh->getGlobalNumberOfTriangles() > 0)) {
-    createTriangleOwnerInformation();
+  if (communicateFullOwnership) {
+    if (_mesh->getGlobalNumberOfEdges() > 0) {
+      createEdgeOwnerInformation();
+    }
+    if ((_dimensions == 3) and (_mesh->getGlobalNumberOfTriangles() > 0)) {
+      createTriangleOwnerInformation();
+    }
   }
 
   // (4) Tag vertices 2nd round (what should be filtered out)
   PRECICE_DEBUG("Tag vertices for filtering: 2nd round.");
   tagMeshSecondRound();
 
-  bool filterFlag = std::none_of(_fromMappings.begin(), _fromMappings.end(), [](const mapping::PtrMapping &mapping) { return mapping->hasConstraint(mapping::Mapping::SCALEDCONSISTENT); }) and std::none_of(_toMappings.begin(), _toMappings.end(), [](const mapping::PtrMapping &mapping) { return mapping->hasConstraint(mapping::Mapping::SCALEDCONSISTENT); });
-
-  if (filterFlag) {
+  // If there is no scaled consistent mappings, filter the mesh
+  if (not communicateFullOwnership) {
     // (5) Filter mesh according to tag
     PRECICE_INFO("Filter mesh " << _mesh->getName() << " by mappings");
     Event      e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
