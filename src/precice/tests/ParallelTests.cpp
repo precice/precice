@@ -1105,7 +1105,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
 }
 #endif // PRECICE_NO_PETSC
 
-/*
+
 // Simple 2 triangles. Read mapping on serial participant B
 BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase1)
 {
@@ -1921,6 +1921,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase7)
       maxDt = cplInterface.initialize();
       cplInterface.writeScalarData(dataID, vA, valOneA);
       cplInterface.writeScalarData(dataID, vB, valOneB);
+      cplInterface.writeScalarData(dataID, vC, valOneC);
       cplInterface.writeScalarData(dataID, vD, valOneD);
     } else {
       int vB = cplInterface.setMeshVertex(meshID, coordOneB.data());
@@ -1935,6 +1936,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase7)
       cplInterface.setMeshTriangle(meshID, eBC, eFC, eBF);
       cplInterface.setMeshTriangle(meshID, eBE, eEF, eBF);
       maxDt = cplInterface.initialize();
+      cplInterface.writeScalarData(dataID, vB, valOneB);
       cplInterface.writeScalarData(dataID, vC, valOneC);
       cplInterface.writeScalarData(dataID, vE, valOneE);
       cplInterface.writeScalarData(dataID, vF, valOneF);
@@ -1978,13 +1980,13 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase7)
       BOOST_TEST(!cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
       cplInterface.finalize();
     } else {
-        int vB = cplInterface.setMeshVertex(meshID, coordTwoB.data());
-        int vE = cplInterface.setMeshVertex(meshID, coordTwoE.data());
-        int vF = cplInterface.setMeshVertex(meshID, coordTwoF.data());
-        int eBE = cplInterface.setMeshEdge(meshID, vB, vE);
-        int eBF = cplInterface.setMeshEdge(meshID, vB, vF);
-        int eEF = cplInterface.setMeshEdge(meshID, vE, vF);
-        cplInterface.setMeshTriangle(meshID, eBE, eEF, eBF);
+      int vB = cplInterface.setMeshVertex(meshID, coordTwoB.data());
+      int vE = cplInterface.setMeshVertex(meshID, coordTwoE.data());
+      int vF = cplInterface.setMeshVertex(meshID, coordTwoF.data());
+      int eBE = cplInterface.setMeshEdge(meshID, vB, vE);
+      int eBF = cplInterface.setMeshEdge(meshID, vB, vF);
+      int eEF = cplInterface.setMeshEdge(meshID, vE, vF);
+      cplInterface.setMeshTriangle(meshID, eBE, eEF, eBF);
       double maxDt = cplInterface.initialize();
       double valueB, valueE, valueF;
       cplInterface.readScalarData(dataID, vB, valueB);
@@ -1999,7 +2001,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentMappingCase7)
     BOOST_TEST(calculatedIntegral == expectedIntegral);
   }
 }
-*/
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

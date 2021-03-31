@@ -98,8 +98,18 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   int   valueDimensions = input()->data(inputDataID)->getDimensions();
 
   // Integral is calculated on each direction separately
-  auto integralInput  = mesh::integrate(input(), input()->data(inputDataID));
+  auto integralInput  = mesh::integrateOwner(input(), input()->data(inputDataID));
   auto integralOutput = mesh::integrate(output(), output()->data(outputDataID));
+
+  // If the mesh is distributed, we need to calculate the global integral
+  if (utils::MasterSlave::isMaster() or utils::MasterSlave::isSlave()) {
+    Eigen::VectorXd globalInputIntegral(valueDimensions);
+    Eigen::VectorXd globalOutputIntegral(valueDimensions);
+    utils::MasterSlave::allreduceSum(integralInput.data(), globalInputIntegral.data(), integralInput.size());
+    utils::MasterSlave::allreduceSum(integralOutput.data(), globalOutputIntegral.data(), integralOutput.size());
+    integralInput  = globalInputIntegral;
+    integralOutput = globalOutputIntegral;
+  }
 
   // Create reshape the output values vector to matrix
   Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
