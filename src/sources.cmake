@@ -192,6 +192,7 @@ target_sources(precice
     src/mesh/Edge.cpp
     src/mesh/Edge.hpp
     src/mesh/Filter.hpp
+    src/mesh/Filter.cpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
     src/mesh/RangeAccessor.hpp
