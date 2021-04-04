@@ -109,10 +109,15 @@ void ReceivedPartition::compute()
                                        << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
   }
 
+  // If any of the mappings is a scaled-scaled consistent mapping, extend filtering considering connectivity
+  _filterWithConnectivity = std::any_of(_fromMappings.begin(), _fromMappings.end(), [](const mapping::PtrMapping m) { return m->hasConstraint(mapping::Mapping::SCALEDCONSISTENT); }) or
+                            std::any_of(_toMappings.begin(), _toMappings.end(), [](const mapping::PtrMapping m) { return m->hasConstraint(mapping::Mapping::SCALEDCONSISTENT); });
+
+  PRECICE_DEBUG("Filtering the mesh " << (_filterWithConnectivity ? "with connectivity aware filtering." : "without considering connectivity."));
+
   // To better understand steps (2) to (5), it is recommended to look at BU's thesis, especially Figure 69 on page 89
   // for RBF-based filtering. https://mediatum.ub.tum.de/doc/1320661/document.pdf
 
-  // (1) Bounding-Box-Filter
   filterByBoundingBox();
 
   // (2) Tag vertices 1st round (i.e. who could be owned by this rank)
@@ -133,7 +138,8 @@ void ReceivedPartition::compute()
   PRECICE_INFO("Filter mesh " << _mesh->getName() << " by mappings");
   Event      e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-  mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
+  mesh::filterMesh(
+      filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); }, _filterWithConnectivity);
   PRECICE_DEBUG("Mapping filter, filtered from "
                 << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
                 << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
@@ -289,14 +295,16 @@ void ReceivedPartition::filterByBoundingBox()
 
         PRECICE_DEBUG("From slave " << rankSlave << ", bounding mesh: " << slaveBB);
         mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-        mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return slaveBB.contains(v); });
+        mesh::filterMesh(
+            slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return slaveBB.contains(v); }, _filterWithConnectivity);
         PRECICE_DEBUG("Send filtered mesh to slave: " << rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
       }
 
       // Now also filter the remaining master mesh
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
+      mesh::filterMesh(
+          filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); }, _filterWithConnectivity);
       PRECICE_DEBUG("Master mesh, filtered from "
                     << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
                     << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
@@ -326,7 +334,8 @@ void ReceivedPartition::filterByBoundingBox()
       Event e("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);
 
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
+      mesh::filterMesh(
+          filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); }, _filterWithConnectivity);
 
       if (isAnyProvidedMeshNonEmpty()) {
         PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));

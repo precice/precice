@@ -1,7 +1,4 @@
-#pragma once
-
 #include "mesh/Filter.hpp"
-
 namespace precice {
 namespace mesh {
 
