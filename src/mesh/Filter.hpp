@@ -6,9 +6,14 @@
 namespace precice {
 namespace mesh {
 
+/// Creates a vertex on the destination mesh and adds it to the map to use it to build other connectivity elements
 void addVertexToMesh(const Vertex &vertex, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination);
-void addEdgeToMesh(const Edge &edge, boost::container::flat_map<int, Edge *> &edgeMap, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination);
-void addTriangleToMesh(const Triangle &triangle, boost::container::flat_map<int, Edge *> &edgeMap, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination);
+
+/// Creates an edge on the destination mesh. If withConnection option is true, it also creates the missing vertex for an edge
+void addEdgeToMesh(const Edge &edge, boost::container::flat_map<int, Edge *> &edgeMap, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination, bool withConnection);
+
+/// Creates an face on the destination mesh. If withConnection option is true, it also creates the missing vertices for an edge
+void addTriangleToMesh(const Triangle &triangle, boost::container::flat_map<int, Edge *> &edgeMap, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination, bool withConnection);
 
 /** filters the source Mesh and adds it to the destination Mesh
  * @param[inout] destination the destination mesh to append the filtered Mesh to
@@ -36,41 +41,13 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p, bool wi
 
   // Add all edges formed by the contributing vertices
   for (const Edge &edge : source.edges()) {
-    int vertexIndex1 = edge.vertex(0).getID();
-    int vertexIndex2 = edge.vertex(1).getID();
-    if (withConnection) {
-      if (vertexMap.count(vertexIndex1) == 1 or
-          vertexMap.count(vertexIndex2) == 1) {
-        addEdgeToMesh(edge, edgeMap, vertexMap, destination);
-      }
-    } else {
-      if (vertexMap.count(vertexIndex1) == 1 &&
-          vertexMap.count(vertexIndex2) == 1) {
-        Edge &e               = destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-        edgeMap[edge.getID()] = &e;
-      }
-    }
+    addEdgeToMesh(edge, edgeMap, vertexMap, destination, withConnection);
   }
 
   // Add all triangles formed by the contributing edges
   if (source.getDimensions() == 3) {
     for (const Triangle &triangle : source.triangles()) {
-      int edgeIndex1 = triangle.edge(0).getID();
-      int edgeIndex2 = triangle.edge(1).getID();
-      int edgeIndex3 = triangle.edge(2).getID();
-      if (withConnection) {
-        if (edgeMap.count(edgeIndex1) == 1 or
-            edgeMap.count(edgeIndex2) == 1 or
-            edgeMap.count(edgeIndex3) == 1) {
-          addTriangleToMesh(triangle, edgeMap, vertexMap, destination);
-        }
-      } else {
-        if (edgeMap.count(edgeIndex1) == 1 &&
-            edgeMap.count(edgeIndex2) == 1 &&
-            edgeMap.count(edgeIndex3) == 1) {
-          destination.createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-        }
-      }
+      addTriangleToMesh(triangle, edgeMap, vertexMap, destination, withConnection);
     }
   }
 }

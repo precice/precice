@@ -13,30 +13,60 @@ void addVertexToMesh(const Vertex &vertex, boost::container::flat_map<int, Verte
   vertexMap[vertex.getID()] = &v;
 }
 
-void addEdgeToMesh(const Edge &edge, boost::container::flat_map<int, Edge *> &edgeMap, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination)
+void addEdgeToMesh(const Edge &edge, boost::container::flat_map<int, Edge *> &edgeMap, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination, bool withConnection)
 {
-  if (vertexMap.count(edge.vertex(0).getID()) == 0) {
-    addVertexToMesh(edge.vertex(0), vertexMap, destination);
+  int vertexIndex1 = edge.vertex(0).getID();
+  int vertexIndex2 = edge.vertex(1).getID();
+
+  if (vertexMap.count(vertexIndex1) == 0 and
+      vertexMap.count(vertexIndex2) == 0) {
+    return;
   }
-  if (vertexMap.count(edge.vertex(1).getID()) == 0) {
-    addVertexToMesh(edge.vertex(1), vertexMap, destination);
+
+  if (withConnection) {
+    if (vertexMap.count(vertexIndex1) == 0) {
+      addVertexToMesh(edge.vertex(0), vertexMap, destination);
+    }
+    if (vertexMap.count(vertexIndex2) == 0) {
+      addVertexToMesh(edge.vertex(1), vertexMap, destination);
+    }
   }
-  Edge &e               = destination.createEdge(*vertexMap[edge.vertex(0).getID()], *vertexMap[edge.vertex(1).getID()]);
-  edgeMap[edge.getID()] = &e;
+
+  if (vertexMap.count(vertexIndex1) == 1 and
+      vertexMap.count(vertexIndex2) == 1) {
+    Edge &e               = destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
+    edgeMap[edge.getID()] = &e;
+  }
 }
 
-void addTriangleToMesh(const Triangle &triangle, boost::container::flat_map<int, Edge *> &edgeMap, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination)
+void addTriangleToMesh(const Triangle &triangle, boost::container::flat_map<int, Edge *> &edgeMap, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination, bool withConnection)
 {
-  if (edgeMap.count(triangle.edge(0).getID()) == 0) {
-    addEdgeToMesh(triangle.edge(0), edgeMap, vertexMap, destination);
+  int edgeIndex1 = triangle.edge(0).getID();
+  int edgeIndex2 = triangle.edge(1).getID();
+  int edgeIndex3 = triangle.edge(2).getID();
+
+  if (edgeMap.count(edgeIndex1) == 0 and
+      edgeMap.count(edgeIndex2) == 0 and
+      edgeMap.count(edgeIndex3) == 0) {
+    return;
   }
-  if (edgeMap.count(triangle.edge(1).getID()) == 0) {
-    addEdgeToMesh(triangle.edge(1), edgeMap, vertexMap, destination);
+
+  if (withConnection) {
+    if (edgeMap.count(edgeIndex1) == 0) {
+      addEdgeToMesh(triangle.edge(0), edgeMap, vertexMap, destination, withConnection);
+    }
+    if (edgeMap.count(edgeIndex2) == 0) {
+      addEdgeToMesh(triangle.edge(1), edgeMap, vertexMap, destination, withConnection);
+    }
+    if (edgeMap.count(edgeIndex3) == 0) {
+      addEdgeToMesh(triangle.edge(2), edgeMap, vertexMap, destination, withConnection);
+    }
   }
-  if (edgeMap.count(triangle.edge(2).getID()) == 0) {
-    addEdgeToMesh(triangle.edge(2), edgeMap, vertexMap, destination);
+  if (edgeMap.count(edgeIndex1) == 1 and
+      edgeMap.count(edgeIndex2) == 1 and
+      edgeMap.count(edgeIndex3) == 1) {
+    Triangle &t = destination.createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
   }
-  Triangle &t = destination.createTriangle(*edgeMap[triangle.edge(0).getID()], *edgeMap[triangle.edge(1).getID()], *edgeMap[triangle.edge(2).getID()]);
 }
 
 } // namespace mesh
