@@ -1,2 +1,2 @@
 This folder contains documentation for developers only.
-For user documentation, consider our [wiki](https://github.com/precice/precice/wiki).
+For user documentation, refer to our [website](https://www.precice.org/docs.html).

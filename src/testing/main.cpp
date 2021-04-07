@@ -46,8 +46,8 @@ bool init_unit_test()
   auto logConfigs = logging::readLogConfFile("log.conf");
 
   if (logConfigs.empty()) { // nothing has been read from log.conf
-#if BOOST_VERSION == 106900
-    std::cerr << "Boost 1.69 get log_level is broken, preCICE log level set to debug.\n";
+#if BOOST_VERSION == 106900 || __APPLE__ && __MACH__
+    std::cerr << "Boost 1.69 and macOS get log_level is broken, preCICE log level set to debug.\n";
     auto logLevel = log_successful_tests;
 #else
     auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);
@@ -63,6 +63,25 @@ bool init_unit_test()
     if (logLevel >= log_all_errors)
       config.filter = "%Severity% >= warning"; // log warnings in any case
 
+    const std::string prefix{"%TimeStamp(format=\"%H:%M:%S.%f\")%|%Participant%|%Rank%|%Module%|l%Line%|%Function%|"};
+
+    // Console output
+    config.format = prefix + "%ColorizedSeverity%%Message%";
+    config.type   = "stream";
+    config.output = "stdout";
+    logConfigs.push_back(config);
+
+    // File Outputs
+    config.format = prefix + "%Severity%%Message%";
+    config.type   = "file";
+
+    // Same as console output
+    config.output = "test.log";
+    logConfigs.push_back(config);
+
+    // The full debug log
+    config.output = "test.debug.log";
+    config.filter = "%Severity% >= debug";
     logConfigs.push_back(config);
   }
 

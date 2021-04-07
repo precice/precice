@@ -356,8 +356,6 @@ void Parallel::splitCommunicator(const std::string &groupName)
     // Assemble and set new state
     newState = CommState::fromComm(newComm);
   }
-  newState->groups = std::move(accessorGroups);
-  pushState(newState);
 
 #ifndef NDEBUG
   PRECICE_DEBUG("Detected " << accessorGroups.size() << " groups");
@@ -367,6 +365,10 @@ void Parallel::splitCommunicator(const std::string &groupName)
                            << ", size = " << group.size);
   }
 #endif // NDEBUG
+
+  newState->groups = std::move(accessorGroups);
+  pushState(newState);
+
 #endif // not PRECICE_NO_MPI
 }
 

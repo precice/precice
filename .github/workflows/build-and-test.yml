@@ -1,12 +1,9 @@
 name: Build and Test
 on:
-<<<<<<< HEAD
   push:
     branches:
       - master
       - develop
-=======
->>>>>>> master
   pull_request:
     paths:
       - 'cmake/**'
@@ -95,7 +92,7 @@ jobs:
           PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
         run: |
           cmake --version
-          cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DPRECICE_MPICommunication=${{ env.MPI }} -DPRECICE_PETScMapping=${{ env.PETSc }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+          cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_MPICommunication=${{ env.MPI }} -DPRECICE_PETScMapping=${{ env.PETSc }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
       - uses: actions/upload-artifact@v2
         if: failure()
         with:
@@ -128,14 +125,10 @@ jobs:
         run: |
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '/usr/*' "/opt/*" --output-file coverage.info # filter system-files and local-dependencies
-<<<<<<< HEAD
       - uses: codecov/codecov-action@v1
         with:
           file: ./build/coverage.info
         if: ${{ matrix.COVFLAGS }} 
-=======
-          bash <(curl -s https://codecov.io/bash) -f coverage.info -t ${{ secrets.CODECOV_TOKEN }} || echo "Codecov did not collect coverage reports" 
->>>>>>> master
       - name: Check packages
         working-directory: build
         if: ${{ contains(matrix.IMAGE, 'ubuntu') }}

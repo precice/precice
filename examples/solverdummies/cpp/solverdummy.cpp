@@ -1,6 +1,3 @@
-// To compile use:
-// mpic++ -I$PRECICE_ROOT/src main.cpp -lprecice -o solverdummy
-
 #include <iostream>
 #include <sstream>
 #include "precice/SolverInterface.hpp"
@@ -54,9 +51,9 @@ int main(int argc, char **argv)
 
   for (int i = 0; i < numberOfVertices; i++) {
     for (int j = 0; j < dimensions; j++) {
-      vertices[j + numberOfVertices * i]  = i;
-      readData[j + numberOfVertices * i]  = i;
-      writeData[j + numberOfVertices * i] = i;
+      vertices.at(j + dimensions * i)  = i;
+      readData.at(j + dimensions * i)  = i;
+      writeData.at(j + dimensions * i) = i;
     }
   }
 
@@ -76,7 +73,7 @@ int main(int argc, char **argv)
     }
 
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
-      writeData[i] = readData[i] + 1;
+      writeData.at(i) = readData.at(i) + 1;
     }
 
     if (interface.isWriteDataRequired(dt)) {

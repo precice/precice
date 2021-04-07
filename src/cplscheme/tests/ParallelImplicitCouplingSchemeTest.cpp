@@ -316,8 +316,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   ParallelCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, dataRequiresInitialization);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, dataRequiresInitialization);
+  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, dataRequiresInitialization);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -325,8 +325,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure2(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, minIterationConvMeasure1, true);
-  cplScheme.addConvergenceMeasure(mesh->data()[0], false, false, minIterationConvMeasure2, true);
+  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, minIterationConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(mesh->data().at(0), false, false, minIterationConvMeasure2, true);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());

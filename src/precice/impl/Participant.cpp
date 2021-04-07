@@ -5,6 +5,7 @@
 #include "DataContext.hpp"
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
+#include "WatchIntegral.hpp"
 #include "WatchPoint.hpp"
 #include "action/Action.hpp"
 #include "logging/LogMacros.hpp"
@@ -51,9 +52,20 @@ void Participant::addWatchPoint(
   _watchPoints.push_back(watchPoint);
 }
 
+void Participant::addWatchIntegral(
+    const PtrWatchIntegral &watchIntegral)
+{
+  _watchIntegrals.push_back(watchIntegral);
+}
+
 std::vector<PtrWatchPoint> &Participant::watchPoints()
 {
   return _watchPoints;
+}
+
+std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
+{
+  return _watchIntegrals;
 }
 
 void Participant::useMesh(
@@ -185,6 +197,14 @@ bool Participant::isMeshUsed(
   return _meshContexts[meshID] != nullptr;
 }
 
+bool Participant::isMeshProvided(
+    int meshID) const
+{
+  PRECICE_ASSERT((meshID >= 0) && (meshID < (int) _meshContexts.size()));
+  auto context = _meshContexts[meshID];
+  return (context != nullptr) && context->provideMesh;
+}
+
 bool Participant::isDataUsed(
     int dataID) const
 {
@@ -254,12 +274,11 @@ MeshContext const *Participant::usedMeshContextByName(const std::string &name) c
   return (pos == _usedMeshContexts.end()) ? nullptr : *pos;
 }
 
-void Participant::addAction(
-    const action::PtrAction &action)
+void Participant::addAction(action::PtrAction &&action)
 {
-  _actions.push_back(action);
   auto &context = meshContext(action->getMesh()->getID());
   context.require(action->getMeshRequirement());
+  _actions.push_back(std::move(action));
 }
 
 std::vector<action::PtrAction> &Participant::actions()

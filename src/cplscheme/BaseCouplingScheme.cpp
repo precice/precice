@@ -264,8 +264,7 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
     for (DataMap::value_type &pair : data) {
       PRECICE_DEBUG("Extrapolate data: " << pair.first);
       PRECICE_ASSERT(pair.second->oldValues.cols() > 1);
-      Eigen::VectorXd &values       = pair.second->values();
-      pair.second->oldValues.col(0) = values;  // = x^t
+      Eigen::VectorXd &values = pair.second->values();
       values *= 2.0;                           // = 2*x^t
       values -= pair.second->oldValues.col(1); // = 2*x^t - x^(t-1)
       utils::shiftSetFirst(pair.second->oldValues, values);
@@ -278,10 +277,9 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
       auto             valuesOld1 = pair.second->oldValues.col(1);
       auto             valuesOld2 = pair.second->oldValues.col(2);
 
-      pair.second->oldValues.col(0) = values; // = x^t
-      values *= 2.5;                          // = 2.5 x^t
-      values -= valuesOld1 * 2.0;             // = 2.5x^t - 2x^(t-1)
-      values += valuesOld2 * 0.5;             // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
+      values *= 2.5;              // = 2.5 x^t
+      values -= valuesOld1 * 2.0; // = 2.5x^t - 2x^(t-1)
+      values += valuesOld2 * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
       utils::shiftSetFirst(pair.second->oldValues, values);
     }
   } else {
@@ -404,11 +402,11 @@ void BaseCouplingScheme::requireAction(
 std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
-  os << "it " << _iterations; //_iterations;
+  os << "iteration: " << _iterations; //_iterations;
   if (_maxIterations != -1) {
     os << " of " << _maxIterations;
   }
-  os << " | " << printBasicState(_timeWindows, _time) << " | " << printActionsState();
+  os << ", " << printBasicState(_timeWindows, _time) << ", " << printActionsState();
   return os.str();
 }
 
@@ -417,23 +415,23 @@ std::string BaseCouplingScheme::printBasicState(
     double time) const
 {
   std::ostringstream os;
-  os << "dt# " << timeWindows;
+  os << "time-window: " << timeWindows;
   if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
     os << " of " << _maxTimeWindows;
   }
-  os << " | t " << time;
+  os << ", time: " << time;
   if (_maxTime != UNDEFINED_TIME) {
     os << " of " << _maxTime;
   }
   if (_timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) {
-    os << " | dt " << _timeWindowSize;
+    os << ", time-window-size: " << _timeWindowSize;
   }
   if ((_timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) || (_maxTime != UNDEFINED_TIME)) {
-    os << " | max dt " << getNextTimestepMaxLength();
+    os << ", max-timestep-length: " << getNextTimestepMaxLength();
   }
-  os << " | ongoing ";
+  os << ", ongoing: ";
   isCouplingOngoing() ? os << "yes" : os << "no";
-  os << " | dt complete ";
+  os << ", time-window-complete: ";
   _isTimeWindowComplete ? os << "yes" : os << "no";
   return os.str();
 }
@@ -442,7 +440,7 @@ std::string BaseCouplingScheme::printActionsState() const
 {
   std::ostringstream os;
   for (const std::string &actionName : _actions) {
-    os << actionName << " | ";
+    os << actionName << ' ';
   }
   return os.str();
 }
@@ -677,12 +675,12 @@ bool BaseCouplingScheme::accelerate()
     getAcceleration()->performAcceleration(getAccelerationData());
   }
 
+  // Store data for conv. measurement, acceleration, or extrapolation
+  storeData();
+
   // extrapolate new input data for the solver evaluation in time.
   if (convergence && (_extrapolationOrder > 0)) {
-    extrapolateData(getAccelerationData()); // Also stores data
-  } else {
-    // Store data for conv. measurement, acceleration, or extrapolation
-    storeData();
+    extrapolateData(getAccelerationData());
   }
 
   return convergence;

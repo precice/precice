@@ -244,9 +244,9 @@ void runSameConnectionTest(const TestContext &context, com::PtrCommunicationFact
     c.broadcastReceiveAll(receiveData);
 
     if (context.isMaster()) {
-      BOOST_TEST(receiveData[0] == 5);
+      BOOST_TEST(receiveData.at(0) == 5);
     } else {
-      BOOST_TEST(receiveData[0] == 10);
+      BOOST_TEST(receiveData.at(0) == 10);
     }
   }
 }
@@ -301,9 +301,9 @@ void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFac
     c.broadcastReceiveAll(receiveData);
 
     if (context.isMaster()) {
-      BOOST_TEST(receiveData[0] == 10);
+      BOOST_TEST(receiveData.at(0) == 10);
     } else {
-      BOOST_TEST(receiveData[0] == 5);
+      BOOST_TEST(receiveData.at(0) == 5);
     }
   }
 }
@@ -345,7 +345,7 @@ void runEmptyConnectionTest(const TestContext &context, com::PtrCommunicationFac
     c.broadcastReceiveAll(receiveData);
 
     if (context.isMaster()) {
-      BOOST_TEST(receiveData[0] == 5);
+      BOOST_TEST(receiveData.at(0) == 5);
 
     } else {
       BOOST_TEST(receiveData.size() == 0);
@@ -406,17 +406,17 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
     if (context.isMaster()) {
       // This rank should receive the mesh from rank 0 (fluid master)
       BOOST_TEST(mesh->vertices().size() == 2);
-      BOOST_TEST(mesh->vertices()[0].getCoords()[0] == 5.50);
-      BOOST_TEST(mesh->vertices()[0].getCoords()[1] == 0.0);
-      BOOST_TEST(mesh->vertices()[1].getCoords()[0] == 1.0);
-      BOOST_TEST(mesh->vertices()[1].getCoords()[1] == 2.0);
+      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 5.50);
+      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
+      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.0);
+      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 2.0);
     } else {
       // This rank should receive the mesh from rank 1 (fluid slave)
       BOOST_TEST(mesh->vertices().size() == 2);
-      BOOST_TEST(mesh->vertices()[0].getCoords()[0] == 1.50);
-      BOOST_TEST(mesh->vertices()[0].getCoords()[1] == 0.0);
-      BOOST_TEST(mesh->vertices()[1].getCoords()[0] == 1.50);
-      BOOST_TEST(mesh->vertices()[1].getCoords()[1] == 2.0);
+      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 1.50);
+      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
+      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.50);
+      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 2.0);
     }
   }
 }
@@ -487,19 +487,19 @@ void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrComm
       // The numbers are chosen in this way to make it easy to test weather
       // correct values are communicated or not!
       BOOST_TEST(localCommunicationMap.size() == 1);
-      BOOST_TEST(localCommunicationMap[0].size() == 3);
-      BOOST_TEST(localCommunicationMap[0][0] == 102);
-      BOOST_TEST(localCommunicationMap[0][1] == 1022);
-      BOOST_TEST(localCommunicationMap[0][2] == 10222);
+      BOOST_TEST(localCommunicationMap.at(0).size() == 3);
+      BOOST_TEST(localCommunicationMap.at(0).at(0) == 102);
+      BOOST_TEST(localCommunicationMap.at(0).at(1) == 1022);
+      BOOST_TEST(localCommunicationMap.at(0).at(2) == 10222);
 
     } else {
       // The numbers are chosen in this way to make it easy to test weather
       // correct values are communicated or not!
       BOOST_TEST(localCommunicationMap.size() == 1);
-      BOOST_TEST(localCommunicationMap[1].size() == 3);
-      BOOST_TEST(localCommunicationMap[1][0] == 113);
-      BOOST_TEST(localCommunicationMap[1][1] == 1133);
-      BOOST_TEST(localCommunicationMap[1][2] == 11333);
+      BOOST_TEST(localCommunicationMap.at(1).size() == 3);
+      BOOST_TEST(localCommunicationMap.at(1).at(0) == 113);
+      BOOST_TEST(localCommunicationMap.at(1).at(1) == 1133);
+      BOOST_TEST(localCommunicationMap.at(1).at(2) == 11333);
     }
   }
 }

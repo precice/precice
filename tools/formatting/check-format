@@ -44,7 +44,8 @@ echo "Checking $(echo "$CFILES" | wc -l) C/C++ files"
 DIFFS=""
 if $HAS_PARALLEL; then
     CMD="${BINARY} -style=file --output-replacements-xml {} | grep '<replacement ' > /dev/null && echo {}"
-    DIFFS=$( echo "$CFILES" | parallel $PAROPS "$CMD" )
+    CDIFFS="$( echo "$CFILES" | parallel $PAROPS "$CMD" )"
+    [[ -n "$CDIFFS" ]] && DIFFS="$DIFFS $CDIFFS"
 else
     for cfile in $CFILES; do
         ${BINARY} -style=file --output-replacements-xml $cfile | grep '<replacement ' > /dev/null
@@ -72,7 +73,8 @@ if [ ! -z "$PYCMD" ]; then
   echo "Checking $(echo "$XMLFILES" | wc -l) XML files"
   if $HAS_PARALLEL; then
     CMD="${PYCMD} $XMLFMT {} | diff -q {} - > /dev/null || echo {}"
-    DIFFS=$( echo "$XMLFILES" | parallel $PAROPS "$CMD" )
+    XMLDIFFS="$( echo "$XMLFILES" | parallel $PAROPS "$CMD" )"
+    [[ -n "$XMLDIFFS" ]] && DIFFS="$DIFFS $XMLDIFFS"
   else
     echo "Install GNU parallel to format in parallel."
     for xmlfile in $XMLFILES; do

@@ -171,6 +171,8 @@ target_sources(precice
     src/mapping/NearestProjectionMapping.hpp
     src/mapping/PetRadialBasisFctMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
+    src/mapping/Polation.hpp
+    src/mapping/Polation.cpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
@@ -192,12 +194,11 @@ target_sources(precice
     src/mesh/Filter.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
-    src/mesh/RTree.cpp
-    src/mesh/RTree.hpp
     src/mesh/RangeAccessor.hpp
     src/mesh/SharedPointer.hpp
     src/mesh/Triangle.cpp
     src/mesh/Triangle.hpp
+    src/mesh/Utils.cpp
     src/mesh/Utils.hpp
     src/mesh/Vertex.cpp
     src/mesh/Vertex.hpp
@@ -205,8 +206,7 @@ target_sources(precice
     src/mesh/config/DataConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
-    src/mesh/impl/BBUtils.hpp
-    src/mesh/impl/RTreeAdapter.hpp
+    src/query/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
     src/partition/ProvidedPartition.cpp
@@ -234,17 +234,16 @@ target_sources(precice
     src/precice/impl/SolverInterfaceImpl.cpp
     src/precice/impl/SolverInterfaceImpl.hpp
     src/precice/impl/ValidationMacros.hpp
+    src/precice/impl/WatchIntegral.cpp
+    src/precice/impl/WatchIntegral.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
-    src/query/FindClosest.cpp
-    src/query/FindClosest.hpp
-    src/query/FindClosestEdge.cpp
-    src/query/FindClosestEdge.hpp
-    src/query/FindClosestTriangle.cpp
-    src/query/FindClosestTriangle.hpp
-    src/query/FindClosestVertex.cpp
-    src/query/FindClosestVertex.hpp
+    src/query/Index.hpp
+    src/query/Index.cpp
+    src/query/impl/RTreeAdapter.hpp
+    src/query/impl/Indexer.hpp
+    src/query/impl/Indexer.cpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp

@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.10.2)
-project(preCICE VERSION 2.1.1 LANGUAGES CXX)
+project(preCICE VERSION 2.2.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -212,18 +212,9 @@ if (PRECICE_PETScMapping)
   if (TPL_ENABLE_PETSC)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
     # PETSc detection uses primarily these ENVs
-    unset(ENV{PETSC_DIR})
-    unset(ENV{PETSC_ARCH})
   endif()
   find_package(PETSc 3.12 REQUIRED)
   # No validation required as PETSc does this internally
-
-  set(PETSC_VERSIONS "")
-  set(PETSC_VERSION_MAJOR "")
-  set(PETSC_VERSION_MINOR "")
-  string(REGEX MATCHALL "[0-9]+" PETSC_VERSIONS ${PETSC_VERSION})
-  list(GET PETSC_VERSIONS 0 PETSC_VERSION_MAJOR)
-  list(GET PETSC_VERSIONS 1 PETSC_VERSION_MINOR)
 else()
   message(STATUS "PETSc support disabled")
 endif()
@@ -274,8 +265,8 @@ endif()
 # Add precice as an empty target
 add_library(precice ${preCICE_DUMMY})
 set_target_properties(precice PROPERTIES
-  # precice is a C++11 project
-  CXX_STANDARD 11
+  # precice is a C++14 project
+  CXX_STANDARD 14
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   VERSION ${preCICE_VERSION}
@@ -295,6 +286,7 @@ target_link_libraries(precice PRIVATE
   Boost::unit_test_framework
   )
 if(UNIX OR APPLE OR MINGW)
+  target_compile_definitions(precice PRIVATE _GNU_SOURCE)
   target_link_libraries(precice PRIVATE ${CMAKE_DL_LIBS})
 endif()
 
@@ -321,8 +313,7 @@ endif()
 
 # Setup PETSC
 if (PRECICE_PETScMapping AND PRECICE_MPICommunication)
-  target_include_directories(precice PRIVATE ${PETSC_INCLUDES})
-  target_link_libraries(precice PRIVATE ${PETSC_LIBRARIES})
+  target_link_libraries(precice PRIVATE PETSc::PETSc)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PETSC)
 endif()
@@ -375,8 +366,10 @@ target_link_libraries(binprecice
   Boost::unit_test_framework
   )
 set_target_properties(binprecice PROPERTIES
-  # precice is a C++11 project
-  CXX_STANDARD 11
+  # precice is a C++14 project
+  CXX_STANDARD 14
+  CXX_STANDARD_REQUIRED Yes
+  CXX_EXTENSIONS No
   )
 # Copy needed properties from the lib to the executatble. This is necessary as
 # this executable uses the library source, not only the interface.
@@ -386,8 +379,7 @@ if(PRECICE_MPICommunication)
   target_link_libraries(binprecice PRIVATE MPI::MPI_CXX)
 endif()
 if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
-  target_include_directories(binprecice PRIVATE ${PETSC_INCLUDES})
-  target_link_libraries(binprecice PRIVATE ${PETSC_LIBRARIES})
+  target_link_libraries(binprecice PRIVATE PETSc::PETSc)
 endif()
 
 
@@ -412,8 +404,10 @@ IF (BUILD_TESTING)
     Boost::unit_test_framework
     )
   set_target_properties(testprecice PROPERTIES
-    # precice is a C++11 project
-    CXX_STANDARD 11
+    # precice is a C++14 project
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
     )
   # Copy needed properties from the lib to the executatble. This is necessary as
   # this executable uses the library source, not only the interface.
@@ -425,8 +419,7 @@ IF (BUILD_TESTING)
     target_link_libraries(testprecice PRIVATE MPI::MPI_CXX)
   endif()
   if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
-    target_include_directories(testprecice PRIVATE ${PETSC_INCLUDES})
-    target_link_libraries(testprecice PRIVATE ${PETSC_LIBRARIES})
+    target_link_libraries(testprecice PRIVATE PETSc::PETSc)
   endif()
 
   message(STATUS "Including test sources")

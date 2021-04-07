@@ -60,9 +60,9 @@ int main(int argc, char **argv)
 
   for (int i = 0; i < numberOfVertices; i++) {
     for (int j = 0; j < dimensions; j++) {
-      vertices[j + numberOfVertices * i]  = i;
-      readData[j + numberOfVertices * i]  = i;
-      writeData[j + numberOfVertices * i] = i;
+      vertices[j + dimensions * i]  = i;
+      readData[j + dimensions * i]  = i;
+      writeData[j + dimensions * i] = i;
     }
   }
 

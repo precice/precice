@@ -50,13 +50,13 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
       recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
       comMesh.receiveMesh(recvMesh, 0);
       BOOST_TEST(recvMesh.vertices().size() == 4);
-      BOOST_TEST(testing::equals(recvMesh.vertices()[0].getCoords(), Eigen::VectorXd::Constant(dim, 9)));
-      BOOST_TEST(recvMesh.vertices()[1] == v0);
-      BOOST_TEST(recvMesh.vertices()[2] == v1);
-      BOOST_TEST(recvMesh.vertices()[3] == v2);
-      BOOST_TEST(recvMesh.edges()[0] == e0);
-      BOOST_TEST(recvMesh.edges()[1] == e1);
-      BOOST_TEST(recvMesh.edges()[2] == e2);
+      BOOST_TEST(testing::equals(recvMesh.vertices().at(0).getCoords(), Eigen::VectorXd::Constant(dim, 9)));
+      BOOST_TEST(recvMesh.vertices().at(1) == v0);
+      BOOST_TEST(recvMesh.vertices().at(2) == v1);
+      BOOST_TEST(recvMesh.vertices().at(3) == v2);
+      BOOST_TEST(recvMesh.edges().at(0) == e0);
+      BOOST_TEST(recvMesh.edges().at(1) == e1);
+      BOOST_TEST(recvMesh.edges().at(2) == e2);
     }
   }
 }
@@ -87,15 +87,15 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
     recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
     comMesh.receiveMesh(recvMesh, 0);
     BOOST_TEST(recvMesh.vertices().size() == 4);
-    BOOST_TEST(testing::equals(recvMesh.vertices()[0].getCoords(), Eigen::VectorXd::Constant(dim, 9)));
-    BOOST_TEST(recvMesh.vertices()[1] == v0);
-    BOOST_TEST(recvMesh.vertices()[2] == v1);
-    BOOST_TEST(recvMesh.vertices()[3] == v2);
-    BOOST_TEST(recvMesh.edges()[0] == e0);
-    BOOST_TEST(recvMesh.edges()[1] == e1);
-    BOOST_TEST(recvMesh.edges()[2] == e2);
+    BOOST_TEST(testing::equals(recvMesh.vertices().at(0).getCoords(), Eigen::VectorXd::Constant(dim, 9)));
+    BOOST_TEST(recvMesh.vertices().at(1) == v0);
+    BOOST_TEST(recvMesh.vertices().at(2) == v1);
+    BOOST_TEST(recvMesh.vertices().at(3) == v2);
+    BOOST_TEST(recvMesh.edges().at(0) == e0);
+    BOOST_TEST(recvMesh.edges().at(1) == e1);
+    BOOST_TEST(recvMesh.edges().at(2) == e2);
 
-    BOOST_TEST(recvMesh.triangles()[0] == t0);
+    BOOST_TEST(recvMesh.triangles().at(0) == t0);
   }
 }
 
@@ -124,14 +124,14 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh)
     recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
     comMesh.broadcastReceiveMesh(recvMesh);
     BOOST_TEST(recvMesh.vertices().size() == 4);
-    BOOST_TEST(testing::equals(recvMesh.vertices()[0].getCoords(), Eigen::VectorXd::Constant(dim, 9)));
-    BOOST_TEST(recvMesh.vertices()[1] == v0);
-    BOOST_TEST(recvMesh.vertices()[2] == v1);
-    BOOST_TEST(recvMesh.vertices()[3] == v2);
-    BOOST_TEST(recvMesh.edges()[0] == e0);
-    BOOST_TEST(recvMesh.edges()[1] == e1);
-    BOOST_TEST(recvMesh.edges()[2] == e2);
-    BOOST_TEST(recvMesh.triangles()[0] == t0);
+    BOOST_TEST(testing::equals(recvMesh.vertices().at(0).getCoords(), Eigen::VectorXd::Constant(dim, 9)));
+    BOOST_TEST(recvMesh.vertices().at(1) == v0);
+    BOOST_TEST(recvMesh.vertices().at(2) == v1);
+    BOOST_TEST(recvMesh.vertices().at(3) == v2);
+    BOOST_TEST(recvMesh.edges().at(0) == e0);
+    BOOST_TEST(recvMesh.edges().at(1) == e1);
+    BOOST_TEST(recvMesh.edges().at(2) == e2);
+    BOOST_TEST(recvMesh.triangles().at(0) == t0);
   }
 }
 

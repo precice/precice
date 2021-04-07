@@ -40,10 +40,7 @@ void SummationAction::performAction(
   targetValues.setZero();
 
   for (const auto &sourceData : _sourceDataVector) {
-    auto sourceValues = sourceData->values();
-    for (int i = 0; i < targetValues.size(); ++i) {
-      targetValues[i] += sourceValues[i];
-    }
+    targetValues += sourceData->values();
   }
 }
 

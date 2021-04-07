@@ -151,6 +151,9 @@ public:
 
   /// Prints the vector
   void view() const;
+
+  /// returns the l2-norm of the vector
+  double l2norm() const;
 };
 
 void swap(Vector &lhs, Vector &rhs) noexcept;
@@ -253,14 +256,33 @@ public:
   /// Destroys and recreates the ksp on the same communicator
   void reset();
 
+  /// The state of the KSP after returning from solve()
+  enum struct SolverResult {
+    Converged, ///< The solver converged
+    Stopped,   ///< The solver reached the maximum iterations
+    Diverged   ///< The solver diverged
+  };
+
+  /// Returns the current convergence reason as a SolverRestult
+  SolverResult getSolverResult();
+
   /// Solves the linear system, returns false it not converged
-  bool solve(Vector &b, Vector &x);
+  SolverResult solve(Vector &b, Vector &x);
 
   /// Solves the transposed linear system, returns false it not converged
-  bool solveTranspose(Vector &b, Vector &x);
+  SolverResult solveTranspose(Vector &b, Vector &x);
+
+  /// Returns a summary the KSP solving for b
+  std::string summaryFor(Vector &b);
 
   /// Returns the iteration number of solver, either during or after the solve call.
   PetscInt getIterationNumber();
+
+  /// Returns the relavtive tolerance of the KSP
+  PetscReal getRealtiveTolerance();
+
+  /// Returns the last residual norm of the KSP
+  PetscReal getResidualNorm();
 };
 
 /// Destroys an KSP, if ksp is not null and PetscIsInitialized

@@ -49,7 +49,7 @@ while ( interface.isCouplingOngoing() ){
    // When all data values are written, the simulation can be advanced.
    // preCICE automatically exchanges data between coupled solvers and 
    // computes the current state of the simulation. It uses the timestep length
-   // of the solver timestep for that, and returns an upper limit for the neext
+   // of the solver timestep for that, and returns an upper limit for the next
    // timestep of the solver.
    dtLimit = interface.advance ( computedTimestepLength );
 }

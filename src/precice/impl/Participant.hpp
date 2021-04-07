@@ -87,6 +87,8 @@ public:
 
   bool isMeshUsed(int meshID) const;
 
+  bool isMeshProvided(int meshID) const;
+
   bool isDataUsed(int dataID) const;
 
   bool isDataRead(int dataID) const;
@@ -123,7 +125,11 @@ public:
 
   void addWatchPoint(const PtrWatchPoint &watchPoint);
 
+  void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
+
   std::vector<PtrWatchPoint> &watchPoints();
+
+  std::vector<PtrWatchIntegral> &watchIntegrals();
 
   /// Adds a mesh to be used by the participant.
   void useMesh(
@@ -135,7 +141,7 @@ public:
       bool                                          provideMesh,
       partition::ReceivedPartition::GeometricFilter geoFilter);
 
-  void addAction(const action::PtrAction &action);
+  void addAction(action::PtrAction &&action);
 
   std::vector<action::PtrAction> &actions();
 
@@ -163,6 +169,8 @@ private:
   std::string _name;
 
   std::vector<PtrWatchPoint> _watchPoints;
+
+  std::vector<PtrWatchIntegral> _watchIntegrals;
 
   /// Export contexts to export meshes, data, and more.
   std::vector<io::ExportContext> _exportContexts;

@@ -6,6 +6,7 @@
 #include <boost/concept/assert.hpp>
 #include <boost/range/concepts.hpp>
 #include "math/differences.hpp"
+#include "math/geometry.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenIO.hpp"
@@ -73,6 +74,11 @@ Triangle::Triangle(
           (&edge(0).vertex(_vertexMap[0]) != &edge(2).vertex(_vertexMap[2])) &&
           (&edge(1).vertex(_vertexMap[1]) != &edge(2).vertex(_vertexMap[2])),
       "Triangle vertices are not unique!");
+}
+
+double Triangle::getArea() const
+{
+  return math::geometry::triangleArea(vertex(0).getCoords(), vertex(1).getCoords(), vertex(2).getCoords());
 }
 
 const Eigen::VectorXd Triangle::computeNormal(bool flip)

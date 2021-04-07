@@ -47,13 +47,13 @@ void runCoupling(
     const std::vector<int> &       validIterations)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
-  mesh::PtrMesh mesh = meshConfig.meshes()[0];
+  mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_TEST(mesh->data().size() == 2);
   BOOST_TEST(mesh->vertices().size() > 0);
-  mesh::Vertex &  vertex               = mesh->vertices()[0];
+  mesh::Vertex &  vertex               = mesh->vertices().at(0);
   int             index                = vertex.getID();
-  auto &          dataValues0          = mesh->data()[0]->values();
-  auto &          dataValues1          = mesh->data()[1]->values();
+  auto &          dataValues0          = mesh->data().at(0)->values();
+  auto &          dataValues1          = mesh->data().at(1)->values();
   double          initialStepsizeData0 = 5.0;
   double          stepsizeData0        = 5.0;
   Eigen::VectorXd initialStepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
@@ -79,7 +79,7 @@ void runCoupling(
     BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
 
     while (cplScheme.isCouplingOngoing()) {
-      dataValues0[index] += stepsizeData0;
+      dataValues0(index) += stepsizeData0;
       // The max timestep length is required to be obeyed.
       double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
       cplScheme.addComputedTime(maxLengthTimestep);
@@ -210,7 +210,7 @@ void runCouplingWithSubcycling(
     const std::vector<int> &       validIterations)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
-  mesh::PtrMesh mesh = meshConfig.meshes()[0];
+  mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_TEST(mesh->data().size() == 2);
   BOOST_TEST(mesh->vertices().size() > 0);
   double          initialStepsizeData0 = 5.0;
@@ -456,27 +456,29 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->oldValues.cols() == 2);
   BOOST_TEST(cplData->oldValues.rows() == 1);
-  BOOST_TEST(testing::equals(cplData->values()[0], 0.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 0.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 0.0));
 
-  cplData->values()[0] = 1.0;
+  cplData->values()(0) = 1.0;
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
+  scheme.storeData();
   scheme.extrapolateData(scheme.getSendData());
-  BOOST_TEST(testing::equals(cplData->values()[0], 2.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 1.0));
 
-  cplData->values()[0] = 4.0;
+  cplData->values()(0) = 4.0;
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
+  scheme.storeData();
   scheme.extrapolateData(scheme.getSendData());
-  BOOST_TEST(testing::equals(cplData->values()[0], 7.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 7.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 7.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 4.0));
 
   // Test second order extrapolation
-  cplData->values() = Eigen::VectorXd::Zero(cplData->values().size());
-  cplData->oldValues    = Eigen::MatrixXd::Zero(cplData->oldValues.rows(), cplData->oldValues.cols());
+  cplData->values()  = Eigen::VectorXd::Zero(cplData->values().size());
+  cplData->oldValues = Eigen::MatrixXd::Zero(cplData->oldValues.rows(), cplData->oldValues.cols());
   //assign(cplData->values()) = 0.0;
   //assign(cplData->oldValues) = 0.0;
   SerialCouplingScheme scheme2(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations);
@@ -489,23 +491,25 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->oldValues.cols() == 3);
   BOOST_TEST(cplData->oldValues.rows() == 1);
-  BOOST_TEST(testing::equals(cplData->values()[0], 0.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 0.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 0.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 2), 0.0));
 
-  cplData->values()[0] = 1.0;
+  cplData->values()(0) = 1.0;
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
+  scheme2.storeData();
   scheme2.extrapolateData(scheme2.getSendData());
-  BOOST_TEST(testing::equals(cplData->values()[0], 2.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 2.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 1.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 2), 0.0));
 
-  cplData->values()[0] = 4.0;
+  cplData->values()(0) = 4.0;
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
+  scheme2.storeData();
   scheme2.extrapolateData(scheme2.getSendData());
-  BOOST_TEST(testing::equals(cplData->values()[0], 8.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 8.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 0), 8.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 1), 4.0));
   BOOST_TEST(testing::equals(cplData->oldValues(0, 2), 1.0));
@@ -558,13 +562,13 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
+  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, false);
 
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
   cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
       new cplscheme::impl::AbsoluteConvergenceMeasure(convergenceLimit1));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, absoluteConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, absoluteConvMeasure1, true);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {5, 5, 5};
@@ -593,11 +597,11 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   useOnlyMasterCom(m2n) = true;
 
   // some dummy mesh
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
-  meshConfig->meshes()[0]->allocateDataValues();
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
+  meshConfig->meshes().at(0)->allocateDataValues();
 
   std::vector<int> validIterations = {5, 5, 5};
 
@@ -655,14 +659,14 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
+  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, false);
 
   // Add convergence measures
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, minIterationConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, minIterationConvMeasure1, true);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {3, 3, 3};
@@ -716,14 +720,14 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
+  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, false);
 
   // Add convergence measures
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, minIterationConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, minIterationConvMeasure1, true);
   runCouplingWithSubcycling(
       cplScheme, context.name, meshConfig, validIterations);
 }
@@ -776,14 +780,14 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, dataRequiresInitialization);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, not dataRequiresInitialization);
+  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, not dataRequiresInitialization);
 
   // Add convergence measures
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data()[1], false, false, minIterationConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, minIterationConvMeasure1, true);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
