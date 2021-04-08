@@ -43,6 +43,6 @@ If you are new to preCICE, please have a look at our [documentation](https://www
 <img src="https://www.precice.org/material/overview/preCICE_overview.png" alt="preCICE overview" style="max-height: 100%; max-width: 100%">
 </div>
 
-preCICE is an academic project, developed at the [Technical University of Munich](https://www.in.tum.de/i05/startseite/) and at the [University of Stuttgart](https://www.ipvs.uni-stuttgart.de/departments/us3/). If you use preCICE, please [cite us](https://www.precice.org/publications/):
+preCICE is an academic project, developed at the [Technical University of Munich](https://www.in.tum.de/i05/startseite/) and at the [University of Stuttgart](https://www.ipvs.uni-stuttgart.de). If you use preCICE, please [cite us](https://www.precice.org/publications/):
 
 *H.-J. Bungartz, F. Lindner, B. Gatzhammer, M. Mehl, K. Scheufele, A. Shukaev, and B. Uekermann: preCICE - A Fully Parallel Library for Multi-Physics Surface Coupling. Computers and Fluids, 141, 250–258, 2016.*
