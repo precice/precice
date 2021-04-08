@@ -1089,6 +1089,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
       PRECICE_ASSERT(offset + dim < valuesInternal.size(),
                      offset + dim, valuesInternal.size());
       valuesInternal[offsetInternal + dim] = values[offset + dim];
+      PRECICE_IS_FINITE(values[offset + dim]);
     }
   }
 }
@@ -1117,6 +1118,7 @@ void SolverInterfaceImpl::writeVectorData(
   int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
     values[offset + dim] = value[dim];
+    PRECICE_IS_FINITE(value[dim]);
   }
 }
 
@@ -1148,6 +1150,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
                   "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   data.getName(), valueIndex);
     valuesInternal[valueIndex] = values[i];
+    PRECICE_IS_FINITE(values[i]);
   }
 }
 
@@ -1179,6 +1182,7 @@ void SolverInterfaceImpl::writeScalarData(
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 data.getName(), valueIndex);
   values[valueIndex] = value;
+  PRECICE_IS_FINITE(value);
 }
 
 void SolverInterfaceImpl::readBlockVectorData(

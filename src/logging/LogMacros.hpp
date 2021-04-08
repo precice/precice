@@ -31,7 +31,9 @@
 #define PRECICE_TRACE(...) \
   {                        \
   }
-
+#define PRECICE_IS_FINITE(...) \
+  {                            \
+  }
 #else // NDEBUG
 
 #include "logging/Tracer.hpp"
@@ -43,5 +45,7 @@
 #define PRECICE_TRACE(...)                                       \
   precice::logging::Tracer _tracer_(_log, PRECICE_LOG_LOCATION); \
   _log.trace(PRECICE_LOG_LOCATION, std::string{"Entering "} + __func__ + PRECICE_LOG_ARGUMENTS(__VA_ARGS__))
+
+#define PRECICE_IS_FINITE(value) PRECICE_CHECK(std::isfinite(value), "The given value is either plus or minus infinity or NaN.");
 
 #endif // ! NDEBUG
