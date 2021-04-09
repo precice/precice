@@ -123,14 +123,6 @@ void ReceivedPartition::compute()
   // go to both meshes, vertex is tagged if already one mesh tags him
   tagMeshFirstRound();
 
-  // if(utils::MasterSlave::getRank()==0)
-  // {
-  //   for (auto & vtx : _mesh->vertices())
-  //   {
-  //     std::cout<< vtx.getGlobalIndex() << std::endl;
-  //   }
-  // }
-
   // (3) Define which vertices are owned by this rank
   PRECICE_DEBUG("Create owner information.");
   createOwnerInformation();
@@ -164,14 +156,6 @@ void ReceivedPartition::compute()
     // _mesh->getCommunicationMap(): connectedRank -> {this rank's local vertex index}
     // A vertex belongs to a specific connected rank if its global vertex ID lies within the ranks min and max.
     std::map<int, std::vector<int>> remoteCommunicationMap;
-
-    // if(utils::MasterSlave::getRank()==0)
-    // {
-    //   for (auto & vtx : _mesh->vertices())
-    //   {
-    //     std::cout<< vtx.getGlobalIndex() << std::endl;
-    //   }
-    // }
 
     for (size_t vertexIndex = 0; vertexIndex < _mesh->vertices().size(); ++vertexIndex) {
       for (size_t rankIndex = 0; rankIndex < _mesh->getConnectedRanks().size(); ++rankIndex) {
@@ -484,6 +468,14 @@ void ReceivedPartition::createOwnerInformation()
 
   if (m2n().usesTwoLevelInitialization()) {
     /*
+    This function ensures that each vertex is owned by only a single rank and
+    is not shared among ranks. Initially the vertexes are checked against the 
+    bounding box of each rank. If a vertex fits into only a single bounding box, 
+    the vertex is assigend to that rank. If it fits to varous bbs, the rank with 
+    the lowest vertexes own it to keed the load as balanced as possible. 
+    
+    Following steps are taken:
+
     1- receive local bb map from master
     2- filter bb map to keep the connected ranks
     3- own the vertices that only fits into the ranks bb
@@ -493,8 +485,7 @@ void ReceivedPartition::createOwnerInformation()
 
     // #1: receive local bb map from master
     // Define and initialize localBBMap to save local bbs
-    prepareBoundingBox();
-   
+ 
     mesh::Mesh::BoundingBoxMap localBBMap;
     for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
       localBBMap.emplace(rank, _bb);
@@ -518,25 +509,23 @@ void ReceivedPartition::createOwnerInformation()
 
     if (utils::MasterSlave::isMaster()) {
 
-      // master receives local bb from each slave ranke
+      // master receives local bb from each slave rank
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
         com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(localBBMap.at(rankSlave), rankSlave);
       }
 
       // master broadcast localBBMap to all slaves 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
-        com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBoxMap(localBBMap, rankSlave);
-      }
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendBoundingBoxMap(localBBMap);
     }
     else if (utils::MasterSlave::isSlave()) {
       // slaves send local bb to master 
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_bb, 0);
       // slaves receive localBBMap from master
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBoxMap(localBBMap, 0);
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveBoundingBoxMap(localBBMap);
     }    
 
     // #2: filter bb map to keep the connected ranks
-    // remove the current bb from the map
+    // remove the own bb from the map since we compare the own bb only with other ranks bb. 
     localBBMap.erase(utils::MasterSlave::getRank());
     // find and store local connected ranks
     for (auto &localBB : localBBMap) {
@@ -545,7 +534,7 @@ void ReceivedPartition::createOwnerInformation()
       }
     }
 
-    // #3: filter vertices and keep those only fit into the current rank's bb
+    // #3: check vertices and keep those only fit into the current rank's bb
     int numberOfVertices = _mesh->vertices().size();
     PRECICE_DEBUG("Tag vertices, number of vertices " << numberOfVertices);
     std::vector<int> tags(numberOfVertices, -1);
@@ -621,6 +610,11 @@ void ReceivedPartition::createOwnerInformation()
 
     // #6: Second round filter according to the number of owned vertices
 
+    /* In case that a vertex can be shared between two ranks, the rank with lower
+       vertex count will own the vertex. 
+       If both ranks have same vertex count, the lower rank will own the vertex.
+    */ 
+
     int minGlobalID = _mesh->vertices()[0].getGlobalIndex();
 
     for(int i=0; i < sharedVerticesList.size(); i++)
@@ -649,10 +643,15 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     setOwnerInformation(tags);
-    // end of bb section 
+    
+    auto filteredVertices = std::count(tags.begin(), tags.end(), 0);
+    if (filteredVertices)
+      PRECICE_WARN(filteredVertices << " of " << _mesh->getGlobalNumberOfVertices()
+                   << " vertices of mesh " << _mesh->getName() << " have been filtered out "
+                   << "since they have no influence on the mapping.");
+   // end of bb section 
   } else
   {
-    std::cout<<"we use normal filtering ..." << std::endl;
     if (utils::MasterSlave::isSlave()) {
       int numberOfVertices = _mesh->vertices().size();
       utils::MasterSlave::_communication->send(numberOfVertices, 0);
