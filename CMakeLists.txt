@@ -188,6 +188,8 @@ else()
 endif()
 precice_validate_prettyprint()
 
+# libfmt
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
 
 #
 # Find Configurable Dependencies
@@ -302,7 +304,7 @@ target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
 target_link_libraries(precice PRIVATE prettyprint)
 
 # Setup JSON
-target_link_libraries(precice PRIVATE JSON)
+target_link_libraries(precice PRIVATE JSON fmt-header-only)
 
 # Setup MPI
 if (PRECICE_MPICommunication)
@@ -355,6 +357,7 @@ target_link_libraries(binprecice
   Threads::Threads
   precice
   prettyprint
+  fmt-header-only
   Eigen3::Eigen
   Boost::boost
   Boost::filesystem
@@ -394,6 +397,7 @@ IF (BUILD_TESTING)
     precice
     Eigen3::Eigen
     prettyprint
+    fmt-header-only
     Boost::boost
     Boost::filesystem
     Boost::log
