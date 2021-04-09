@@ -8,23 +8,24 @@
 #include <boost/vmd/is_empty.hpp>
 #include <string>
 
+#include "fmt/format.h"
 #include "logging/Tracer.hpp"
 #include "prettyprint/prettyprint.hpp" // so that we can put std::vector et. al. on ostream
 #include "utils/String.hpp"
 
-#define PRECICE_WARN(message) _log.warning(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
+#define PRECICE_WARN(...) _log.warning(PRECICE_LOG_LOCATION, fmt::format(__VA_ARGS__))
 
-#define PRECICE_INFO(message) _log.info(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
+#define PRECICE_INFO(...) _log.info(PRECICE_LOG_LOCATION, fmt::format(__VA_ARGS__))
 
-#define PRECICE_ERROR(message)                                    \
-  do {                                                            \
-    _log.error(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message)); \
-    std::exit(-1);                                                \
+#define PRECICE_ERROR(...)                                      \
+  do {                                                          \
+    _log.error(PRECICE_LOG_LOCATION, fmt::format(__VA_ARGS__)); \
+    std::exit(-1);                                              \
   } while (false)
 
-#define PRECICE_CHECK(check, message) \
-  if (!(check)) {                     \
-    PRECICE_ERROR(message);           \
+#define PRECICE_CHECK(check, ...) \
+  if (!(check)) {                 \
+    PRECICE_ERROR(__VA_ARGS__);   \
   }
 
 #ifdef NDEBUG
@@ -38,7 +39,7 @@
 
 #else // NDEBUG
 
-#define PRECICE_DEBUG(message) _log.debug(PRECICE_LOG_LOCATION, PRECICE_AS_STRING(message))
+#define PRECICE_DEBUG(...) _log.debug(PRECICE_LOG_LOCATION, fmt::format(__VA_ARGS__))
 
 /// Helper macro, used by TRACE
 #define PRECICE_LOG_ARGUMENT(r, data, i, elem) \
