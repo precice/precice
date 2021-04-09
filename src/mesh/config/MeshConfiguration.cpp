@@ -84,9 +84,9 @@ void MeshConfiguration::xmlTagCallback(
       }
     }
     if (not found) {
-      PRECICE_ERROR("Data with name \"" << name << "\" used by "
-                                        << "mesh \"" << _meshes.back()->getName() << "\" is not defined. "
-                                        << "Please define a data tag with name=\"" << name << "\".");
+      PRECICE_ERROR("Data with name \"{}\" used by mesh \"{}\" is not defined. "
+                    "Please define a data tag with name=\"{}\".",
+                    name, _meshes.back()->getName(), name);
     }
   }
 }

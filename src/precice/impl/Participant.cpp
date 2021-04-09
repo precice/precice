@@ -95,10 +95,9 @@ void Participant::useMesh(
   _usedMeshContexts.push_back(context);
 
   PRECICE_CHECK(fromParticipant.empty() || (!provideMesh),
-                "Participant \"" << _name << "\" cannot receive and provide mesh \""
-                                 << mesh->getName() << "\" at the same time. "
-                                 << "Please remove all but one of the \"from\" and \"provide\" attributes in the <use-mesh name=\""
-                                 << mesh->getName() << "\"/> node of " << _name << ".");
+                "Participant \"{}\" cannot receive and provide mesh \"{}\" at the same time. "
+                "Please remove all but one of the \"from\" and \"provide\" attributes in the <use-mesh name=\"{}\"/> node of {}.",
+                _name, mesh->getName(), mesh->getName(), _name);
 }
 
 void Participant::addWriteData(
@@ -307,8 +306,9 @@ void Participant::checkDuplicatedUse(
 {
   PRECICE_ASSERT((int) _meshContexts.size() > mesh->getID());
   PRECICE_CHECK(_meshContexts[mesh->getID()] == nullptr,
-                "Mesh \"" << mesh->getName() << " cannot be used twice by "
-                          << "participant " << _name << ". Please remove one of the use-mesh nodes with name=\"" << mesh->getName() << "\"./>");
+                "Mesh \"{} cannot be used twice by participant {}. "
+                "Please remove one of the use-mesh nodes with name=\"{}\"./>",
+                mesh->getName(), _name, mesh->getName());
 }
 
 void Participant::checkDuplicatedData(
@@ -317,8 +317,9 @@ void Participant::checkDuplicatedData(
   PRECICE_TRACE(data->getID(), _dataContexts.size());
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size(), data->getID(), _dataContexts.size());
   PRECICE_CHECK(_dataContexts[data->getID()] == nullptr,
-                "Participant \"" << _name << "\" can read/write data \""
-                                 << data->getName() << "\" only once. Please remove any duplicate instances of write-data/read-data nodes.");
+                "Participant \"{}\" can read/write data \"{}\" only once. "
+                "Please remove any duplicate instances of write-data/read-data nodes.",
+                _name, data->getName());
 }
 
 bool Participant::useMaster()

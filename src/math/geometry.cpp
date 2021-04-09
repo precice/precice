@@ -265,7 +265,8 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
   Eigen::Vector3d e_2          = coords[2] - coordOrigin;
   Eigen::Vector3d normalVector = e_1.cross(e_2);
 
-  PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0), "Non-planar quads are not supported. The vertex coordinates are: " << coords << ".");
+  PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0),
+                "Non-planar quads are not supported. The vertex coordinates are: {}.", coords);
 
   //Transform Coordinates - coord[0] is the origin
   for (int i = 0; i < 4; i++) {

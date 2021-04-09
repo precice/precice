@@ -97,7 +97,7 @@ void CommunicateMesh::receiveMesh(
 
   int numberOfVertices = 0;
   _communication->receive(numberOfVertices, rankSender);
-  PRECICE_DEBUG("Number of vertices to receive: " << numberOfVertices);
+  PRECICE_DEBUG("Number of vertices to receive: {}", numberOfVertices);
 
   std::vector<mesh::Vertex *> vertices;
   vertices.reserve(numberOfVertices);
@@ -120,7 +120,7 @@ void CommunicateMesh::receiveMesh(
 
   int numberOfEdges = 0;
   _communication->receive(numberOfEdges, rankSender);
-  PRECICE_DEBUG("Number of edges to receive: " << numberOfEdges);
+  PRECICE_DEBUG("Number of edges to receive: {}", numberOfEdges);
 
   boost::container::flat_map<int, mesh::Vertex *> vertexMap;
   vertexMap.reserve(numberOfVertices);
@@ -146,8 +146,8 @@ void CommunicateMesh::receiveMesh(
   if (dim == 3) {
     int numberOfTriangles = 0;
     _communication->receive(numberOfTriangles, rankSender);
-    PRECICE_DEBUG("Number of Triangles to receive: " << numberOfTriangles);
-    PRECICE_DEBUG("Number of Edges: " << edges.size());
+    PRECICE_DEBUG("Number of Triangles to receive: {}", numberOfTriangles);
+    PRECICE_DEBUG("Number of Edges: {}", edges.size());
     if (numberOfTriangles > 0) {
       PRECICE_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
       std::vector<int> edgeIDs;

@@ -73,7 +73,7 @@ void BroydenAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen:
 {
   PRECICE_TRACE();
 
-  PRECICE_DEBUG("currentColumns=" << _currentColumns);
+  PRECICE_DEBUG("currentColumns={}", _currentColumns);
   if (_currentColumns > 1) {
     PRECICE_ERROR("Truncated IMVJ is no longer supported. Please use IMVJ with restart mode instead.");
     PRECICE_DEBUG("compute update with QR-dec");

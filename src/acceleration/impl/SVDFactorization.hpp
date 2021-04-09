@@ -170,7 +170,7 @@ public:
     _psi.conservativeResize(_rows, _cols);
     _phi.conservativeResize(_rows, _cols);
     _sigma.conservativeResize(_cols);
-    PRECICE_DEBUG("SVD factorization of Jacobian is truncated to " << _cols << " DOFs. Cut off " << waste << " DOFs");
+    PRECICE_DEBUG("SVD factorization of Jacobian is truncated to {} DOFs. Cut off {} DOFs", _cols, waste);
 
     _initialSVD = true;
   }

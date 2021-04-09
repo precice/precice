@@ -192,16 +192,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     _matrixA = buildMatrixA(_basisFunction, globalInMesh, globalOutMesh, _deadAxis);
     _qr      = buildMatrixCLU(_basisFunction, globalInMesh, _deadAxis).colPivHouseholderQr();
 
-    if (not _qr.isInvertible()) {
-      PRECICE_ERROR("The interpolation matrix of the RBF mapping from mesh " << input()->getName() << " to mesh "
-                                                                             << output()->getName() << " is not invertable. This means that the mapping problem is not well-posed. "
-                                                                             << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
-                                                                             << "by marking perpendicular axes as dead?");
-    }
+    PRECICE_CHECK(_qr.isInvertible(),
+                  "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
+                  "This means that the mapping problem is not well-posed. "
+                  "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
+                  "by marking perpendicular axes as dead?",
+                  input()->getName(), output()->getName());
   }
   _hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
-}
+} // namespace mapping
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 bool RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::hasComputedMapping() const

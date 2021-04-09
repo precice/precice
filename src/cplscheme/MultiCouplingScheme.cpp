@@ -137,9 +137,8 @@ void MultiCouplingScheme::addDataToSend(
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _sendDataVector[index].insert(pair);
   } else {
-    PRECICE_ERROR("Data \"" << data->getName()
-                            << "\" of mesh \"" << mesh->getName() << "\" cannot be "
-                            << "added twice for sending.");
+    PRECICE_ERROR("Data \"{}\" of mesh \"{}\" cannot be added twice for sending.",
+                  data->getName(), mesh->getName());
   }
 }
 
@@ -155,9 +154,8 @@ void MultiCouplingScheme::addDataToReceive(
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _receiveDataVector[index].insert(pair);
   } else {
-    PRECICE_ERROR("Data \"" << data->getName()
-                            << "\" of mesh \"" << mesh->getName() << "\" cannot be "
-                            << "added twice for receiving.");
+    PRECICE_ERROR("Data \"{}\" of mesh \"{}\" cannot be added twice for receiving.",
+                  data->getName(), mesh->getName());
   }
 }
 

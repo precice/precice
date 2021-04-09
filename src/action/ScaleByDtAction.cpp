@@ -38,19 +38,19 @@ void ScaleByDtAction::performAction(
                  sourceValues.size(), targetValues.size());
   if (_scaling == SCALING_BY_COMPUTED_DT_RATIO) {
     double scaling = dt / fullDt;
-    PRECICE_DEBUG("Scale by computed dt ratio " << scaling);
+    PRECICE_DEBUG("Scale by computed dt ratio {}", scaling);
     for (int i = 0; i < targetValues.size(); i++) {
       targetValues[i] = sourceValues[i] * scaling;
     }
   } else if (_scaling == SCALING_BY_DT) {
-    PRECICE_DEBUG("Scale by dt " << fullDt);
+    PRECICE_DEBUG("Scale by dt {}", fullDt);
     for (int i = 0; i < targetValues.size(); i++) {
       targetValues[i] = sourceValues[i] * fullDt;
     }
   } else {
     PRECICE_ASSERT(_scaling == SCALING_BY_COMPUTED_DT_PART_RATIO, _scaling);
     double scaling = computedPartFullDt / fullDt;
-    PRECICE_DEBUG("Scale by computed dt part ratio " << scaling);
+    PRECICE_DEBUG("Scale by computed dt part ratio {}", scaling);
     for (int i = 0; i < targetValues.size(); i++) {
       targetValues[i] = sourceValues[i] * scaling;
     }

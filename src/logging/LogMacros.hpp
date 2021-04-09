@@ -9,6 +9,7 @@
 #include <string>
 
 #include "fmt/format.h"
+#include "fmt/ostream.h"
 #include "logging/Tracer.hpp"
 #include "prettyprint/prettyprint.hpp" // so that we can put std::vector et. al. on ostream
 #include "utils/String.hpp"
