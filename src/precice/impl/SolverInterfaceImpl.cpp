@@ -1052,35 +1052,86 @@ void SolverInterfaceImpl::mapReadDataTo(
   performDataActions({action::Action::READ_MAPPING_POST}, time, 0, 0, 0);
 }
 
-void SolverInterfaceImpl::writeBlockVectorData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *values)
+template <int dataDimension>
+void SolverInterfaceImpl::readBlockVectorDataImpl(const int  dataID,
+                                                  const int  size,
+                                                  const int *valueIndices,
+                                                  double *   values) const
+
 {
   PRECICE_TRACE(dataID, size);
-  PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
+
+  // Return if nothing to read
   if (size == 0)
     return;
+
+  // Validate user input
+  PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
+  PRECICE_VALIDATE_DATA_ID(dataID);
+  PRECICE_REQUIRE_DATA_READ(dataID);
+
+  DataContext &context = _accessor->dataContext(dataID);
+  PRECICE_ASSERT(context.toData != nullptr);
+  mesh::Data &data = *context.toData;
+  PRECICE_CHECK(data.getDimensions() == dataDimension,
+                "Your specified data type dimension of the data \"" << data.getName() << "\" does not match the data dimension you used for reading data in your code."
+                                                                                         "This means you either use 'readVectorData' on a scalar data set or 'readScalarData' on a vector-valued data set.");
   PRECICE_ASSERT(valueIndices != nullptr);
   PRECICE_ASSERT(values != nullptr);
+
+  auto &     valuesInternal = data.values();
+  const auto vertexCount    = valuesInternal.size() / dataDimension;
+  for (int i = 0; i < size; i++) {
+
+    const auto valueIndex     = valueIndices[i];
+    const int  offsetInternal = valueIndex * dataDimension;
+    const int  offset         = i * dataDimension;
+
+    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
+    for (int dim = 0; dim < dataDimension; dim++) {
+      values[offset + dim] = valuesInternal[offsetInternal + dim];
+    }
+  }
+}
+
+template <int dataDimension>
+void SolverInterfaceImpl::writeBlockVectorDataImpl(const int     dataID,
+                                                   const int     size,
+                                                   const int *   valueIndices,
+                                                   const double *values)
+{
+  PRECICE_TRACE(dataID, size);
+
+  // Return if nothing to write
+  if (size == 0)
+    return;
+
+  // Validate user input
+  PRECICE_CHECK(_state != State::Finalized, "writeData(...) cannot be called after finalize().");
+  PRECICE_VALIDATE_DATA_ID(dataID);
   PRECICE_REQUIRE_DATA_WRITE(dataID);
+
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.fromData != nullptr);
   mesh::Data &data = *context.fromData;
-  PRECICE_CHECK(data.getDimensions() == _dimensions,
-                "You cannot call writeBlockVectorData on the scalar data type \"" << data.getName()
-                                                                                  << "\". Use writeBlockScalarData or change the data type for \""
-                                                                                  << data.getName() << "\" to vector.");
+  PRECICE_CHECK(data.getDimensions() == dataDimension,
+                "Your specified data type dimension of the data \"" << data.getName() << "\" does not match the data dimension you used for writing data in your code."
+                                                                                         "This means you either use 'writeVectorData' on a scalar data set or 'writeScalarData' on a vector-valued data set.");
+  // Assert input pointer
+  PRECICE_ASSERT(valueIndices != nullptr);
+  PRECICE_ASSERT(values != nullptr);
+
   auto &     valuesInternal = data.values();
-  const auto vertexCount    = valuesInternal.size() / data.getDimensions();
+  const auto vertexCount    = valuesInternal.size() / dataDimension;
+  // Loop over provided size and assign values
   for (int i = 0; i < size; i++) {
-    const auto valueIndex = valueIndices[i];
+
+    const auto valueIndex     = valueIndices[i];
+    const int  offsetInternal = valueIndex * dataDimension;
+    const int  offset         = i * dataDimension;
+
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot write data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
-    int offsetInternal = valueIndex * _dimensions;
-    int offset         = i * _dimensions;
-    for (int dim = 0; dim < _dimensions; dim++) {
+    for (int dim = 0; dim < dataDimension; dim++) {
       PRECICE_ASSERT(offset + dim < valuesInternal.size(),
                      offset + dim, valuesInternal.size());
       valuesInternal[offsetInternal + dim] = values[offset + dim];
@@ -1088,30 +1139,29 @@ void SolverInterfaceImpl::writeBlockVectorData(
   }
 }
 
+void SolverInterfaceImpl::writeBlockVectorData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *values)
+{
+  PRECICE_VALIDATE_DATA_ID(dataID);
+  if (_accessor->dataContext(dataID).fromData->getDimensions() == 2)
+    writeBlockVectorDataImpl<2>(dataID, size, valueIndices, values);
+  else
+    writeBlockVectorDataImpl<3>(dataID, size, valueIndices, values);
+}
+
 void SolverInterfaceImpl::writeVectorData(
     int           dataID,
     int           valueIndex,
     const double *value)
 {
-  PRECICE_TRACE(dataID, valueIndex);
-  PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called before finalize().");
-
-  PRECICE_DEBUG("value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
-  PRECICE_REQUIRE_DATA_WRITE(dataID);
-  DataContext &context = _accessor->dataContext(dataID);
-  PRECICE_ASSERT(context.fromData != nullptr);
-  mesh::Data &data = *context.fromData;
-  PRECICE_CHECK(data.getDimensions() == _dimensions,
-                "You cannot call writeVectorData on the scalar data type \"" << data.getName()
-                                                                             << "\". Use writeScalarData or change the data type for \""
-                                                                             << data.getName() << "\" to vector.");
-  auto &     values      = data.values();
-  const auto vertexCount = values.size() / data.getDimensions();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot write data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
-  int offset = valueIndex * _dimensions;
-  for (int dim = 0; dim < _dimensions; dim++) {
-    values[offset + dim] = value[dim];
-  }
+  PRECICE_VALIDATE_DATA_ID(dataID);
+  if (_accessor->dataContext(dataID).fromData->getDimensions() == 2)
+    writeBlockVectorDataImpl<2>(dataID, 1, &valueIndex, value);
+  else
+    writeBlockVectorDataImpl<3>(dataID, 1, &valueIndex, value);
 }
 
 void SolverInterfaceImpl::writeBlockScalarData(
@@ -1120,28 +1170,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
     const int *   valueIndices,
     const double *values)
 {
-  PRECICE_TRACE(dataID, size);
-  PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
-  if (size == 0)
-    return;
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
-  PRECICE_REQUIRE_DATA_WRITE(dataID);
-  DataContext &context = _accessor->dataContext(dataID);
-  PRECICE_ASSERT(context.fromData != nullptr);
-  mesh::Data &data = *context.fromData;
-  PRECICE_CHECK(data.getDimensions() == 1,
-                "You cannot call writeBlockScalarData on the vector data type \"" << data.getName()
-                                                                                  << "\". Use writeBlockVectorData or change the data type for \""
-                                                                                  << data.getName() << "\" to scalar.");
-  auto &     valuesInternal = data.values();
-  const auto vertexCount    = valuesInternal.size() / data.getDimensions();
-  for (int i = 0; i < size; i++) {
-    const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot write data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
-    valuesInternal[valueIndex] = values[i];
-  }
+  writeBlockVectorDataImpl<1>(dataID, size, valueIndices, values);
 }
 
 void SolverInterfaceImpl::writeScalarData(
@@ -1149,24 +1178,7 @@ void SolverInterfaceImpl::writeScalarData(
     int    valueIndex,
     double value)
 {
-  PRECICE_TRACE(dataID, valueIndex, value);
-  PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
-  PRECICE_REQUIRE_DATA_WRITE(dataID);
-  DataContext &context = _accessor->dataContext(dataID);
-  PRECICE_ASSERT(context.fromData != nullptr);
-  mesh::Data &data = *context.fromData;
-  PRECICE_CHECK(valueIndex >= -1, "Invalid value index (" << valueIndex << ") when writing scalar data. Value index must be >= 0. "
-                                                                           "Please check the value index for "
-                                                          << data.getName());
-  PRECICE_CHECK(data.getDimensions() == 1,
-                "You cannot call writeScalarData on the vector data type \"" << data.getName()
-                                                                             << "\". Use writeVectorData or change the data type for \""
-                                                                             << data.getName() << "\" to scalar.");
-  auto &     values      = data.values();
-  const auto vertexCount = values.size() / data.getDimensions();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot write data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
-  values[valueIndex] = value;
+  writeBlockVectorDataImpl<1>(dataID, 1, &valueIndex, &value);
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
@@ -1175,32 +1187,11 @@ void SolverInterfaceImpl::readBlockVectorData(
     const int *valueIndices,
     double *   values) const
 {
-  PRECICE_TRACE(dataID, size);
-  PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(dataID);
-  if (size == 0)
-    return;
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
-  PRECICE_REQUIRE_DATA_READ(dataID);
-  DataContext &context = _accessor->dataContext(dataID);
-  PRECICE_ASSERT(context.toData != nullptr);
-  mesh::Data &data = *context.toData;
-  PRECICE_CHECK(data.getDimensions() == _dimensions,
-                "You cannot call readBlockVectorData on the scalar data type \"" << data.getName()
-                                                                                 << "\". Use readBlockScalarData or change the data type for \""
-                                                                                 << data.getName() << "\" to vector.");
-  auto &     valuesInternal = data.values();
-  const auto vertexCount    = valuesInternal.size() / data.getDimensions();
-  for (int i = 0; i < size; i++) {
-    const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
-    int offsetInternal = valueIndex * _dimensions;
-    int offset         = i * _dimensions;
-    for (int dim = 0; dim < _dimensions; dim++) {
-      values[offset + dim] = valuesInternal[offsetInternal + dim];
-    }
-  }
+  if (_accessor->dataContext(dataID).toData->getDimensions() == 2)
+    readBlockVectorDataImpl<2>(dataID, size, valueIndices, values);
+  else
+    readBlockVectorDataImpl<3>(dataID, size, valueIndices, values);
 }
 
 void SolverInterfaceImpl::readVectorData(
@@ -1208,28 +1199,11 @@ void SolverInterfaceImpl::readVectorData(
     int     valueIndex,
     double *value) const
 {
-  PRECICE_TRACE(dataID, valueIndex);
-  PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_VALIDATE_DATA_ID(dataID);
-  PRECICE_REQUIRE_DATA_READ(dataID);
-  DataContext &context = _accessor->dataContext(dataID);
-  PRECICE_ASSERT(context.toData != nullptr);
-  mesh::Data &data = *context.toData;
-  PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " ) when reading vector data. Value index must be >= 0. "
-                                                                            "Please check the value index for "
-                                                           << data.getName());
-  PRECICE_CHECK(data.getDimensions() == _dimensions,
-                "You cannot call readVectorData on the scalar data type \"" << data.getName()
-                                                                            << "\". Use readScalarData or change the data type for \""
-                                                                            << data.getName() << "\" to vector.");
-  auto &     values      = data.values();
-  const auto vertexCount = values.size() / data.getDimensions();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
-  int offset = valueIndex * _dimensions;
-  for (int dim = 0; dim < _dimensions; dim++) {
-    value[dim] = values[offset + dim];
-  }
-  PRECICE_DEBUG("read value = " << Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
+  if (_accessor->dataContext(dataID).toData->getDimensions() == 2)
+    readBlockVectorDataImpl<2>(dataID, 1, &valueIndex, value);
+  else
+    readBlockVectorDataImpl<3>(dataID, 1, &valueIndex, value);
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
@@ -1238,28 +1212,7 @@ void SolverInterfaceImpl::readBlockScalarData(
     const int *valueIndices,
     double *   values) const
 {
-  PRECICE_TRACE(dataID, size);
-  PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
-  if (size == 0)
-    return;
-  PRECICE_DEBUG("size = " << size);
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
-  PRECICE_REQUIRE_DATA_READ(dataID);
-  DataContext &context = _accessor->dataContext(dataID);
-  PRECICE_ASSERT(context.toData != nullptr);
-  mesh::Data &data = *context.toData;
-  PRECICE_CHECK(data.getDimensions() == 1,
-                "You cannot call readBlockScalarData on the vector data type \"" << data.getName()
-                                                                                 << "\". Use readBlockVectorData or change the data type for \"" << data.getName() << "\" to scalar.");
-  auto &     valuesInternal = data.values();
-  const auto vertexCount    = valuesInternal.size();
-  for (int i = 0; i < size; i++) {
-    const auto valueIndex = valueIndices[i];
-    PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
-    values[i] = valuesInternal[valueIndex];
-  }
+  readBlockVectorDataImpl<1>(dataID, size, valueIndices, values);
 }
 
 void SolverInterfaceImpl::readScalarData(
@@ -1267,25 +1220,7 @@ void SolverInterfaceImpl::readScalarData(
     int     valueIndex,
     double &value) const
 {
-  PRECICE_TRACE(dataID, valueIndex, value);
-  PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
-  PRECICE_REQUIRE_DATA_READ(dataID);
-  DataContext &context = _accessor->dataContext(dataID);
-  PRECICE_ASSERT(context.toData != nullptr);
-  mesh::Data &data = *context.toData;
-  PRECICE_CHECK(valueIndex >= -1, "Invalid value index ( " << valueIndex << " ) when reading scalar data. Value index must be >= 0. "
-                                                                            "Please check the value index for "
-                                                           << data.getName());
-  PRECICE_CHECK(data.getDimensions() == 1,
-                "You cannot call readScalarData on the vector data type \"" << data.getName()
-                                                                            << "\". Use readVectorData or change the data type for \""
-                                                                            << data.getName() << "\" to scalar.");
-  auto &     values      = data.values();
-  const auto vertexCount = values.size();
-  PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
-  value = values[valueIndex];
-  PRECICE_DEBUG("Read value = " << value);
+  readBlockVectorDataImpl<1>(dataID, 1, &valueIndex, &value);
 }
 
 void SolverInterfaceImpl::exportMesh(
