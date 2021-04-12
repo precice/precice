@@ -1004,7 +1004,6 @@ void SolverInterfaceImpl::mapWriteDataFrom(
         continue;
       }
 
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" from mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
@@ -1040,7 +1039,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.mesh->getID() != toMeshID) {
         continue;
       }
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" to mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
@@ -1485,17 +1484,18 @@ void SolverInterfaceImpl::mapWrittenData()
 
   // Map data
   for (impl::DataContext &context : _accessor->writeDataContexts()) {
-    timing          = context.mappingContext.timing;
-    bool hasMapping = context.mappingContext.mapping.get() != nullptr;
-    bool rightTime  = timing == MappingConfiguration::ON_ADVANCE;
+    timing         = context.mappingContext.timing;
+    bool rightTime = timing == MappingConfiguration::ON_ADVANCE;
     rightTime |= timing == MappingConfiguration::INITIAL;
-    bool hasMapped = context.mappingContext.hasMappedData;
+    const bool hasMapping = context.mappingContext.mapping.get() != nullptr;
+    const bool hasMapped  = context.mappingContext.hasMappedData;
+
     if (hasMapping && rightTime && (not hasMapped)) {
-      int inDataID  = context.fromData->getID();
-      int outDataID = context.toData->getID();
+      const int inDataID  = context.fromData->getID();
+      const int outDataID = context.toData->getID();
+
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" from mesh \"" << context.mesh->getName() << "\"");
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
       PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
@@ -1538,12 +1538,13 @@ void SolverInterfaceImpl::mapReadData()
     timing      = context.mappingContext.timing;
     bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
-    bool hasMapping = context.mappingContext.mapping.get() != nullptr;
-    bool hasMapped  = context.mappingContext.hasMappedData;
+    const bool hasMapping = context.mappingContext.mapping.get() != nullptr;
+    const bool hasMapped  = context.mappingContext.hasMappedData;
+
     if (mapNow && hasMapping && (not hasMapped)) {
-      int inDataID             = context.fromData->getID();
-      int outDataID            = context.toData->getID();
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      const int inDataID  = context.fromData->getID();
+      const int outDataID = context.toData->getID();
+
       PRECICE_DEBUG("Map read data \"" << context.fromData->getName()
                                        << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
@@ -1552,7 +1553,7 @@ void SolverInterfaceImpl::mapReadData()
   }
   // Clear non-initial, non-incremental mappings
   for (impl::MappingContext &context : _accessor->readMappingContexts()) {
-    bool isStationary = context.timing == mapping::MappingConfiguration::INITIAL;
+    const bool isStationary = context.timing == mapping::MappingConfiguration::INITIAL;
     if (not isStationary) {
       context.mapping->clear();
     }
