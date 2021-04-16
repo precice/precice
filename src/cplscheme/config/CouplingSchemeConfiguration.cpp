@@ -954,7 +954,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
 
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
   }
-  PRECICE_INFO(scheme->doesFirstStep());
+
   if (not scheme->doesFirstStep() && _accelerationConfig->getAcceleration()) {
     if (_accelerationConfig->getAcceleration()->getDataIDs().size() < 3) {
       PRECICE_WARN("Due to numerical reasons, for multi coupling, the number of coupling data vectors should be at least 3, not: "
