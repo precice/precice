@@ -143,9 +143,17 @@ if(PKG_CONFIG_FOUND)
     endif()
   endif()
 
+  # Set PKG_CONFIG_ALLOW_SYSTEM_CFLAGS
+  set(_petsc_prev_allow_system_cflags $ENV{PKG_CONFIG_ALLOW_SYSTEM_CFLAGS})
+  set(ENV{PKG_CONFIG_ALLOW_SYSTEM_CFLAGS} 1)
+
   # Use pkg-config to find PETSc
   set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH "YES")
   pkg_check_modules(PC_PETSc ${_petsc_quiet_arg} "PETSc${_pkg_version_spec}")
+
+  # Restore/Reset PKG_CONFIG_USE_CMAKE_PREFIX_PATH
+  set(ENV{PKG_CONFIG_ALLOW_SYSTEM_CFLAGS} ${_petsc_prev_allow_system_cflags})
+
   unset(PKG_CONFIG_USE_CMAKE_PREFIX_PATH)
   unset(_pkg_version_spec)
 
