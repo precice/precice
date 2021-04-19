@@ -39,7 +39,7 @@ else
 fi
 
 # Check C/C++
-CFILES="$(find . -type f -name \*.hpp -or -name \*.h -or -name \*.cpp -or -name \*.c)"
+CFILES=$(git ls-files -- '*.[ch]pp' '*.[ch]' ':!thirdparty')
 echo "Checking $(echo "$CFILES" | wc -l) C/C++ files"
 DIFFS=""
 if $HAS_PARALLEL; then
@@ -68,7 +68,7 @@ fi
 
 if [ ! -z "$PYCMD" ]; then
   # Check XML
-  XMLFILES=$(find . -not \( -path ./docs -prune \) -type f -name \*.xml)
+  XMLFILES="$(git ls-files -- '*.xml' '!docs')"
   XMLFMT="$SCRIPTDIR/config-formatter"
   echo "Checking $(echo "$XMLFILES" | wc -l) XML files"
   if $HAS_PARALLEL; then
