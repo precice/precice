@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #ifdef NDEBUG
 
 #define PRECICE_ASSERT(...) \
@@ -9,7 +11,6 @@
 #else
 
 #include <cassert>
-#include <iostream>
 #include <sstream>
 
 #include <boost/current_function.hpp>
