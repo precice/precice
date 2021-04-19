@@ -160,7 +160,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
     if (not _hasDefaultValue) {
-      PRECICE_ERROR("Attribute \"" + _name + "\" is required, but was not defined.");
+      PRECICE_ERROR("Attribute \"{}\" is required, but was not defined.", _name);
     }
     set(_value, _defaultValue);
   } else {
@@ -187,7 +187,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
       }
     }
   }
-  PRECICE_DEBUG("Read valid attribute \"" << getName() << "\" value = " << _value);
+  PRECICE_DEBUG("Read valid attribute \"{}\" value = {}", getName(), _value);
 }
 
 template <typename ATTRIBUTE_T>

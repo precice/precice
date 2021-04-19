@@ -87,7 +87,7 @@ void WatchPoint::initialize()
     }
   }
 
-  PRECICE_DEBUG("Rank: " << utils::MasterSlave::getRank() << ", isClosest: " << _isClosest);
+  PRECICE_DEBUG("Rank: {}, isClosest: {}", utils::MasterSlave::getRank(), _isClosest);
 }
 
 void WatchPoint::exportPointData(

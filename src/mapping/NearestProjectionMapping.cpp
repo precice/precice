@@ -81,11 +81,15 @@ void NearestProjectionMapping::computeMapping()
 
   if (getDimensions() == 2) {
     if (!fVertices.empty() && searchSpace->edges().empty()) {
-      PRECICE_WARN("2D Mesh \"" << searchSpace->getName() << "\" does not contain edges. Nearest projection mapping falls back to nearest neighbor mapping.");
+      PRECICE_WARN("2D Mesh \"{}\" does not contain edges. "
+                   "Nearest projection mapping falls back to nearest neighbor mapping.",
+                   searchSpace->getName());
     }
   } else {
     if (!fVertices.empty() && searchSpace->triangles().empty()) {
-      PRECICE_WARN("3D Mesh \"" << searchSpace->getName() << "\" does not contain triangles. Nearest projection mapping will map to primitives of lower dimension.");
+      PRECICE_WARN("3D Mesh \"{}\" does not contain triangles. "
+                   "Nearest projection mapping will map to primitives of lower dimension.",
+                   searchSpace->getName());
     }
   }
 
@@ -111,7 +115,7 @@ void NearestProjectionMapping::computeMapping()
   if (distanceStatistics.empty()) {
     PRECICE_INFO("Mapping distance not available due to empty partition.");
   } else {
-    PRECICE_INFO("Mapping distance " << distanceStatistics);
+    PRECICE_INFO("Mapping distance {}", distanceStatistics);
   }
 
   _hasComputedMapping = true;
@@ -224,7 +228,7 @@ void NearestProjectionMapping::tagMeshFirstRound()
       v.tag();
     }
   }
-  PRECICE_DEBUG("First Round Tagged " << tagged.size() << "/" << max_count << " Vertices");
+  PRECICE_DEBUG("First Round Tagged {}/{} Vertices", tagged.size(), max_count);
 
   clear();
 }

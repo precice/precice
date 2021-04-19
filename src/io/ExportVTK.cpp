@@ -41,7 +41,7 @@ void ExportVTK::doExport(
     fs::create_directories(outfile);
   outfile = outfile / fs::path(name + ".vtk");
   std::ofstream outstream(outfile.string(), std::ios::trunc);
-  PRECICE_CHECK(outstream, "VTK export failed to open destination file \"" << outfile << '"');
+  PRECICE_CHECK(outstream, "VTK export failed to open destination file \"{}\"", outfile);
 
   initializeWriting(outstream);
   writeHeader(outstream);
