@@ -436,7 +436,8 @@ MappingConfiguration::Timing MappingConfiguration::getTiming(const std::string &
   } else if (timing == VALUE_TIMING_ON_DEMAND) {
     return ON_DEMAND;
   }
-  PRECICE_ASSERT(false, "Unknown timing value \"" << timing << "\". Please check the documentation for available options.");
+  // We should never reach this point
+  PRECICE_UNREACHABLE("Unknown timing value \"" << timing << "\". Please check the documentation for available options.");
 }
 
 } // namespace mapping

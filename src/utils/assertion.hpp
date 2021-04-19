@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #ifdef NDEBUG
 
 #define PRECICE_ASSERT(...) \
@@ -9,7 +11,6 @@
 #else
 
 #include <cassert>
-#include <iostream>
 #include <sstream>
 
 #include <boost/current_function.hpp>
@@ -45,3 +46,11 @@
   }
 
 #endif
+
+/// Displays an error message and aborts the program independent of the build type.
+/// Use to mark unreachable statements under switch or if blocks.
+#define PRECICE_UNREACHABLE(message)   \
+  {                                    \
+    std::cerr << message << std::endl; \
+    std::abort();                      \
+  }
