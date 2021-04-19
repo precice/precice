@@ -979,7 +979,8 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
   } else if (method == VALUE_FIRST_PARTICIPANT) {
     return constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE;
   } else {
-    PRECICE_ASSERT(false, "Unknown timestepping method !", method);
+    // We should never reach this point.
+    PRECICE_UNREACHABLE("Unknown timestepping method '" << method<<"'.");
   }
 }
 

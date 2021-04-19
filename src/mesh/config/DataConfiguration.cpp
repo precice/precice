@@ -94,7 +94,8 @@ int DataConfiguration::getDataDimensions(
   } else if (typeName == VALUE_SCALAR) {
     return 1;
   }
-  PRECICE_ASSERT(false, "Unknown data type \"" << typeName << "\". Known data types: " << VALUE_SCALAR << ", " << VALUE_VECTOR << ".");
+  // We should never reach this point
+  PRECICE_UNREACHABLE("Unknown data type \"" << typeName << "\". Known data types: ");
 }
 
 } // namespace mesh
