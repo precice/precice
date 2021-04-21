@@ -61,7 +61,7 @@ void DataConfiguration::xmlTagCallback(
     int         dataDimensions = getDataDimensions(typeName);
     addData(name, dataDimensions);
   } else {
-    PRECICE_ASSERT(false, "Received callback from unknown tag " << tag.getName());
+    PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
   }
 }
 

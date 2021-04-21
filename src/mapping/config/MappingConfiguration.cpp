@@ -281,7 +281,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (direction == VALUE_READ) {
     configuredMapping.direction = READ;
   } else {
-    PRECICE_ASSERT(false, "Unknown mapping direction type \"" << direction << "\". Please check the documentation for available options.");
+    PRECICE_UNREACHABLE("Unknown mapping direction type \"" << direction << "\". Please check the documentation for available options.");
   }
 
   Mapping::Constraint constraintValue;
@@ -292,7 +292,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (constraint == VALUE_SCALED_CONSISTENT) {
     constraintValue = Mapping::SCALEDCONSISTENT;
   } else {
-    PRECICE_ASSERT(false, "Unknown mapping constraint \"" << constraint << "\". Please check the documentation for available options.");
+    PRECICE_UNREACHABLE("Unknown mapping constraint \"" << constraint << "\". Please check the documentation for available options.");
   }
 
   if (type == VALUE_NEAREST_NEIGHBOR) {

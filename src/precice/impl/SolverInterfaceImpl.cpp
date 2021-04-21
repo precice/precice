@@ -1690,8 +1690,7 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
   const MeshContext *context = _accessor->usedMeshContextByName(meshName);
-  PRECICE_ASSERT(context && context->mesh,
-                 "Participant \"" << _accessorName << "\" does not use mesh \"" << meshName << "\"!");
+  PRECICE_ASSERT(context && context->mesh, "Participant does not use mesh! ", _accessorName, meshName);
   return *context->mesh;
 }
 
