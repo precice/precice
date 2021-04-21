@@ -3,5 +3,5 @@
 - `packaging/`: Recipes for package managers
     - `Arch_User_Repository/`: Recipe for the [preCICE AUR package](https://aur.archlinux.org/packages/precice/).
     - `debian/`: Files for the CPack Debian package generator.
-- `createChangelog`: Creates a changelog file for the current PR. This is based on the GitHub CLI.
+- `create-changelog`: Creates a changelog file for the current PR. This is based on the GitHub CLI.
 - `bumpversion.h`: Script to set the version in all relevant configuration files and update the debian changelog
