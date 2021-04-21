@@ -2,6 +2,7 @@
 
 #include "fmt/format.h"
 #include "fmt/ostream.h"
+#include "utils/fmtSTL.hpp"
 
 #define PRECICE_LOG_LOCATION     \
   precice::logging::LogLocation  \
