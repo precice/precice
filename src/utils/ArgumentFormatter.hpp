@@ -6,7 +6,7 @@
 #include <boost/preprocessor/variadic/to_seq.hpp>
 #include <boost/vmd/is_empty.hpp>
 
-#include "fmt/format.h"
+#include "utils/fmt.hpp"
 
 /// Helper macro, used by TRACE
 #define PRECICE_LOG_ARGUMENTS_FMT(r, data, i, elem) \

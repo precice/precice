@@ -18,7 +18,7 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/variadic/size.hpp>
 
-#include "fmt/format.h"
+#include "utils/fmt.hpp"
 
 #include "utils/ArgumentFormatter.hpp"
 #include "utils/Parallel.hpp"

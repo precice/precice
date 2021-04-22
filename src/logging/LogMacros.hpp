@@ -1,8 +1,6 @@
 #pragma once
 
-#include "fmt/format.h"
-#include "fmt/ostream.h"
-#include "utils/fmtSTL.hpp"
+#include "utils/fmt.hpp"
 
 #define PRECICE_LOG_LOCATION     \
   precice::logging::LogLocation  \
