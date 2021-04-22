@@ -40,8 +40,8 @@
 #define PRECICE_DEBUG(...) _log.debug(PRECICE_LOG_LOCATION, fmt::format(__VA_ARGS__))
 
 // Do not put do {...} while (false) here, it will destroy the _tracer_ right after creation
-#define PRECICE_TRACE(...)                                                                                                \
-  precice::logging::Tracer _tracer_(_log, PRECICE_LOG_LOCATION);                                                          \
-  _log.trace(PRECICE_LOG_LOCATION, std::string{"Entering "} + __func__ + PRECICE_LOG_ARGUMENTS(__VA_ARGS__)) 
+#define PRECICE_TRACE(...)                                       \
+  precice::logging::Tracer _tracer_(_log, PRECICE_LOG_LOCATION); \
+  _log.trace(PRECICE_LOG_LOCATION, std::string{"Entering "} + __func__ + PRECICE_LOG_ARGUMENTS(__VA_ARGS__))
 
 #endif // ! NDEBUG

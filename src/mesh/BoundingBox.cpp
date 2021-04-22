@@ -16,7 +16,7 @@ logging::Logger BoundingBox::_log{"mesh::BoundingBox"};
 
 BoundingBox::BoundingBox(std::vector<double> bounds)
 {
-  PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3.",  bounds.size() / 2);
+  PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3.", bounds.size() / 2);
   _bounds     = std::move(bounds);
   _dimensions = _bounds.size() / 2;
 }

@@ -113,7 +113,7 @@ void MeshConfiguration::addMesh(
         break;
       }
     }
-    PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".",  dataNewMesh->getName());
+    PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".", dataNewMesh->getName());
   }
   _meshes.push_back(mesh);
 }

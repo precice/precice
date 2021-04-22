@@ -7,5 +7,5 @@
 
 #include "fmt/format.h"
 #include "fmt/ostream.h"
-#include "utils/fmtSTL.hpp"
 #include "utils/fmtEigen.hpp"
+#include "utils/fmtSTL.hpp"
