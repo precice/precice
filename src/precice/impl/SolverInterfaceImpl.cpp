@@ -1053,10 +1053,10 @@ void SolverInterfaceImpl::mapReadDataTo(
 }
 
 template <int dataDimension>
-void SolverInterfaceImpl::readBlockVectorDataImpl(const int  dataID,
-                                                  const int  size,
-                                                  const int *valueIndices,
-                                                  double *   values) const
+void SolverInterfaceImpl::readBlockDataImpl(const int  dataID,
+                                            const int  size,
+                                            const int *valueIndices,
+                                            double *   values) const
 
 {
   PRECICE_TRACE(dataID, size);
@@ -1095,10 +1095,10 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(const int  dataID,
 }
 
 template <int dataDimension>
-void SolverInterfaceImpl::writeBlockVectorDataImpl(const int     dataID,
-                                                   const int     size,
-                                                   const int *   valueIndices,
-                                                   const double *values)
+void SolverInterfaceImpl::writeBlockDataImpl(const int     dataID,
+                                             const int     size,
+                                             const int *   valueIndices,
+                                             const double *values)
 {
   PRECICE_TRACE(dataID, size);
 
@@ -1147,9 +1147,9 @@ void SolverInterfaceImpl::writeBlockVectorData(
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
   if (_accessor->dataContext(dataID).fromData->getDimensions() == 2)
-    writeBlockVectorDataImpl<2>(dataID, size, valueIndices, values);
+    writeBlockDataImpl<2>(dataID, size, valueIndices, values);
   else
-    writeBlockVectorDataImpl<3>(dataID, size, valueIndices, values);
+    writeBlockDataImpl<3>(dataID, size, valueIndices, values);
 }
 
 void SolverInterfaceImpl::writeVectorData(
@@ -1159,9 +1159,9 @@ void SolverInterfaceImpl::writeVectorData(
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
   if (_accessor->dataContext(dataID).fromData->getDimensions() == 2)
-    writeBlockVectorDataImpl<2>(dataID, 1, &valueIndex, value);
+    writeBlockDataImpl<2>(dataID, 1, &valueIndex, value);
   else
-    writeBlockVectorDataImpl<3>(dataID, 1, &valueIndex, value);
+    writeBlockDataImpl<3>(dataID, 1, &valueIndex, value);
 }
 
 void SolverInterfaceImpl::writeBlockScalarData(
@@ -1170,7 +1170,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
     const int *   valueIndices,
     const double *values)
 {
-  writeBlockVectorDataImpl<1>(dataID, size, valueIndices, values);
+  writeBlockDataImpl<1>(dataID, size, valueIndices, values);
 }
 
 void SolverInterfaceImpl::writeScalarData(
@@ -1178,7 +1178,7 @@ void SolverInterfaceImpl::writeScalarData(
     int    valueIndex,
     double value)
 {
-  writeBlockVectorDataImpl<1>(dataID, 1, &valueIndex, &value);
+  writeBlockDataImpl<1>(dataID, 1, &valueIndex, &value);
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
@@ -1189,9 +1189,9 @@ void SolverInterfaceImpl::readBlockVectorData(
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
   if (_accessor->dataContext(dataID).toData->getDimensions() == 2)
-    readBlockVectorDataImpl<2>(dataID, size, valueIndices, values);
+    readBlockDataImpl<2>(dataID, size, valueIndices, values);
   else
-    readBlockVectorDataImpl<3>(dataID, size, valueIndices, values);
+    readBlockDataImpl<3>(dataID, size, valueIndices, values);
 }
 
 void SolverInterfaceImpl::readVectorData(
@@ -1201,9 +1201,9 @@ void SolverInterfaceImpl::readVectorData(
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
   if (_accessor->dataContext(dataID).toData->getDimensions() == 2)
-    readBlockVectorDataImpl<2>(dataID, 1, &valueIndex, value);
+    readBlockDataImpl<2>(dataID, 1, &valueIndex, value);
   else
-    readBlockVectorDataImpl<3>(dataID, 1, &valueIndex, value);
+    readBlockDataImpl<3>(dataID, 1, &valueIndex, value);
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
@@ -1212,7 +1212,7 @@ void SolverInterfaceImpl::readBlockScalarData(
     const int *valueIndices,
     double *   values) const
 {
-  readBlockVectorDataImpl<1>(dataID, size, valueIndices, values);
+  readBlockDataImpl<1>(dataID, size, valueIndices, values);
 }
 
 void SolverInterfaceImpl::readScalarData(
@@ -1220,7 +1220,7 @@ void SolverInterfaceImpl::readScalarData(
     int     valueIndex,
     double &value) const
 {
-  readBlockVectorDataImpl<1>(dataID, 1, &valueIndex, &value);
+  readBlockDataImpl<1>(dataID, 1, &valueIndex, &value);
 }
 
 void SolverInterfaceImpl::exportMesh(

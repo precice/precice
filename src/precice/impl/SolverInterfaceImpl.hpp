@@ -635,7 +635,7 @@ private:
   void mapReadData();
 
   /**
-   * @brief Generich implementation in order to write data
+   * @brief Generic implementation in order to write data
    *
    * @tparam dataDimension dimension of the associated data.
    *         Equals one for scalar data and dim for vector-valued data
@@ -646,13 +646,13 @@ private:
    * @param[in] values pointer to the data to write
    */
   template <int dataDimension>
-  void writeBlockVectorDataImpl(const int     dataID,
-                                const int     size,
-                                const int *   valueIndices,
-                                const double *values);
+  void writeBlockDataImpl(const int     dataID,
+                          const int     size,
+                          const int *   valueIndices,
+                          const double *values);
 
   /**
-   * @brief Generich implementation in order to read data
+   * @brief Generic implementation in order to read data
    *
    * @tparam dataDimension dimension of the associated data.
    *         Equals one for scalar data and dim for vector-valued data
@@ -663,10 +663,10 @@ private:
    * @param[out] values pointer to the data to read
    */
   template <int dataDimension>
-  void readBlockVectorDataImpl(const int  dataID,
-                               const int  size,
-                               const int *valueIndices,
-                               double *   values) const;
+  void readBlockDataImpl(const int  dataID,
+                         const int  size,
+                         const int *valueIndices,
+                         double *   values) const;
 
   /**
    * @brief Performs all data actions with given timing.
