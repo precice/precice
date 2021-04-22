@@ -117,7 +117,6 @@ void ReceivedPartition::compute()
 
   // (2) Tag vertices 1st round (i.e. who could be owned by this rank)
   PRECICE_DEBUG("Tag vertices for filtering: 1st round.");
-  _mesh->computeState(); // normals need to be ready for NP mapping
   // go to both meshes, vertex is tagged if already one mesh tags him
   tagMeshFirstRound();
 

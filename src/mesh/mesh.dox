@@ -45,9 +45,6 @@ Edge & e3 = mesh.createEdge ( v3, v1 );
 // Triangles are setup from three edges
 Triangle & t = mesh.createTriangle ( e1, e2, e3 );
 
-// In order to operate on a mesh, it has to have a valid state
-mesh.computeState ();
-
 @endcode
 
 */

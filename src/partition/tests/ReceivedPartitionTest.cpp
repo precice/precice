@@ -78,7 +78,6 @@ void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh)
   pSolidzMesh->createEdge(v3, v4);
   pSolidzMesh->createEdge(v4, v5);
   pSolidzMesh->createEdge(v5, v6);
-  pSolidzMesh->computeState();
   pSolidzMesh->computeBoundingBox();
 }
 
@@ -97,7 +96,6 @@ void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
   mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
   pSolidzMesh->createEdge(v1, v2);
   pSolidzMesh->createEdge(v2, v3);
-  pSolidzMesh->computeState();
   pSolidzMesh->computeBoundingBox();
 }
 
@@ -122,7 +120,6 @@ void createNastinMesh2D(mesh::PtrMesh pNastinMesh, int rank)
     position << 0.0, 6.0;
     pNastinMesh->createVertex(position);
   }
-  pNastinMesh->computeState();
   pNastinMesh->computeBoundingBox();
 }
 
@@ -148,7 +145,6 @@ void createNastinMesh2D2(mesh::PtrMesh pNastinMesh, int rank)
     position << 2.9, 2.9;
     pNastinMesh->createVertex(position);
   }
-  pNastinMesh->computeState();
   pNastinMesh->computeBoundingBox();
 }
 
@@ -182,7 +178,6 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
   mesh::Edge &e6 = pSolidzMesh->createEdge(v5, v1);
   pSolidzMesh->createTriangle(e1, e2, e3);
   pSolidzMesh->createTriangle(e4, e5, e6);
-  pSolidzMesh->computeState();
   pSolidzMesh->computeBoundingBox();
 }
 
@@ -207,7 +202,6 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, int rank)
     position << 0.5, 0.5, 0.0;
     pNastinMesh->createVertex(position);
   }
-  pNastinMesh->computeState();
   pNastinMesh->computeBoundingBox();
 }
 
@@ -233,7 +227,6 @@ void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, int rank)
     position << 2.9, 2.9, 2.1;
     pNastinMesh->createVertex(position);
   }
-  pNastinMesh->computeState();
   pNastinMesh->computeBoundingBox();
 }
 
@@ -807,7 +800,6 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
     position << 2.0, 0.0;
     pMesh->createVertex(position);
 
-    pMesh->computeState();
     pMesh->computeBoundingBox();
 
     ProvidedPartition part(pMesh);
@@ -839,7 +831,6 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
       // no vertices
     }
 
-    pOtherMesh->computeState();
     pOtherMesh->computeBoundingBox();
 
     double            safetyFactor = 20.0;
@@ -1139,11 +1130,8 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
       position << 0.0, 6.0;
       pNastinMesh3->createVertex(position);
     }
-    pNastinMesh1->computeState();
     pNastinMesh1->computeBoundingBox();
-    pNastinMesh2->computeState();
     pNastinMesh2->computeBoundingBox();
-    pNastinMesh3->computeState();
     pNastinMesh3->computeBoundingBox();
 
     double safetyFactor = 0.1;

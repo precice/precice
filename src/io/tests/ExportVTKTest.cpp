@@ -36,7 +36,6 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
-  mesh.computeState();
 
   bool          exportNormals = true;
   io::ExportVTK exportVTK(exportNormals);
@@ -61,7 +60,6 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   mesh::Edge &e2 = mesh.createEdge(v2, v3);
   mesh::Edge &e3 = mesh.createEdge(v3, v1);
   mesh.createTriangle(e1, e2, e3);
-  mesh.computeState();
 
   bool          exportNormals = true;
   io::ExportVTK exportVTK(exportNormals);

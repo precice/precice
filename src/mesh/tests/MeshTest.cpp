@@ -45,7 +45,6 @@ BOOST_AUTO_TEST_CASE(ComputeState_2D)
   //     *  <---
   // *****
   Edge &e2 = mesh.createEdge(v2, v3);
-  mesh.computeState();
 
   // Perform test validations
   BOOST_TEST(equals(e1.getCenter(), Vector2d(0.5, 0.0)));
@@ -84,7 +83,6 @@ BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
   //   *   *   *
   // *************
   Triangle &t2 = mesh.createTriangle(e4, e5, e2);
-  mesh.computeState();
 
   // Perform test validations
   BOOST_TEST(equals(e1.getCenter(), Vector3d(0.5, 0.0, 0.5)));
@@ -264,8 +262,7 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     std::string dataName("MyData");
     int         dataDimensions = dim;
     // Add a data set to the mesh. Every data value is associated to a vertex in
-    // the mesh via the vertex ID. The data values are created when
-    // Mesh::computeState() is called by the mesh holding the data.
+    // the mesh via the vertex ID.
     PtrData data = mesh.createData(dataName, dataDimensions);
 
     // Validate data state
@@ -277,7 +274,6 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     BOOST_TEST(mesh.data().at(0)->getName() == dataName);
 
     // Compute the state of the mesh elements (vertices, edges, triangles)
-    mesh.computeState();
 
     // Allocate memory for the data values of set data. Before data value access
     // leads to assertions.
@@ -322,7 +318,6 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
     mesh.createEdge(v1, v3);              // LINESTRING (1 0 0, 1 0 1)
     mesh.createEdge(v3, v2);              // LINESTRING (1 0 1, 0 0 1)
     mesh.createTriangle(e0, e1, e2);
-    mesh.computeState();
   }
   BOOST_TEST(mesh1 != mesh1flipped);
   BOOST_TEST(mesh1 == mesh2);
@@ -342,7 +337,6 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
   mesh.createEdge(v1, v3);              // LINESTRING (1 0 0, 1 0 1)
   mesh.createEdge(v3, v2);              // LINESTRING (1 0 1, 0 0 1)
   mesh.createTriangle(e0, e1, e2);
-  mesh.computeState();
   std::stringstream sstream;
   sstream << mesh;
   std::string reference(
@@ -425,7 +419,6 @@ BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
 
   mesh.allocateDataValues();
   BOOST_TEST(mesh.data().size() == 1);
-  mesh.computeState();
 
   for (const auto &vertex : mesh.vertices()) {
     BOOST_TEST(vertex.getNormal().allFinite());

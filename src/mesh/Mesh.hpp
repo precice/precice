@@ -155,17 +155,6 @@ public:
   /// Allocates memory for the vertex data values.
   void allocateDataValues();
 
-  /**
-   * @brief Necessary before any geom. operations can be performed on the mesh.
-   *
-   * If no edges (in 2d) or triangles(in 3d) are
-   * given, no normals are computed in order to avoid dividing by zero on
-   * normalization of the vertex normals.
-   *
-   * Circumcircles of edges and triangles are computed.
-   */
-  void computeState();
-
   /// Computes the boundingBox for the vertices.
   void computeBoundingBox();
 
@@ -219,7 +208,6 @@ public:
    * @brief Returns the bounding box of the mesh.
    *
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
-   * computeState() has to be called after setting the mesh.
    */
   const BoundingBox &getBoundingBox() const;
 

@@ -58,7 +58,6 @@ BOOST_AUTO_TEST_CASE(TimeSeries)
   PtrData vectorData   = mesh->createData("VectorData", 2);
   auto &  doubleValues = doubleData->values();
   auto &  vectorValues = vectorData->values();
-  mesh->computeState();
   mesh->allocateDataValues();
 
   doubleValues(0) = 1.0;
@@ -177,7 +176,6 @@ BOOST_AUTO_TEST_CASE(Reinitalize)
   PtrData vectorData   = mesh->createData("VectorData", 2);
   auto &  doubleValues = doubleData->values();
   auto &  vectorValues = vectorData->values();
-  mesh->computeState();
   mesh->allocateDataValues();
 
   // v1, v2 carry data 1
@@ -212,7 +210,6 @@ BOOST_AUTO_TEST_CASE(Reinitalize)
     mesh->createEdge(v3, v4);
     mesh->meshChanged(*mesh);
     mesh->allocateDataValues();
-    mesh->computeState();
     doubleValues.setConstant(1.0);
     doubleValues(2) = 2.0;
     doubleValues(3) = 2.0;

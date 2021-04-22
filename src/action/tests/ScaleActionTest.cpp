@@ -41,7 +41,6 @@ BOOST_AUTO_TEST_CASE(DivideByArea)
   Vertex &v2     = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   mesh->createEdge(v0, v1);
   mesh->createEdge(v1, v2);
-  mesh->computeState();
   mesh->allocateDataValues();
   auto &values = data->values();
   values << 2.0, 3.0, 4.0;

@@ -78,7 +78,6 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::VectorXd::Constant(dim, 3.0));
   }
 
-  mesh.computeState();
 
   bool             exportNormals = true;
   io::ExportVTKXML exportVTKXML(exportNormals);
@@ -127,7 +126,6 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.createVertex(Eigen::VectorXd::Constant(dim, 3.0));
   }
 
-  mesh.computeState();
 
   bool             exportNormals = false;
   io::ExportVTKXML exportVTKXML(exportNormals);

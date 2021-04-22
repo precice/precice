@@ -46,7 +46,6 @@ PtrMesh fullMesh()
   // Triangles
   mesh.createTriangle(e1, e5, e4);
   mesh.createTriangle(e2, e3, e5);
-  mesh.computeState();
   return ptr;
 }
 

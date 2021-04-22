@@ -38,7 +38,6 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   Vertex &v1        = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v2        = outMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   outMesh->createEdge(v1, v2);
-  outMesh->computeState();
   outMesh->allocateDataValues();
 
   // Base-value for tests
@@ -62,7 +61,6 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
     inMesh->createVertex(Eigen::Vector2d(1.5, 1.5));
 
     inMesh->allocateDataValues();
-    inMesh->computeState();
 
     //assign(inData->values()) = value;
     inData->values() = Eigen::VectorXd::Constant(inData->values().size(), value);
@@ -91,7 +89,6 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
     inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
     inMesh->allocateDataValues();
-    inMesh->computeState();
 
     //assign(inData->values()) = value;
     inData->values() = Eigen::VectorXd::Constant(inData->values().size(), value);
@@ -134,7 +131,6 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
   Vertex &v1       = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v2       = inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   inMesh->createEdge(v1, v2);
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -227,7 +223,6 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
   Vertex &v1       = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v2       = inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   inMesh->createEdge(v1, v2);
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -287,7 +282,6 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   Vertex &v1       = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v2       = inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   inMesh->createEdge(v1, v2);
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -354,7 +348,6 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   Edge &  e31      = inMesh->createEdge(v3, v1);
   inMesh->createTriangle(e12, e23, e31);
 
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -465,7 +458,6 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
   inMesh->createEdge(v2, v3);
   inMesh->createEdge(v3, v1);
 
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -518,7 +510,6 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnVertices)
   inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
   inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
 
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -580,7 +571,6 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   inMesh->createTriangle(inEAB, inEBD, inEDA);
   inMesh->createTriangle(inEBD, inEDC, inECB);
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() << 1.0, 1.0, 1.0, 1.0;
 
   // Create mesh to map to with one vertex per defined traingle
@@ -589,7 +579,6 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   outMesh->createVertex(Eigen::Vector3d{0.33, 0.33, 0});
   outMesh->createVertex(Eigen::Vector3d{0.66, 0.66, 0});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() << 0.0, 0.0;
 
   // Setup mapping with mapping coordinates and geometry used
@@ -638,14 +627,12 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
   inMesh->createTriangle(erd, erb, err);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() = Eigen::VectorXd::Constant(6, 1.0);
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{0.7, 0.5, 0.0});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   // Setup mapping with mapping coordinates and geometry used
@@ -695,7 +682,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
   inMesh->createTriangle(erd, erb, err);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() = Eigen::VectorXd::Constant(6, 1.0);
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
@@ -708,7 +694,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
   auto &  outE3   = outMesh->createEdge(outV1, outV3);
   outMesh->createTriangle(outE1, outE2, outE3);
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(3, 0.0);
 
   // Setup mapping with mapping coordinates and geometry used
@@ -773,14 +758,12 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() << 0, 0, 0, 1, 1, 1;
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{2, 1, 0});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
@@ -808,14 +791,12 @@ BOOST_AUTO_TEST_CASE(PickClosestTriangle)
   makeTriangle(inMesh, vc0, vc1, vc2);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() << 1, 1, 1, 0, 0, 0;
 
   PtrMesh outMesh(new Mesh("OutMesh", 3, false, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{1, 1, 0});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
@@ -843,14 +824,12 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() << 0, 0, 1, 1, 1;
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{1, 1, 1});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
@@ -880,14 +859,12 @@ BOOST_AUTO_TEST_CASE(TriangleDistances)
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() << 1, 1, 1, 0, 0, 0;
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{1, 1, 1});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);

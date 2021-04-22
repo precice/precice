@@ -93,7 +93,6 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
       pSolidzMesh->createEdge(v5, v6);
     }
     pSolidzMesh->computeBoundingBox();
-    pSolidzMesh->computeState();
 
     ProvidedPartition part(pSolidzMesh);
     part.addM2N(m2n);
@@ -174,7 +173,6 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
       pSolidzMesh->createTriangle(e4, e5, e3);
     }
     pSolidzMesh->computeBoundingBox();
-    pSolidzMesh->computeState();
 
     ProvidedPartition part(pSolidzMesh);
     part.addM2N(m2n);
@@ -261,7 +259,6 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
     position << 4.0, 0.0;
     pMesh->createVertex(position);
   }
-  pMesh->computeState();
   pMesh->computeBoundingBox();
 
   ProvidedPartition part(pMesh);
@@ -355,7 +352,6 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
       pSolidzMesh->createEdge(v5, v6);
     }
     pSolidzMesh->computeBoundingBox();
-    pSolidzMesh->computeState();
 
     ProvidedPartition part(pSolidzMesh);
     part.addM2N(m2n);
@@ -464,7 +460,6 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
       mesh::Vertex &v6 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v5, v6);
     }
-    pSolidzMesh->computeState();
     pSolidzMesh->computeBoundingBox();
 
     ProvidedPartition part(pSolidzMesh);
@@ -568,7 +563,6 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
     }
   }
   mesh->computeBoundingBox();
-  mesh->computeState();
 
   if (context.isNamed("Solid")) {
     m2n->createDistributedCommunication(mesh);
@@ -694,7 +688,6 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
       mesh->createVertex(position);
     }
   }
-  mesh->computeState();
   mesh->computeBoundingBox();
 
   if (context.isNamed("Solid")) {
@@ -826,7 +819,6 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
       mesh->createVertex(position);
     }
   }
-  mesh->computeState();
   mesh->computeBoundingBox();
 
   if (context.isNamed("Solid")) {
