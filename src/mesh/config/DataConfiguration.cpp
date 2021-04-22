@@ -95,7 +95,7 @@ int DataConfiguration::getDataDimensions(
     return 1;
   }
   // We should never reach this point
-  PRECICE_UNREACHABLE("Unknown data type \"" << typeName << "\". Known data types: ");
+  PRECICE_UNREACHABLE("Unknown data type \"{}\".", typeName);
 }
 
 } // namespace mesh

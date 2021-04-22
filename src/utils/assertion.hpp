@@ -73,8 +73,8 @@ static constexpr char const *ASSERT_FMT =
 
 /// Displays an error message and aborts the program independent of the build type.
 /// Use to mark unreachable statements under switch or if blocks.
-#define PRECICE_UNREACHABLE(message)   \
-  {                                    \
-    std::cerr << message << std::endl; \
-    std::abort();                      \
+#define PRECICE_UNREACHABLE(...)                        \
+  {                                                     \
+    std::cerr << fmt::format(__VA_ARGS__) << std::endl; \
+    std::abort();                                       \
   }
