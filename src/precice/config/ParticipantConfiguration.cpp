@@ -548,9 +548,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
       if (context.size > 1) {
-        exporter = io::PtrExport(new io::ExportVTKXML(exportContext.plotNormals));
+        exporter = io::PtrExport(new io::ExportVTKXML());
       } else {
-        exporter = io::PtrExport(new io::ExportVTK(exportContext.plotNormals));
+        exporter = io::PtrExport(new io::ExportVTK());
       }
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",

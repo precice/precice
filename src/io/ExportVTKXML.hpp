@@ -23,10 +23,8 @@ class ExportVTKXML : public Export {
 public:
   /**
    * @brief Standard constructor
-   *
-   * @param[in] writeNormals write normals to file?
    */
-  ExportVTKXML(bool writeNormals);
+  ExportVTKXML();
 
   /// Returns the VTK type ID.
   virtual int getType() const;
@@ -56,9 +54,6 @@ public:
 
 private:
   logging::Logger _log{"io::ExportVTKXML"};
-
-  /// By default set true: plot vertex normals, false: no normals plotting
-  bool _writeNormals;
 
   /// dimensions of mesh
   int _meshDimensions;

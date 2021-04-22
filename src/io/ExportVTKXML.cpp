@@ -21,10 +21,8 @@
 namespace precice {
 namespace io {
 
-ExportVTKXML::ExportVTKXML(
-    bool writeNormals)
+ExportVTKXML::ExportVTKXML()
     : Export(),
-      _writeNormals(writeNormals),
       _meshDimensions(-1)
 {
 }
@@ -57,9 +55,6 @@ void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
   _meshDimensions = mesh.getDimensions();
   _vectorDataNames.clear();
   _scalarDataNames.clear();
-  if (_writeNormals) {
-    _vectorDataNames.emplace_back("VertexNormals");
-  }
   for (const mesh::PtrData &data : mesh.data()) {
     int dataDimensions = data->getDimensions();
     PRECICE_ASSERT(dataDimensions >= 1);
@@ -249,26 +244,6 @@ void ExportVTKXML::exportData(
   }
   outFile << "\">\n";
 
-  // Print VertexNormals
-  if (_writeNormals) {
-    const auto dimensions = mesh.getDimensions();
-    outFile << "            <DataArray type=\"Float64\" Name=\"VertexNormals\" NumberOfComponents=\"";
-    outFile << std::max(3, dimensions) << "\" format=\"ascii\">\n";
-    outFile << "               ";
-    for (const auto &vertex : mesh.vertices()) {
-      const auto &normal = vertex.getNormal();
-      for (int i = 0; i < std::max(3, dimensions); i++) {
-        if (i < dimensions) {
-          outFile << normal[i] << ' ';
-        } else {
-          outFile << "0.0 ";
-        }
-        outFile << ' ';
-      }
-    }
-    outFile << '\n'
-            << "            </DataArray>\n";
-  }
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values         = data->values();
     int              dataDimensions = data->getDimensions();

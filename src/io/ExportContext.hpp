@@ -15,27 +15,13 @@ struct ExportContext {
   std::string location;
 
   // @brief Exporting every N time windows (equals -1 when not set).
-  int everyNTimeWindows;
+  int everyNTimeWindows = -1;
 
   // @brief If true, export is done in every iteration (also implicit).
-  bool everyIteration;
+  bool everyIteration = false;
 
   // @brief type of the exporter (e.g. vtk).
   std::string type;
-
-  // @brief If true, normals are plotted.
-  bool plotNormals;
-
-  /**
-   * @brief Constructor.
-   */
-  ExportContext()
-      : exporter(),
-        location(),
-        everyNTimeWindows(-1),
-        everyIteration(false),
-        type(),
-        plotNormals(false) {}
 };
 
 } // namespace io

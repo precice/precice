@@ -18,7 +18,7 @@ namespace io {
 /// Writes polygonal, or triangle meshes to vtk files.
 class ExportVTK : public Export {
 public:
-  explicit ExportVTK(bool exportNormals);
+  explicit ExportVTK();
 
   /// Returns the VTK type ID.
   virtual int getType() const;
@@ -48,9 +48,6 @@ public:
 
 private:
   logging::Logger _log{"io::ExportVTK"};
-
-  /// By default set true: plot vertex normals, false: no normals plotting
-  bool _writeNormals;
 
   void openFile(
       std::ofstream &    outFile,
