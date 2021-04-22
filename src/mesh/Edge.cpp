@@ -12,8 +12,7 @@ Edge::Edge(
     Vertex &vertexTwo,
     int     id)
     : _vertices({&vertexOne, &vertexTwo}),
-      _id(id),
-      _normal(Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0))
+      _id(id)
 {
   PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(),
                  vertexOne.getDimensions(), vertexTwo.getDimensions());
@@ -30,7 +29,7 @@ double Edge::getLength() const
   return length;
 }
 
-const Eigen::VectorXd Edge::computeNormal(bool flip)
+Eigen::VectorXd Edge::computeNormal(bool flip) const
 {
   // Compute normal
   Eigen::VectorXd edgeVector = vertex(1).getCoords() - vertex(0).getCoords();
@@ -38,9 +37,8 @@ const Eigen::VectorXd Edge::computeNormal(bool flip)
   if (not flip) {
     normal *= -1.0; // Invert direction if counterclockwise
   }
-  _normal = normal.normalized(); // Scale normal vector to length 1
-
-  return normal * getEnclosingRadius() * 2.0; // Weight by length
+ // Scale normal vector to length 1, then weight by length
+  return normal.normalized() * getEnclosingRadius() * 2.0; 
 }
 
 const Eigen::VectorXd Edge::getCenter() const
@@ -60,8 +58,7 @@ bool Edge::connectedTo(const Edge &other) const
 
 bool Edge::operator==(const Edge &other) const
 {
-  return math::equals(_normal, other._normal) &&
-         std::is_permutation(_vertices.begin(), _vertices.end(), other._vertices.begin(),
+  return std::is_permutation(_vertices.begin(), _vertices.end(), other._vertices.begin(),
                              [](const Vertex *a, const Vertex *b) { return *a == *b; });
 }
 bool Edge::operator!=(const Edge &other) const

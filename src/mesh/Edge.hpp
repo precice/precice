@@ -39,12 +39,8 @@ public:
   /// Returns the edge's vertex as const object with index 0 or 1.
   const Vertex &vertex(int i) const;
 
-  /// Sets the normal of the edge.
-  template <typename VECTOR_T>
-  void setNormal(const VECTOR_T &normal);
-
   /// Computes and sets the normal of the edge, returns the area-weighted normal.
-  const Eigen::VectorXd computeNormal(bool flip = false);
+  Eigen::VectorXd computeNormal(bool flip = false) const;
 
   /// Returns the (among edges) unique ID of the edge.
   int getID() const;
@@ -53,7 +49,7 @@ public:
   double getLength() const;
 
   /// Returns the normal of the edge.
-  const Eigen::VectorXd &getNormal() const;
+  const Eigen::VectorXd getNormal() const;
 
   /// Returns the center of the edge.
   const Eigen::VectorXd getCenter() const;
@@ -81,9 +77,6 @@ private:
 
   /// Unique (among edges) ID of the edge.
   int _id;
-
-  /// Normal of the edge.
-  Eigen::VectorXd _normal;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
@@ -107,18 +100,9 @@ inline int Edge::getDimensions() const
   return _vertices[0]->getDimensions();
 }
 
-template <typename VECTOR_T>
-void Edge::setNormal(
-    const VECTOR_T &normal)
+inline const Eigen::VectorXd Edge::getNormal() const
 {
-  PRECICE_ASSERT(normal.size() == _vertices[0]->getDimensions(), normal,
-                 _vertices[0]->getDimensions());
-  _normal = normal;
-}
-
-inline const Eigen::VectorXd &Edge::getNormal() const
-{
-  return _normal;
+  return computeNormal();
 }
 
 std::ostream &operator<<(std::ostream &stream, const Edge &edge);
