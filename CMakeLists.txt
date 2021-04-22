@@ -190,6 +190,7 @@ precice_validate_prettyprint()
 
 # libfmt
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
+precice_validate_fmtlib()
 
 #
 # Find Configurable Dependencies
