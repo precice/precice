@@ -37,7 +37,7 @@ function(precice_validate_lib ARG_CODE)
   file(WRITE ${_wdir}/${_filename} "${ARG_CODE}")
 
   if(${_cache_success} AND NOT PRECICE_ALWAYS_VALIDATE_LIBS)
-    message(STATUS "Validating Prettyprint - success [cached]")
+    message(STATUS "Validating ${ARG_NAME} - success [cached]")
   else()
     unset(VAL_SUCCESS)
     unset(VAL_OUT)
