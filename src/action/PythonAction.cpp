@@ -133,21 +133,16 @@ void PythonAction::performAction(double time,
     PyObject *      vertexArgs = PyTuple_New(3);
     mesh::PtrMesh   mesh       = getMesh();
     Eigen::VectorXd coords(mesh->getDimensions());
-    Eigen::VectorXd normal(mesh->getDimensions());
     for (mesh::Vertex &vertex : mesh->vertices()) {
       npy_intp vdim[]        = {mesh->getDimensions()};
       int      id            = vertex.getID();
       coords                 = vertex.getCoords();
-      normal                 = vertex.getNormal();
       PyObject *pythonID     = PyLong_FromLong(id);
       PyObject *pythonCoords = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
-      PyObject *pythonNormal = PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, coords.data());
       PRECICE_CHECK(pythonID != nullptr, "Creating python ID failed. Please check that the python-actions mesh name is correct.");
       PRECICE_CHECK(pythonCoords != nullptr, "Creating python coords failed. Please check that the python-actions mesh name is correct.");
-      PRECICE_CHECK(pythonNormal != nullptr, "Creating python normal failed. Please check that the python-actions mesh name is correct.");
       PyTuple_SetItem(vertexArgs, 0, pythonID);
       PyTuple_SetItem(vertexArgs, 1, pythonCoords);
-      PyTuple_SetItem(vertexArgs, 2, pythonNormal);
       PyObject_CallObject(_vertexCallback, vertexArgs);
       if (PyErr_Occurred()) {
         PRECICE_ERROR("Error occurred during call of function vertexCallback() in python module \"{}\". "
