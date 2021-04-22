@@ -15,6 +15,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"
+#include "utils/String.hpp"
 
 namespace precice {
 namespace action {

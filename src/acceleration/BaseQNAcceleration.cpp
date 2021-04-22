@@ -150,14 +150,14 @@ void BaseQNAcceleration::initialize(
     }
     PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
     if (utils::MasterSlave::isMaster()) {
-      _infostringstream << "\n--------\n DOFs (global): " << _dimOffsets.back() << "\n offsets: " << _dimOffsets << '\n';
+      _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
     }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::getRank() + 1] - _dimOffsets[utils::MasterSlave::getRank()];
     PRECICE_ASSERT(entries == unknowns, entries, unknowns);
   } else {
-    _infostringstream << "\n--------\n DOFs (global): " << entries << '\n';
+    _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n", entries);
   }
 
   // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!

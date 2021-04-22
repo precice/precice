@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(BarycenterEdge)
     auto     ret = calcBarycentricCoordsForEdge(a, b, n, l);
     BOOST_TEST(equals(ret.projected, projected));
     BOOST_TEST(ret.barycentricCoords.sum() == 1.0);
-    BOOST_TEST(equals(ret.barycentricCoords, coords), "Coords are " << ret.barycentricCoords << " but should be " << coords);
+    BOOST_TEST(equals(ret.barycentricCoords, coords), fmt::format("Coords are {} but should be {}", ret.barycentricCoords, coords));
   }
 }
 
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle)
   {
     Vector3d l(2.0, 0.0, 0.0);
     auto     ret = calcBarycentricCoordsForTriangle(a, b, c, n, l);
-    BOOST_TEST((ret.barycentricCoords.array() < -precice::math::NUMERICAL_ZERO_DIFFERENCE).any(), "Min 1 coord should be negative " << ret.barycentricCoords);
+    BOOST_TEST((ret.barycentricCoords.array() < -precice::math::NUMERICAL_ZERO_DIFFERENCE).any(), fmt::format("Min 1 coord should be negative {}", ret.barycentricCoords));
   }
 }
 
