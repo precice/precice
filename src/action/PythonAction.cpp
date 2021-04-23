@@ -143,6 +143,7 @@ void PythonAction::performAction(double time,
       PRECICE_CHECK(pythonCoords != nullptr, "Creating python coords failed. Please check that the python-actions mesh name is correct.");
       PyTuple_SetItem(vertexArgs, 0, pythonID);
       PyTuple_SetItem(vertexArgs, 1, pythonCoords);
+      PyTuple_SetItem(vertexArgs, 2, Py_None);
       PyObject_CallObject(_vertexCallback, vertexArgs);
       if (PyErr_Occurred()) {
         PRECICE_ERROR("Error occurred during call of function vertexCallback() in python module \"{}\". "
