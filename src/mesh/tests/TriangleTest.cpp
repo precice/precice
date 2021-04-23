@@ -204,7 +204,6 @@ BOOST_AUTO_TEST_CASE(TriangleEquality)
   //    ****
   Triangle triangle3(e2, e4, e5, 0);
   Triangle triangle4(e2, e4, e5, 0);
-  triangle4.setNormal(Vector3d(0., 0., 1.));
   BOOST_TEST(triangle1 == triangle2);
   BOOST_TEST(triangle1 != triangle3);
   BOOST_TEST(triangle4 != triangle3);

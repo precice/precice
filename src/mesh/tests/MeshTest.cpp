@@ -51,11 +51,8 @@ BOOST_AUTO_TEST_CASE(ComputeState_2D)
   BOOST_TEST(equals(e2.getCenter(), Vector2d(1.0, 0.5)));
   BOOST_TEST(e1.getEnclosingRadius() == 0.5);
   BOOST_TEST(e2.getEnclosingRadius() == 0.5);
-  BOOST_TEST(equals(e1.getNormal(), Vector2d(0.0, 1.0)));
-  BOOST_TEST(equals(e2.getNormal(), Vector2d(-1.0, 0.0)));
-  BOOST_TEST(equals(v1.getNormal(), Vector2d(0.0, 1.0)));
-  BOOST_TEST(equals(v2.getNormal(), Vector2d(-std::sqrt(0.5), std::sqrt(0.5))));
-  BOOST_TEST(equals(v3.getNormal(), Vector2d(-1.0, 0.0)));
+  BOOST_TEST(equals(e1.computeNormal(), Vector2d(0.0, 1.0)));
+  BOOST_TEST(equals(e2.computeNormal(), Vector2d(-1.0, 0.0)));
 }
 
 BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
@@ -103,18 +100,14 @@ BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
   Vector3d normal(1.0, 0.0, -1.0);
   normal = normal.normalized();
   BOOST_TEST(normal.norm() == 1.0);
-  BOOST_TEST(equals(t1.getNormal(), normal));
-  BOOST_TEST(equals(t2.getNormal(), normal));
+  BOOST_TEST(equals(t1.computeNormal(), normal));
+  BOOST_TEST(equals(t2.computeNormal(), normal));
 
-  BOOST_TEST(equals(e1.getNormal(), normal));
-  BOOST_TEST(equals(e2.getNormal(), normal));
-  BOOST_TEST(equals(e3.getNormal(), normal));
-  BOOST_TEST(equals(e4.getNormal(), normal));
-  BOOST_TEST(equals(e5.getNormal(), normal));
-  BOOST_TEST(equals(v1.getNormal(), normal));
-  BOOST_TEST(equals(v2.getNormal(), normal));
-  BOOST_TEST(equals(v3.getNormal(), normal));
-  BOOST_TEST(equals(v4.getNormal(), normal));
+  BOOST_TEST(equals(e1.computeNormal(), normal));
+  BOOST_TEST(equals(e2.computeNormal(), normal));
+  BOOST_TEST(equals(e3.computeNormal(), normal));
+  BOOST_TEST(equals(e4.computeNormal(), normal));
+  BOOST_TEST(equals(e5.computeNormal(), normal));
 }
 
 BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
@@ -419,10 +412,6 @@ BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
 
   mesh.allocateDataValues();
   BOOST_TEST(mesh.data().size() == 1);
-
-  for (const auto &vertex : mesh.vertices()) {
-    BOOST_TEST(vertex.getNormal().allFinite());
-  }
 }
 
 BOOST_AUTO_TEST_CASE(ResizeDataGrow)

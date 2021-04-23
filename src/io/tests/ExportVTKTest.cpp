@@ -37,8 +37,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   mesh.createEdge(v3, v1);
 
 
-  bool          exportNormals = true;
-  io::ExportVTK exportVTK(exportNormals);
+  io::ExportVTK exportVTK;
   std::string   filename = "io-VTKExport-ExportPolygonalMesh";
   std::string   location = "";
   exportVTK.doExport(filename, location, mesh);
@@ -61,8 +60,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   mesh::Edge &e3 = mesh.createEdge(v3, v1);
   mesh.createTriangle(e1, e2, e3);
 
-  bool          exportNormals = true;
-  io::ExportVTK exportVTK(exportNormals);
+  io::ExportVTK exportVTK;
   std::string   filename = "io-VTKExport-ExportTriangulatedMesh";
   std::string   location = "";
   exportVTK.doExport(filename, location, mesh);

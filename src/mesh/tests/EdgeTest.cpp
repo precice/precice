@@ -36,7 +36,6 @@ BOOST_AUTO_TEST_CASE(EdgeEquality)
   Edge   edge2(v2, v1, 1);
   Edge   edge3(v1, v3, 0);
   Edge   edge4(v1, v3, 0);
-  edge4.setNormal(Eigen::Vector3d(Eigen::Vector3d(0, 1, 0)));
   BOOST_TEST(edge1 == edge2);
   BOOST_TEST(edge1 != edge3);
   BOOST_TEST(edge3 != edge4);

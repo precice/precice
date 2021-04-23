@@ -79,8 +79,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   }
 
 
-  bool             exportNormals = true;
-  io::ExportVTKXML exportVTKXML(exportNormals);
+  io::ExportVTKXML exportVTKXML;
   std::string      filename = "io-ExportVTKXMLTest-testExportPolygonalMesh";
   std::string      location = "";
   exportVTKXML.doExport(filename, location, mesh);
@@ -127,8 +126,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   }
 
 
-  bool             exportNormals = false;
-  io::ExportVTKXML exportVTKXML(exportNormals);
+  io::ExportVTKXML exportVTKXML;
   std::string      filename = "io-ExportVTKXMLTest-testExportTriangulatedMesh";
   std::string      location = "";
   exportVTKXML.doExport(filename, location, mesh);
