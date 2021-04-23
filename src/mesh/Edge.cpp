@@ -37,8 +37,7 @@ Eigen::VectorXd Edge::computeNormal(bool flip) const
   if (not flip) {
     normal *= -1.0; // Invert direction if counterclockwise
   }
- // Scale normal vector to length 1, then weight by length
-  return normal.normalized() * getEnclosingRadius() * 2.0; 
+  return normal.normalized();
 }
 
 const Eigen::VectorXd Edge::getCenter() const

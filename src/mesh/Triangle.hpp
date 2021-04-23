@@ -94,7 +94,11 @@ public:
 
   ///@}
 
-  /// Computes and sets the normal of the triangle, returns the area-weighted normal.
+  /**
+   * @brief Computes the normal of the triangle.
+   *
+   * @pre The normal has to be computed and set from outside before.
+   */
   Eigen::VectorXd computeNormal(bool flip = false) const;
 
   /// Returns a among triangles globally unique ID.
@@ -102,13 +106,6 @@ public:
 
   /// Returns the surface area of the triangle
   double getArea() const;
-
-  /**
-   * @brief Returns the outer normal of the triangle.
-   *
-   * @pre The normal has to be computed and set from outside before.
-   */
-  Eigen::VectorXd getNormal() const;
 
   /// Returns the barycenter of the triangle.
   const Eigen::VectorXd getCenter() const;

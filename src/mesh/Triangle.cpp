@@ -97,11 +97,6 @@ int Triangle::getDimensions() const
   return _edges[0]->getDimensions();
 }
 
-Eigen::VectorXd Triangle::getNormal() const
-{
-  return computeNormal();
-}
-
 const Eigen::VectorXd Triangle::getCenter() const
 {
   return (_edges[0]->getCenter() + _edges[1]->getCenter() + _edges[2]->getCenter()) / 3.0;

@@ -39,7 +39,7 @@ public:
   /// Returns the edge's vertex as const object with index 0 or 1.
   const Vertex &vertex(int i) const;
 
-  /// Computes and sets the normal of the edge, returns the area-weighted normal.
+  /// Computes the normal of the edge
   Eigen::VectorXd computeNormal(bool flip = false) const;
 
   /// Returns the (among edges) unique ID of the edge.
@@ -47,9 +47,6 @@ public:
 
   /// Returns the length of the edge
   double getLength() const;
-
-  /// Returns the normal of the edge.
-  const Eigen::VectorXd getNormal() const;
 
   /// Returns the center of the edge.
   const Eigen::VectorXd getCenter() const;
@@ -63,8 +60,8 @@ public:
   /**
    * @brief Compares two Edges for equality
    *
-   * Two Edges are equal if their normal vector is equal AND
-   * if the two vertices are equal, whereas the order of vertices is NOT important.
+   * Two Edges are equal if the two vertices are equal,
+   * whereas the order of vertices is NOT important.
    */
   bool operator==(const Edge &other) const;
 
@@ -98,11 +95,6 @@ inline const Vertex &Edge::vertex(
 inline int Edge::getDimensions() const
 {
   return _vertices[0]->getDimensions();
-}
-
-inline const Eigen::VectorXd Edge::getNormal() const
-{
-  return computeNormal();
 }
 
 std::ostream &operator<<(std::ostream &stream, const Edge &edge);
