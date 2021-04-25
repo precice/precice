@@ -1,6 +1,6 @@
 #include "acceleration/impl/ResidualSumPreconditioner.hpp"
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #include "logging/LogMacros.hpp"
 #include "math/differences.hpp"
 #include "utils/MasterSlave.hpp"

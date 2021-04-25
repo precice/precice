@@ -1,10 +1,10 @@
 #include "MappingConfiguration.hpp"
 #include <Eigen/Core>
 #include <algorithm>
+#include <cstring>
 #include <list>
 #include <memory>
 #include <ostream>
-#include <string.h>
 #include <utility>
 #include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"

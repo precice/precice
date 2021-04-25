@@ -2,11 +2,11 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <boost/container/flat_map.hpp>
+#include <cstddef>
 #include <functional>
 #include <map>
 #include <memory>
 #include <ostream>
-#include <stddef.h>
 #include <vector>
 #include "Communication.hpp"
 #include "com/SharedPointer.hpp"

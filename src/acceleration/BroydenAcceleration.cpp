@@ -1,10 +1,10 @@
 #include "acceleration/BroydenAcceleration.hpp"
 #include <Eigen/Core>
 #include <algorithm>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <ostream>
-#include <stddef.h>
 #include "acceleration/impl/QRFactorization.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"

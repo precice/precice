@@ -1,8 +1,8 @@
 #include "geometry.hpp"
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include "logging/Logger.hpp"
 #include "math/math.hpp"
 #include "utils/Helpers.hpp"

@@ -1,9 +1,9 @@
 #include "BaseCouplingScheme.hpp"
 #include <Eigen/Core>
+#include <cmath>
+#include <cstddef>
 #include <limits>
-#include <math.h>
 #include <sstream>
-#include <stddef.h>
 #include <utility>
 #include "acceleration/Acceleration.hpp"
 #include "cplscheme/Constants.hpp"

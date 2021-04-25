@@ -1,9 +1,9 @@
 #include "MultiCouplingScheme.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <ostream>
-#include <stddef.h>
 #include <type_traits>
 #include <utility>
 #include "acceleration/Acceleration.hpp"
