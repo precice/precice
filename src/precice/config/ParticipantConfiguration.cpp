@@ -75,13 +75,13 @@ ParticipantConfiguration::ParticipantConfiguration(
   tag.addSubtag(tagWriteData);
   tag.addSubtag(tagReadData);
 
-  _mappingConfig = mapping::PtrMappingConfiguration(
-      new mapping::MappingConfiguration(tag, _meshConfig));
+  _mappingConfig = std::make_shared<mapping::MappingConfiguration>(
+      tag, _meshConfig);
 
-  _actionConfig = action::PtrActionConfiguration(
-      new action::ActionConfiguration(tag, _meshConfig));
+  _actionConfig = std::make_shared<action::ActionConfiguration>(
+      tag, _meshConfig);
 
-  _exportConfig = io::PtrExportConfiguration(new io::ExportConfiguration(tag));
+  _exportConfig = std::make_shared<io::ExportConfiguration>(tag);
 
   XMLTag tagWatchPoint(*this, TAG_WATCH_POINT, XMLTag::OCCUR_ARBITRARY);
   doc = "A watch point can be used to follow the transient changes of data ";

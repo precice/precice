@@ -82,7 +82,7 @@ void MVQNAcceleration::initialize(
     _imvjRestart = true;
 
   // initialize parallel matrix-matrix operation module
-  _parMatrixOps = impl::PtrParMatrixOps(new impl::ParallelMatrixOperations());
+  _parMatrixOps = std::make_shared<impl::ParallelMatrixOperations>();
   _parMatrixOps->initialize(not _imvjRestart);
   _svdJ.initialize(_parMatrixOps, getLSSystemRows());
 
