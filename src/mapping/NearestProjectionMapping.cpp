@@ -104,10 +104,10 @@ void NearestProjectionMapping::computeMapping()
 
   _interpolations.reserve(fVertices.size());
 
-  for (size_t i = 0; i < fVertices.size(); i++) {
+  for (const auto &fVertice : fVertices) {
     // Nearest projection element is edge for 2d if exists, if not, it is the nearest vertex
     // Nearest projection element is triangle for 3d if exists, if not the edge and at the worst case it is the nearest vertex
-    auto interpolation = indexTree.findNearestProjection(fVertices[i].getCoords(), nnearest);
+    auto interpolation = indexTree.findNearestProjection(fVertice.getCoords(), nnearest);
     _interpolations.push_back(std::move(interpolation.first));
     distanceStatistics(interpolation.second);
   }

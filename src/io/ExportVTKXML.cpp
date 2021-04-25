@@ -101,22 +101,22 @@ void ExportVTKXML::writeMasterFile(
 
   // write scalar data names
   outMasterFile << "      <PPointData Scalars=\"";
-  for (size_t i = 0; i < _scalarDataNames.size(); ++i) {
-    outMasterFile << _scalarDataNames[i] << ' ';
+  for (const auto &_scalarDataName : _scalarDataNames) {
+    outMasterFile << _scalarDataName << ' ';
   }
   // write vector data names
   outMasterFile << "\" Vectors=\"";
-  for (size_t i = 0; i < _vectorDataNames.size(); ++i) {
-    outMasterFile << _vectorDataNames[i] << ' ';
+  for (const auto &_vectorDataName : _vectorDataNames) {
+    outMasterFile << _vectorDataName << ' ';
   }
   outMasterFile << "\">\n";
 
-  for (size_t i = 0; i < _scalarDataNames.size(); ++i) {
-    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << _scalarDataNames[i] << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
+  for (const auto &_scalarDataName : _scalarDataNames) {
+    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << _scalarDataName << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
   }
 
-  for (size_t i = 0; i < _vectorDataNames.size(); ++i) {
-    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << _vectorDataNames[i] << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
+  for (const auto &_vectorDataName : _vectorDataNames) {
+    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << _vectorDataName << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
   }
   outMasterFile << "      </PPointData>\n";
 
@@ -240,12 +240,12 @@ void ExportVTKXML::exportData(
     mesh::Mesh &   mesh)
 {
   outFile << "         <PointData Scalars=\"";
-  for (size_t i = 0; i < _scalarDataNames.size(); i++) {
-    outFile << _scalarDataNames[i] << ' ';
+  for (const auto &_scalarDataName : _scalarDataNames) {
+    outFile << _scalarDataName << ' ';
   }
   outFile << "\" Vectors=\"";
-  for (size_t i = 0; i < _vectorDataNames.size(); i++) {
-    outFile << _vectorDataNames[i] << ' ';
+  for (const auto &_vectorDataName : _vectorDataNames) {
+    outFile << _vectorDataName << ' ';
   }
   outFile << "\">\n";
 
