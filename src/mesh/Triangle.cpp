@@ -39,33 +39,33 @@ Triangle::Triangle(
   Vertex &v1 = edge(0).vertex(1);
 
   if (&edge(1).vertex(0) == &v0) {
-    _vertexMap[0] = 1;
-    _vertexMap[1] = 0;
+    _vertexMap[0] = true;
+    _vertexMap[1] = false;
   } else if (&edge(1).vertex(1) == &v0) {
-    _vertexMap[0] = 1;
-    _vertexMap[1] = 1;
+    _vertexMap[0] = true;
+    _vertexMap[1] = true;
   } else if (&edge(1).vertex(0) == &v1) {
-    _vertexMap[0] = 0;
-    _vertexMap[1] = 0;
+    _vertexMap[0] = false;
+    _vertexMap[1] = false;
   } else {
     PRECICE_ASSERT(&edge(1).vertex(1) == &v1);
-    _vertexMap[0] = 0;
-    _vertexMap[1] = 1;
+    _vertexMap[0] = false;
+    _vertexMap[1] = true;
   }
 
   if (_vertexMap[1] == 0) {
     if (&edge(2).vertex(0) == &edge(1).vertex(1)) {
-      _vertexMap[2] = 0;
+      _vertexMap[2] = false;
     } else {
       PRECICE_ASSERT(&edge(2).vertex(1) == &edge(1).vertex(1));
-      _vertexMap[2] = 1;
+      _vertexMap[2] = true;
     }
   } else if (_vertexMap[1] == 1) {
     if (&edge(2).vertex(0) == &edge(1).vertex(0)) {
-      _vertexMap[2] = 0;
+      _vertexMap[2] = false;
     } else {
       PRECICE_ASSERT(&edge(2).vertex(1) == &edge(1).vertex(0));
-      _vertexMap[2] = 1;
+      _vertexMap[2] = true;
     }
   }
 

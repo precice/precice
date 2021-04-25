@@ -1,4 +1,6 @@
 #include "MeshConfiguration.hpp"
+#include <memory>
+
 #include <sstream>
 #include <stdexcept>
 #include "logging/LogMacros.hpp"
@@ -72,7 +74,7 @@ void MeshConfiguration::xmlTagCallback(
     std::string name        = tag.getStringAttributeValue(ATTR_NAME);
     bool        flipNormals = tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS);
     PRECICE_ASSERT(_meshIdManager);
-    _meshes.push_back(PtrMesh(new Mesh(name, _dimensions, flipNormals, _meshIdManager->getFreeID())));
+    _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, flipNormals, _meshIdManager->getFreeID()));
   } else if (tag.getName() == TAG_DATA) {
     std::string name  = tag.getStringAttributeValue(ATTR_NAME);
     bool        found = false;
