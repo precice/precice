@@ -1,8 +1,8 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPICommunication.hpp"
+#include <cstddef>
 #include <ostream>
-#include <stddef.h>
 #include "MPIRequest.hpp"
 #include "logging/LogMacros.hpp"
 

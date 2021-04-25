@@ -1,11 +1,11 @@
 #include "acceleration/AitkenAcceleration.hpp"
 #include <Eigen/Core>
+#include <cmath>
+#include <cstddef>
 #include <limits>
 #include <map>
-#include <math.h>
 #include <memory>
 #include <ostream>
-#include <stddef.h>
 #include "cplscheme/CouplingData.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/math.hpp"

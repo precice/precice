@@ -2,9 +2,9 @@
 #include <Eigen/Core>
 #include <algorithm> // std::sort
 #include <cmath>
+#include <cstddef>
 #include <iostream>
 #include <memory>
-#include <stddef.h>
 #include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "com/Communication.hpp"

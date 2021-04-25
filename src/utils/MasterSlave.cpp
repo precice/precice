@@ -2,7 +2,7 @@
 
 #include "MasterSlave.hpp"
 #include <Eigen/Core>
-#include <math.h>
+#include <cmath>
 #include <memory>
 #include <ostream>
 #include <string>

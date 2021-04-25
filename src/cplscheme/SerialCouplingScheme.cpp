@@ -1,5 +1,5 @@
 #include "SerialCouplingScheme.hpp"
-#include <math.h>
+#include <cmath>
 #include <memory>
 #include <ostream>
 #include <vector>

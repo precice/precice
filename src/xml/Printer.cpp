@@ -1,7 +1,7 @@
 #include "xml/Printer.hpp"
 #include <Eigen/Core>
 #include <algorithm>
-#include <ctype.h>
+#include <cctype>
 #include <map>
 #include <memory>
 #include <regex>

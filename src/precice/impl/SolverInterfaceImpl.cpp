@@ -2,10 +2,10 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <deque>
 #include <functional>
 #include <iterator>
-#include <math.h>
 #include <memory>
 #include <ostream>
 #include <tuple>

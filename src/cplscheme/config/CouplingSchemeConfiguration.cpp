@@ -1,8 +1,8 @@
 #include "CouplingSchemeConfiguration.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <ostream>
-#include <stddef.h>
 #include <stdexcept>
 #include <utility>
 #include <vector>
