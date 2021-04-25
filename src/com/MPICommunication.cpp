@@ -37,9 +37,7 @@ MPI_Datatype MPI_Select_unsigned_integer_datatype<8>::datatype = MPI_UNSIGNED_LO
 
 namespace precice {
 namespace com {
-MPICommunication::MPICommunication()
-{
-}
+MPICommunication::MPICommunication() = default;
 
 void MPICommunication::send(std::string const &itemToSend, int rankReceiver)
 {
