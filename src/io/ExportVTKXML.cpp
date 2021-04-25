@@ -58,7 +58,7 @@ void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
   _vectorDataNames.clear();
   _scalarDataNames.clear();
   if (_writeNormals) {
-    _vectorDataNames.push_back("VertexNormals");
+    _vectorDataNames.emplace_back("VertexNormals");
   }
   for (mesh::PtrData data : mesh.data()) {
     int dataDimensions = data->getDimensions();
