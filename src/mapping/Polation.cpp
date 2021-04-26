@@ -11,6 +11,7 @@ Polation::Polation(const mesh::Vertex &element)
 
 Polation::Polation(const Eigen::VectorXd &location, const mesh::Edge &element)
 {
+  PRECICE_ASSERT(location.size() == element.getDimensions(), location.size(), element.getDimensions());
   const auto &A = element.vertex(0);
   const auto &B = element.vertex(1);
 
@@ -27,6 +28,7 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Edge &element)
 
 Polation::Polation(const Eigen::VectorXd &location, const mesh::Triangle &element)
 {
+  PRECICE_ASSERT(location.size() == element.getDimensions(), location.size(), element.getDimensions());
   auto &A = element.vertex(0);
   auto &B = element.vertex(1);
   auto &C = element.vertex(2);
