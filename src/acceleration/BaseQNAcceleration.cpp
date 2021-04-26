@@ -2,6 +2,8 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <memory>
+#include <utility>
+
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
@@ -38,11 +40,11 @@ BaseQNAcceleration::BaseQNAcceleration(
     double                  singularityLimit,
     std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
-    : _preconditioner(preconditioner),
+    : _preconditioner(std::move(preconditioner)),
       _initialRelaxation(initialRelaxation),
       _maxIterationsUsed(maxIterationsUsed),
       _timestepsReused(timestepsReused),
-      _dataIDs(dataIDs),
+      _dataIDs(std::move(dataIDs)),
       _forceInitialRelaxation(forceInitialRelaxation),
       _qrV(filter),
       _filter(filter),

@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <utility>
+
 #include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "com/Communication.hpp"
@@ -27,8 +29,8 @@ QRFactorization::QRFactorization(
     double          theta,
     double          sigma)
 
-    : _Q(Q),
-      _R(R),
+    : _Q(std::move(Q)),
+      _R(std::move(R)),
       _rows(rows),
       _cols(cols),
       _filter(filter),

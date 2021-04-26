@@ -19,10 +19,10 @@ namespace com {
 /// Implements Communication by using sockets.
 class SocketCommunication : public Communication {
 public:
-  SocketCommunication(unsigned short     portNumber       = 0,
-                      bool               reuseAddress     = false,
-                      std::string const &networkName      = utils::networking::loopbackInterfaceName(),
-                      std::string const &addressDirectory = ".");
+  SocketCommunication(unsigned short portNumber       = 0,
+                      bool           reuseAddress     = false,
+                      std::string    networkName      = utils::networking::loopbackInterfaceName(),
+                      std::string    addressDirectory = ".");
 
   explicit SocketCommunication(std::string const &addressDirectory);
 

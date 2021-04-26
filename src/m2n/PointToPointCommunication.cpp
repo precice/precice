@@ -8,6 +8,8 @@
 #include <map>
 #include <set>
 #include <thread>
+#include <utility>
+
 #include <vector>
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
@@ -285,7 +287,7 @@ PointToPointCommunication::PointToPointCommunication(
     com::PtrCommunicationFactory communicationFactory,
     mesh::PtrMesh                mesh)
     : DistributedCommunication(mesh),
-      _communicationFactory(communicationFactory)
+      _communicationFactory(std::move(communicationFactory))
 {
 }
 
