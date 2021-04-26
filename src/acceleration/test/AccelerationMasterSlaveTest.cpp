@@ -511,9 +511,6 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 2));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 2));
 
-  Eigen::VectorXd doldValues;
-  Eigen::VectorXd foldValues;
-
   Eigen::VectorXd dref;
   Eigen::VectorXd fref;
   double          drefNorm = 0., frefNorm = 0.;
@@ -528,9 +525,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
      */
 
     displacements->values().resize(0);
-    doldValues.resize(0);
     forces->values().resize(0);
-    foldValues.resize(0);
 
     //init displacements
     dpcd.reset(new CouplingData(displacements, dummyMesh, false));
@@ -543,8 +538,8 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
     pp.initialize(data);
 
-    dpcd->writeLastIteration(doldValues);
-    fpcd->writeLastIteration(foldValues);
+    dpcd->storeIteration();
+    fpcd->storeIteration();
   } else if (context.isRank(1)) { //Slave1
     /**
      * processor with 4 vertices
@@ -552,13 +547,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
     //init displacements
     displacements->values().resize(22);
-    doldValues.resize(22);
     forces->values().resize(22);
-    foldValues.resize(22);
     displacements->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    doldValues << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
     forces->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    foldValues << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false));
     fpcd.reset(new CouplingData(forces, dummyMesh, false));
@@ -568,10 +559,10 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
     pp.initialize(data);
 
-    forces->values() << -0.01765744149520443, -0.000534499502588083, 0.05397520666020422, 0.0005546984205735067, 0.05213823386543703, 0.0007618478879228568, -0.01944857239806249, -0.0009206665792022876, -0.02459872346309381, -0.001296931976456198, 0.04688718434761113, 0.001346643628716769, -0.01063536095060684, -0.01905148710330257, 0.02514593936525903, -0.01643393169986981, -0.02189723835016068, -0.000912218689367709, 0.04985117008772211, 0.0009615805506705544, 0.05534647415570375, 0.0004068469082890895;
+    dpcd->storeIteration();
+    fpcd->storeIteration();
 
-    dpcd->writeLastIteration(doldValues);
-    fpcd->writeLastIteration(foldValues);
+    forces->values() << -0.01765744149520443, -0.000534499502588083, 0.05397520666020422, 0.0005546984205735067, 0.05213823386543703, 0.0007618478879228568, -0.01944857239806249, -0.0009206665792022876, -0.02459872346309381, -0.001296931976456198, 0.04688718434761113, 0.001346643628716769, -0.01063536095060684, -0.01905148710330257, 0.02514593936525903, -0.01643393169986981, -0.02189723835016068, -0.000912218689367709, 0.04985117008772211, 0.0009615805506705544, 0.05534647415570375, 0.0004068469082890895;
   } else if (context.isRank(2)) { //Slave2
     /**
      * processor with 4 vertices
@@ -579,13 +570,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
     //init displacements
     displacements->values().resize(22);
-    doldValues.resize(22);
     forces->values().resize(22);
-    foldValues.resize(22);
     displacements->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    doldValues << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
     forces->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    foldValues << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false));
     fpcd.reset(new CouplingData(forces, dummyMesh, false));
@@ -595,19 +582,17 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
     pp.initialize(data);
 
-    forces->values() << -0.01465589151503364, -0.0002670111835650672, 0.05711438689366102, 0.0002383730129847531, -0.01536098575916998, -0.000285287812066552, 0.05638274807579218, 0.000283961973555227, -0.006856432131857973, -0.006815594391460808, 0.02901925611525407, -0.02907380915674757, 0.05800715138289463, 9.667376010126116e-05, -0.01376443700165205, -9.547563271960956e-05, 0.05768190311116184, 0.0001311583226994801, -0.01408147387131287, -0.0001216961377915992, -0.0163823504288376, -0.0003874626690545313;
+    dpcd->storeIteration();
+    fpcd->storeIteration();
 
-    dpcd->writeLastIteration(doldValues);
-    fpcd->writeLastIteration(foldValues);
+    forces->values() << -0.01465589151503364, -0.0002670111835650672, 0.05711438689366102, 0.0002383730129847531, -0.01536098575916998, -0.000285287812066552, 0.05638274807579218, 0.000283961973555227, -0.006856432131857973, -0.006815594391460808, 0.02901925611525407, -0.02907380915674757, 0.05800715138289463, 9.667376010126116e-05, -0.01376443700165205, -9.547563271960956e-05, 0.05768190311116184, 0.0001311583226994801, -0.01408147387131287, -0.0001216961377915992, -0.0163823504288376, -0.0003874626690545313;
   } else if (context.isRank(3)) { //Slave3
     /**
      * processor with no vertices
      */
 
     displacements->values().resize(0);
-    doldValues.resize(0);
     forces->values().resize(0);
-    foldValues.resize(0);
 
     dpcd.reset(new CouplingData(displacements, dummyMesh, false));
     fpcd.reset(new CouplingData(forces, dummyMesh, false));
@@ -617,8 +602,8 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
     pp.initialize(data);
 
-    dpcd->writeLastIteration(doldValues);
-    fpcd->writeLastIteration(foldValues);
+    dpcd->storeIteration();
+    fpcd->storeIteration();
   }
 
   // underrelaxation, first iteration
