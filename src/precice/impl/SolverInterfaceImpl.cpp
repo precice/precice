@@ -441,7 +441,7 @@ double SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  resetWrittenData();
+  //  resetWrittenData();
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
@@ -1004,7 +1004,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
         continue;
       }
 
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      //      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" from mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
@@ -1040,7 +1040,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.mesh->getID() != toMeshID) {
         continue;
       }
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      //      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" to mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
@@ -1255,6 +1255,7 @@ void SolverInterfaceImpl::readBlockScalarData(
                                                                                  << "\". Use readBlockVectorData or change the data type for \"" << data.getName() << "\" to scalar.");
   auto &     valuesInternal = data.values();
   const auto vertexCount    = valuesInternal.size();
+  // Open issue: how to handle filtered data sets? valuesInternal is set to zero initially
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
@@ -1286,6 +1287,42 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount, "Cannot read data \"" << data.getName() << "\" to invalid Vertex ID (" << valueIndex << "). Please make sure you only use the results from calls to setMeshVertex/Vertices().");
   value = values[valueIndex];
   PRECICE_DEBUG("Read value = " << value);
+}
+
+int SolverInterfaceImpl::setBoundingBox(
+    const int     meshID,
+    const double *boundingBox) const
+{
+  PRECICE_TRACE(meshID);
+  PRECICE_ASSERT(boundingBox != nullptr);
+  //  PRECICE_REQUIRE_MESH_MODIFY(meshID);
+
+  // Get the related mesh
+  MeshContext & context = _accessor->meshContext(meshID);
+  mesh::PtrMesh mesh(context.mesh);
+  PRECICE_DEBUG("Define bounding box");
+  // Transform bounds into a suitable format
+  int                 dim = mesh->getDimensions();
+  std::vector<double> bounds(dim * 2);
+
+  for (int d = 0; d < dim; ++d) {
+    // Assert that min is lower or equal to max
+    PRECICE_ASSERT(boundingBox[2 * d] <= boundingBox[2 * d + 1]);
+    bounds[2 * d]     = boundingBox[2 * d];
+    bounds[2 * d + 1] = boundingBox[2 * d + 1];
+  }
+  // Create a bounding box
+  mesh::BoundingBox providedBoundingBox(bounds);
+  // Expand the mesh associated bounding box
+  mesh::BoundingBox &bbox = mesh->getBoundingBox();
+  bbox.expandBy(providedBoundingBox);
+
+  // Do not allocate data values
+  // TODO: Remove returned ID. We probably need a dedicated boundingBox
+  // for this case as the approach becomes problematic when an actual
+  // mesh is defined in addition to the bounding box
+  // mesh->allocateDataValues();
+  return 0;
 }
 
 void SolverInterfaceImpl::exportMesh(
@@ -1495,7 +1532,7 @@ void SolverInterfaceImpl::mapWrittenData()
       int outDataID = context.toData->getID();
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" from mesh \"" << context.mesh->getName() << "\"");
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      //      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
       PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
@@ -1541,9 +1578,9 @@ void SolverInterfaceImpl::mapReadData()
     bool hasMapping = context.mappingContext.mapping.get() != nullptr;
     bool hasMapped  = context.mappingContext.hasMappedData;
     if (mapNow && hasMapping && (not hasMapped)) {
-      int inDataID             = context.fromData->getID();
-      int outDataID            = context.toData->getID();
-      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      int inDataID  = context.fromData->getID();
+      int outDataID = context.toData->getID();
+      //      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map read data \"" << context.fromData->getName()
                                        << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);

@@ -772,6 +772,20 @@ public:
       int     valueIndex,
       double &value) const;
 
+  /**
+   * @brief setBoundingBox Define a region of interest in order to filter a
+   *        received mesh for a certain mesh region
+   *
+   * @param[in] dataID ID of the Data you want to access through the bounding box
+   * @param[in] boundingBox (axis aligned) which has in 3D the format
+   *            [x_min, x_max, y_min, y_max, z_min, z_max]
+   *
+   * @return ID of the bounding box (similar to a mesh ID)
+   */
+  int setBoundingBox(
+      const int     dataID,
+      const double *boundingBox) const;
+
   ///@}
 
   /// Disable copy construction

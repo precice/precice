@@ -681,6 +681,85 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling)
     cplInterface.finalize();
   }
 }
+BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  // Set up Solverinterface
+  SolverInterface couplingInterface(context.name, _pathToTests + "explicit-bounding-box.xml", 0, 1);
+  BOOST_TEST(couplingInterface.getDimensions() == 2);
+
+  std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
+
+  // TODO: The IDs are usually unknown. Setting them this way
+  // is a workaround which works only in serial
+  std::vector<int> ids = {0, 1, 2, 3};
+
+  constexpr int               dim         = 2;
+  std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
+
+  if (context.isNamed("SolverOne")) {
+    // ownMeshID is unused
+    const int ownMeshID   = couplingInterface.getMeshID("MeshOne");
+    const int otherMeshID = couplingInterface.getMeshID("MeshTwo");
+    const int dataID      = couplingInterface.getDataID("Velocities", otherMeshID);
+
+    // Get bounding box ID
+    // Define region of interest, where we could obtain direct write access
+    couplingInterface.setBoundingBox(otherMeshID, boundingBox.data());
+
+    double dt = couplingInterface.initialize();
+    // Get the size of the filtered mesh within the bounding box
+    // (provided by the coupling participant)
+    const int meshSize = couplingInterface.getMeshVertexSize(dataID);
+    BOOST_TEST(meshSize == (ids.size()));
+
+    // Allocate a vector containing the vertices
+    std::vector<double> solverTwoMesh(meshSize * dim);
+    couplingInterface.getMeshVertices(otherMeshID, meshSize, ids.data(), solverTwoMesh.data());
+    // Some dummy writeData
+    std::array<double, 4> writeData({1, 2, 3, 4});
+
+    // Expected data = positions of the other participant's mesh
+    const std::vector<double> expectedData = positions;
+    for (unsigned int i = 0; i < meshSize * 2; ++i)
+      BOOST_TEST(solverTwoMesh[i] == expectedData[i]);
+
+    // Reshuffle IDs a bit
+    ids = std::vector<int>({1, 0, 2, 3});
+
+    while (couplingInterface.isCouplingOngoing()) {
+      // Write data
+      couplingInterface.writeBlockScalarData(dataID, meshSize,
+                                             ids.data(), writeData.data());
+      dt = couplingInterface.advance(dt);
+    }
+
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    // Query IDs
+    const int meshID = couplingInterface.getMeshID("MeshTwo");
+    const int dataID = couplingInterface.getDataID("Velocities", meshID);
+
+    // Define the mesh
+    couplingInterface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
+    // Allocate data to read
+    std::vector<double> readData(4, std::numeric_limits<double>::max());
+
+    // Initialize
+    double dt = couplingInterface.initialize();
+    while (couplingInterface.isCouplingOngoing()) {
+
+      dt = couplingInterface.advance(dt);
+      couplingInterface.readBlockScalarData(dataID, ids.size(),
+                                            ids.data(), readData.data());
+      // Expected data according to the writeData
+      std::array<double, 4> expectedData({2, 1, 3, 4});
+      for (unsigned int i = 0; i < ids.size(); ++i)
+        BOOST_TEST(expectedData[i] == readData[i]);
+    }
+  }
+}
 
 /// Test simple coupled simulation with coupling iterations.
 BOOST_AUTO_TEST_CASE(testImplicit)

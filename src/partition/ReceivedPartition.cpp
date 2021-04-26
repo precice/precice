@@ -89,9 +89,21 @@ void ReceivedPartition::compute()
 {
   PRECICE_TRACE();
 
+  // Prepare the bounding boxes
+  prepareBoundingBox();
+
   // handle coupling mode first (i.e. serial participant)
-  if (not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster()) { //coupling mode
+  if (not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster()) {
+
+    // Debug messages
     PRECICE_DEBUG("Handle partition data structures for serial participant");
+
+    // Filter out vertices not laying in the bounding box
+    mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _mesh->getBoundingBox().contains(v); });
+    _mesh->clear();
+    _mesh->addMesh(filteredMesh);
+
     int vertexCounter = 0;
     for (mesh::Vertex &v : _mesh->vertices()) {
       v.setOwner(true);

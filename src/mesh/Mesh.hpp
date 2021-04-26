@@ -223,6 +223,8 @@ public:
    */
   const BoundingBox &getBoundingBox() const;
 
+  BoundingBox &getBoundingBox();
+
   bool operator==(const Mesh &other) const;
 
   bool operator!=(const Mesh &other) const;

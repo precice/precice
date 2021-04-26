@@ -298,6 +298,11 @@ void SolverInterface::readScalarData(
   return _impl->readScalarData(dataID, valueIndex, value);
 }
 
+int SolverInterface::setBoundingBox(const int dataID, const double *boundingBox) const
+{
+  return _impl->setBoundingBox(dataID, boundingBox);
+}
+
 std::string getVersionInformation()
 {
   return {precice::versionInformation};
