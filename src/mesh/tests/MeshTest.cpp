@@ -29,87 +29,6 @@ BOOST_AUTO_TEST_SUITE(MeshTests)
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
-BOOST_AUTO_TEST_CASE(ComputeState_2D)
-{
-  PRECICE_TEST(1_rank);
-  mesh::Mesh mesh("MyMesh", 2, true, testing::nextMeshID());
-  // Create mesh
-  Vertex &v1 = mesh.createVertex(Vector2d(0.0, 0.0));
-  Vertex &v2 = mesh.createVertex(Vector2d(1.0, 0.0));
-  Vertex &v3 = mesh.createVertex(Vector2d(1.0, 1.0));
-  //
-  //
-  // *****
-  Edge &e1 = mesh.createEdge(v1, v2);
-  //     *
-  //     *  <---
-  // *****
-  Edge &e2 = mesh.createEdge(v2, v3);
-
-  // Perform test validations
-  BOOST_TEST(equals(e1.getCenter(), Vector2d(0.5, 0.0)));
-  BOOST_TEST(equals(e2.getCenter(), Vector2d(1.0, 0.5)));
-  BOOST_TEST(e1.getEnclosingRadius() == 0.5);
-  BOOST_TEST(e2.getEnclosingRadius() == 0.5);
-  BOOST_TEST(equals(e1.computeNormal(), Vector2d(0.0, 1.0)));
-  BOOST_TEST(equals(e2.computeNormal(), Vector2d(-1.0, 0.0)));
-}
-
-BOOST_AUTO_TEST_CASE(ComputeState_3D_Triangle)
-{
-  PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
-  // Create mesh
-  Vertex &v1 = mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
-  Vertex &v2 = mesh.createVertex(Vector3d(1.0, 0.0, 1.0));
-  Vertex &v3 = mesh.createVertex(Vector3d(1.0, 1.0, 1.0));
-  Vertex &v4 = mesh.createVertex(Vector3d(2.0, 0.0, 2.0));
-  Edge &  e1 = mesh.createEdge(v1, v2);
-  Edge &  e2 = mesh.createEdge(v2, v3);
-  Edge &  e3 = mesh.createEdge(v3, v1);
-  Edge &  e4 = mesh.createEdge(v2, v4);
-  Edge &  e5 = mesh.createEdge(v4, v3);
-
-  //       *
-  //     * *
-  //   *   *
-  // *******
-  Triangle &t1 = mesh.createTriangle(e1, e2, e3);
-  //       *
-  //     * * *     <---
-  //   *   *   *
-  // *************
-  Triangle &t2 = mesh.createTriangle(e4, e5, e2);
-
-  // Perform test validations
-  BOOST_TEST(equals(e1.getCenter(), Vector3d(0.5, 0.0, 0.5)));
-  BOOST_TEST(equals(e2.getCenter(), Vector3d(1.0, 0.5, 1.0)));
-  BOOST_TEST(equals(e3.getCenter(), Vector3d(0.5, 0.5, 0.5)));
-  BOOST_TEST(equals(e4.getCenter(), Vector3d(1.5, 0.0, 1.5)));
-  BOOST_TEST(equals(e5.getCenter(), Vector3d(1.5, 0.5, 1.5)));
-  BOOST_TEST(e1.getEnclosingRadius() == std::sqrt(2.0) * 0.5);
-  BOOST_TEST(e2.getEnclosingRadius() == 0.5);
-  BOOST_TEST(e3.getEnclosingRadius() == std::sqrt(3.0) * 0.5);
-  BOOST_TEST(e4.getEnclosingRadius() == std::sqrt(2.0) * 0.5);
-  BOOST_TEST(e5.getEnclosingRadius() == std::sqrt(3.0) * 0.5);
-
-  BOOST_TEST(equals(t1.getCenter(), Vector3d(2.0 / 3.0, 1.0 / 3.0, 2.0 / 3.0)));
-  BOOST_TEST(equals(t2.getCenter(), Vector3d(4.0 / 3.0, 1.0 / 3.0, 4.0 / 3.0)));
-  BOOST_TEST(t1.getEnclosingRadius() == 1.0);
-  BOOST_TEST(t2.getEnclosingRadius() == 1.0);
-  Vector3d normal(1.0, 0.0, -1.0);
-  normal = normal.normalized();
-  BOOST_TEST(normal.norm() == 1.0);
-  BOOST_TEST(equals(t1.computeNormal(), normal));
-  BOOST_TEST(equals(t2.computeNormal(), normal));
-
-  BOOST_TEST(equals(e1.computeNormal(), normal));
-  BOOST_TEST(equals(e2.computeNormal(), normal));
-  BOOST_TEST(equals(e3.computeNormal(), normal));
-  BOOST_TEST(equals(e4.computeNormal(), normal));
-  BOOST_TEST(equals(e5.computeNormal(), normal));
-}
-
 BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
 {
   PRECICE_TEST(1_rank);
@@ -266,8 +185,6 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     BOOST_TEST(mesh.data().size() == 1);
     BOOST_TEST(mesh.data().at(0)->getName() == dataName);
 
-    // Compute the state of the mesh elements (vertices, edges, triangles)
-
     // Allocate memory for the data values of set data. Before data value access
     // leads to assertions.
     mesh.allocateDataValues();
@@ -370,48 +287,6 @@ BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
   BOOST_TEST(mesh.edges().size() == 3);
   mesh.createUniqueEdge(v1, v2); // LINESTRING (0 0 0, 1 0 0)
   BOOST_TEST(mesh.edges().size() == 3);
-}
-
-BOOST_AUTO_TEST_CASE(ComputeStateOfNotFullyConnectedMesh)
-{
-  Mesh mesh("Mesh1", 3, false, testing::nextMeshID());
-  mesh.createData("Data", 1);
-  const double ctz = 0.0000013;
-
-  Eigen::Vector3d coords0;
-  Eigen::Vector3d coords1;
-  Eigen::Vector3d coords2;
-  Eigen::Vector3d coords3;
-  Eigen::Vector3d coords4;
-  Eigen::Vector3d coords5;
-  coords0 << ctz, ctz, ctz;
-  coords1 << 1.0, ctz, ctz;
-  coords2 << ctz, 1.0, ctz;
-  coords3 << ctz, -1.0, ctz;
-  coords4 << ctz, ctz, ctz - 1.;    // edge only
-  coords5 << ctz, ctz - 1, ctz - 1; // disconnected
-  Vertex &v0 = mesh.createVertex(coords0);
-  Vertex &v1 = mesh.createVertex(coords1);
-  Vertex &v2 = mesh.createVertex(coords2);
-  Vertex &v3 = mesh.createVertex(coords3);
-  Vertex &v4 = mesh.createVertex(coords4);
-  mesh.createVertex(coords5);
-  BOOST_TEST(mesh.vertices().size() == 6);
-
-  Edge &e0 = mesh.createEdge(v0, v1);
-  Edge &e1 = mesh.createEdge(v1, v2);
-  Edge &e2 = mesh.createEdge(v2, v0);
-  Edge &e3 = mesh.createEdge(v1, v3);
-  Edge &e4 = mesh.createEdge(v3, v0);
-  mesh.createEdge(v0, v4); // edge only
-  BOOST_TEST(mesh.edges().size() == 6);
-
-  mesh.createTriangle(e0, e1, e2);
-  mesh.createTriangle(e0, e3, e4);
-  BOOST_TEST(mesh.triangles().size() == 2);
-
-  mesh.allocateDataValues();
-  BOOST_TEST(mesh.data().size() == 1);
 }
 
 BOOST_AUTO_TEST_CASE(ResizeDataGrow)
