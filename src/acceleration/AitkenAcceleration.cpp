@@ -6,6 +6,8 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <utility>
+
 #include "cplscheme/CouplingData.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/math.hpp"
@@ -20,7 +22,7 @@ namespace acceleration {
 AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
                                        std::vector<int> dataIDs)
     : _initialRelaxation(initialRelaxation),
-      _dataIDs(dataIDs),
+      _dataIDs(std::move(dataIDs)),
       _aitkenFactor(initialRelaxation)
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),

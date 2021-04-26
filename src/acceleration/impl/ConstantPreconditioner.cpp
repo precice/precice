@@ -1,5 +1,7 @@
 #include "acceleration/impl/ConstantPreconditioner.hpp"
 #include <algorithm>
+#include <utility>
+
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
@@ -9,7 +11,7 @@ namespace impl {
 
 ConstantPreconditioner::ConstantPreconditioner(std::vector<double> factors)
     : Preconditioner(-1),
-      _factors(factors)
+      _factors(std::move(factors))
 {
 }
 

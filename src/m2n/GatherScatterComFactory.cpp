@@ -2,11 +2,13 @@
 
 #include "GatherScatterComFactory.hpp"
 
+#include <utility>
+
 namespace precice {
 namespace m2n {
 GatherScatterComFactory::GatherScatterComFactory(
     com::PtrCommunication masterCom)
-    : _masterCom(masterCom)
+    : _masterCom(std::move(masterCom))
 {
 }
 

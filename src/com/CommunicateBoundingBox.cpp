@@ -11,7 +11,7 @@ namespace precice {
 namespace com {
 CommunicateBoundingBox::CommunicateBoundingBox(
     com::PtrCommunication communication)
-    : _communication(communication)
+    : _communication(std::move(communication))
 {
 }
 

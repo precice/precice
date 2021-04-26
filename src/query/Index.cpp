@@ -1,5 +1,7 @@
 #include "Index.hpp"
 #include <boost/range/irange.hpp>
+#include <utility>
+
 #include "impl/Indexer.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/Event.hpp"
@@ -17,8 +19,8 @@ struct Index::IndexImpl {
   impl::MeshIndices indices;
 };
 
-Index::Index(const mesh::PtrMesh &mesh)
-    : _mesh(mesh)
+Index::Index(mesh::PtrMesh mesh)
+    : _mesh(std::move(mesh))
 {
   _pimpl = std::make_unique<IndexImpl>(IndexImpl{});
 }

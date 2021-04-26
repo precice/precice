@@ -17,8 +17,8 @@ class PythonAction : public Action {
 public:
   PythonAction(
       Timing               timing,
-      const std::string &  modulePath,
-      const std::string &  moduleName,
+      std::string          modulePath,
+      std::string          moduleName,
       const mesh::PtrMesh &mesh,
       int                  targetDataID,
       int                  sourceDataID);

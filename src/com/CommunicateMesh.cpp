@@ -7,6 +7,8 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <utility>
+
 #include <vector>
 #include "Communication.hpp"
 #include "com/SharedPointer.hpp"
@@ -20,7 +22,7 @@ namespace precice {
 namespace com {
 CommunicateMesh::CommunicateMesh(
     com::PtrCommunication communication)
-    : _communication(communication)
+    : _communication(std::move(communication))
 {
 }
 

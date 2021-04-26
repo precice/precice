@@ -21,11 +21,11 @@ namespace precice {
 namespace mesh {
 
 Mesh::Mesh(
-    const std::string &name,
-    int                dimensions,
-    bool               flipNormals,
-    int                id)
-    : _name(name),
+    std::string name,
+    int         dimensions,
+    bool        flipNormals,
+    int         id)
+    : _name(std::move(name)),
       _dimensions(dimensions),
       _flipNormals(flipNormals),
       _id(id),

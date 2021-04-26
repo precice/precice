@@ -27,9 +27,9 @@ namespace precice {
 namespace mapping {
 
 MappingConfiguration::MappingConfiguration(
-    xml::XMLTag &                     parent,
-    const mesh::PtrMeshConfiguration &meshConfiguration)
-    : _meshConfig(meshConfiguration)
+    xml::XMLTag &              parent,
+    mesh::PtrMeshConfiguration meshConfiguration)
+    : _meshConfig(std::move(meshConfiguration))
 {
   PRECICE_ASSERT(_meshConfig);
   using namespace xml;
