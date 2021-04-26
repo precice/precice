@@ -21,12 +21,6 @@
 namespace precice {
 namespace io {
 
-ExportVTKXML::ExportVTKXML()
-    : Export(),
-      _meshDimensions(-1)
-{
-}
-
 int ExportVTKXML::getType() const
 {
   return constants::exportVTKXML();
@@ -52,7 +46,6 @@ void ExportVTKXML::doExport(
 
 void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
 {
-  _meshDimensions = mesh.getDimensions();
   _vectorDataNames.clear();
   _scalarDataNames.clear();
   for (const mesh::PtrData &data : mesh.data()) {
@@ -134,7 +127,7 @@ void ExportVTKXML::writeSubFile(
 {
   int numPoints = mesh.vertices().size(); // number of vertices
   int numCells;                           // number of cells
-  if (_meshDimensions == 2) {
+  if (mesh.getDimensions() == 2) {
     numCells = mesh.edges().size();
   } else {
     numCells = mesh.triangles().size();
@@ -178,7 +171,7 @@ void ExportVTKXML::exportMesh(
     std::ofstream &   outFile,
     mesh::Mesh const &mesh)
 {
-  if (_meshDimensions == 2) { // write edges as cells
+  if (mesh.getDimensions() == 2) { // write edges as cells
     outFile << "         <Cells>\n";
     outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";

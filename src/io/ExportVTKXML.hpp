@@ -21,11 +21,6 @@ namespace io {
 /// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
 class ExportVTKXML : public Export {
 public:
-  /**
-   * @brief Standard constructor
-   */
-  ExportVTKXML();
-
   /// Returns the VTK type ID.
   virtual int getType() const;
 
@@ -54,9 +49,6 @@ public:
 
 private:
   logging::Logger _log{"io::ExportVTKXML"};
-
-  /// dimensions of mesh
-  int _meshDimensions;
 
   /// List of names of all scalar data on mesh
   std::vector<std::string> _scalarDataNames;

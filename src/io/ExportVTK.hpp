@@ -18,8 +18,6 @@ namespace io {
 /// Writes polygonal, or triangle meshes to vtk files.
 class ExportVTK : public Export {
 public:
-  explicit ExportVTK();
-
   /// Returns the VTK type ID.
   virtual int getType() const;
 

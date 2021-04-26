@@ -18,9 +18,6 @@
 namespace precice {
 namespace io {
 
-ExportVTK::ExportVTK()
-    : Export() {}
-
 int ExportVTK::getType() const
 {
   return constants::exportVTK();
