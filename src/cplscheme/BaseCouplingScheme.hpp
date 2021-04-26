@@ -404,7 +404,7 @@ protected:
   /**
    * @brief used for storing send/receive data at end of acceleration, if not converged.
    */
-  void storeLastIteration()  // @todo: Try to make this private. This method is currently, only used for sake of testing.
+  void storeLastIteration() // @todo: Try to make this private. This method is currently, only used for sake of testing.
   {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     for (DataMap::value_type &pair : getAccelerationData()) {

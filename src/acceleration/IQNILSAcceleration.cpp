@@ -121,9 +121,9 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
     Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
-    secResiduals                  = data->lastIteration;    // old
-    secResiduals *= 1.0 - _initialRelaxation;               // (1-omg) * old
-    values += secResiduals;                                 // (1-omg) * old + new * omg
+    secResiduals                  = data->lastIteration; // old
+    secResiduals *= 1.0 - _initialRelaxation;            // (1-omg) * old
+    values += secResiduals;                              // (1-omg) * old + new * omg
   }
 }
 

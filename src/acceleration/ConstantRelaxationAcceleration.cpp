@@ -28,7 +28,7 @@ void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
 {
   checkDataIDs(cplData);
 
-  for (DataMap::value_type &pair : cplData) {  // @todo: seems to be unnecessary, since this is again just a loop over CouplingScheme::getAccelerationData
+  for (DataMap::value_type &pair : cplData) { // @todo: seems to be unnecessary, since this is again just a loop over CouplingScheme::getAccelerationData
     pair.second->storeIteration();
   }
 }

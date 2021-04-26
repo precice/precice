@@ -3,8 +3,8 @@
 #include <Eigen/Core>
 #include "mesh/Data.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/assertion.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -22,8 +22,8 @@ struct Waveform {
     if ((order == 1) || (timeWindows == 2 && order == 2)) { //timesteps is increased before extrapolate is called
       // PRECICE_INFO("Performing first order extrapolation");
       PRECICE_ASSERT(this->lastTimeWindows.cols() > 1);
-      extrapolatedValue = this->lastTimeWindows.col(0) * 2.0;          // = 2*x^t
-      extrapolatedValue -= this->lastTimeWindows.col(1); // = 2*x^t - x^(t-1)
+      extrapolatedValue = this->lastTimeWindows.col(0) * 2.0; // = 2*x^t
+      extrapolatedValue -= this->lastTimeWindows.col(1);      // = 2*x^t - x^(t-1)
     } else if (order == 2) {
       // PRECICE_INFO("Performing second order extrapolation");
       PRECICE_ASSERT(this->lastTimeWindows.cols() > 2);
@@ -40,7 +40,7 @@ struct Waveform {
   Eigen::MatrixXd lastTimeWindows;
 };
 
-struct CouplingData {  // @todo: should be a class from a design standpoint. See https://github.com/precice/precice/pull/865#discussion_r495825098
+struct CouplingData { // @todo: should be a class from a design standpoint. See https://github.com/precice/precice/pull/865#discussion_r495825098
   /// Returns a reference to the data values.
   Eigen::VectorXd &values()
   {
@@ -74,7 +74,7 @@ struct CouplingData {  // @todo: should be a class from a design standpoint. See
   Waveform waveform;
 
   /// Data values of previous iteration.
-  Eigen::VectorXd lastIteration;  // @todo: make this read-only. Only allow update via storeIteration.
+  Eigen::VectorXd lastIteration; // @todo: make this read-only. Only allow update via storeIteration.
 
   mesh::PtrData data;
 

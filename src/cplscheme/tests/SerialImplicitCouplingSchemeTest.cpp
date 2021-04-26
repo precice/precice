@@ -483,8 +483,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 1), 1.0));
 
   // Test second order extrapolation
-  cplData->values() = Eigen::VectorXd::Zero(cplData->values().size());
-  cplData->lastIteration = Eigen::VectorXd::Zero(cplData->values().size());
+  cplData->values()                 = Eigen::VectorXd::Zero(cplData->values().size());
+  cplData->lastIteration            = Eigen::VectorXd::Zero(cplData->values().size());
   cplData->waveform.lastTimeWindows = Eigen::MatrixXd::Zero(cplData->waveform.lastTimeWindows.rows(), cplData->waveform.lastTimeWindows.cols());
   //assign(cplData->values()) = 0.0;
   //assign(cplData->oldValues) = 0.0;
