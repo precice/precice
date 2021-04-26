@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
     mesh.createEdge(v3, v2);              // LINESTRING (1 0 1, 0 0 1)
     mesh.createTriangle(e0, e1, e2);
   }
-  BOOST_TEST(mesh1 != mesh1flipped);
+  BOOST_TEST(mesh1 == mesh1flipped);
   BOOST_TEST(mesh1 == mesh2);
 }
 

@@ -33,7 +33,11 @@ Eigen::VectorXd Edge::computeNormal(bool flip) const
 {
   // Compute normal
   Eigen::VectorXd edgeVector = vertex(1).getCoords() - vertex(0).getCoords();
-  Eigen::VectorXd normal     = Eigen::Vector2d(-edgeVector[1], edgeVector[0]);
+  // In 3D, use a normal on the plane z=0
+  Eigen::VectorXd normal = Eigen::VectorXd::Zero(edgeVector.size());
+  normal[0] = -edgeVector[1];
+  normal[1] = edgeVector[0];
+
   if (not flip) {
     normal *= -1.0; // Invert direction if counterclockwise
   }
