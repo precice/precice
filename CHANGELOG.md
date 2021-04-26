@@ -42,10 +42,6 @@ All notable changes to this project will be documented in this file. For future 
 - Increased the minimum required C++ version from 11 to 14. This was triggered by `Boost.Geometry` increasing their minimum version to C++14 in Boost `1.75`.
 - Removed obsolete `trigger-solver-plot` config option.
 
-## latest
-
-- Improved documenation of [`action:scale-by-computed-dt-ratio`](https://www.precice.org/configuration-xml-reference.html#actionscale-by-computed-dt-ratio), [`action:scale-by-computed-dt-part-ratio`](https://www.precice.org/configuration-xml-reference.html#actionscale-by-computed-dt-part-ratio) and [`action:scale-by-dt`](https://www.precice.org/configuration-xml-reference.html#actionscale-by-dt) with respect to time step size vs. time window. size.
-
 ## 2.1.1
 
 - Fixed a compilation error emitted by intel compilers when compiling tests.
