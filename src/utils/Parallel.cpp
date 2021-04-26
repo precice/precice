@@ -172,7 +172,7 @@ void Parallel::pushState(CommStatePtr newState)
   PRECICE_ASSERT(newState != nullptr, "pushState cannot to be called with nullptr!");
   PRECICE_ASSERT(newState->parent == nullptr, "The parent of the given state must be empty!");
 #ifndef NDEBUG
-  PRECICE_DEBUG("Update comm state from " << *current() << " to " << *newState);
+  PRECICE_DEBUG("Update comm state from {} to {}", *current(), *newState);
 #endif
   newState->parent = _currentState;
   _currentState    = std::move(newState);
@@ -356,17 +356,18 @@ void Parallel::splitCommunicator(const std::string &groupName)
     // Assemble and set new state
     newState = CommState::fromComm(newComm);
   }
+
+#ifndef NDEBUG
+  PRECICE_DEBUG("Detected {} groups", accessorGroups.size());
+  for (const AccessorGroup &group : accessorGroups) {
+    PRECICE_DEBUG("Group {}: name = {}, leaderRank = {}, size = {}",
+                  group.id, group.name, group.leaderRank, group.size);
+  }
+#endif // NDEBUG
+
   newState->groups = std::move(accessorGroups);
   pushState(newState);
 
-#ifndef NDEBUG
-  PRECICE_DEBUG("Detected " << accessorGroups.size() << " groups");
-  for (const AccessorGroup &group : accessorGroups) {
-    PRECICE_DEBUG("Group " << group.id << ": name = " << group.name
-                           << ", leaderRank = " << group.leaderRank
-                           << ", size = " << group.size);
-  }
-#endif // NDEBUG
 #endif // not PRECICE_NO_MPI
 }
 

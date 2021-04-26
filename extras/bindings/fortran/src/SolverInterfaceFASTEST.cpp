@@ -6,6 +6,15 @@
 #include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 using namespace std;
 
 static std::unique_ptr<precice::SolverInterface> implAcoustic = nullptr;
@@ -352,3 +361,10 @@ void precice::impl::checkCorrectUsage(int useFluid)
                                            "\"precicef_create\" with \"useAcoustic=1\" before any other call to preCICE if \"isFluid=0\".");
   }
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

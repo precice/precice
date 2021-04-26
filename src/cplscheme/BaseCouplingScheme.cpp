@@ -1,9 +1,9 @@
 #include "BaseCouplingScheme.hpp"
 #include <Eigen/Core>
+#include <cmath>
+#include <cstddef>
 #include <limits>
-#include <math.h>
 #include <sstream>
-#include <stddef.h>
 #include <utility>
 #include "acceleration/Acceleration.hpp"
 #include "cplscheme/Constants.hpp"
@@ -80,7 +80,7 @@ void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
     }
     sentDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of sent data sets = " << sentDataIDs.size());
+  PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
 void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
@@ -96,7 +96,7 @@ void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
     }
     receivedDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
+  PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
 }
 
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
@@ -125,7 +125,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
-                        << "an implicit coupling scheme.");
+                    "an implicit coupling scheme.");
       // merge send and receive data for all pp calls
       mergeData();
       // setup convergence measures
@@ -238,7 +238,7 @@ void BaseCouplingScheme::storeWindowData()
 {
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
-    PRECICE_DEBUG("Store data: " << pair.first);
+    PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->waveform.addNewWindowData(pair.second->values());
   }
 }
@@ -247,7 +247,7 @@ void BaseCouplingScheme::extrapolateData()
 {
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
-    PRECICE_DEBUG("Extrapolate data: " << pair.first);
+    PRECICE_DEBUG("Extrapolate data: {}", pair.first);
     pair.second->extrapolateData(_extrapolationOrder, getTimeWindows());
   }
 }
@@ -275,11 +275,12 @@ void BaseCouplingScheme::addComputedTime(
 
   // Check validness
   bool valid = math::greaterEquals(getThisTimeWindowRemainder(), 0.0, _eps);
-  PRECICE_CHECK(valid, "The timestep "
-                       "length given to preCICE in \"advance\" "
-                           << timeToAdd << " exceeds the maximum allowed timestep length " << _timeWindowSize - _computedTimeWindowPart + timeToAdd
-                           << " in the remaining of this time window. Did you restrict your timestep length, \"dt = min(precice_dt, dt)\" ?"
-                           << " For more information, consult the adapter example in the preCICE documentation.");
+  PRECICE_CHECK(valid,
+                "The timestep length given to preCICE in \"advance\" {} exceeds the maximum allowed timestep length {} "
+                "in the remaining of this time window. "
+                "Did you restrict your timestep length, \"dt = min(precice_dt, dt)\"? "
+                "For more information, consult the adapter example in the preCICE documentation.",
+                timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
@@ -318,7 +319,7 @@ double BaseCouplingScheme::getThisTimeWindowRemainder() const
   if (not math::equals(_timeWindowSize, UNDEFINED_TIME_WINDOW_SIZE)) {
     remainder = getNextTimestepMaxLength();
   }
-  PRECICE_DEBUG("return " << remainder);
+  PRECICE_DEBUG("return {}", remainder);
   return remainder;
 }
 
@@ -367,11 +368,11 @@ void BaseCouplingScheme::requireAction(
 std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
-  os << "it " << _iterations; //_iterations;
+  os << "iteration: " << _iterations; //_iterations;
   if (_maxIterations != -1) {
     os << " of " << _maxIterations;
   }
-  os << " | " << printBasicState(_timeWindows, _time) << " | " << printActionsState();
+  os << ", " << printBasicState(_timeWindows, _time) << ", " << printActionsState();
   return os.str();
 }
 
@@ -380,23 +381,23 @@ std::string BaseCouplingScheme::printBasicState(
     double time) const
 {
   std::ostringstream os;
-  os << "dt# " << timeWindows;
+  os << "time-window: " << timeWindows;
   if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
     os << " of " << _maxTimeWindows;
   }
-  os << " | t " << time;
+  os << ", time: " << time;
   if (_maxTime != UNDEFINED_TIME) {
     os << " of " << _maxTime;
   }
   if (_timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) {
-    os << " | dt " << _timeWindowSize;
+    os << ", time-window-size: " << _timeWindowSize;
   }
   if ((_timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) || (_maxTime != UNDEFINED_TIME)) {
-    os << " | max dt " << getNextTimestepMaxLength();
+    os << ", max-timestep-length: " << getNextTimestepMaxLength();
   }
-  os << " | ongoing ";
+  os << ", ongoing: ";
   isCouplingOngoing() ? os << "yes" : os << "no";
-  os << " | dt complete ";
+  os << ", time-window-complete: ";
   _isTimeWindowComplete ? os << "yes" : os << "no";
   return os.str();
 }
@@ -405,7 +406,7 @@ std::string BaseCouplingScheme::printActionsState() const
 {
   std::ostringstream os;
   for (const std::string &actionName : _actions) {
-    os << actionName << " | ";
+    os << actionName << ' ';
   }
   return os.str();
 }
@@ -421,14 +422,14 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
       }
       stream << action;
     }
-    PRECICE_ERROR("The required actions " << stream.str() << " are not fulfilled. Did you forget to call \"markActionFulfilled\"?");
+    PRECICE_ERROR("The required actions {} are not fulfilled. Did you forget to call \"markActionFulfilled\"?", stream.str());
   }
 }
 
 void BaseCouplingScheme::setupDataMatrices()
 {
   PRECICE_TRACE();
-  PRECICE_DEBUG("Data size: " << getAccelerationData().size());
+  PRECICE_DEBUG("Data size: {}", getAccelerationData().size());
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);

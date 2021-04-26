@@ -57,10 +57,10 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     xml::configure(root, ccontext, configFilename);
 
     // some dummy mesh
-    meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
-    meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
-    meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
-    meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
+    meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+    meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
+    meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
+    meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
 
     m2n::PtrM2N m2n0 = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
     m2n::PtrM2N m2n1 = m2nConfig->getM2N(nameParticipant1, nameParticipant2);
@@ -84,7 +84,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       mesh::PtrMeshConfiguration meshConfig)
   {
     BOOST_TEST(meshConfig->meshes().size() == 1);
-    mesh::PtrMesh mesh = meshConfig->meshes()[0];
+    mesh::PtrMesh mesh = meshConfig->meshes().at(0);
     BOOST_TEST(mesh->data().size() == 3);
     BOOST_TEST(mesh->vertices().size() > 0);
 

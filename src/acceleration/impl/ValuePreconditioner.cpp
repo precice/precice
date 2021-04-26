@@ -1,5 +1,5 @@
 #include "acceleration/impl/ValuePreconditioner.hpp"
-#include <stddef.h>
+#include <cstddef>
 #include <vector>
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"

@@ -53,32 +53,32 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
       action::SummationAction::WRITE_MAPPING_PRIOR, sourceDataIDs, targetDataID, mesh);
 
   sum.performAction(0.0, 0.25, 0.0, 0.25);
-  BOOST_TEST(sourceValues1[0] == 2.0);
-  BOOST_TEST(sourceValues1[1] == 3.0);
-  BOOST_TEST(sourceValues1[2] == 4.0);
-  BOOST_TEST(sourceValues2[0] == 1.0);
-  BOOST_TEST(sourceValues2[1] == 2.0);
-  BOOST_TEST(sourceValues2[2] == 3.0);
-  BOOST_TEST(sourceValues3[0] == 2.0);
-  BOOST_TEST(sourceValues3[1] == 3.0);
-  BOOST_TEST(sourceValues3[2] == 4.0);
-  BOOST_TEST(targetValues[0] == 5.0);
-  BOOST_TEST(targetValues[1] == 8.0);
-  BOOST_TEST(targetValues[2] == 11.0);
+  BOOST_TEST(sourceValues1(0) == 2.0);
+  BOOST_TEST(sourceValues1(1) == 3.0);
+  BOOST_TEST(sourceValues1(2) == 4.0);
+  BOOST_TEST(sourceValues2(0) == 1.0);
+  BOOST_TEST(sourceValues2(1) == 2.0);
+  BOOST_TEST(sourceValues2(2) == 3.0);
+  BOOST_TEST(sourceValues3(0) == 2.0);
+  BOOST_TEST(sourceValues3(1) == 3.0);
+  BOOST_TEST(sourceValues3(2) == 4.0);
+  BOOST_TEST(targetValues(0) == 5.0);
+  BOOST_TEST(targetValues(1) == 8.0);
+  BOOST_TEST(targetValues(2) == 11.0);
 
   sum.performAction(0.0, 0.25, 0.25, 0.25);
-  BOOST_TEST(sourceValues1[0] == 2.0);
-  BOOST_TEST(sourceValues1[1] == 3.0);
-  BOOST_TEST(sourceValues1[2] == 4.0);
-  BOOST_TEST(sourceValues2[0] == 1.0);
-  BOOST_TEST(sourceValues2[1] == 2.0);
-  BOOST_TEST(sourceValues2[2] == 3.0);
-  BOOST_TEST(sourceValues3[0] == 2.0);
-  BOOST_TEST(sourceValues3[1] == 3.0);
-  BOOST_TEST(sourceValues3[2] == 4.0);
-  BOOST_TEST(targetValues[0] == 5.0);
-  BOOST_TEST(targetValues[1] == 8.0);
-  BOOST_TEST(targetValues[2] == 11.0);
+  BOOST_TEST(sourceValues1(0) == 2.0);
+  BOOST_TEST(sourceValues1(1) == 3.0);
+  BOOST_TEST(sourceValues1(2) == 4.0);
+  BOOST_TEST(sourceValues2(0) == 1.0);
+  BOOST_TEST(sourceValues2(1) == 2.0);
+  BOOST_TEST(sourceValues2(2) == 3.0);
+  BOOST_TEST(sourceValues3(0) == 2.0);
+  BOOST_TEST(sourceValues3(1) == 3.0);
+  BOOST_TEST(sourceValues3(2) == 4.0);
+  BOOST_TEST(targetValues(0) == 5.0);
+  BOOST_TEST(targetValues(1) == 8.0);
+  BOOST_TEST(targetValues(2) == 11.0);
 }
 
 BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
@@ -107,41 +107,41 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
       action::SummationAction::WRITE_MAPPING_PRIOR, sourceDataIDs, targetDataID, mesh);
 
   sum.performAction(0.0, 0.25, 0.0, 0.25);
-  BOOST_TEST(sourceValues1[0] == 1.0);
-  BOOST_TEST(sourceValues2[0] == 2.0);
-  BOOST_TEST(targetValues[0] == 3.0);
+  BOOST_TEST(sourceValues1(0) == 1.0);
+  BOOST_TEST(sourceValues2(0) == 2.0);
+  BOOST_TEST(targetValues(0) == 3.0);
 
-  BOOST_TEST(sourceValues1[1] == 2.0);
-  BOOST_TEST(sourceValues2[1] == 3.0);
-  BOOST_TEST(targetValues[1] == 5.0);
+  BOOST_TEST(sourceValues1(1) == 2.0);
+  BOOST_TEST(sourceValues2(1) == 3.0);
+  BOOST_TEST(targetValues(1) == 5.0);
 
-  BOOST_TEST(sourceValues1[2] == 3.0);
-  BOOST_TEST(sourceValues2[2] == 4.0);
-  BOOST_TEST(targetValues[2] == 7.0);
+  BOOST_TEST(sourceValues1(2) == 3.0);
+  BOOST_TEST(sourceValues2(2) == 4.0);
+  BOOST_TEST(targetValues(2) == 7.0);
 
-  BOOST_TEST(sourceValues1[3] == 4.0);
-  BOOST_TEST(sourceValues2[3] == 5.0);
-  BOOST_TEST(targetValues[3] == 9.0);
+  BOOST_TEST(sourceValues1(3) == 4.0);
+  BOOST_TEST(sourceValues2(3) == 5.0);
+  BOOST_TEST(targetValues(3) == 9.0);
 
-  BOOST_TEST(sourceValues1[4] == 5.0);
-  BOOST_TEST(sourceValues2[4] == 6.0);
-  BOOST_TEST(targetValues[4] == 11.0);
+  BOOST_TEST(sourceValues1(4) == 5.0);
+  BOOST_TEST(sourceValues2(4) == 6.0);
+  BOOST_TEST(targetValues(4) == 11.0);
 
-  BOOST_TEST(sourceValues1[5] == 6.0);
-  BOOST_TEST(sourceValues2[5] == 7.0);
-  BOOST_TEST(targetValues[5] == 13.0);
+  BOOST_TEST(sourceValues1(5) == 6.0);
+  BOOST_TEST(sourceValues2(5) == 7.0);
+  BOOST_TEST(targetValues(5) == 13.0);
 
-  BOOST_TEST(sourceValues1[6] == 7.0);
-  BOOST_TEST(sourceValues2[6] == 8.0);
-  BOOST_TEST(targetValues[6] == 15.0);
+  BOOST_TEST(sourceValues1(6) == 7.0);
+  BOOST_TEST(sourceValues2(6) == 8.0);
+  BOOST_TEST(targetValues(6) == 15.0);
 
-  BOOST_TEST(sourceValues1[7] == 8.0);
-  BOOST_TEST(sourceValues2[7] == 9.0);
-  BOOST_TEST(targetValues[7] == 17.0);
+  BOOST_TEST(sourceValues1(7) == 8.0);
+  BOOST_TEST(sourceValues2(7) == 9.0);
+  BOOST_TEST(targetValues(7) == 17.0);
 
-  BOOST_TEST(sourceValues1[8] == 9.0);
-  BOOST_TEST(sourceValues2[8] == 10.0);
-  BOOST_TEST(targetValues[8] == 19.0);
+  BOOST_TEST(sourceValues1(8) == 9.0);
+  BOOST_TEST(sourceValues2(8) == 10.0);
+  BOOST_TEST(targetValues(8) == 19.0);
 }
 
 BOOST_AUTO_TEST_CASE(Configuration)
@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(Configuration)
   action::ActionConfiguration config(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, filename);
   BOOST_TEST(config.actions().size() == 1);
-  action::PtrAction action = config.actions().front();
-  BOOST_TEST(action);
+  auto &action = config.actions().front();
+  BOOST_TEST(static_cast<bool>(action));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Summation

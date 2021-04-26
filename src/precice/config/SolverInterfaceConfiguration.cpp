@@ -31,17 +31,17 @@ SolverInterfaceConfiguration::SolverInterfaceConfiguration(xml::XMLTag &parent)
                             .setOptions({2, 3});
   tag.addAttribute(attrDimensions);
 
-  _dataConfiguration = mesh::PtrDataConfiguration(
-      new mesh::DataConfiguration(tag));
-  _meshConfiguration = mesh::PtrMeshConfiguration(
-      new mesh::MeshConfiguration(tag, _dataConfiguration));
-  _m2nConfiguration = m2n::M2NConfiguration::SharedPointer(
-      new m2n::M2NConfiguration(tag));
-  _participantConfiguration = config::PtrParticipantConfiguration(
-      new ParticipantConfiguration(tag, _meshConfiguration));
-  _couplingSchemeConfiguration = cplscheme::PtrCouplingSchemeConfiguration(
-      new cplscheme::CouplingSchemeConfiguration(tag, _meshConfiguration,
-                                                 _m2nConfiguration));
+  _dataConfiguration = std::make_shared<mesh::DataConfiguration>(
+      tag);
+  _meshConfiguration = std::make_shared<mesh::MeshConfiguration>(
+      tag, _dataConfiguration);
+  _m2nConfiguration = std::make_shared<m2n::M2NConfiguration>(
+      tag);
+  _participantConfiguration = std::make_shared<ParticipantConfiguration>(
+      tag, _meshConfiguration);
+  _couplingSchemeConfiguration = std::make_shared<cplscheme::CouplingSchemeConfiguration>(
+      tag, _meshConfiguration,
+      _m2nConfiguration);
 
   parent.addSubtag(tag);
 }
@@ -76,8 +76,9 @@ void SolverInterfaceConfiguration::xmlEndTagCallback(
           for (const std::string &neededMesh : neededMeshes.second) {
             const impl::MeshContext *meshContext = participant->usedMeshContextByName(neededMesh);
             PRECICE_CHECK(meshContext != nullptr,
-                          "Participant \"" << neededMeshes.first << "\" needs to use the mesh \"" << neededMesh << "\" to be able to use it in the coupling scheme. "
-                                           << "Please either add a use-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.");
+                          "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
+                          "Please either add a use-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.",
+                          neededMeshes.first, neededMesh);
           }
           participantFound = true;
           break;

@@ -162,17 +162,17 @@ public:
    */
   void update(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res)
   {
-    PRECICE_TRACE(_nbNonConstTimesteps, _freezed);
+    PRECICE_TRACE(_nbNonConstTimesteps, _frozen);
 
     // if number of allowed non-const time steps is exceeded, do not update weights
-    if (_freezed)
+    if (_frozen)
       return;
 
     // increment number of time steps that has been scaled with changing preconditioning weights
     if (timestepComplete) {
       _nbNonConstTimesteps++;
       if (_nbNonConstTimesteps >= _maxNonConstTimesteps && _maxNonConstTimesteps > 0)
-        _freezed = true;
+        _frozen = true;
     }
 
     // type specific update functionality
@@ -199,7 +199,7 @@ public:
 
   bool isConst()
   {
-    return _freezed;
+    return _frozen;
   }
 
 protected:
@@ -213,7 +213,7 @@ protected:
   std::vector<size_t> _subVectorSizes;
 
   /** @brief maximum number of non-const time steps, i.e., after this number of time steps,
-   *  the preconditioner is freezed with the current weights and becomes a constant preconditioner
+   *  the preconditioner is frozen with the current weights and becomes a constant preconditioner
    */
   int _maxNonConstTimesteps;
 
@@ -224,7 +224,7 @@ protected:
   bool _requireNewQR = false;
 
   /// True if _nbNonConstTimesteps >= _maxNonConstTimesteps, i.e., preconditioner is not updated any more.
-  bool _freezed = false;
+  bool _frozen = false;
 
   /**
    * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)

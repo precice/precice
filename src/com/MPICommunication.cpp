@@ -1,8 +1,8 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPICommunication.hpp"
+#include <cstddef>
 #include <ostream>
-#include <stddef.h>
 #include "MPIRequest.hpp"
 #include "logging/LogMacros.hpp"
 
@@ -200,7 +200,7 @@ void MPICommunication::receive(std::string &itemToReceive, int rankSender)
   MPI_Status status;
   MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
   MPI_Get_count(&status, MPI_CHAR, &length);
-  PRECICE_DEBUG("Stringlength = " << length);
+  PRECICE_DEBUG("Stringlength = {}", length);
   itemToReceive = std::string(length, '\0');
   MPI_Recv(const_cast<char *>(itemToReceive.data()),
            length,
@@ -209,7 +209,7 @@ void MPICommunication::receive(std::string &itemToReceive, int rankSender)
            0,
            communicator(rankSender),
            MPI_STATUS_IGNORE);
-  PRECICE_DEBUG("Received \"" << itemToReceive << "\" from rank " << rankSender);
+  PRECICE_DEBUG("Received \"{}\" from rank {}", itemToReceive, rankSender);
 }
 
 void MPICommunication::receive(int *itemsToReceive, int size, int rankSender)
@@ -289,7 +289,7 @@ void MPICommunication::receive(double &itemToReceive, int rankSender)
            0,
            communicator(rankSender),
            &status);
-  PRECICE_DEBUG("Received " << itemToReceive << " from rank " << rankSender);
+  PRECICE_DEBUG("Received {} from rank {}", itemToReceive, rankSender);
 }
 
 PtrRequest MPICommunication::aReceive(double &itemToReceive, int rankSender)
@@ -310,7 +310,7 @@ void MPICommunication::receive(int &itemToReceive, int rankSender)
            0,
            communicator(rankSender),
            &status);
-  PRECICE_DEBUG("Received " << itemToReceive << " from rank " << rankSender);
+  PRECICE_DEBUG("Received {} from rank {}", itemToReceive, rankSender);
 }
 
 PtrRequest MPICommunication::aReceive(int &itemToReceive, int rankSender)
@@ -343,7 +343,7 @@ void MPICommunication::receive(bool &itemToReceive, int rankSender)
            0,
            communicator(rankSender),
            &status);
-  PRECICE_DEBUG("Received " << itemToReceive << " from rank " << rankSender);
+  PRECICE_DEBUG("Received {} from rank {}", itemToReceive, rankSender);
 }
 
 PtrRequest MPICommunication::aReceive(bool &itemToReceive, int rankSender)

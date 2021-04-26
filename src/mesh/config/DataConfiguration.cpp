@@ -11,22 +11,20 @@ namespace mesh {
 DataConfiguration::DataConfiguration(xml::XMLTag &parent)
 {
   using namespace xml;
-  std::string doc;
-  XMLTag      tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
-  doc = "Defines a scalar data set to be assigned to meshes.";
-  tagScalar.setDocumentation(doc);
-  XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
-  doc = "Defines a vector data set to be assigned to meshes. The number of ";
-  doc += "components of each data entry depends on the spatial dimensions set ";
-  doc += "in tag <solver-interface>.";
-  tagVector.setDocumentation(doc);
 
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)
                       .setDocumentation("Unique name for the data set.");
-  tagScalar.addAttribute(attrName);
-  tagVector.addAttribute(attrName);
 
+  XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
+  tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
+  tagScalar.addAttribute(attrName);
   parent.addSubtag(tagScalar);
+
+  XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
+  tagVector.setDocumentation("Defines a vector data set to be assigned to meshes. The number of "
+                             "components of each data entry depends on the spatial dimensions set "
+                             "in tag <solver-interface>.");
+  tagVector.addAttribute(attrName);
   parent.addSubtag(tagVector);
 }
 
@@ -81,7 +79,9 @@ void DataConfiguration::addData(
 
   // Check if data with same name has been added already
   for (auto &elem : _data) {
-    PRECICE_CHECK(elem.name != data.name, "Data \"" << data.name << "\" has already been defined. Please rename or remove one of the data tags with name=\"" << data.name << "\".");
+    PRECICE_CHECK(elem.name != data.name,
+                  "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
+                  data.name);
   }
   _data.push_back(data);
 }
@@ -94,7 +94,8 @@ int DataConfiguration::getDataDimensions(
   } else if (typeName == VALUE_SCALAR) {
     return 1;
   }
-  PRECICE_ASSERT(false, "Unknown data type \"" << typeName << "\". Known data types: " << VALUE_SCALAR << ", " << VALUE_VECTOR << ".");
+  // We should never reach this point
+  PRECICE_UNREACHABLE("Unknown data type \"" << typeName << "\". Known data types: ");
 }
 
 } // namespace mesh

@@ -50,15 +50,14 @@ ActionConfiguration::ActionConfiguration(
       _meshConfig(meshConfig)
 {
   using namespace xml;
-  std::string doc;
-  XMLTag      tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
+  XMLTag tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
   tagSourceData.setDocumentation("Single data to read from. ");
   XMLTag tagMultipleSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE_OR_MORE);
   tagMultipleSourceData.setDocumentation("Multiple data to read from.");
   XMLTag tagTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_ONCE);
   tagTargetData.setDocumentation("Data to read from and write to.");
 
-  auto attrName = XMLAttribute<std::string>(ATTR_NAME).setDocumentation("Name of data.");
+  auto attrName = XMLAttribute<std::string>(ATTR_NAME).setDocumentation("Name of the data.");
   tagSourceData.addAttribute(attrName);
   tagMultipleSourceData.addAttribute(attrName);
   tagTargetData.addAttribute(attrName);
@@ -67,50 +66,43 @@ ActionConfiguration::ActionConfiguration(
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   {
     XMLTag tag(*this, NAME_MULTIPLY_BY_AREA, occ, TAG);
-    doc = "Multiplies data values with mesh area associated to vertex holding the value.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Multiplies data values with mesh area associated to vertex holding the value.");
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, NAME_DIVIDE_BY_AREA, occ, TAG);
-    doc = "Divides data values by mesh area associated to vertex holding the value.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Divides data values by mesh area associated to vertex holding the value.");
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, NAME_SCALE_BY_COMPUTED_DT_RATIO, occ, TAG);
-    doc = "Multiplies source data values by ratio of full dt / last computed dt,";
-    doc += " and writes the result into target data.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Multiplies source data values by ratio of full dt / last computed dt,"
+                         " and writes the result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, NAME_SCALE_BY_COMPUTED_DT_PART_RATIO, occ, TAG);
-    doc = "Multiplies source data values by ratio of full dt / computed dt part,";
-    doc += " and writes the result into target data.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Multiplies source data values by ratio of full dt / computed dt part,"
+                         " and writes the result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, NAME_SCALE_BY_DT, occ, TAG);
-    doc = "Multiplies source data values by last computed dt, and writes the ";
-    doc += "result into target data.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Multiplies source data values by last computed dt, and writes the "
+                         "result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, NAME_SUMMATION, occ, TAG);
-    doc = "Sums up multiple source data values and writes the result into ";
-    doc += "target data.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Sums up multiple source data values and writes the result into target data.");
     tag.addSubtag(tagMultipleSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
@@ -128,40 +120,39 @@ ActionConfiguration::ActionConfiguration(
   }
   {
     XMLTag tag(*this, NAME_PYTHON, occ, TAG);
-    doc = "Calls Python script to execute action.";
-    doc += " See preCICE file \"src/action/PythonAction.py\" for an overview.";
-    tag.setDocumentation(doc);
+    tag.setDocumentation("Calls Python script to execute action."
+                         " See preCICE file \"src/action/PythonAction.py\" for an overview.");
+
     XMLTag tagModulePath(*this, TAG_MODULE_PATH, XMLTag::OCCUR_NOT_OR_ONCE);
-    doc = "Directory path to Python module, i.e. script file.";
-    doc = " If it doesn't occur, the current path is used";
-    tagModulePath.setDocumentation(doc);
-    XMLTag tagModule(*this, TAG_MODULE_NAME, XMLTag::OCCUR_ONCE);
-    doc = "Name of Python module, i.e. Python script file without file ending. ";
-    doc += "The module name has to differ from existing (library) modules, ";
-    doc += "otherwise, the existing module will be loaded instead of the user script.";
-    tagModule.setDocumentation(doc);
-    tagModulePath.addAttribute(makeXMLAttribute(ATTR_NAME, ""));
-    tagModule.addAttribute(attrName);
+    tagModulePath.setDocumentation("Directory path to Python module, i.e. script file."
+                                   " If it doesn't occur, the current path is used");
+    tagModulePath.addAttribute(makeXMLAttribute(ATTR_NAME, "").setDocumentation("The path to the directory of the module."));
     tag.addSubtag(tagModulePath);
+
+    XMLTag tagModule(*this, TAG_MODULE_NAME, XMLTag::OCCUR_ONCE);
+    tagModule.setDocumentation("Name of Python module, i.e. Python script file without file ending. "
+                               "The module name has to differ from existing (library) modules, "
+                               "otherwise, the existing module will be loaded instead of the user script.");
+    tagModule.addAttribute(attrName);
     tag.addSubtag(tagModule);
+
     XMLTag tagOptionalSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_NOT_OR_ONCE);
-    doc = "Source data to be read is handed to the Python module.";
-    doc += " Can be omitted, if only a target data is needed.";
-    tagOptionalSourceData.setDocumentation(doc);
-    XMLTag tagOptionalTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_NOT_OR_ONCE);
-    doc = "Target data to be read and written to is handed to the Python module.";
-    doc = " Can be omitted, if only source data is needed.";
-    tagOptionalTargetData.setDocumentation(doc);
+    tagOptionalSourceData.setDocumentation("Source data to be read is handed to the Python module."
+                                           " Can be omitted, if only a target data is needed.");
     tagOptionalSourceData.addAttribute(attrName);
-    tagOptionalTargetData.addAttribute(attrName);
     tag.addSubtag(tagOptionalSourceData);
+
+    XMLTag tagOptionalTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_NOT_OR_ONCE);
+    tagOptionalTargetData.setDocumentation("Target data to be read and written to is handed to the Python module."
+                                           " Can be omitted, if only source data is needed.");
+    tagOptionalTargetData.addAttribute(attrName);
     tag.addSubtag(tagOptionalTargetData);
+
     tags.push_back(tag);
   }
 
   auto attrTiming = XMLAttribute<std::string>(ATTR_TIMING)
-                        .setDocumentation(
-                            "Determines when (relative to advancing the coupling scheme) the action is executed.")
+                        .setDocumentation("Determines when (relative to advancing the coupling scheme) the action is executed.")
                         .setOptions({VALUE_REGULAR_PRIOR, VALUE_REGULAR_POST,
                                      VALUE_ON_EXCHANGE_PRIOR, VALUE_ON_EXCHANGE_POST,
                                      VALUE_ON_TIME_WINDOW_COMPLETE_POST, WRITE_MAPPING_PRIOR, WRITE_MAPPING_POST,
@@ -219,7 +210,7 @@ int ActionConfiguration::getUsedMeshID() const
       return mesh->getID();
     }
   }
-  PRECICE_ERROR("No mesh name \"" << _configuredAction.mesh << "\" found. Please check that the correct mesh name is used.");
+  PRECICE_ERROR("No mesh name \"{}\" found. Please check that the correct mesh name is used.", _configuredAction.mesh);
   return -1; // To please compiler
 }
 
@@ -248,23 +239,25 @@ void ActionConfiguration::createAction()
     }
   }
   PRECICE_CHECK(mesh,
-                "Data action uses mesh \"" << _configuredAction.mesh << "\" which is not configured. Please ensure that the correct mesh name is given in <action:python mesh=\"...\">");
+                "Data action uses mesh \"{}\" which is not configured. Please ensure that the correct mesh name is given in <action:python mesh=\"...\">", _configuredAction.mesh);
   PRECICE_CHECK((_configuredAction.sourceDataVector.empty() || not sourceDataIDs.empty()),
-                "Data action uses source data \"" << _configuredAction.sourceDataVector.back() << "\" which is not configured. Please ensure that the source data name is used by the mesh.");
+                "Data action uses source data \"{}\" which is not configured. Please ensure that the source data name is used by the mesh.", _configuredAction.sourceDataVector.back());
   PRECICE_CHECK((_configuredAction.targetData.empty() || (targetDataID != -1)),
-                "Data action uses target data \"" << _configuredAction.targetData << "\" which is not configured. Please ensure that the target data name is used by the mesh");
+                "Data action uses target data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh", _configuredAction.targetData);
   action::PtrAction action;
   if (_configuredAction.type == NAME_MULTIPLY_BY_AREA) {
     PRECICE_CHECK(mesh->getDimensions() == 2,
-                  "The action \"" << NAME_MULTIPLY_BY_AREA << "\" is only available for a solverinterface dimensionality of 2. "
-                                                              "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.");
+                  "The action \"{}\" is only available for a solverinterface dimensionality of 2. "
+                  "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.",
+                  NAME_MULTIPLY_BY_AREA);
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_MULTIPLY_BY_AREA));
   } else if (_configuredAction.type == NAME_DIVIDE_BY_AREA) {
     PRECICE_CHECK(mesh->getDimensions() == 2,
-                  "The action \"" << NAME_DIVIDE_BY_AREA << "\" is only available for a solverinterface dimensionality of 2. "
-                                                            "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.");
+                  "The action \"{}\" is only available for a solverinterface dimensionality of 2. "
+                  "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.",
+                  NAME_DIVIDE_BY_AREA);
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
@@ -299,7 +292,7 @@ void ActionConfiguration::createAction()
   }
 #endif
   PRECICE_ASSERT(action.get() != nullptr);
-  _actions.push_back(action);
+  _actions.push_back(std::move(action));
 }
 
 action::Action::Timing ActionConfiguration::getTiming() const
@@ -333,8 +326,9 @@ action::Action::Timing ActionConfiguration::getTiming() const
   } else if (_configuredAction.timing == READ_MAPPING_POST) {
     timing = action::Action::READ_MAPPING_POST;
   } else {
-    PRECICE_ERROR("Unknown action timing \"" << _configuredAction.timing << "\". Valid action timings are "
-                                             << "regular-prior, regular-post, on-exchange-prior, on-exchange-post, on-time-window-complete-post");
+    PRECICE_ERROR("Unknown action timing \"{}\". "
+                  "Valid action timings are regular-prior, regular-post, on-exchange-prior, on-exchange-post, on-time-window-complete-post",
+                  _configuredAction.timing);
   }
   return timing;
 }

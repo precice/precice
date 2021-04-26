@@ -34,20 +34,20 @@ BOOST_AUTO_TEST_CASE(Configuration)
 
   BOOST_TEST(meshConfig->meshes().size() == 3);
   BOOST_TEST(mappingConfig.mappings().size() == 3);
-  BOOST_TEST(mappingConfig.mappings()[0].timing == MappingConfiguration::ON_DEMAND);
-  BOOST_TEST(mappingConfig.mappings()[0].fromMesh == meshConfig->meshes()[0]);
-  BOOST_TEST(mappingConfig.mappings()[0].toMesh == meshConfig->meshes()[2]);
-  BOOST_TEST(mappingConfig.mappings()[0].direction == MappingConfiguration::WRITE);
+  BOOST_TEST(mappingConfig.mappings().at(0).timing == MappingConfiguration::ON_DEMAND);
+  BOOST_TEST(mappingConfig.mappings().at(0).fromMesh == meshConfig->meshes().at(0));
+  BOOST_TEST(mappingConfig.mappings().at(0).toMesh == meshConfig->meshes().at(2));
+  BOOST_TEST(mappingConfig.mappings().at(0).direction == MappingConfiguration::WRITE);
 
-  BOOST_TEST(mappingConfig.mappings()[1].timing == MappingConfiguration::INITIAL);
-  BOOST_TEST(mappingConfig.mappings()[1].fromMesh == meshConfig->meshes()[2]);
-  BOOST_TEST(mappingConfig.mappings()[1].toMesh == meshConfig->meshes()[1]);
-  BOOST_TEST(mappingConfig.mappings()[1].direction == MappingConfiguration::READ);
+  BOOST_TEST(mappingConfig.mappings().at(1).timing == MappingConfiguration::INITIAL);
+  BOOST_TEST(mappingConfig.mappings().at(1).fromMesh == meshConfig->meshes().at(2));
+  BOOST_TEST(mappingConfig.mappings().at(1).toMesh == meshConfig->meshes().at(1));
+  BOOST_TEST(mappingConfig.mappings().at(1).direction == MappingConfiguration::READ);
 
-  BOOST_TEST(mappingConfig.mappings()[2].timing == MappingConfiguration::ON_ADVANCE);
-  BOOST_TEST(mappingConfig.mappings()[2].fromMesh == meshConfig->meshes()[1]);
-  BOOST_TEST(mappingConfig.mappings()[2].toMesh == meshConfig->meshes()[0]);
-  BOOST_TEST(mappingConfig.mappings()[2].direction == MappingConfiguration::WRITE);
+  BOOST_TEST(mappingConfig.mappings().at(2).timing == MappingConfiguration::ON_ADVANCE);
+  BOOST_TEST(mappingConfig.mappings().at(2).fromMesh == meshConfig->meshes().at(1));
+  BOOST_TEST(mappingConfig.mappings().at(2).toMesh == meshConfig->meshes().at(0));
+  BOOST_TEST(mappingConfig.mappings().at(2).direction == MappingConfiguration::WRITE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

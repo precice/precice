@@ -37,12 +37,12 @@ void runSimpleExplicitCoupling(
     const mesh::MeshConfiguration &meshConfig)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
-  mesh::PtrMesh mesh = meshConfig.meshes()[0];
+  mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_TEST(mesh->data().size() == 2);
-  auto &dataValues0 = mesh->data()[0]->values();
-  auto &dataValues1 = mesh->data()[1]->values();
+  auto &dataValues0 = mesh->data().at(0)->values();
+  auto &dataValues1 = mesh->data().at(1)->values();
   BOOST_TEST(mesh->vertices().size() > 0);
-  mesh::Vertex &  vertex     = mesh->vertices()[0];
+  mesh::Vertex &  vertex     = mesh->vertices().at(0);
   double          valueData0 = 1.0;
   Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0);
 
@@ -114,7 +114,7 @@ void runSimpleExplicitCoupling(
         // The participant not starting the coupled simulation does neither
         // receive nor send data in the last call to advance
         BOOST_TEST(cplScheme.hasDataBeenReceived());
-        double value = dataValues0[vertex.getID()];
+        double value = dataValues0(vertex.getID());
         BOOST_TEST(testing::equals(value, valueData0));
       }
       valueData0 += 1.0;
@@ -138,14 +138,14 @@ void runExplicitCouplingWithSubcycling(
     const mesh::MeshConfiguration &meshConfig)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
-  mesh::PtrMesh mesh = meshConfig.meshes()[0];
+  mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_TEST(mesh->data().size() == 2);
   BOOST_TEST(mesh->vertices().size() > 0);
-  mesh::Vertex &  vertex      = mesh->vertices()[0];
+  mesh::Vertex &  vertex      = mesh->vertices().at(0);
   double          valueData0  = 1.0;
   Eigen::VectorXd valueData1  = Eigen::VectorXd::Constant(3, 1.0);
-  auto &          dataValues0 = mesh->data()[0]->values();
-  auto &          dataValues1 = mesh->data()[1]->values();
+  auto &          dataValues0 = mesh->data().at(0)->values();
+  auto &          dataValues1 = mesh->data().at(1)->values();
 
   double      computedTime      = 0.0;
   int         computedTimesteps = 0;
@@ -313,8 +313,8 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
+  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, false);
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
 }
 
@@ -342,11 +342,11 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling)
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
-  meshConfig->meshes()[0]->allocateDataValues();
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
+  meshConfig->meshes().at(0)->allocateDataValues();
 
   connect(nameParticipant0, nameParticipant1, context.name, m2n);
   runSimpleExplicitCoupling(*cplSchemeConfig.getCouplingScheme(context.name),
@@ -376,11 +376,11 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
-  meshConfig->meshes()[0]->allocateDataValues();
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(2.0, 1.0, -1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(4.0, 1.0, -1.0));
+  meshConfig->meshes().at(0)->allocateDataValues();
 
   connect(nameParticipant0, nameParticipant1, context.name, m2n);
   CouplingScheme &cplScheme = *cplSchemeConfig.getCouplingScheme(context.name);
@@ -458,21 +458,21 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(2.0, -1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(3.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(4.0, -1.0));
-  meshConfig->meshes()[0]->allocateDataValues();
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector2d(1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector2d(2.0, -1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector2d(3.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector2d(4.0, -1.0));
+  meshConfig->meshes().at(0)->allocateDataValues();
 
   connect(nameParticipant0, nameParticipant1, context.name, m2n);
   CouplingScheme &cplScheme = *cplSchemeConfig.getCouplingScheme(context.name);
 
   BOOST_TEST(meshConfig->meshes().size() == 1);
-  mesh::PtrMesh mesh = meshConfig->meshes()[0];
+  mesh::PtrMesh mesh = meshConfig->meshes().at(0);
   BOOST_TEST(mesh->data().size() == 3);
-  auto &dataValues0 = mesh->data()[0]->values();
-  auto &dataValues1 = mesh->data()[1]->values();
-  auto &dataValues2 = mesh->data()[2]->values();
+  auto &dataValues0 = mesh->data().at(0)->values();
+  auto &dataValues1 = mesh->data().at(1)->values();
+  auto &dataValues2 = mesh->data().at(2)->values();
 
   if (context.isNamed(nameParticipant0)) {
     cplScheme.initialize(0.0, 1);
@@ -526,21 +526,21 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
 
   // some dummy mesh
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(2.0, -1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(3.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector2d(4.0, -1.0));
-  meshConfig->meshes()[0]->allocateDataValues();
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector2d(1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector2d(2.0, -1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector2d(3.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector2d(4.0, -1.0));
+  meshConfig->meshes().at(0)->allocateDataValues();
 
   connect(nameParticipant0, nameParticipant1, context.name, m2n);
   CouplingScheme &cplScheme = *cplSchemeConfig.getCouplingScheme(context.name);
 
   BOOST_TEST(meshConfig->meshes().size() == 1);
-  mesh::PtrMesh mesh = meshConfig->meshes()[0];
+  mesh::PtrMesh mesh = meshConfig->meshes().at(0);
   BOOST_TEST(mesh->data().size() == 3);
-  auto &dataValues0 = mesh->data()[0]->values();
-  auto &dataValues1 = mesh->data()[1]->values();
-  auto &dataValues2 = mesh->data()[2]->values();
+  auto &dataValues0 = mesh->data().at(0)->values();
+  auto &dataValues1 = mesh->data().at(1)->values();
+  auto &dataValues2 = mesh->data().at(2)->values();
 
   if (context.isNamed(nameParticipant0)) {
     cplScheme.initialize(0.0, 1);
@@ -616,8 +616,8 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, false);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, false);
+  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, false);
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
 }
 
@@ -644,11 +644,11 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling)
   xml::configure(root, ccontext, configurationPath);
   m2n::PtrM2N m2n = m2nConfig->getM2N(nameParticipant0, nameParticipant1);
   // some dummy mesh
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(2.0, -1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
-  meshConfig->meshes()[0]->createVertex(Eigen::Vector3d(4.0, -1.0, 1.0));
-  meshConfig->meshes()[0]->allocateDataValues();
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(2.0, -1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
+  meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(4.0, -1.0, 1.0));
+  meshConfig->meshes().at(0)->allocateDataValues();
 
   connect(nameParticipant0, nameParticipant1, context.name, m2n);
   runExplicitCouplingWithSubcycling(

@@ -19,8 +19,9 @@ ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
       _dataIDs(dataIDs)
 {
   PRECICE_CHECK((relaxation > 0.0) && (relaxation <= 1.0),
-                "Relaxation factor for constant relaxation acceleration "
-                    << "has to be larger than zero and smaller or equal to one. Current relaxation factor is: " << relaxation);
+                "Relaxation factor for constant relaxation acceleration has to be larger than zero and smaller or equal to one. "
+                "Current relaxation factor is: {}",
+                relaxation);
 }
 
 void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
@@ -42,7 +43,7 @@ void ConstantRelaxationAcceleration::performAcceleration(DataMap &cplData)
     const auto &oldValues = pair.second->lastIteration;
     values *= omega;
     values += oldValues * oneMinusOmega;
-    PRECICE_DEBUG("pp values" << values);
+    PRECICE_DEBUG("pp values {}", values);
   }
 }
 

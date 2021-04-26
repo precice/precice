@@ -1,6 +1,46 @@
 # preCICE Change Log
 
-All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
+All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
+
+## 2.2.0
+
+- Added a file sink to the test runner, which additionally writes the test log output to the file `test.log`.
+- Added a verbose log file `test.debug.log` to tests. Submitting this file alongside bug reports will significantly simplify debugging the tests.
+- Added check for user-defined python actions.
+- Added check to ensure `advance()` isn't called with invalid timestep size.
+- Added error message for incorrectly configured acceleration data in a serial implicit coupling scheme.
+- Added missing documentation to XML tags and attributes.
+- Added support for `BUILD_TESTING`, which may be used to disable the compilation and execution of the tests.
+- Added support for escaped characters in XML.
+- Added the build configuration (Release/Debug) to the preCICE startup statement and inform the user when `Debug` an `Trace` logs are not available.
+- Added watch-integral functionality to, for instance, compute total force, total stress, or flow rate at coupling mesh.
+- Changed an error to a warning when all sub-vectors of the residual-sum preconditioner are numerically zero.
+- Changed the CMake FindPETSc module to a robust wrapper based on pkg-config. The new method is more robust and simplifies the compilation of preCICE in e.g. SLURM jobs.
+- Changed the log format for tests. They now contain the participant name and are `|`-separated.
+- Clarified the wording of errors messages in data access functions. They now refer to vertex IDs instead of indices.
+- Deprecated API method `getMeshIDs`. Call `getMeshID` for specific mesh names instead. This method will be removed in a future release.
+- Extended configuration and repartitioning to allow the user to define multiple mappings from and/or to the same mesh.
+- Fixed MacOS compilation and test errors.
+- Fixed a bug in ReceivedPartition which led to problems when coupling multiple participants.
+- Fixed a bug in the configuration of Aitken underrelexation.
+- Fixed an issue when running the tests with Intel MPI.
+- Fixed an occasional issue solving the system matrix in PETSc-based RBF mappings.
+- Fixed boost log_level issues on MacOS.
+- Fixed compilation error emitted by intel compilers.
+- Fixed cryptic assertion for forgetting the max-iterations tag. Now max-iterations is enforced in the configuration. 
+- Fixed indexing bug in solverdummies.
+- Fixed input checks for data access functions.
+- Fixed interleaved assertion output.
+- Fixed parameter type of operator"" in TestContext, which was a system-dependant error.
+- Fixed parsing error on systems without locales installed. This fixes issues when running preCICE in minimal docker containers.
+- Fixed syntax of the Fortran function `precicef_get_mesh_vertex_size_`, which lead to incorrect name de-mangling.
+- Fixed the data type and precision in exported VTK files.
+- Fixed two wrong assertions in QR factorization, which did not allow meshes with only a single partition. 
+- Improved checks of configuration related to data access.
+- Improved compiler compatibility of assertion.
+- Improved the error message for not exchanging data over the same mesh used for convergence measures.
+- Increased the minimum required C++ version from 11 to 14. This was triggered by `Boost.Geometry` increasing their minimum version to C++14 in Boost `1.75`.
+- Removed obsolete `trigger-solver-plot` config option.
 
 ## 2.1.1
 

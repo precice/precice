@@ -2,9 +2,9 @@
 #include <Eigen/Core>
 #include <algorithm> // std::sort
 #include <cmath>
+#include <cstddef>
 #include <iostream>
 #include <memory>
-#include <stddef.h>
 #include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "com/Communication.hpp"
@@ -245,7 +245,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   // rho_orth: the norm of the orthogonalized (but not normalized) column
   // rho0:     the norm of the initial column that is to be inserted
   if (applyFilter && (rho0 * singularityLimit > rho_orth)) {
-    PRECICE_DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: " << rho0 * singularityLimit << " > " << rho_orth);
+    PRECICE_DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: {} > {}", rho0 * singularityLimit, rho_orth);
     _cols--;
     return false;
   }
@@ -318,8 +318,6 @@ int QRFactorization::orthogonalize(
 
   if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
     PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
-  } else {
-    PRECICE_ASSERT(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            null        = false;
@@ -436,9 +434,6 @@ int QRFactorization::orthogonalize_stable(
   // serial case
   if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
     PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
-    // master-slave case
-  } else {
-    PRECICE_ASSERT(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            restart     = false;
@@ -739,7 +734,7 @@ void QRFactorization::reset(
     bool            inserted = insertColumn(k, v);
     if (not inserted) {
       k--;
-      PRECICE_DEBUG("column " << col << " has not been inserted in the QR-factorization, failed to orthogonalize.");
+      PRECICE_DEBUG("column {} has not been inserted in the QR-factorization, failed to orthogonalize.", col);
     }
   }
   PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);

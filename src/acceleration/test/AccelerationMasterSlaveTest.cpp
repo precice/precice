@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
   Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
 
-  DataMap data;
+  DataMap       data;
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
@@ -983,7 +983,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timestepsReused, filter, singularityLimit, dataIDs, prec);
 
-  mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
+  mesh::PtrData   displacements(new mesh::Data("dvalues", -1, 1));
   Eigen::VectorXd dcol1;
 
   DataMap data;

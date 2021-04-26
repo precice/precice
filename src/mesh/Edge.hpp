@@ -49,6 +49,9 @@ public:
   /// Returns the (among edges) unique ID of the edge.
   int getID() const;
 
+  /// Returns the length of the edge
+  double getLength() const;
+
   /// Returns the normal of the edge.
   const Eigen::VectorXd &getNormal() const;
 

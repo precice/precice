@@ -5,6 +5,7 @@
 #include "DataContext.hpp"
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
+#include "WatchIntegral.hpp"
 #include "WatchPoint.hpp"
 #include "action/Action.hpp"
 #include "logging/LogMacros.hpp"
@@ -51,9 +52,20 @@ void Participant::addWatchPoint(
   _watchPoints.push_back(watchPoint);
 }
 
+void Participant::addWatchIntegral(
+    const PtrWatchIntegral &watchIntegral)
+{
+  _watchIntegrals.push_back(watchIntegral);
+}
+
 std::vector<PtrWatchPoint> &Participant::watchPoints()
 {
   return _watchPoints;
+}
+
+std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
+{
+  return _watchIntegrals;
 }
 
 void Participant::useMesh(
@@ -83,10 +95,9 @@ void Participant::useMesh(
   _usedMeshContexts.push_back(context);
 
   PRECICE_CHECK(fromParticipant.empty() || (!provideMesh),
-                "Participant \"" << _name << "\" cannot receive and provide mesh \""
-                                 << mesh->getName() << "\" at the same time. "
-                                 << "Please remove all but one of the \"from\" and \"provide\" attributes in the <use-mesh name=\""
-                                 << mesh->getName() << "\"/> node of " << _name << ".");
+                "Participant \"{}\" cannot receive and provide mesh \"{}\" at the same time. "
+                "Please remove all but one of the \"from\" and \"provide\" attributes in the <use-mesh name=\"{}\"/> node of {}.",
+                _name, mesh->getName(), mesh->getName(), _name);
 }
 
 void Participant::addWriteData(
@@ -185,6 +196,14 @@ bool Participant::isMeshUsed(
   return _meshContexts[meshID] != nullptr;
 }
 
+bool Participant::isMeshProvided(
+    int meshID) const
+{
+  PRECICE_ASSERT((meshID >= 0) && (meshID < (int) _meshContexts.size()));
+  auto context = _meshContexts[meshID];
+  return (context != nullptr) && context->provideMesh;
+}
+
 bool Participant::isDataUsed(
     int dataID) const
 {
@@ -254,12 +273,11 @@ MeshContext const *Participant::usedMeshContextByName(const std::string &name) c
   return (pos == _usedMeshContexts.end()) ? nullptr : *pos;
 }
 
-void Participant::addAction(
-    const action::PtrAction &action)
+void Participant::addAction(action::PtrAction &&action)
 {
-  _actions.push_back(action);
   auto &context = meshContext(action->getMesh()->getID());
   context.require(action->getMeshRequirement());
+  _actions.push_back(std::move(action));
 }
 
 std::vector<action::PtrAction> &Participant::actions()
@@ -288,8 +306,9 @@ void Participant::checkDuplicatedUse(
 {
   PRECICE_ASSERT((int) _meshContexts.size() > mesh->getID());
   PRECICE_CHECK(_meshContexts[mesh->getID()] == nullptr,
-                "Mesh \"" << mesh->getName() << " cannot be used twice by "
-                          << "participant " << _name << ". Please remove one of the use-mesh nodes with name=\"" << mesh->getName() << "\"./>");
+                "Mesh \"{} cannot be used twice by participant {}. "
+                "Please remove one of the use-mesh nodes with name=\"{}\"./>",
+                mesh->getName(), _name, mesh->getName());
 }
 
 void Participant::checkDuplicatedData(
@@ -298,8 +317,9 @@ void Participant::checkDuplicatedData(
   PRECICE_TRACE(data->getID(), _dataContexts.size());
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size(), data->getID(), _dataContexts.size());
   PRECICE_CHECK(_dataContexts[data->getID()] == nullptr,
-                "Participant \"" << _name << "\" can read/write data \""
-                                 << data->getName() << "\" only once. Please remove any duplicate instances of write-data/read-data nodes.");
+                "Participant \"{}\" can read/write data \"{}\" only once. "
+                "Please remove any duplicate instances of write-data/read-data nodes.",
+                _name, data->getName());
 }
 
 bool Participant::useMaster()

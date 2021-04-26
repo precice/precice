@@ -37,7 +37,7 @@ bool CompositionalCouplingScheme::isInitialized() const
   for (Scheme scheme : _couplingSchemes) {
     isInitialized &= scheme.scheme->isInitialized();
   }
-  PRECICE_DEBUG("return " << isInitialized);
+  PRECICE_DEBUG("return {}", isInitialized);
   return isInitialized;
 }
 
@@ -48,7 +48,7 @@ bool CompositionalCouplingScheme::sendsInitializedData() const
   for (Scheme scheme : _couplingSchemes) {
     sendsInitializedData |= scheme.scheme->sendsInitializedData();
   }
-  PRECICE_DEBUG("return " << sendsInitializedData);
+  PRECICE_DEBUG("return {}", sendsInitializedData);
   return sendsInitializedData;
 }
 
@@ -59,7 +59,7 @@ bool CompositionalCouplingScheme::receivesInitializedData() const
   for (Scheme scheme : _couplingSchemes) {
     receivesInitializedData |= scheme.scheme->receivesInitializedData();
   }
-  PRECICE_DEBUG("return " << receivesInitializedData);
+  PRECICE_DEBUG("return {}", receivesInitializedData);
   return receivesInitializedData;
 }
 
@@ -132,7 +132,7 @@ bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimestepL
       willBeExchanged |= it->scheme->willDataBeExchanged(lastSolverTimestepLength);
     }
   }
-  PRECICE_DEBUG("return " << willBeExchanged);
+  PRECICE_DEBUG("return {}", willBeExchanged);
   return willBeExchanged;
 }
 
@@ -146,7 +146,7 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
       hasBeenReceived |= it->scheme->hasDataBeenReceived();
     }
   }
-  PRECICE_DEBUG("return " << hasBeenReceived);
+  PRECICE_DEBUG("return {}", hasBeenReceived);
   return hasBeenReceived;
 }
 
@@ -159,7 +159,7 @@ double CompositionalCouplingScheme::getTime() const
       time = std::min(time, scheme.scheme->getTime());
     }
   }
-  PRECICE_DEBUG("return " << time);
+  PRECICE_DEBUG("return {}", time);
   return time;
 }
 
@@ -172,7 +172,7 @@ int CompositionalCouplingScheme::getTimeWindows() const
       timeWindows = std::min(timeWindows, scheme.scheme->getTimeWindows());
     }
   }
-  PRECICE_DEBUG("return " << timeWindows);
+  PRECICE_DEBUG("return {}", timeWindows);
   return timeWindows;
 }
 
@@ -183,7 +183,7 @@ bool CompositionalCouplingScheme::hasTimeWindowSize() const
   for (Scheme scheme : _couplingSchemes) {
     hasIt |= scheme.scheme->hasTimeWindowSize();
   }
-  PRECICE_DEBUG("return " << hasIt);
+  PRECICE_DEBUG("return {}", hasIt);
   return hasIt;
 }
 
@@ -196,7 +196,7 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
       timeWindowSize = scheme.scheme->getTimeWindowSize();
     }
   }
-  PRECICE_DEBUG("return " << timeWindowSize);
+  PRECICE_DEBUG("return {}", timeWindowSize);
   return timeWindowSize;
 }
 
@@ -211,7 +211,7 @@ double CompositionalCouplingScheme::getThisTimeWindowRemainder() const
       }
     }
   }
-  PRECICE_DEBUG("return " << maxRemainder);
+  PRECICE_DEBUG("return {}", maxRemainder);
   return maxRemainder;
 }
 
@@ -224,7 +224,7 @@ double CompositionalCouplingScheme::getNextTimestepMaxLength() const
       maxLength = std::min(maxLength, scheme.scheme->getNextTimestepMaxLength());
     }
   }
-  PRECICE_DEBUG("return " << maxLength);
+  PRECICE_DEBUG("return {}", maxLength);
   return maxLength;
 }
 
@@ -235,7 +235,7 @@ bool CompositionalCouplingScheme::isCouplingOngoing() const
   for (Scheme scheme : _couplingSchemes) {
     isOngoing |= scheme.scheme->isCouplingOngoing();
   }
-  PRECICE_DEBUG("return " << isOngoing);
+  PRECICE_DEBUG("return {}", isOngoing);
   return isOngoing;
 }
 
@@ -246,7 +246,7 @@ bool CompositionalCouplingScheme::isTimeWindowComplete() const
   for (Scheme scheme : _couplingSchemes) {
     isComplete &= scheme.scheme->isTimeWindowComplete();
   }
-  PRECICE_DEBUG("return " << isComplete);
+  PRECICE_DEBUG("return {}", isComplete);
   return isComplete;
 }
 
@@ -260,7 +260,7 @@ bool CompositionalCouplingScheme::isActionRequired(
       isRequired |= scheme.scheme->isActionRequired(actionName);
     }
   }
-  PRECICE_DEBUG("return " << isRequired);
+  PRECICE_DEBUG("return {}", isRequired);
   return isRequired;
 }
 
@@ -371,7 +371,7 @@ bool CompositionalCouplingScheme::determineActiveCouplingSchemes()
       }
     }
   }
-  PRECICE_DEBUG("return newActiveSchemes=" << newActiveSchemes);
+  PRECICE_DEBUG("return newActiveSchemes={}", newActiveSchemes);
   return newActiveSchemes;
 }
 

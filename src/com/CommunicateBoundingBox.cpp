@@ -1,6 +1,6 @@
 #include "CommunicateBoundingBox.hpp"
+#include <cstddef>
 #include <memory>
-#include <stddef.h>
 #include <utility>
 #include "Communication.hpp"
 #include "logging/LogMacros.hpp"

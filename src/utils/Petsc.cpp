@@ -7,6 +7,7 @@
 #include <memory>
 #include <mpi.h>
 #include <numeric>
+#include <sstream>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -15,8 +16,11 @@
 #include "petsc.h"
 #include "petscdrawtypes.h"
 #include "petscis.h"
+#include "petscksp.h"
+#include "petscsystypes.h"
 #include "petscviewertypes.h"
 #include "utils/Parallel.hpp"
+
 #endif // not PRECICE_NO_PETSC
 
 namespace precice {
@@ -111,19 +115,47 @@ namespace precice {
 namespace utils {
 namespace petsc {
 
-void openViewer(PetscViewer &viewer, std::string filename, VIEWERFORMAT format, MPI_Comm comm)
-{
-  PetscErrorCode ierr = 0;
-  if (format == ASCII) {
-    ierr = PetscViewerASCIIOpen(comm, filename.c_str(), &viewer);
+struct Viewer {
+  Viewer(const std::string &filename, VIEWERFORMAT format, MPI_Comm comm)
+  {
+    PetscErrorCode ierr = 0;
+    if (format == ASCII) {
+      ierr = PetscViewerASCIIOpen(comm, filename.c_str(), &viewer);
+      CHKERRV(ierr);
+    } else if (format == BINARY) {
+      ierr = PetscViewerBinaryOpen(comm, filename.c_str(), FILE_MODE_WRITE, &viewer);
+      CHKERRV(ierr);
+      pushFormat(PETSC_VIEWER_NATIVE);
+    }
+  }
+
+  Viewer(PetscViewerType type, MPI_Comm comm)
+  {
+    PetscErrorCode ierr = 0;
+    ierr                = PetscViewerCreate(comm, &viewer);
     CHKERRV(ierr);
-  } else if (format == BINARY) {
-    ierr = PetscViewerBinaryOpen(comm, filename.c_str(), FILE_MODE_WRITE, &viewer);
-    CHKERRV(ierr);
-    ierr = PetscViewerPushFormat(viewer, PETSC_VIEWER_NATIVE);
+    ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII);
     CHKERRV(ierr);
   }
-}
+
+  ~Viewer()
+  {
+    while (popformats--) {
+      PetscViewerPopFormat(viewer);
+    }
+    PetscViewerDestroy(&viewer);
+  }
+
+  void pushFormat(PetscViewerFormat format)
+  {
+    auto ierr = PetscViewerPushFormat(viewer, format);
+    CHKERRV(ierr);
+    popformats++;
+  }
+
+  int         popformats{0};
+  PetscViewer viewer{nullptr};
+};
 
 template <class T>
 MPI_Comm getCommunicator(T obj)
@@ -330,6 +362,7 @@ void Vector::sort()
   ierr = VecGetArray(vector, &a);
   CHKERRV(ierr);
   ierr = VecGetSize(vector, &size);
+  CHKERRV(ierr);
   ierr = PetscSortReal(size, a);
   CHKERRV(ierr);
   ierr = VecRestoreArray(vector, &a);
@@ -354,23 +387,21 @@ std::pair<PetscInt, PetscInt> Vector::ownerRange() const
 
 void Vector::write(std::string filename, VIEWERFORMAT format) const
 {
-  PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  openViewer(viewer, filename, format, getCommunicator(vector));
-  VecView(vector, viewer);
-  CHKERRV(ierr);
-  PetscViewerDestroy(&viewer);
+  Viewer viewer{filename, format, getCommunicator(vector)};
+  VecView(vector, viewer.viewer);
+}
+
+double Vector::l2norm() const
+{
+  PetscReal val;
+  VecNorm(vector, NORM_2, &val);
+  return val;
 }
 
 void Vector::read(std::string filename, VIEWERFORMAT format)
 {
-  PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  openViewer(viewer, filename, format, getCommunicator(vector));
-  VecLoad(vector, viewer);
-  CHKERRV(ierr);
-  CHKERRV(ierr);
-  PetscViewerDestroy(&viewer);
+  Viewer viewer{filename, format, getCommunicator(vector)};
+  VecLoad(vector, viewer.viewer);
 }
 
 void Vector::view() const
@@ -539,58 +570,41 @@ PetscInt Matrix::blockSize() const
 void Matrix::write(std::string filename, VIEWERFORMAT format) const
 {
   PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  openViewer(viewer, filename, format, getCommunicator(matrix));
-  ierr = MatView(matrix, viewer);
+  Viewer         viewer{filename, format, getCommunicator(matrix)};
+  ierr = MatView(matrix, viewer.viewer);
   CHKERRV(ierr);
-  PetscViewerDestroy(&viewer);
 }
 
 void Matrix::read(std::string filename)
 {
   PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  openViewer(viewer, filename, BINARY, getCommunicator(matrix));
-  ierr = MatLoad(matrix, viewer);
+  Viewer         viewer{filename, BINARY, getCommunicator(matrix)};
+  ierr = MatLoad(matrix, viewer.viewer);
   CHKERRV(ierr);
-  PetscViewerDestroy(&viewer);
 }
 
 void Matrix::view() const
 {
-  PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  ierr = PetscViewerCreate(getCommunicator(matrix), &viewer);
-  CHKERRV(ierr);
-  ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII);
-  CHKERRV(ierr);
-  ierr = PetscViewerPushFormat(viewer, PETSC_VIEWER_ASCII_DENSE);
-  CHKERRV(ierr);
-  ierr = MatView(matrix, viewer);
-  CHKERRV(ierr);
-  ierr = PetscViewerPopFormat(viewer);
-  CHKERRV(ierr);
-  ierr = PetscViewerDestroy(&viewer);
+  Viewer viewer{PETSCVIEWERASCII, getCommunicator(matrix)};
+  viewer.pushFormat(PETSC_VIEWER_ASCII_DENSE);
+  PetscErrorCode ierr = MatView(matrix, viewer.viewer);
   CHKERRV(ierr);
 }
 
 void Matrix::viewDraw() const
 {
-  PetscErrorCode ierr = 0;
-  PetscViewer    viewer;
-  PetscDraw      draw;
-  ierr = PetscViewerCreate(getCommunicator(matrix), &viewer);
+  Viewer viewer{PETSCVIEWERDRAW, getCommunicator(matrix)};
+  viewer.pushFormat(PETSC_VIEWER_ASCII_DENSE);
+  PetscErrorCode ierr = MatView(matrix, viewer.viewer);
   CHKERRV(ierr);
-  ierr = PetscViewerSetType(viewer, PETSCVIEWERDRAW);
+  ierr = MatView(matrix, viewer.viewer);
   CHKERRV(ierr);
-  ierr = MatView(matrix, viewer);
-  CHKERRV(ierr);
-  ierr = PetscViewerDrawGetDraw(viewer, 0, &draw);
+
+  PetscDraw draw;
+  ierr = PetscViewerDrawGetDraw(viewer.viewer, 0, &draw);
   CHKERRV(ierr);
   ierr = PetscDrawSetPause(draw, -1);
   CHKERRV(ierr); // Wait for user
-  ierr = PetscViewerDestroy(&viewer);
-  CHKERRV(ierr);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -625,24 +639,88 @@ void KSPSolver::reset()
   CHKERRV(ierr);
 }
 
-bool KSPSolver::solve(Vector &b, Vector &x)
+KSPSolver::SolverResult KSPSolver::getSolverResult()
 {
-  PetscErrorCode     ierr = 0;
   KSPConvergedReason convReason;
-  KSPSolve(ksp, b, x);
-  ierr = KSPGetConvergedReason(ksp, &convReason);
-  CHKERRQ(ierr);
-  return (convReason > 0);
+  PetscErrorCode     ierr = 0;
+  ierr                    = KSPGetConvergedReason(ksp, &convReason);
+  if (ierr != 0) {
+    return SolverResult::Diverged;
+  }
+  if (convReason > 0) {
+    return SolverResult::Converged;
+  }
+  if (convReason == KSP_DIVERGED_ITS) {
+    return SolverResult::Stopped;
+  } else {
+    return SolverResult::Diverged;
+  }
 }
 
-bool KSPSolver::solveTranspose(Vector &b, Vector &x)
+KSPSolver::SolverResult KSPSolver::solve(Vector &b, Vector &x)
 {
-  PetscErrorCode     ierr = 0;
-  KSPConvergedReason convReason;
+  KSPSolve(ksp, b, x);
+  return getSolverResult();
+}
+
+KSPSolver::SolverResult KSPSolver::solveTranspose(Vector &b, Vector &x)
+{
   KSPSolveTranspose(ksp, b, x);
-  ierr = KSPGetConvergedReason(ksp, &convReason);
-  CHKERRQ(ierr);
-  return (convReason > 0);
+  return getSolverResult();
+}
+
+std::string KSPSolver::summaryFor(Vector &b)
+{
+  // See PETSc manual page for KSPGetConvergedReason to understand this function
+  // We treat divergence due to reaching max iterations as "stopped"
+  KSPConvergedReason convReason;
+  KSPGetConvergedReason(ksp, &convReason);
+
+  PetscReal rtol, atol, dtol;
+  PetscInt  miter;
+  KSPGetTolerances(ksp, &rtol, &atol, &dtol, &miter);
+
+  std::ostringstream oss;
+  {
+    bool converged = (convReason >= 0);
+    bool stopped   = (convReason == KSP_DIVERGED_ITS);
+    oss << "Solver " << (converged ? "converged" : (stopped ? "stopped" : "diverged"));
+  }
+  oss << " after " << getIterationNumber() << " of " << miter << " iterations due to";
+
+  switch (convReason) {
+  case (KSP_CONVERGED_RTOL):
+  case (KSP_CONVERGED_RTOL_NORMAL):
+    oss << " sufficient relative convergence";
+    break;
+  case (KSP_CONVERGED_ATOL):
+  case (KSP_CONVERGED_ATOL_NORMAL):
+    oss << " sufficient absolute convergence";
+    break;
+  case (KSP_DIVERGED_ITS):
+    oss << " reaching the maximum iterations";
+    break;
+  case (KSP_DIVERGED_DTOL):
+    oss << " sufficient divergence";
+    break;
+  case (KSP_DIVERGED_NANORINF):
+    oss << " the residual norm becoming nan or inf";
+    break;
+  case (KSP_DIVERGED_BREAKDOWN):
+    oss << " a generic breakdown of the method";
+    break;
+  default:
+    oss << " the PETSc reason " << KSPConvergedReasons[convReason];
+    break;
+  }
+
+  double bnorm = b.l2norm();
+  double dlim  = bnorm * dtol;
+  double rlim  = bnorm * rtol;
+
+  oss << ". Last residual norm: " << getResidualNorm() << ", limits: relative " << rlim << " (rtol " << rtol << "), absolute " << atol << ", divergence " << dlim << "(dtol " << dtol << ')';
+
+  return oss.str();
 }
 
 PetscInt KSPSolver::getIterationNumber()
@@ -652,6 +730,24 @@ PetscInt KSPSolver::getIterationNumber()
   ierr = KSPGetIterationNumber(ksp, &its);
   CHKERRQ(ierr);
   return its;
+}
+
+PetscReal KSPSolver::getResidualNorm()
+{
+  PetscErrorCode ierr = 0;
+  PetscReal      val;
+  ierr = KSPGetResidualNorm(ksp, &val);
+  CHKERRQ(ierr);
+  return val;
+}
+
+PetscReal KSPSolver::getRealtiveTolerance()
+{
+  PetscErrorCode ierr = 0;
+  PetscReal      rtol;
+  ierr = KSPGetTolerances(ksp, &rtol, NULL, NULL, NULL);
+  CHKERRQ(ierr);
+  return rtol;
 }
 
 /////////////////////////////////////////////////////////////////////////

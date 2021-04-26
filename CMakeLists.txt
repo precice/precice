@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.10.2)
-project(preCICE VERSION 2.1.1 LANGUAGES CXX)
+project(preCICE VERSION 2.2.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -188,6 +188,8 @@ else()
 endif()
 precice_validate_prettyprint()
 
+# libfmt
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
 
 #
 # Find Configurable Dependencies
@@ -265,8 +267,8 @@ endif()
 # Add precice as an empty target
 add_library(precice ${preCICE_DUMMY})
 set_target_properties(precice PROPERTIES
-  # precice is a C++11 project
-  CXX_STANDARD 11
+  # precice is a C++14 project
+  CXX_STANDARD 14
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   VERSION ${preCICE_VERSION}
@@ -286,6 +288,7 @@ target_link_libraries(precice PRIVATE
   Boost::unit_test_framework
   )
 if(UNIX OR APPLE OR MINGW)
+  target_compile_definitions(precice PRIVATE _GNU_SOURCE)
   target_link_libraries(precice PRIVATE ${CMAKE_DL_LIBS})
 endif()
 
@@ -301,7 +304,7 @@ target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
 target_link_libraries(precice PRIVATE prettyprint)
 
 # Setup JSON
-target_link_libraries(precice PRIVATE JSON)
+target_link_libraries(precice PRIVATE JSON fmt-header-only)
 
 # Setup MPI
 if (PRECICE_MPICommunication)
@@ -354,6 +357,7 @@ target_link_libraries(binprecice
   Threads::Threads
   precice
   prettyprint
+  fmt-header-only
   Eigen3::Eigen
   Boost::boost
   Boost::filesystem
@@ -365,8 +369,10 @@ target_link_libraries(binprecice
   Boost::unit_test_framework
   )
 set_target_properties(binprecice PROPERTIES
-  # precice is a C++11 project
-  CXX_STANDARD 11
+  # precice is a C++14 project
+  CXX_STANDARD 14
+  CXX_STANDARD_REQUIRED Yes
+  CXX_EXTENSIONS No
   )
 # Copy needed properties from the lib to the executatble. This is necessary as
 # this executable uses the library source, not only the interface.
@@ -391,6 +397,7 @@ IF (BUILD_TESTING)
     precice
     Eigen3::Eigen
     prettyprint
+    fmt-header-only
     Boost::boost
     Boost::filesystem
     Boost::log
@@ -401,8 +408,10 @@ IF (BUILD_TESTING)
     Boost::unit_test_framework
     )
   set_target_properties(testprecice PROPERTIES
-    # precice is a C++11 project
-    CXX_STANDARD 11
+    # precice is a C++14 project
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
     )
   # Copy needed properties from the lib to the executatble. This is necessary as
   # this executable uses the library source, not only the interface.
