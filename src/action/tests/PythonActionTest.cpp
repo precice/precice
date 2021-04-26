@@ -69,6 +69,20 @@ BOOST_AUTO_TEST_CASE(OmitMethods)
   }
 }
 
+BOOST_AUTO_TEST_CASE(DeprecatedNormal)
+{
+  PRECICE_TEST(1_rank);
+  std::string path = testing::getPathToSources() + "/action/tests/";
+  {
+    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
+    mesh->createVertex(Eigen::Vector3d::Zero());
+    mesh::PtrData data = mesh->createData("TargetData", 1);
+    mesh->allocateDataValues();
+    PythonAction action(PythonAction::WRITE_MAPPING_PRIOR, path, "TestDeprecatedAction", mesh, data->getID(), -1);
+    action.performAction(0.0, 0.0, 0.0, 0.0);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Python
 BOOST_AUTO_TEST_SUITE_END() // ActionTest
 

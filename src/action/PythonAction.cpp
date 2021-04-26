@@ -50,6 +50,46 @@ std::string python_error_as_string()
     }
   }
 }
+
+/// Fetches the function inpect.getfullargspec().
+PyObject *getfullargspec()
+{
+  PyObject *const inspect_module_name     = PyUnicode_DecodeFSDefault("inspect");
+  PyObject *const inspect_module          = PyImport_Import(inspect_module_name);
+  PyObject *const getfullargspec_function = PyObject_GetAttrString(inspect_module, "getfullargspec");
+  Py_DECREF(inspect_module_name);
+  Py_DECREF(inspect_module);
+  return getfullargspec_function;
+}
+
+/// Returns the argument names of of a callable
+std::vector<std::string> python_func_args(PyObject *const func)
+{
+  PyObject *const getfullargspec_function = getfullargspec();
+
+  // Call the inspect.getfullargspec function.
+  PyObject *const argspec_call_args = PyTuple_New(1);
+  PyTuple_SetItem(argspec_call_args, 0, func);
+  PyObject *const argspec = PyObject_CallObject(getfullargspec_function, argspec_call_args);
+  Py_DECREF(argspec_call_args);
+  Py_DECREF(getfullargspec_function);
+
+  // Get args from argspec.
+  PyObject *const          f_args   = PyObject_GetAttrString(argspec, "args");
+  Py_ssize_t const         num_args = PyList_Size(f_args);
+  std::vector<std::string> arg_names;
+  for (Py_ssize_t i = 0; i < num_args; ++i) {
+    PyObject *const arg      = PyList_GetItem(f_args, i);
+    PyObject *const arg_repr = PyObject_Repr(arg);
+    PyObject *const arg_str  = PyUnicode_AsASCIIString(arg_repr);
+    arg_names.emplace_back(PyBytes_AS_STRING(arg_str));
+    Py_DECREF(arg);
+    Py_DECREF(arg_repr);
+    Py_DECREF(arg_str);
+  }
+  Py_DECREF(f_args);
+  return arg_names;
+}
 } // namespace
 
 PythonAction::PythonAction(
@@ -130,8 +170,14 @@ void PythonAction::performAction(double time,
   }
 
   if (_vertexCallback != nullptr) {
-    PyObject *      vertexArgs = PyTuple_New(3);
-    mesh::PtrMesh   mesh       = getMesh();
+    // The arguments is a tuple of (id, coord) or (id, coord, normal).
+    // The deprecated normal is optional and None will be passed if it was defined.
+    PRECICE_ASSERT(_vertexCallbackArgs == 2 || _vertexCallbackArgs == 3, _vertexCallbackArgs);
+    PyObject *vertexArgs = PyTuple_New(_vertexCallbackArgs);
+    if (_vertexCallbackArgs == 3) {
+      PyTuple_SetItem(vertexArgs, 2, Py_None);
+    }
+    mesh::PtrMesh   mesh = getMesh();
     Eigen::VectorXd coords(mesh->getDimensions());
     for (mesh::Vertex &vertex : mesh->vertices()) {
       npy_intp vdim[]        = {mesh->getDimensions()};
@@ -143,7 +189,6 @@ void PythonAction::performAction(double time,
       PRECICE_CHECK(pythonCoords != nullptr, "Creating python coords failed. Please check that the python-actions mesh name is correct.");
       PyTuple_SetItem(vertexArgs, 0, pythonID);
       PyTuple_SetItem(vertexArgs, 1, pythonCoords);
-      PyTuple_SetItem(vertexArgs, 2, Py_None);
       PyObject_CallObject(_vertexCallback, vertexArgs);
       if (PyErr_Occurred()) {
         PRECICE_ERROR("Error occurred during call of function vertexCallback() in python module \"{}\". "
@@ -202,6 +247,18 @@ void PythonAction::initialize()
     PyErr_Clear();
     PRECICE_WARN("Python module \"{}\" does not define function vertexCallback().", _moduleName);
     _vertexCallback = nullptr;
+  } else {
+    _vertexCallbackArgs = python_func_args(_vertexCallback).size();
+    if (_vertexCallbackArgs == 3) {
+      PRECICE_WARN("Python module \"{}\" defines the function vertexCallback with 3 arguments. "
+                   "The normal argument is deprecated and preCICE will pass None instead. "
+                   "Please use the following definition to silence this warning \"def vertexCallback(id, coords):\".",
+                   _moduleName);
+    }
+    PRECICE_CHECK(_vertexCallbackArgs == 2 || _vertexCallbackArgs == 3,
+                  "The provided vertexCallback() in python module \"{}\" has {} arguments, but needs to have 2 or 3. "
+                  "Please use the following definition \"def vertexCallback(id, coords):\"",
+                  _moduleName, _vertexCallbackArgs);
   }
 
   // Construct function postAction
