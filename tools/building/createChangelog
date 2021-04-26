@@ -8,7 +8,7 @@
 if command -v gh > /dev/null ; then
   INFO="$(gh pr view)"
   if [ $? -eq 0 ]; then
-    PR="$(echo "$INFO" | grep "number:" | grep "[0-9]\+")"
+    PR="$(echo "$INFO" | grep "number:" | grep -o "[0-9]\+")"
     FILE="`git rev-parse --show-toplevel`/docs/changelog/$PR.md"
     if [ -f $FILE ]; then
       echo "Changelog file for PR $PR already exists."

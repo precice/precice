@@ -51,13 +51,19 @@ BaseQNAcceleration::BaseQNAcceleration(
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "Initial relaxation factor for QN acceleration has to "
-                    << "be larger than zero and smaller or equal than one. Current initial relaxation is: " << _initialRelaxation);
+                "be larger than zero and smaller or equal than one. "
+                "Current initial relaxation is {}",
+                _initialRelaxation);
   PRECICE_CHECK(_maxIterationsUsed > 0,
                 "Maximum number of iterations used in the quasi-Newton acceleration "
-                    << "scheme has to be larger than zero. Current maximum reused iterations is: " << _maxIterationsUsed);
+                "scheme has to be larger than zero. "
+                "Current maximum reused iterations is {}",
+                _maxIterationsUsed);
   PRECICE_CHECK(_pastTimeWindowsReused >= 0,
-                "Number of previous time windows to be reused for quasi-Newton acceleration has to be larger than or equal to zero. "
-                    << "Current number of time windows reused is " << _pastTimeWindowsReused);
+                "Number of previous time windows to be reused for "
+                "quasi-Newton acceleration has to be larger than or equal to zero. "
+                "Current number of time windows reused is {}",
+                _pastTimeWindowsReused);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -142,7 +148,7 @@ void BaseQNAcceleration::initialize(
       }
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
-    PRECICE_DEBUG("Number of unknowns at the interface (global): " << _dimOffsets.back());
+    PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
     if (utils::MasterSlave::isMaster()) {
       _infostringstream << "\n--------\n DOFs (global): " << _dimOffsets.back() << "\n offsets: " << _dimOffsets << '\n';
     }
@@ -215,8 +221,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       if (2 * getLSSystemCols() >= getLSSystemRows())
         PRECICE_WARN(
             "The number of columns in the least squares system exceeded half the number of unknowns at the interface. "
-            << "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
-            << "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
+            "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
+            "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
 
       Eigen::VectorXd deltaR = _residuals;
       deltaR -= _oldResiduals;
@@ -224,10 +230,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
-      PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0), "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
-                                                                               "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
-                                                                               "Maybe you always write the same (or only incremented) data or you call advance without "
-                                                                               "providing  new data first.");
+      PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0),
+                    "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
+                    "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
+                    "Maybe you always write the same (or only incremented) data or you call advance without "
+                    "providing  new data first.");
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
@@ -441,7 +448,7 @@ void BaseQNAcceleration::applyFilter()
 
       removeMatrixColumn(delIndices[i]);
 
-      PRECICE_DEBUG(" Filter: removing column with index " << delIndices[i] << " in iteration " << its << " of time window: " << tWindows);
+      PRECICE_DEBUG(" Filter: removing column with index {} in iteration {} of time window: {}", delIndices[i], its, tSteps);
     }
     PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
@@ -558,7 +565,7 @@ void BaseQNAcceleration::iterationsConverged(
     int toRemove = _matrixCols.back();
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
-    PRECICE_DEBUG("Removing " << toRemove << " cols from least-squares system with " << getLSSystemCols() << " cols");
+    PRECICE_DEBUG("Removing {} cols from least-squares system with {} cols", toRemove, getLSSystemCols());
     PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
     PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 

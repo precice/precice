@@ -146,7 +146,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       int         port    = tag.getIntAttributeValue("port");
 
       PRECICE_CHECK(not utils::isTruncated<unsigned short>(port),
-                    "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
+                    "The value given for the \"port\" attribute is not a 16-bit unsigned integer: {}", port);
 
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
       comFactory      = std::make_shared<com::SocketCommunicationFactory>(port, false, network, dir);

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <solver-interface dimensions="2">
+    <data:scalar name="Pressure" />
+
+    <mesh name="MeshB">
+      <use-data name="Pressure" />
+    </mesh>
+
+    <mesh name="MeshATop">
+      <use-data name="Pressure" />
+    </mesh>
+
+    <mesh name="MeshABottom">
+      <use-data name="Pressure" />
+    </mesh>
+
+    <participant name="A">
+      <use-mesh name="MeshATop" provide="yes" />
+      <use-mesh name="MeshABottom" provide="yes" />
+      <use-mesh name="MeshB" from="B" />
+      <read-data name="Pressure" mesh="MeshATop" />
+      <read-data name="Pressure" mesh="MeshABottom" />
+      <mapping:nearest-neighbor
+        direction="read"
+        from="MeshB"
+        to="MeshATop"
+        constraint="consistent" />
+      <mapping:nearest-neighbor
+        direction="read"
+        from="MeshB"
+        to="MeshABottom"
+        constraint="consistent" />
+    </participant>
+
+    <participant name="B">
+      <use-mesh name="MeshB" provide="yes" />
+      <write-data name="Pressure" mesh="MeshB" />
+    </participant>
+
+    <m2n:sockets from="B" to="A" />
+
+    <coupling-scheme:parallel-explicit>
+      <participants first="A" second="B" />
+      <max-time value="1.0" />
+      <time-window-size value="1.0" />
+      <exchange data="Pressure" mesh="MeshB" from="B" to="A" />
+    </coupling-scheme:parallel-explicit>
+  </solver-interface>
+</precice-configuration>

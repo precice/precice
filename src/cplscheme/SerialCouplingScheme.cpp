@@ -1,5 +1,5 @@
 #include "SerialCouplingScheme.hpp"
-#include <math.h>
+#include <cmath>
 #include <memory>
 #include <ostream>
 #include <vector>
@@ -47,7 +47,7 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
   if (_participantReceivesTimeWindowSize) {
     double dt = UNDEFINED_TIME_WINDOW_SIZE;
     getM2N()->receive(dt);
-    PRECICE_DEBUG("Received time window size of " << dt << ".");
+    PRECICE_DEBUG("Received time window size of {}.", dt);
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
     PRECICE_ASSERT(not doesFirstStep(), "Only second participant can receive time window size.");
     setTimeWindowSize(dt);
@@ -100,7 +100,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     if (_participantSetsTimeWindowSize) {
-      PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart());
+      PRECICE_DEBUG("sending time window size of {}", getComputedTimeWindowPart());
       getM2N()->send(getComputedTimeWindowPart());
     }
     sendData(getM2N(), getSendData());

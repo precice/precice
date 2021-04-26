@@ -50,6 +50,6 @@ BOOST_AUTO_TEST_SUITE_END()
 FAQ
 ---
 - **How can I setup/tearDown a test case?** Use [fixtures](http://www.boost.org/doc/libs/1_65_1/libs/test/doc/html/boost_test/tests_organization/fixtures.html) and attach them to a test suite or case
-- **How to configure logging for the tests?** Use a file ```log.conf``` as described in [Logging](https://github.com/precice/precice/wiki/Logging).
+- **How to configure logging for the tests?** Use a file ```log.conf``` as described in [Logging](https://www.precice.org/configuration-logging.html).
 
 */

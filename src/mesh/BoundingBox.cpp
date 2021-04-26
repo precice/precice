@@ -150,7 +150,7 @@ void BoundingBox::scaleBy(double safetyFactor)
   for (int d = 0; d < _dimensions; d++) {
     _bounds.at(2 * d + 1) += safetyFactor * maxSideLength;
     _bounds.at(2 * d) -= safetyFactor * maxSideLength;
-    PRECICE_DEBUG("Merged BoundingBox" << *this);
+    PRECICE_DEBUG("Merged BoundingBox {}", *this);
   }
 }
 

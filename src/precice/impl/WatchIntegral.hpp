@@ -55,11 +55,9 @@ private:
 
   bool _isScalingOn;
 
-  Eigen::VectorXd calculateVectorData(mesh::PtrData data);
+  Eigen::VectorXd calculateIntegral(mesh::PtrData data) const;
 
-  double calculateScalarData(mesh::PtrData data);
-
-  double calculateSurfaceArea();
+  double calculateSurfaceArea() const;
 };
 
 } // namespace impl

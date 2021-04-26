@@ -178,8 +178,8 @@ BOOST_AUTO_TEST_CASE(Configuration)
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
-    action::PtrAction action = config.actions().front();
-    BOOST_TEST(action);
+    auto &action = config.actions().front();
+    BOOST_TEST(static_cast<bool>(action));
   }
   {
     std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-2.xml";
@@ -191,8 +191,8 @@ BOOST_AUTO_TEST_CASE(Configuration)
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
-    action::PtrAction action = config.actions().front();
-    BOOST_TEST(action);
+    auto &action = config.actions().front();
+    BOOST_TEST(static_cast<bool>(action));
   }
   {
     std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-3.xml";
@@ -204,8 +204,8 @@ BOOST_AUTO_TEST_CASE(Configuration)
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
-    action::PtrAction action = config.actions().front();
-    BOOST_TEST(action);
+    auto &action = config.actions().front();
+    BOOST_TEST(static_cast<bool>(action));
   }
   {
     std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-4.xml";
@@ -217,8 +217,8 @@ BOOST_AUTO_TEST_CASE(Configuration)
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
-    action::PtrAction action = config.actions().front();
-    BOOST_TEST(action);
+    auto &action = config.actions().front();
+    BOOST_TEST(static_cast<bool>(action));
   }
 }
 

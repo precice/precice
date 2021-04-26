@@ -9,6 +9,15 @@
 #include "precice/impl/versions.hpp"
 #include "utils/assertion.hpp"
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 using namespace std;
 
 static std::unique_ptr<precice::SolverInterface> impl = nullptr;
@@ -508,3 +517,10 @@ void precicef_get_version_information_(
     versionInfo[i] = versionInformation[i];
   }
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

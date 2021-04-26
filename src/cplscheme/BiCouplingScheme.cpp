@@ -41,9 +41,8 @@ BiCouplingScheme::BiCouplingScheme(
   } else if (localParticipant == _secondParticipant) {
     setDoesFirstStep(false);
   } else {
-    PRECICE_ERROR("Name of local participant \""
-                  << localParticipant << "\" does not match any "
-                  << "participant specified for the coupling scheme.");
+    PRECICE_ERROR("Name of local participant \"{}\" does not match any participant specified for the coupling scheme.",
+                  localParticipant);
   }
 }
 
@@ -59,7 +58,7 @@ void BiCouplingScheme::addDataToSend(
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _sendData.insert(pair);
   } else {
-    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"" << data->getName() << "\" .../> tags");
+    PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
 }
 
@@ -75,7 +74,7 @@ void BiCouplingScheme::addDataToReceive(
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     _receiveData.insert(pair);
   } else {
-    PRECICE_ERROR("Data \"" << data->getName() << "\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"" << data->getName() << "\" ... /> tags");
+    PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }
 }
 

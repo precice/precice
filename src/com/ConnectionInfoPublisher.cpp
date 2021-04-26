@@ -60,12 +60,12 @@ std::string ConnectionInfoReader::read() const
 {
   std::ifstream ifs;
   auto          path = getFilename();
-  PRECICE_DEBUG("Waiting for connection file " << path);
+  PRECICE_DEBUG("Waiting for connection file {}", path);
   do {
     ifs.open(path, std::ifstream::in);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   } while (not ifs);
-  PRECICE_DEBUG("Found connection file " << path);
+  PRECICE_DEBUG("Found connection file {}", path);
 
   std::string addressData;
   ifs >> addressData;
@@ -76,7 +76,7 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
 {
   namespace fs = boost::filesystem;
   fs::path p(getFilename());
-  PRECICE_DEBUG("Deleting connection file " << p.string());
+  PRECICE_DEBUG("Deleting connection file {}", p.string());
   fs::remove(p);
 }
 
@@ -85,7 +85,7 @@ void ConnectionInfoWriter::write(std::string const &info) const
   namespace fs = boost::filesystem;
   auto path    = getFilename();
   auto tmp     = fs::path(path + "~");
-  PRECICE_DEBUG("Writing connection file " << path);
+  PRECICE_DEBUG("Writing connection file {}", path);
   fs::create_directories(tmp.parent_path());
   {
     std::ofstream ofs(tmp.string(), std::ofstream::out);

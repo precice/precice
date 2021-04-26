@@ -157,9 +157,9 @@ void AccelerationConfiguration::xmlTagCallback(
     std::string meshName = callingTag.getStringAttributeValue(ATTR_MESH);
     auto        success  = _uniqueDataAndMeshNames.emplace(dataName, meshName);
     if (not success.second) {
-      PRECICE_ERROR("You have provided a subtag "
-                    << "<data name=\"" << dataName << "\" mesh=\"" << meshName << "\"/> more than once in your <acceleration:.../>. "
-                    << "Please remove the duplicated entry.");
+      PRECICE_ERROR("You have provided a subtag <data name=\"{}\" mesh=\"{}\"/> more than once in your <acceleration:.../>. "
+                    "Please remove the duplicated entry.",
+                    dataName, meshName);
     }
     _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
     double scaling = 1.0;
@@ -178,18 +178,18 @@ void AccelerationConfiguration::xmlTagCallback(
       }
     }
 
-    if (_config.dataIDs.empty()) {
-      std::ostringstream stream;
-      stream << "Data with name \"" << dataName << "\" associated to mesh \""
-             << _meshName << "\" not found on configuration of acceleration. Add \""
-             << dataName << "\" to the \"<mesh name=" << _meshName << ">\" tag, or change the "
-             << "data name in the acceleration scheme.";
-      throw std::runtime_error{stream.str()};
-    }
+    PRECICE_CHECK(!_config.dataIDs.empty(),
+                  "Data with name \"{0}\" associated to mesh \"{1}\" not found on configuration of acceleration. "
+                  "Add \"{0}\" to the \"<mesh name={1}>\" tag, or change the data name in the acceleration scheme.",
+                  dataName, _meshName);
     _neededMeshes.push_back(_meshName);
   } else if (callingTag.getName() == TAG_INIT_RELAX) {
-    _config.relaxationFactor       = callingTag.getDoubleAttributeValue(ATTR_VALUE);
-    _config.forceInitialRelaxation = callingTag.getBooleanAttributeValue(ATTR_ENFORCE);
+    _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
+    if (callingTag.hasAttribute(ATTR_ENFORCE)) {
+      _config.forceInitialRelaxation = callingTag.getBooleanAttributeValue(ATTR_ENFORCE);
+    } else {
+      _config.forceInitialRelaxation = false;
+    }
   } else if (callingTag.getName() == TAG_MAX_USED_ITERATIONS) {
     _config.maxIterationsUsed = callingTag.getIntAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_TIME_WINDOWS_REUSED) {
@@ -213,7 +213,7 @@ void AccelerationConfiguration::xmlTagCallback(
 
     if (_config.alwaysBuildJacobian)
       PRECICE_ERROR("IMVJ cannot be in restart mode while parameter always-build-jacobian is set to true. "
-                    << "Please remove 'always-build-jacobian' from the configuration file or do not run in restart mode.");
+                    "Please remove 'always-build-jacobian' from the configuration file or do not run in restart mode.");
 
 #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
@@ -551,8 +551,7 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
   } else {
-    PRECICE_ERROR("Acceleration of type \""
-                  << tag.getName() << "\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.");
+    PRECICE_ERROR("Acceleration of type \"{}\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.", tag.getName());
   }
 }
 } // namespace acceleration

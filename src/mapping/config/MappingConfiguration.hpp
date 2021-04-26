@@ -115,10 +115,11 @@ private:
   const std::string ATTR_Z_DEAD         = "z-dead";
   const std::string ATTR_USE_QR         = "use-qr-decomposition";
 
-  const std::string VALUE_WRITE        = "write";
-  const std::string VALUE_READ         = "read";
-  const std::string VALUE_CONSISTENT   = "consistent";
-  const std::string VALUE_CONSERVATIVE = "conservative";
+  const std::string VALUE_WRITE             = "write";
+  const std::string VALUE_READ              = "read";
+  const std::string VALUE_CONSISTENT        = "consistent";
+  const std::string VALUE_CONSERVATIVE      = "conservative";
+  const std::string VALUE_SCALED_CONSISTENT = "scaled-consistent";
 
   const std::string VALUE_NEAREST_NEIGHBOR      = "nearest-neighbor";
   const std::string VALUE_NEAREST_PROJECTION    = "nearest-projection";
@@ -157,6 +158,7 @@ private:
       Polynomial                       polynomial,
       Preallocation                    preallocation) const;
 
+  /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);
 
   Timing getTiming(const std::string &timing) const;

@@ -6,6 +6,7 @@
 #include <boost/concept/assert.hpp>
 #include <boost/range/concepts.hpp>
 #include "math/differences.hpp"
+#include "math/geometry.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenIO.hpp"
@@ -38,33 +39,33 @@ Triangle::Triangle(
   Vertex &v1 = edge(0).vertex(1);
 
   if (&edge(1).vertex(0) == &v0) {
-    _vertexMap[0] = 1;
-    _vertexMap[1] = 0;
+    _vertexMap[0] = true;
+    _vertexMap[1] = false;
   } else if (&edge(1).vertex(1) == &v0) {
-    _vertexMap[0] = 1;
-    _vertexMap[1] = 1;
+    _vertexMap[0] = true;
+    _vertexMap[1] = true;
   } else if (&edge(1).vertex(0) == &v1) {
-    _vertexMap[0] = 0;
-    _vertexMap[1] = 0;
+    _vertexMap[0] = false;
+    _vertexMap[1] = false;
   } else {
     PRECICE_ASSERT(&edge(1).vertex(1) == &v1);
-    _vertexMap[0] = 0;
-    _vertexMap[1] = 1;
+    _vertexMap[0] = false;
+    _vertexMap[1] = true;
   }
 
   if (_vertexMap[1] == 0) {
     if (&edge(2).vertex(0) == &edge(1).vertex(1)) {
-      _vertexMap[2] = 0;
+      _vertexMap[2] = false;
     } else {
       PRECICE_ASSERT(&edge(2).vertex(1) == &edge(1).vertex(1));
-      _vertexMap[2] = 1;
+      _vertexMap[2] = true;
     }
   } else if (_vertexMap[1] == 1) {
     if (&edge(2).vertex(0) == &edge(1).vertex(0)) {
-      _vertexMap[2] = 0;
+      _vertexMap[2] = false;
     } else {
       PRECICE_ASSERT(&edge(2).vertex(1) == &edge(1).vertex(0));
-      _vertexMap[2] = 1;
+      _vertexMap[2] = true;
     }
   }
 
@@ -77,11 +78,7 @@ Triangle::Triangle(
 
 double Triangle::getArea() const
 {
-  Eigen::Vector3d vectorA = edge(1).vertex(1).getCoords() - edge(1).vertex(0).getCoords();
-  Eigen::Vector3d vectorB = edge(0).vertex(1).getCoords() - edge(0).vertex(0).getCoords();
-  // Compute cross-product of vector A and vector B
-  auto normal = vectorA.cross(vectorB);
-  return (0.5 * normal.norm());
+  return math::geometry::triangleArea(vertex(0).getCoords(), vertex(1).getCoords(), vertex(2).getCoords());
 }
 
 const Eigen::VectorXd Triangle::computeNormal(bool flip)

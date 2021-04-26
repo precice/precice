@@ -38,19 +38,19 @@ void ScaleByDtAction::performAction(
                  sourceValues.size(), targetValues.size());
   if (_scaling == SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO) {
     double scaling = timeStepSize / timeWindowSize;
-    PRECICE_DEBUG("Scale by ratio: time step size / time window size = " << scaling);
+    PRECICE_DEBUG("Scale by ratio: time step size / time window size = {}", scaling);
     for (int i = 0; i < targetValues.size(); i++) {
       targetValues[i] = sourceValues[i] * scaling;
     }
   } else if (_scaling == SCALING_BY_TIME_WINDOW_SIZE) {
-    PRECICE_DEBUG("Scale by time window size " << timeWindowSize);
+    PRECICE_DEBUG("Scale by dt {}", timeWindowSize);
     for (int i = 0; i < targetValues.size(); i++) {
       targetValues[i] = sourceValues[i] * timeWindowSize;
     }
   } else {
     PRECICE_ASSERT(_scaling == SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO, _scaling);
     double scaling = computedTimeWindowPart / timeWindowSize;
-    PRECICE_DEBUG("Scale by ratio: computed part of time window / time window size = " << scaling);
+    PRECICE_DEBUG("Scale by ratio: computed part of time window / time window size = {}", scaling);
     for (int i = 0; i < targetValues.size(); i++) {
       targetValues[i] = sourceValues[i] * scaling;
     }

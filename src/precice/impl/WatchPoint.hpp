@@ -7,6 +7,7 @@
 #include "SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
+#include "mapping/Polation.hpp"
 #include "mesh/SharedPointer.hpp"
 
 namespace precice {
@@ -55,9 +56,7 @@ private:
 
   double _shortestDistance = std::numeric_limits<double>::max();
 
-  std::vector<double> _weights;
-
-  std::vector<mesh::Vertex *> _vertices;
+  std::unique_ptr<mapping::Polation> _interpolation;
 
   std::vector<mesh::PtrData> _dataToExport;
 

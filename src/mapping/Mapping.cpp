@@ -1,6 +1,8 @@
 #include "Mapping.hpp"
 #include <boost/config.hpp>
 #include <ostream>
+#include "mesh/Utils.hpp"
+#include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -76,6 +78,47 @@ void Mapping::setOutputRequirement(
 int Mapping::getDimensions() const
 {
   return _dimensions;
+}
+
+void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
+{
+  // Only serial participant is supported for scale-consistent mapping
+  PRECICE_ASSERT((not utils::MasterSlave::isMaster()) and (not utils::MasterSlave::isSlave()));
+
+  // If rank is not empty and do not contain connectivity information, raise error
+  if ((input()->edges().empty() and (not input()->vertices().empty())) or
+      (((input()->getDimensions() == 3) and input()->triangles().empty()) and (not input()->vertices().empty()))) {
+    logging::Logger _log{"mapping::Mapping"};
+    PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
+                  "Scaled consistent mapping requires connectivity information.",
+                  input()->getName());
+  }
+  if ((output()->edges().empty() and (not output()->vertices().empty())) or
+      (((output()->getDimensions() == 3) and output()->triangles().empty()) and (not output()->vertices().empty()))) {
+    logging::Logger _log{"mapping::Mapping"};
+    PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
+                  "Scaled consistent mapping requires connectivity information.",
+                  output()->getName());
+  }
+
+  auto &outputValues    = output()->data(outputDataID)->values();
+  int   valueDimensions = input()->data(inputDataID)->getDimensions();
+
+  // Integral is calculated on each direction separately
+  auto integralInput  = mesh::integrate(input(), input()->data(inputDataID));
+  auto integralOutput = mesh::integrate(output(), output()->data(outputDataID));
+
+  // Create reshape the output values vector to matrix
+  Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
+
+  // Scale in each direction
+  Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
+  outputValuesMatrix.array().colwise() *= scalingFactor.array();
+}
+
+bool Mapping::hasConstraint(const Constraint &constraint) const
+{
+  return (getConstraint() == constraint);
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
