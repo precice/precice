@@ -82,14 +82,14 @@ BOOST_AUTO_TEST_CASE(ComputeNormal2D)
   PRECICE_TEST(1_rank);
   Eigen::Vector2d a{-0.5, 1.0};
   Eigen::Vector2d b{1.25, -1.1};
-  Vertex v1(a, 0);
-  Vertex v2(b, 1);
-  Edge   edge(v1, v2, 0);
+  Vertex          v1(a, 0);
+  Vertex          v2(b, 1);
+  Edge            edge(v1, v2, 0);
 
   auto normal = edge.computeNormal(false);
   BOOST_TEST(normal.size() == 2);
   BOOST_TEST(normal.norm() == 1.0);
-  BOOST_TEST(normal.dot(b-a) == 0.0);
+  BOOST_TEST(normal.dot(b - a) == 0.0);
 
   auto flipped = edge.computeNormal(true);
   BOOST_TEST(normal == -flipped);
@@ -100,19 +100,18 @@ BOOST_AUTO_TEST_CASE(ComputeNormal3D_Unit)
   PRECICE_TEST(1_rank);
   Eigen::Vector3d a{0.0, 0.0, 1.0};
   Eigen::Vector3d b{1.0, 0.0, 1.0};
-  Vertex v1(a, 0);
-  Vertex v2(b, 1);
-  Edge   edge(v1, v2, 0);
+  Vertex          v1(a, 0);
+  Vertex          v2(b, 1);
+  Edge            edge(v1, v2, 0);
 
   auto normal = edge.computeNormal(false);
   BOOST_TEST(normal.size() == 3);
   BOOST_TEST(normal.norm() == 1.0);
-  BOOST_TEST(normal.dot(b-a) == 0.0);
+  BOOST_TEST(normal.dot(b - a) == 0.0);
 
   auto flipped = edge.computeNormal(true);
   BOOST_TEST(normal == -flipped);
 }
-
 
 BOOST_AUTO_TEST_CASE(EdgeWKTPrint)
 {

@@ -78,7 +78,6 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::VectorXd::Constant(dim, 3.0));
   }
 
-
   io::ExportVTKXML exportVTKXML;
   std::string      filename = "io-ExportVTKXMLTest-testExportPolygonalMesh";
   std::string      location = "";
@@ -124,7 +123,6 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   } else if (utils::Parallel::getProcessRank() == 3) {
     mesh.createVertex(Eigen::VectorXd::Constant(dim, 3.0));
   }
-
 
   io::ExportVTKXML exportVTKXML;
   std::string      filename = "io-ExportVTKXMLTest-testExportTriangulatedMesh";

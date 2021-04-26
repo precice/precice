@@ -36,7 +36,6 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
-
   io::ExportVTK exportVTK;
   std::string   filename = "io-VTKExport-ExportPolygonalMesh";
   std::string   location = "";
