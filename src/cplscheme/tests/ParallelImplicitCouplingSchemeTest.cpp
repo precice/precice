@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
 
   pp.initialize(data);
 
-  dpcd->lastIteration = dcol1;
-  fpcd->lastIteration = fcol1;
+  dpcd->writeLastIteration(dcol1);
+  fpcd->writeLastIteration(fcol1);
 
   pp.performAcceleration(data);
 
@@ -236,8 +236,8 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 
   pp.initialize(data);
 
-  dpcd->lastIteration = dcol1;
-  fpcd->lastIteration = fcol1;
+  dpcd->writeLastIteration(dcol1);
+  fpcd->writeLastIteration(fcol1);
 
   pp.performAcceleration(data);
 

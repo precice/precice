@@ -52,9 +52,10 @@ void BroydenAcceleration::computeUnderrelaxationSecondaryData(
     Eigen::VectorXd &          values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
-    secResiduals                  = data->lastIteration; // old
-    secResiduals *= 1.0 - _initialRelaxation;            // (1-omg) * old
-    values += secResiduals;                              // (1-omg) * old + new * omg
+    const auto &     oldValues    = data->readLastIteration();
+    secResiduals                  = oldValues;
+    secResiduals *= 1.0 - _initialRelaxation; // (1-omg) * old
+    values += secResiduals;                   // (1-omg) * old + new * omg
   }
 }
 

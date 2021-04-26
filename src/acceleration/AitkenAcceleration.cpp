@@ -63,7 +63,7 @@ void AitkenAcceleration::performAcceleration(
   Eigen::VectorXd oldValues;
   for (int id : _dataIDs) {
     utils::append(values, cplData[id]->values());
-    utils::append(oldValues, (Eigen::VectorXd) cplData[id]->lastIteration);
+    utils::append(oldValues, (Eigen::VectorXd) cplData[id]->readLastIteration());
   }
 
   // Compute current residuals
@@ -92,7 +92,7 @@ void AitkenAcceleration::performAcceleration(
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type &pair : cplData) {
     auto &      values    = pair.second->values();
-    const auto &oldValues = pair.second->lastIteration;
+    const auto &oldValues = pair.second->readLastIteration();
     values *= omega;
     for (int i = 0; i < values.size(); i++) {
       values(i) += oldValues(i) * oneMinusOmega;

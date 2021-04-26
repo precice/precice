@@ -40,7 +40,39 @@ struct Waveform {
   Eigen::MatrixXd lastTimeWindows;
 };
 
-struct CouplingData { // @todo: should be a class from a design standpoint. See https://github.com/precice/precice/pull/865#discussion_r495825098
+class CouplingData {
+public:
+  /**
+   * @brief Default constructor, not to be used!
+   *
+   * Necessary when compiler creates template code for std::map::operator[].
+   */
+  CouplingData()
+      : requiresInitialization(false)
+  {
+    PRECICE_ASSERT(false);
+  }
+
+  CouplingData(
+      mesh::PtrData data,
+      mesh::PtrMesh mesh,
+      bool          requiresInitialization)
+      : data(data),
+        mesh(mesh),
+        requiresInitialization(requiresInitialization),
+        waveform()
+  {
+    PRECICE_ASSERT(data != nullptr);
+    PRECICE_ASSERT(mesh != nullptr);
+    PRECICE_ASSERT(mesh.use_count() > 0);
+  }
+
+  int getDimensions()
+  {
+    PRECICE_ASSERT(data != nullptr);
+    return data->getDimensions();
+  }
+
   /// Returns a reference to the data values.
   Eigen::VectorXd &values()
   {
@@ -60,6 +92,16 @@ struct CouplingData { // @todo: should be a class from a design standpoint. See 
     lastIteration = this->values();
   }
 
+  const Eigen::VectorXd readLastIteration()
+  {
+    return lastIteration;
+  }
+
+  [[deprecated("lastIteration should be read only!")]] void writeLastIteration(Eigen::VectorXd value)
+  {
+    lastIteration = value;
+  }
+
   void extrapolateData(int order, int timeWindows)
   {
     this->values() = waveform.extrapolateData(order, timeWindows);
@@ -70,48 +112,19 @@ struct CouplingData { // @todo: should be a class from a design standpoint. See 
     waveform.lastTimeWindows = Eigen::MatrixXd::Zero(this->values().size(), extrapolationOrder + 1);
   }
 
+  mesh::PtrMesh mesh;
+
   /// Stores data of this and previous time windows and allows to extrapolate.
   Waveform waveform;
 
+  ///  True, if the data values if this CouplingData requires to be initialized by a participant.
+  const bool requiresInitialization;
+
+private:
   /// Data values of previous iteration.
-  Eigen::VectorXd lastIteration; // @todo: make this read-only. Only allow update via storeIteration.
+  Eigen::VectorXd lastIteration;
 
   mesh::PtrData data;
-
-  mesh::PtrMesh mesh;
-
-  ///  True, if the data values if this CouplingData requires to be initialized by a participant.
-  bool requiresInitialization;
-
-  int getDimensions()
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->getDimensions();
-  }
-
-  /**
-   * @brief Default constructor, not to be used!
-   *
-   * Necessary when compiler creates template code for std::map::operator[].
-   */
-  CouplingData()
-  {
-    PRECICE_ASSERT(false);
-  }
-
-  CouplingData(
-      mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      bool          requiresInitialization)
-      : data(data),
-        mesh(mesh),
-        requiresInitialization(requiresInitialization),
-        waveform()
-  {
-    PRECICE_ASSERT(data != nullptr);
-    PRECICE_ASSERT(mesh != nullptr);
-    PRECICE_ASSERT(mesh.use_count() > 0);
-  }
 };
 
 } // namespace cplscheme
