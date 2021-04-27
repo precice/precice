@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"
@@ -42,17 +43,6 @@ struct Waveform {
 
 class CouplingData {
 public:
-  /**
-   * @brief Default constructor, not to be used!
-   *
-   * Necessary when compiler creates template code for std::map::operator[].
-   */
-  CouplingData()
-      : requiresInitialization(false)
-  {
-    PRECICE_ASSERT(false);
-  }
-
   CouplingData(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
@@ -67,7 +57,7 @@ public:
     PRECICE_ASSERT(mesh.use_count() > 0);
   }
 
-  int getDimensions()
+  int getDimensions() const
   {
     PRECICE_ASSERT(data != nullptr);
     return data->getDimensions();
@@ -92,7 +82,7 @@ public:
     lastIteration = this->values();
   }
 
-  const Eigen::VectorXd readLastIteration()
+  const Eigen::VectorXd readLastIteration() const
   {
     return lastIteration;
   }
@@ -112,7 +102,15 @@ public:
     waveform.lastTimeWindows = Eigen::MatrixXd::Zero(this->values().size(), extrapolationOrder + 1);
   }
 
-  mesh::PtrMesh mesh;
+  int getMeshID()
+  {
+    return mesh->getID();
+  }
+
+  std::vector<int> getVertexOffsets()
+  {
+    return mesh->getVertexOffsets();
+  }
 
   /// Stores data of this and previous time windows and allows to extrapolate.
   Waveform waveform;
@@ -121,10 +119,23 @@ public:
   const bool requiresInitialization;
 
 private:
+  /**
+   * @brief Default constructor, not to be used!
+   *
+   * Necessary when compiler creates template code for std::map::operator[].
+   */
+  CouplingData()
+      : requiresInitialization(false)
+  {
+    PRECICE_ASSERT(false);
+  }
+
   /// Data values of previous iteration.
   Eigen::VectorXd lastIteration;
 
   mesh::PtrData data;
+
+  mesh::PtrMesh mesh;
 };
 
 } // namespace cplscheme
