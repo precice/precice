@@ -248,7 +248,7 @@ void BaseCouplingScheme::extrapolateData()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Extrapolate data: {}", pair.first);
-    pair.second->extrapolateData(_extrapolationOrder, getTimeWindows());
+    pair.second->values() = pair.second->waveform.extrapolateData(_extrapolationOrder, getTimeWindows());
   }
 }
 
@@ -439,7 +439,7 @@ void BaseCouplingScheme::setupDataMatrices()
   if (_extrapolationOrder > 0) {
     for (DataMap::value_type &pair : getAccelerationData()) {
       pair.second->storeIteration();
-      pair.second->initializeWaveform(_extrapolationOrder);
+      pair.second->waveform.initialize(pair.second->values().size(), _extrapolationOrder + 1);
     }
   }
   // Storage reservation for acceleration methods happens in Acceleration::initialize

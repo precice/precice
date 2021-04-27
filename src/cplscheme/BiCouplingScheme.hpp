@@ -10,11 +10,11 @@
 #include "utils/assertion.hpp"
 
 // Forward declaration to friend the boost test struct
-namespace CplSchemeTests {
-namespace SerialImplicitCouplingSchemeTests {
+namespace TimeTests {
+namespace WaveformTests {
 struct testExtrapolateData;
 }
-} // namespace CplSchemeTests
+} // namespace TimeTests
 
 namespace precice {
 namespace cplscheme {
@@ -44,7 +44,7 @@ public:
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
 
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
+  friend struct TimeTests::WaveformTests::testExtrapolateData; // For whitebox tests
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(

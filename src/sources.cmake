@@ -244,6 +244,7 @@ target_sources(precice
     src/query/impl/RTreeAdapter.hpp
     src/query/impl/Indexer.hpp
     src/query/impl/Indexer.cpp
+    src/time/Waveform.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp

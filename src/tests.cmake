@@ -47,8 +47,6 @@ target_sources(testprecice
     src/mesh/tests/DataConfigurationTest.cpp
     src/mesh/tests/EdgeTest.cpp
     src/mesh/tests/MeshTest.cpp
-    src/query/tests/RTreeAdapterTests.cpp
-    src/query/tests/RTreeTests.cpp
     src/mesh/tests/TriangleTest.cpp
     src/mesh/tests/VertexTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
@@ -58,12 +56,15 @@ target_sources(testprecice
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
     src/precice/tests/WatchPointTest.cpp
+    src/query/tests/RTreeAdapterTests.cpp
+    src/query/tests/RTreeTests.cpp
     src/testing/TestContext.cpp
     src/testing/TestContext.hpp
     src/testing/Testing.cpp
     src/testing/Testing.hpp
     src/testing/main.cpp
     src/testing/tests/ExampleTests.cpp
+    src/time/tests/WaveformTest.cpp
     src/utils/tests/AlgorithmTest.cpp
     src/utils/tests/DimensionsTest.cpp
     src/utils/tests/EigenHelperFunctionsTest.cpp

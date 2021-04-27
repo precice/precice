@@ -272,6 +272,11 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
+  NAME time
+  ARGUMENTS "--run_test=TimeTests"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  )
+add_precice_test(
   NAME interface
   ARGUMENTS "--run_test=PreciceTests:\!PreciceTests/Serial:\!PreciceTests/Parallel"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}

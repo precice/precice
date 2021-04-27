@@ -4,42 +4,12 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
-
-struct Waveform {
-  void addNewWindowData(Eigen::VectorXd data)
-  {
-    // For extrapolation, treat the initial value as old time windows value
-    utils::shiftSetFirst(this->lastTimeWindows, data);
-  }
-
-  Eigen::VectorXd extrapolateData(int order, int timeWindows)
-  {
-    Eigen::VectorXd extrapolatedValue;
-    if ((order == 1) || (timeWindows == 2 && order == 2)) { //timesteps is increased before extrapolate is called
-      // PRECICE_INFO("Performing first order extrapolation");
-      PRECICE_ASSERT(this->lastTimeWindows.cols() > 1);
-      extrapolatedValue = this->lastTimeWindows.col(0) * 2.0; // = 2*x^t
-      extrapolatedValue -= this->lastTimeWindows.col(1);      // = 2*x^t - x^(t-1)
-    } else if (order == 2) {
-      // PRECICE_INFO("Performing second order extrapolation");
-      PRECICE_ASSERT(this->lastTimeWindows.cols() > 2);
-      extrapolatedValue = this->lastTimeWindows.col(0) * 2.5;  // = 2.5*x^t
-      extrapolatedValue -= this->lastTimeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-      extrapolatedValue += this->lastTimeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
-    } else {
-      PRECICE_ASSERT(false, "Extrapolation order is invalid.");
-    }
-    return extrapolatedValue;
-  }
-
-  /// Data values of previous time windows.
-  Eigen::MatrixXd lastTimeWindows;
-};
 
 class CouplingData {
 public:
@@ -89,17 +59,7 @@ public:
 
   [[deprecated("lastIteration should be read only!")]] void writeLastIteration(Eigen::VectorXd value)
   {
-    lastIteration = value;
-  }
-
-  void extrapolateData(int order, int timeWindows)
-  {
-    this->values() = waveform.extrapolateData(order, timeWindows);
-  }
-
-  void initializeWaveform(int extrapolationOrder)
-  {
-    waveform.lastTimeWindows = Eigen::MatrixXd::Zero(this->values().size(), extrapolationOrder + 1);
+    _lastIteration = value;
   }
 
   int getMeshID()
@@ -113,7 +73,7 @@ public:
   }
 
   /// Stores data of this and previous time windows and allows to extrapolate.
-  Waveform waveform;
+  time::Waveform waveform;
 
   ///  True, if the data values if this CouplingData requires to be initialized by a participant.
   const bool requiresInitialization;
