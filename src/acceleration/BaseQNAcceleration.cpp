@@ -489,11 +489,8 @@ void BaseQNAcceleration::splitCouplingData(
   for (int id : _dataIDs) {
     int   size       = cplData[id]->values().size();
     auto &valuesPart = cplData[id]->values();
-    //Eigen::VectorXd& oldValuesPart = cplData[id]->oldValues.col(0);
-    cplData[id]->writeLastIteration(_oldValues.segment(offset, size)); /// @todo: check if this is correct
     for (int i = 0; i < size; i++) {
       valuesPart(i) = _values(i + offset);
-      //oldValuesPart(i) = _oldValues(i + offset);
     }
     offset += size;
   }
