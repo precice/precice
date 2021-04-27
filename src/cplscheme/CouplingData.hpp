@@ -2,13 +2,34 @@
 
 #include <Eigen/Core>
 #include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
 
-struct CouplingData { // @todo: should be a class from a design standpoint. See https://github.com/precice/precice/pull/865#discussion_r495825098
+class CouplingData {
+public:
+  CouplingData(
+      mesh::PtrData data,
+      mesh::PtrMesh mesh,
+      bool          requiresInitialization)
+      : data(data),
+        mesh(mesh),
+        requiresInitialization(requiresInitialization)
+  {
+    PRECICE_ASSERT(data != nullptr);
+    PRECICE_ASSERT(mesh != nullptr);
+    PRECICE_ASSERT(mesh.use_count() > 0);
+  }
+
+  int getDimensions() const
+  {
+    PRECICE_ASSERT(data != nullptr);
+    return data->getDimensions();
+  }
+
   using DataMatrix = Eigen::MatrixXd;
 
   /// Returns a reference to the data values.
@@ -25,44 +46,37 @@ struct CouplingData { // @todo: should be a class from a design standpoint. See 
     return data->values();
   }
 
+  int getMeshID()
+  {
+    return mesh->getID();
+  }
+
+  std::vector<int> getVertexOffsets()
+  {
+    return mesh->getVertexOffsets();
+  }
+
   /// Data values of previous iteration (1st col) and previous time windows.
   DataMatrix oldValues;
 
-  mesh::PtrData data;
-
-  mesh::PtrMesh mesh;
-
   ///  True, if the data values if this CouplingData requires to be initialized by a participant.
-  bool requiresInitialization;
+  const bool requiresInitialization;
 
-  int getDimensions()
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->getDimensions();
-  }
-
+private:
   /**
    * @brief Default constructor, not to be used!
    *
    * Necessary when compiler creates template code for std::map::operator[].
    */
   CouplingData()
+      : requiresInitialization(false)
   {
     PRECICE_ASSERT(false);
   }
 
-  CouplingData(
-      mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      bool          requiresInitialization)
-      : data(data),
-        mesh(mesh),
-        requiresInitialization(requiresInitialization)
-  {
-    PRECICE_ASSERT(data != nullptr);
-    PRECICE_ASSERT(mesh != nullptr);
-    PRECICE_ASSERT(mesh.use_count() > 0);
-  }
+  mesh::PtrData data;
+
+  mesh::PtrMesh mesh;
 };
 
 } // namespace cplscheme
