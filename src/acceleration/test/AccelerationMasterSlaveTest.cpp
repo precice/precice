@@ -304,28 +304,31 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 
     //init displacements
     Eigen::VectorXd insert(4);
-    insert << 1.0, 2.0, 3.0, 4.0;
-    utils::append(displacements->values(), insert);
     insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(dcol1, insert);
+    utils::append(displacements->values(), insert);
+    //init forces
+    insert << 0.2, 0.2, 0.2, 0.2;
+    utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
-
-    //init forces
-    insert << 0.1, 0.1, 0.1, 0.1;
-    utils::append(forces->values(), insert);
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(fcol1, insert);
-
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+
+    dpcd->storeIteration();
+    fpcd->storeIteration();
+
+    // update displacement
+    insert << 1.0, 2.0, 3.0, 4.0;
+    dpcd->values() = insert;
+
+    // update forces
+    insert << 0.1, 0.1, 0.1, 0.1;
+    fpcd->values() = insert;
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
 
     pp.initialize(data);
 
-    dpcd->writeLastIteration(dcol1);
-    fpcd->writeLastIteration(fcol1);
   } else if (context.isRank(1)) { //Slave1
 
     /**
@@ -334,28 +337,30 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 
     //init displacements
     Eigen::VectorXd insert(4);
-    insert << 5.0, 6.0, 7.0, 8.0;
-    utils::append(displacements->values(), insert);
     insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(dcol1, insert);
+    utils::append(displacements->values(), insert);
+    //init forces
+    insert << 0.2, 0.2, 0.2, 0.2;
+    utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
-
-    //init forces
-    insert << 0.1, 0.1, 0.1, 0.1;
-    utils::append(forces->values(), insert);
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(fcol1, insert);
-
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+
+    dpcd->storeIteration();
+    fpcd->storeIteration();
+
+    //update displacements
+    insert << 5.0, 6.0, 7.0, 8.0;
+    dpcd->values() = insert;
+    //update forces
+    insert << 0.1, 0.1, 0.1, 0.1;
+    fpcd->values() = insert;
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
 
     pp.initialize(data);
 
-    dpcd->writeLastIteration(dcol1);
-    fpcd->writeLastIteration(fcol1);
   } else if (context.isRank(2)) { //Slave2
 
     /**
@@ -368,13 +373,14 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     //init forces
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
+    dpcd->storeIteration();
+    fpcd->storeIteration();
+
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
 
     pp.initialize(data);
 
-    dpcd->writeLastIteration(dcol1);
-    fpcd->writeLastIteration(fcol1);
   } else if (context.isRank(3)) { //Slave3
 
     /**
@@ -383,28 +389,30 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 
     //init displacements
     Eigen::VectorXd insert(2);
-    insert << 1.0, 2.0;
-    utils::append(displacements->values(), insert);
     insert << 1.0, 1.0;
-    utils::append(dcol1, insert);
+    utils::append(displacements->values(), insert);
+    //init forces
+    insert << 0.2, 0.2;
+    utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
-
-    //init forces
-    insert << 0.1, 0.1;
-    utils::append(forces->values(), insert);
-    insert << 0.2, 0.2;
-    utils::append(fcol1, insert);
-
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+
+    dpcd->storeIteration();
+    fpcd->storeIteration();
+
+    //update displacements
+    insert << 1.0, 2.0;
+    displacements->values() = insert;
+
+    //update forces
+    insert << 0.1, 0.1;
+    forces->values() = insert;
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
 
     pp.initialize(data);
-
-    dpcd->writeLastIteration(dcol1);
-    fpcd->writeLastIteration(fcol1);
   }
 
   pp.performAcceleration(data);
