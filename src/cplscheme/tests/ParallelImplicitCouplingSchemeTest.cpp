@@ -100,36 +100,20 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
                                     timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
                                     restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
 
-  Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
   //init displacements
-  utils::append(displacements->values(), 1.0);
-  utils::append(displacements->values(), 2.0);
-  utils::append(displacements->values(), 3.0);
-  utils::append(displacements->values(), 4.0);
-
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-
-  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
+  displacements->values().resize(4);
+  displacements->values() << 1.0, 1.0, 1.0, 1.0;
 
   //init forces
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
+  forces->values().resize(4);
+  forces->values() << 0.2, 0.2, 0.2, 0.2;
 
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-
+  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
   PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
   DataMap data;
@@ -138,8 +122,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
 
   pp.initialize(data);
 
-  dpcd->writeLastIteration(dcol1);
-  fpcd->writeLastIteration(fcol1);
+  displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  forces->values() << 0.1, 0.1, 0.1, 0.1;
 
   pp.performAcceleration(data);
 
@@ -152,13 +136,7 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199000000000000010214));
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199000000000000010214));
 
-  Eigen::VectorXd newdvalues;
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-
-  data.begin()->second->values() = newdvalues;
+  data.begin()->second->values() << 10, 10, 10, 10;
 
   pp.performAcceleration(data);
 
@@ -198,36 +176,18 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   acceleration::IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                                       timestepsReused, filter, singularityLimit, dataIDs, prec);
 
-  Eigen::VectorXd dcol1;
-  Eigen::VectorXd fcol1;
-
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
   //init displacements
-  utils::append(displacements->values(), 1.0);
-  utils::append(displacements->values(), 2.0);
-  utils::append(displacements->values(), 3.0);
-  utils::append(displacements->values(), 4.0);
-
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-
-  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
+  displacements->values().resize(4);
+  displacements->values() << 1.0, 1.0, 1.0, 1.0;
 
   //init forces
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
+  forces->values().resize(4);
+  forces->values() << 0.2, 0.2, 0.2, 0.2;
 
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-
+  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
   PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
   DataMap data;
@@ -236,8 +196,8 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 
   pp.initialize(data);
 
-  dpcd->writeLastIteration(dcol1);
-  fpcd->writeLastIteration(fcol1);
+  displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  forces->values() << 0.1, 0.1, 0.1, 0.1;
 
   pp.performAcceleration(data);
 
