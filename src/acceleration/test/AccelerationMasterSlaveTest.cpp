@@ -74,19 +74,13 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
     //init displacements
     Eigen::VectorXd insert(4);
-    insert << 1.0, 2.0, 3.0, 4.0;
-    utils::append(displacements->values(), insert);
     insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(dcol1, insert);
+    utils::append(displacements->values(), insert);
+    //init forces
+    insert << 0.2, 0.2, 0.2, 0.2;
+    utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
-
-    //init forces
-    insert << 0.1, 0.1, 0.1, 0.1;
-    utils::append(forces->values(), insert);
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(fcol1, insert);
-
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
@@ -94,8 +88,11 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
     pp.initialize(data);
 
-    dpcd->writeLastIteration(dcol1);
-    fpcd->writeLastIteration(fcol1);
+    insert << 1.0, 2.0, 3.0, 4.0;
+    displacements->values() = insert;
+    insert << 0.1, 0.1, 0.1, 0.1;
+    forces->values() = insert;
+
   } else if (context.isRank(1)) { //Slave1
 
     /**
@@ -104,19 +101,13 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
     //init displacements
     Eigen::VectorXd insert(4);
-    insert << 5.0, 6.0, 7.0, 8.0;
-    utils::append(displacements->values(), insert);
     insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(dcol1, insert);
+    utils::append(displacements->values(), insert);
+    //init forces
+    insert << 0.2, 0.2, 0.2, 0.2;
+    utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
-
-    //init forces
-    insert << 0.1, 0.1, 0.1, 0.1;
-    utils::append(forces->values(), insert);
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(fcol1, insert);
-
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
@@ -124,8 +115,11 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
     pp.initialize(data);
 
-    dpcd->writeLastIteration(dcol1);
-    fpcd->writeLastIteration(fcol1);
+    insert << 5.0, 6.0, 7.0, 8.0;
+    displacements->values() = insert;
+    insert << 0.1, 0.1, 0.1, 0.1;
+    forces->values() = insert;
+
   } else if (context.isRank(2)) { //Slave2
 
     /**
@@ -143,8 +137,6 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
     pp.initialize(data);
 
-    dpcd->writeLastIteration(dcol1);
-    fpcd->writeLastIteration(fcol1);
   } else if (context.isRank(3)) { //Slave3
 
     /**
@@ -153,19 +145,13 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
     //init displacements
     Eigen::VectorXd insert(2);
-    insert << 1.0, 2.0;
-    utils::append(displacements->values(), insert);
     insert << 1.0, 1.0;
-    utils::append(dcol1, insert);
+    utils::append(displacements->values(), insert);
+    //init forces
+    insert << 0.2, 0.2;
+    utils::append(forces->values(), insert);
 
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
-
-    //init forces
-    insert << 0.1, 0.1;
-    utils::append(forces->values(), insert);
-    insert << 0.2, 0.2;
-    utils::append(fcol1, insert);
-
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
@@ -173,8 +159,10 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
     pp.initialize(data);
 
-    dpcd->writeLastIteration(dcol1);
-    fpcd->writeLastIteration(fcol1);
+    insert << 1.0, 2.0;
+    displacements->values() = insert;
+    insert << 0.1, 0.1;
+    forces->values() = insert;
   }
 
   pp.performAcceleration(data);
@@ -988,37 +976,42 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timestepsReused, filter, singularityLimit, dataIDs, prec);
 
-  mesh::PtrData   displacements(new mesh::Data("dvalues", -1, 1));
-  Eigen::VectorXd dcol1;
+  mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
 
   DataMap data;
 
+  Eigen::VectorXd insert;
+  //init displacements
   if (context.isMaster()) { // 2 vertices
-    //init displacements
-    Eigen::VectorXd insert(2);
-    insert << 1.0, 1.0;
-    utils::append(displacements->values(), insert);
+    insert.resize(2);
     insert << 0.5, 0.5;
-    utils::append(dcol1, insert);
   } else if (context.isRank(1)) { //1 vertex
-    Eigen::VectorXd insert(1);
-    insert << 1.0;
-    utils::append(displacements->values(), insert);
+    insert.resize(1);
     insert << 0.5;
-    utils::append(dcol1, insert);
   } else if (context.isRank(2)) { //no vertices
   } else {                        //1 vertex
-    Eigen::VectorXd insert(1);
-    insert << 1.0;
-    utils::append(displacements->values(), insert);
+    insert.resize(1);
     insert << 0.5;
-    utils::append(dcol1, insert);
   }
+
+  utils::append(displacements->values(), insert);
 
   PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+
   acc.initialize(data);
-  dpcd->writeLastIteration(dcol1);
+
+  //update displacements
+  if (context.isMaster()) { // 2 vertices
+    insert << 1.0, 1.0;
+  } else if (context.isRank(1)) { //1 vertex
+    insert << 1.0;
+  } else if (context.isRank(2)) { //no vertices
+  } else {                        //1 vertex
+    insert << 1.0;
+  }
+
+  displacements->values() = insert;
 
   acc.performAcceleration(data);
 
