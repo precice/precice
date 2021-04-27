@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <array>
 #include <iostream>
 #include <utility>
 #include "math/differences.hpp"
@@ -12,6 +13,9 @@ namespace mesh {
 /// Vertex of a mesh.
 class Vertex {
 public:
+  //( Used as the raw representation of the coordinates
+  using RawCoords = std::array<double, 3>;
+
   /// Constructor for vertex
   template <typename VECTOR_T>
   Vertex(
@@ -25,10 +29,6 @@ public:
   template <typename VECTOR_T>
   void setCoords(const VECTOR_T &coordinates);
 
-  /// Sets the coordinates of the vertex, rvalue variant
-  template <typename VECTOR_T>
-  void setCoords(VECTOR_T &&coordinates);
-
   /// Sets the normal of the vertex.
   template <typename VECTOR_T>
   void setNormal(const VECTOR_T &normal);
@@ -41,7 +41,10 @@ public:
   int getID() const;
 
   /// Returns the coordinates of the vertex.
-  const Eigen::VectorXd &getCoords() const;
+  Eigen::VectorXd getCoords() const;
+
+  /// Direct access to the coordinates
+  const RawCoords &rawCoords() const;
 
   /// Returns the normal of the vertex.
   const Eigen::VectorXd &getNormal() const;
@@ -64,11 +67,14 @@ public:
   inline bool operator!=(const Vertex &rhs) const;
 
 private:
+  /// Coordinates of the vertex
+  std::array<double, 3> _coords;
+
+  /// Dimension of the coordinates. 3D or 2D
+  short _dim;
+
   /// Unique (among vertices in one mesh) ID of the vertex.
   int _id;
-
-  /// Coordinates of the vertex.
-  Eigen::VectorXd _coords;
 
   /// Normal of the vertex.
   Eigen::VectorXd _normal;
@@ -89,26 +95,26 @@ template <typename VECTOR_T>
 Vertex::Vertex(
     const VECTOR_T &coordinates,
     int             id)
-    : _id(id),
-      _coords(coordinates),
-      _normal(Eigen::VectorXd::Constant(_coords.size(), 0.0))
+    : _dim(coordinates.size()),
+      _id(id),
+      _normal(Eigen::VectorXd::Constant(_dim, 0.0))
 {
+  PRECICE_ASSERT(_dim == 2 || _dim == 3, _dim);
+  std::copy_n(coordinates.data(), _dim, _coords.begin());
+  if (_dim == 2) {
+    _coords[2] = 0.0;
+  };
 }
 
 template <typename VECTOR_T>
 void Vertex::setCoords(
     const VECTOR_T &coordinates)
 {
-  PRECICE_ASSERT(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
-  _coords = coordinates;
-}
-
-template <typename VECTOR_T>
-void Vertex::setCoords(
-    VECTOR_T &&coordinates)
-{
-  PRECICE_ASSERT(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
-  _coords = std::forward<VECTOR_T>(coordinates);
+  PRECICE_ASSERT(coordinates.size() == _dim, coordinates.size(), _dim);
+  std::copy_n(coordinates.data(), _dim, _coords.begin());
+  if (_dim == 2) {
+    _coords[2] = 0.0;
+  };
 }
 
 template <typename VECTOR_T>
@@ -132,14 +138,21 @@ inline int Vertex::getID() const
   return _id;
 }
 
-inline const Eigen::VectorXd &Vertex::getCoords() const
+inline Eigen::VectorXd Vertex::getCoords() const
+{
+  Eigen::VectorXd v(_dim);
+  std::copy_n(_coords.data(), _dim, v.data());
+  return v;
+}
+
+inline const Vertex::RawCoords &Vertex::rawCoords() const
 {
   return _coords;
 }
 
 inline bool Vertex::operator==(const Vertex &rhs) const
 {
-  return math::equals(_coords, rhs._coords);
+  return math::equals(getCoords(), rhs.getCoords());
 }
 
 inline bool Vertex::operator!=(const Vertex &rhs) const
