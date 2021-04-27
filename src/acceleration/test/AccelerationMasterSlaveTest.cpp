@@ -313,8 +313,10 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
-    dpcd->storeIteration();
-    fpcd->storeIteration();
+    data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+    data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+
+    pp.initialize(data);
 
     // update displacement
     insert << 1.0, 2.0, 3.0, 4.0;
@@ -324,11 +326,23 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     insert << 0.1, 0.1, 0.1, 0.1;
     fpcd->values() = insert;
 
-    data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
-    data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
-
-    pp.initialize(data);
-
+    //check for correct initial data
+    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(0), 1.0), data.at(0)->readLastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(1), 1.0), data.at(0)->readLastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(2), 1.0), data.at(0)->readLastIteration()(2));
+    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(3), 1.0), data.at(0)->readLastIteration()(3));
+    BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.0), data.at(0)->values()(0));
+    BOOST_TEST(testing::equals(data.at(0)->values()(1), 2.0), data.at(0)->values()(1));
+    BOOST_TEST(testing::equals(data.at(0)->values()(2), 3.0), data.at(0)->values()(2));
+    BOOST_TEST(testing::equals(data.at(0)->values()(3), 4.0), data.at(0)->values()(3));
+    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(0), 0.2), data.at(1)->readLastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(1), 0.2), data.at(1)->readLastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(2), 0.2), data.at(1)->readLastIteration()(2));
+    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(3), 0.2), data.at(1)->readLastIteration()(3));
+    BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.1), data.at(1)->values()(0));
+    BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.1), data.at(1)->values()(1));
+    BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.1), data.at(1)->values()(2));
+    BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.1), data.at(1)->values()(3));
   } else if (context.isRank(1)) { //Slave1
 
     /**
@@ -346,8 +360,10 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
-    dpcd->storeIteration();
-    fpcd->storeIteration();
+    data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+    data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+
+    pp.initialize(data);
 
     //update displacements
     insert << 5.0, 6.0, 7.0, 8.0;
@@ -356,11 +372,23 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     insert << 0.1, 0.1, 0.1, 0.1;
     fpcd->values() = insert;
 
-    data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
-    data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
-
-    pp.initialize(data);
-
+    //check for correct initial data
+    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(0), 1.0), data.at(0)->readLastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(1), 1.0), data.at(0)->readLastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(2), 1.0), data.at(0)->readLastIteration()(2));
+    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(3), 1.0), data.at(0)->readLastIteration()(3));
+    BOOST_TEST(testing::equals(data.at(0)->values()(0), 5.0), data.at(0)->values()(0));
+    BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.0), data.at(0)->values()(1));
+    BOOST_TEST(testing::equals(data.at(0)->values()(2), 7.0), data.at(0)->values()(2));
+    BOOST_TEST(testing::equals(data.at(0)->values()(3), 8.0), data.at(0)->values()(3));
+    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(0), 0.2), data.at(1)->readLastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(1), 0.2), data.at(1)->readLastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(2), 0.2), data.at(1)->readLastIteration()(2));
+    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(3), 0.2), data.at(1)->readLastIteration()(3));
+    BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.1), data.at(1)->values()(0));
+    BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.1), data.at(1)->values()(1));
+    BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.1), data.at(1)->values()(2));
+    BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.1), data.at(1)->values()(3));
   } else if (context.isRank(2)) { //Slave2
 
     /**
@@ -373,14 +401,13 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     //init forces
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
-    dpcd->storeIteration();
-    fpcd->storeIteration();
-
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
 
     pp.initialize(data);
 
+    //check for correct initial data
+    //empty proc
   } else if (context.isRank(3)) { //Slave3
 
     /**
@@ -398,8 +425,10 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
     PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
-    dpcd->storeIteration();
-    fpcd->storeIteration();
+    data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+    data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+
+    pp.initialize(data);
 
     //update displacements
     insert << 1.0, 2.0;
@@ -409,10 +438,15 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     insert << 0.1, 0.1;
     forces->values() = insert;
 
-    data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
-    data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
-
-    pp.initialize(data);
+    //check for correct initial data
+    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(0), 1.0), data.at(0)->readLastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(1), 1.0), data.at(0)->readLastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.0), data.at(0)->values()(0));
+    BOOST_TEST(testing::equals(data.at(0)->values()(1), 2.0), data.at(0)->values()(1));
+    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(0), 0.2), data.at(1)->readLastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(1), 0.2), data.at(1)->readLastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.1), data.at(1)->values()(0));
+    BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.1), data.at(1)->values()(1));
   }
 
   pp.performAcceleration(data);
