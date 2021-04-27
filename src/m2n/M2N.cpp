@@ -299,7 +299,7 @@ void M2N::receive(bool &itemToReceive)
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  PRECICE_DEBUG("receive(bool): " << itemToReceive);
+  PRECICE_DEBUG("receive(bool): {}", itemToReceive);
 }
 
 void M2N::receive(double &itemToReceive)
@@ -311,7 +311,7 @@ void M2N::receive(double &itemToReceive)
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  PRECICE_DEBUG("receive(double): " << itemToReceive);
+  PRECICE_DEBUG("receive(double): {}", itemToReceive);
 }
 
 void M2N::broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh)

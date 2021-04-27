@@ -34,6 +34,7 @@ target_sources(testprecice
     src/io/tests/TXTWriterReaderTest.cpp
     src/m2n/tests/GatherScatterCommunicationTest.cpp
     src/m2n/tests/PointToPointCommunicationTest.cpp
+    src/mapping/tests/PolationTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
     src/mapping/tests/NearestNeighborMappingTest.cpp
     src/mapping/tests/NearestProjectionMappingTest.cpp
@@ -57,8 +58,6 @@ target_sources(testprecice
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
     src/precice/tests/WatchPointTest.cpp
-    src/query/tests/FindClosestTest.cpp
-    src/query/tests/FindClosestVertexVisitorTest.cpp
     src/testing/TestContext.cpp
     src/testing/TestContext.hpp
     src/testing/Testing.cpp

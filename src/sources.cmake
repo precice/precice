@@ -171,6 +171,8 @@ target_sources(precice
     src/mapping/NearestProjectionMapping.hpp
     src/mapping/PetRadialBasisFctMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
+    src/mapping/Polation.hpp
+    src/mapping/Polation.cpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
@@ -237,14 +239,6 @@ target_sources(precice
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
-    src/query/FindClosest.cpp
-    src/query/FindClosest.hpp
-    src/query/FindClosestEdge.cpp
-    src/query/FindClosestEdge.hpp
-    src/query/FindClosestTriangle.cpp
-    src/query/FindClosestTriangle.hpp
-    src/query/FindClosestVertex.cpp
-    src/query/FindClosestVertex.hpp
     src/query/Index.hpp
     src/query/Index.cpp
     src/query/impl/RTreeAdapter.hpp

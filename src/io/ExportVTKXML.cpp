@@ -82,7 +82,7 @@ void ExportVTKXML::writeMasterFile(
   outfile = outfile / fs::path(name + "_master.pvtu");
   std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outMasterFile, "VTKXML export failed to open master file \"" << outfile << '"');
+  PRECICE_CHECK(outMasterFile, "VTKXML export failed to open master file \"{}\"", outfile);
 
   outMasterFile << "<?xml version=\"1.0\"?>\n";
   outMasterFile << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"";
@@ -150,7 +150,7 @@ void ExportVTKXML::writeSubFile(
   outfile = outfile / fs::path(name + "_r" + std::to_string(utils::MasterSlave::getRank()) + ".vtu");
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outSubFile, "VTKXML export failed to open slave file \"" << outfile << '"');
+  PRECICE_CHECK(outSubFile, "VTKXML export failed to open slave file \"{}\"", outfile);
 
   outSubFile << "<?xml version=\"1.0\"?>\n";
   outSubFile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"";

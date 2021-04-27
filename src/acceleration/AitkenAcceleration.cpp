@@ -1,11 +1,11 @@
 #include "acceleration/AitkenAcceleration.hpp"
 #include <Eigen/Core>
+#include <cmath>
+#include <cstddef>
 #include <limits>
 #include <map>
-#include <math.h>
 #include <memory>
 #include <ostream>
-#include <stddef.h>
 #include "cplscheme/CouplingData.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/math.hpp"
@@ -25,7 +25,9 @@ AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "Initial relaxation factor for Aitken acceleration has to "
-                    << "be larger than zero and smaller or equal to one. Current initial relaxation is: " << _initialRelaxation);
+                "be larger than zero and smaller or equal to one. "
+                "Current initial relaxation is: {}",
+                _initialRelaxation);
 }
 
 void AitkenAcceleration::initialize(DataMap &cplData)
@@ -88,7 +90,7 @@ void AitkenAcceleration::performAcceleration(
     _aitkenFactor      = -_aitkenFactor * (nominator / denominator);
   }
 
-  PRECICE_DEBUG("AitkenFactor: " << _aitkenFactor);
+  PRECICE_DEBUG("AitkenFactor: {}", _aitkenFactor);
 
   // Perform relaxation with aitken factor
   double omega         = _aitkenFactor;

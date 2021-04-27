@@ -218,11 +218,11 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
     std::cout << std::fixed << std::setprecision(3) //
               << "Number of LVDIs per Interface Process:"
               << "\n"
-              << "  Total:   " << total << "\n"
-              << "  Maximum: " << maximum << "\n"
-              << "  Minimum: " << minimum << "\n"
-              << "  Average: " << average << "\n"
-              << "Number of Interface Processes: " << count << "\n"
+              << "  Total:   " << total << '\n'
+              << "  Maximum: " << maximum << '\n'
+              << "  Minimum: " << minimum << '\n'
+              << "  Average: " << average << '\n'
+              << "Number of Interface Processes: " << count << '\n'
               << '\n';
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
