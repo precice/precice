@@ -732,6 +732,130 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
   tearDownParallelEnvironment();
 }
 
+BOOST_AUTO_TEST_CASE(RePartitionRBFLocalPrimitiveOwnership3D)
+{
+  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events, Require::PETSc);
+  auto m2n = context.connectMasters("Solid", "Fluid");
+
+  int  dimensions  = 3;
+  bool flipNormals = false;
+
+  if (context.isNamed("Solid")) { //SOLIDZ
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+    createSolidzMesh3D(pSolidzMesh);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
+    part.communicate();
+  } else {
+    BOOST_TEST(context.isNamed("Fluid"));
+    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+
+    double supportRadius1 = 1.2;
+    double supportRadius2 = 0.2;
+
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
+        new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::SCALEDCONSISTENT, dimensions,
+                                                                                  mapping::CompactThinPlateSplinesC2(supportRadius1), false, false, false));
+    mapping::PtrMapping boundingToMapping = mapping::PtrMapping(
+        new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(mapping::Mapping::CONSERVATIVE, dimensions,
+                                                                                  mapping::CompactThinPlateSplinesC2(supportRadius2), false, false, false));
+    boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
+    boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
+
+    createNastinMesh3D(pNastinMesh, context.rank);
+
+    double            safetyFactor = 20.0;
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::NO_FILTER, safetyFactor);
+    part.addM2N(m2n);
+    part.addFromMapping(boundingFromMapping);
+    part.addToMapping(boundingToMapping);
+    part.communicate();
+    part.compute();
+
+    BOOST_TEST_CONTEXT(*pSolidzMesh)
+    {
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 5);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 5);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 10);
+      BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 5);
+
+      // check if the sending and filtering worked right
+      if (context.isMaster()) { //Master
+        BOOST_TEST(pSolidzMesh->vertices().size() == 5);
+        BOOST_TEST(pSolidzMesh->edges().size() == 6);
+        BOOST_TEST(pSolidzMesh->triangles().size() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 4);
+
+        BOOST_TEST(pSolidzMesh->edges().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->edges().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->edges().at(2).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->edges().at(3).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->edges().at(4).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->edges().at(5).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->edges().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->edges().at(1).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->edges().at(2).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->edges().at(3).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->edges().at(4).getGlobalIndex() == 4);
+        BOOST_TEST(pSolidzMesh->edges().at(5).getGlobalIndex() == 5);
+
+        BOOST_TEST(pSolidzMesh->triangles().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->triangles().at(1).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->triangles().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->triangles().at(1).getGlobalIndex() == 1);
+      } else if (context.isRank(1)) { //Slave2
+        BOOST_TEST(pSolidzMesh->vertices().size() == 0);
+        BOOST_TEST(pSolidzMesh->edges().size() == 0);
+        BOOST_TEST(pSolidzMesh->triangles().size() == 0);
+      } else if (context.isRank(2)) { //Slave3
+        BOOST_TEST(pSolidzMesh->vertices().size() == 5);
+        BOOST_TEST(pSolidzMesh->edges().size() == 6);
+        BOOST_TEST(pSolidzMesh->triangles().size() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 4);
+
+        BOOST_TEST(pSolidzMesh->edges().at(0).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->edges().at(1).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->edges().at(2).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->edges().at(3).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->edges().at(4).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->edges().at(5).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->edges().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->edges().at(1).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->edges().at(2).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->edges().at(3).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->edges().at(4).getGlobalIndex() == 4);
+        BOOST_TEST(pSolidzMesh->edges().at(5).getGlobalIndex() == 5);
+
+        BOOST_TEST(pSolidzMesh->triangles().at(0).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->triangles().at(1).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->triangles().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->triangles().at(1).getGlobalIndex() == 1);
+      }
+    }
+  }
+  tearDownParallelEnvironment();
+}
+
 #endif // PRECICE_NO_PETSC
 
 BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
@@ -1176,120 +1300,6 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
   tearDownParallelEnvironment();
 }
 
-BOOST_AUTO_TEST_CASE(MeshFiltering)
-{
-  PRECICE_TEST("SolverOne"_on(2_ranks).setupMasterSlaves(), "SolverTwo"_on(2_ranks).setupMasterSlaves(), Require::Events);
-  auto m2n = context.connectMasters("SolverOne", "SolverTwo");
-
-  int  dimensions  = 3;
-  bool flipNormals = false;
-
-  if (context.isNamed("SolverOne")) {
-    mesh::PtrMesh meshOne(new mesh::Mesh("MeshOne", dimensions, flipNormals, testing::nextMeshID()));
-    // MeshOne
-    Eigen::Vector3d coordOneA{0.0, 0.0, 0.1};
-    Eigen::Vector3d coordOneB{1.2, 0.0, 0.1};
-    Eigen::Vector3d coordOneC{1.3, 1.0, 0.11};
-    Eigen::Vector3d coordOneD{0.0, 1.0, 0.1};
-    Eigen::Vector3d coordOneE{2.1, 0.0, 0.1};
-    Eigen::Vector3d coordOneF{2.3, 1.0, -0.1};
-
-    if (context.isMaster()) {
-      auto &vA  = meshOne->createVertex(coordOneA);
-      auto &vB  = meshOne->createVertex(coordOneB);
-      auto &vC  = meshOne->createVertex(coordOneC);
-      auto &vD  = meshOne->createVertex(coordOneD);
-      auto &eAB = meshOne->createEdge(vA, vB);
-      auto &eBC = meshOne->createEdge(vB, vC);
-      auto &eAC = meshOne->createEdge(vA, vC);
-      auto &eCD = meshOne->createEdge(vC, vD);
-      auto &eAD = meshOne->createEdge(vA, vD);
-      meshOne->createTriangle(eAB, eBC, eAC);
-      meshOne->createTriangle(eAD, eAC, eCD);
-    } else {
-      auto &vB  = meshOne->createVertex(coordOneB);
-      auto &vC  = meshOne->createVertex(coordOneC);
-      auto &vE  = meshOne->createVertex(coordOneE);
-      auto &vF  = meshOne->createVertex(coordOneF);
-      auto &eBC = meshOne->createEdge(vB, vC);
-      auto &eBE = meshOne->createEdge(vB, vE);
-      auto &eBF = meshOne->createEdge(vB, vF);
-      auto &eEF = meshOne->createEdge(vE, vF);
-      auto &eFC = meshOne->createEdge(vF, vC);
-      meshOne->createTriangle(eBC, eFC, eBF);
-      meshOne->createTriangle(eBE, eEF, eBF);
-    }
-
-    ProvidedPartition part(meshOne);
-    part.addM2N(m2n);
-    part.communicate();
-
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    mesh::PtrMesh meshOne(new mesh::Mesh("MeshOne", dimensions, flipNormals, testing::nextMeshID()));
-    mesh::PtrMesh meshTwo(new mesh::Mesh("MeshTwo", dimensions, flipNormals, testing::nextMeshID()));
-
-    // Mesh Two
-    Eigen::Vector3d coordTwoA{0.0, 0.0, 0.01};
-    Eigen::Vector3d coordTwoB{1.01, 0.0, 0.0};
-    Eigen::Vector3d coordTwoC{1.5, 1.0, 0.01};
-    Eigen::Vector3d coordTwoD{0.0, 1.0, 0.01};
-    Eigen::Vector3d coordTwoE{2.2, 0.0, -0.01};
-    Eigen::Vector3d coordTwoF{2.5, 1.0, 0.01};
-
-    double supportRadius = 2.45;
-
-    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
-        new mapping::NearestProjectionMapping(mapping::Mapping::SCALEDCONSISTENT, dimensions));
-    mapping::PtrMapping boundingToMapping = mapping::PtrMapping(
-        new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
-
-    boundingFromMapping->setMeshes(meshOne, meshTwo);
-    boundingToMapping->setMeshes(meshTwo, meshOne);
-
-    if (context.isMaster()) {
-      auto &vA  = meshTwo->createVertex(coordTwoA);
-      auto &vB  = meshTwo->createVertex(coordTwoB);
-      auto &vC  = meshTwo->createVertex(coordTwoC);
-      auto &vD  = meshTwo->createVertex(coordTwoD);
-      auto &vF  = meshTwo->createVertex(coordTwoF);
-      auto &eAB = meshTwo->createEdge(vA, vB);
-      auto &eBC = meshTwo->createEdge(vB, vC);
-      auto &eAC = meshTwo->createEdge(vA, vC);
-      auto &eCD = meshTwo->createEdge(vC, vD);
-      auto &eAD = meshTwo->createEdge(vA, vD);
-      auto &eBF = meshTwo->createEdge(vB, vF);
-      auto &eFC = meshTwo->createEdge(vF, vC);
-      meshTwo->createTriangle(eAB, eBC, eAC);
-      meshTwo->createTriangle(eAD, eAC, eCD);
-      meshTwo->createTriangle(eBC, eFC, eBF);
-    } else {
-      auto &vB  = meshTwo->createVertex(coordTwoB);
-      auto &vE  = meshTwo->createVertex(coordTwoE);
-      auto &vF  = meshTwo->createVertex(coordTwoF);
-      auto &eBE = meshTwo->createEdge(vB, vE);
-      auto &eBF = meshTwo->createEdge(vB, vF);
-      auto &eEF = meshTwo->createEdge(vE, vF);
-      meshTwo->createTriangle(eBE, eEF, eBF);
-    }
-
-    double            safetyFactor = 20.0;
-    ReceivedPartition part(meshOne, ReceivedPartition::NO_FILTER, safetyFactor);
-    part.addM2N(m2n);
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
-    part.communicate();
-    part.compute();
-
-    BOOST_TEST_CONTEXT(*meshOne)
-    {
-      for (auto triangle : meshOne->triangles()) {
-        std::cout << context.rank << ": " << triangle << " " << triangle.getGlobalIndex() << " " << triangle.isOwner() << std::endl;
-      }
-    }
-  }
-  tearDownParallelEnvironment();
-}
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

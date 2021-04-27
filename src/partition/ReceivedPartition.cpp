@@ -170,22 +170,19 @@ void ReceivedPartition::compute()
   PRECICE_DEBUG("Tag vertices for filtering: 2nd round.");
   tagMeshSecondRound();
 
-  // If there is no scaled consistent mappings, filter the mesh
-  if (not communicateFullOwnership) {
-    // (5) Filter mesh according to tag
-    PRECICE_INFO("Filter mesh " << _mesh->getName() << " by mappings");
-    Event      e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
-    mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-    mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
-    PRECICE_DEBUG("Mapping filter, filtered from "
-                  << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
-                  << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
-                  << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
+  // (5) Filter mesh according to tag
+  PRECICE_INFO("Filter mesh " << _mesh->getName() << " by mappings");
+  Event      e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
+  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+  mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
+  PRECICE_DEBUG("Mapping filter, filtered from "
+                << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
+                << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
+                << _mesh->triangles().size() << " to " << filteredMesh.triangles().size() << " triangles.");
 
-    _mesh->clear();
-    _mesh->addMesh(filteredMesh);
-    e5.stop();
-  }
+  _mesh->clear();
+  _mesh->addMesh(filteredMesh);
+  e5.stop();
 
   // (6) Compute vertex distribution or local communication map
   if (m2n().usesTwoLevelInitialization()) {
