@@ -456,9 +456,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->waveform.lastTimeWindows.cols() == 2);
   BOOST_TEST(cplData->waveform.lastTimeWindows.rows() == 1);
-  BOOST_TEST(cplData->readLastIteration().size() == 1);
+  BOOST_TEST(cplData->lastIteration().size() == 1);
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
-  BOOST_TEST(testing::equals(cplData->readLastIteration()(0), 0.0));
+  BOOST_TEST(testing::equals(cplData->lastIteration()(0), 0.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 0), 0.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 1), 0.0));
 
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme.extrapolateData();
   scheme.storeLastIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0));
-  BOOST_TEST(testing::equals(cplData->readLastIteration()(0), 2.0));
+  BOOST_TEST(testing::equals(cplData->lastIteration()(0), 2.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 0), 1.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 1), 0.0));
 
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme.extrapolateData();
   scheme.storeLastIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0));
-  BOOST_TEST(testing::equals(cplData->readLastIteration()(0), 7.0));
+  BOOST_TEST(testing::equals(cplData->lastIteration()(0), 7.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 0), 4.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 1), 1.0));
 
@@ -498,9 +498,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->waveform.lastTimeWindows.cols() == 3);
   BOOST_TEST(cplData->waveform.lastTimeWindows.rows() == 1);
-  BOOST_TEST(cplData->readLastIteration().size() == 1);
+  BOOST_TEST(cplData->lastIteration().size() == 1);
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
-  BOOST_TEST(testing::equals(cplData->readLastIteration()(0), 0.0));
+  BOOST_TEST(testing::equals(cplData->lastIteration()(0), 0.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 0), 0.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 1), 0.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 2), 0.0));
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme2.extrapolateData();
   scheme2.storeLastIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0));
-  BOOST_TEST(testing::equals(cplData->readLastIteration()(0), 2.0));
+  BOOST_TEST(testing::equals(cplData->lastIteration()(0), 2.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 0), 1.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 1), 0.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 2), 0.0));
@@ -522,7 +522,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme2.extrapolateData();
   scheme2.storeLastIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 8.0));
-  BOOST_TEST(testing::equals(cplData->readLastIteration()(0), 8.0));
+  BOOST_TEST(testing::equals(cplData->lastIteration()(0), 8.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 0), 4.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 1), 1.0));
   BOOST_TEST(testing::equals(cplData->waveform.lastTimeWindows(0, 2), 0.0));

@@ -315,18 +315,18 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     fpcd->values() = insert;
 
     //check for correct initial data
-    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(0), 1.0), data.at(0)->readLastIteration()(0));
-    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(1), 1.0), data.at(0)->readLastIteration()(1));
-    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(2), 1.0), data.at(0)->readLastIteration()(2));
-    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(3), 1.0), data.at(0)->readLastIteration()(3));
+    BOOST_TEST(testing::equals(data.at(0)->lastIteration()(0), 1.0), data.at(0)->lastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(0)->lastIteration()(1), 1.0), data.at(0)->lastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(0)->lastIteration()(2), 1.0), data.at(0)->lastIteration()(2));
+    BOOST_TEST(testing::equals(data.at(0)->lastIteration()(3), 1.0), data.at(0)->lastIteration()(3));
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.0), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 2.0), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 3.0), data.at(0)->values()(2));
     BOOST_TEST(testing::equals(data.at(0)->values()(3), 4.0), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(0), 0.2), data.at(1)->readLastIteration()(0));
-    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(1), 0.2), data.at(1)->readLastIteration()(1));
-    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(2), 0.2), data.at(1)->readLastIteration()(2));
-    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(3), 0.2), data.at(1)->readLastIteration()(3));
+    BOOST_TEST(testing::equals(data.at(1)->lastIteration()(0), 0.2), data.at(1)->lastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(1)->lastIteration()(1), 0.2), data.at(1)->lastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(1)->lastIteration()(2), 0.2), data.at(1)->lastIteration()(2));
+    BOOST_TEST(testing::equals(data.at(1)->lastIteration()(3), 0.2), data.at(1)->lastIteration()(3));
     BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.1), data.at(1)->values()(0));
     BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.1), data.at(1)->values()(1));
     BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.1), data.at(1)->values()(2));
@@ -361,18 +361,18 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     fpcd->values() = insert;
 
     //check for correct initial data
-    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(0), 1.0), data.at(0)->readLastIteration()(0));
-    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(1), 1.0), data.at(0)->readLastIteration()(1));
-    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(2), 1.0), data.at(0)->readLastIteration()(2));
-    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(3), 1.0), data.at(0)->readLastIteration()(3));
+    BOOST_TEST(testing::equals(data.at(0)->lastIteration()(0), 1.0), data.at(0)->lastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(0)->lastIteration()(1), 1.0), data.at(0)->lastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(0)->lastIteration()(2), 1.0), data.at(0)->lastIteration()(2));
+    BOOST_TEST(testing::equals(data.at(0)->lastIteration()(3), 1.0), data.at(0)->lastIteration()(3));
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 5.0), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.0), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 7.0), data.at(0)->values()(2));
     BOOST_TEST(testing::equals(data.at(0)->values()(3), 8.0), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(0), 0.2), data.at(1)->readLastIteration()(0));
-    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(1), 0.2), data.at(1)->readLastIteration()(1));
-    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(2), 0.2), data.at(1)->readLastIteration()(2));
-    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(3), 0.2), data.at(1)->readLastIteration()(3));
+    BOOST_TEST(testing::equals(data.at(1)->lastIteration()(0), 0.2), data.at(1)->lastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(1)->lastIteration()(1), 0.2), data.at(1)->lastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(1)->lastIteration()(2), 0.2), data.at(1)->lastIteration()(2));
+    BOOST_TEST(testing::equals(data.at(1)->lastIteration()(3), 0.2), data.at(1)->lastIteration()(3));
     BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.1), data.at(1)->values()(0));
     BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.1), data.at(1)->values()(1));
     BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.1), data.at(1)->values()(2));
@@ -427,12 +427,12 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     forces->values() = insert;
 
     //check for correct initial data
-    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(0), 1.0), data.at(0)->readLastIteration()(0));
-    BOOST_TEST(testing::equals(data.at(0)->readLastIteration()(1), 1.0), data.at(0)->readLastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(0)->lastIteration()(0), 1.0), data.at(0)->lastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(0)->lastIteration()(1), 1.0), data.at(0)->lastIteration()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.0), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 2.0), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(0), 0.2), data.at(1)->readLastIteration()(0));
-    BOOST_TEST(testing::equals(data.at(1)->readLastIteration()(1), 0.2), data.at(1)->readLastIteration()(1));
+    BOOST_TEST(testing::equals(data.at(1)->lastIteration()(0), 0.2), data.at(1)->lastIteration()(0));
+    BOOST_TEST(testing::equals(data.at(1)->lastIteration()(1), 0.2), data.at(1)->lastIteration()(1));
     BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.1), data.at(1)->values()(0));
     BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.1), data.at(1)->values()(1));
   }

@@ -40,7 +40,7 @@ void ConstantRelaxationAcceleration::performAcceleration(DataMap &cplData)
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type &pair : cplData) {
     auto &      values    = pair.second->values();
-    const auto &oldValues = pair.second->readLastIteration();
+    const auto &oldValues = pair.second->lastIteration();
     values *= omega;
     values += oldValues * oneMinusOmega;
     PRECICE_DEBUG("pp values {}", values);

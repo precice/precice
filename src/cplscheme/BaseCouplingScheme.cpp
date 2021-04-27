@@ -495,7 +495,7 @@ bool BaseCouplingScheme::measureConvergence()
 
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
-    const auto &oldValues = convMeasure.couplingData->readLastIteration();
+    const auto &oldValues = convMeasure.couplingData->lastIteration();
 
     convMeasure.measure->measure(oldValues, convMeasure.couplingData->values());
 
