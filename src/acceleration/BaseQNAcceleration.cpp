@@ -123,7 +123,7 @@ void BaseQNAcceleration::initialize(
    */
   std::stringstream ss;
   if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
-    PRECICE_ASSERT(utils::MasterSlave::_communication.get() != NULL);
+    PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
     PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
     if (entries <= 0) {

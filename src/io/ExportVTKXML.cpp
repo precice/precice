@@ -58,7 +58,7 @@ void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
   _vectorDataNames.clear();
   _scalarDataNames.clear();
   if (_writeNormals) {
-    _vectorDataNames.push_back("VertexNormals");
+    _vectorDataNames.emplace_back("VertexNormals");
   }
   for (mesh::PtrData data : mesh.data()) {
     int dataDimensions = data->getDimensions();
@@ -101,22 +101,22 @@ void ExportVTKXML::writeMasterFile(
 
   // write scalar data names
   outMasterFile << "      <PPointData Scalars=\"";
-  for (size_t i = 0; i < _scalarDataNames.size(); ++i) {
-    outMasterFile << _scalarDataNames[i] << ' ';
+  for (const auto &scalarDataName : _scalarDataNames) {
+    outMasterFile << scalarDataName << ' ';
   }
   // write vector data names
   outMasterFile << "\" Vectors=\"";
-  for (size_t i = 0; i < _vectorDataNames.size(); ++i) {
-    outMasterFile << _vectorDataNames[i] << ' ';
+  for (const auto &vectorDataName : _vectorDataNames) {
+    outMasterFile << vectorDataName << ' ';
   }
   outMasterFile << "\">\n";
 
-  for (size_t i = 0; i < _scalarDataNames.size(); ++i) {
-    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << _scalarDataNames[i] << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
+  for (const auto &scalarDataName : _scalarDataNames) {
+    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << scalarDataName << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
   }
 
-  for (size_t i = 0; i < _vectorDataNames.size(); ++i) {
-    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << _vectorDataNames[i] << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
+  for (const auto &vectorDataName : _vectorDataNames) {
+    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << vectorDataName << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
   }
   outMasterFile << "      </PPointData>\n";
 
@@ -240,12 +240,12 @@ void ExportVTKXML::exportData(
     mesh::Mesh &   mesh)
 {
   outFile << "         <PointData Scalars=\"";
-  for (size_t i = 0; i < _scalarDataNames.size(); i++) {
-    outFile << _scalarDataNames[i] << ' ';
+  for (const auto &scalarDataName : _scalarDataNames) {
+    outFile << scalarDataName << ' ';
   }
   outFile << "\" Vectors=\"";
-  for (size_t i = 0; i < _vectorDataNames.size(); i++) {
-    outFile << _vectorDataNames[i] << ' ';
+  for (const auto &vectorDataName : _vectorDataNames) {
+    outFile << vectorDataName << ' ';
   }
   outFile << "\">\n";
 

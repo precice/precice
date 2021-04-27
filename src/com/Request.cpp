@@ -11,8 +11,6 @@ void Request::wait(std::vector<PtrRequest> &requests)
   }
 }
 
-Request::~Request()
-{
-}
+Request::~Request() = default;
 } // namespace com
 } // namespace precice

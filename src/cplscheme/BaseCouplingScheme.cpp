@@ -531,9 +531,7 @@ bool BaseCouplingScheme::measureConvergence()
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
-  for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
-    ConvergenceMeasureContext &convMeasure = _convergenceMeasures[i];
-
+  for (const auto &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
     const auto &oldValues = convMeasure.couplingData->oldValues.col(0);

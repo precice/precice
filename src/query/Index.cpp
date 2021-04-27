@@ -23,9 +23,7 @@ Index::Index(const mesh::PtrMesh &mesh)
   _pimpl = std::make_unique<IndexImpl>(IndexImpl{});
 }
 
-Index::~Index()
-{
-}
+Index::~Index() = default;
 
 VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
 {
