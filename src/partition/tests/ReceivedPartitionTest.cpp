@@ -804,14 +804,14 @@ BOOST_AUTO_TEST_CASE(NPPrimitiveOwnership3D)
         BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 2);
         BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 4);
 
-        BOOST_TEST(pSolidzMesh->edges().at(0).isOwner() == false);
-        BOOST_TEST(pSolidzMesh->edges().at(1).isOwner() == false);
-        BOOST_TEST(pSolidzMesh->edges().at(2).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->edges().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->edges().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->edges().at(2).isOwner() == true);
         BOOST_TEST(pSolidzMesh->edges().at(0).getGlobalIndex() == 3);
         BOOST_TEST(pSolidzMesh->edges().at(1).getGlobalIndex() == 4);
         BOOST_TEST(pSolidzMesh->edges().at(2).getGlobalIndex() == 5);
 
-        BOOST_TEST(pSolidzMesh->triangles().at(0).isOwner() == false);
+        BOOST_TEST(pSolidzMesh->triangles().at(0).isOwner() == true);
         BOOST_TEST(pSolidzMesh->triangles().at(0).getGlobalIndex() == 1);
       }
     }

@@ -157,15 +157,6 @@ void ReceivedPartition::compute()
   PRECICE_DEBUG("Create owner information.");
   createOwnerInformation();
 
-  if (communicateFullOwnership) {
-    if (_mesh->getGlobalNumberOfEdges() > 0) {
-      createEdgeOwnerInformation();
-    }
-    if ((_dimensions == 3) and (_mesh->getGlobalNumberOfTriangles() > 0)) {
-      createTriangleOwnerInformation();
-    }
-  }
-
   // (4) Tag vertices 2nd round (what should be filtered out)
   PRECICE_DEBUG("Tag vertices for filtering: 2nd round.");
   tagMeshSecondRound();
@@ -183,6 +174,15 @@ void ReceivedPartition::compute()
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   e5.stop();
+
+  if (communicateFullOwnership) {
+    if (_mesh->getGlobalNumberOfEdges() > 0) {
+      createEdgeOwnerInformation();
+    }
+    if ((_dimensions == 3) and (_mesh->getGlobalNumberOfTriangles() > 0)) {
+      createTriangleOwnerInformation();
+    }
+  }
 
   // (6) Compute vertex distribution or local communication map
   if (m2n().usesTwoLevelInitialization()) {
