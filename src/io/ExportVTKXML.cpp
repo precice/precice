@@ -101,22 +101,22 @@ void ExportVTKXML::writeMasterFile(
 
   // write scalar data names
   outMasterFile << "      <PPointData Scalars=\"";
-  for (const auto &_scalarDataName : _scalarDataNames) {
-    outMasterFile << _scalarDataName << ' ';
+  for (const auto &scalarDataName : _scalarDataNames) {
+    outMasterFile << scalarDataName << ' ';
   }
   // write vector data names
   outMasterFile << "\" Vectors=\"";
-  for (const auto &_vectorDataName : _vectorDataNames) {
-    outMasterFile << _vectorDataName << ' ';
+  for (const auto &vectorDataName : _vectorDataNames) {
+    outMasterFile << vectorDataName << ' ';
   }
   outMasterFile << "\">\n";
 
-  for (const auto &_scalarDataName : _scalarDataNames) {
-    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << _scalarDataName << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
+  for (const auto &scalarDataName : _scalarDataNames) {
+    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << scalarDataName << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
   }
 
-  for (const auto &_vectorDataName : _vectorDataNames) {
-    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << _vectorDataName << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
+  for (const auto &vectorDataName : _vectorDataNames) {
+    outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << vectorDataName << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
   }
   outMasterFile << "      </PPointData>\n";
 
@@ -240,12 +240,12 @@ void ExportVTKXML::exportData(
     mesh::Mesh &   mesh)
 {
   outFile << "         <PointData Scalars=\"";
-  for (const auto &_scalarDataName : _scalarDataNames) {
-    outFile << _scalarDataName << ' ';
+  for (const auto &scalarDataName : _scalarDataNames) {
+    outFile << scalarDataName << ' ';
   }
   outFile << "\" Vectors=\"";
-  for (const auto &_vectorDataName : _vectorDataNames) {
-    outFile << _vectorDataName << ' ';
+  for (const auto &vectorDataName : _vectorDataNames) {
+    outFile << vectorDataName << ' ';
   }
   outFile << "\">\n";
 
