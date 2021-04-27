@@ -29,13 +29,13 @@ public:
    * The returned value is the forwarded result of Vertex::getCoords.
    * It is thus a read-only random-access iterator.
    */
-  using const_iterator = IndexRangeIterator<const Triangle, const Eigen::VectorXd>;
+  using const_iterator = IndexRangeIterator<const Triangle, const Vertex::RawCoords>;
 
   /// Type of the read-only random access vertex iterator
   using iterator = const_iterator;
 
   /// Fix for the Boost.Test versions 1.65.1 - 1.67
-  using value_type = Eigen::VectorXd;
+  using value_type = Vertex::RawCoords;
 
   /// Constructor, the order of edges defines the outer normal direction.
   Triangle(

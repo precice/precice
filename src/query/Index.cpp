@@ -1,4 +1,6 @@
 #include "Index.hpp"
+#include <Eigen/src/Core/Matrix.h>
+#include <algorithm>
 #include <boost/range/irange.hpp>
 #include "impl/Indexer.hpp"
 #include "logging/LogMacros.hpp"
@@ -92,8 +94,8 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::Vertex &centerVertex
   }
 
   // Prepare boost::geometry box
-  auto &          coords = centerVertex.getCoords();
-  query::RTreeBox searchBox{coords.array() - radius, coords.array() + radius};
+  auto coords    = centerVertex.getCoords();
+  auto searchBox = query::makeBox(coords.array() - radius, coords.array() + radius);
 
   std::vector<size_t> matches;
   _pimpl->indices.vertexRTree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
@@ -111,7 +113,7 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
     event.stop();
   }
   std::vector<size_t> matches;
-  _pimpl->indices.vertexRTree->query(bgi::intersects(query::RTreeBox{bb.minCorner(), bb.maxCorner()}), std::back_inserter(matches));
+  _pimpl->indices.vertexRTree->query(bgi::intersects(query::makeBox(bb.minCorner(), bb.maxCorner())), std::back_inserter(matches));
   return matches;
 }
 
