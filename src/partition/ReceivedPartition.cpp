@@ -666,14 +666,13 @@ void ReceivedPartition::createEdgeOwnerInformation()
       for (int i = 0; i < numberOfEdges; i++) {
         globalIDs[i] = _mesh->edges()[i].getGlobalIndex();
       }
-      PRECICE_DEBUG("My global IDs: " << globalIDs);
       PRECICE_DEBUG("Send global IDs");
       utils::MasterSlave::_communication->send(globalIDs, 0);
 
       PRECICE_DEBUG("Receive owner information");
       std::vector<int> ownerVec(numberOfEdges, -1);
       utils::MasterSlave::_communication->receive(ownerVec, 0);
-      PRECICE_DEBUG("My owner information: " << ownerVec);
+      PRECICE_DEBUG("My owner information: {}", ownerVec);
       PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfEdges));
       setEdgeOwnerInformation(ownerVec);
     }
@@ -697,12 +696,12 @@ void ReceivedPartition::createEdgeOwnerInformation()
     for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
       int localNumberOfEdges = -1;
       utils::MasterSlave::_communication->receive(localNumberOfEdges, rank);
-      PRECICE_DEBUG("Rank " << rank << " has " << localNumberOfEdges << " edges.");
+      PRECICE_DEBUG("Rank {} has {} edges.", rank, localNumberOfEdges);
       slaveOwnerVecs[rank].resize(localNumberOfEdges, 0);
 
       if (localNumberOfEdges != 0) {
         utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank], rank);
-        PRECICE_DEBUG("Rank " << rank << " has global IDs " << slaveGlobalIDs[rank]);
+        PRECICE_DEBUG("Rank {} has global IDs {}", rank, slaveGlobalIDs[rank]);
       }
     }
 
@@ -719,8 +718,9 @@ void ReceivedPartition::createEdgeOwnerInformation()
           slaveOwnerVecs[rank][i]                 = 1; // Now rank is owner
           globalOwnerVec[slaveGlobalIDs[rank][i]] = 1; // Edge now has owner
           counter++;
-          if (counter == localGuess)
+          if (counter == localGuess){
             break;
+          }
         }
       }
     }
@@ -738,13 +738,13 @@ void ReceivedPartition::createEdgeOwnerInformation()
 
     // Send information back to slaves
     for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
-      PRECICE_DEBUG("Send owner information to slave rank " << rank);
+      PRECICE_DEBUG("Send owner information to slave rank {}", rank);
       if (slaveOwnerVecs[rank].size() != 0) {
         utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);
       }
     }
     // Master data
-    PRECICE_DEBUG("My owner information: " << slaveOwnerVecs[0]);
+    PRECICE_DEBUG("My owner information: {}", slaveOwnerVecs[0]);
     setEdgeOwnerInformation(slaveOwnerVecs[0]);
   }
 }
@@ -766,14 +766,14 @@ void ReceivedPartition::createTriangleOwnerInformation()
       for (int i = 0; i < numberOfTriangles; i++) {
         globalIDs[i] = _mesh->triangles()[i].getGlobalIndex();
       }
-      PRECICE_DEBUG("My global IDs: " << globalIDs);
+      PRECICE_DEBUG("My global IDs: {}", globalIDs);
       PRECICE_DEBUG("Send global IDs");
       utils::MasterSlave::_communication->send(globalIDs, 0);
 
       PRECICE_DEBUG("Receive owner information");
       std::vector<int> ownerVec(numberOfTriangles, -1);
       utils::MasterSlave::_communication->receive(ownerVec, 0);
-      PRECICE_DEBUG("My owner information: " << ownerVec);
+      PRECICE_DEBUG("My owner information: {}", ownerVec);
       PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfTriangles));
       setTriangleOwnerInformation(ownerVec);
     }
@@ -797,12 +797,12 @@ void ReceivedPartition::createTriangleOwnerInformation()
     for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
       int localNumberOfTriangles = -1;
       utils::MasterSlave::_communication->receive(localNumberOfTriangles, rank);
-      PRECICE_DEBUG("Rank " << rank << " has " << localNumberOfTriangles << " triangles.");
+      PRECICE_DEBUG("Rank {} has {} triangles.", rank, localNumberOfTriangles);
       slaveOwnerVecs[rank].resize(localNumberOfTriangles, 0);
 
       if (localNumberOfTriangles != 0) {
         utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank], rank);
-        PRECICE_DEBUG("Rank " << rank << " has global IDs " << slaveGlobalIDs[rank]);
+        PRECICE_DEBUG("Rank {} has global IDs {}.", rank, slaveGlobalIDs[rank]);
       }
     }
 
@@ -838,13 +838,13 @@ void ReceivedPartition::createTriangleOwnerInformation()
 
     // Send information back to slaves
     for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
-      PRECICE_DEBUG("Send owner information to slave rank " << rank);
+      PRECICE_DEBUG("Send owner information to slave rank {}", rank);
       if (slaveOwnerVecs[rank].size() != 0) {
         utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);
       }
     }
     // Master data
-    PRECICE_DEBUG("My owner information: " << slaveOwnerVecs[0]);
+    PRECICE_DEBUG("My owner information: {}", slaveOwnerVecs[0]);
     setTriangleOwnerInformation(slaveOwnerVecs[0]);
   }
 }
@@ -905,7 +905,7 @@ void ReceivedPartition::setEdgeOwnerInformation(const std::vector<int> &ownerVec
   size_t i = 0;
   for (mesh::Edge &edge : _mesh->edges()) {
     PRECICE_ASSERT(i < ownerVec.size());
-    PRECICE_ASSERT(ownerVec[i] != -1);
+    PRECICE_ASSERT(ownerVec[i] != -1);  
     edge.setOwner(ownerVec[i] == 1);
     i++;
   }

@@ -218,7 +218,7 @@ void ProvidedPartition::prepare()
 void ProvidedPartition::prepareEdges()
 {
   PRECICE_TRACE();
-  PRECICE_INFO("Prepare edges partition for mesh " << _mesh->getName());
+  PRECICE_INFO("Prepare edges partition for mesh {}", _mesh->getName());
   Event e("partition.prepareMesh." + _mesh->getName(), precice::syncMode);
 
   int numberOfEdges = _mesh->edges().size();
@@ -243,13 +243,13 @@ void ProvidedPartition::prepareEdges()
 
     // set and broadcast global number of edges
     _mesh->setGlobalNumberOfEdges(globalNumberOfEdges);
-    PRECICE_DEBUG("Broadcast global number of edges: " << globalNumberOfEdges);
+    PRECICE_DEBUG("Broadcast global number of edges: {}", globalNumberOfEdges);
     utils::MasterSlave::_communication->broadcast(globalNumberOfEdges);
 
   } else if (utils::MasterSlave::isSlave()) {
 
     // send number of own edges
-    PRECICE_DEBUG("Send number of edges: " << numberOfEdges);
+    PRECICE_DEBUG("Send number of edges: {}", numberOfEdges);
     utils::MasterSlave::_communication->send(numberOfEdges, 0);
 
     // set global IDs
@@ -282,7 +282,7 @@ void ProvidedPartition::prepareEdges()
 void ProvidedPartition::prepareTriangles()
 {
   PRECICE_TRACE();
-  PRECICE_INFO("Prepare triangles partition for mesh " << _mesh->getName());
+  PRECICE_INFO("Prepare triangles partition for mesh {}", _mesh->getName());
   Event e("partition.prepareMesh." + _mesh->getName(), precice::syncMode);
 
   int numberOfTriangles = _mesh->triangles().size();
@@ -307,13 +307,13 @@ void ProvidedPartition::prepareTriangles()
 
     // set and broadcast global number of triangles
     _mesh->setGlobalNumberOfTriangles(globalNumberOfTriangles);
-    PRECICE_DEBUG("Broadcast global number of triangles: " << globalNumberOfTriangles);
+    PRECICE_DEBUG("Broadcast global number of triangles: {}", globalNumberOfTriangles);
     utils::MasterSlave::_communication->broadcast(globalNumberOfTriangles);
 
   } else if (utils::MasterSlave::isSlave()) {
 
     // send number of own triangles
-    PRECICE_DEBUG("Send number of triangles: " << numberOfTriangles);
+    PRECICE_DEBUG("Send number of triangles: {}", numberOfTriangles);
     utils::MasterSlave::_communication->send(numberOfTriangles, 0);
 
     // set global IDs
