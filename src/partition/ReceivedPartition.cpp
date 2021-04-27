@@ -718,7 +718,7 @@ void ReceivedPartition::createEdgeOwnerInformation()
           slaveOwnerVecs[rank][i]                 = 1; // Now rank is owner
           globalOwnerVec[slaveGlobalIDs[rank][i]] = 1; // Edge now has owner
           counter++;
-          if (counter == localGuess){
+          if (counter == localGuess) {
             break;
           }
         }
@@ -905,7 +905,7 @@ void ReceivedPartition::setEdgeOwnerInformation(const std::vector<int> &ownerVec
   size_t i = 0;
   for (mesh::Edge &edge : _mesh->edges()) {
     PRECICE_ASSERT(i < ownerVec.size());
-    PRECICE_ASSERT(ownerVec[i] != -1);  
+    PRECICE_ASSERT(ownerVec[i] != -1);
     edge.setOwner(ownerVec[i] == 1);
     i++;
   }

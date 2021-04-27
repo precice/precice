@@ -787,7 +787,7 @@ BOOST_AUTO_TEST_CASE(NPPrimitiveOwnership3D)
 
         BOOST_TEST(pSolidzMesh->edges().at(0).isOwner() == true);
         BOOST_TEST(pSolidzMesh->edges().at(0).getGlobalIndex() == 1);
-        
+
         BOOST_TEST(pSolidzMesh->triangles().size() == 0);
       } else if (context.isRank(1)) { //Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
@@ -1262,7 +1262,6 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
 
   tearDownParallelEnvironment();
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
