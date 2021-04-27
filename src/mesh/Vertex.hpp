@@ -100,10 +100,9 @@ Vertex::Vertex(
       _normal(Eigen::VectorXd::Constant(_dim, 0.0))
 {
   PRECICE_ASSERT(_dim == 2 || _dim == 3, _dim);
-  std::copy_n(coordinates.data(), _dim, _coords.begin());
-  if (_dim == 2) {
-    _coords[2] = 0.0;
-  };
+  _coords[0] = coordinates[0];
+  _coords[1] = coordinates[1];
+  _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
 }
 
 template <typename VECTOR_T>
@@ -111,10 +110,9 @@ void Vertex::setCoords(
     const VECTOR_T &coordinates)
 {
   PRECICE_ASSERT(coordinates.size() == _dim, coordinates.size(), _dim);
-  std::copy_n(coordinates.data(), _dim, _coords.begin());
-  if (_dim == 2) {
-    _coords[2] = 0.0;
-  };
+  _coords[0] = coordinates[0];
+  _coords[1] = coordinates[1];
+  _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
 }
 
 template <typename VECTOR_T>
