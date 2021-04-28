@@ -155,7 +155,7 @@ const PtrData &Mesh::data(
   auto iter = std::find_if(_data.begin(), _data.end(), [dataID](PtrData const &ptr) {
     return ptr->getID() == dataID;
   });
-  PRECICE_ASSERT(iter != _data.end(), "Data with ID = " << dataID << " not found in mesh \"" << _name << "\".");
+  PRECICE_ASSERT(iter != _data.end(), "Data with id not found in mesh.", dataID, _name);
   return *iter;
 }
 

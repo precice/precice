@@ -16,7 +16,7 @@ logging::Logger BoundingBox::_log{"mesh::BoundingBox"};
 
 BoundingBox::BoundingBox(std::vector<double> bounds)
 {
-  PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3. Given dimension is: " << bounds.size() / 2);
+  PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3.", bounds.size() / 2);
   _bounds     = std::move(bounds);
   _dimensions = _bounds.size() / 2;
 }
@@ -24,7 +24,7 @@ BoundingBox::BoundingBox(std::vector<double> bounds)
 BoundingBox::BoundingBox(int dimension)
     : _dimensions(dimension)
 {
-  PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box can only be 2 or 3. Given dimension is: " << dimension);
+  PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box can only be 2 or 3.", dimension);
   for (int i = 0; i < _dimensions; ++i) {
     _bounds.push_back(std::numeric_limits<double>::max());
     _bounds.push_back(std::numeric_limits<double>::lowest());
@@ -33,7 +33,7 @@ BoundingBox::BoundingBox(int dimension)
 
 bool BoundingBox::operator==(const BoundingBox &otherBB) const
 {
-  PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes with different dimensions cannot be compared. Dimensions: " << _dimensions << " and " << otherBB._dimensions);
+  PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes with different dimensions cannot be compared.", _dimensions, otherBB._dimensions);
   for (int i = 0; i < _dimensions; ++i) {
     if (_bounds.at(i) != otherBB._bounds.at(i)) {
       return false;

@@ -61,7 +61,7 @@ void DataConfiguration::xmlTagCallback(
     int         dataDimensions = getDataDimensions(typeName);
     addData(name, dataDimensions);
   } else {
-    PRECICE_ASSERT(false, "Received callback from unknown tag " << tag.getName());
+    PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
   }
 }
 
@@ -95,7 +95,7 @@ int DataConfiguration::getDataDimensions(
     return 1;
   }
   // We should never reach this point
-  PRECICE_UNREACHABLE("Unknown data type \"" << typeName << "\". Known data types: ");
+  PRECICE_UNREACHABLE("Unknown data type \"{}\".", typeName);
 }
 
 } // namespace mesh
