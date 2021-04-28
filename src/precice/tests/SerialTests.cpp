@@ -699,8 +699,6 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
   std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
 
   if (context.isNamed("SolverOne")) {
-    // ownMeshID is unused
-    const int ownMeshID   = couplingInterface.getMeshID("MeshOne");
     const int otherMeshID = couplingInterface.getMeshID("MeshTwo");
     const int dataID      = couplingInterface.getDataID("Velocities", otherMeshID);
 
@@ -722,8 +720,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
 
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = positions;
-    for (unsigned int i = 0; i < meshSize * 2; ++i)
-      BOOST_TEST(solverTwoMesh[i] == expectedData[i]);
+    BOOST_TEST(solverTwoMesh == expectedData);
 
     // Reshuffle IDs a bit
     ids = std::vector<int>({1, 0, 2, 3});
@@ -754,9 +751,8 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
       couplingInterface.readBlockScalarData(dataID, ids.size(),
                                             ids.data(), readData.data());
       // Expected data according to the writeData
-      std::array<double, 4> expectedData({2, 1, 3, 4});
-      for (unsigned int i = 0; i < ids.size(); ++i)
-        BOOST_TEST(expectedData[i] == readData[i]);
+      std::vector<double> expectedData({2, 1, 3, 4});
+      BOOST_TEST(expectedData == readData);
     }
   }
 }

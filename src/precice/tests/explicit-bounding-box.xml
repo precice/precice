@@ -7,12 +7,7 @@
       <use-data name="Velocities" />
     </mesh>
 
-    <mesh name="MeshOne">
-      <use-data name="Velocities" />
-    </mesh>
-
     <participant name="SolverOne">
-      <use-mesh name="MeshOne" provide="yes" />
       <use-mesh name="MeshTwo" from="SolverTwo" />
       <write-data name="Velocities" mesh="MeshTwo" />
     </participant>
