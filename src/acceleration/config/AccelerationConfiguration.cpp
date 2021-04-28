@@ -167,9 +167,9 @@ void AccelerationConfiguration::xmlTagCallback(
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
     }
 
-    for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+    for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
       if (mesh->getName() == _meshName) {
-        for (mesh::PtrData data : mesh->data()) {
+        for (const mesh::PtrData &data : mesh->data()) {
           if (dataName == data->getName()) {
             _config.dataIDs.push_back(data->getID());
             _config.scalings.insert(std::make_pair(data->getID(), scaling));

@@ -269,7 +269,7 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
 
 void XMLTag::areAllSubtagsConfigured() const
 {
-  for (auto tag : _subtags) {
+  for (const auto &tag : _subtags) {
     std::string ns         = tag->_namespace;
     bool        configured = tag->isConfigured();
 

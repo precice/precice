@@ -258,9 +258,9 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     bool          initialize          = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
     mesh::PtrData exchangeData;
     mesh::PtrMesh exchangeMesh;
-    for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+    for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
       if (mesh->getName() == nameMesh) {
-        for (mesh::PtrData data : mesh->data()) {
+        for (const mesh::PtrData &data : mesh->data()) {
           if (data->getName() == nameData) {
             exchangeData = data;
             exchangeMesh = mesh;
@@ -740,7 +740,7 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
     const std::string &dataName,
     const std::string &meshName) const
 {
-  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+  for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
     if (meshName == mesh->getName()) {
       for (mesh::PtrData data : mesh->data()) {
         if (dataName == data->getName()) {
@@ -755,7 +755,7 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
 mesh::PtrData CouplingSchemeConfiguration::findDataByID(
     int ID) const
 {
-  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+  for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
     for (mesh::PtrData data : mesh->data()) {
       if (data->getID() == ID) {
         return data;

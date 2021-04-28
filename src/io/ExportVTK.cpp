@@ -132,7 +132,7 @@ void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
     //    }
   }
 
-  for (mesh::PtrData data : mesh.data()) { // Plot vertex data
+  for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values = data->values();
     if (data->getDimensions() > 1) {
       Eigen::VectorXd viewTemp(data->getDimensions());
