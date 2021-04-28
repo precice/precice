@@ -1,0 +1,17 @@
+name: clang-tidy
+on:
+    push:
+        branches: [ master, develop ]
+    pull_request:
+        branches: [ master, develop ]
+
+jobs:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    container: 'precice/ci-ubuntu-2004:latest'
+    steps:
+      - uses: actions/checkout@v2
+      - name: fetch clang
+        run: apt update && apt install -y clang && apt install -y clang-tidy
+      - name: run clang-tidy
+        run: tools/formatting/run_clang_tidy.sh

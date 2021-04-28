@@ -1,7 +1,7 @@
----
-Checks:          '-*,clang-diagnostic-all,clang-diagnostic-extra,clang-diagnostic-pedantic,clang-analyzer-*,pugprone-*,cppcoreguidelines-*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,misc-*,-misc-static-assert,modernize-*,-modernize-use-trailing-return-type,mpi-*,performance-*,portability-*,readability-static-accessed-through-instance,readability-identifier-naming,readability-magic-numbers,readability-redundant-*,readability-else-after-return,readability-simplify-subscript-expr'
-WarningsAsErrors: ''
-HeaderFilterRegex: ''
+# clang-tidy settings to be used with ./tools/formatting/run_clang_tidy.sh
+
+Checks:          "-*,clang-analyzer-*,pugprone-*,cppcoreguidelines-*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,misc-*,-misc-static-assert,modernize-*,-modernize-use-trailing-return-type,mpi-*,performance-*,portability-*,readability-static-accessed-through-instance,readability-identifier-naming,readability-magic-numbers,readability-redundant-*,readability-else-after-return,readability-simplify-subscript-expr"
+WarningsAsErrors: '*'
 AnalyzeTemporaryDtors: false
 FormatStyle:     file
 CheckOptions:    
