@@ -3,11 +3,20 @@
 #include <memory>
 
 namespace precice {
+namespace time {
+
+class Waveform;
+using PtrWaveform = std::shared_ptr<Waveform>;
+
+} // namespace time
+} // namespace precice
+
+namespace precice {
 namespace cplscheme {
 
 class CouplingScheme;
 class CouplingSchemeConfiguration;
-struct CouplingData;
+class CouplingData;
 
 using PtrCouplingScheme              = std::shared_ptr<CouplingScheme>;
 using PtrCouplingSchemeConfiguration = std::shared_ptr<CouplingSchemeConfiguration>;

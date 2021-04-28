@@ -120,5 +120,16 @@ CouplingData *BiCouplingScheme::getReceiveData(
   return nullptr;
 }
 
+time::Waveform *BiCouplingScheme::getWaveform(
+    int dataID)
+{
+  PRECICE_TRACE(dataID);
+  WaveformMap::iterator iter = _waveforms.find(dataID);
+  if (iter != _waveforms.end()) {
+    return &(*(iter->second));
+  }
+  return nullptr;
+}
+
 } // namespace cplscheme
 } // namespace precice

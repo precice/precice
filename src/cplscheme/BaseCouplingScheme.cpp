@@ -16,6 +16,7 @@
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -239,7 +240,7 @@ void BaseCouplingScheme::storeWindowData()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->waveform.addNewWindowData(pair.second->values());
+    _waveforms[pair.first]->addNewWindowData(pair.second->values());
   }
 }
 
@@ -248,7 +249,7 @@ void BaseCouplingScheme::extrapolateData()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Extrapolate data: {}", pair.first);
-    pair.second->values() = pair.second->waveform.extrapolateData(_extrapolationOrder, getTimeWindows());
+    pair.second->values() = _waveforms[pair.first]->extrapolateData(_extrapolationOrder, getTimeWindows());
   }
 }
 
@@ -439,7 +440,11 @@ void BaseCouplingScheme::setupDataMatrices()
   if (_extrapolationOrder > 0) {
     for (DataMap::value_type &pair : getAccelerationData()) {
       pair.second->storeIteration();
-      pair.second->waveform.initialize(pair.second->values().size(), _extrapolationOrder + 1);
+      int               id = pair.first;
+      time::PtrWaveform ptrWaveform(new time::Waveform());
+      ptrWaveform->initialize(pair.second->values().size(), _extrapolationOrder + 1);
+      WaveformMap::value_type waveformPair = std::make_pair(id, ptrWaveform);
+      _waveforms.insert(waveformPair);
     }
   }
   // Storage reservation for acceleration methods happens in Acceleration::initialize

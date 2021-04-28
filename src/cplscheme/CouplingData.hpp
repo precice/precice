@@ -19,8 +19,7 @@ public:
       bool          requiresInitialization)
       : data(data),
         mesh(mesh),
-        requiresInitialization(requiresInitialization),
-        waveform()
+        requiresInitialization(requiresInitialization)
   {
     PRECICE_ASSERT(data != nullptr);
     PRECICE_ASSERT(mesh != nullptr);
@@ -71,9 +70,6 @@ public:
   {
     return mesh->getVertexOffsets();
   }
-
-  /// Stores data of this and previous time windows and allows to extrapolate.
-  time::Waveform waveform;
 
   ///  True, if the data values if this CouplingData requires to be initialized by a participant.
   const bool requiresInitialization;

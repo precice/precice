@@ -7,6 +7,7 @@
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/Waveform.hpp"
 #include "utils/assertion.hpp"
 
 // Forward declaration to friend the boost test struct
@@ -95,6 +96,9 @@ protected:
 
   /// Returns all data to be received with data ID as given.
   CouplingData *getReceiveData(int dataID);
+
+  /// Returns waveform from given data ID.
+  time::Waveform *getWaveform(int dataID);
 
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N() const

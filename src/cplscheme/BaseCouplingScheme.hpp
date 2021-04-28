@@ -254,6 +254,12 @@ protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
 
+  /// Map that links DataID to Waveform
+  typedef std::map<int, time::PtrWaveform> WaveformMap;
+
+  /// All waveforms this coupling scheme needs data as a map "data ID -> waveform"
+  WaveformMap _waveforms;
+
   /// Sends data sendDataIDs given in mapCouplingData with communication.
   void sendData(m2n::PtrM2N m2n, DataMap sendData);
 
