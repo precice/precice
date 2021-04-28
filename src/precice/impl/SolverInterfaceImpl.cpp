@@ -1076,6 +1076,8 @@ void SolverInterfaceImpl::writeBlockVectorData(
   PRECICE_CHECK(data.getDimensions() == _dimensions,
                 "You cannot call writeBlockVectorData on the scalar data type \"{0}\". Use writeBlockScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
+  PRECICE_VALIDATE_DATA(values, size * _dimensions);
+
   auto &     valuesInternal = data.values();
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
@@ -1083,13 +1085,12 @@ void SolverInterfaceImpl::writeBlockVectorData(
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   data.getName(), valueIndex);
-    int offsetInternal = valueIndex * _dimensions;
-    int offset         = i * _dimensions;
+    const int offsetInternal = valueIndex * _dimensions;
+    const int offset         = i * _dimensions;
     for (int dim = 0; dim < _dimensions; dim++) {
       PRECICE_ASSERT(offset + dim < valuesInternal.size(),
                      offset + dim, valuesInternal.size());
       valuesInternal[offsetInternal + dim] = values[offset + dim];
-      PRECICE_IS_FINITE(values[offset + dim]);
     }
   }
 }
@@ -1110,15 +1111,16 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_CHECK(data.getDimensions() == _dimensions,
                 "You cannot call writeVectorData on the scalar data type \"{0}\". Use writeScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
+  PRECICE_VALIDATE_DATA(value, _dimensions);
+
   auto &     values      = data.values();
   const auto vertexCount = values.size() / data.getDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 data.getName(), valueIndex);
-  int offset = valueIndex * _dimensions;
+  const int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
     values[offset + dim] = value[dim];
-    PRECICE_IS_FINITE(value[dim]);
   }
 }
 
@@ -1142,6 +1144,8 @@ void SolverInterfaceImpl::writeBlockScalarData(
   PRECICE_CHECK(data.getDimensions() == 1,
                 "You cannot call writeBlockScalarData on the vector data type \"{}\". Use writeBlockVectorData or change the data type for \"{}\" to scalar.",
                 data.getName(), data.getName());
+  PRECICE_VALIDATE_DATA(values, size);
+
   auto &     valuesInternal = data.values();
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
@@ -1150,7 +1154,6 @@ void SolverInterfaceImpl::writeBlockScalarData(
                   "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   data.getName(), valueIndex);
     valuesInternal[valueIndex] = values[i];
-    PRECICE_IS_FINITE(values[i]);
   }
 }
 
@@ -1174,6 +1177,7 @@ void SolverInterfaceImpl::writeScalarData(
                 "You cannot call writeScalarData on the vector data type \"{0}\". "
                 "Use writeVectorData or change the data type for \"{0}\" to scalar.",
                 data.getName());
+  PRECICE_VALIDATE_DATA(static_cast<double *>(&value), 1);
 
   auto &     values      = data.values();
   const auto vertexCount = values.size() / data.getDimensions();
@@ -1182,7 +1186,6 @@ void SolverInterfaceImpl::writeScalarData(
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 data.getName(), valueIndex);
   values[valueIndex] = value;
-  PRECICE_IS_FINITE(value);
 }
 
 void SolverInterfaceImpl::readBlockVectorData(

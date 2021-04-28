@@ -142,3 +142,20 @@
     const auto id = (dataID);              \
     PRECICE_REQUIRE_DATA_WRITE_IMPL(id)    \
   } while (false)
+
+//
+// DATA VALUE VALIDATION
+//
+#ifdef NDEBUG
+
+#define PRECICE_VALIDATE_DATA(data, size) \
+  {                                       \
+  }
+#else //NDEBUG
+
+#define PRECICE_VALIDATE_DATA(data, size)                                                                                                                                       \
+  do {                                                                                                                                                                          \
+    PRECICE_CHECK(std::all_of(data, data + size, [](const auto &val) { return std::isfinite(val); }), "One of the given data values is either plus or minus infinity or NaN."); \
+  } while (false)
+
+#endif
