@@ -200,13 +200,13 @@ Vector &Vector::operator=(const Vector &other)
   return *this;
 }
 
-Vector::Vector(Vector &&other)
+Vector::Vector(Vector &&other) noexcept
 {
   vector       = other.vector;
   other.vector = nullptr;
 }
 
-Vector &Vector::operator=(Vector &&other)
+Vector &Vector::operator=(Vector &&other) noexcept
 {
   swap(other);
   return *this;
