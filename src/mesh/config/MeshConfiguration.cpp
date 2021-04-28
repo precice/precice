@@ -109,7 +109,7 @@ const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
 void MeshConfiguration::addMesh(
     const mesh::PtrMesh &mesh)
 {
-  for (PtrData dataNewMesh : mesh->data()) {
+  for (const PtrData &dataNewMesh : mesh->data()) {
     bool found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
       if ((dataNewMesh->getName() == data.name) && (dataNewMesh->getDimensions() == data.dimensions)) {

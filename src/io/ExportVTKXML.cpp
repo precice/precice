@@ -60,7 +60,7 @@ void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
   if (_writeNormals) {
     _vectorDataNames.emplace_back("VertexNormals");
   }
-  for (mesh::PtrData data : mesh.data()) {
+  for (const mesh::PtrData &data : mesh.data()) {
     int dataDimensions = data->getDimensions();
     PRECICE_ASSERT(dataDimensions >= 1);
     std::string dataName = data->getName();
@@ -269,7 +269,7 @@ void ExportVTKXML::exportData(
     outFile << '\n'
             << "            </DataArray>\n";
   }
-  for (mesh::PtrData data : mesh.data()) { // Plot vertex data
+  for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values         = data->values();
     int              dataDimensions = data->getDimensions();
     std::string      dataName(data->getName());

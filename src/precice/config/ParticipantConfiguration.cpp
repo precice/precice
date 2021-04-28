@@ -494,7 +494,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (mappingContext.fromMeshID == fromMeshID) {
         dataContext.mappingContext     = mappingContext;
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.toMeshID);
-        for (mesh::PtrData data : meshContext.mesh->data()) {
+        for (const mesh::PtrData &data : meshContext.mesh->data()) {
           if (data->getName() == dataContext.fromData->getName()) {
             dataContext.toData = data;
           }
@@ -518,7 +518,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (mappingContext.toMeshID == toMeshID) {
         dataContext.mappingContext     = mappingContext;
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.fromMeshID);
-        for (mesh::PtrData data : meshContext.mesh->data()) {
+        for (const mesh::PtrData &data : meshContext.mesh->data()) {
           if (data->getName() == dataContext.toData->getName()) {
             dataContext.fromData = data;
           }
