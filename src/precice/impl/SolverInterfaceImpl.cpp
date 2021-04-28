@@ -1289,7 +1289,7 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_DEBUG("Read value = " << value);
 }
 
-int SolverInterfaceImpl::setBoundingBox(
+void SolverInterfaceImpl::setBoundingBox(
     const int     meshID,
     const double *boundingBox) const
 {
@@ -1318,11 +1318,7 @@ int SolverInterfaceImpl::setBoundingBox(
   bbox.expandBy(providedBoundingBox);
 
   // Do not allocate data values
-  // TODO: Remove returned ID. We probably need a dedicated boundingBox
-  // for this case as the approach becomes problematic when an actual
-  // mesh is defined in addition to the bounding box
   // mesh->allocateDataValues();
-  return 0;
 }
 
 void SolverInterfaceImpl::exportMesh(

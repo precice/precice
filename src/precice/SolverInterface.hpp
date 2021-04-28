@@ -779,10 +779,8 @@ public:
    * @param[in] dataID ID of the Data you want to access through the bounding box
    * @param[in] boundingBox (axis aligned) which has in 3D the format
    *            [x_min, x_max, y_min, y_max, z_min, z_max]
-   *
-   * @return ID of the bounding box (similar to a mesh ID)
    */
-  int setBoundingBox(
+  void setBoundingBox(
       const int     dataID,
       const double *boundingBox) const;
 

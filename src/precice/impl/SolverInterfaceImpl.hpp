@@ -476,7 +476,7 @@ public:
    * @param[in] boundingBox (axis aligned) which has in 3D the format
    *            [x_min, x_max, y_min, y_max, z_min, z_max]
    */
-  int setBoundingBox(const int dataID, const double *boundingBox) const;
+  void setBoundingBox(const int dataID, const double *boundingBox) const;
 
   /**
    * @brief Sets the location for all output of preCICE.

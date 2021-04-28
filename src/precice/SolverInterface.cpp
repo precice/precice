@@ -298,9 +298,9 @@ void SolverInterface::readScalarData(
   return _impl->readScalarData(dataID, valueIndex, value);
 }
 
-int SolverInterface::setBoundingBox(const int dataID, const double *boundingBox) const
+void SolverInterface::setBoundingBox(const int dataID, const double *boundingBox) const
 {
-  return _impl->setBoundingBox(dataID, boundingBox);
+  _impl->setBoundingBox(dataID, boundingBox);
 }
 
 std::string getVersionInformation()
