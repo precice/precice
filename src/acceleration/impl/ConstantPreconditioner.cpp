@@ -22,7 +22,7 @@ void ConstantPreconditioner::initialize(std::vector<size_t> &svs)
 
   // is always constant by definition
   _frozen = true;
-  PRECICE_ASSERT(_maxNonConstTimesteps == -1, _maxNonConstTimesteps);
+  PRECICE_ASSERT(_maxNonConstTimeWindows == -1, _maxNonConstTimeWindows);
 
   PRECICE_ASSERT(_factors.size() == _subVectorSizes.size());
 
@@ -36,7 +36,7 @@ void ConstantPreconditioner::initialize(std::vector<size_t> &svs)
   }
 }
 
-void ConstantPreconditioner::_update_(bool                   timestepComplete,
+void ConstantPreconditioner::_update_(bool                   timeWindowComplete,
                                       const Eigen::VectorXd &oldValues,
                                       const Eigen::VectorXd &res)
 {

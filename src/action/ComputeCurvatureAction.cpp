@@ -24,9 +24,9 @@ ComputeCurvatureAction::ComputeCurvatureAction(
 
 void ComputeCurvatureAction::performAction(
     double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double timeStepSize,
+    double computedTimeWindowPart,
+    double timeWindowSize)
 {
   PRECICE_TRACE();
   auto &dataValues = _data->values();

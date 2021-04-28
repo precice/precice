@@ -88,21 +88,21 @@ PythonAction::~PythonAction()
 }
 
 void PythonAction::performAction(double time,
-                                 double dt,
-                                 double computedPartFullDt,
-                                 double fullDt)
+                                 double timeStepSize,
+                                 double computedTimeWindowPart,
+                                 double timeWindowSize)
 {
-  PRECICE_TRACE(time, dt, computedPartFullDt, fullDt);
+  PRECICE_TRACE(time, timeStepSize, computedTimeWindowPart, timeWindowSize);
 
   if (not _isInitialized)
     initialize();
 
   PyObject *dataArgs = PyTuple_New(_numberArguments);
   if (_performAction != nullptr) {
-    PyObject *pythonTime = PyFloat_FromDouble(time);
-    PyObject *pythonDt   = PyFloat_FromDouble(fullDt);
+    PyObject *pythonTime           = PyFloat_FromDouble(time);
+    PyObject *pythonTimeWindowSize = PyFloat_FromDouble(timeWindowSize);
     PyTuple_SetItem(dataArgs, 0, pythonTime);
-    PyTuple_SetItem(dataArgs, 1, pythonDt);
+    PyTuple_SetItem(dataArgs, 1, pythonTimeWindowSize);
     if (_sourceData) {
       npy_intp sourceDim[]  = {_sourceData->values().size()};
       double * sourceValues = _sourceData->values().data();

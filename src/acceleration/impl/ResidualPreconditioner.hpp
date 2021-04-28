@@ -15,7 +15,7 @@ namespace impl {
 class ResidualPreconditioner : public Preconditioner {
 public:
   ResidualPreconditioner(
-      int maxNonConstTimesteps);
+      int maxNonConstTimeWindows);
 
   /**
    * @brief Destructor, empty.
@@ -26,9 +26,9 @@ private:
   /**
     * @brief Update the scaling after every FSI iteration.
     *
-    * @param[in] timestepComplete True if this FSI iteration also completed a timestep
+    * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
     */
-  virtual void _update_(bool                   timestepComplete,
+  virtual void _update_(bool                   timeWindowComplete,
                         const Eigen::VectorXd &oldValues,
                         const Eigen::VectorXd &res);
 

@@ -1588,14 +1588,14 @@ void SolverInterfaceImpl::mapReadData()
 void SolverInterfaceImpl::performDataActions(
     const std::set<action::Action::Timing> &timings,
     double                                  time,
-    double                                  dt,
-    double                                  partFullDt,
-    double                                  fullDt)
+    double                                  timeStepSize,
+    double                                  computedTimeWindowPart,
+    double                                  timeWindowSize)
 {
   PRECICE_TRACE();
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
-      action->performAction(time, dt, partFullDt, fullDt);
+      action->performAction(time, timeStepSize, computedTimeWindowPart, timeWindowSize);
     }
   }
 }
