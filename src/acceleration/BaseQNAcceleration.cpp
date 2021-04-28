@@ -33,7 +33,7 @@ BaseQNAcceleration::BaseQNAcceleration(
     double                  initialRelaxation,
     bool                    forceInitialRelaxation,
     int                     maxIterationsUsed,
-    int                     pastTimeWindowsReused,
+    int                     timeWindowsReused,
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
@@ -41,7 +41,7 @@ BaseQNAcceleration::BaseQNAcceleration(
     : _preconditioner(preconditioner),
       _initialRelaxation(initialRelaxation),
       _maxIterationsUsed(maxIterationsUsed),
-      _pastTimeWindowsReused(pastTimeWindowsReused),
+      _timeWindowsReused(timeWindowsReused),
       _dataIDs(dataIDs),
       _forceInitialRelaxation(forceInitialRelaxation),
       _qrV(filter),
@@ -59,11 +59,11 @@ BaseQNAcceleration::BaseQNAcceleration(
                 "scheme has to be larger than zero. "
                 "Current maximum reused iterations is {}",
                 _maxIterationsUsed);
-  PRECICE_CHECK(_pastTimeWindowsReused >= 0,
+  PRECICE_CHECK(_timeWindowsReused >= 0,
                 "Number of previous time windows to be reused for "
                 "quasi-Newton acceleration has to be larger than or equal to zero. "
                 "Current number of time windows reused is {}",
-                _pastTimeWindowsReused);
+                _timeWindowsReused);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -321,7 +321,7 @@ void BaseQNAcceleration::performAcceleration(
 
     // If the previous time window converged within one single iteration, nothing was added
     // to the LS system matrices and they need to be restored from the backup at time T-2
-    if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_pastTimeWindowsReused == 0) && not _forceInitialRelaxation) {
+    if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
       PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the matrices from backup.");
 
       _matrixCols = _matrixColsBackup;
@@ -379,9 +379,9 @@ void BaseQNAcceleration::performAcceleration(
      */
     _values = _oldValues + xUpdate + _residuals; // = x^k + delta_x + r^k - q^k
 
-    // pending deletion: delete old V, W matrices if pastTimeWindowsReused = 0
+    // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
-    if (_firstIteration && _pastTimeWindowsReused == 0 && not _forceInitialRelaxation) {
+    if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
       // save current matrix data in case the coupling for the next time window will terminate
       // after the first iteration (no new data, i.e., V = W = 0)
       if (getLSSystemCols() > 0) {
@@ -546,7 +546,7 @@ void BaseQNAcceleration::iterationsConverged(
   // update preconditioner depending on residuals or values (must be after specialized iterations converged --> IMVJ)
   _preconditioner->update(true, _values, _residuals);
 
-  if (_pastTimeWindowsReused == 0) {
+  if (_timeWindowsReused == 0) {
     if (_forceInitialRelaxation) {
       _matrixV.resize(0, 0);
       _matrixW.resize(0, 0);
@@ -561,7 +561,7 @@ void BaseQNAcceleration::iterationsConverged(
        * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _pastTimeWindowsReused) {
+  } else if ((int) _matrixCols.size() > _timeWindowsReused) {
     int toRemove = _matrixCols.back();
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);

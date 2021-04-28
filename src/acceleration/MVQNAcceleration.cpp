@@ -446,7 +446,7 @@ void MVQNAcceleration::computeNewtonUpdateEfficient(
   xUpdate += xUptmp;
 
   // pending deletion: delete Wtil
-  if (_firstIteration && _pastTimeWindowsReused == 0 && not _forceInitialRelaxation) {
+  if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
     _Wtil.conservativeResize(0, 0);
     _resetLS = true;
   }
@@ -765,7 +765,7 @@ void MVQNAcceleration::specializedIterationsConverged(
      *  in case of pastTimeWindowsReused > 0, the columns in _Wtil are outdated, as the Jacobian changes, hence clear
      *  in case of pastTimeWindowsReused == 0 and no initial relaxation, pending deletion in performAcceleration
      */
-    if (_pastTimeWindowsReused > 0 || (_pastTimeWindowsReused == 0 && _forceInitialRelaxation)) {
+    if (_timeWindowsReused > 0 || (_timeWindowsReused == 0 && _forceInitialRelaxation)) {
       //_Wtil.conservativeResize(0, 0);
       _resetLS = true;
     }

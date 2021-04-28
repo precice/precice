@@ -66,7 +66,7 @@ public:
       double                  initialRelaxation,
       bool                    forceInitialRelaxation,
       int                     maxIterationsUsed,
-      int                     pastTimeWindowsReused,
+      int                     timeWindowsReused,
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
@@ -153,7 +153,7 @@ protected:
   int _maxIterationsUsed;
 
   /// Maximum number of old time windows (with data values) kept.
-  int _pastTimeWindowsReused;
+  int _timeWindowsReused;
 
   /// Data IDs of data to be involved in the IQN algorithm.
   std::vector<int> _dataIDs;
@@ -218,7 +218,7 @@ protected:
 
   /** @brief Indices (of columns in W, V matrices) of 1st iterations of time windows.
     *
-    * When old time windows are reused (_pastTimeWindowsReused > 0), the indices of the
+    * When old time windows are reused (_timeWindowsReused > 0), the indices of the
     * first iteration of each time window needs to be stored, such that, e.g., all
     * iterations of the last time window, or one specific iteration that leads to
     * a singular matrix in the QR decomposition can be removed and tracked.

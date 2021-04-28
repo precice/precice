@@ -201,7 +201,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
 
   // If the previous time window converged within one single iteration, nothing was added
   // to the LS system matrices and they need to be restored from the backup at time T-2
-  if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_pastTimeWindowsReused == 0) && not _forceInitialRelaxation) {
+  if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
     PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the secondaryMatricesW from backup.");
     _secondaryMatricesW = _secondaryMatricesWBackup;
   }
@@ -219,7 +219,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
   }
 
   // pending deletion: delete old secondaryMatricesW
-  if (_firstIteration && _pastTimeWindowsReused == 0 && not _forceInitialRelaxation) {
+  if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
     // save current secondaryMatrix data in case the coupling for the next time window will terminate
     // after the first iteration (no new data, i.e., V = W = 0)
     if (getLSSystemCols() > 0) {
@@ -239,7 +239,7 @@ void IQNILSAcceleration::specializedIterationsConverged(
     _matrixCols.pop_front();
   }
 
-  if (_pastTimeWindowsReused == 0) {
+  if (_timeWindowsReused == 0) {
     if (_forceInitialRelaxation) {
       for (int id : _secondaryDataIDs) {
         _secondaryMatricesW[id].resize(0, 0);
@@ -251,7 +251,7 @@ void IQNILSAcceleration::specializedIterationsConverged(
        * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _pastTimeWindowsReused) {
+  } else if ((int) _matrixCols.size() > _timeWindowsReused) {
     int toRemove = _matrixCols.back();
     for (int id : _secondaryDataIDs) {
       Eigen::MatrixXd &secW = _secondaryMatricesW[id];
