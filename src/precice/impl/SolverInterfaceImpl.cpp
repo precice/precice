@@ -1588,14 +1588,14 @@ void SolverInterfaceImpl::mapReadData()
 void SolverInterfaceImpl::performDataActions(
     const std::set<action::Action::Timing> &timings,
     double                                  time,
-    double                                  dt,
-    double                                  partFullDt,
-    double                                  fullDt)
+    double                                  timeStepSize,
+    double                                  computedTimeWindowPart,
+    double                                  timeWindowSize)
 {
   PRECICE_TRACE();
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
-      action->performAction(time, dt, partFullDt, fullDt);
+      action->performAction(time, timeStepSize, computedTimeWindowPart, timeWindowSize);
     }
   }
 }
@@ -1690,8 +1690,7 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
   const MeshContext *context = _accessor->usedMeshContextByName(meshName);
-  PRECICE_ASSERT(context && context->mesh,
-                 "Participant \"" << _accessorName << "\" does not use mesh \"" << meshName << "\"!");
+  PRECICE_ASSERT(context && context->mesh, "Participant does not use mesh! ", _accessorName, meshName);
   return *context->mesh;
 }
 

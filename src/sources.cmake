@@ -170,9 +170,9 @@ target_sources(precice
     src/mapping/NearestProjectionMapping.cpp
     src/mapping/NearestProjectionMapping.hpp
     src/mapping/PetRadialBasisFctMapping.hpp
-    src/mapping/RadialBasisFctMapping.hpp
-    src/mapping/Polation.hpp
     src/mapping/Polation.cpp
+    src/mapping/Polation.hpp
+    src/mapping/RadialBasisFctMapping.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
@@ -206,7 +206,6 @@ target_sources(precice
     src/mesh/config/DataConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
-    src/query/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
     src/partition/ProvidedPartition.cpp
@@ -239,12 +238,12 @@ target_sources(precice
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
-    src/query/Index.hpp
     src/query/Index.cpp
-    src/query/impl/RTreeAdapter.hpp
-    src/query/impl/Indexer.hpp
+    src/query/Index.hpp
     src/query/impl/Indexer.cpp
-    src/time/Waveform.hpp
+    src/query/impl/Indexer.hpp
+    src/query/impl/RTreeAdapter.hpp
+    src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp
@@ -275,6 +274,9 @@ target_sources(precice
     src/utils/TypeNames.hpp
     src/utils/algorithm.hpp
     src/utils/assertion.hpp
+    src/utils/fmt.hpp
+    src/utils/fmtEigen.hpp
+    src/utils/fmtSTL.hpp
     src/utils/networking.cpp
     src/utils/networking.hpp
     src/utils/stacktrace.cpp

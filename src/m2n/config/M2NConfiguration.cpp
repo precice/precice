@@ -188,7 +188,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     PRECICE_ASSERT(distrFactory.get() != nullptr);
 
     auto m2n = std::make_shared<m2n::M2N>(com, distrFactory, false, useTwoLevelInit);
-    _m2ns.push_back(std::make_tuple(m2n, from, to));
+    _m2ns.emplace_back(m2n, from, to);
   }
 }
 

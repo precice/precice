@@ -3,6 +3,8 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <utility>
+
 #include "com/Communication.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
@@ -16,7 +18,7 @@ GatherScatterCommunication::GatherScatterCommunication(
     com::PtrCommunication com,
     mesh::PtrMesh         mesh)
     : DistributedCommunication(mesh),
-      _com(com),
+      _com(std::move(com)),
       _isConnected(false)
 {
 }

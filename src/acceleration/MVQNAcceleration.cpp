@@ -29,7 +29,7 @@ MVQNAcceleration::MVQNAcceleration(
     double                  initialRelaxation,
     bool                    forceInitialRelaxation,
     int                     maxIterationsUsed,
-    int                     timestepsReused,
+    int                     pastTimeWindowsReused,
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
@@ -37,9 +37,9 @@ MVQNAcceleration::MVQNAcceleration(
     bool                    alwaysBuildJacobian,
     int                     imvjRestartType,
     int                     chunkSize,
-    int                     RSLSreusedTimesteps,
+    int                     RSLSreusedTimeWindows,
     double                  RSSVDtruncationEps)
-    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
+    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
                          filter, singularityLimit, dataIDs, preconditioner),
       //  _secondaryOldXTildes(),
       _invJacobian(),
@@ -56,18 +56,15 @@ MVQNAcceleration::MVQNAcceleration(
       _imvjRestartType(imvjRestartType),
       _imvjRestart(false),
       _chunkSize(chunkSize),
-      _RSLSreusedTimesteps(RSLSreusedTimesteps),
-      _usedColumnsPerTstep(5),
+      _RSLSreusedTimeWindows(RSLSreusedTimeWindows),
+      _usedColumnsPerTimeWindow(5),
       _nbRestarts(0),
-      //_info2(),
       _avgRank(0)
 {
 }
 
 // ==================================================================================
-MVQNAcceleration::~MVQNAcceleration()
-{
-}
+MVQNAcceleration::~MVQNAcceleration() = default;
 
 // ==================================================================================
 void MVQNAcceleration::initialize(
@@ -109,7 +106,7 @@ void MVQNAcceleration::initialize(
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
 
   if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
-    _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimesteps << "\n--------\n"
+    _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
                       << '\n';
 }
 
@@ -148,7 +145,7 @@ void MVQNAcceleration::updateDifferenceMatrices(
   // update _Wtil if the efficient computation of the quasi-Newton update is used
   // or update current Wtil if the restart mode of imvj is used
   if (not _alwaysBuildJacobian || _imvjRestart) {
-    if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
+    if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
       // do nothing: constant relaxation
     } else {
       if (not _firstIteration) {
@@ -180,7 +177,7 @@ void MVQNAcceleration::updateDifferenceMatrices(
 
           // store columns if restart mode = RS-LS
           if (_imvjRestartType == RS_LS) {
-            if (_matrixCols_RSLS.front() < _usedColumnsPerTstep) {
+            if (_matrixCols_RSLS.front() < _usedColumnsPerTimeWindow) {
               utils::appendFront(_matrixV_RSLS, v);
               utils::appendFront(_matrixW_RSLS, w);
               _matrixCols_RSLS.front()++;
@@ -368,8 +365,8 @@ void MVQNAcceleration::computeNewtonUpdateEfficient(
   *   iteration has converged, namely in the last iteration.
   *
   *   If restart-mode is used:
-  *   The Jacobian is never build. Store matrices Wtil^q and Z^q for the last M time steps.
-  *   After M time steps, a restart algorithm is performed basedon the restart-mode type, either
+  *   The Jacobian is never build. Store matrices Wtil^q and Z^q for the last M time windows.
+  *   After M time windows, a restart algorithm is performed basedon the restart-mode type, either
   *   Least-Squares restart (IQN-ILS like) or maintaining of a updated truncated SVD decomposition
   *   of the SVD.
   *
@@ -448,7 +445,7 @@ void MVQNAcceleration::computeNewtonUpdateEfficient(
   xUpdate += xUptmp;
 
   // pending deletion: delete Wtil
-  if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
+  if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
     _Wtil.conservativeResize(0, 0);
     _resetLS = true;
   }
@@ -512,7 +509,7 @@ void MVQNAcceleration::restartIMVJ()
 
     int rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
 
-    // if it is the first time step, there is no initial SVD, so take all Wtil, Z matrices
+    // if it is the first time window, there is no initial SVD, so take all Wtil, Z matrices
     // otherwise, the first element of each container holds the decomposition of the current
     // truncated SVD, i.e., Wtil^0 = \phi, Z^0 = S\psi^T, this should not be added to the SVD.
     int q = _svdJ.isSVDinitialized() ? 1 : 0;
@@ -633,9 +630,9 @@ void MVQNAcceleration::restartIMVJ()
       // |===================                             ==|
     }
 
-    PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with {} columns from {} time steps.", _matrixV_RSLS.cols(), _RSLSreusedTimesteps);
+    PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with {} columns from {} time windows.", _matrixV_RSLS.cols(), _RSLSreusedTimeWindows);
     if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
-      _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimesteps << "\n"
+      _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimeWindows << "\n"
                         << '\n';
 
     //            ------------ RESTART ZERO ------------
@@ -682,16 +679,16 @@ void MVQNAcceleration::specializedIterationsConverged(
 {
   PRECICE_TRACE();
 
-  // truncate V_RSLS and W_RSLS matrices according to _RSLSreusedTimesteps
+  // truncate V_RSLS and W_RSLS matrices according to _RSLSreusedTimeWindows
   if (_imvjRestartType == RS_LS) {
     if (_matrixCols_RSLS.front() == 0) { // Did only one iteration
       _matrixCols_RSLS.pop_front();
     }
-    if (_RSLSreusedTimesteps == 0) {
+    if (_RSLSreusedTimeWindows == 0) {
       _matrixV_RSLS.resize(0, 0);
       _matrixW_RSLS.resize(0, 0);
       _matrixCols_RSLS.clear();
-    } else if ((int) _matrixCols_RSLS.size() > _RSLSreusedTimesteps) {
+    } else if ((int) _matrixCols_RSLS.size() > _RSLSreusedTimeWindows) {
       int toRemove = _matrixCols_RSLS.back();
       PRECICE_ASSERT(toRemove > 0, toRemove);
       if (_matrixV_RSLS.size() > 0) {
@@ -764,10 +761,10 @@ void MVQNAcceleration::specializedIterationsConverged(
     }
 
     /** in case of enforced initial relaxation, the matrices are cleared
-     *  in case of timestepsReused > 0, the columns in _Wtil are outdated, as the Jacobian changes, hence clear
-     *  in case of timestepsReused == 0 and no initial relaxation, pending deletion in performAcceleration
+     *  in case of pastTimeWindowsReused > 0, the columns in _Wtil are outdated, as the Jacobian changes, hence clear
+     *  in case of pastTimeWindowsReused == 0 and no initial relaxation, pending deletion in performAcceleration
      */
-    if (_timestepsReused > 0 || (_timestepsReused == 0 && _forceInitialRelaxation)) {
+    if (_timeWindowsReused > 0 || (_timeWindowsReused == 0 && _forceInitialRelaxation)) {
       //_Wtil.conservativeResize(0, 0);
       _resetLS = true;
     }
@@ -775,7 +772,7 @@ void MVQNAcceleration::specializedIterationsConverged(
 
   // only store Jacobian if imvj is in normal mode, i.e., the Jacobian is build
   if (not _imvjRestart) {
-    // store inverse Jacobian from converged time step. NOT SCALED with preconditioner
+    // store inverse Jacobian from converged time window. NOT SCALED with preconditioner
     _oldInvJacobian = _invJacobian;
   }
 }

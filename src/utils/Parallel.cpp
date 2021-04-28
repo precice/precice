@@ -341,7 +341,7 @@ void Parallel::splitCommunicator(const std::string &groupName)
   // Step 4 split into groups
   PRECICE_DEBUG("Split groups");
   auto thisGroup = std::find_if(accessorGroups.begin(), accessorGroups.end(), [groupName](const AccessorGroup &group) { return group.name == groupName; });
-  PRECICE_ASSERT(thisGroup != accessorGroups.end(), "This requested groupName \"" << groupName << "\" is not in accessorGroups!");
+  PRECICE_ASSERT(thisGroup != accessorGroups.end(), "This requested groupName is not in accessorGroups!", groupName);
 
   CommStatePtr newState;
   const bool   restrictToSelf = std::all_of(accessorGroups.begin(), accessorGroups.end(), [](const AccessorGroup &group) { return group.size == 1; });

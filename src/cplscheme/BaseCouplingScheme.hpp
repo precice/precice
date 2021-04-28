@@ -68,7 +68,7 @@ public:
       int                           maxTimeWindows,
       double                        timeWindowSize,
       int                           validDigits,
-      const std::string &           localParticipant,
+      std::string                   localParticipant,
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);

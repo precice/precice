@@ -38,9 +38,9 @@ namespace cplscheme {
 using precice::impl::PtrParticipant;
 
 CouplingSchemeConfiguration::CouplingSchemeConfiguration(
-    xml::XMLTag &                               parent,
-    const mesh::PtrMeshConfiguration &          meshConfig,
-    const m2n::M2NConfiguration::SharedPointer &m2nConfig)
+    xml::XMLTag &                        parent,
+    mesh::PtrMeshConfiguration           meshConfig,
+    m2n::M2NConfiguration::SharedPointer m2nConfig)
     : TAG("coupling-scheme"),
       TAG_PARTICIPANTS("participants"),
       TAG_PARTICIPANT("participant"),
@@ -80,8 +80,8 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       VALUE_FIXED("fixed"),
       VALUE_FIRST_PARTICIPANT("first-participant"),
       _config(),
-      _meshConfig(meshConfig),
-      _m2nConfig(m2nConfig),
+      _meshConfig(std::move(meshConfig)),
+      _m2nConfig(std::move(m2nConfig)),
       _couplingSchemes(),
       _couplingSchemeCompositions()
 {
@@ -980,7 +980,7 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
     return constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE;
   } else {
     // We should never reach this point.
-    PRECICE_UNREACHABLE("Unknown timestepping method '" << method << "'.");
+    PRECICE_UNREACHABLE("Unknown timestepping method '{}'.", method);
   }
 }
 

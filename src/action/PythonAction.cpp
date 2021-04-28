@@ -10,10 +10,13 @@
 #include <ostream>
 #include <pthread.h>
 #include <string>
+#include <utility>
+
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -51,14 +54,14 @@ std::string python_error_as_string()
 
 PythonAction::PythonAction(
     Timing               timing,
-    const std::string &  modulePath,
-    const std::string &  moduleName,
+    std::string          modulePath,
+    std::string          moduleName,
     const mesh::PtrMesh &mesh,
     int                  targetDataID,
     int                  sourceDataID)
     : Action(timing, mesh),
-      _modulePath(modulePath),
-      _moduleName(moduleName)
+      _modulePath(std::move(modulePath)),
+      _moduleName(std::move(moduleName))
 {
   PRECICE_CHECK(boost::filesystem::is_directory(_modulePath),
                 "The module path of the python action \"{}\" does not exist. The configured path is \"{}\".",
@@ -85,21 +88,21 @@ PythonAction::~PythonAction()
 }
 
 void PythonAction::performAction(double time,
-                                 double dt,
-                                 double computedPartFullDt,
-                                 double fullDt)
+                                 double timeStepSize,
+                                 double computedTimeWindowPart,
+                                 double timeWindowSize)
 {
-  PRECICE_TRACE(time, dt, computedPartFullDt, fullDt);
+  PRECICE_TRACE(time, timeStepSize, computedTimeWindowPart, timeWindowSize);
 
   if (not _isInitialized)
     initialize();
 
   PyObject *dataArgs = PyTuple_New(_numberArguments);
   if (_performAction != nullptr) {
-    PyObject *pythonTime = PyFloat_FromDouble(time);
-    PyObject *pythonDt   = PyFloat_FromDouble(fullDt);
+    PyObject *pythonTime           = PyFloat_FromDouble(time);
+    PyObject *pythonTimeWindowSize = PyFloat_FromDouble(timeWindowSize);
     PyTuple_SetItem(dataArgs, 0, pythonTime);
-    PyTuple_SetItem(dataArgs, 1, pythonDt);
+    PyTuple_SetItem(dataArgs, 1, pythonTimeWindowSize);
     if (_sourceData) {
       npy_intp sourceDim[]  = {_sourceData->values().size()};
       double * sourceValues = _sourceData->values().data();

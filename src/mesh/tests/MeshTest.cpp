@@ -603,9 +603,6 @@ BOOST_AUTO_TEST_CASE(VertexPtrsFor)
   std::array<Vertex *, 3> expected{&v0, &v2, &v1};
 
   auto result = vertexPtrsFor(mesh, ids);
-  BOOST_TEST_MESSAGE("IDs " << ids);
-  BOOST_TEST_MESSAGE("RES: " << result);
-  BOOST_TEST_MESSAGE("EXP: " << expected);
   BOOST_REQUIRE(result.size() == 3);
   BOOST_TEST(result == expected);
 }

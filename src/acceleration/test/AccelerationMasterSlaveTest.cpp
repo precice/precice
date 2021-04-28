@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
-  int              timestepsReused          = 6;
+  int              timeWindowsReused        = 6;
   int              filter                   = BaseQNAcceleration::QR1FILTER;
   double           singularityLimit         = 1e-10;
   bool             enforceInitialRelaxation = false;
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timestepsReused, filter, singularityLimit, dataIDs, prec);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, prec);
 
   Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
@@ -249,17 +249,17 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  double initialRelaxation        = 0.01;
-  int    maxIterationsUsed        = 50;
-  int    timestepsReused          = 6;
-  int    filter                   = BaseQNAcceleration::QR1FILTER;
-  int    restartType              = MVQNAcceleration::NO_RESTART;
-  int    chunkSize                = 0;
-  int    reusedTimeStepsAtRestart = 0;
-  double singularityLimit         = 1e-10;
-  double svdTruncationEps         = 0.0;
-  bool   enforceInitialRelaxation = false;
-  bool   alwaysBuildJacobian      = false;
+  double initialRelaxation          = 0.01;
+  int    maxIterationsUsed          = 50;
+  int    timeWindowsReused          = 6;
+  int    filter                     = BaseQNAcceleration::QR1FILTER;
+  int    restartType                = MVQNAcceleration::NO_RESTART;
+  int    chunkSize                  = 0;
+  int    reusedTimeWindowsAtRestart = 0;
+  double singularityLimit           = 1e-10;
+  double svdTruncationEps           = 0.0;
+  bool   enforceInitialRelaxation   = false;
+  bool   alwaysBuildJacobian        = false;
 
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
@@ -273,8 +273,8 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                      timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
-                      restartType, chunkSize, reusedTimeStepsAtRestart, svdTruncationEps);
+                      timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+                      restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
 
   Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
@@ -513,17 +513,17 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   // config:
-  double initialRelaxation        = 0.1;
-  int    maxIterationsUsed        = 30;
-  int    timestepsReused          = 0;
-  int    filter                   = BaseQNAcceleration::QR2FILTER;
-  int    restartType              = MVQNAcceleration::NO_RESTART;
-  int    chunkSize                = 0;
-  int    reusedTimeStepsAtRestart = 0;
-  double singularityLimit         = 1e-2;
-  double svdTruncationEps         = 0.0;
-  bool   enforceInitialRelaxation = false;
-  bool   alwaysBuildJacobian      = false;
+  double initialRelaxation          = 0.1;
+  int    maxIterationsUsed          = 30;
+  int    timeWindowsReused          = 0;
+  int    filter                     = BaseQNAcceleration::QR2FILTER;
+  int    restartType                = MVQNAcceleration::NO_RESTART;
+  int    chunkSize                  = 0;
+  int    reusedTimeWindowsAtRestart = 0;
+  double singularityLimit           = 1e-2;
+  double svdTruncationEps           = 0.0;
+  bool   enforceInitialRelaxation   = false;
+  bool   alwaysBuildJacobian        = false;
 
   std::vector<int> dataIDs;
   dataIDs.push_back(4);
@@ -535,8 +535,8 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                      timestepsReused, filter, singularityLimit, dataIDs, _preconditioner, alwaysBuildJacobian,
-                      restartType, chunkSize, reusedTimeStepsAtRestart, svdTruncationEps);
+                      timeWindowsReused, filter, singularityLimit, dataIDs, _preconditioner, alwaysBuildJacobian,
+                      restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 2));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 2));
@@ -959,7 +959,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   double           initialRelaxation        = 0.1;
   int              maxIterationsUsed        = 3;
-  int              timestepsReused          = 1;
+  int              timeWindowsReused        = 1;
   int              filter                   = BaseQNAcceleration::QR1FILTER;
   double           singularityLimit         = 0.1;
   bool             enforceInitialRelaxation = false;
@@ -974,7 +974,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timestepsReused, filter, singularityLimit, dataIDs, prec);
+                         timeWindowsReused, filter, singularityLimit, dataIDs, prec);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
 

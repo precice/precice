@@ -19,12 +19,12 @@ namespace impl {
  *
  * apply() applies the weighting, i.e. transforms from physical values to balanced values.
  * revert() reverts the weighting, i.e. transforms from balanced values back to physical values.
- * update() updates the preconditioner, after every FSI iteration (though some variants might only be updated after a complete timestep)
+ * update() updates the preconditioner, after every FSI iteration (though some variants might only be updated after a complete time window)
  */
 class Preconditioner {
 public:
-  Preconditioner(int maxNonConstTimesteps)
-      : _maxNonConstTimesteps(maxNonConstTimesteps)
+  Preconditioner(int maxNonConstTimeWindows)
+      : _maxNonConstTimeWindows(maxNonConstTimeWindows)
   {
   }
 
@@ -158,25 +158,25 @@ public:
   /**
    * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
    *
-   * @param[in] timestepComplete True if this FSI iteration also completed a timestep
+   * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
    */
-  void update(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res)
+  void update(bool timeWindowComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res)
   {
-    PRECICE_TRACE(_nbNonConstTimesteps, _frozen);
+    PRECICE_TRACE(_nbNonConstTimeWindows, _frozen);
 
-    // if number of allowed non-const time steps is exceeded, do not update weights
+    // if number of allowed non-const time windows is exceeded, do not update weights
     if (_frozen)
       return;
 
-    // increment number of time steps that has been scaled with changing preconditioning weights
-    if (timestepComplete) {
-      _nbNonConstTimesteps++;
-      if (_nbNonConstTimesteps >= _maxNonConstTimesteps && _maxNonConstTimesteps > 0)
+    // increment number of time windows that has been scaled with changing preconditioning weights
+    if (timeWindowComplete) {
+      _nbNonConstTimeWindows++;
+      if (_nbNonConstTimeWindows >= _maxNonConstTimeWindows && _maxNonConstTimeWindows > 0)
         _frozen = true;
     }
 
     // type specific update functionality
-    _update_(timestepComplete, oldValues, res);
+    _update_(timeWindowComplete, oldValues, res);
   }
 
   /// returns true if a QR decomposition from scratch is necessary
@@ -212,26 +212,26 @@ protected:
   /// Sizes of each sub-vector, i.e. each coupling data
   std::vector<size_t> _subVectorSizes;
 
-  /** @brief maximum number of non-const time steps, i.e., after this number of time steps,
+  /** @brief maximum number of non-const time windows, i.e., after this number of time windows,
    *  the preconditioner is frozen with the current weights and becomes a constant preconditioner
    */
-  int _maxNonConstTimesteps;
+  int _maxNonConstTimeWindows;
 
-  /// Counts the number of completed time steps with a non-const weighting
-  int _nbNonConstTimesteps = 0;
+  /// Counts the number of completed time windows with a non-const weighting
+  int _nbNonConstTimeWindows = 0;
 
   /// True if a QR decomposition from scratch is necessary
   bool _requireNewQR = false;
 
-  /// True if _nbNonConstTimesteps >= _maxNonConstTimesteps, i.e., preconditioner is not updated any more.
+  /// True if _nbNonConstTimeWindows >= _maxNonConstTimeWindows, i.e., preconditioner is not updated any more.
   bool _frozen = false;
 
   /**
    * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
    *
-   * @param[in] timestepComplete True if this FSI iteration also completed a timestep
+   * @param[in] timeWindowComplete True if this FSI iteration also completed a time windows
    */
-  virtual void _update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res) = 0;
+  virtual void _update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res) = 0;
 
 private:
   logging::Logger _log{"acceleration::Preconditioner"};

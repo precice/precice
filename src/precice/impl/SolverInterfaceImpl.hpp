@@ -637,16 +637,18 @@ private:
   /**
    * @brief Performs all data actions with given timing.
    *
-   * @param[in] dt Last timestep length computed by solver.
-   * @param[in] partFullDt Part of current full timestep computed by solver.
-   * @param[out] fullDt Length of current full timestep.
+   * @param[in] timings the timings of the action.
+   * @param[in] time the current total simulation time.
+   * @param[in] timeStepSize Length of last time step computed.
+   * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
+   * @param[in] timeWindowSize Current time window size.
    */
   void performDataActions(
       const std::set<action::Action::Timing> &timings,
       double                                  time,
-      double                                  dt,
-      double                                  partFullDt,
-      double                                  fullDt);
+      double                                  timeStepSize,
+      double                                  computedTimeWindowPart,
+      double                                  timeWindowSize);
 
   /// Resets written data, displacements and mesh neighbors to export.
   void resetWrittenData();

@@ -17,14 +17,14 @@ namespace com {
 
 namespace asio = boost::asio;
 
-SocketCommunication::SocketCommunication(unsigned short     portNumber,
-                                         bool               reuseAddress,
-                                         std::string const &networkName,
-                                         std::string const &addressDirectory)
+SocketCommunication::SocketCommunication(unsigned short portNumber,
+                                         bool           reuseAddress,
+                                         std::string    networkName,
+                                         std::string    addressDirectory)
     : _portNumber(portNumber),
       _reuseAddress(reuseAddress),
-      _networkName(networkName),
-      _addressDirectory(addressDirectory),
+      _networkName(std::move(networkName)),
+      _addressDirectory(std::move(addressDirectory)),
       _ioService(new IOService)
 {
   if (_addressDirectory.empty()) {

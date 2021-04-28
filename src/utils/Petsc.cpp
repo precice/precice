@@ -745,7 +745,7 @@ PetscReal KSPSolver::getRealtiveTolerance()
 {
   PetscErrorCode ierr = 0;
   PetscReal      rtol;
-  ierr = KSPGetTolerances(ksp, &rtol, NULL, NULL, NULL);
+  ierr = KSPGetTolerances(ksp, &rtol, nullptr, nullptr, nullptr);
   CHKERRQ(ierr);
   return rtol;
 }

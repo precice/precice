@@ -58,9 +58,9 @@ public:
    * @brief Constructor.
    */
   Data(
-      const std::string &name,
-      int                id,
-      int                dimension);
+      std::string name,
+      int         id,
+      int         dimension);
 
   /// Destructor, decrements data count.
   ~Data();

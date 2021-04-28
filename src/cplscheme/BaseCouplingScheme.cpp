@@ -28,7 +28,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     int                           maxTimeWindows,
     double                        timeWindowSize,
     int                           validDigits,
-    const std::string &           localParticipant,
+    std::string                   localParticipant,
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
@@ -41,7 +41,7 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterations(1),
       _validDigits(validDigits),
-      _localParticipant(localParticipant),
+      _localParticipant(std::move(localParticipant)),
       _eps(std::pow(10.0, -1 * validDigits))
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -495,9 +495,7 @@ bool BaseCouplingScheme::measureConvergence()
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
-  for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
-    ConvergenceMeasureContext &convMeasure = _convergenceMeasures[i];
-
+  for (const auto &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
 

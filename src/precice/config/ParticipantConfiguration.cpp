@@ -3,6 +3,8 @@
 #include <list>
 #include <memory>
 #include <stdexcept>
+#include <utility>
+
 #include "action/Action.hpp"
 #include "action/config/ActionConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
@@ -36,9 +38,9 @@ namespace precice {
 namespace config {
 
 ParticipantConfiguration::ParticipantConfiguration(
-    xml::XMLTag &                     parent,
-    const mesh::PtrMeshConfiguration &meshConfiguration)
-    : _meshConfig(meshConfiguration)
+    xml::XMLTag &              parent,
+    mesh::PtrMeshConfiguration meshConfiguration)
+    : _meshConfig(std::move(meshConfiguration))
 {
   PRECICE_ASSERT(_meshConfig);
   using namespace xml;
