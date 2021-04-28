@@ -37,7 +37,7 @@ using TriangleMatch = MatchType<struct TriangleTag>;
 class Index {
 
 public:
-  Index(const mesh::PtrMesh &mesh);
+  Index(mesh::PtrMesh mesh);
   ~Index();
 
   /// Get n number of closest vertices to the given vertex

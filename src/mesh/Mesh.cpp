@@ -21,11 +21,11 @@ namespace precice {
 namespace mesh {
 
 Mesh::Mesh(
-    const std::string &name,
-    int                dimensions,
-    bool               flipNormals,
-    int                id)
-    : _name(name),
+    std::string name,
+    int         dimensions,
+    bool        flipNormals,
+    int         id)
+    : _name(std::move(name)),
       _dimensions(dimensions),
       _flipNormals(flipNormals),
       _id(id),
@@ -134,8 +134,9 @@ PtrData &Mesh::createData(
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
     PRECICE_CHECK(data->getName() != name,
-                  "Data \"" << name << "\" cannot be created twice for "
-                            << "mesh \"" << _name << "\". Please rename or remove one of the use-data tags with name \"" << name << "\".");
+                  "Data \"{}\" cannot be created twice for mesh \"{}\". "
+                  "Please rename or remove one of the use-data tags with name \"{}\".",
+                  name, _name, name);
   }
   int     id = Data::getDataCount();
   PtrData data(new Data(name, id, dimension));
@@ -154,7 +155,7 @@ const PtrData &Mesh::data(
   auto iter = std::find_if(_data.begin(), _data.end(), [dataID](PtrData const &ptr) {
     return ptr->getID() == dataID;
   });
-  PRECICE_ASSERT(iter != _data.end(), "Data with ID = " << dataID << " not found in mesh \"" << _name << "\".");
+  PRECICE_ASSERT(iter != _data.end(), "Data with id not found in mesh.", dataID, _name);
   return *iter;
 }
 
@@ -206,7 +207,7 @@ void Mesh::allocateDataValues()
       const auto leftToAllocate = expectedSize - actualSize;
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
-    PRECICE_DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
+    PRECICE_DEBUG("Data {} now has {} values", data->getName(), data->values().size());
   }
 }
 
@@ -218,7 +219,7 @@ void Mesh::computeBoundingBox()
     bb.expandBy(vertex);
   }
   _boundingBox = std::move(bb);
-  PRECICE_DEBUG("Bounding Box, " << _boundingBox);
+  PRECICE_DEBUG("Bounding Box, {}", _boundingBox);
 }
 
 void Mesh::computeState()

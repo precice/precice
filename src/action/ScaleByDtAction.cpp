@@ -27,30 +27,30 @@ ScaleByDtAction::ScaleByDtAction(
 
 void ScaleByDtAction::performAction(
     double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double timeStepSize,
+    double computedTimeWindowPart,
+    double timeWindowSize)
 {
-  PRECICE_TRACE(dt, computedPartFullDt, fullDt);
+  PRECICE_TRACE(timeStepSize, computedTimeWindowPart, timeWindowSize);
   auto &sourceValues = _sourceData->values();
   auto &targetValues = _targetData->values();
   PRECICE_ASSERT(sourceValues.size() == targetValues.size(),
                  sourceValues.size(), targetValues.size());
-  if (_scaling == SCALING_BY_COMPUTED_DT_RATIO) {
-    double scaling = dt / fullDt;
-    PRECICE_DEBUG("Scale by computed dt ratio " << scaling);
+  if (_scaling == SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO) {
+    double scaling = timeStepSize / timeWindowSize;
+    PRECICE_DEBUG("Scale by ratio: time step size / time window size = {}", scaling);
     for (int i = 0; i < targetValues.size(); i++) {
       targetValues[i] = sourceValues[i] * scaling;
     }
-  } else if (_scaling == SCALING_BY_DT) {
-    PRECICE_DEBUG("Scale by dt " << fullDt);
+  } else if (_scaling == SCALING_BY_TIME_WINDOW_SIZE) {
+    PRECICE_DEBUG("Scale by dt {}", timeWindowSize);
     for (int i = 0; i < targetValues.size(); i++) {
-      targetValues[i] = sourceValues[i] * fullDt;
+      targetValues[i] = sourceValues[i] * timeWindowSize;
     }
   } else {
-    PRECICE_ASSERT(_scaling == SCALING_BY_COMPUTED_DT_PART_RATIO, _scaling);
-    double scaling = computedPartFullDt / fullDt;
-    PRECICE_DEBUG("Scale by computed dt part ratio " << scaling);
+    PRECICE_ASSERT(_scaling == SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO, _scaling);
+    double scaling = computedTimeWindowPart / timeWindowSize;
+    PRECICE_DEBUG("Scale by ratio: computed part of time window / time window size = {}", scaling);
     for (int i = 0; i < targetValues.size(); i++) {
       targetValues[i] = sourceValues[i] * scaling;
     }

@@ -34,11 +34,11 @@ target_sources(testprecice
     src/io/tests/TXTWriterReaderTest.cpp
     src/m2n/tests/GatherScatterCommunicationTest.cpp
     src/m2n/tests/PointToPointCommunicationTest.cpp
-    src/mapping/tests/PolationTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
     src/mapping/tests/NearestNeighborMappingTest.cpp
     src/mapping/tests/NearestProjectionMappingTest.cpp
     src/mapping/tests/PetRadialBasisFctMappingTest.cpp
+    src/mapping/tests/PolationTest.cpp
     src/mapping/tests/RadialBasisFctMappingTest.cpp
     src/math/tests/BarycenterTest.cpp
     src/math/tests/DifferencesTest.cpp
@@ -47,8 +47,6 @@ target_sources(testprecice
     src/mesh/tests/DataConfigurationTest.cpp
     src/mesh/tests/EdgeTest.cpp
     src/mesh/tests/MeshTest.cpp
-    src/query/tests/RTreeAdapterTests.cpp
-    src/query/tests/RTreeTests.cpp
     src/mesh/tests/TriangleTest.cpp
     src/mesh/tests/VertexTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
@@ -58,6 +56,8 @@ target_sources(testprecice
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
     src/precice/tests/WatchPointTest.cpp
+    src/query/tests/RTreeAdapterTests.cpp
+    src/query/tests/RTreeTests.cpp
     src/testing/TestContext.cpp
     src/testing/TestContext.hpp
     src/testing/Testing.cpp

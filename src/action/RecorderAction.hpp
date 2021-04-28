@@ -24,16 +24,16 @@ public:
   /// Records the invokation and appends it to the records
   void performAction(
       double time,
-      double dt,
-      double computedPartFullDt,
-      double fullDt) override;
+      double timeStepSize,
+      double computedTimeWindowPart,
+      double timeWindowSize) override;
 
   struct Record {
     Timing timing;
     double time;
-    double dt;
-    double computedPartFullDt;
-    double fullDt;
+    double timeStepSize;
+    double computedTimeWindowPart;
+    double timeWindowSize;
   };
 
   /// resets the saved records.

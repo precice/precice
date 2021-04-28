@@ -3,6 +3,8 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <utility>
+
 #include "com/Communication.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
@@ -16,7 +18,7 @@ GatherScatterCommunication::GatherScatterCommunication(
     com::PtrCommunication com,
     mesh::PtrMesh         mesh)
     : DistributedCommunication(mesh),
-      _com(com),
+      _com(std::move(com)),
       _isConnected(false)
 {
 }
@@ -74,7 +76,7 @@ void GatherScatterCommunication::send(
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
     mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
     int                             globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
-    PRECICE_DEBUG("Global Size = " << globalSize);
+    PRECICE_DEBUG("Global Size = {}", globalSize);
     std::vector<double> globalItemsToSend(globalSize);
 
     // Master data
@@ -90,7 +92,7 @@ void GatherScatterCommunication::send(
       PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
       int slaveSize = vertexDistribution[rankSlave].size() * valueDimension;
-      PRECICE_DEBUG("Slave Size = " << slaveSize);
+      PRECICE_DEBUG("Slave Size = {}", slaveSize);
       if (slaveSize > 0) {
         std::vector<double> valuesSlave(slaveSize);
         utils::MasterSlave::_communication->receive(valuesSlave.data(), slaveSize, rankSlave);
@@ -119,7 +121,7 @@ void GatherScatterCommunication::receive(
   // Receive data at master
   if (not utils::MasterSlave::isSlave()) {
     int globalSize = _mesh->getGlobalNumberOfVertices() * valueDimension;
-    PRECICE_DEBUG("Global Size = " << globalSize);
+    PRECICE_DEBUG("Global Size = {}", globalSize);
     globalItemsToReceive.resize(globalSize);
     _com->receive(globalItemsToReceive.data(), globalSize, 0);
   }
@@ -127,9 +129,9 @@ void GatherScatterCommunication::receive(
   // Scatter data
   if (utils::MasterSlave::isSlave()) { // Slave
     if (size > 0) {
-      PRECICE_DEBUG("itemsToRec[0] = " << itemsToReceive[0]);
+      PRECICE_DEBUG("itemsToRec[0] = {}", itemsToReceive[0]);
       utils::MasterSlave::_communication->receive(itemsToReceive, size, 0);
-      PRECICE_DEBUG("itemsToRec[0] = " << itemsToReceive[0]);
+      PRECICE_DEBUG("itemsToRec[0] = {}", itemsToReceive[0]);
     }
   } else { // Master or coupling mode
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
@@ -148,7 +150,7 @@ void GatherScatterCommunication::receive(
       PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
       int slaveSize = vertexDistribution[rankSlave].size() * valueDimension;
-      PRECICE_DEBUG("Slave Size = " << slaveSize);
+      PRECICE_DEBUG("Slave Size = {}", slaveSize);
       if (slaveSize > 0) {
         std::vector<double> valuesSlave(slaveSize);
         for (size_t i = 0; i < vertexDistribution[rankSlave].size(); i++) {
@@ -157,7 +159,7 @@ void GatherScatterCommunication::receive(
           }
         }
         utils::MasterSlave::_communication->send(valuesSlave.data(), slaveSize, rankSlave);
-        PRECICE_DEBUG("valuesSlave[0] = " << valuesSlave[0]);
+        PRECICE_DEBUG("valuesSlave[0] = {}", valuesSlave[0]);
       }
     }
   } // Master

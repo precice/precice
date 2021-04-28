@@ -1,5 +1,5 @@
 #include "acceleration/impl/ResidualPreconditioner.hpp"
-#include <stddef.h>
+#include <cstddef>
 #include <vector>
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -8,16 +8,16 @@ namespace precice {
 namespace acceleration {
 namespace impl {
 
-ResidualPreconditioner::ResidualPreconditioner(int maxNonConstTimesteps)
-    : Preconditioner(maxNonConstTimesteps)
+ResidualPreconditioner::ResidualPreconditioner(int maxNonConstTimeWindows)
+    : Preconditioner(maxNonConstTimeWindows)
 {
 }
 
-void ResidualPreconditioner::_update_(bool                   timestepComplete,
+void ResidualPreconditioner::_update_(bool                   timeWindowComplete,
                                       const Eigen::VectorXd &oldValues,
                                       const Eigen::VectorXd &res)
 {
-  if (not timestepComplete) {
+  if (not timeWindowComplete) {
     std::vector<double> norms(_subVectorSizes.size(), 0.0);
 
     int offset = 0;

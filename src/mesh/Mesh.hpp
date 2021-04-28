@@ -65,10 +65,10 @@ public:
    * @param[in] id The id of this mesh
    */
   Mesh(
-      const std::string &name,
-      int                dimensions,
-      bool               flipNormals,
-      int                id);
+      std::string name,
+      int         dimensions,
+      bool        flipNormals,
+      int         id);
 
   /// Destructor, deletes created objects.
   ~Mesh();

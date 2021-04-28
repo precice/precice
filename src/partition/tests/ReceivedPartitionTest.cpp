@@ -991,18 +991,10 @@ BOOST_AUTO_TEST_CASE(ConnectivityAwareFilteringSmaller)
       BOOST_TEST(meshOne->vertices().size() == 4);
       BOOST_TEST(meshOne->edges().size() == 5);
       BOOST_TEST(meshOne->triangles().size() == 2);
-
-      std::cout << "Master Vertices: " << meshOne->vertices() << std::endl;
-      std::cout << "Master Edges: " << meshOne->edges() << std::endl;
-      std::cout << "Master Triangles: " << meshOne->triangles() << std::endl;
     } else if (context.isRank(1)) { //Slave1
       BOOST_TEST(meshOne->vertices().size() == 4);
       BOOST_TEST(meshOne->edges().size() == 5);
       BOOST_TEST(meshOne->triangles().size() == 2);
-
-      std::cout << "Slave Vertices: " << meshOne->vertices() << std::endl;
-      std::cout << "Slave Edges: " << meshOne->edges() << std::endl;
-      std::cout << "Slave Triangles: " << meshOne->triangles() << std::endl;
     }
   }
   tearDownParallelEnvironment();

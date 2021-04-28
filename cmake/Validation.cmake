@@ -37,7 +37,7 @@ function(precice_validate_lib ARG_CODE)
   file(WRITE ${_wdir}/${_filename} "${ARG_CODE}")
 
   if(${_cache_success} AND NOT PRECICE_ALWAYS_VALIDATE_LIBS)
-    message(STATUS "Validating Prettyprint - success [cached]")
+    message(STATUS "Validating ${ARG_NAME} - success [cached]")
   else()
     unset(VAL_SUCCESS)
     unset(VAL_OUT)
@@ -106,10 +106,10 @@ macro(precice_validate_json)
     LINK_LIBRARIES JSON)
 endmacro()
 
-# Validation for prettyprint
-macro(precice_validate_prettyprint)
+# Validation for fmtlib
+macro(precice_validate_fmtlib)
   precice_validate_lib(
-    "#include <prettyprint/prettyprint.hpp>\nint main() { return 0; } "
-    NAME Prettyprint
-    LINK_LIBRARIES prettyprint)
+    "#include <fmt/format.h>\nint main() { return 0; } "
+    NAME fmtlib
+    LINK_LIBRARIES fmt-header-only)
 endmacro()

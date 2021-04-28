@@ -14,33 +14,45 @@
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_VALIDATE_MESH_ID_IMPL(id) \
-  PRECICE_CHECK(_dataIDs.find(id) != _dataIDs.end(), "The given Mesh ID \"" << id << "\" is unknown to preCICE.");
+#include "utils/stacktrace.hpp"
+#define PRECICE_VALIDATE_MESH_ID_IMPL(id)                          \
+  PRECICE_CHECK(_dataIDs.find(id) != _dataIDs.end(),               \
+                "The given Mesh ID \"{}\" is unknown to preCICE.", \
+                id);
 
 /** Implementation of PRECICE_REQUIRE_MESH_USE()
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_MESH_USE_IMPL(id)            \
-  PRECICE_VALIDATE_MESH_ID_IMPL(id)                  \
-  MeshContext &context = _accessor->meshContext(id); \
-  PRECICE_CHECK(_accessor->isMeshUsed(id), "This participant does not use the mesh \"" << context.mesh->getName() << "\", but attempted to access it. Please define <use-mesh name=\"" << context.mesh->getName() << "\" /> in the configuration of participant \"" << _accessorName << '"');
+#define PRECICE_REQUIRE_MESH_USE_IMPL(id)                                                              \
+  PRECICE_VALIDATE_MESH_ID_IMPL(id)                                                                    \
+  MeshContext &context = _accessor->meshContext(id);                                                   \
+  PRECICE_CHECK(_accessor->isMeshUsed(id),                                                             \
+                "This participant does not use the mesh \"{0}\", but attempted to access it. "         \
+                "Please define <use-mesh name=\"{0}\" /> in the configuration of participant \" {1}.", \
+                context.mesh->getName(), _accessorName);
 
 /** Implementation of PRECICE_REQUIRE_MESH_PROVIDE()
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id) \
-  PRECICE_REQUIRE_MESH_USE_IMPL(id)           \
-  PRECICE_CHECK(context.provideMesh, "This participant does not provide Mesh \"" << context.mesh->getName() << "\", but attempted to modify it. Please extend the use-mesh tag as follows <use-mesh name=\"" << context.mesh->getName() << "\" provide=\"yes\" />.");
+#define PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id)                                                          \
+  PRECICE_REQUIRE_MESH_USE_IMPL(id)                                                                    \
+  PRECICE_CHECK(context.provideMesh,                                                                   \
+                "This participant does not provide Mesh \"{}\", but attempted to modify it. "          \
+                "Please extend the use-mesh tag as follows <use-mesh name=\"{}\" provide=\"yes\" />.", \
+                context.mesh->getName(), context.mesh->getName());
 
 /** Implementation of PRECICE_REQUIRE_MESH_MODIFY()
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_MESH_MODIFY_IMPL(id) \
-  PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id)      \
-  PRECICE_CHECK(!_meshLock.check(meshID), "This participant attempted to modify the Mesh \"" << context.mesh->getName() << "\" while locked. Mesh modification is only allowed before calling initialize().");
+#define PRECICE_REQUIRE_MESH_MODIFY_IMPL(id)                                          \
+  PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id)                                               \
+  PRECICE_CHECK(!_meshLock.check(meshID),                                             \
+                "This participant attempted to modify the Mesh \"{}\" while locked. " \
+                "Mesh modification is only allowed before calling initialize().",     \
+                context.mesh->getName());
 
 /// Validates a given meshID
 #define PRECICE_VALIDATE_MESH_ID(meshID) \
@@ -84,29 +96,31 @@
                     return datakv.second == id;                                                                                                     \
                   });                                                                                                                               \
                 }),                                                                                                                                 \
-                "The given Data ID \"" << id << "\" is unknown to preCICE.");
+                "The given Data ID \"{}\" is unknown to preCICE.", id);
 
 /** Implementation of PRECICE_REQUIRE_DATA_READ()
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_DATA_READ_IMPL(id)                                                                                                                        \
-  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                                                               \
-  DataContext &context = _accessor->dataContext(id);                                                                                                              \
-  PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataRead(id)),                                                                                         \
-                "This participant does not use Data \"" << context.getName() << "\", but attempted to read it. Please extend the configuarion of partiticpant \"" \
-                                                        << _accessorName << "\" by defining <read-data mesh=\"" << context.mesh->getName() << "\" name=\"" << context.getName() << "\" />.");
+#define PRECICE_REQUIRE_DATA_READ_IMPL(id)                                                                                  \
+  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                         \
+  DataContext &context = _accessor->dataContext(id);                                                                        \
+  PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataRead(id)),                                                   \
+                "This participant does not use Data \"{}\", but attempted to read it. "                                     \
+                "Please extend the configuarion of partiticpant \"{}\" by defining <read-data mesh=\"{}\" name=\"{}\" />.", \
+                context.getName(), _accessorName, context.mesh->getName(), context.getName());
 
 /** Implementation of PRECICE_REQUIRE_DATA_WRITE()
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_DATA_WRITE_IMPL(id)                                                                                                                        \
-  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                                                                \
-  DataContext &context = _accessor->dataContext(id);                                                                                                               \
-  PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataWrite(id)),                                                                                         \
-                "This participant does not use Data \"" << context.getName() << "\", but attempted to write it. Please extend the configuarion of partiticpant \"" \
-                                                        << _accessorName << "\" by defining <write-data mesh=\"" << context.mesh->getName() << "\" name=\"" << context.getName() << "\" />.");
+#define PRECICE_REQUIRE_DATA_WRITE_IMPL(id)                                                                                  \
+  PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                          \
+  DataContext &context = _accessor->dataContext(id);                                                                         \
+  PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataWrite(id)),                                                   \
+                "This participant does not use Data \"{}\", but attempted to write it. "                                     \
+                "Please extend the configuarion of partiticpant \"{}\" by defining <write-data mesh=\"{}\" name=\"{}\" />.", \
+                context.getName(), _accessorName, context.mesh->getName(), context.getName());
 
 /// Validates a given dataID
 #define PRECICE_VALIDATE_DATA_ID(dataID) \

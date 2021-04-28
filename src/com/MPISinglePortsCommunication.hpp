@@ -33,7 +33,7 @@ namespace com {
 **/
 class MPISinglePortsCommunication : public MPICommunication {
 public:
-  explicit MPISinglePortsCommunication(std::string const &addressDirectory = ".");
+  explicit MPISinglePortsCommunication(std::string addressDirectory = ".");
 
   virtual ~MPISinglePortsCommunication();
 
