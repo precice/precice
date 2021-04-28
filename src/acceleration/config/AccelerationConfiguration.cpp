@@ -195,7 +195,7 @@ void AccelerationConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_TIME_WINDOWS_REUSED) {
     _config.timeWindowsReused = callingTag.getIntAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_FILTER) {
-    auto f = callingTag.getStringAttributeValue(ATTR_TYPE);
+    const auto &f = callingTag.getStringAttributeValue(ATTR_TYPE);
     if (f == VALUE_QR1FILTER) {
       _config.filter = Acceleration::QR1FILTER;
     } else if (f == VALUE_QR1_ABSFILTER) {
@@ -217,7 +217,7 @@ void AccelerationConfiguration::xmlTagCallback(
 
 #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
-    auto f                = callingTag.getStringAttributeValue(ATTR_TYPE);
+    const auto &f         = callingTag.getStringAttributeValue(ATTR_TYPE);
     if (f == VALUE_NO_RESTART) {
       _config.imvjRestartType = MVQNAcceleration::NO_RESTART;
     } else if (f == VALUE_ZERO_RESTART) {
