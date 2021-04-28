@@ -441,7 +441,7 @@ double SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Handle exports");
   handleExports();
 
-  //  resetWrittenData();
+  resetWrittenData();
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
@@ -1004,7 +1004,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
         continue;
       }
 
-      //      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" from mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
@@ -1040,7 +1040,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.mesh->getID() != toMeshID) {
         continue;
       }
-      //      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" to mesh \"" << context.mesh->getName() << "\"");
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext.mapping);
@@ -1528,7 +1528,7 @@ void SolverInterfaceImpl::mapWrittenData()
       int outDataID = context.toData->getID();
       PRECICE_DEBUG("Map data \"" << context.fromData->getName()
                                   << "\" from mesh \"" << context.mesh->getName() << "\"");
-      //      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
       PRECICE_DEBUG("Mapped values = " << utils::previewRange(3, context.toData->values()));
@@ -1576,7 +1576,7 @@ void SolverInterfaceImpl::mapReadData()
     if (mapNow && hasMapping && (not hasMapped)) {
       int inDataID  = context.fromData->getID();
       int outDataID = context.toData->getID();
-      //      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map read data \"" << context.fromData->getName()
                                        << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
