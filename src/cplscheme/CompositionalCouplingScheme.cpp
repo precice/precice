@@ -303,9 +303,9 @@ std::string CompositionalCouplingScheme::printCouplingState() const
 bool CompositionalCouplingScheme::determineActiveCouplingSchemes()
 {
   PRECICE_TRACE();
-  bool        newActiveSchemes = false;
-  std::string writeCheckpoint  = constants::actionWriteIterationCheckpoint();
-  std::string readCheckpoint   = constants::actionReadIterationCheckpoint();
+  bool               newActiveSchemes = false;
+  const std::string &writeCheckpoint  = constants::actionWriteIterationCheckpoint();
+  const std::string &readCheckpoint   = constants::actionReadIterationCheckpoint();
   if (_activeSchemesBegin == _activeSchemesEnd) {
     PRECICE_DEBUG("Case After Init");
     // First call after initialization of all coupling schemes. All coupling
@@ -378,8 +378,8 @@ bool CompositionalCouplingScheme::determineActiveCouplingSchemes()
 void CompositionalCouplingScheme::advanceActiveCouplingSchemes()
 {
   PRECICE_TRACE();
-  std::string writeCheckpoint = constants::actionWriteIterationCheckpoint();
-  bool        iterating       = false;
+  const std::string &writeCheckpoint = constants::actionWriteIterationCheckpoint();
+  bool               iterating       = false;
   while (_activeSchemesEnd != _couplingSchemes.end()) {
     if (_activeSchemesEnd->scheme->isActionRequired(writeCheckpoint)) {
       PRECICE_DEBUG("Found implicit scheme");

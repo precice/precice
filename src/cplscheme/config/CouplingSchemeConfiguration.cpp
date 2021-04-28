@@ -219,35 +219,35 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                   "in the <coupling-scheme:...> of your precice-config.xml",
                   _config.timeWindowSize, _config.validDigits, tag.getStringAttributeValue(ATTR_METHOD));
   } else if (tag.getName() == TAG_ABS_CONV_MEASURE) {
-    std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
-    std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
-    double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool        strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
+    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_REL_CONV_MEASURE) {
-    std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
-    std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
-    double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool        strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
+    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_RES_REL_CONV_MEASURE) {
-    std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
-    std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
-    double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool        strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
+    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_MIN_ITER_CONV_MEASURE) {
-    std::string dataName      = tag.getStringAttributeValue(ATTR_DATA);
-    std::string meshName      = tag.getStringAttributeValue(ATTR_MESH);
-    int         minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
-    bool        suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool        strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
+    const std::string &dataName      = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName      = tag.getStringAttributeValue(ATTR_MESH);
+    int                minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
+    bool               suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices, strict);
   } else if (tag.getName() == TAG_EXCHANGE) {

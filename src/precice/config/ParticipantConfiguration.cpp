@@ -252,7 +252,7 @@ void ParticipantConfiguration::xmlTagCallback(
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
-    std::string          name = tag.getStringAttributeValue(ATTR_NAME);
+    const std::string &  name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::Participant(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_USE_MESH) {
@@ -261,7 +261,7 @@ void ParticipantConfiguration::xmlTagCallback(
     Eigen::VectorXd offset(_dimensions);
     /// @todo offset currently not supported
     //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
-    std::string                                   from         = tag.getStringAttributeValue(ATTR_FROM);
+    const std::string &                           from         = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     partition::ReceivedPartition::GeometricFilter geoFilter    = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
     PRECICE_CHECK(safetyFactor >= 0,
@@ -288,18 +288,18 @@ void ParticipantConfiguration::xmlTagCallback(
     }
     _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter);
   } else if (tag.getName() == TAG_WRITE) {
-    std::string   dataName = tag.getStringAttributeValue(ATTR_NAME);
-    std::string   meshName = tag.getStringAttributeValue(ATTR_MESH);
-    mesh::PtrMesh mesh     = _meshConfig->getMesh(meshName);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
+    std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
+    mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
                   "Participant \"{}\" has to use mesh \"{}\" in order to write data to it. Please add a use-mesh node with name=\"{}\".",
                   _participants.back()->getName(), meshName, meshName);
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addWriteData(data, mesh);
   } else if (tag.getName() == TAG_READ) {
-    std::string   dataName = tag.getStringAttributeValue(ATTR_NAME);
-    std::string   meshName = tag.getStringAttributeValue(ATTR_MESH);
-    mesh::PtrMesh mesh     = _meshConfig->getMesh(meshName);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
+    std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
+    mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
                   "Participant \"{}\" has to use mesh \"{}\" in order to read data from it. Please add a use-mesh node with name=\"{}\".",
                   _participants.back()->getName(), meshName, meshName);

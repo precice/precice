@@ -256,7 +256,7 @@ void ExportVTKXML::exportData(
     outFile << std::max(3, dimensions) << "\" format=\"ascii\">\n";
     outFile << "               ";
     for (const auto &vertex : mesh.vertices()) {
-      const auto normal = vertex.getNormal();
+      const auto &normal = vertex.getNormal();
       for (int i = 0; i < std::max(3, dimensions); i++) {
         if (i < dimensions) {
           outFile << normal[i] << ' ';

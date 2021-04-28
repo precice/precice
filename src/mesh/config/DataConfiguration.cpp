@@ -56,9 +56,9 @@ void DataConfiguration::xmlTagCallback(
 {
   if (tag.getNamespace() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
-    std::string name           = tag.getStringAttributeValue(ATTR_NAME);
-    std::string typeName       = tag.getName();
-    int         dataDimensions = getDataDimensions(typeName);
+    const std::string &name           = tag.getStringAttributeValue(ATTR_NAME);
+    const std::string &typeName       = tag.getName();
+    int                dataDimensions = getDataDimensions(typeName);
     addData(name, dataDimensions);
   } else {
     PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
