@@ -10,8 +10,8 @@
 
 namespace precice {
 namespace com {
-MPIPortsCommunication::MPIPortsCommunication(std::string const &addressDirectory)
-    : _addressDirectory(addressDirectory)
+MPIPortsCommunication::MPIPortsCommunication(std::string addressDirectory)
+    : _addressDirectory(std::move(addressDirectory))
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";

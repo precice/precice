@@ -64,9 +64,7 @@ MVQNAcceleration::MVQNAcceleration(
 }
 
 // ==================================================================================
-MVQNAcceleration::~MVQNAcceleration()
-{
-}
+MVQNAcceleration::~MVQNAcceleration() = default;
 
 // ==================================================================================
 void MVQNAcceleration::initialize(

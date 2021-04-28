@@ -50,9 +50,9 @@ public:
    * @param[in] comConfig For checking if a communication between participants to be coupled is defined.
    */
   CouplingSchemeConfiguration(
-      xml::XMLTag &                               parent,
-      const mesh::PtrMeshConfiguration &          meshConfig,
-      const m2n::M2NConfiguration::SharedPointer &m2nConfig);
+      xml::XMLTag &                        parent,
+      mesh::PtrMeshConfiguration           meshConfig,
+      m2n::M2NConfiguration::SharedPointer m2nConfig);
 
   /// Destructor, empty.
   virtual ~CouplingSchemeConfiguration() {}

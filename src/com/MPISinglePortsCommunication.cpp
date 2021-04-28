@@ -14,8 +14,8 @@
 
 namespace precice {
 namespace com {
-MPISinglePortsCommunication::MPISinglePortsCommunication(std::string const &addressDirectory)
-    : _addressDirectory(addressDirectory)
+MPISinglePortsCommunication::MPISinglePortsCommunication(std::string addressDirectory)
+    : _addressDirectory(std::move(addressDirectory))
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";

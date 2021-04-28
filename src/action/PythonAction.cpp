@@ -10,6 +10,8 @@
 #include <ostream>
 #include <pthread.h>
 #include <string>
+#include <utility>
+
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -51,14 +53,14 @@ std::string python_error_as_string()
 
 PythonAction::PythonAction(
     Timing               timing,
-    const std::string &  modulePath,
-    const std::string &  moduleName,
+    std::string          modulePath,
+    std::string          moduleName,
     const mesh::PtrMesh &mesh,
     int                  targetDataID,
     int                  sourceDataID)
     : Action(timing, mesh),
-      _modulePath(modulePath),
-      _moduleName(moduleName)
+      _modulePath(std::move(modulePath)),
+      _moduleName(std::move(moduleName))
 {
   PRECICE_CHECK(boost::filesystem::is_directory(_modulePath),
                 "The module path of the python action \"{}\" does not exist. The configured path is \"{}\".",

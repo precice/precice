@@ -22,17 +22,17 @@ BiCouplingScheme::BiCouplingScheme(
     int                           maxTimeWindows,
     double                        timeWindowSize,
     int                           validDigits,
-    const std::string &           firstParticipant,
-    const std::string &           secondParticipant,
+    std::string                   firstParticipant,
+    std::string                   secondParticipant,
     const std::string &           localParticipant,
     m2n::PtrM2N                   m2n,
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod),
-      _m2n(m2n),
-      _firstParticipant(firstParticipant),
-      _secondParticipant(secondParticipant)
+      _m2n(std::move(m2n)),
+      _firstParticipant(std::move(firstParticipant)),
+      _secondParticipant(std::move(secondParticipant))
 {
   PRECICE_ASSERT(_firstParticipant != _secondParticipant,
                  "First participant and second participant must have different names.");

@@ -85,7 +85,7 @@ private:
 
 public:
   explicit StreamBackend(boost::shared_ptr<std::ostream> ostream)
-      : _ostream(ostream) {}
+      : _ostream(std::move(ostream)) {}
 
   void consume(boost::log::record_view const &rec, string_type const &formatted_record)
   {

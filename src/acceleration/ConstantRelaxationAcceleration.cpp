@@ -3,6 +3,8 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <utility>
+
 #include "cplscheme/CouplingData.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -16,7 +18,7 @@ ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
     double           relaxation,
     std::vector<int> dataIDs)
     : _relaxation(relaxation),
-      _dataIDs(dataIDs)
+      _dataIDs(std::move(dataIDs))
 {
   PRECICE_CHECK((relaxation > 0.0) && (relaxation <= 1.0),
                 "Relaxation factor for constant relaxation acceleration has to be larger than zero and smaller or equal to one. "

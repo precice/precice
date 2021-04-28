@@ -3,6 +3,8 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <utility>
+
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -24,7 +26,7 @@ MeshConfiguration::MeshConfiguration(
       TAG_DATA("use-data"),
       ATTR_SIDE_INDEX("side"),
       _dimensions(0),
-      _dataConfig(config),
+      _dataConfig(std::move(config)),
       _meshes(),
       _neededMeshes(),
       _meshIdManager(new utils::ManageUniqueIDs())

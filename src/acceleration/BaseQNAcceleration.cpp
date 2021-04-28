@@ -2,6 +2,8 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <memory>
+#include <utility>
+
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
@@ -38,11 +40,11 @@ BaseQNAcceleration::BaseQNAcceleration(
     double                  singularityLimit,
     std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
-    : _preconditioner(preconditioner),
+    : _preconditioner(std::move(preconditioner)),
       _initialRelaxation(initialRelaxation),
       _maxIterationsUsed(maxIterationsUsed),
       _timeWindowsReused(timeWindowsReused),
-      _dataIDs(dataIDs),
+      _dataIDs(std::move(dataIDs)),
       _forceInitialRelaxation(forceInitialRelaxation),
       _qrV(filter),
       _filter(filter),
@@ -123,7 +125,7 @@ void BaseQNAcceleration::initialize(
    */
   std::stringstream ss;
   if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
-    PRECICE_ASSERT(utils::MasterSlave::_communication.get() != NULL);
+    PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
     PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
     if (entries <= 0) {

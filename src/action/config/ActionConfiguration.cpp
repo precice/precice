@@ -3,6 +3,8 @@
 #include <memory>
 #include <ostream>
 #include <stdexcept>
+#include <utility>
+
 #include "action/ComputeCurvatureAction.hpp"
 #include "action/PythonAction.hpp"
 #include "action/RecorderAction.hpp"
@@ -21,8 +23,8 @@ namespace precice {
 namespace action {
 
 ActionConfiguration::ActionConfiguration(
-    xml::XMLTag &                     parent,
-    const mesh::PtrMeshConfiguration &meshConfig)
+    xml::XMLTag &              parent,
+    mesh::PtrMeshConfiguration meshConfig)
     : NAME_DIVIDE_BY_AREA("divide-by-area"),
       NAME_MULTIPLY_BY_AREA("multiply-by-area"),
       NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO("scale-by-computed-dt-ratio"),       //@todo rename this, breaking change!
@@ -47,7 +49,7 @@ ActionConfiguration::ActionConfiguration(
       WRITE_MAPPING_POST("write-mapping-post"),
       READ_MAPPING_PRIOR("read-mapping-prior"),
       READ_MAPPING_POST("read-mapping-post"),
-      _meshConfig(meshConfig)
+      _meshConfig(std::move(meshConfig))
 {
   using namespace xml;
   XMLTag tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
