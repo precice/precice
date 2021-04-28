@@ -104,11 +104,10 @@
  */
 #define PRECICE_REQUIRE_DATA_READ_IMPL(id)                                                                                  \
   PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                         \
-  DataContext &context = _accessor->dataContext(id);                                                                        \
   PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataRead(id)),                                                   \
                 "This participant does not use Data \"{}\", but attempted to read it. "                                     \
                 "Please extend the configuarion of partiticpant \"{}\" by defining <read-data mesh=\"{}\" name=\"{}\" />.", \
-                context.getName(), _accessorName, context.mesh->getName(), context.getName());
+                "context.getName()", _accessorName, "context.mesh->getName()", "context.getName()");
 
 /** Implementation of PRECICE_REQUIRE_DATA_WRITE()
  *
@@ -116,11 +115,10 @@
  */
 #define PRECICE_REQUIRE_DATA_WRITE_IMPL(id)                                                                                  \
   PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                          \
-  DataContext &context = _accessor->dataContext(id);                                                                         \
   PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataWrite(id)),                                                   \
                 "This participant does not use Data \"{}\", but attempted to write it. "                                     \
                 "Please extend the configuarion of partiticpant \"{}\" by defining <write-data mesh=\"{}\" name=\"{}\" />.", \
-                context.getName(), _accessorName, context.mesh->getName(), context.getName());
+                "context.getName()", _accessorName, "context.mesh->getName()", "context.getName()");
 
 /// Validates a given dataID
 #define PRECICE_VALIDATE_DATA_ID(dataID) \
