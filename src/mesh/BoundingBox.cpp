@@ -55,8 +55,9 @@ bool BoundingBox::empty() const
 bool BoundingBox::contains(const mesh::Vertex &vertex) const
 {
   PRECICE_ASSERT(_dimensions == vertex.getDimensions(), "Vertex with different dimensions than bounding box cannot be checked.");
+  const auto &coords = vertex.rawCoords();
   for (int d = 0; d < _dimensions; d++) {
-    if (vertex.getCoords()[d] < _bounds.at(2 * d) || vertex.getCoords()[d] > _bounds.at(2 * d + 1)) {
+    if (coords[d] < _bounds.at(2 * d) || coords[d] > _bounds.at(2 * d + 1)) {
       return false;
     }
   }
@@ -122,9 +123,10 @@ void BoundingBox::expandBy(const BoundingBox &otherBB)
 void BoundingBox::expandBy(const Vertex &vertices)
 {
   PRECICE_ASSERT(_dimensions == vertices.getDimensions(), "Vertex with different dimensions than bounding box cannot be used to expand bounding box");
+  const auto coords = vertices.rawCoords();
   for (int d = 0; d < _dimensions; ++d) {
-    _bounds.at(2 * d)     = std::min(vertices.getCoords()[d], _bounds.at(2 * d));
-    _bounds.at(2 * d + 1) = std::max(vertices.getCoords()[d], _bounds.at(2 * d + 1));
+    _bounds.at(2 * d)     = std::min(coords[d], _bounds.at(2 * d));
+    _bounds.at(2 * d + 1) = std::max(coords[d], _bounds.at(2 * d + 1));
   }
 }
 
