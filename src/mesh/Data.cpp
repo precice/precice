@@ -15,14 +15,15 @@ Data::Data()
   PRECICE_ASSERT(false);
 }
 
-Data::Data(
-    const std::string &name,
-    int                id,
-    int                dimensions)
+Data::Data(const std::string &   name,
+           int                   id,
+           int                   dimensions,
+           Data::DataMappingType dataMappingType)
     : _values(),
       _name(name),
       _id(id),
-      _dimensions(dimensions)
+      _dimensions(dimensions),
+      _dataMappingType(dataMappingType)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
   _dataCount++;
@@ -51,6 +52,11 @@ const std::string &Data::getName() const
 int Data::getID() const
 {
   return _id;
+}
+
+Data::DataMappingType Data::getDataMappingType() const
+{
+  return _dataMappingType;
 }
 
 void Data::toZero()

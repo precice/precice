@@ -1607,8 +1607,8 @@ void SolverInterfaceImpl::mapReadData()
     bool hasMapping = context.mappingContext.mapping.get() != nullptr;
     bool hasMapped  = context.mappingContext.hasMappedData;
     if (mapNow && hasMapping && (not hasMapped)) {
-      int inDataID  = context.fromData->getID();
-      int outDataID = context.toData->getID();
+      int inDataID             = context.fromData->getID();
+      int outDataID            = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       PRECICE_DEBUG("Map read data \"" << context.fromData->getName()
                                        << "\" to mesh \"" << context.mesh->getName() << "\"");

@@ -128,9 +128,9 @@ public:
       Edge &edgeTwo,
       Edge &edgeThree);
 
-  PtrData &createData(
-      const std::string &name,
-      int                dimension);
+  PtrData &createData(const std::string &   name,
+                      int                   dimension,
+                      Data::DataMappingType mappingType = Data::DataMappingType::NONE);
 
   const DataContainer &data() const;
 

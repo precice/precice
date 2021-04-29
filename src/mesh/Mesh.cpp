@@ -128,8 +128,9 @@ Triangle &Mesh::createTriangle(
 }
 
 PtrData &Mesh::createData(
-    const std::string &name,
-    int                dimension)
+    const std::string &   name,
+    int                   dimension,
+    Data::DataMappingType mappingType)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -138,7 +139,7 @@ PtrData &Mesh::createData(
                             << "mesh \"" << _name << "\". Please rename or remove one of the use-data tags with name \"" << name << "\".");
   }
   int     id = Data::getDataCount();
-  PtrData data(new Data(name, id, dimension));
+  PtrData data(new Data(name, id, dimension, mappingType));
   _data.push_back(data);
   return _data.back();
 }
