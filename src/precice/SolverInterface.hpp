@@ -784,6 +784,25 @@ public:
       const int     dataID,
       const double *boundingBox) const;
 
+  /**
+   * @brief getMeshVerticesWithIDs Iterates over the region of
+   *        interest defined by bounding boxes and reads the corresponding
+   *        coordinates omitting the mapping.
+   *
+   * @param[in]  meshID corresponding mesh ID
+   * @param[in]  size return value of getMeshSize
+   * @param[out]  ids ids corresponding to the coordinates
+   * @param[out] coordinates associated to the values (dim * @p getLocallyRelevantMeshSize)
+   *
+   * @pre IDs and coordinates need to have the correct size, which can be requested by getMeshSize)
+   * @pre bounding box has been defined using @p setBoundingBox
+   */
+  void getMeshVerticesWithIDs(
+      const int meshID,
+      const int size,
+      int *     ids,
+      double *  coordinates) const;
+
   ///@}
 
   /// Disable copy construction

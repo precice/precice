@@ -693,7 +693,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
 
   // TODO: The IDs are usually unknown. Setting them this way
   // is a workaround which works only in serial
-  std::vector<int> ids = {0, 1, 2, 3};
+  std::vector<int> ids = {0, 0, 0, 0};
 
   constexpr int               dim         = 2;
   std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
@@ -714,16 +714,13 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
 
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(meshSize * dim);
-    couplingInterface.getMeshVertices(otherMeshID, meshSize, ids.data(), solverTwoMesh.data());
+    couplingInterface.getMeshVerticesWithIDs(otherMeshID, meshSize, ids.data(), solverTwoMesh.data());
     // Some dummy writeData
     std::array<double, 4> writeData({1, 2, 3, 4});
 
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = positions;
     BOOST_TEST(solverTwoMesh == expectedData);
-
-    // Reshuffle IDs a bit
-    ids = std::vector<int>({1, 0, 2, 3});
 
     while (couplingInterface.isCouplingOngoing()) {
       // Write data
@@ -751,7 +748,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
       couplingInterface.readBlockScalarData(dataID, ids.size(),
                                             ids.data(), readData.data());
       // Expected data according to the writeData
-      std::vector<double> expectedData({2, 1, 3, 4});
+      std::vector<double> expectedData({1, 2, 3, 4});
       BOOST_TEST(expectedData == readData);
     }
   }

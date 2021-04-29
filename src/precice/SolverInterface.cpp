@@ -303,6 +303,14 @@ void SolverInterface::setBoundingBox(const int dataID, const double *boundingBox
   _impl->setBoundingBox(dataID, boundingBox);
 }
 
+void SolverInterface::getMeshVerticesWithIDs(const int meshID,
+                                             const int size,
+                                             int *     ids,
+                                             double *  coordinates) const
+{
+  _impl->getMeshVerticesWithIDs(meshID, size, ids, coordinates);
+}
+
 std::string getVersionInformation()
 {
   return {precice::versionInformation};

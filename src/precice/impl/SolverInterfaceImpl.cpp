@@ -1321,6 +1321,39 @@ void SolverInterfaceImpl::setBoundingBox(
   // mesh->allocateDataValues();
 }
 
+void SolverInterfaceImpl::getMeshVerticesWithIDs(
+    const int meshID,
+    const int size,
+    int *     ids,
+    double *  coordinates) const
+{
+  PRECICE_TRACE(meshID, size);
+  PRECICE_REQUIRE_MESH_USE(meshID);
+  PRECICE_DEBUG("Get " << size << "mesh vertices with IDs");
+  if (size == 0)
+    return;
+
+  const MeshContext & context = _accessor->meshContext(meshID);
+  const mesh::PtrMesh mesh(context.mesh);
+
+  PRECICE_CHECK(ids != nullptr, "You queried the IDs on mesh " << mesh->getName() << ",but the given pointer for the underlying "
+                                                                                     "data container of 'ids' is empty.");
+  PRECICE_CHECK(coordinates != nullptr, "You queried the coordinates on mesh " << mesh->getName() << ",but the given pointer for the underlying "
+                                                                                                     "data container of 'coordinates' is empty.");
+
+  const auto &vertices = mesh->vertices();
+  PRECICE_CHECK(size <= vertices.size(), "The queried size exceeds the number of available points.");
+
+  Eigen::Map<Eigen::MatrixXd> posMatrix{
+      coordinates, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
+
+  for (size_t i = 0; i < size; i++) {
+    PRECICE_ASSERT(i < vertices.size(), i, vertices.size());
+    ids[i]           = vertices[i].getID();
+    posMatrix.col(i) = vertices[i].getCoords();
+  }
+}
+
 void SolverInterfaceImpl::exportMesh(
     const std::string &filenameSuffix,
     int                exportType) const
