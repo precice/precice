@@ -1307,7 +1307,7 @@ void SolverInterfaceImpl::setBoundingBox(
 
   for (int d = 0; d < dim; ++d) {
     // Assert that min is lower or equal to max
-    PRECICE_ASSERT(boundingBox[2 * d] <= boundingBox[2 * d + 1]);
+    PRECICE_CHECK(boundingBox[2 * d] <= boundingBox[2 * d + 1], "Your bounding box is ill defined, i.e. it has a negative volume. The required format is [x_min, x_max...]");
     bounds[2 * d]     = boundingBox[2 * d];
     bounds[2 * d + 1] = boundingBox[2 * d + 1];
   }
