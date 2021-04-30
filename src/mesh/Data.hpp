@@ -34,6 +34,11 @@ public:
   //static const std::string TYPE_NAME_DOUBLE;
   // @brief Name of a vector data type.
   //static const std::string TYPE_NAME_VECTOR;
+  enum class DataMappingType {
+    NONE,
+    CONSISTENT,
+    CONSERVATIVE
+  };
 
   /**
    * @brief Returns the number of created (and still existing) Data objects.

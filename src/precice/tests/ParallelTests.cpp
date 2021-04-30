@@ -742,6 +742,72 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
   precice.finalize();
 }
 
+BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  std::string configFilename = _pathToTests + "explicit-bounding-box.xml";
+
+  if (context.isNamed("SolverOne")) {
+    // Defines the bounding box and writes data to the received mesh
+    SolverInterface interface(context.name, configFilename, context.rank, context.size);
+    const int       otherMeshID = interface.getMeshID("MeshTwo");
+    const int       dataID      = interface.getDataID("Velocities", otherMeshID);
+    const int       dim         = interface.getDimensions();
+
+    std::vector<double> boundingBox = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : std::vector<double>{0.0, 1.0, 4.0, 7};
+    // Set bounding box
+    interface.setBoundingBox(otherMeshID, boundingBox.data());
+    // Initialize the solverinterface
+    double dt = interface.initialize();
+
+    // Get relevant size, allocate data structures and retrieve coordinates
+    const int           meshSize = interface.getMeshVertexSize(dataID);
+    std::vector<int>    ids(meshSize);
+    std::vector<double> coordinates(meshSize * dim);
+    interface.getMeshVerticesWithIDs(otherMeshID, meshSize, ids.data(), coordinates.data());
+    std::vector<double> writeData;
+    for (unsigned int i = 0; i < meshSize; ++i)
+      writeData.emplace_back(i);
+
+    while (interface.isCouplingOngoing()) {
+      // Write data
+      interface.writeBlockScalarData(dataID, meshSize,
+                                     ids.data(), writeData.data());
+      dt = interface.advance(dt);
+    }
+
+  } else {
+    // Defines the mesh and reads data
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    SolverInterface interface(context.name, configFilename, context.rank, context.size);
+    BOOST_TEST(interface.getDimensions() == 2);
+
+    // Get IDs
+    const int meshID = interface.getMeshID("MeshTwo");
+    const int dataID = interface.getDataID("Velocities", meshID);
+    const int dim    = interface.getDimensions();
+    // Define the interface
+    std::vector<double> positions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.0, 0.0, 4.0, 0.0, 5.0});
+
+    const int        size = positions.size() / dim;
+    std::vector<int> ids(size);
+
+    interface.setMeshVertices(meshID, size, positions.data(), ids.data());
+
+    // Initialize the solverinterface
+    double dt = interface.initialize();
+
+    // Start the time loop
+    std::vector<double> readData(size);
+    while (interface.isCouplingOngoing()) {
+
+      dt = interface.advance(dt);
+      interface.readBlockScalarData(dataID, size,
+                                    ids.data(), readData.data());
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
 {
   PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
