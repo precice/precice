@@ -89,18 +89,17 @@ void ReceivedPartition::compute()
 {
   PRECICE_TRACE();
 
-  // Prepare the bounding boxes
-  prepareBoundingBox();
-
   // handle coupling mode first (i.e. serial participant)
   if (not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster()) {
 
     // Debug messages
     PRECICE_DEBUG("Handle partition data structures for serial participant");
 
+    // Prepare the bounding boxes
+    prepareBoundingBox();
     // Filter out vertices not laying in the bounding box
     mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-    mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _mesh->getBoundingBox().contains(v); });
+    mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
     _mesh->clear();
     _mesh->addMesh(filteredMesh);
 
@@ -115,11 +114,11 @@ void ReceivedPartition::compute()
   }
 
   // check to prevent false configuration
-  if (not utils::MasterSlave::isSlave()) {
-    PRECICE_CHECK(hasAnyMapping(),
-                  "The received mesh " << _mesh->getName()
-                                       << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
-  }
+  //  if (not utils::MasterSlave::isSlave()) {
+  //    PRECICE_CHECK(hasAnyMapping(),
+  //                  "The received mesh " << _mesh->getName()
+  //                                       << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
+  //  }
 
   // To better understand steps (2) to (5), it is recommended to look at BU's thesis, especially Figure 69 on page 89
   // for RBF-based filtering. https://mediatum.ub.tum.de/doc/1320661/document.pdf
@@ -469,6 +468,21 @@ void ReceivedPartition::prepareBoundingBox()
     _bb.scaleBy(_safetyFactor);
     _boundingBoxPrepared = true;
   }
+  // This will not be compatible in case we define a mapping on the
+  // same mesh. Still, we need to transfer the mesh own bounding box
+  // to the received partition bounding box. Otherwise the received
+  // partition bounding box will be empty and everything will be
+  // filtered out in the subsequent steps
+  // An alternative would be to use Data::DataMappingType::CONSISTENT
+  // or Data::DataMappingType::CONSERVATIVE here, but then we need to
+  // associate the mesh to a specific data set.
+  if (!hasAnyMapping()) {
+    const auto other_bb = _mesh->getBoundingBox();
+    _bb.expandBy(other_bb);
+    // TODO: Scale by safety factor here. Default of 1.5 is for the current
+    // mappings still too large in comparison to what we want to do here.
+    _boundingBoxPrepared = true;
+  }
 }
 
 void ReceivedPartition::createOwnerInformation()
@@ -645,6 +659,12 @@ void ReceivedPartition::tagMeshFirstRound()
   }
   for (mapping::PtrMapping toMapping : _toMappings) {
     toMapping->tagMeshFirstRound();
+  }
+
+  // Same if-condition as in prepareBoundingBox. See above for
+  // the rationale.
+  if (!hasAnyMapping()) {
+    _mesh->tagAll();
   }
 }
 
