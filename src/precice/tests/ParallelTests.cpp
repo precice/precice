@@ -742,6 +742,11 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
   precice.finalize();
 }
 
+// Test case for parallel mesh partitioning without any mapping. Each solver
+// runs on two ranks. SolverTwo defines 5(2 and 3) vertices which need to be
+// repartitioned on SolverOne according to the defined boundingBoxes
+// (resulting in 3 and 2 vertices per rank. The boundingBoxes don't have any
+// overlap.
 BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
@@ -761,13 +766,29 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
     double dt = interface.initialize();
 
     // Get relevant size, allocate data structures and retrieve coordinates
-    const int           meshSize = interface.getMeshVertexSize(dataID);
+    const int meshSize = interface.getMeshVertexSize(dataID);
+
+    // According to the bounding boxes and vertices: the master rank receives 3 vertices, the slave rank 2
+    const bool expectedSize = (context.isMaster() && meshSize == 3) || (!context.isMaster() && meshSize == 2);
+    BOOST_TEST(expectedSize);
+
+    // Allocate memory
     std::vector<int>    ids(meshSize);
     std::vector<double> coordinates(meshSize * dim);
     interface.getMeshVerticesWithIDs(otherMeshID, meshSize, ids.data(), coordinates.data());
-    std::vector<double> writeData;
-    for (unsigned int i = 0; i < meshSize; ++i)
-      writeData.emplace_back(i);
+
+    // Check the received vertex coordinates
+    std::vector<double> expectedPositions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0});
+    BOOST_TEST(expectedPositions == coordinates);
+
+    // Check the received vertex IDs (IDs are local?!)
+    std::vector<int> expectedIDs;
+    for (int i = 0; i < meshSize; ++i)
+      expectedIDs.emplace_back(i);
+    BOOST_TEST(expectedIDs == ids);
+
+    // Create some unique writeData in order to assert it in the other participant
+    std::vector<double> writeData = context.isMaster() ? std::vector<double>({1, 2, 3}) : std::vector<double>({4, 5});
 
     while (interface.isCouplingOngoing()) {
       // Write data
@@ -775,7 +796,6 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
                                      ids.data(), writeData.data());
       dt = interface.advance(dt);
     }
-
   } else {
     // Defines the mesh and reads data
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
@@ -804,6 +824,10 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
       dt = interface.advance(dt);
       interface.readBlockScalarData(dataID, size,
                                     ids.data(), readData.data());
+
+      // Check the received data
+      std::vector<double> expectedReadData = context.isMaster() ? std::vector<double>({1, 2}) : std::vector<double>({3, 4, 5});
+      BOOST_TEST(expectedReadData == readData);
     }
   }
 }
