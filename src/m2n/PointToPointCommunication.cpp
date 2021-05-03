@@ -612,8 +612,6 @@ void PointToPointCommunication::receive(double *itemsToReceive,
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 
   for (auto &mapping : _mappings) {
-    // if (not utils::MasterSlave::isMaster())
-    //   std::cout<< "indices " << mapping.indices << std::endl;
     mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);
     mapping.request = _communication->aReceive(mapping.recvBuffer, mapping.remoteRank);
   }
