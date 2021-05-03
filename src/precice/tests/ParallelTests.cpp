@@ -1020,7 +1020,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicitOverlapNoWrite)
                                     ids.data(), readData.data());
 
       // Check the received data
-      // Vertex '3' is shared by the other participant and the values 3 and 4 are summed up on the receiver side.
+      // Vertex '3' is shared by the other participant, but only the first rank writes the '3' into the buffer
       std::vector<double> expectedReadData = context.isMaster() ? std::vector<double>({1, 2}) : std::vector<double>({3, 4, 5});
       BOOST_TEST(expectedReadData == readData);
     }
