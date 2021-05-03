@@ -681,6 +681,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling)
     cplInterface.finalize();
   }
 }
+
 BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
@@ -690,10 +691,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
   BOOST_TEST(couplingInterface.getDimensions() == 2);
 
   std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
-
-  // TODO: The IDs are usually unknown. Setting them this way
-  // is a workaround which works only in serial
-  std::vector<int> ids = {0, 0, 0, 0};
+  std::vector<int>    ids(4, 0);
 
   constexpr int               dim         = 2;
   std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
