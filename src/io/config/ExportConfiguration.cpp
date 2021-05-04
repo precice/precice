@@ -45,7 +45,7 @@ void ExportConfiguration::xmlTagCallback(
 {
   if (tag.getBooleanAttributeValue(ATTR_NORMALS)) {
     PRECICE_WARN("You explicitly requrested to export the vertex normals. "
-                 "This is deprecated and the attribute will be removed in a future release.");
+                 "This is deprecated, no longer functional, and the attribute will be removed in a future release.");
   }
   if (tag.getNamespace() == TAG) {
     ExportContext econtext;
