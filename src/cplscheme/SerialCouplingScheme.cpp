@@ -112,7 +112,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
-      convergence = accelerate();
+      convergence = doImplicitStep();
       sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");

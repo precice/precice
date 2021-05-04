@@ -390,12 +390,12 @@ protected:
   }
 
   /**
-   * @brief apply acceleration to the current iteration
+   * @brief perform a coupling iteration
    * @returns whether this iteration has converged or not
    *
    * This function is called from the child classes
    */
-  bool accelerate();
+  bool doImplicitStep();
 
   /**
    * @brief stores current data in buffer of Waveform

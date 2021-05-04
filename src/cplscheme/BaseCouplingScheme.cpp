@@ -618,7 +618,7 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
   return false;
 }
 
-bool BaseCouplingScheme::accelerate()
+bool BaseCouplingScheme::doImplicitStep()
 {
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   bool convergence = measureConvergence();
@@ -632,15 +632,16 @@ bool BaseCouplingScheme::accelerate()
       getAcceleration()->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
+    // extrapolate new input data for the solver evaluation in time.
+    if (_extrapolationOrder > 0) {
+      storeWindowData();
+      extrapolateData();
+    }
+  } else {
     // no convergence achieved for the coupling iteration within the current time window
-  } else if (getAcceleration()) {
-    getAcceleration()->performAcceleration(getAccelerationData());
-  }
-
-  // extrapolate new input data for the solver evaluation in time.
-  if (convergence && (_extrapolationOrder > 0)) {
-    storeWindowData();
-    extrapolateData();
+    if (getAcceleration()) {
+      getAcceleration()->performAcceleration(getAccelerationData());
+    }
   }
 
   // Store data for conv. measurement, acceleration

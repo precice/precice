@@ -67,7 +67,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     checkDataHasBeenReceived();
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
-      convergence = accelerate();
+      convergence = doImplicitStep();
       sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");

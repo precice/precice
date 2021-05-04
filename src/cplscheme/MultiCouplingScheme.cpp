@@ -94,7 +94,7 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   checkDataHasBeenReceived();
 
   PRECICE_DEBUG("Perform acceleration (only second participant)...");
-  bool convergence = accelerate();
+  bool convergence = doImplicitStep();
 
   for (m2n::PtrM2N m2n : _m2ns) {
     sendConvergence(m2n, convergence);
