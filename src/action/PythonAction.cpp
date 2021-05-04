@@ -62,7 +62,7 @@ PyObject *getfullargspec()
   return getfullargspec_function;
 }
 
-/// Returns the argument names of of a callable
+/// Returns the argument names of a callable
 std::vector<std::string> python_func_args(PyObject *const func)
 {
   PyObject *const getfullargspec_function = getfullargspec();
