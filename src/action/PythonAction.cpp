@@ -51,7 +51,7 @@ std::string python_error_as_string()
   }
 }
 
-/// Fetches the function inpect.getfullargspec().
+/// Fetches the function inspect.getfullargspec().
 PyObject *getfullargspec()
 {
   PyObject *const inspect_module_name     = PyUnicode_DecodeFSDefault("inspect");
