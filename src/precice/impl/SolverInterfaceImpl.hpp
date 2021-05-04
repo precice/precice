@@ -476,7 +476,9 @@ public:
    * @param[in] boundingBox (axis aligned) which has in 3D the format
    *            [x_min, x_max, y_min, y_max, z_min, z_max]
    */
-  void setBoundingBox(const int dataID, const double *boundingBox) const;
+  void setBoundingBoxes(const int     dataID,
+                        const double *boundingBox,
+                        const int     nBoundingBoxes) const;
 
   /**
    * @brief getMeshVerticesWithIDs Iterates over the region of

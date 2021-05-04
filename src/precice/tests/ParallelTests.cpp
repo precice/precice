@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicitNoOverlap)
 
     std::vector<double> boundingBox = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : std::vector<double>{0.0, 1.0, 4.0, 7};
     // Set bounding box
-    interface.setBoundingBox(otherMeshID, boundingBox.data());
+    interface.setBoundingBoxes(otherMeshID, boundingBox.data(), 1);
     // Initialize the solverinterface
     double dt = interface.initialize();
 
@@ -852,7 +852,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicitOverlap)
 
     std::vector<double> boundingBox = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : std::vector<double>{0.0, 1.0, 3.0, 7};
     // Set bounding box
-    interface.setBoundingBox(otherMeshID, boundingBox.data());
+    interface.setBoundingBoxes(otherMeshID, boundingBox.data(), 1);
     // Initialize the solverinterface
     double dt = interface.initialize();
 
@@ -950,7 +950,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicitOverlapNoWrite)
 
     std::vector<double> boundingBox = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : std::vector<double>{0.0, 1.0, 3.0, 7};
     // Set bounding box
-    interface.setBoundingBox(otherMeshID, boundingBox.data());
+    interface.setBoundingBoxes(otherMeshID, boundingBox.data(), 1);
     // Initialize the solverinterface
     double dt = interface.initialize();
 

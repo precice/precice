@@ -773,16 +773,60 @@ public:
       double &value) const;
 
   /**
-   * @brief setBoundingBox Define a region of interest in order to filter a
-   *        received mesh for a certain mesh region
+   * @brief setBoundingBoxes Define a region of interest on a received mesh
+   *        (<use-mesh ... from="otherParticipant />") in order to receive
+   *        only a certain mesh region.
+   *
+   *        This function is required if you don't want to use the preCICE
+   *        own mappings, but rather want to use your own solver for data
+   *        mapping. As opposed to the usual preCICE mapping, only a single
+   *        mesh (from the other participant) is now involved in this
+   *        situation since an 'own' mesh defined by the participant itself
+   *        is not required any more. In order to partition the receiving
+   *        interface mesh, the solver needs to define the mesh region he
+   *        wants to work on and write data to.
+   *
+   *        The complete concept on the receiving participant looks as follows
+   * @code
+   *    std::vector<double> boundingBoxes(dim * 2 * nBoundingBoxes);
+   *    // fill boundingBoxes ...
+   *    const int otherMeshID = precice.getMeshID("ReceivedMeshname");
+   *    const int writeDataID = precice.getDataID("WriteDataName", otherMeshID);
+   *
+   *    // Define region of interest, where we could obtain direct write access
+   *    precice.setBoundingBoxes(otherMeshID, boundingBox.data(), nBoundingBoxes);
+   *
+   *    double dt = precice.initialize();
+   *    // Get the size of the filtered mesh within the bounding box
+   *    // (provided by the coupling participant)
+   *    const int otherMeshSize = precice.getMeshVertexSize(writeDataID);
+   *
+   *    // Allocate a vector for the vertices
+   *    std::vector<double> otherSolverMesh(otherMeshSize * dim);
+   *    precice.getMeshVerticesWithIDs(otherMeshID, otherMeshSize, ids.data(), otherSolverMesh.data());
+   *    // continue with time loop and write data directly to writeDataID
+   * @endcode
+   *        Defining a bounding box for serial runs of the solver (not to
+   *        be confused with serial coupling mode) is valid. However, an
+   *        exception is thrown (TODO) in case vertices are filtered out
+   *        completely on the receiving side as long as this is not explicitly
+   *        enabled in the configuration file (TODO).
+   *        The mesh region is specified through a collection of axis-aligned
+   *        bounding boxes given by the lower and upper [min and max]
+   *        bounding-box limits in each space dimension [x, y, z].
    *
    * @param[in] dataID ID of the Data you want to access through the bounding box
-   * @param[in] boundingBox (axis aligned) which has in 3D the format
-   *            [x_min, x_max, y_min, y_max, z_min, z_max]
+   * @param[in] boundingBoxes collection of (axis aligned) bounding boxes which
+   *            has in 3D the format
+   *            [x_min0, x_max0, y_min0, y_max0, z_min0, z_max0, x_min1 ... ]
+   * @param[in] nBoundingBoxes number of bounding boxes.
+   *
+   * @pre 'initialize' has not yet been called.
    */
-  void setBoundingBox(
+  void setBoundingBoxes(
       const int     dataID,
-      const double *boundingBox) const;
+      const double *boundingBoxCollection,
+      const int     nBoundingBoxes) const;
 
   /**
    * @brief getMeshVerticesWithIDs Iterates over the region of

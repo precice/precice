@@ -1289,9 +1289,10 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_DEBUG("Read value = " << value);
 }
 
-void SolverInterfaceImpl::setBoundingBox(
+void SolverInterfaceImpl::setBoundingBoxes(
     const int     meshID,
-    const double *boundingBox) const
+    const double *boundingBox,
+    const int     nBoundingBoxes) const
 {
   PRECICE_TRACE(meshID);
   PRECICE_ASSERT(boundingBox != nullptr);

@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
     const int dataID      = couplingInterface.getDataID("Velocities", otherMeshID);
 
     // Define region of interest, where we could obtain direct write access
-    couplingInterface.setBoundingBox(otherMeshID, boundingBox.data());
+    couplingInterface.setBoundingBoxes(otherMeshID, boundingBox.data(), 1);
 
     double dt = couplingInterface.initialize();
     // Get the size of the filtered mesh within the bounding box
@@ -792,7 +792,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxImplicit)
     // TODO: Implement something in order to derive the bounding box from the mesh
 
     // Define region of interest, where we could obtain direct write access
-    couplingInterface.setBoundingBox(otherMeshID, boundingBox.data());
+    couplingInterface.setBoundingBoxes(otherMeshID, boundingBox.data(), 1);
 
     double dt = couplingInterface.initialize();
     // Get the size of the filtered mesh within the bounding box
@@ -829,7 +829,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxImplicit)
       }
 
       // Expected data according to the writeData
-      std::vector<double> expectedData({10, 11, 12,13});
+      std::vector<double> expectedData({10, 11, 12, 13});
       BOOST_TEST(expectedData == readData);
     }
 
@@ -848,7 +848,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxImplicit)
     // Define the mesh
     couplingInterface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
     // Define region of interest, where we could obtain direct write access
-    couplingInterface.setBoundingBox(otherMeshID, boundingBox.data());
+    couplingInterface.setBoundingBoxes(otherMeshID, boundingBox.data(), 1);
     // Initialize
     double dt = couplingInterface.initialize();
 
