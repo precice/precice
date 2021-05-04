@@ -96,6 +96,9 @@ void ReceivedPartition::compute()
     PRECICE_DEBUG("Handle partition data structures for serial participant");
 
     // Prepare the bounding boxes
+    // FIXME: The filtering here destroys currently the compatibility. Failing tests:
+    // serial and partition.
+    // Option at the moment: make the filtering conditional (e.g. using the 'dataMappingType')
     prepareBoundingBox();
     // Filter out vertices not laying in the bounding box
     mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
