@@ -414,7 +414,6 @@ protected:
   {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     for (DataMap::value_type &pair : getAccelerationData()) {
-      // PRECICE_ASSERT(pair.second->lastIteration.size() > 0);  // @todo: Why is this assertion failing?
       pair.second->storeIteration();
     }
   }

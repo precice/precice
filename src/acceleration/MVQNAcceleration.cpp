@@ -120,7 +120,7 @@ void MVQNAcceleration::computeUnderrelaxationSecondaryData(
     Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
-    const auto       oldValues    = data->lastIteration();
+    const auto       oldValues    = data->previousIteration();
     secResiduals                  = oldValues; // old
     secResiduals *= 1.0 - _initialRelaxation;  // (1-omg) * old
     values += secResiduals;                    // (1-omg) * old + new * omg

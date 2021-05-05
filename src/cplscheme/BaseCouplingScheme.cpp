@@ -499,7 +499,7 @@ bool BaseCouplingScheme::measureConvergence()
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
 
-    convMeasure.measure->measure(convMeasure.couplingData->lastIteration(), convMeasure.couplingData->values());
+    convMeasure.measure->measure(convMeasure.couplingData->previousIteration(), convMeasure.couplingData->values());
 
     if (not utils::MasterSlave::isSlave() && convMeasure.doesLogging) {
       _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());

@@ -62,7 +62,7 @@ void IQNILSAcceleration::updateDifferenceMatrices(
     PRECICE_ASSERT(secResiduals.size() == data->values().size(),
                    secResiduals.size(), data->values().size());
     secResiduals = data->values();
-    secResiduals -= data->lastIteration();
+    secResiduals -= data->previousIteration();
   }
 
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
@@ -121,7 +121,7 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
     Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
-    const auto       oldValues    = data->lastIteration();
+    const auto       oldValues    = data->previousIteration();
     secResiduals                  = oldValues; // old
     secResiduals *= 1.0 - _initialRelaxation;  // (1-omg) * old
     values += secResiduals;                    // (1-omg) * old + new * omg
@@ -213,8 +213,8 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     auto &          values = data->values();
     PRECICE_ASSERT(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
     values = _secondaryMatricesW[id] * c;
-    PRECICE_ASSERT(values.size() == data->lastIteration().size(), values.size(), data->lastIteration().size());
-    values += data->lastIteration();
+    PRECICE_ASSERT(values.size() == data->previousIteration().size(), values.size(), data->previousIteration().size());
+    values += data->previousIteration();
     PRECICE_ASSERT(values.size() == _secondaryResiduals[id].size(), values.size(), _secondaryResiduals[id].size());
     values += _secondaryResiduals[id];
   }

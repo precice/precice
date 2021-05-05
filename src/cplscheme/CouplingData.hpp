@@ -48,17 +48,12 @@ public:
 
   void storeIteration()
   {
-    _lastIteration = this->values();
+    _previousIteration = this->values();
   }
 
-  const Eigen::VectorXd lastIteration() const
+  const Eigen::VectorXd previousIteration() const
   {
-    return _lastIteration;
-  }
-
-  [[deprecated("lastIteration should be read only!")]] void writeLastIteration(Eigen::VectorXd value)
-  {
-    _lastIteration = value;
+    return _previousIteration;
   }
 
   int getMeshID()
@@ -87,7 +82,7 @@ private:
   }
 
   /// Data values of previous iteration.
-  Eigen::VectorXd _lastIteration;
+  Eigen::VectorXd _previousIteration;
 
   mesh::PtrData data;
 

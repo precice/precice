@@ -460,7 +460,7 @@ void BaseQNAcceleration::concatenateCouplingData(
   for (int id : _dataIDs) {
     int         size      = cplData[id]->values().size();
     auto &      values    = cplData[id]->values();
-    const auto &oldValues = cplData[id]->lastIteration();
+    const auto &oldValues = cplData[id]->previousIteration();
     for (int i = 0; i < size; i++) {
       _values(i + offset)    = values(i);
       _oldValues(i + offset) = oldValues(i);
