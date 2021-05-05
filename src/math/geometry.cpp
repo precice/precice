@@ -1,7 +1,6 @@
 #include "geometry.hpp"
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include "logging/Logger.hpp"
@@ -254,9 +253,9 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
     All points need to be projected into a new plane with only 2 coordinates, x' and y'. These are used to check
     the convexity of the quad. These new coordinates are stored in 'coords'.
   */
-  PRECICE_ASSERT(std::all_of(vec.cbegin(), vec.cend(),
-                             [](const auto &v) { return v.size() == 3; }),
-                 "This only works in 3D.");
+  for (const auto &vec : coords) {
+    PRECICE_ASSERT(vec.size() == 3, "This only works in 3D.");
+  }
 
   Eigen::Vector3d coordOrigin; // Origin point for the transformation of points onto the new plane
   coordOrigin = coords[0];
