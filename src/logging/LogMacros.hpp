@@ -31,6 +31,7 @@
 #define PRECICE_TRACE(...) \
   {                        \
   }
+
 #else // NDEBUG
 
 #include "logging/Tracer.hpp"
