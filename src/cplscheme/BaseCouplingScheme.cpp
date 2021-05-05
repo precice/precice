@@ -616,7 +616,6 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
 
 bool BaseCouplingScheme::doImplicitStep()
 {
-  storeWindowData();
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   bool convergence = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
@@ -625,6 +624,7 @@ bool BaseCouplingScheme::doImplicitStep()
 
   // coupling iteration converged for current time window. Advance in time.
   if (convergence) {
+    storeWindowData();
     if (getAcceleration()) {
       getAcceleration()->iterationsConverged(getAccelerationData());
     }
