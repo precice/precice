@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme.storeWindowData();
   scheme.extrapolateData();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-  scheme.storeLastIteration();
+  scheme.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
 
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme.storeWindowData();
   scheme.extrapolateData();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  scheme.storeLastIteration();
+  scheme.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
 
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme2.storeWindowData();
   scheme2.extrapolateData();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-  scheme2.storeLastIteration();
+  scheme2.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
 
@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme2.storeWindowData();
   scheme2.extrapolateData();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  scheme2.storeLastIteration();
+  scheme2.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 8.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
 }

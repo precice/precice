@@ -645,7 +645,7 @@ bool BaseCouplingScheme::doImplicitStep()
   }
 
   // Store data for conv. measurement, acceleration
-  storeLastIteration();
+  storeIteration();
 
   return convergence;
 }
