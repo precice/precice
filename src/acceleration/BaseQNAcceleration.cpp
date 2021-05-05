@@ -174,7 +174,7 @@ void BaseQNAcceleration::initialize(
     }
   }
 
-  for (DataMap::value_type &pair : cplData) { // @todo: seems to be unnecessary, since this is again just a loop over CouplingScheme::getAccelerationData
+  for (DataMap::value_type &pair : cplData) { // @todo: Should be removed, but causes failure of test in precice.serial
     pair.second->storeIteration();
   }
 

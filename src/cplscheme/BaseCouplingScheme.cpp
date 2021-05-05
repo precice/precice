@@ -438,7 +438,6 @@ void BaseCouplingScheme::setupDataMatrices()
   }
   // Reserve storage for data values
   for (DataMap::value_type &pair : getAccelerationData()) {
-    pair.second->storeIteration();
     time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder + 1));
     WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
     _waveforms.insert(waveformPair);

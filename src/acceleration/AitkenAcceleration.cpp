@@ -46,11 +46,6 @@ void AitkenAcceleration::initialize(DataMap &cplData)
   double          initializer = std::numeric_limits<double>::max();
   Eigen::VectorXd toAppend    = Eigen::VectorXd::Constant(entries, initializer);
   utils::append(_residuals, toAppend);
-
-  for (DataMap::value_type &pair : cplData) { // @todo: seems to be unnecessary, since this is again just a loop over CouplingScheme::getAccelerationData
-    PRECICE_ASSERT(pair.second->values().size() > 0, pair.first);
-    pair.second->storeIteration();
-  }
 }
 
 void AitkenAcceleration::performAcceleration(

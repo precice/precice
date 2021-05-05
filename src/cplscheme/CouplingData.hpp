@@ -24,6 +24,7 @@ public:
     PRECICE_ASSERT(data != nullptr);
     PRECICE_ASSERT(mesh != nullptr);
     PRECICE_ASSERT(mesh.use_count() > 0);
+    _previousIteration = data->values(); // initialize previous iteration with current data.
   }
 
   int getDimensions() const
