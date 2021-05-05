@@ -207,7 +207,7 @@ void ActionConfiguration::xmlEndTagCallback(
 
 int ActionConfiguration::getUsedMeshID() const
 {
-  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+  for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
     if (mesh->getName() == _configuredAction.mesh) {
       return mesh->getID();
     }
@@ -227,7 +227,7 @@ void ActionConfiguration::createAction()
   std::vector<int> sourceDataIDs;
   int              targetDataID = -1;
   mesh::PtrMesh    mesh;
-  for (mesh::PtrMesh aMesh : _meshConfig->meshes()) {
+  for (const mesh::PtrMesh &aMesh : _meshConfig->meshes()) {
     if (aMesh->getName() == _configuredAction.mesh) {
       mesh = aMesh;
       for (const mesh::PtrData &data : mesh->data()) {

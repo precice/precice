@@ -6,7 +6,7 @@ namespace com {
 
 void Request::wait(std::vector<PtrRequest> &requests)
 {
-  for (auto request : requests) {
+  for (const auto &request : requests) {
     request->wait();
   }
 }

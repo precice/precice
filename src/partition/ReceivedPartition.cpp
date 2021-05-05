@@ -629,20 +629,20 @@ bool ReceivedPartition::hasAnyMapping() const
 
 void ReceivedPartition::tagMeshFirstRound()
 {
-  for (mapping::PtrMapping fromMapping : _fromMappings) {
+  for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshFirstRound();
   }
-  for (mapping::PtrMapping toMapping : _toMappings) {
+  for (const mapping::PtrMapping &toMapping : _toMappings) {
     toMapping->tagMeshFirstRound();
   }
 }
 
 void ReceivedPartition::tagMeshSecondRound()
 {
-  for (mapping::PtrMapping fromMapping : _fromMappings) {
+  for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshSecondRound();
   }
-  for (mapping::PtrMapping toMapping : _toMappings) {
+  for (const mapping::PtrMapping &toMapping : _toMappings) {
     toMapping->tagMeshSecondRound();
   }
 }
