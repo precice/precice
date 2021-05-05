@@ -436,16 +436,12 @@ void BaseCouplingScheme::setupDataMatrices()
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     convMeasure.couplingData->storeIteration();
   }
-  // Reserve storage for extrapolation of data values
-  if (_extrapolationOrder > 0) {
-    for (DataMap::value_type &pair : getAccelerationData()) {
-      pair.second->storeIteration();
-      int               id = pair.first;
-      time::PtrWaveform ptrWaveform(new time::Waveform());
-      ptrWaveform->initialize(pair.second->values().size(), _extrapolationOrder + 1);
-      WaveformMap::value_type waveformPair = std::make_pair(id, ptrWaveform);
-      _waveforms.insert(waveformPair);
-    }
+  // Reserve storage for data values
+  for (DataMap::value_type &pair : getAccelerationData()) {
+    pair.second->storeIteration();
+    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder + 1));
+    WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
+    _waveforms.insert(waveformPair);
   }
   // Storage reservation for acceleration methods happens in Acceleration::initialize
 }
@@ -620,6 +616,7 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
 
 bool BaseCouplingScheme::doImplicitStep()
 {
+  storeWindowData();
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   bool convergence = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
@@ -634,7 +631,6 @@ bool BaseCouplingScheme::doImplicitStep()
     newConvergenceMeasurements();
     // extrapolate new input data for the solver evaluation in time.
     if (_extrapolationOrder > 0) {
-      storeWindowData();
       extrapolateData();
     }
   } else {

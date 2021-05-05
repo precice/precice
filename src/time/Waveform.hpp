@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <algorithm>
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -8,6 +9,13 @@ namespace time {
 
 class Waveform {
 public:
+  Waveform(int numberOfVertices,
+           int numberOfSamples)
+  {
+    numberOfSamples  = std::max(2, numberOfSamples); // work with at least two samples (beginning and end of time window)
+    _lastTimeWindows = Eigen::MatrixXd::Zero(numberOfVertices, numberOfSamples);
+  }
+
   void addNewWindowData(Eigen::VectorXd data)
   {
     // For extrapolation, treat the initial value as old time windows value
@@ -32,11 +40,6 @@ public:
       PRECICE_ASSERT(false, "Extrapolation order is invalid.");
     }
     return extrapolatedValue;
-  }
-
-  void initialize(int numberOfVertices, int numberOfSamples)
-  {
-    _lastTimeWindows = Eigen::MatrixXd::Zero(numberOfVertices, numberOfSamples);
   }
 
   const Eigen::MatrixXd &lastTimeWindows()
