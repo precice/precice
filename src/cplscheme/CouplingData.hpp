@@ -66,7 +66,7 @@ public:
     return mesh->getVertexOffsets();
   }
 
-  ///  True, if the data values if this CouplingData requires to be initialized by a participant.
+  ///  True, if the data values of this CouplingData require to be initialized by a participant.
   const bool requiresInitialization;
 
 private:
