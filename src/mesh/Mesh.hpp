@@ -61,13 +61,11 @@ public:
    *
    * @param[in] name Unique name of the mesh.
    * @param[in] dimensions Dimensionalty of the mesh.
-   * @param[in] flipNormals Inverts the standard direction of normals.
    * @param[in] id The id of this mesh
    */
   Mesh(
       std::string name,
       int         dimensions,
-      bool        flipNormals,
       int         id);
 
   /// Destructor, deletes created objects.
@@ -138,10 +136,6 @@ public:
 
   /// Returns the name of the mesh, as set in the config file.
   const std::string &getName() const;
-
-  bool isFlipNormals() const;
-
-  void setFlipNormals(bool flipNormals);
 
   /// Returns the base ID of the mesh.
   int getID() const;
@@ -223,9 +217,6 @@ private:
 
   /// Dimension of mesh.
   int _dimensions;
-
-  /// Flag for flipping normals direction.
-  bool _flipNormals;
 
   /// The ID of this mesh.
   int _id;

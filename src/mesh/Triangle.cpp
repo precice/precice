@@ -80,16 +80,12 @@ double Triangle::getArea() const
   return math::geometry::triangleArea(vertex(0).getCoords(), vertex(1).getCoords(), vertex(2).getCoords());
 }
 
-Eigen::VectorXd Triangle::computeNormal(bool flip) const
+Eigen::VectorXd Triangle::computeNormal() const
 {
   Eigen::Vector3d vectorA = edge(1).getCenter() - edge(0).getCenter();
   Eigen::Vector3d vectorB = edge(2).getCenter() - edge(0).getCenter();
   // Compute cross-product of vector A and vector B
-  auto normal = vectorA.cross(vectorB);
-  if (flip) {
-    normal *= -1.0; // Invert direction if counterclockwise
-  }
-  return normal.normalized();
+  return vectorA.cross(vectorB).normalized();
 }
 
 int Triangle::getDimensions() const

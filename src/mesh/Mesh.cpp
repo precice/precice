@@ -23,11 +23,9 @@ namespace mesh {
 Mesh::Mesh(
     std::string name,
     int         dimensions,
-    bool        flipNormals,
     int         id)
     : _name(std::move(name)),
       _dimensions(dimensions),
-      _flipNormals(flipNormals),
       _id(id),
       _boundingBox(dimensions)
 {
@@ -162,17 +160,6 @@ const PtrData &Mesh::data(
 const std::string &Mesh::getName() const
 {
   return _name;
-}
-
-bool Mesh::isFlipNormals() const
-{
-  return _flipNormals;
-}
-
-void Mesh::setFlipNormals(
-    bool flipNormals)
-{
-  _flipNormals = flipNormals;
 }
 
 int Mesh::getID() const

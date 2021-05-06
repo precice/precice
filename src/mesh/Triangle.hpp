@@ -94,12 +94,8 @@ public:
 
   ///@}
 
-  /**
-   * @brief Computes the normal of the triangle.
-   *
-   * @pre The normal has to be computed and set from outside before.
-   */
-  Eigen::VectorXd computeNormal(bool flip = false) const;
+  /// Computes the normal of the triangle.
+  Eigen::VectorXd computeNormal() const;
 
   /// Returns a among triangles globally unique ID.
   int getID() const;

@@ -29,7 +29,7 @@ double Edge::getLength() const
   return length;
 }
 
-Eigen::VectorXd Edge::computeNormal(bool flip) const
+Eigen::VectorXd Edge::computeNormal() const
 {
   // Compute normal
   Eigen::VectorXd edgeVector = vertex(1).getCoords() - vertex(0).getCoords();
@@ -44,9 +44,6 @@ Eigen::VectorXd Edge::computeNormal(bool flip) const
     normal[0] = 1.0;
   }
 
-  if (not flip) {
-    normal *= -1.0; // Invert direction if counterclockwise
-  }
   return normal.normalized();
 }
 

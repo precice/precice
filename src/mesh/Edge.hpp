@@ -40,7 +40,7 @@ public:
   const Vertex &vertex(int i) const;
 
   /// Computes the normal of the edge
-  Eigen::VectorXd computeNormal(bool flip = false) const;
+  Eigen::VectorXd computeNormal() const;
 
   /// Returns the (among edges) unique ID of the edge.
   int getID() const;
