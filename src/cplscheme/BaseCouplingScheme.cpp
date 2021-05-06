@@ -249,17 +249,8 @@ void BaseCouplingScheme::moveToNextWindow()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->moveToNextWindow();
-  }
-}
-
-void BaseCouplingScheme::extrapolateData()
-{
-  PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : getAccelerationData()) {
-    PRECICE_DEBUG("Extrapolate data: {}", pair.first);
-    pair.second->values() = _waveforms[pair.first]->extrapolateData(_extrapolationOrder, getTimeWindows());
-    _waveforms[pair.first]->updateThisWindow(pair.second->values());
+    _waveforms[pair.first]->moveToNextWindow(getTimeWindows(), _extrapolationOrder);
+    pair.second->values() = _waveforms[pair.first]->lastTimeWindows().col(0);
   }
 }
 
@@ -641,10 +632,6 @@ bool BaseCouplingScheme::doImplicitStep()
       getAcceleration()->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
-    // extrapolate new input data for the solver evaluation in time.
-    if (_extrapolationOrder > 0) {
-      extrapolateData();
-    }
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (getAcceleration()) {

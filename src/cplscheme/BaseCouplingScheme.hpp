@@ -409,11 +409,6 @@ protected:
   void moveToNextWindow();
 
   /**
-   * @brief Extrapolate coupling data from values of previous time windows
-   */
-  void extrapolateData();
-
-  /**
    * @brief used for storing send/receive data at end of acceleration, if not converged.
    */
   void storeIteration()
