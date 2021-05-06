@@ -154,6 +154,6 @@
 #else //NDEBUG
 
 #define PRECICE_VALIDATE_DATA(data, size) \
-  PRECICE_CHECK(std::all_of(data, data + size, [](const double val) { return std::isfinite(val); }), "One of the given data values is either plus or minus infinity or NaN.");
+  PRECICE_CHECK(std::all_of(data, data + size, [](double val) { return std::isfinite(val); }), "One of the given data values is either plus or minus infinity or NaN.");
 
 #endif
