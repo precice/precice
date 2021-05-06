@@ -119,6 +119,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   DataMap data;
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
   data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+  dpcd->storeIteration();
+  fpcd->storeIteration();
 
   pp.initialize(data);
 
@@ -189,6 +191,8 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 
   PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
   PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
+  dpcd->storeIteration();
+  fpcd->storeIteration();
 
   DataMap data;
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
