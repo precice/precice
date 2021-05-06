@@ -441,6 +441,7 @@ void BaseCouplingScheme::setupDataMatrices()
     time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder + 1));
     WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
     _waveforms.insert(waveformPair);
+    pair.second->storeIteration(); // @ todo remove this duplicate of line above! But removing this line causes failure for mpirun --oversubscribe -np 4 ./testprecice -t PreciceTests/Serial/MultiCoupling
   }
   // Storage reservation for acceleration methods happens in Acceleration::initialize
 }

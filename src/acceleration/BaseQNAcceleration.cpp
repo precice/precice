@@ -78,6 +78,11 @@ void BaseQNAcceleration::initialize(
     DataMap &cplData)
 {
   PRECICE_TRACE(cplData.size());
+  for (DataMap::value_type &pair : cplData) {
+    PRECICE_ASSERT(pair.second->values().size() == pair.second->previousIteration().size(), "current and previousIteration have to be initialized and of identical size.",
+                   pair.second->values().size(), pair.second->previousIteration().size());
+  }
+
   checkDataIDs(cplData);
 
   /*
@@ -172,10 +177,6 @@ void BaseQNAcceleration::initialize(
       int secondaryEntries            = pair.second->values().size();
       _secondaryResiduals[pair.first] = Eigen::VectorXd::Zero(secondaryEntries);
     }
-  }
-
-  for (DataMap::value_type &pair : cplData) { // @todo: Should be removed, but causes failure of test in precice.serial
-    pair.second->storeIteration();
   }
 
   _preconditioner->initialize(subVectorSizes);
