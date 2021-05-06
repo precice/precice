@@ -540,9 +540,6 @@ private:
   /// mesh name to mesh ID mapping.
   std::map<std::string, int> _meshIDs;
 
-  /// dataIDs referenced by meshID and data name
-  std::map<int, std::map<std::string, int>> _dataIDs;
-
   std::map<std::string, m2n::BoundM2N> _m2ns;
 
   /// Holds information about solvers participating in the coupled simulation.
