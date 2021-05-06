@@ -355,20 +355,6 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
   }
 }
 
-/// @todo remove
-mesh::PtrMesh ParticipantConfiguration::copy(
-    const mesh::PtrMesh &mesh) const
-{
-  int         dim = mesh->getDimensions();
-  std::string name(mesh->getName());
-  bool        flipNormals = mesh->isFlipNormals();
-  mesh::Mesh *meshCopy    = new mesh::Mesh("Local_" + name, dim, flipNormals, mesh::Mesh::MESH_ID_UNDEFINED);
-  for (const mesh::PtrData &data : mesh->data()) {
-    meshCopy->createData(data->getName(), data->getDimensions());
-  }
-  return mesh::PtrMesh(meshCopy);
-}
-
 const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
     const std::string &  nameData) const

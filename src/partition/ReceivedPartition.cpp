@@ -131,7 +131,7 @@ void ReceivedPartition::compute()
   // (5) Filter mesh according to tag
   PRECICE_INFO("Filter mesh {} by mappings", _mesh->getName());
   Event      e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
-  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
   mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
   PRECICE_DEBUG("Mapping filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                 _mesh->vertices().size(), filteredMesh.vertices().size(),
@@ -287,14 +287,14 @@ void ReceivedPartition::filterByBoundingBox()
         com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(slaveBB, rankSlave);
 
         PRECICE_DEBUG("From slave {}, bounding mesh: {}", rankSlave, slaveBB);
-        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return slaveBB.contains(v); });
         PRECICE_DEBUG("Send filtered mesh to slave: {}", rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
       }
 
       // Now also filter the remaining master mesh
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
       PRECICE_DEBUG("Master mesh, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->vertices().size(), filteredMesh.vertices().size(),
@@ -324,7 +324,7 @@ void ReceivedPartition::filterByBoundingBox()
       PRECICE_INFO("Filter mesh {} by bounding box on slaves", _mesh->getName());
       Event e("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);
 
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
 
       if (isAnyProvidedMeshNonEmpty()) {

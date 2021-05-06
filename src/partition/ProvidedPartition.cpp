@@ -43,7 +43,7 @@ void ProvidedPartition::communicate()
     return;
 
   // Temporary globalMesh such that the master also keeps his local mesh
-  mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+  mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   bool       hasMeshBeenGathered = false;
 
   bool twoLevelInitAlreadyUsed = false;
