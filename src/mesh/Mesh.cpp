@@ -149,13 +149,21 @@ const Mesh::DataContainer &Mesh::data() const
   return _data;
 }
 
-const PtrData &Mesh::data(
-    int dataID) const
+const PtrData &Mesh::data(int dataID) const
 {
-  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](PtrData const &ptr) {
-    return ptr->getID() == dataID;
+  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) {
+    return dptr->getID() == dataID;
   });
   PRECICE_ASSERT(iter != _data.end(), "Data with id not found in mesh.", dataID, _name);
+  return *iter;
+}
+
+const PtrData &Mesh::data(const std::string &dataName) const
+{
+  auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
+    return dptr->getName() == dataName;
+  });
+  PRECICE_ASSERT(iter != _data.end(), "Data with Name " << dataName << " not found in mesh \"" << _name << "\".");
   return *iter;
 }
 
