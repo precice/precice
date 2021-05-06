@@ -23,7 +23,7 @@ using namespace precice;
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST(1_rank);
-  int             dim           = 2;
+  int             dim = 2;
   mesh::Mesh      mesh("MyMesh", dim, testing::nextMeshID());
   mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
   mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST(1_rank);
-  int             dim           = 3;
+  int             dim = 3;
   mesh::Mesh      mesh("MyMesh", dim, testing::nextMeshID());
   mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
   mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));

@@ -56,11 +56,11 @@ BOOST_AUTO_TEST_CASE(DirectionalEdges)
   BOOST_TEST(id == 0);
 
   Vector3d normal = triangle.computeNormal();
-  BOOST_TEST((coords2-coords1).dot(normal) == 0.0);
-  BOOST_TEST((coords3-coords1).dot(normal) == 0.0);
+  BOOST_TEST((coords2 - coords1).dot(normal) == 0.0);
+  BOOST_TEST((coords3 - coords1).dot(normal) == 0.0);
 
   Vector3d center = triangle.getCenter();
-  BOOST_TEST(testing::equals(center, (coords1+coords2+coords3)/3));
+  BOOST_TEST(testing::equals(center, (coords1 + coords2 + coords3) / 3));
 
   constexpr double expectedRadius = 0.74535599249993001;
   BOOST_TEST(triangle.getEnclosingRadius() == expectedRadius);
@@ -108,11 +108,11 @@ BOOST_AUTO_TEST_CASE(SecondFlipped)
   BOOST_TEST(id == 0);
 
   Vector3d normal = triangle.computeNormal();
-  BOOST_TEST((coords2-coords1).dot(normal) == 0.0);
-  BOOST_TEST((coords3-coords1).dot(normal) == 0.0);
+  BOOST_TEST((coords2 - coords1).dot(normal) == 0.0);
+  BOOST_TEST((coords3 - coords1).dot(normal) == 0.0);
 
   Vector3d center = triangle.getCenter();
-  BOOST_TEST(testing::equals(center, (coords1+coords2+coords3)/3));
+  BOOST_TEST(testing::equals(center, (coords1 + coords2 + coords3) / 3));
 
   constexpr double expectedRadius = 0.74535599249993001;
   BOOST_TEST(triangle.getEnclosingRadius() == expectedRadius);
@@ -161,11 +161,11 @@ BOOST_AUTO_TEST_CASE(ReversedFirstFlipped)
   BOOST_TEST(id == 0);
 
   Vector3d normal = triangle.computeNormal();
-  BOOST_TEST((coords2-coords1).dot(normal) == 0.0);
-  BOOST_TEST((coords3-coords1).dot(normal) == 0.0);
+  BOOST_TEST((coords2 - coords1).dot(normal) == 0.0);
+  BOOST_TEST((coords3 - coords1).dot(normal) == 0.0);
 
   Vector3d center = triangle.getCenter();
-  BOOST_TEST(testing::equals(center, (coords1+coords2+coords3)/3));
+  BOOST_TEST(testing::equals(center, (coords1 + coords2 + coords3) / 3));
 
   constexpr double expectedRadius = 0.74535599249993001;
   BOOST_TEST(triangle.getEnclosingRadius() == expectedRadius);
@@ -214,11 +214,11 @@ BOOST_AUTO_TEST_CASE(ReversedLastFlipped)
   BOOST_TEST(id == 0);
 
   Vector3d normal = triangle.computeNormal();
-  BOOST_TEST((coords2-coords1).dot(normal) == 0.0);
-  BOOST_TEST((coords3-coords1).dot(normal) == 0.0);
+  BOOST_TEST((coords2 - coords1).dot(normal) == 0.0);
+  BOOST_TEST((coords3 - coords1).dot(normal) == 0.0);
 
   Vector3d center = triangle.getCenter();
-  BOOST_TEST(testing::equals(center, (coords1+coords2+coords3)/3));
+  BOOST_TEST(testing::equals(center, (coords1 + coords2 + coords3) / 3));
 
   constexpr double expectedRadius = 0.74535599249993001;
   BOOST_TEST(triangle.getEnclosingRadius() == expectedRadius);

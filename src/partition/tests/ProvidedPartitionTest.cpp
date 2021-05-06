@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
   PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
   auto m2n = context.connectMasters("NASTIN", "SOLIDZ");
 
-  int  dimensions  = 2;
+  int dimensions = 2;
 
   if (context.isNamed("NASTIN")) { //NASTIN
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
   PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
   auto m2n = context.connectMasters("NASTIN", "SOLIDZ");
 
-  int  dimensions  = 3;
+  int dimensions = 3;
 
   if (context.isNamed("NASTIN")) { //NASTIN
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
   PRECICE_TEST("NASTIN"_on(4_ranks).setupMasterSlaves(), Require::Events);
   // Create mesh object
   std::string   meshName("MyMesh");
-  int           dim         = 2;
+  int           dim = 2;
   mesh::PtrMesh pMesh(new mesh::Mesh(meshName, dim, testing::nextMeshID()));
 
   if (context.isMaster()) { //Master
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   options.useTwoLevelInit  = true;
   auto m2n                 = context.connectMasters("NASTIN", "SOLIDZ", options);
 
-  int  dimensions  = 2;
+  int dimensions = 2;
 
   if (context.isNamed("SOLIDZ")) { //SOLIDZ
 
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
   options.useTwoLevelInit  = true;
   auto m2n                 = context.connectMasters("NASTIN", "SOLIDZ", options);
 
-  int  dimensions  = 3;
+  int dimensions = 3;
 
   if (context.isNamed("SOLIDZ")) { //SOLIDZ
 

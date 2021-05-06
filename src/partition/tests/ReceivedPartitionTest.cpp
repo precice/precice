@@ -235,8 +235,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int             dimensions  = 2;
-  Eigen::VectorXd offset      = Eigen::VectorXd::Zero(dimensions);
+  int             dimensions = 2;
+  Eigen::VectorXd offset     = Eigen::VectorXd::Zero(dimensions);
 
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -292,8 +292,8 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int             dimensions  = 2;
-  Eigen::VectorXd offset      = Eigen::VectorXd::Zero(dimensions);
+  int             dimensions = 2;
+  Eigen::VectorXd offset     = Eigen::VectorXd::Zero(dimensions);
 
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int  dimensions  = 2;
+  int dimensions = 2;
 
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events, Require::PETSc);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int  dimensions  = 2;
+  int dimensions = 2;
 
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events, Require::PETSc);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int  dimensions  = 2;
+  int dimensions = 2;
 
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events, Require::PETSc);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int  dimensions  = 2;
+  int dimensions = 2;
 
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -636,7 +636,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events, Require::PETSc);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int  dimensions  = 3;
+  int dimensions = 3;
 
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
   PRECICE_TEST("Fluid"_on(3_ranks).setupMasterSlaves(), "Solid"_on(1_rank), Require::Events);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int  dimensions  = 3;
+  int dimensions = 3;
 
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -778,7 +778,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int  dimensions  = 2;
+  int dimensions = 2;
 
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -863,7 +863,7 @@ BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
   PRECICE_TEST("Fluid"_on(1_rank), "Solid"_on(1_rank), Require::Events);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int  dimensions  = 2;
+  int dimensions = 2;
 
   if (context.isNamed("Solid")) {
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -935,7 +935,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   options.useTwoLevelInit  = true;
   auto m2n                 = context.connectMasters("SOLIDZ", "NASTIN", options);
 
-  int  dimensions  = 2;
+  int dimensions = 2;
 
   // construct send global boundingbox
   mesh::Mesh::BoundingBoxMap sendGlobalBB;
@@ -1005,7 +1005,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
   options.useTwoLevelInit  = true;
   auto m2n                 = context.connectMasters("SOLIDZ", "NASTIN", options);
 
-  int  dimensions  = 3;
+  int dimensions = 3;
 
   // construct send global boundingbox
   mesh::Mesh::BoundingBoxMap sendGlobalBB;
@@ -1072,8 +1072,8 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
   auto m2n = context.connectMasters("Solid", "Fluid");
 
-  int             dimensions  = 2;
-  Eigen::VectorXd offset      = Eigen::VectorXd::Zero(dimensions);
+  int             dimensions = 2;
+  Eigen::VectorXd offset     = Eigen::VectorXd::Zero(dimensions);
 
   if (context.isNamed("Solid")) { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));

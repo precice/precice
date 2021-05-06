@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_SUITE(VTKXMLExport)
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  int        dim           = 2;
+  int        dim = 2;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  int        dim           = 3;
+  int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {

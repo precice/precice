@@ -40,7 +40,7 @@ Eigen::VectorXd Edge::computeNormal() const
   normal[1]              = edgeVector[0];
 
   // Handle vectors along the z axis
-  if(normal.size() == 3 && normal.isApproxToConstant(0.0)) {
+  if (normal.size() == 3 && normal.isApproxToConstant(0.0)) {
     normal[0] = 1.0;
   }
 

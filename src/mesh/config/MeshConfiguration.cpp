@@ -73,12 +73,12 @@ void MeshConfiguration::xmlTagCallback(
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
-    std::string name        = tag.getStringAttributeValue(ATTR_NAME);
-    if(tag.hasAttribute(ATTR_FLIP_NORMALS)) {
+    std::string name = tag.getStringAttributeValue(ATTR_NAME);
+    if (tag.hasAttribute(ATTR_FLIP_NORMALS)) {
       PRECICE_WARN("You used the attribute \"{}\" when configuring mesh \"\". "
-          "This attribute is deprecated and will be removed in the next major release. "
-          "Please remove the attribute to silence this warning.",
-          ATTR_FLIP_NORMALS, name);
+                   "This attribute is deprecated and will be removed in the next major release. "
+                   "Please remove the attribute to silence this warning.",
+                   ATTR_FLIP_NORMALS, name);
     }
     PRECICE_ASSERT(_meshIdManager);
     _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, _meshIdManager->getFreeID()));
