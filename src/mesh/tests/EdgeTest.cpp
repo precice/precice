@@ -177,15 +177,12 @@ BOOST_AUTO_TEST_CASE(ComputeNormal2D_Unit)
   Vertex v2(Vector2d{1.0, 0.0}, 1);
   Edge   edge(v1, v2, 0);
 
-  auto normal = edge.computeNormal(false);
+  auto normal = edge.computeNormal();
   BOOST_TEST(normal.size() == 2);
   BOOST_TEST(normal.norm() == 1.0);
   Vector2d a{0.0, 1.0};
   Vector2d b{0.0, -1.0};
   BOOST_TEST((normal == a || normal == b));
-
-  auto flipped = edge.computeNormal(true);
-  BOOST_TEST(normal == -flipped);
 }
 
 BOOST_AUTO_TEST_CASE(ComputeNormal2D)
@@ -197,13 +194,10 @@ BOOST_AUTO_TEST_CASE(ComputeNormal2D)
   Vertex          v2(b, 1);
   Edge            edge(v1, v2, 0);
 
-  auto normal = edge.computeNormal(false);
+  auto normal = edge.computeNormal();
   BOOST_TEST(normal.size() == 2);
   BOOST_TEST(normal.norm() == 1.0);
   BOOST_TEST(normal.dot(b - a) == 0.0);
-
-  auto flipped = edge.computeNormal(true);
-  BOOST_TEST(normal == -flipped);
 }
 
 
@@ -216,13 +210,10 @@ BOOST_AUTO_TEST_CASE(ComputeNormal3D_Unit)
   Vertex          v2(b, 1);
   Edge            edge(v1, v2, 0);
 
-  auto normal = edge.computeNormal(false);
+  auto normal = edge.computeNormal();
   BOOST_TEST(normal.size() == 3);
   BOOST_TEST(normal.norm() == 1.0);
   BOOST_TEST(normal.dot(b - a) == 0.0);
-
-  auto flipped = edge.computeNormal(true);
-  BOOST_TEST(normal == -flipped);
 }
 
 BOOST_AUTO_TEST_CASE(EdgeWKTPrint)

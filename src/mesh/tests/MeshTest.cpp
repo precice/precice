@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
   Eigen::Vector2d coords1(-1, 4);
   Eigen::Vector2d coords2(0, 1);
 
-  mesh::Mesh mesh("2D Testmesh", 2, false, testing::nextMeshID());
+  mesh::Mesh mesh("2D Testmesh", 2, testing::nextMeshID());
   mesh.createVertex(coords0);
   mesh.createVertex(coords1);
   mesh.createVertex(coords2);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   Eigen::Vector3d coords2(0, 1, -2);
   Eigen::Vector3d coords3(3.5, 2, -2);
 
-  mesh::Mesh mesh("3D Testmesh", 3, false, testing::nextMeshID());
+  mesh::Mesh mesh("3D Testmesh", 3, testing::nextMeshID());
   mesh.createVertex(coords0);
   mesh.createVertex(coords1);
   mesh.createVertex(coords2);
@@ -100,12 +100,10 @@ BOOST_AUTO_TEST_CASE(Demonstration)
   for (int dim = 2; dim <= 3; dim++) {
     // Create mesh object
     std::string         meshName("MyMesh");
-    bool                flipNormals = false; // The normals of triangles, edges, vertices
-    precice::mesh::Mesh mesh(meshName, dim, flipNormals, testing::nextMeshID());
+    precice::mesh::Mesh mesh(meshName, dim, testing::nextMeshID());
 
     // Validate mesh object state
     BOOST_TEST(mesh.getName() == meshName);
-    BOOST_TEST(mesh.isFlipNormals() == flipNormals);
 
     // Create mesh vertices
     Eigen::VectorXd coords0(dim);
@@ -205,9 +203,8 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
   PRECICE_TEST(1_rank);
   int                   dim = 3;
   Mesh                  mesh1("Mesh1", dim, false, testing::nextMeshID());
-  Mesh                  mesh1flipped("Mesh1flipped", dim, true, testing::nextMeshID());
   Mesh                  mesh2("Mesh2", dim, false, testing::nextMeshID());
-  std::array<Mesh *, 3> meshes = {&mesh1, &mesh1flipped, &mesh2};
+  std::array<Mesh *, 3> meshes = {&mesh1, &mesh2};
   for (auto ptr : meshes) {
     auto &          mesh = *ptr;
     Eigen::VectorXd coords0(dim);
@@ -229,14 +226,13 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
     mesh.createEdge(v3, v2);              // LINESTRING (1 0 1, 0 0 1)
     mesh.createTriangle(e0, e1, e2);
   }
-  BOOST_TEST(mesh1 == mesh1flipped);
   BOOST_TEST(mesh1 == mesh2);
 }
 
 BOOST_AUTO_TEST_CASE(MeshWKTPrint)
 {
   PRECICE_TEST(1_rank);
-  Mesh    mesh("WKTMesh", 3, false, testing::nextMeshID());
+  Mesh    mesh("WKTMesh", 3, testing::nextMeshID());
   Vertex &v0 = mesh.createVertex(Eigen::Vector3d(0., 0., 0.));
   Vertex &v1 = mesh.createVertex(Eigen::Vector3d(1., 0., 0.));
   Vertex &v2 = mesh.createVertex(Eigen::Vector3d(0., 0., 1.));
@@ -263,7 +259,7 @@ BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
 {
   PRECICE_TEST(1_rank);
   int             dim = 3;
-  Mesh            mesh1("Mesh1", dim, false, testing::nextMeshID());
+  Mesh            mesh1("Mesh1", dim, testing::nextMeshID());
   auto &          mesh = mesh1;
   Eigen::VectorXd coords0(dim);
   Eigen::VectorXd coords1(dim);
@@ -292,7 +288,7 @@ BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
 BOOST_AUTO_TEST_CASE(ResizeDataGrow)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
+  precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   const auto &        values = mesh.createData("Data", 1)->values();
 
   // Create mesh
@@ -315,7 +311,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataGrow)
 BOOST_AUTO_TEST_CASE(ResizeDataShrink)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, true, testing::nextMeshID());
+  precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   const auto &        values = mesh.createData("Data", 1)->values();
 
   // Create mesh
