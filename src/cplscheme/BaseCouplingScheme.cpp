@@ -235,12 +235,21 @@ void BaseCouplingScheme::setExtrapolationOrder(
   _extrapolationOrder = order;
 }
 
-void BaseCouplingScheme::storeWindowData()
+void BaseCouplingScheme::updateThisWindow()
 {
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->addNewWindowData(pair.second->values());
+    _waveforms[pair.first]->updateThisWindow(pair.second->values());
+  }
+}
+
+void BaseCouplingScheme::moveToNextWindow()
+{
+  PRECICE_TRACE(_timeWindows);
+  for (DataMap::value_type &pair : getAccelerationData()) {
+    PRECICE_DEBUG("Store data: {}", pair.first);
+    _waveforms[pair.first]->moveToNextWindow();
   }
 }
 
@@ -250,6 +259,7 @@ void BaseCouplingScheme::extrapolateData()
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Extrapolate data: {}", pair.first);
     pair.second->values() = _waveforms[pair.first]->extrapolateData(_extrapolationOrder, getTimeWindows());
+    _waveforms[pair.first]->updateThisWindow(pair.second->values());
   }
 }
 
@@ -438,7 +448,7 @@ void BaseCouplingScheme::setupDataMatrices()
   }
   // Reserve storage for data values
   for (DataMap::value_type &pair : getAccelerationData()) {
-    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder + 1));
+    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder + 2));
     WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
     _waveforms.insert(waveformPair);
     pair.second->storeIteration(); // @ todo remove this duplicate of line above! But removing this line causes failure for mpirun --oversubscribe -np 4 ./testprecice -t PreciceTests/Serial/MultiCoupling
@@ -616,6 +626,8 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
 
 bool BaseCouplingScheme::doImplicitStep()
 {
+  updateThisWindow();
+
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   bool convergence = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
@@ -624,7 +636,7 @@ bool BaseCouplingScheme::doImplicitStep()
 
   // coupling iteration converged for current time window. Advance in time.
   if (convergence) {
-    storeWindowData();
+    moveToNextWindow();
     if (getAcceleration()) {
       getAcceleration()->iterationsConverged(getAccelerationData());
     }

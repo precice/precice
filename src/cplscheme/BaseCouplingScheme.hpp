@@ -401,7 +401,12 @@ protected:
   /**
    * @brief stores current data in buffer of Waveform
    */
-  void storeWindowData();
+  void updateThisWindow();
+
+  /**
+   * @brief finalizes this window's data and initializes data for next window.
+   */
+  void moveToNextWindow();
 
   /**
    * @brief Extrapolate coupling data from values of previous time windows
