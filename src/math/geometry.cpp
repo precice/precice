@@ -254,7 +254,7 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
     All points need to be projected into a new plane with only 2 coordinates, x' and y'. These are used to check
     the convexity of the quad. These new coordinates are stored in 'coords'.
   */
-  PRECICE_ASSERT(std::all_of(vec.cbegin(), vec.cend(),
+  PRECICE_ASSERT(std::all_of(coords.cbegin(), coords.cend(),
                              [](const auto &v) { return v.size() == 3; }),
                  "This only works in 3D.");
 
