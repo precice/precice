@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
   auto m2n = context.connectMasters("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
-    mesh::Mesh    sendMesh("Sent Mesh", dim, false, testing::nextMeshID());
+    mesh::Mesh    sendMesh("Sent Mesh", dim, testing::nextMeshID());
     mesh::Vertex &v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
     mesh::Vertex &v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     mesh::Vertex &v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
       comMesh.sendMesh(sendMesh, 0);
     } else {
       // receiveMesh can also deal with delta meshes
-      mesh::Mesh recvMesh("Received Mesh", dim, false, testing::nextMeshID());
+      mesh::Mesh recvMesh("Received Mesh", dim, testing::nextMeshID());
       recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
       comMesh.receiveMesh(recvMesh, 0);
       BOOST_TEST(recvMesh.vertices().size() == 4);
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
   auto m2n = context.connectMasters("A", "B");
 
   int             dim = 3;
-  mesh::Mesh      sendMesh("Sent Mesh", dim, false, testing::nextMeshID());
+  mesh::Mesh      sendMesh("Sent Mesh", dim, testing::nextMeshID());
   mesh::Vertex &  v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
   mesh::Vertex &  v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
   mesh::Vertex &  v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
   if (context.isNamed("A")) {
     comMesh.sendMesh(sendMesh, 0);
   } else {
-    mesh::Mesh recvMesh("Received Mesh", dim, false, testing::nextMeshID());
+    mesh::Mesh recvMesh("Received Mesh", dim, testing::nextMeshID());
     // receiveMesh can also deal with delta meshes
     recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
     comMesh.receiveMesh(recvMesh, 0);
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh)
   PRECICE_TEST(""_on(2_ranks).setupMasterSlaves(), Require::Events);
 
   int             dim = 3;
-  mesh::Mesh      sendMesh("Sent Mesh", dim, false, testing::nextMeshID());
+  mesh::Mesh      sendMesh("Sent Mesh", dim, testing::nextMeshID());
   mesh::Vertex &  v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
   mesh::Vertex &  v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
   mesh::Vertex &  v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh)
   if (context.isMaster()) {
     comMesh.broadcastSendMesh(sendMesh);
   } else {
-    mesh::Mesh recvMesh("Received Mesh", dim, false, testing::nextMeshID());
+    mesh::Mesh recvMesh("Received Mesh", dim, testing::nextMeshID());
     // receiveMesh can also deal with delta meshes
     recvMesh.createVertex(Eigen::VectorXd::Constant(dim, 9));
     comMesh.broadcastReceiveMesh(recvMesh);

@@ -23,12 +23,11 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
 
   int             dimensions       = 2;
   int             numberOfVertices = 6;
-  bool            flipNormals      = false;
   int             valueDimension   = 1;
   Eigen::VectorXd offset           = Eigen::VectorXd::Zero(dimensions);
 
   if (context.isNamed("Part1")) {
-    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
     m2n->createDistributedCommunication(pMesh);
 
     pMesh->setGlobalNumberOfVertices(numberOfVertices);
@@ -54,7 +53,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
 
   } else {
     BOOST_TEST(context.isNamed("Part2"));
-    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
     m2n->createDistributedCommunication(pMesh);
     m2n->requestSlavesConnection("Part1", "Part2");
 

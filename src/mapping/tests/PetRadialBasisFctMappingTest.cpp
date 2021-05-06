@@ -133,13 +133,13 @@ void testDistributed(const TestContext &    context,
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
 
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", valueDimension);
   int           inDataID = inData->getID();
 
   getDistributedMesh(context, inMeshSpec, inMesh, inData, inGlobalIndexOffset);
 
-  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", valueDimension);
   int           outDataID = outData->getID();
 

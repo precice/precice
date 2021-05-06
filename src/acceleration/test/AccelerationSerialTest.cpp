@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   int              timestepsReused          = 6;
   int              reusedTimestepsAtRestart = 0;
   int              chunkSize                = 0;
-  int              filter                   = Acceleration::QR1FILTER;
-  int              restartType              = MVQNAcceleration::NO_RESTART;
+  int              filter                   = acceleration::Acceleration::QR1FILTER;
+  int              restartType              = acceleration::MVQNAcceleration::NO_RESTART;
   double           singularityLimit         = 1e-10;
   double           svdTruncationEps         = 0.0;
   bool             enforceInitialRelaxation = false;
@@ -49,12 +49,12 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   dataIDs.push_back(1);
   std::vector<double> factors;
   factors.resize(2, 1.0);
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
-  mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()));
+  acceleration::impl::PtrPreconditioner prec(new acceleration::impl::ConstantPreconditioner(factors));
+  mesh::PtrMesh                         dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
-  MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                      timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
-                      restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
+  acceleration::MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+                                    timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+                                    restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
 
   Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
 
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false));
+  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
 
   //init forces
   utils::append(forces->values(), 0.1);
@@ -86,11 +86,11 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
 
-  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false));
+  PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
   DataMap data;
-  data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
-  data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
+  data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+  data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
 
   pp.initialize(data);
 
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0, 1.0));
   scalings.insert(std::make_pair(1, 1.0));
-  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   acceleration::IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                                       timestepsReused, filter, singularityLimit, dataIDs, prec);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   utils::append(dcol1, 1.0);
   utils::append(dcol1, 1.0);
 
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false));
+  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false));
 
   //init forces
   utils::append(forces->values(), 0.1);
@@ -184,11 +184,11 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   utils::append(fcol1, 0.2);
   utils::append(fcol1, 0.2);
 
-  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false));
+  PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
   DataMap data;
-  data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
-  data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
+  data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+  data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
 
   pp.initialize(data);
 

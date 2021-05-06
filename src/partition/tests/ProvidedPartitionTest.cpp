@@ -50,10 +50,9 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
   auto m2n = context.connectMasters("NASTIN", "SOLIDZ");
 
   int  dimensions  = 2;
-  bool flipNormals = false;
 
   if (context.isNamed("NASTIN")) { //NASTIN
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
     double safetyFactor = 0.1;
 
@@ -68,7 +67,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
       BOOST_TEST(pSolidzMesh->vertices().at(i).getGlobalIndex() == i);
     }
   } else { //SOLIDZ
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
     if (context.isMaster()) { //Master
       Eigen::VectorXd position(dimensions);
@@ -124,10 +123,9 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
   auto m2n = context.connectMasters("NASTIN", "SOLIDZ");
 
   int  dimensions  = 3;
-  bool flipNormals = false;
 
   if (context.isNamed("NASTIN")) { //NASTIN
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
     double safetyFactor = 0.1;
 
@@ -143,7 +141,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
       BOOST_TEST(pSolidzMesh->vertices().at(i).getGlobalIndex() == i);
     }
   } else { //SOLIDZ
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
     if (context.isMaster()) { //Master
       Eigen::VectorXd position(dimensions);
@@ -238,8 +236,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
   // Create mesh object
   std::string   meshName("MyMesh");
   int           dim         = 2;
-  bool          flipNormals = false; // The normals of triangles, edges, vertices
-  mesh::PtrMesh pMesh(new mesh::Mesh(meshName, dim, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh pMesh(new mesh::Mesh(meshName, dim, testing::nextMeshID()));
 
   if (context.isMaster()) { //Master
     Eigen::VectorXd position(dim);
@@ -318,11 +315,10 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   auto m2n                 = context.connectMasters("NASTIN", "SOLIDZ", options);
 
   int  dimensions  = 2;
-  bool flipNormals = true;
 
   if (context.isNamed("SOLIDZ")) { //SOLIDZ
 
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
     if (context.isMaster()) { //Master
       Eigen::VectorXd position(dimensions);
@@ -427,11 +423,10 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
   auto m2n                 = context.connectMasters("NASTIN", "SOLIDZ", options);
 
   int  dimensions  = 3;
-  bool flipNormals = true;
 
   if (context.isNamed("SOLIDZ")) { //SOLIDZ
 
-    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
     if (context.isMaster()) { //Master
       Eigen::VectorXd position(dimensions);
@@ -509,9 +504,8 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
   PRECICE_TEST("Solid"_on(2_ranks).setupMasterSlaves(), "Fluid"_on(2_ranks).setupMasterSlaves(), Require::Events);
   //mesh creation
   int           dimensions   = 2;
-  bool          flipNormals  = true;
   double        safetyFactor = 0.1;
-  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
   testing::ConnectionOptions options;
   options.useOnlyMasterCom = false;
@@ -609,10 +603,9 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
   PRECICE_TEST("Solid"_on(2_ranks).setupMasterSlaves(), "Fluid"_on(2_ranks).setupMasterSlaves(), Require::Events);
   //mesh creation
   int           dimensions   = 2;
-  bool          flipNormals  = true;
   double        safetyFactor = 0;
-  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
-  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
+  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
   testing::ConnectionOptions options;
   options.useOnlyMasterCom = false;
@@ -750,10 +743,9 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
 
   //mesh creation
   int           dimensions   = 3;
-  bool          flipNormals  = true;
   double        safetyFactor = 0.0;
-  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
-  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, flipNormals, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
+  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
   // create the communicator for m2n mesh and communciation map exchange
   testing::ConnectionOptions options;
