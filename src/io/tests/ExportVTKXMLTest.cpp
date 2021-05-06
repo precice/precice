@@ -45,8 +45,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   int        dim           = 2;
-  bool       invertNormals = false;
-  mesh::Mesh mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
+  mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
@@ -88,8 +87,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
   int        dim           = 3;
-  bool       invertNormals = false;
-  mesh::Mesh mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
+  mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));

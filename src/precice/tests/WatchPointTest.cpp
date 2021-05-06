@@ -47,8 +47,7 @@ BOOST_AUTO_TEST_CASE(TimeSeries)
   using Eigen::VectorXd;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
-  PtrMesh     mesh(new Mesh(name, 2, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, 2, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
@@ -164,8 +163,7 @@ BOOST_AUTO_TEST_CASE(Reinitalize)
   using Eigen::VectorXd;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
-  PtrMesh     mesh(new Mesh(name, 2, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, 2, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));

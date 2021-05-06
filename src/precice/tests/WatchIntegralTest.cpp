@@ -46,9 +46,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 2;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
@@ -110,9 +109,8 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 2;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
@@ -182,9 +180,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 2;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
@@ -246,9 +243,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityNoScale)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 2;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
@@ -310,9 +306,8 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 2;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
@@ -382,9 +377,8 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 2;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
@@ -454,9 +448,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 3;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
@@ -527,9 +520,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityNoScale)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 3;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
@@ -600,9 +592,8 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 3;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
@@ -681,9 +672,8 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 3;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
@@ -762,9 +752,8 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 3;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
@@ -832,9 +821,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 2;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
   PtrData     doubleData   = mesh->createData("DoubleData", 1);
   auto &      doubleValues = doubleData->values();
 
@@ -924,9 +912,8 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 2;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
   PtrData     doubleData   = mesh->createData("DoubleData", 2);
   auto &      doubleValues = doubleData->values();
 
@@ -1032,9 +1019,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 2;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   if (utils::MasterSlave::isMaster()) {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
@@ -1138,9 +1124,8 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 2;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   if (utils::MasterSlave::isMaster()) {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
@@ -1260,9 +1245,8 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 3;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   if (utils::MasterSlave::isMaster()) {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -1364,9 +1348,8 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
-  bool        flipNormals = false;
   int         dimensions  = 3;
-  PtrMesh     mesh(new Mesh(name, dimensions, flipNormals, testing::nextMeshID()));
+  PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
 
   if (utils::MasterSlave::isMaster()) {
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));

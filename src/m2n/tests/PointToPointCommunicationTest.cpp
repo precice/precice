@@ -47,7 +47,7 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
 
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, testing::nextMeshID()));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
@@ -123,7 +123,7 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
 void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, testing::nextMeshID()));
 
   m2n::PointToPointCommunication c(cf, mesh);
 

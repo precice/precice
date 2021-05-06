@@ -24,8 +24,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST(1_rank);
   int             dim           = 2;
-  bool            invertNormals = false;
-  mesh::Mesh      mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
+  mesh::Mesh      mesh("MyMesh", dim, testing::nextMeshID());
   mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
   mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
   Eigen::VectorXd coords3 = Eigen::VectorXd::Constant(dim, 0.0);
@@ -46,8 +45,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST(1_rank);
   int             dim           = 3;
-  bool            invertNormals = false;
-  mesh::Mesh      mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
+  mesh::Mesh      mesh("MyMesh", dim, testing::nextMeshID());
   mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
   mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
   Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
