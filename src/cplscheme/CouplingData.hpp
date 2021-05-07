@@ -15,9 +15,9 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization)
-      : data(data),
-        mesh(mesh),
-        requiresInitialization(requiresInitialization)
+      : requiresInitialization(requiresInitialization),
+        data(data),
+        mesh(mesh)
   {
     PRECICE_ASSERT(data != nullptr);
     PRECICE_ASSERT(mesh != nullptr);
