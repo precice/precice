@@ -409,7 +409,7 @@ protected:
   void moveToNextWindow();
 
   /**
-   * @brief used for storing send/receive data at end of acceleration, if not converged.
+   * @brief used for storing send/receive data at end of doImplicitStep.
    */
   void storeIteration()
   {
