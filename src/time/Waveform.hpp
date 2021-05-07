@@ -2,6 +2,8 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -41,6 +43,8 @@ public:
 private:
   /// Data values of time windows.
   Eigen::MatrixXd _timeWindows;
+
+  mutable logging::Logger _log{"time::Waveform"};
 
   Eigen::VectorXd extrapolateData(int order, int timeWindows)
   {
