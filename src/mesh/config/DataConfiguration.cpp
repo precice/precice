@@ -15,14 +15,9 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)
                       .setDocumentation("Unique name for the data set.");
 
-  auto attrType = XMLAttribute<std::string>(ATTR_TYPE)
-                      .setDocumentation("Type to be used when exchanging the data set. "
-                                        "Could be 'consistent' or 'conservative'.");
-  attrType.setDefaultValue("none");
   XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
   tagScalar.addAttribute(attrName);
-  tagScalar.addAttribute(attrType);
   parent.addSubtag(tagScalar);
 
   XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
@@ -30,7 +25,6 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
                              "components of each data entry depends on the spatial dimensions set "
                              "in tag <solver-interface>.");
   tagVector.addAttribute(attrName);
-  tagVector.addAttribute(attrType);
   parent.addSubtag(tagVector);
 }
 
@@ -63,13 +57,10 @@ void DataConfiguration::xmlTagCallback(
   if (tag.getNamespace() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
     std::string name     = tag.getStringAttributeValue(ATTR_NAME);
-    std::string type     = tag.getStringAttributeValue(ATTR_TYPE);
     std::string typeName = tag.getName();
 
-    int                         dataDimensions = getDataDimensions(typeName);
-    const Data::DataMappingType mappingType    = getDataMappingType(type);
-
-    addData(name, dataDimensions, mappingType);
+    int dataDimensions = getDataDimensions(typeName);
+    addData(name, dataDimensions);
   } else {
     PRECICE_ASSERT(false, "Received callback from unknown tag " << tag.getName());
   }
@@ -82,11 +73,10 @@ void DataConfiguration::xmlEndTagCallback(
 }
 
 void DataConfiguration::addData(
-    const std::string &   name,
-    int                   dataDimensions,
-    Data::DataMappingType dataMappingType)
+    const std::string &name,
+    int                dataDimensions)
 {
-  ConfiguredData data(name, dataDimensions, dataMappingType);
+  ConfiguredData data(name, dataDimensions);
 
   // Check if data with same name has been added already
   for (auto &elem : _data) {
@@ -105,20 +95,5 @@ int DataConfiguration::getDataDimensions(
   }
   PRECICE_ASSERT(false, "Unknown data type \"" << typeName << "\". Known data types: " << VALUE_SCALAR << ", " << VALUE_VECTOR << ".");
 }
-
-Data::DataMappingType DataConfiguration::getDataMappingType(
-    const std::string &type) const
-{
-  if (type == TYPE_CONSISTENT) {
-    return Data::DataMappingType::CONSISTENT;
-  } else if (type == TYPE_CONSERVATIVE) {
-    return Data::DataMappingType::CONSERVATIVE;
-  } else if (type == "none") {
-    PRECICE_WARN("Data mapping type is 'none'.");
-    return Data::DataMappingType::NONE;
-  }
-  PRECICE_ERROR("Unknown data mapping type \"" << type << "\". Known data types: " << TYPE_CONSISTENT << ", " << TYPE_CONSERVATIVE << ".");
-}
-
 } // namespace mesh
 } // namespace precice

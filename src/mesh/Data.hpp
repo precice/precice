@@ -34,11 +34,6 @@ public:
   //static const std::string TYPE_NAME_DOUBLE;
   // @brief Name of a vector data type.
   //static const std::string TYPE_NAME_VECTOR;
-  enum class DataMappingType {
-    NONE,
-    CONSISTENT,
-    CONSERVATIVE
-  };
 
   /**
    * @brief Returns the number of created (and still existing) Data objects.
@@ -62,11 +57,9 @@ public:
   /**
    * @brief Constructor.
    */
-  Data(
-      const std::string &   name,
-      int                   id,
-      int                   dimension,
-      Data::DataMappingType dataMappingType = Data::DataMappingType::NONE);
+  Data(const std::string &name,
+       int                id,
+       int                dimension);
 
   /// Destructor, decrements data count.
   ~Data();
@@ -82,9 +75,6 @@ public:
 
   /// Returns the ID of the data set (supposed to be unique).
   int getID() const;
-
-  /// Returns the associated data mapping type
-  DataMappingType getDataMappingType() const;
 
   /// Sets all values to zero
   void toZero();
@@ -105,9 +95,6 @@ private:
 
   /// ID of the data set (supposed to be unique).
   int _id;
-
-  /// type to be considered when exchanging the data
-  DataMappingType _dataMappingType = DataMappingType::NONE;
 
   /// Dimensionality of one data value.
   int _dimensions;

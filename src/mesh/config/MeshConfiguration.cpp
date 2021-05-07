@@ -78,7 +78,7 @@ void MeshConfiguration::xmlTagCallback(
     bool        found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
       if (data.name == name) {
-        _meshes.back()->createData(data.name, data.dimensions, data.mappingType);
+        _meshes.back()->createData(data.name, data.dimensions);
         found = true;
         break;
       }

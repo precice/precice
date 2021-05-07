@@ -356,7 +356,7 @@ mesh::PtrMesh ParticipantConfiguration::copy(
   bool        flipNormals = mesh->isFlipNormals();
   mesh::Mesh *meshCopy    = new mesh::Mesh("Local_" + name, dim, flipNormals, mesh::Mesh::MESH_ID_UNDEFINED);
   for (const mesh::PtrData &data : mesh->data()) {
-    meshCopy->createData(data->getName(), data->getDimensions(), data->getDataMappingType());
+    meshCopy->createData(data->getName(), data->getDimensions());
   }
   return mesh::PtrMesh(meshCopy);
 }

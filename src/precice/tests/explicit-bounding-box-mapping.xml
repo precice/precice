@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
   <solver-interface dimensions="2">
-    <data:scalar name="Velocities" type="conservative" />
-    <data:scalar name="Forces" type="conservative" />
+    <data:scalar name="Velocities" />
+    <data:scalar name="Forces" />
 
     <mesh name="MeshOne">
       <use-data name="Forces" />

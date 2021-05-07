@@ -13,15 +13,13 @@ namespace mesh {
 class DataConfiguration : public xml::XMLTag::Listener {
 public:
   struct ConfiguredData {
-    std::string           name;
-    int                   dimensions;
-    Data::DataMappingType mappingType;
+    std::string name;
+    int         dimensions;
 
     ConfiguredData(
-        const std::string &   name,
-        int                   dimensions,
-        Data::DataMappingType mappingType)
-        : name(name), dimensions(dimensions), mappingType(mappingType) {}
+        const std::string &name,
+        int                dimensions)
+        : name(name), dimensions(dimensions) {}
   };
 
   DataConfiguration(xml::XMLTag &parent);
@@ -48,22 +46,18 @@ public:
    * @param[in] mappingType data mapping type (consistent or conservative)
    * Set a default here in order to compile the tests without any complains
    */
-  void addData(const std::string &   name,
-               int                   dataDimensions,
-               Data::DataMappingType mappingType = Data::DataMappingType::NONE);
+  void addData(const std::string &name,
+               int                dataDimensions);
 
   //int getDimensions() const;
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
 
-  const std::string TAG               = "data";
-  const std::string ATTR_NAME         = "name";
-  const std::string ATTR_TYPE         = "type";
-  const std::string TYPE_CONSISTENT   = "consistent";
-  const std::string TYPE_CONSERVATIVE = "conservative";
-  const std::string VALUE_VECTOR      = "vector";
-  const std::string VALUE_SCALAR      = "scalar";
+  const std::string TAG          = "data";
+  const std::string ATTR_NAME    = "name";
+  const std::string VALUE_VECTOR = "vector";
+  const std::string VALUE_SCALAR = "scalar";
 
   /// Dimension of space.
   int _dimensions = 0;
@@ -73,8 +67,6 @@ private:
   int _indexLastConfigured = -1;
 
   int getDataDimensions(const std::string &typeName) const;
-
-  Data::DataMappingType getDataMappingType(const std::string &type) const;
 };
 
 } // namespace mesh
