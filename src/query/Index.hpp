@@ -15,6 +15,7 @@ namespace query {
 
 /// Struct to hold index and distance information of the closest primitive
 template <class Tag>
+// TODO: Initialize these values with defaults
 struct MatchType {
   double distance;
   int    index;
