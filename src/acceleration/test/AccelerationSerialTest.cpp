@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   int              timestepsReused          = 6;
   int              reusedTimestepsAtRestart = 0;
   int              chunkSize                = 0;
-  int              filter                   = acceleration::Acceleration::QR1FILTER;
-  int              restartType              = acceleration::MVQNAcceleration::NO_RESTART;
+  int              filter                   = Acceleration::QR1FILTER;
+  int              restartType              = MVQNAcceleration::NO_RESTART;
   double           singularityLimit         = 1e-10;
   double           svdTruncationEps         = 0.0;
   bool             enforceInitialRelaxation = false;
