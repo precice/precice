@@ -11,15 +11,28 @@ namespace time {
 
 class Waveform {
 public:
-  Waveform(int numberOfVertices,
-           int numberOfSamples)
+  /**
+   * @brief Waveform object which stores data of current and past time windows for performing extrapolation.
+   * @param numberOfData defines how many pieces of data one sample in time consists of
+   * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
+   */
+  Waveform(int numberOfData,
+           int extrapolationOrder)
   {
-    numberOfSamples = std::max(2, numberOfSamples); // work with at least two samples (beginning and end of time window)
-    _timeWindows    = Eigen::MatrixXd::Zero(numberOfVertices, numberOfSamples);
+    /**
+     * Reserve storage depending on required extrapolation order. Extrapolation happens in-place. Therefore, for zeroth
+     * order extrapolation we need one column (to read from and write to), for first order two, for second order three. 
+     * Note that extrapolationOrder = 0 is an exception, since we want to always work with at least two samples. One at
+     * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
+     * extrapolation.
+     */
+    int numberOfSamples = std::max(2, extrapolationOrder + 1);
+    _timeWindows        = Eigen::MatrixXd::Zero(numberOfData, numberOfSamples);
   }
 
   /**
    * @brief Updates entry in _timeWindows corresponding to this window with given data
+   * @param data new sample for this time window
    */
   void updateThisWindow(Eigen::VectorXd data)
   {
@@ -28,6 +41,7 @@ public:
 
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
+   * @param timeWindows number of samples that are valid and may be used for extrapolation. Usually number of past time windows.
    */
   void moveToNextWindow(int timeWindows, int order = 0)
   {
@@ -35,6 +49,10 @@ public:
     utils::shiftSetFirst(this->_timeWindows, initialGuess);
   }
 
+  /**
+   * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)
+   * being the current time window.
+   */
   const Eigen::MatrixXd &lastTimeWindows()
   {
     return _timeWindows;
@@ -46,6 +64,15 @@ private:
 
   mutable logging::Logger _log{"time::Waveform"};
 
+  /**
+   * @brief Extrapolates data _timeWindows using an extrapolation scheme of given order. 
+   * 
+   * If the order condition cannot be satisfied, since there are not enough samples available, the order is automatically reduced.
+   * If order two is required, but only two samples are available, the extrapolation order is automatically reduced to one.
+   * 
+   * @param order Order of the extrapolation scheme to be used.
+   * @param timeWindows number of valid samples.
+   */
   Eigen::VectorXd extrapolateData(int order, int timeWindows)
   {
     Eigen::VectorXd extrapolatedValue;
