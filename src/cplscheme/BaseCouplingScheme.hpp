@@ -470,9 +470,6 @@ private:
   /// Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder = 0;
 
-  /// valid digits for computation of the remainder of a time window
-  int _validDigits;
-
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;
 
