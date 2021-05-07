@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 0.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
   timeWindowCounter++;
-  waveform2.moveToNextWindow(timeWindowCounter, extrapolationOrder);
+  waveform2.moveToNextWindow(timeWindowCounter, extrapolationOrder); // only applies first order extrapolation
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 2.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 1.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 1.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
   timeWindowCounter++;
-  waveform2.moveToNextWindow(timeWindowCounter, extrapolationOrder);
+  waveform2.moveToNextWindow(timeWindowCounter, extrapolationOrder); // applies second order extrapolation
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 8.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 4.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 1.0));
