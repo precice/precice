@@ -14,8 +14,6 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 {
   PRECICE_TEST(1_rank);
 
-  double dt = 1.0;
-
   // Test first order extrapolation
   int      extrapolationOrder = 1;
   int      timeWindowCounter  = 1;
