@@ -39,7 +39,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
     event.stop();
   }
 
-  PRECICE_ASSERT(not _mesh->vertices().empty());
+  PRECICE_ASSERT(not _mesh->vertices().empty(), _mesh->getName());
   VertexMatch match(-1, -1);
   _pimpl->indices.vertexRTree->query(bgi::nearest(sourceCoord, 1), boost::make_function_output_iterator([&](size_t matchID) {
                                        match = VertexMatch(bg::distance(sourceCoord, _mesh->vertices()[matchID]), matchID);
