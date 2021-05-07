@@ -32,7 +32,7 @@
       <use-mesh name="ParallelMesh" from="ParallelSolver" />
       <read-data name="MyData1" mesh="SerialMesh" />
       <write-data name="MyData2" mesh="SerialMesh" />
-      <mapping:rbf-thin-plate-splines
+      <mapping:nearest-neighbor
         direction="read"
         from="ParallelMesh"
         to="SerialMesh"
