@@ -789,7 +789,7 @@ void runTestAccessReceivedMesh(const std::string         configName,
       expectedIDs.emplace_back(i);
     BOOST_TEST(expectedIDs == ids);
 
-    // Create some unique writeData in order to assert it in the other participant
+    // Create some unique writeData in order to check it in the other participant
     std::vector<double> writeData = context.isMaster() ? std::vector<double>({1, 2, 3}) : writeDataSlave;
 
     while (interface.isCouplingOngoing()) {
