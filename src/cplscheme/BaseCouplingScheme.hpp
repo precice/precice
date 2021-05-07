@@ -27,7 +27,7 @@ class TXTTableWriter;
 } // namespace io
 
 namespace cplscheme {
-struct CouplingData;
+class CouplingData;
 
 /**
  * @brief Abstract base class for standard coupling schemes.

@@ -10,7 +10,7 @@
 
 namespace precice {
 namespace cplscheme {
-struct CouplingData;
+class CouplingData;
 
 /**
  * @brief A coupling scheme with multiple participants.
