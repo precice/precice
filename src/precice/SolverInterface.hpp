@@ -821,6 +821,8 @@ public:
    *            [x_min0, x_max0, y_min0, y_max0, z_min0, z_max0, x_min1 ... ]
    * @param[in] nBoundingBoxes number of bounding boxes.
    *
+   * @warning This functions is currently only implemented for nBoundingBoxes = 1.
+   *
    * @pre 'initialize' has not yet been called.
    */
   void setBoundingBoxes(

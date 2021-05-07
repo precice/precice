@@ -1297,7 +1297,7 @@ void SolverInterfaceImpl::setBoundingBoxes(
   PRECICE_TRACE(meshID);
   PRECICE_CHECK(boundingBox != nullptr, "The provided bounding boxes are empty.");
   //  PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  PRECICE_CHECK(nBoundingBoxes == 1, "Using more than one bounding box is currently not implemented.");
+  PRECICE_CHECK(nBoundingBoxes == 1, "Using more than one bounding box is not yet implemented.");
 
   // Get the related mesh
   MeshContext & context = _accessor->meshContext(meshID);
