@@ -201,7 +201,7 @@ void M2N::send(
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
-    if (precice::syncMode && utils::MasterSlave::isMaster()) {
+    if (precice::syncMode && not utils::MasterSlave::isSlave()) {
       bool ack = true;
       _masterCom->send(ack, 0);
       _masterCom->receive(ack, 0);
