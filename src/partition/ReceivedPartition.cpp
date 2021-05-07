@@ -20,6 +20,7 @@
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
+#include "utils/fmt.hpp"
 
 using precice::utils::Event;
 
@@ -238,18 +239,18 @@ void ReceivedPartition::compute()
 }
 
 namespace {
-std::string errorMeshFilteredOut(const std::string &meshName, const int rank)
+auto errorMeshFilteredOut(const std::string &meshName, const int rank)
 {
-  return "The re-partitioning completely filtered out the mesh \"" + meshName +
-         "\" received on rank " + std::to_string(rank) +
-         " at the coupling interface, although the provided mesh partition on this rank is non-empty. "
-         "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-         "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-         "If your geometry setup is correct and if you have very different mesh resolutions on both sides, you may "
-         "want to increase the safety-factor: \"<use-mesh mesh=\"" +
-         meshName + "\" ... safety-factor=\"N\"/> (default value is 0.5) "
-                    "of the decomposition strategy or disable the filtering completely: \"<use-mesh mesh=\"" +
-         meshName + "\" ... geometric-filter=\"no-filter\" />";
+  return fmt::format("The re-partitioning completely filtered out the mesh \"{0}\" received on rank {1} "
+                     "at the coupling interface, although the provided mesh partition on this rank is "
+                     "non-empty. Most probably, the coupling interfaces of your coupled participants do "
+                     "not match geometry-wise. Please check your geometry setup again. Small overlaps or "
+                     "gaps are no problem. If your geometry setup is correct and if you have very different "
+                     "mesh resolutions on both sides, you may want to increase the safety-factor: "
+                     "\"<use-mesh mesh=\"{0} \" ... safety-factor=\"N\"/> (default value is 0.5) of the "
+                     "decomposition strategy or disable the filtering completely: "
+                     "\"<use-mesh mesh=\"{0}\" ... geometric-filter=\"no-filter\" />",
+                     meshName, rank);
 }
 } // namespace
 
