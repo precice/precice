@@ -27,6 +27,8 @@ struct AccelerationSerialTestsFixture {
 
 BOOST_FIXTURE_TEST_SUITE(AccelerationSerialTests, AccelerationSerialTestsFixture)
 
+#ifndef PRECICE_NO_MPI
+
 BOOST_AUTO_TEST_CASE(testMVQNPP)
 {
   PRECICE_TEST(1_rank);
@@ -36,8 +38,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   int              timestepsReused          = 6;
   int              reusedTimestepsAtRestart = 0;
   int              chunkSize                = 0;
-  int              filter                   = acceleration::Acceleration::QR1FILTER;
-  int              restartType              = acceleration::MVQNAcceleration::NO_RESTART;
+  int              filter                   = Acceleration::QR1FILTER;
+  int              restartType              = MVQNAcceleration::NO_RESTART;
   double           singularityLimit         = 1e-10;
   double           svdTruncationEps         = 0.0;
   bool             enforceInitialRelaxation = false;
@@ -186,6 +188,8 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   BOOST_TEST(testing::equals(data.at(1)->values()(2), 8.28025852497733944046e-02));
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733944046e-02));
 }
+
+#endif // not PRECICE_NO_MPI
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
