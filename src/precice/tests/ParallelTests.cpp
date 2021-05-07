@@ -192,7 +192,7 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
     BOOST_TEST(dim == 2);
 
     // Set coordinates, master according to input argument
-    const std::vector<double> coordinates = context.isMaster() ? masterPartition : std::vector<double>({0.0, 0.5, 0.0, 3.5, 0.0, 5.0});
+    const std::vector<double> coordinates = context.isMaster() ? masterPartition : std::vector<double>{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
     const unsigned int        size        = coordinates.size() / dim;
     std::vector<int>          ids(size, 0);
 
@@ -204,8 +204,9 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
 
     // Create some dummy writeData
     std::vector<double> writeData;
-    for (unsigned int i = 0; i < size; ++i)
+    for (unsigned int i = 0; i < size; ++i) {
       writeData.emplace_back(i + 1);
+    }
 
     // Allocate memory for readData
     std::vector<double> readData(size);
@@ -218,8 +219,9 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
       interface.readBlockScalarData(readDataID, size,
                                     ids.data(), readData.data());
       // The received data on the slave rank is always the same
-      if (!context.isMaster())
+      if (!context.isMaster()) {
         BOOST_TEST(readData == std::vector<double>({3.4, 5.7, 4.0}));
+      }
     }
   } else {
     // The serial participant
@@ -233,9 +235,9 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
     BOOST_TEST(interface.getDimensions() == 2);
 
     // Define the interface
-    std::vector<double> coordinates({0.0, 0.5, 0.0, 3.5, 0.0, 5.0});
-    const unsigned int  size = coordinates.size() / dim;
-    std::vector<int>    ids(size);
+    const std::vector<double> coordinates{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
+    const unsigned int        size = coordinates.size() / dim;
+    std::vector<int>          ids(size);
 
     // Set vertices
     interface.setMeshVertices(meshID, size, coordinates.data(), ids.data());
@@ -244,7 +246,7 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
     double dt = interface.initialize();
 
     // Somce arbitrary write data
-    std::vector<double> writeData({3.4, 5.7, 4.0});
+    std::vector<double> writeData{3.4, 5.7, 4.0};
     std::vector<double> readData(size);
 
     // Start the time loop
@@ -256,8 +258,9 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
       interface.readBlockScalarData(readDataID, size,
                                     ids.data(), readData.data());
       // The received data is always the same
-      if (!context.isMaster())
+      if (!context.isMaster()) {
         BOOST_TEST(readData == std::vector<double>({1, 2, 3}));
+      }
     }
   }
 }
@@ -266,13 +269,13 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
 BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyMaster)
 {
   // Provided master partition is empty and received master partition is empty
-  runTestEnforceGatherScatter(std::vector<double>({}), _pathToTests + "enforce-gather-scatter.xml");
+  runTestEnforceGatherScatter(std::vector<double>{}, _pathToTests + "enforce-gather-scatter.xml");
 }
 
 BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyReceivedMaster)
 {
   // Provided master partition is not empty, but received master partitionis empty
-  runTestEnforceGatherScatter(std::vector<double>({0.0, 2.0, 0.0, 2.5}), _pathToTests + "enforce-gather-scatter.xml");
+  runTestEnforceGatherScatter(std::vector<double>{0.0, 2.0, 0.0, 2.5}, _pathToTests + "enforce-gather-scatter.xml");
 }
 
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning)
