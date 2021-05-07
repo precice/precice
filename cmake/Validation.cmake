@@ -71,7 +71,7 @@ endmacro()
 # Validation for NumPy
 macro(precice_validate_numpy)
   precice_validate_lib(
-    "#include <Python.h>\n#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n#include <numpy/arrayobject.h>\nint main() { import_array(); return 0; } "
+    "#include <Python.h>\n#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n#include <numpy/arrayobject.h>\n int main() { import_array1(0); return 0; } "
     NAME NumPy
     COMPILE_DEFINITIONS "-I ${PYTHON_INCLUDE_DIRS}"
     LINK_LIBRARIES NumPy::NumPy ${PYTHON_LIBRARIES}
