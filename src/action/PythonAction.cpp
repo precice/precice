@@ -6,11 +6,13 @@
 #include <boost/filesystem/operations.hpp>
 #include <cstdlib>
 #include <memory>
-#include <numpy/arrayobject.h>
 #include <ostream>
 #include <pthread.h>
 #include <string>
 #include <utility>
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
