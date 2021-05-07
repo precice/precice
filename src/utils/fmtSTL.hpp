@@ -1,5 +1,4 @@
 #include <array>
-#include <bits/c++config.h>
 #include <deque>
 #include <fmt/format.h>
 #include <map>
