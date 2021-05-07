@@ -687,7 +687,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling)
 // boundingBox. The test case here is the most basic variant in order
 // use such a feature. SolverTwo defines the mesh whereas SolverOne writes
 // directly on this mesh.
-BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshExplicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
@@ -763,7 +763,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxExplicit)
 // TODO: This test would fail if we choose the bounding box smaller than
 // the owned mesh(?) due to the current implementation of
 // 'prepareBoundingBoxes' during the partitioning step in preCICE.
-BOOST_AUTO_TEST_CASE(BoundingBoxAndMapping)
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
@@ -853,7 +853,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxAndMapping)
 // boundingBox. As opposed to the 'boundingBoxExplicit' test case, this
 // test case uses the same feature in an implicit setup.
 
-BOOST_AUTO_TEST_CASE(BoundingBoxImplicit)
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
