@@ -96,16 +96,18 @@ void ReceivedPartition::compute()
     // Debug messages
     PRECICE_DEBUG("Handle partition data structures for serial participant");
 
-    // Prepare the bounding boxes
-    // FIXME: The filtering here destroys currently the compatibility. Failing tests:
-    // serial and partition.
-    // Option at the moment: make the filtering conditional (e.g. using the 'dataMappingType')
-    prepareBoundingBox();
-    // Filter out vertices not laying in the bounding box
-    mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-    mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
-    _mesh->clear();
-    _mesh->addMesh(filteredMesh);
+    if (_partitionByBoundingBox) {
+      // Prepare the bounding boxes
+      prepareBoundingBox();
+      // Filter out vertices not laying in the bounding box
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { PRECICE_ASSERT(_bb.contains(v), "The vertex with coordinates {} "
+                                                                                                          "has been filtered out in serial mode, "
+                                                                                                          "which is currently undefined behavior.",
+                                                                                         v.getCoords()); return _bb.contains(v); });
+      _mesh->clear();
+      _mesh->addMesh(filteredMesh);
+    }
 
     int vertexCounter = 0;
     for (mesh::Vertex &v : _mesh->vertices()) {
