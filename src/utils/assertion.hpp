@@ -7,9 +7,9 @@
 
 #ifdef NDEBUG
 
-#define PRECICE_ASSERT_IMPL_N(check, ...) static_cast<bool>(check)
+#define PRECICE_ASSERT_IMPL_N(check, ...) (void)(check)
 
-#define PRECICE_ASSERT_IMPL_1(check) static_cast<bool>(check)
+#define PRECICE_ASSERT_IMPL_1(check) (void)(check)
 
 #else
 
