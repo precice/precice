@@ -64,32 +64,41 @@ public:
 
   /// @name Configuration interface
   /// @{
+  /// Adds a configured write \ref Data to the Participant
   void addWriteData(
       const mesh::PtrData &data,
       const mesh::PtrMesh &mesh);
 
+  /// Adds a configured read \ref Data to the Participant
   void addReadData(
       const mesh::PtrData &data,
       const mesh::PtrMesh &mesh);
 
+  /// Adds a configured read \ref Mapping to the Participant
   void addReadMappingContext(MappingContext *mappingContext);
 
+  /// Adds a configured write \ref Mapping to the Participant
   void addWriteMappingContext(MappingContext *mappingContext);
 
+  /// Adds a configured \ref WatchPoint to the Participant
   void addWatchPoint(const PtrWatchPoint &watchPoint);
 
+  /// Adds a configured \ref WatchIntegral to the Participant
   void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
 
+  /// Sets weather the participant was configured with a master tag
   void setUseMaster(bool useMaster);
 
+  /// Sets the manager responsible for providing unique IDs to meshes.
   void setMeshIdManager(std::unique_ptr<utils::ManageUniqueIDs> &&idm)
   {
     _meshIdManager = std::move(idm);
   }
 
+  /// Adds a configured \ref Action to the participant
   void addAction(action::PtrAction &&action);
 
-  /// Adds an export context to export meshes and data.
+  /// Adds a configured \ref ExportContext to export meshes and data.
   void addExportContext(const io::ExportContext &context);
 
   /// Adds a mesh to be used by the participant.
@@ -105,22 +114,34 @@ public:
 
   /// @name Data queries
   /// @{
-  /// Provides access to both write and read \ref DataContext
+  /** Provides access to both write and read \ref DataContext
+   * @pre there exists a \ref DataContext for \ref dataID
+   */
   const DataContext &dataContext(int dataID) const;
 
-  /// Provides access to both write and read \ref DataContext
+  /** Provides access to both write and read \ref DataContext
+   * @pre there exists a \ref DataContext for \ref dataID
+   */
   DataContext &dataContext(int dataID);
 
-  /// Provides access to write \ref DataContext
+  /** Provides access to write \ref DataContext
+   * @remarks does not contain nullptr.
+   */
   const utils::ptr_vector<DataContext> &writeDataContexts() const;
 
-  /// Provides access to write \ref DataContext
+  /** Provides access to write \ref DataContext
+   * @remarks does not contain nullptr.
+   */
   utils::ptr_vector<DataContext> &writeDataContexts();
 
-  /// Provides access to read \ref DataContext
+  /** Provides access to read \ref DataContext
+   * @remarks does not contain nullptr.
+   */
   const utils::ptr_vector<DataContext> &readDataContexts() const;
 
-  /// Provides access to read \ref DataContext
+  /** Provides access to read \ref DataContext
+   * @remarks does not contain nullptr.
+   */
   utils::ptr_vector<DataContext> &readDataContexts();
 
   /// Is the dataID know to preCICE?
@@ -147,16 +168,28 @@ public:
 
   /// @name Mesh queries
   /// @{
-  /// Provides access to all \ref MeshContext where the index is meshID. Can contain nullptr!
+  /*** Provides direct access to a \ref MeshContext given the \ref meshid
+   * @param[in] meshID the id of the \ref Mesh
+   * @returns a reference to the matching \ref MeshContext
+   * @pre the \ref Mesh with \ref meshID is used by the Participant
+   */
   const MeshContext &meshContext(int meshID) const;
 
-  /// Provides access to all \ref MeshContext where the index is meshID. Can contain nullptr!
+  /*** Provides direct access to a \ref MeshContext given the \ref meshid
+   * @param[in] meshID the id of the \ref Mesh
+   * @returns a reference to the matching \ref MeshContext
+   * @pre the \ref Mesh with \ref meshID is used by the Participant
+   */
   MeshContext &meshContext(int meshID);
 
-  /// Provides unordered access to all used \ref MeshContext. Contains only existing contexts.
+  /** Provides unordered access to all \ref MeshContext.used by this \ref Participant
+   * @remarks The sequence does not contain nullptr
+   */
   const std::vector<MeshContext *> &usedMeshContexts() const;
 
-  /// Provides unordered access to all used \ref MeshContext. Contains only existing contexts.
+  /** Provides unordered access to all \ref MeshContext.used by this \ref Participant
+   * @remarks The sequence does not contain nullptr
+   */
   std::vector<MeshContext *> &usedMeshContexts();
 
   /** Looks for a used MeshContext with a given mesh name.
@@ -212,7 +245,7 @@ public:
   std::string getMeshNameFromData(int dataID) const;
   /// @}
 
-  /// @name Other querries
+  /// @name Other queries
   /// @{
   /// Returns the name of the participant.
   const std::string &getName() const;
