@@ -660,7 +660,7 @@ void MVQNAcceleration::restartIMVJ()
 
       // drop oldest pair Wtil_0 and Z_0
       PRECICE_ASSERT(not _WtilChunk.empty());
-      PRECICE_ASSERT(not _pseudoInverseChunk.empty())
+      PRECICE_ASSERT(not _pseudoInverseChunk.empty());
       _WtilChunk.erase(_WtilChunk.begin());
       _pseudoInverseChunk.erase(_pseudoInverseChunk.begin());
     }
