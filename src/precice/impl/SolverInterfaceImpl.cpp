@@ -1050,10 +1050,10 @@ void SolverInterfaceImpl::writeBlockVectorData(
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
   if (size == 0)
     return;
+  PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, "writeBlockVectorData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.fromData != nullptr);
   mesh::Data &data = *context.fromData;
@@ -1118,8 +1118,8 @@ void SolverInterfaceImpl::writeBlockScalarData(
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   if (size == 0)
     return;
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
+  PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, "writeBlockScalarData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.fromData != nullptr);
   mesh::Data &data = *context.fromData;
@@ -1180,8 +1180,8 @@ void SolverInterfaceImpl::readBlockVectorData(
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
+  PRECICE_CHECK(valueIndices != nullptr, "readBlockVectorData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.toData != nullptr);
   mesh::Data &data = *context.toData;
@@ -1247,9 +1247,8 @@ void SolverInterfaceImpl::readBlockScalarData(
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
-  PRECICE_DEBUG("size = {}", size);
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
+  PRECICE_CHECK(valueIndices != nullptr, "readBlockScalarData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.toData != nullptr);
   mesh::Data &data = *context.toData;
