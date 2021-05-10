@@ -250,8 +250,8 @@ public:
   /// Returns the name of the participant.
   const std::string &getName() const;
 
-  /// Returns true, if the participant uses a master process.
-  bool useMaster();
+  /// Returns true, if the participant uses a master tag.
+  bool useMaster() const;
 
   /// Provided access to all read \ref MappingContext
   const utils::ptr_vector<MappingContext> &readMappingContexts() const;

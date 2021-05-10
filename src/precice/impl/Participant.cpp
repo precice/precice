@@ -414,7 +414,7 @@ std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
   return _watchIntegrals;
 }
 
-bool Participant::useMaster()
+bool Participant::useMaster() const
 {
   return _useMaster;
 }
