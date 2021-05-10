@@ -48,7 +48,7 @@
  */
 #define PRECICE_REQUIRE_MESH_MODIFY_IMPL(id)                                          \
   PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id)                                               \
-  PRECICE_CHECK(!_meshLock.check(meshID),                                             \
+  PRECICE_CHECK(!_meshLock.check(id),                                                 \
                 "This participant attempted to modify the Mesh \"{}\" while locked. " \
                 "Mesh modification is only allowed before calling initialize().",     \
                 _accessor->getMeshName(id));
