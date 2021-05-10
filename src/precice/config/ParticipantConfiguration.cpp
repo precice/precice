@@ -165,6 +165,20 @@ ParticipantConfiguration::ParticipantConfiguration(
                            .setDefaultValue(VALUE_FILTER_ON_SLAVES);
   tagUseMesh.addAttribute(attrGeoFilter);
 
+  auto attrPartitionBy = XMLAttribute<std::string>(ATTR_PARTITION_BY)
+                             .setDocumentation(
+                                 "If a mesh is received from another partipant (see tag <from>), it needs to be"
+                                 "decomposed at the receiving participant. In case a mapping is defined, the "
+                                 "mesh is decomposed according to the local provided mesh associated to the mapping. "
+                                 "(partition-by=\"default\"). In case no mapping has been defined (you want to access "
+                                 "the mesh and related data direct), there is no obvious way on how to decompose the "
+                                 "mesh, since no mesh needs to be provided by the participant. For this purpose, bounding "
+                                 "boxes can be defined (see API function \"setBoundingBoxes\") and used by selecting "
+                                 "the option partition-by=\"bounding-box\".")
+                             .setOptions({VALUE_DEFAULT, VALUE_BOUNDING_BOX})
+                             .setDefaultValue(VALUE_DEFAULT);
+  tagUseMesh.addAttribute(attrPartitionBy);
+
   auto attrProvide = makeXMLAttribute(ATTR_PROVIDE, false)
                          .setDocumentation(
                              "If this attribute is set to \"on\", the "
@@ -259,9 +273,12 @@ void ParticipantConfiguration::xmlTagCallback(
     Eigen::VectorXd offset(_dimensions);
     /// @todo offset currently not supported
     //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
-    std::string                                   from         = tag.getStringAttributeValue(ATTR_FROM);
-    double                                        safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
-    partition::ReceivedPartition::GeometricFilter geoFilter    = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
+    std::string                                   from                   = tag.getStringAttributeValue(ATTR_FROM);
+    double                                        safetyFactor           = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
+    partition::ReceivedPartition::GeometricFilter geoFilter              = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
+    const bool                                    partitionByBoundingBox = (tag.getStringAttributeValue(ATTR_PARTITION_BY) == VALUE_BOUNDING_BOX);
+    if (partitionByBoundingBox)
+      PRECICE_WARN("You configured the received mesh \"" << name << "\" using the option partition-by=\"bounding-box\", which is experimental.");
     PRECICE_CHECK(safetyFactor >= 0, "Participant \"" << context.name << "\" uses mesh \"" << name << "\" with safety-factor=\"" << safetyFactor << "\". Please use a positive or zero safety-factor instead.")
     bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
     if (_participants.back()->getName() == from) {
@@ -276,7 +293,15 @@ void ParticipantConfiguration::xmlTagCallback(
                                             << "\" uses mesh \"" << name << "\", which is not received (no \"from\"), but has a geometric-filter and/or"
                                             << " a safety factor defined. Please extend the use-mesh tag as follows: <use-mesh name=\"" << name << "\" from=\"(other participant)\" />");
     }
-    _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter);
+
+    // TODO: Maybe merge later with the config check above
+    if ((partitionByBoundingBox == true) && from == "") {
+      PRECICE_CHECK(false, "Participant \"" << _participants.back()->getName()
+                                            << "\" uses mesh \"" << name << "\", which is not received (no \"from\"), but has a bounding-box partitioning "
+                                            << " defined. Please extend the use-mesh tag as follows: <use-mesh name=\"" << name << "\" from=\"(other participant)\" />");
+    }
+
+    _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter, partitionByBoundingBox);
   } else if (tag.getName() == TAG_WRITE) {
     std::string   dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string   meshName = tag.getStringAttributeValue(ATTR_MESH);

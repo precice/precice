@@ -75,7 +75,8 @@ void Participant::useMesh(
     const std::string &                           fromParticipant,
     double                                        safetyFactor,
     bool                                          provideMesh,
-    partition::ReceivedPartition::GeometricFilter geoFilter)
+    partition::ReceivedPartition::GeometricFilter geoFilter,
+    bool                                          partitionByBoundingBox)
 {
   PRECICE_TRACE(_name, mesh->getName(), mesh->getID());
   checkDuplicatedUse(mesh);
@@ -85,10 +86,11 @@ void Participant::useMesh(
   context->localOffset = localOffset;
   PRECICE_ASSERT(mesh->getDimensions() == context->localOffset.size(),
                  mesh->getDimensions(), context->localOffset.size());
-  context->receiveMeshFrom = fromParticipant;
-  context->safetyFactor    = safetyFactor;
-  context->provideMesh     = provideMesh;
-  context->geoFilter       = geoFilter;
+  context->receiveMeshFrom        = fromParticipant;
+  context->safetyFactor           = safetyFactor;
+  context->provideMesh            = provideMesh;
+  context->geoFilter              = geoFilter;
+  context->partitionByBoundingBox = partitionByBoundingBox;
 
   _meshContexts[mesh->getID()] = context;
 

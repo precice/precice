@@ -29,12 +29,13 @@ extern bool syncMode;
 namespace partition {
 
 ReceivedPartition::ReceivedPartition(
-    mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor)
+    mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor, bool partitionByBoundingBox)
     : Partition(mesh),
       _geometricFilter(geometricFilter),
       _bb(mesh->getDimensions()),
       _dimensions(mesh->getDimensions()),
-      _safetyFactor(safetyFactor)
+      _safetyFactor(safetyFactor),
+      _partitionByBoundingBox(partitionByBoundingBox)
 {
 }
 
@@ -479,12 +480,13 @@ void ReceivedPartition::prepareBoundingBox()
   // An alternative would be to use Data::DataMappingType::CONSISTENT
   // or Data::DataMappingType::CONSERVATIVE here, but then we need to
   // associate the mesh to a specific data set.
-  if (!hasAnyMapping()) {
+  if (_partitionByBoundingBox) {
     const auto other_bb = _mesh->getBoundingBox();
     _bb.expandBy(other_bb);
     // TODO: Scale by safety factor here. Default of 1.5 is for the current
     // mappings still too large in comparison to what we want to do here.
     _boundingBoxPrepared = true;
+    PRECICE_WARN("Ignoring the safety factor for bounding box initialization");
   }
 }
 
@@ -666,7 +668,7 @@ void ReceivedPartition::tagMeshFirstRound()
 
   // Same if-condition as in prepareBoundingBox. See above for
   // the rationale.
-  if (!hasAnyMapping()) {
+  if (_partitionByBoundingBox) {
     _mesh->tagAll();
   }
 }

@@ -132,14 +132,14 @@ public:
   std::vector<PtrWatchIntegral> &watchIntegrals();
 
   /// Adds a mesh to be used by the participant.
-  void useMesh(
-      const mesh::PtrMesh &                         mesh,
-      const Eigen::VectorXd &                       localOffset,
-      bool                                          remote,
-      const std::string &                           fromParticipant,
-      double                                        safetyFactor,
-      bool                                          provideMesh,
-      partition::ReceivedPartition::GeometricFilter geoFilter);
+  void useMesh(const mesh::PtrMesh &                         mesh,
+               const Eigen::VectorXd &                       localOffset,
+               bool                                          remote,
+               const std::string &                           fromParticipant,
+               double                                        safetyFactor,
+               bool                                          provideMesh,
+               partition::ReceivedPartition::GeometricFilter geoFilter,
+               bool                                          partitionByBoundingBox);
 
   void addAction(action::PtrAction &&action);
 

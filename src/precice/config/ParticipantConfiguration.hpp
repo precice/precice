@@ -83,6 +83,7 @@ private:
   const std::string ATTR_FROM               = "from";
   const std::string ATTR_SAFETY_FACTOR      = "safety-factor";
   const std::string ATTR_GEOMETRIC_FILTER   = "geometric-filter";
+  const std::string ATTR_PARTITION_BY       = "partition-by";
   const std::string ATTR_PROVIDE            = "provide";
   const std::string ATTR_MESH               = "mesh";
   const std::string ATTR_COORDINATE         = "coordinate";
@@ -95,6 +96,9 @@ private:
   const std::string VALUE_FILTER_ON_SLAVES = "on-slaves";
   const std::string VALUE_FILTER_ON_MASTER = "on-master";
   const std::string VALUE_NO_FILTER        = "no-filter";
+
+  const std::string VALUE_DEFAULT      = "default";
+  const std::string VALUE_BOUNDING_BOX = "bounding-box";
 
   const std::string VALUE_VTK = "vtk";
 
