@@ -112,7 +112,8 @@ void Vertex::setCoords(
   PRECICE_ASSERT(coordinates.size() == _dim, coordinates.size(), _dim);
   _coords[0] = coordinates[0];
   _coords[1] = coordinates[1];
-  _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
+  const auto newsize = coordinates.size();
+  _coords[2] = (newsize == 3 && newsize == _dim) ? coordinates[2] : 0.0;
 }
 
 template <typename VECTOR_T>
