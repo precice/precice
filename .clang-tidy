@@ -1,6 +1,11 @@
 # clang-tidy settings to be used with ./tools/formatting/run_clang_tidy.sh
+# Rationale for disabling checks:
+#
+# -cppcoreguidelines-avoid-magic-numbers: This is just an alias for readability-magic-numbers
+# -cppcoreguidelines-avoid-c-arrays: This is just an alias for modernize-avoid-c-arrays
+# -misc-unused-parameters: We have not yet removed all unused parameters from the code base
 
-Checks:          "-*,clang-analyzer-*,pugprone-*,cppcoreguidelines-*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,misc-*,-misc-static-assert,modernize-*,-modernize-use-trailing-return-type,mpi-*,performance-*,portability-*,readability-static-accessed-through-instance,readability-identifier-naming,readability-magic-numbers,readability-redundant-*,readability-else-after-return,readability-simplify-subscript-expr"
+Checks:          "-*,clang-analyzer-*,pugprone-*,cppcoreguidelines-*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-avoid-c-arrays,misc-*,-misc-static-assert,-misc-unused-parameters,modernize-*,-modernize-use-trailing-return-type,mpi-*,performance-*,portability-*,readability-static-accessed-through-instance,readability-identifier-naming,readability-magic-numbers,readability-redundant-*,readability-simplify-subscript-expr"
 WarningsAsErrors: '*'
 AnalyzeTemporaryDtors: false
 FormatStyle:     file
