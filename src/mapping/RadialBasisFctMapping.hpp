@@ -232,11 +232,13 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
                  input()->getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
+#ifndef NDEBUG
   {
     int valueDim = input()->data(inputDataID)->getDimensions();
     PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
                    valueDim, output()->data(outputDataID)->getDimensions());
   }
+#endif
   int deadDimensions = 0;
   for (int d = 0; d < getDimensions(); d++) {
     if (_deadAxis[d])

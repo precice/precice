@@ -18,7 +18,7 @@ struct testExtrapolateData;
 
 namespace precice {
 namespace cplscheme {
-struct CouplingData;
+class CouplingData;
 
 /**
  * @brief Abstract base class for coupling schemes with two participants.

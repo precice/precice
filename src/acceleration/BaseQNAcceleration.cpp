@@ -155,9 +155,11 @@ void BaseQNAcceleration::initialize(
       _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
     }
 
+#ifndef NDEBUG
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::getRank() + 1] - _dimOffsets[utils::MasterSlave::getRank()];
     PRECICE_ASSERT(entries == unknowns, entries, unknowns);
+#endif
   } else {
     _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n", entries);
   }
