@@ -599,7 +599,7 @@ int SolverInterfaceImpl::getMeshID(
                 "Please check the mesh definitions in the configuration.",
                 meshName);
   PRECICE_CHECK(_accessor->isMeshUsed(meshName),
-                "The given mesh name \"{0}\" is not used by the preCICE. "
+                "The given mesh name \"{0}\" is not used by the participant \"{1}\". "
                 "Please define a <use-mesh name=\"{0}\"/> node for the particpant \"{1}\".",
                 meshName, _accessorName);
   return _accessor->getUsedMeshID(meshName);
