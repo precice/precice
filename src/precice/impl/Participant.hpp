@@ -145,7 +145,7 @@ public:
   std::string getDataName(int dataID) const;
   /// @}
 
-  /// @name Mesh querries
+  /// @name Mesh queries
   /// @{
   /// Provides access to all \ref MeshContext where the index is meshID. Can contain nullptr!
   const MeshContext &meshContext(int meshID) const;
