@@ -1,22 +1,22 @@
 #pragma once
 
+#include <boost/preprocessor/comparison/greater.hpp>
+#include <boost/preprocessor/control/if.hpp>
+#include <boost/preprocessor/variadic/size.hpp>
 #include <iostream>
 
 #ifdef NDEBUG
 
-#define PRECICE_ASSERT(...) \
-  {                         \
-  }
+#define PRECICE_ASSERT_IMPL_N(check, ...) static_cast<bool>(check)
+
+#define PRECICE_ASSERT_IMPL_1(check) static_cast<bool>(check)
 
 #else
 
 #include <cassert>
 
 #include <boost/current_function.hpp>
-#include <boost/preprocessor/comparison/greater.hpp>
-#include <boost/preprocessor/control/if.hpp>
 #include <boost/preprocessor/stringize.hpp>
-#include <boost/preprocessor/variadic/size.hpp>
 
 #include "utils/fmt.hpp"
 
@@ -61,14 +61,6 @@ static constexpr char const *ASSERT_FMT =
 #define PRECICE_ASSERT_IMPL_1(check) \
   PRECICE_ASSERT_IMPL(check, "none")
 
-/** Asserts either a single statement or a statement followed by multiple arguments.
- *
- * This dispatches to PRECICE_ASSERT_IMPL_1 if only a check is provided, otherwise to PRECICE_ASSERT_IMPL_N
- */
-#define PRECICE_ASSERT(...)                                                                                       \
-  BOOST_PP_CAT(PRECICE_ASSERT_IMPL_, BOOST_PP_IF(BOOST_PP_GREATER(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__), 1), N, 1)) \
-  (__VA_ARGS__)
-
 #endif
 
 /// Displays an error message and aborts the program independent of the build type.
@@ -78,3 +70,11 @@ static constexpr char const *ASSERT_FMT =
     std::cerr << fmt::format(__VA_ARGS__) << std::endl; \
     std::abort();                                       \
   }
+
+/** Asserts either a single statement or a statement followed by multiple arguments.
+ *
+ * This dispatches to PRECICE_ASSERT_IMPL_1 if only a check is provided, otherwise to PRECICE_ASSERT_IMPL_N
+ */
+#define PRECICE_ASSERT(...)                                                                                       \
+  BOOST_PP_CAT(PRECICE_ASSERT_IMPL_, BOOST_PP_IF(BOOST_PP_GREATER(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__), 1), N, 1)) \
+  (__VA_ARGS__)
