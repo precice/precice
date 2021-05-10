@@ -103,7 +103,7 @@ public:
       partition::ReceivedPartition::GeometricFilter geoFilter);
   /// @}
 
-  /// @name Data querries
+  /// @name Data queries
   /// @{
   /// Provides access to both write and read \ref DataContext
   const DataContext &dataContext(int dataID) const;
