@@ -16,18 +16,18 @@ public:
       mesh::PtrMesh mesh,
       bool          requiresInitialization)
       : requiresInitialization(requiresInitialization),
-        data(data),
-        mesh(mesh)
+        _data(std::move(data)),
+        _mesh(std::move(mesh))
   {
-    PRECICE_ASSERT(data != nullptr);
-    PRECICE_ASSERT(mesh != nullptr);
-    PRECICE_ASSERT(mesh.use_count() > 0);
+    PRECICE_ASSERT(_data != nullptr);
+    PRECICE_ASSERT(_mesh != nullptr);
+    PRECICE_ASSERT(_mesh.use_count() > 0);
   }
 
   int getDimensions() const
   {
-    PRECICE_ASSERT(data != nullptr);
-    return data->getDimensions();
+    PRECICE_ASSERT(_data != nullptr);
+    return _data->getDimensions();
   }
 
   using DataMatrix = Eigen::MatrixXd;
@@ -35,25 +35,25 @@ public:
   /// Returns a reference to the data values.
   Eigen::VectorXd &values()
   {
-    PRECICE_ASSERT(data != nullptr);
-    return data->values();
+    PRECICE_ASSERT(_data != nullptr);
+    return _data->values();
   }
 
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const
   {
-    PRECICE_ASSERT(data != nullptr);
-    return data->values();
+    PRECICE_ASSERT(_data != nullptr);
+    return _data->values();
   }
 
   int getMeshID()
   {
-    return mesh->getID();
+    return _mesh->getID();
   }
 
   std::vector<int> getVertexOffsets()
   {
-    return mesh->getVertexOffsets();
+    return _mesh->getVertexOffsets();
   }
 
   /// Data values of previous iteration (1st col) and previous time windows.
@@ -74,9 +74,9 @@ private:
     PRECICE_ASSERT(false);
   }
 
-  mesh::PtrData data;
+  mesh::PtrData _data;
 
-  mesh::PtrMesh mesh;
+  mesh::PtrMesh _mesh;
 };
 
 } // namespace cplscheme
