@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToEdge)
   BOOST_TEST(interpolation.second == 1.0);                           // Check the distance
   BOOST_TEST(interpolation.first.isInterpolation());
 
-  for (int i = 0; i < interpolation.first.getWeightedElements().size(); ++i) {
+  for (int i = 0; i < static_cast<int>(interpolation.first.getWeightedElements().size()); ++i) {
     BOOST_TEST(interpolation.first.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
     BOOST_TEST(interpolation.first.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
   }
