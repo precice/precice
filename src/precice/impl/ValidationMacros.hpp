@@ -53,28 +53,36 @@
                 "Mesh modification is only allowed before calling initialize().",     \
                 _accessor->getMeshName(id));
 
-/// Validates a given meshID
+/** Validates a given meshID
+ * This macros creates the "id" in a local scope and provides it to the called implementation.
+ */
 #define PRECICE_VALIDATE_MESH_ID(meshID) \
   do {                                   \
     const auto id = (meshID);            \
     PRECICE_VALIDATE_MESH_ID_IMPL(id)    \
   } while (false)
 
-/// Validates a given meshID and checks if the mesh is used by the current participant
+/** Validates a given meshID and checks if the mesh is used by the current participant
+ * This macros creates the "id" in a local scope and provides it to the called implementation.
+ */
 #define PRECICE_REQUIRE_MESH_USE(meshID) \
   do {                                   \
     const auto id = (meshID);            \
     PRECICE_REQUIRE_MESH_USE_IMPL(id)    \
   } while (false)
 
-/// Validates a given meshID and checks if the mesh is provided by the current participant
+/** Validates a given meshID and checks if the mesh is provided by the current participant
+ * This macros creates the "id" in a local scope and provides it to the called implementation.
+ */
 #define PRECICE_REQUIRE_MESH_PROVIDE(meshID) \
   do {                                       \
     const auto id = (meshID);                \
     PRECICE_REQUIRE_MESH_PROVIDE_IMPL(id)    \
   } while (false)
 
-/// Validates a given meshID and checks if the mesh is provided by the current participant and unlocked
+/** Validates a given meshID, checks if the mesh is provided by the current participant and unlocked
+ * This macros creates the "id" in a local scope and provides it to the called implementation.
+ */
 #define PRECICE_REQUIRE_MESH_MODIFY(meshID) \
   do {                                      \
     const auto id = (meshID);               \
@@ -115,21 +123,27 @@
                 "Please extend the configuarion of partiticipant \"{1}\" by defining <write-data mesh=\"{0}\" name=\"{2}\" />.", \
                 _accessor->getDataName(id), _accessorName, _accessor->getMeshNameFromData(id));
 
-/// Validates a given dataID
+/** Validates a given dataID
+ * This macros creates the "id" in a local scope and provides it to the called implementation.
+ */
 #define PRECICE_VALIDATE_DATA_ID(dataID) \
   do {                                   \
     const auto id = (dataID);            \
     PRECICE_VALIDATE_DATA_ID_IMPL(id)    \
   } while (false)
 
-/// Validates a dataID and checks for read access
+/** Validates a given dataID and checks for read access
+ * This macros creates the "id" in a local scope and provides it to the called implementation.
+ */
 #define PRECICE_REQUIRE_DATA_READ(dataID) \
   do {                                    \
     const auto id = (dataID);             \
     PRECICE_REQUIRE_DATA_READ_IMPL(id)    \
   } while (false)
 
-/// Validates a dataID and checks for write access
+/** Validates a given dataID and checks for write access
+ * This macros creates the "id" in a local scope and provides it to the called implementation.
+ */
 #define PRECICE_REQUIRE_DATA_WRITE(dataID) \
   do {                                     \
     const auto id = (dataID);              \
