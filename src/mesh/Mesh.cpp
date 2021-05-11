@@ -163,7 +163,7 @@ const PtrData &Mesh::data(const std::string &dataName) const
   auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
     return dptr->getName() == dataName;
   });
-  PRECICE_ASSERT(iter != _data.end(), "Data with Name " << dataName << " not found in mesh \"" << _name << "\".");
+  PRECICE_ASSERT(iter != _data.end(), "Data not found in mesh", dataName, _name);
   return *iter;
 }
 
