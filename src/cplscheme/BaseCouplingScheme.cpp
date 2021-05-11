@@ -127,8 +127,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
                     "an implicit coupling scheme.");
-      // merge send and receive data for all pp calls
-      mergeData();
       // setup convergence measures
       for (ConvergenceMeasureContext &convergenceMeasure : _convergenceMeasures) {
         int dataID = convergenceMeasure.data->getID();
@@ -238,7 +236,7 @@ void BaseCouplingScheme::setExtrapolationOrder(
 void BaseCouplingScheme::updateThisWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : getAccelerationData()) {
+  for (DataMap::value_type &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     _waveforms[pair.first]->updateThisWindow(pair.second->values());
   }
@@ -247,7 +245,7 @@ void BaseCouplingScheme::updateThisWindow()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : getAccelerationData()) {
+  for (DataMap::value_type &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     _waveforms[pair.first]->moveToNextWindow(getTimeWindows(), _extrapolationOrder);
     pair.second->values() = _waveforms[pair.first]->lastTimeWindows().col(0);
@@ -431,20 +429,13 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
 void BaseCouplingScheme::setupDataMatrices()
 {
   PRECICE_TRACE();
-  PRECICE_DEBUG("Data size: {}", getAccelerationData().size());
-  // Reserve storage for convergence measurement of send and receive data values
-  for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
-    PRECICE_ASSERT(convMeasure.couplingData != nullptr);
-    convMeasure.couplingData->storeIteration();
-  }
-  // Reserve storage for data values
-  for (DataMap::value_type &pair : getAccelerationData()) {
+  // Reserve storage for all data (acceleration and convergence measurement)
+  for (DataMap::value_type &pair : _allData) {
     time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder));
     WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
     _waveforms.insert(waveformPair);
-    pair.second->storeIteration(); // @ todo remove this duplicate of line above! But removing this line causes failure for mpirun --oversubscribe -np 4 ./testprecice -t PreciceTests/Serial/MultiCoupling
+    pair.second->storeIteration();
   }
-  // Storage reservation for acceleration methods happens in Acceleration::initialize
 }
 
 void BaseCouplingScheme::setAcceleration(
@@ -648,5 +639,14 @@ bool BaseCouplingScheme::doImplicitStep()
 
   return convergence;
 }
+
+void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID)
+{
+  PRECICE_TRACE(dataID);
+  DataMap::iterator iter = _allData.find(dataID);
+  PRECICE_ASSERT(iter != _allData.end(), "Given data ID does not exist in _allData!");
+  convergenceMeasure->couplingData = &(*(iter->second));
+}
+
 } // namespace cplscheme
 } // namespace precice

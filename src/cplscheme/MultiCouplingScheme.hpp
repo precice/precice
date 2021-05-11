@@ -71,21 +71,9 @@ public:
 
 private:
   /**
-   * @brief get CouplingData from _allData using dataID
-   * @param dataID identifies CouplingData to be searched for
-   * @return CouplingData from _allData corresponding to dataID
-   */
-  CouplingData *getData(int dataID);
-
-  /**
    * @brief A vector of m2ns. A m2n is a communication device to the other coupling participant.
    */
   std::vector<m2n::PtrM2N> _m2ns;
-
-  /**
-   * @brief Map from data ID -> all data (receive and send) with that ID
-   */
-  DataMap _allData;
 
   /**
    * @brief A vector of all data to be received.
@@ -120,21 +108,9 @@ private:
   void initializeImplementation() override;
 
   /**
-   * @brief merges send and receive data into one map (for parallel acceleration)
-   */
-  void mergeData() override;
-
-  /**
    * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override;
-
-  /**
-   * @brief Needed for setting up convergence measures
-   * @param convMeasure Convergence measure to which the data field is assigned to
-   * @param dataID Data field to be assigned
-   */
-  void assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID) override;
 };
 
 } // namespace cplscheme

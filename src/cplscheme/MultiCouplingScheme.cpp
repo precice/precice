@@ -107,17 +107,6 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   return convergence;
 }
 
-void MultiCouplingScheme::mergeData()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(_allData.empty(), "This function should only be called once.");
-  PRECICE_ASSERT(_sendDataVector.size() == _receiveDataVector.size());
-  for (size_t i = 0; i < _sendDataVector.size(); i++) {
-    _allData.insert(_sendDataVector[i].begin(), _sendDataVector[i].end());
-    _allData.insert(_receiveDataVector[i].begin(), _receiveDataVector[i].end());
-  }
-}
-
 void MultiCouplingScheme::addDataToSend(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
@@ -128,7 +117,10 @@ void MultiCouplingScheme::addDataToSend(
   if (!utils::contained(id, _sendDataVector[index])) {
     PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
+    PRECICE_ASSERT(_sendDataVector[index].count(pair.first) == 0, "Key already exists!");
     _sendDataVector[index].insert(pair);
+    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
+    _allData.insert(pair);
   } else {
     PRECICE_ERROR("Data \"{}\" of mesh \"{}\" cannot be added twice for sending.",
                   data->getName(), mesh->getName());
@@ -145,28 +137,14 @@ void MultiCouplingScheme::addDataToReceive(
   if (!utils::contained(id, _receiveDataVector[index])) {
     PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
+    PRECICE_ASSERT(_receiveDataVector[index].count(pair.first) == 0, "Key already exists!");
     _receiveDataVector[index].insert(pair);
+    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
+    _allData.insert(pair);
   } else {
     PRECICE_ERROR("Data \"{}\" of mesh \"{}\" cannot be added twice for receiving.",
                   data->getName(), mesh->getName());
   }
-}
-
-CouplingData *MultiCouplingScheme::getData(
-    int dataID)
-{
-  PRECICE_TRACE(dataID);
-  DataMap::iterator iter = _allData.find(dataID);
-  if (iter != _allData.end()) {
-    return &(*(iter->second));
-  }
-  return nullptr;
-}
-
-void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID)
-{
-  convergenceMeasure->couplingData = getData(dataID);
-  PRECICE_ASSERT(convergenceMeasure->couplingData != nullptr);
 }
 
 } // namespace cplscheme

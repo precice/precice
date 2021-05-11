@@ -255,6 +255,9 @@ protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
 
+  /// Map from data ID -> all data (receive and send) with that ID
+  DataMap _allData;
+
   /// Map that links DataID to Waveform
   typedef std::map<int, time::PtrWaveform> WaveformMap;
 
@@ -409,12 +412,12 @@ protected:
   void moveToNextWindow();
 
   /**
-   * @brief used for storing send/receive data at end of doImplicitStep.
+   * @brief used for storing all Data at end of doImplicitStep for later reference.
    */
   void storeIteration()
   {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-    for (DataMap::value_type &pair : getAccelerationData()) {
+    for (DataMap::value_type &pair : _allData) {
       pair.second->storeIteration();
     }
   }
@@ -532,11 +535,6 @@ private:
   /// Functions needed for initialize()
 
   /**
-   * @brief merges all send and receive data into a single data structure.
-   */
-  virtual void mergeData() = 0;
-
-  /**
    * @brief implements functionality for initialize in base class.
    */
   virtual void initializeImplementation() = 0;
@@ -604,9 +602,9 @@ private:
    * @param convMeasure Convergence measure to which the data field is assigned to
    * @param dataID Data field to be assigned
    */
-  virtual void assignDataToConvergenceMeasure(
+  void assignDataToConvergenceMeasure(
       ConvergenceMeasureContext *convMeasure,
-      int                        dataID) = 0;
+      int                        dataID);
 };
 } // namespace cplscheme
 } // namespace precice

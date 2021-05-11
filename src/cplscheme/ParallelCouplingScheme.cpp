@@ -77,14 +77,5 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
   return convergence;
 }
 
-void ParallelCouplingScheme::mergeData()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-  PRECICE_ASSERT(_allData.empty(), "This function should only be called once.");
-  _allData.insert(getSendData().begin(), getSendData().end());
-  _allData.insert(getReceiveData().begin(), getReceiveData().end());
-}
-
 } // namespace cplscheme
 } // namespace precice

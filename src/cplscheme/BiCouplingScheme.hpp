@@ -123,17 +123,6 @@ private:
 
   /// Second participant name.
   std::string _secondParticipant = "unknown";
-
-  /// Implements functionality for setupConvergenceMeasures
-  void assignDataToConvergenceMeasure(ConvergenceMeasureContext *convMeasure, int dataID) override
-  {
-    if ((getSendData(dataID) != nullptr)) {
-      convMeasure->couplingData = getSendData(dataID);
-    } else {
-      convMeasure->couplingData = getReceiveData(dataID);
-      PRECICE_ASSERT(convMeasure->couplingData != nullptr);
-    }
-  }
 };
 
 } // namespace cplscheme
