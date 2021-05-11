@@ -14,6 +14,7 @@ namespace precice {
 namespace query {
 
 /// Struct to hold index and distance information of the closest primitive
+/// @todo Replace default magic number initialization with a dedicated variable
 template <class Tag>
 struct MatchType {
   double distance;
