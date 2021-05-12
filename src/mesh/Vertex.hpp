@@ -29,14 +29,6 @@ public:
   template <typename VECTOR_T>
   void setCoords(const VECTOR_T &coordinates);
 
-  /// Sets the normal of the vertex.
-  template <typename VECTOR_T>
-  void setNormal(const VECTOR_T &normal);
-
-  /// Sets the normal of the vertex, rvalue variant
-  template <typename VECTOR_T>
-  void setNormal(VECTOR_T &&normal);
-
   /// Returns the unique (among vertices of one mesh on one processor) ID of the vertex.
   int getID() const;
 
@@ -45,9 +37,6 @@ public:
 
   /// Direct access to the coordinates
   const RawCoords &rawCoords() const;
-
-  /// Returns the normal of the vertex.
-  const Eigen::VectorXd &getNormal() const;
 
   /// Globally unique index
   int getGlobalIndex() const;
@@ -76,9 +65,6 @@ private:
   /// Unique (among vertices in one mesh) ID of the vertex.
   int _id;
 
-  /// Normal of the vertex.
-  Eigen::VectorXd _normal;
-
   /// global (unique) index for parallel simulations
   int _globalIndex = -1;
 
@@ -96,8 +82,7 @@ Vertex::Vertex(
     const VECTOR_T &coordinates,
     int             id)
     : _dim(coordinates.size()),
-      _id(id),
-      _normal(Eigen::VectorXd::Constant(_dim, 0.0))
+      _id(id)
 {
   PRECICE_ASSERT(_dim == 2 || _dim == 3, _dim);
   _coords[0] = coordinates[0];
@@ -113,22 +98,6 @@ void Vertex::setCoords(
   _coords[0] = coordinates[0];
   _coords[1] = coordinates[1];
   _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
-}
-
-template <typename VECTOR_T>
-void Vertex::setNormal(
-    const VECTOR_T &normal)
-{
-  PRECICE_ASSERT(normal.size() == _normal.size(), normal.size(), _normal.size());
-  _normal = normal;
-}
-
-template <typename VECTOR_T>
-void Vertex::setNormal(
-    VECTOR_T &&normal)
-{
-  PRECICE_ASSERT(normal.size() == _normal.size(), normal.size(), _normal.size());
-  _normal = std::forward<VECTOR_T>(normal);
 }
 
 inline int Vertex::getID() const

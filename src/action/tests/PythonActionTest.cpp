@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(Python)
 BOOST_AUTO_TEST_CASE(AllMethods)
 {
   PRECICE_TEST(1_rank);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector3d::Constant(1.0));
   mesh->createVertex(Eigen::Vector3d::Constant(2.0));
   mesh->createVertex(Eigen::Vector3d::Constant(3.0));
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(OmitMethods)
     action.performAction(0.0, 0.0, 0.0, 0.0);
   }
   {
-    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
+    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
     mesh->createVertex(Eigen::Vector3d::Zero());
     mesh::PtrData data = mesh->createData("TargetData", 1);
     mesh->allocateDataValues();
@@ -60,11 +60,25 @@ BOOST_AUTO_TEST_CASE(OmitMethods)
     action.performAction(0.0, 0.0, 0.0, 0.0);
   }
   {
-    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
+    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
     mesh->createVertex(Eigen::Vector3d::Zero());
     mesh::PtrData data = mesh->createData("SourceData", 1);
     mesh->allocateDataValues();
     PythonAction action(PythonAction::WRITE_MAPPING_PRIOR, path, "TestOmitAction3", mesh, -1, data->getID());
+    action.performAction(0.0, 0.0, 0.0, 0.0);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(DeprecatedNormal)
+{
+  PRECICE_TEST(1_rank);
+  std::string path = testing::getPathToSources() + "/action/tests/";
+  {
+    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
+    mesh->createVertex(Eigen::Vector3d::Zero());
+    mesh::PtrData data = mesh->createData("TargetData", 1);
+    mesh->allocateDataValues();
+    PythonAction action(PythonAction::WRITE_MAPPING_PRIOR, path, "TestDeprecatedAction", mesh, data->getID(), -1);
     action.performAction(0.0, 0.0, 0.0, 0.0);
   }
 }

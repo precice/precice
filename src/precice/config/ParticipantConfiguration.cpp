@@ -355,20 +355,6 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
   }
 }
 
-/// @todo remove
-mesh::PtrMesh ParticipantConfiguration::copy(
-    const mesh::PtrMesh &mesh) const
-{
-  int         dim = mesh->getDimensions();
-  std::string name(mesh->getName());
-  bool        flipNormals = mesh->isFlipNormals();
-  mesh::Mesh *meshCopy    = new mesh::Mesh("Local_" + name, dim, flipNormals, mesh::Mesh::MESH_ID_UNDEFINED);
-  for (const mesh::PtrData &data : mesh->data()) {
-    meshCopy->createData(data->getName(), data->getDimensions());
-  }
-  return mesh::PtrMesh(meshCopy);
-}
-
 const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
     const std::string &  nameData) const
@@ -548,9 +534,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
       if (context.size > 1) {
-        exporter = io::PtrExport(new io::ExportVTKXML(exportContext.plotNormals));
+        exporter = io::PtrExport(new io::ExportVTKXML());
       } else {
-        exporter = io::PtrExport(new io::ExportVTK(exportContext.plotNormals));
+        exporter = io::PtrExport(new io::ExportVTK());
       }
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
@@ -564,38 +550,36 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Create watch points
   for (const WatchPointConfig &config : _watchPointConfigs) {
-    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
-
-    PRECICE_CHECK(meshContext && meshContext->mesh,
+    PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
                   "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not used by the participant. "
                   "Please add a use-mesh node with name=\"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
-    PRECICE_CHECK(meshContext->provideMesh,
+    const auto &meshContext = participant->usedMeshContext(config.nameMesh);
+    PRECICE_CHECK(meshContext.provideMesh,
                   "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
 
     std::string         filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
-    impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, meshContext->mesh, filename));
+    impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, meshContext.mesh, filename));
     participant->addWatchPoint(watchPoint);
   }
   _watchPointConfigs.clear();
 
   // Create watch integrals
   for (const WatchIntegralConfig &config : _watchIntegralConfigs) {
-    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
-
-    PRECICE_CHECK(meshContext && meshContext->mesh,
+    PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
                   "Participant \"{}\" defines watch integral \"{}\" for mesh \"{}\" which is not used by the participant. "
                   "Please add a use-mesh node with name=\"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
-    PRECICE_CHECK(meshContext->provideMesh,
+    const auto &meshContext = participant->usedMeshContext(config.nameMesh);
+    PRECICE_CHECK(meshContext.provideMesh,
                   "Participant \"{}\" defines watch integral \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
 
     std::string            filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
-    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext->mesh, filename, config.isScalingOn));
+    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext.mesh, filename, config.isScalingOn));
     participant->addWatchIntegral(watchIntegral);
   }
   _watchIntegralConfigs.clear();

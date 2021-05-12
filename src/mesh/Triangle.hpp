@@ -94,25 +94,14 @@ public:
 
   ///@}
 
-  /// Sets the outer normal of the triangle.
-  template <typename VECTOR_T>
-  void setNormal(const VECTOR_T &normal);
-
-  /// Computes and sets the normal of the triangle, returns the area-weighted normal.
-  const Eigen::VectorXd computeNormal(bool flip = false);
+  /// Computes the normal of the triangle.
+  Eigen::VectorXd computeNormal() const;
 
   /// Returns a among triangles globally unique ID.
   int getID() const;
 
   /// Returns the surface area of the triangle
   double getArea() const;
-
-  /**
-   * @brief Returns the outer normal of the triangle.
-   *
-   * @pre The normal has to be computed and set from outside before.
-   */
-  const Eigen::VectorXd &getNormal() const;
 
   /// Returns the barycenter of the triangle.
   const Eigen::VectorXd getCenter() const;
@@ -140,9 +129,6 @@ private:
 
   /// ID of the edge.
   int _id;
-
-  /// Normal vector of the triangle.
-  Eigen::VectorXd _normal;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
@@ -197,14 +183,6 @@ inline Triangle::const_iterator Triangle::cbegin() const
 inline Triangle::const_iterator Triangle::cend() const
 {
   return end();
-}
-
-template <typename VECTOR_T>
-void Triangle::setNormal(
-    const VECTOR_T &normal)
-{
-  PRECICE_ASSERT(normal.size() == getDimensions(), normal.size(), getDimensions());
-  _normal = normal;
 }
 
 inline int Triangle::getID() const

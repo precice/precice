@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   dataIDs.push_back(1);
   std::vector<double> factors;
   factors.resize(2, 1.0);
-  impl::PtrPreconditioner prec(new acceleration::impl::ConstantPreconditioner(factors));
-  mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()));
+  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
+  mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                       timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0, 1.0));
   scalings.insert(std::make_pair(1, 1.0));
-  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                         timestepsReused, filter, singularityLimit, dataIDs, prec);

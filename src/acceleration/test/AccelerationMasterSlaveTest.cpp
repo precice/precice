@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
   std::vector<int>  vertexOffsets{4, 8, 8, 10};
 
-  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
   std::vector<int>  vertexOffsets{4, 8, 8, 10};
 
-  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   PtrPreconditioner _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(-1));
   std::vector<int>  vertexOffsets{0, 11, 22, 22};
 
-  mesh::PtrMesh dummyMesh(new mesh::Mesh("dummyMesh", 2, false, testing::nextMeshID()));
+  mesh::PtrMesh dummyMesh(new mesh::Mesh("dummyMesh", 2, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
@@ -994,7 +994,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
   std::vector<int>  vertexOffsets{2, 3, 3, 4};
 
-  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
