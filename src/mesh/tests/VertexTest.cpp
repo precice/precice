@@ -21,9 +21,6 @@ BOOST_AUTO_TEST_CASE(Vertices)
 
   int id = vertex.getID();
   BOOST_TEST(id == 0);
-
-  Eigen::Vector3d normal = vertex.getNormal();
-  BOOST_TEST(testing::equals(normal, Eigen::Vector3d::Zero()));
 }
 
 BOOST_AUTO_TEST_CASE(VertexEquality)

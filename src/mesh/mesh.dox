@@ -20,8 +20,7 @@ An example on how to create a triangulated mesh data structure is given here:
 #include "utils/Dimensions.hpp" // defines utils::Vector
  
 // A mesh is the simplest way to create all needed objects
-bool invertNormals = false;
-Mesh mesh ( "MyMesh", invertNormals );
+Mesh mesh ( "MyMesh" );
 
 // A mesh can assign properties to created vertices automatically
 std::string dataName ( "Forces" );
@@ -44,9 +43,6 @@ Edge & e3 = mesh.createEdge ( v3, v1 );
 
 // Triangles are setup from three edges
 Triangle & t = mesh.createTriangle ( e1, e2, e3 );
-
-// In order to operate on a mesh, it has to have a valid state
-mesh.computeState ();
 
 @endcode
 

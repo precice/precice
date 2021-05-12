@@ -23,11 +23,9 @@ namespace mesh {
 Mesh::Mesh(
     std::string name,
     int         dimensions,
-    bool        flipNormals,
     int         id)
     : _name(std::move(name)),
       _dimensions(dimensions),
-      _flipNormals(flipNormals),
       _id(id),
       _boundingBox(dimensions)
 {
@@ -172,17 +170,6 @@ const std::string &Mesh::getName() const
   return _name;
 }
 
-bool Mesh::isFlipNormals() const
-{
-  return _flipNormals;
-}
-
-void Mesh::setFlipNormals(
-    bool flipNormals)
-{
-  _flipNormals = flipNormals;
-}
-
 int Mesh::getID() const
 {
   return _id;
@@ -228,68 +215,6 @@ void Mesh::computeBoundingBox()
   }
   _boundingBox = std::move(bb);
   PRECICE_DEBUG("Bounding Box, {}", _boundingBox);
-}
-
-void Mesh::computeState()
-{
-  PRECICE_TRACE(_name);
-  PRECICE_ASSERT(_dimensions == 2 || _dimensions == 3, _dimensions);
-
-  // Compute normals only if faces to derive normal information are available
-  size_t size2DFaces = _edges.size();
-  size_t size3DFaces = _triangles.size();
-  if (_dimensions == 2 && size2DFaces == 0) {
-    return;
-  }
-  if (_dimensions == 3 && size3DFaces == 0) {
-    return;
-  }
-
-  // Compute (in 2D) edge normals
-  if (_dimensions == 2) {
-    for (Edge &edge : _edges) {
-      Eigen::VectorXd weightednormal = edge.computeNormal(_flipNormals);
-
-      // Accumulate normal in associated vertices
-      for (int i = 0; i < 2; i++) {
-        Eigen::VectorXd vertexNormal = edge.vertex(i).getNormal();
-        vertexNormal += weightednormal;
-        edge.vertex(i).setNormal(vertexNormal);
-      }
-    }
-  }
-
-  if (_dimensions == 3) {
-    // Compute normals
-    for (Triangle &triangle : _triangles) {
-      PRECICE_ASSERT(triangle.vertex(0) != triangle.vertex(1),
-                     triangle.vertex(0), triangle.getID());
-      PRECICE_ASSERT(triangle.vertex(1) != triangle.vertex(2),
-                     triangle.vertex(1), triangle.getID());
-      PRECICE_ASSERT(triangle.vertex(2) != triangle.vertex(0),
-                     triangle.vertex(2), triangle.getID());
-
-      // Compute normals
-      Eigen::VectorXd weightednormal = triangle.computeNormal(_flipNormals);
-
-      // Accumulate area-weighted normal in associated vertices and edges
-      for (int i = 0; i < 3; i++) {
-        triangle.edge(i).setNormal(triangle.edge(i).getNormal() + weightednormal);
-        triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + weightednormal);
-      }
-    }
-
-    // Normalize edge normals (only done in 3D)
-    for (Edge &edge : _edges) {
-      // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
-      edge.setNormal(edge.getNormal().normalized());
-    }
-  }
-
-  for (Vertex &vertex : _vertices) {
-    // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
-    vertex.setNormal(vertex.getNormal().normalized());
-  }
 }
 
 void Mesh::clear()

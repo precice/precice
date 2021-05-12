@@ -21,14 +21,6 @@
 namespace precice {
 namespace io {
 
-ExportVTKXML::ExportVTKXML(
-    bool writeNormals)
-    : Export(),
-      _writeNormals(writeNormals),
-      _meshDimensions(-1)
-{
-}
-
 int ExportVTKXML::getType() const
 {
   return constants::exportVTKXML();
@@ -54,12 +46,8 @@ void ExportVTKXML::doExport(
 
 void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
 {
-  _meshDimensions = mesh.getDimensions();
   _vectorDataNames.clear();
   _scalarDataNames.clear();
-  if (_writeNormals) {
-    _vectorDataNames.emplace_back("VertexNormals");
-  }
   for (const mesh::PtrData &data : mesh.data()) {
     int dataDimensions = data->getDimensions();
     PRECICE_ASSERT(dataDimensions >= 1);
@@ -139,7 +127,7 @@ void ExportVTKXML::writeSubFile(
 {
   int numPoints = mesh.vertices().size(); // number of vertices
   int numCells;                           // number of cells
-  if (_meshDimensions == 2) {
+  if (mesh.getDimensions() == 2) {
     numCells = mesh.edges().size();
   } else {
     numCells = mesh.triangles().size();
@@ -183,7 +171,7 @@ void ExportVTKXML::exportMesh(
     std::ofstream &   outFile,
     mesh::Mesh const &mesh)
 {
-  if (_meshDimensions == 2) { // write edges as cells
+  if (mesh.getDimensions() == 2) { // write edges as cells
     outFile << "         <Cells>\n";
     outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";
@@ -249,26 +237,6 @@ void ExportVTKXML::exportData(
   }
   outFile << "\">\n";
 
-  // Print VertexNormals
-  if (_writeNormals) {
-    const auto dimensions = mesh.getDimensions();
-    outFile << "            <DataArray type=\"Float64\" Name=\"VertexNormals\" NumberOfComponents=\"";
-    outFile << std::max(3, dimensions) << "\" format=\"ascii\">\n";
-    outFile << "               ";
-    for (const auto &vertex : mesh.vertices()) {
-      const auto &normal = vertex.getNormal();
-      for (int i = 0; i < std::max(3, dimensions); i++) {
-        if (i < dimensions) {
-          outFile << normal[i] << ' ';
-        } else {
-          outFile << "0.0 ";
-        }
-        outFile << ' ';
-      }
-    }
-    outFile << '\n'
-            << "            </DataArray>\n";
-  }
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values         = data->values();
     int              dataDimensions = data->getDimensions();
