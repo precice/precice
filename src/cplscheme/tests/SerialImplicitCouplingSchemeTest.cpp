@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   PRECICE_TEST(1_rank);
   using namespace mesh;
 
-  PtrMesh mesh(new Mesh("MyMesh", 3, false, testing::nextMeshID()));
+  PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
   PtrData data   = mesh->createData("MyData", 1);
   int     dataID = data->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
 
   MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new Mesh("Mesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("data0", 1);
   mesh->createData("data1", 3);
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -631,7 +631,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("data0", 1);
   mesh->createData("data1", 3);
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("data0", 1);
   mesh->createData("data1", 3);
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -750,7 +750,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   const auto    dataID0 = mesh->createData("Data0", 1)->getID();
   const auto    dataID1 = mesh->createData("Data1", 3)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());

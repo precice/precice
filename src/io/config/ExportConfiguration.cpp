@@ -24,8 +24,8 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   auto attrEveryNTimeWindows = makeXMLAttribute(ATTR_EVERY_N_TIME_WINDOWS, 1)
                                    .setDocumentation("preCICE does an export every X time windows. Choose -1 for no exports.");
 
-  auto attrNormals = makeXMLAttribute(ATTR_NORMALS, true)
-                         .setDocumentation("If set to on/yes, mesh normals (if available) are added to the export.");
+  auto attrNormals = makeXMLAttribute(ATTR_NORMALS, false)
+                         .setDocumentation("Deprecated");
 
   auto attrEveryIteration = makeXMLAttribute(ATTR_EVERY_ITERATION, false)
                                 .setDocumentation("Exports in every coupling (sub)iteration. For debug purposes.");
@@ -43,11 +43,14 @@ void ExportConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
     xml::XMLTag &                    tag)
 {
+  if (tag.getBooleanAttributeValue(ATTR_NORMALS)) {
+    PRECICE_WARN("You explicitly requrested to export the vertex normals. "
+                 "This is deprecated, no longer functional, and the attribute will be removed in a future release.");
+  }
   if (tag.getNamespace() == TAG) {
     ExportContext econtext;
     econtext.location          = tag.getStringAttributeValue(ATTR_LOCATION);
     econtext.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
-    econtext.plotNormals       = tag.getBooleanAttributeValue(ATTR_NORMALS);
     econtext.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
     econtext.type              = tag.getName();
     _contexts.push_back(econtext);

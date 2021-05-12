@@ -51,7 +51,7 @@ Logger::Logger(const Logger &other)
 {
 }
 
-Logger::Logger(Logger &&other) = default;
+Logger::Logger(Logger &&other) noexcept = default;
 
 Logger &Logger::operator=(Logger other)
 {

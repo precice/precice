@@ -30,7 +30,7 @@ namespace bgi = boost::geometry::index;
 namespace {
 PtrMesh fullMesh()
 {
-  PtrMesh ptr(new Mesh("MyMesh", 3, false, testing::nextMeshID()));
+  PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
   auto &  mesh = *ptr;
   auto &  v1   = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
   auto &  v2   = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
@@ -46,13 +46,12 @@ PtrMesh fullMesh()
   // Triangles
   mesh.createTriangle(e1, e5, e4);
   mesh.createTriangle(e2, e3, e5);
-  mesh.computeState();
   return ptr;
 }
 
 PtrMesh edgeMesh3D()
 {
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector3d(0, 0, 0));
   mesh->createVertex(Eigen::Vector3d(0, 0, 1));
   mesh->createVertex(Eigen::Vector3d(0, 1, 0));
@@ -67,7 +66,7 @@ PtrMesh edgeMesh3D()
 
 PtrMesh edgeMesh2D()
 {
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, false, testing::nextMeshID()));
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector2d(0, 0));
   mesh->createVertex(Eigen::Vector2d(0, 1));
   auto &v1 = mesh->createVertex(Eigen::Vector2d(1, 0));
@@ -78,7 +77,7 @@ PtrMesh edgeMesh2D()
 
 PtrMesh vertexMesh3D()
 {
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector3d(0, 0, 0));
   mesh->createVertex(Eigen::Vector3d(0, 0, 1));
   mesh->createVertex(Eigen::Vector3d(0, 1, 0));
@@ -123,7 +122,7 @@ BOOST_AUTO_TEST_CASE(Query3DVertex)
 BOOST_AUTO_TEST_CASE(Query3DFullVertex)
 {
   PRECICE_TEST(1_rank);
-  PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
+  PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   const double z1  = 0.1;
   const double z2  = -0.1;
   auto &       v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
@@ -247,7 +246,7 @@ BOOST_AUTO_TEST_CASE(Query3DEdge)
 BOOST_AUTO_TEST_CASE(Query3DFullEdge)
 {
   PRECICE_TEST(1_rank);
-  PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
+  PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   const double z1  = 0.1;
   const double z2  = -0.1;
   auto &       v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
@@ -288,7 +287,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
 {
   PRECICE_TEST(1_rank);
 
-  PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, false, precice::testing::nextMeshID()));
+  PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   const double z1  = 0.1;
   const double z2  = -0.1;
   auto &       v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
@@ -331,7 +330,7 @@ BOOST_AUTO_TEST_SUITE(Cache)
 BOOST_AUTO_TEST_CASE(ClearOnChange)
 {
   PRECICE_TEST(1_rank);
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, false, precice::testing::nextMeshID()));
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, precice::testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector2d(0, 0));
 
   // The Cache should clear whenever a mesh changes
@@ -344,7 +343,7 @@ BOOST_AUTO_TEST_CASE(ClearOnChange)
 BOOST_AUTO_TEST_CASE(ClearOnDestruction)
 {
   PRECICE_TEST(1_rank);
-  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, false, precice::testing::nextMeshID()));
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 2, precice::testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector2d(0, 0));
 
   // The Cache should clear whenever we destroy the Mesh

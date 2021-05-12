@@ -23,9 +23,8 @@ using namespace precice;
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST(1_rank);
-  int             dim           = 2;
-  bool            invertNormals = false;
-  mesh::Mesh      mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
+  int             dim = 2;
+  mesh::Mesh      mesh("MyMesh", dim, testing::nextMeshID());
   mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
   mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
   Eigen::VectorXd coords3 = Eigen::VectorXd::Constant(dim, 0.0);
@@ -36,10 +35,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
-  mesh.computeState();
-
-  bool          exportNormals = true;
-  io::ExportVTK exportVTK(exportNormals);
+  io::ExportVTK exportVTK;
   std::string   filename = "io-VTKExport-ExportPolygonalMesh";
   std::string   location = "";
   exportVTK.doExport(filename, location, mesh);
@@ -48,9 +44,8 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST(1_rank);
-  int             dim           = 3;
-  bool            invertNormals = false;
-  mesh::Mesh      mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
+  int             dim = 3;
+  mesh::Mesh      mesh("MyMesh", dim, testing::nextMeshID());
   mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
   mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
   Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
@@ -61,10 +56,8 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   mesh::Edge &e2 = mesh.createEdge(v2, v3);
   mesh::Edge &e3 = mesh.createEdge(v3, v1);
   mesh.createTriangle(e1, e2, e3);
-  mesh.computeState();
 
-  bool          exportNormals = true;
-  io::ExportVTK exportVTK(exportNormals);
+  io::ExportVTK exportVTK;
   std::string   filename = "io-VTKExport-ExportTriangulatedMesh";
   std::string   location = "";
   exportVTK.doExport(filename, location, mesh);

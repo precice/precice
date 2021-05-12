@@ -62,74 +62,44 @@ public:
 
   virtual ~Participant();
 
-  /// Returns the name of the participant.
-  const std::string &getName() const;
-
+  /// @name Configuration interface
+  /// @{
+  /// Adds a configured write \ref Data to the Participant
   void addWriteData(
       const mesh::PtrData &data,
       const mesh::PtrMesh &mesh);
 
+  /// Adds a configured read \ref Data to the Participant
   void addReadData(
       const mesh::PtrData &data,
       const mesh::PtrMesh &mesh);
 
-  const DataContext &dataContext(int dataID) const;
-
-  DataContext &dataContext(int dataID);
-
-  const utils::ptr_vector<DataContext> &writeDataContexts() const;
-
-  utils::ptr_vector<DataContext> &writeDataContexts();
-
-  const utils::ptr_vector<DataContext> &readDataContexts() const;
-
-  utils::ptr_vector<DataContext> &readDataContexts();
-
-  bool isMeshUsed(int meshID) const;
-
-  bool isMeshProvided(int meshID) const;
-
-  bool isDataUsed(int dataID) const;
-
-  bool isDataRead(int dataID) const;
-
-  bool isDataWrite(int dataID) const;
-
-  const MeshContext &meshContext(int meshID) const;
-
-  MeshContext &meshContext(int meshID);
-
-  const std::vector<MeshContext *> &usedMeshContexts() const;
-
-  std::vector<MeshContext *> &usedMeshContexts();
-
-  /** Looks for a used MeshContext for a mesh name.
-   * @param[in] name the name of the \ref Mesh
-   * @return a pointer to the MeshContext or nullptr if it was not found
-   */
-  MeshContext *usedMeshContextByName(const std::string &name);
-
-  /** Looks for a used MeshContext for a mesh name.
-   * @param[in] name the name of the \ref Mesh
-   * @return a pointer to the MeshContext or nullptr if it was not found
-   */
-  MeshContext const *usedMeshContextByName(const std::string &name) const;
-
+  /// Adds a configured read \ref Mapping to the Participant
   void addReadMappingContext(MappingContext *mappingContext);
 
+  /// Adds a configured write \ref Mapping to the Participant
   void addWriteMappingContext(MappingContext *mappingContext);
 
-  const utils::ptr_vector<MappingContext> &readMappingContexts() const;
-
-  const utils::ptr_vector<MappingContext> &writeMappingContexts() const;
-
+  /// Adds a configured \ref WatchPoint to the Participant
   void addWatchPoint(const PtrWatchPoint &watchPoint);
 
+  /// Adds a configured \ref WatchIntegral to the Participant
   void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
 
-  std::vector<PtrWatchPoint> &watchPoints();
+  /// Sets weather the participant was configured with a master tag
+  void setUseMaster(bool useMaster);
 
-  std::vector<PtrWatchIntegral> &watchIntegrals();
+  /// Sets the manager responsible for providing unique IDs to meshes.
+  void setMeshIdManager(std::unique_ptr<utils::ManageUniqueIDs> &&idm)
+  {
+    _meshIdManager = std::move(idm);
+  }
+
+  /// Adds a configured \ref Action to the participant
+  void addAction(action::PtrAction &&action);
+
+  /// Adds a configured \ref ExportContext to export meshes and data.
+  void addExportContext(const io::ExportContext &context);
 
   /// Adds a mesh to be used by the participant.
   void useMesh(
@@ -140,31 +110,173 @@ public:
       double                                        safetyFactor,
       bool                                          provideMesh,
       partition::ReceivedPartition::GeometricFilter geoFilter);
+  /// @}
 
-  void addAction(action::PtrAction &&action);
+  /// @name Data queries
+  /// @{
+  /** Provides access to both write and read \ref DataContext
+   * @pre there exists a \ref DataContext for \ref dataID
+   */
+  const DataContext &dataContext(int dataID) const;
 
+  /** Provides access to both write and read \ref DataContext
+   * @pre there exists a \ref DataContext for \ref dataID
+   */
+  DataContext &dataContext(int dataID);
+
+  /** Provides access to write \ref DataContext
+   * @remarks does not contain nullptr.
+   */
+  const utils::ptr_vector<DataContext> &writeDataContexts() const;
+
+  /** Provides access to write \ref DataContext
+   * @remarks does not contain nullptr.
+   */
+  utils::ptr_vector<DataContext> &writeDataContexts();
+
+  /** Provides access to read \ref DataContext
+   * @remarks does not contain nullptr.
+   */
+  const utils::ptr_vector<DataContext> &readDataContexts() const;
+
+  /** Provides access to read \ref DataContext
+   * @remarks does not contain nullptr.
+   */
+  utils::ptr_vector<DataContext> &readDataContexts();
+
+  /// Is the dataID know to preCICE?
+  bool hasData(int dataID) const;
+
+  /// Is the data used by this participant?
+  bool isDataUsed(int dataID) const;
+
+  /// Is the data used by this participant?
+  bool isDataUsed(const std::string &dataName, int meshId) const;
+
+  /// Is the participant allowed to read the data?
+  bool isDataRead(int dataID) const;
+
+  /// Is the participant allowed to write the data?
+  bool isDataWrite(int dataID) const;
+
+  /// What is the dataID of the used data from a used mesh given the meshid and the data name?
+  int getUsedDataID(const std::string &dataName, int meshID) const;
+
+  /// What is the name of the given data id
+  std::string getDataName(int dataID) const;
+  /// @}
+
+  /// @name Mesh queries
+  /// @{
+  /*** Provides direct access to a \ref MeshContext given the \ref meshid
+   * @param[in] meshID the id of the \ref Mesh
+   * @returns a reference to the matching \ref MeshContext
+   * @pre the \ref Mesh with \ref meshID is used by the Participant
+   */
+  const MeshContext &meshContext(int meshID) const;
+
+  /*** Provides direct access to a \ref MeshContext given the \ref meshid
+   * @param[in] meshID the id of the \ref Mesh
+   * @returns a reference to the matching \ref MeshContext
+   * @pre the \ref Mesh with \ref meshID is used by the Participant
+   */
+  MeshContext &meshContext(int meshID);
+
+  /** Provides unordered access to all \ref MeshContext.used by this \ref Participant
+   * @remarks The sequence does not contain nullptr
+   */
+  const std::vector<MeshContext *> &usedMeshContexts() const;
+
+  /** Provides unordered access to all \ref MeshContext.used by this \ref Participant
+   * @remarks The sequence does not contain nullptr
+   */
+  std::vector<MeshContext *> &usedMeshContexts();
+
+  /** Looks for a used MeshContext with a given mesh name.
+   * @param[in] name the name of the \ref Mesh
+   * @return a reference to the MeshContext
+   * @pre there is a matching mesh
+   */
+  MeshContext &usedMeshContext(const std::string &name);
+
+  /** Looks for a used MeshContext with a given mesh name.
+   * @param[in] name the name of the \ref Mesh
+   * @return a reference to the MeshContext
+   * @pre there is a matching mesh
+   */
+  MeshContext const &usedMeshContext(const std::string &name) const;
+
+  /** Looks for a used MeshContext with a given mesh ID.
+   * @param[in] meshID the id of the \ref Mesh
+   * @return a reference to the MeshContext
+   * @pre there is a matching mesh
+   */
+  MeshContext &usedMeshContext(int meshID);
+
+  /** Looks for a used MeshContext with a given meshID
+   * @param[in] meshID the id of the \ref Mesh
+   * @return a reference to the MeshContext
+   * @pre there is a matching mesh
+   */
+  MeshContext const &usedMeshContext(int meshID) const;
+
+  /// Does preCICE know a mesh with this meshID?
+  bool hasMesh(int meshID) const;
+
+  /// Does preCICE know a mesh with this name?
+  bool hasMesh(const std::string &meshName) const;
+
+  /// Is a mesh with this id used by this participant?
+  bool isMeshUsed(int meshID) const;
+
+  /// Is a mesh with this name used by this participant?
+  bool isMeshUsed(const std::string &meshID) const;
+
+  /// Is a mesh with this id provided?
+  bool isMeshProvided(int meshID) const;
+
+  /// Get the used mesh id of a mesh with this name.
+  int getUsedMeshID(const std::string &meshName) const;
+
+  /// Get the name of a mesh given by its id.
+  std::string getMeshName(int meshID) const;
+
+  /// Get a mesh name which uses the given data id.
+  std::string getMeshNameFromData(int dataID) const;
+  /// @}
+
+  /// @name Other queries
+  /// @{
+  /// Returns the name of the participant.
+  const std::string &getName() const;
+
+  /// Returns true, if the participant uses a master tag.
+  bool useMaster() const;
+
+  /// Provided access to all read \ref MappingContext
+  const utils::ptr_vector<MappingContext> &readMappingContexts() const;
+
+  /// Provided access to all write \ref MappingContext
+  const utils::ptr_vector<MappingContext> &writeMappingContexts() const;
+
+  /// Provided access to all \ref WatchPoints
+  std::vector<PtrWatchPoint> &watchPoints();
+
+  /// Provided access to all \ref WatchIntegrals
+  std::vector<PtrWatchIntegral> &watchIntegrals();
+
+  /// Provided access to all \ref Action
   std::vector<action::PtrAction> &actions();
 
+  /// Provided access to all \ref Action
   const std::vector<action::PtrAction> &actions() const;
 
-  /// Adds an export context to export meshes and data.
-  void addExportContext(const io::ExportContext &context);
-
-  /// Returns all export contexts for exporting meshes and data.
+  /// Returns all \ref ExportContext for exporting meshes and data.
   const std::vector<io::ExportContext> &exportContexts() const;
-
-  /// Returns true, if the participant uses a master process.
-  bool useMaster();
-
-  void setUseMaster(bool useMaster);
-
-  void setMeshIdManager(std::unique_ptr<utils::ManageUniqueIDs> &&idm)
-  {
-    _meshIdManager = std::move(idm);
-  }
+  /// @}
 
 private:
-  logging::Logger _log{"impl::Participant"};
+  mutable logging::Logger _log{"impl::Participant"};
 
   std::string _name;
 

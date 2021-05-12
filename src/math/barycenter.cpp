@@ -21,8 +21,9 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
   using Eigen::VectorXd;
 
   const int dimensions = edgeA.size();
-  PRECICE_ASSERT(dimensions == edgeB.size() && dimensions == edgeNormal.size() && dimensions == location.size(),
-                 "The inputs need to have the same dimensions.");
+  PRECICE_ASSERT(dimensions == edgeB.size(), "A and B need to have the same dimensions.", dimensions, edgeB.size());
+  PRECICE_ASSERT(dimensions == edgeNormal.size(), "A and the normal need to have the same dimensions.", dimensions, edgeNormal.size());
+  PRECICE_ASSERT(dimensions == location.size(), "A and the location need to have the same dimensions.", dimensions, location.size());
   PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
 
   Vector2d barycentricCoords;
@@ -138,6 +139,13 @@ BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
 {
   using Eigen::Vector2d;
   using Eigen::Vector3d;
+
+  const int dimensions = a.size();
+  PRECICE_ASSERT(dimensions == 3, dimensions);
+  PRECICE_ASSERT(dimensions == b.size(), "A and B need to have the same dimensions.", dimensions, b.size());
+  PRECICE_ASSERT(dimensions == c.size(), "A and C need to have the same dimensions.", dimensions, c.size());
+  PRECICE_ASSERT(dimensions == normal.size(), "A and the normal need to have the same dimensions.", dimensions, normal.size());
+  PRECICE_ASSERT(dimensions == location.size(), "A and the location need to have the same dimensions.", dimensions, location.size());
 
   // Parametric representation for triangle plane:
   // (x, y, z) * normal = d

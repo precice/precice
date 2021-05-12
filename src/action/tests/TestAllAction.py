@@ -20,7 +20,7 @@ def performAction(time, timeWindowSize, sourceData, targetData):
 # This function is called for every vertex in the configured mesh. It is called
 # after performAction, and can also be omitted.
 #
-def vertexCallback(id, coords, normal):
+def vertexCallback(id, coords):
     global mySourceData
     global myTargetData
     # Usage example:
