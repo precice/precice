@@ -17,12 +17,12 @@ namespace query {
 /// @todo Replace default magic number initialization with a dedicated variable
 template <class Tag>
 struct MatchType {
-  double distance;
-  int    index;
-  MatchType()
-      : distance(-1), index(-1){};
+  double distance{-1};
+  int    index{-1};
+  MatchType() = default;
   MatchType(double d, int i)
       : distance(d), index(i){};
+
   constexpr bool operator<(MatchType const &other) const
   {
     return distance < other.distance;
