@@ -134,8 +134,8 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
       }
       // reserve memory and initialize data with zero
       setupDataMatrices();
-      if (getAcceleration()) {
-        getAcceleration()->initialize(getAccelerationData()); // Reserve memory, initialize
+      if (_acceleration) {
+        _acceleration->initialize(getAccelerationData()); // Reserve memory, initialize
       }
     }
     requireAction(constants::actionWriteIterationCheckpoint());
@@ -544,7 +544,7 @@ void BaseCouplingScheme::initializeTXTWriters()
           _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
         }
       }
-      if (getAcceleration()) {
+      if (_acceleration) {
         _iterationsWriter->addData("QNColumns", io::TXTTableWriter::INT);
         _iterationsWriter->addData("DeletedQNColumns", io::TXTTableWriter::INT);
         _iterationsWriter->addData("DroppedQNColumns", io::TXTTableWriter::INT);
@@ -563,10 +563,10 @@ void BaseCouplingScheme::advanceTXTWriters()
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
 
-    if (not doesFirstStep() && getAcceleration()) {
-      _iterationsWriter->writeData("QNColumns", getAcceleration()->getLSSystemCols());
-      _iterationsWriter->writeData("DeletedQNColumns", getAcceleration()->getDeletedColumns());
-      _iterationsWriter->writeData("DroppedQNColumns", getAcceleration()->getDroppedColumns());
+    if (not doesFirstStep() && _acceleration) {
+      _iterationsWriter->writeData("QNColumns", _acceleration->getLSSystemCols());
+      _iterationsWriter->writeData("DeletedQNColumns", _acceleration->getDeletedColumns());
+      _iterationsWriter->writeData("DroppedQNColumns", _acceleration->getDroppedColumns());
     }
   }
 }
@@ -574,11 +574,6 @@ void BaseCouplingScheme::advanceTXTWriters()
 bool BaseCouplingScheme::reachedEndOfTimeWindow()
 {
   return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
-}
-
-bool BaseCouplingScheme::maxIterationsReached()
-{
-  return _iterations == _maxIterations;
 }
 
 void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendData)
@@ -613,20 +608,20 @@ bool BaseCouplingScheme::doImplicitStep()
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   bool convergence = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
-  if (maxIterationsReached())
+  if (_iterations == _maxIterations)
     convergence = true;
 
   // coupling iteration converged for current time window. Advance in time.
   if (convergence) {
     // moveToNextWindow();  // @ todo: Wrong position for moveToNextWindow(). We should write a test that catches this! See correct position below.
-    if (getAcceleration()) {
-      getAcceleration()->iterationsConverged(getAccelerationData());
+    if (_acceleration) {
+      _acceleration->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
   } else {
     // no convergence achieved for the coupling iteration within the current time window
-    if (getAcceleration()) {
-      getAcceleration()->performAcceleration(getAccelerationData());
+    if (_acceleration) {
+      _acceleration->performAcceleration(getAccelerationData());
     }
   }
 
