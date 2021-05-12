@@ -1340,17 +1340,15 @@ void SolverInterfaceImpl::getMeshVerticesWithIDs(
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_USE(meshID);
-  PRECICE_DEBUG("Get " << size << "mesh vertices with IDs");
+  PRECICE_DEBUG("Get {} mesh vertices with IDs", size);
   if (size == 0)
     return;
 
   const MeshContext & context = _accessor->meshContext(meshID);
   const mesh::PtrMesh mesh(context.mesh);
 
-  PRECICE_CHECK(ids != nullptr, "You queried the IDs on mesh " << mesh->getName() << ",but the given pointer for the underlying "
-                                                                                     "data container of 'ids' is empty.");
-  PRECICE_CHECK(coordinates != nullptr, "You queried the coordinates on mesh " << mesh->getName() << ",but the given pointer for the underlying "
-                                                                                                     "data container of 'coordinates' is empty.");
+  PRECICE_CHECK(ids != nullptr, "getMeshVerticesWithIDs() was called with ids == nullptr");
+  PRECICE_CHECK(coordinates != nullptr, "getMeshVerticesWithIDs() was called with coordinates == nullptr");
 
   const auto &vertices = mesh->vertices();
   PRECICE_CHECK(size <= vertices.size(), "The queried size exceeds the number of available points.");
