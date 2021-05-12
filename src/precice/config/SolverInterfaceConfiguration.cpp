@@ -57,7 +57,7 @@ void SolverInterfaceConfiguration::xmlTagCallback(
     _meshConfiguration->setDimensions(_dimensions);
     _participantConfiguration->setDimensions(_dimensions);
   } else {
-    PRECICE_ASSERT(false, "Received callback from unknown tag " << tag.getName());
+    PRECICE_UNREACHABLE("Received callback from unknown tag '{}'.", tag.getName());
   }
 }
 
@@ -74,8 +74,7 @@ void SolverInterfaceConfiguration::xmlEndTagCallback(
       for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
         if (participant->getName() == neededMeshes.first) {
           for (const std::string &neededMesh : neededMeshes.second) {
-            const impl::MeshContext *meshContext = participant->usedMeshContextByName(neededMesh);
-            PRECICE_CHECK(meshContext != nullptr,
+            PRECICE_CHECK(participant->isMeshUsed(neededMesh),
                           "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
                           "Please either add a use-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.",
                           neededMeshes.first, neededMesh);

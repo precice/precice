@@ -24,8 +24,8 @@ namespace config {
 class ParticipantConfiguration : public xml::XMLTag::Listener {
 public:
   ParticipantConfiguration(
-      xml::XMLTag &                     parent,
-      const mesh::PtrMeshConfiguration &meshConfiguration);
+      xml::XMLTag &              parent,
+      mesh::PtrMeshConfiguration meshConfiguration);
 
   void setDimensions(int dimensions);
 

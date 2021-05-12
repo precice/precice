@@ -10,8 +10,8 @@
 
 namespace precice {
 namespace com {
-MPIPortsCommunication::MPIPortsCommunication(std::string const &addressDirectory)
-    : _addressDirectory(addressDirectory)
+MPIPortsCommunication::MPIPortsCommunication(std::string addressDirectory)
+    : _addressDirectory(std::move(addressDirectory))
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
@@ -243,7 +243,7 @@ void MPIPortsCommunication::cleanupEstablishment(std::string const &acceptorName
 
 MPI_Comm &MPIPortsCommunication::communicator(int rank)
 {
-  PRECICE_TRACE(rank, _communicators, _isAcceptor);
+  PRECICE_TRACE(rank, _communicators.size(), _isAcceptor);
   // Use bounds checking here, because a std::map otherwise creates element
   return _communicators.at(rank);
 }

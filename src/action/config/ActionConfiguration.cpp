@@ -3,6 +3,8 @@
 #include <memory>
 #include <ostream>
 #include <stdexcept>
+#include <utility>
+
 #include "action/ComputeCurvatureAction.hpp"
 #include "action/PythonAction.hpp"
 #include "action/RecorderAction.hpp"
@@ -21,13 +23,13 @@ namespace precice {
 namespace action {
 
 ActionConfiguration::ActionConfiguration(
-    xml::XMLTag &                     parent,
-    const mesh::PtrMeshConfiguration &meshConfig)
+    xml::XMLTag &              parent,
+    mesh::PtrMeshConfiguration meshConfig)
     : NAME_DIVIDE_BY_AREA("divide-by-area"),
       NAME_MULTIPLY_BY_AREA("multiply-by-area"),
-      NAME_SCALE_BY_COMPUTED_DT_RATIO("scale-by-computed-dt-ratio"),
-      NAME_SCALE_BY_COMPUTED_DT_PART_RATIO("scale-by-computed-dt-part-ratio"),
-      NAME_SCALE_BY_DT("scale-by-dt"),
+      NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO("scale-by-computed-dt-ratio"),       //@todo rename this, breaking change!
+      NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO("scale-by-computed-dt-part-ratio"), //@todo rename this, breaking change!
+      NAME_SCALING_BY_TIME_WINDOW_SIZE("scale-by-dt"),                                    //@todo rename this, breaking change!, currently misleading. See https://github.com/precice/precice/issues/934
       NAME_SUMMATION("summation"),
       NAME_COMPUTE_CURVATURE("compute-curvature"),
       NAME_PYTHON("python"),
@@ -47,7 +49,7 @@ ActionConfiguration::ActionConfiguration(
       WRITE_MAPPING_POST("write-mapping-post"),
       READ_MAPPING_PRIOR("read-mapping-prior"),
       READ_MAPPING_POST("read-mapping-post"),
-      _meshConfig(meshConfig)
+      _meshConfig(std::move(meshConfig))
 {
   using namespace xml;
   XMLTag tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
@@ -77,24 +79,24 @@ ActionConfiguration::ActionConfiguration(
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, NAME_SCALE_BY_COMPUTED_DT_RATIO, occ, TAG);
-    tag.setDocumentation("Multiplies source data values by ratio of full dt / last computed dt,"
+    XMLTag tag(*this, NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO, occ, TAG);
+    tag.setDocumentation("Multiplies source data values by ratio of last time step size / time window size,"
                          " and writes the result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, NAME_SCALE_BY_COMPUTED_DT_PART_RATIO, occ, TAG);
-    tag.setDocumentation("Multiplies source data values by ratio of full dt / computed dt part,"
+    XMLTag tag(*this, NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO, occ, TAG);
+    tag.setDocumentation("Multiplies source data values by ratio of computed time window part / time window size,"
                          " and writes the result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, NAME_SCALE_BY_DT, occ, TAG);
-    tag.setDocumentation("Multiplies source data values by last computed dt, and writes the "
+    XMLTag tag(*this, NAME_SCALING_BY_TIME_WINDOW_SIZE, occ, TAG);
+    tag.setDocumentation("Multiplies source data values by the time window size, and writes the "
                          "result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
@@ -205,7 +207,7 @@ void ActionConfiguration::xmlEndTagCallback(
 
 int ActionConfiguration::getUsedMeshID() const
 {
-  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+  for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
     if (mesh->getName() == _configuredAction.mesh) {
       return mesh->getID();
     }
@@ -225,7 +227,7 @@ void ActionConfiguration::createAction()
   std::vector<int> sourceDataIDs;
   int              targetDataID = -1;
   mesh::PtrMesh    mesh;
-  for (mesh::PtrMesh aMesh : _meshConfig->meshes()) {
+  for (const mesh::PtrMesh &aMesh : _meshConfig->meshes()) {
     if (aMesh->getName() == _configuredAction.mesh) {
       mesh = aMesh;
       for (const mesh::PtrData &data : mesh->data()) {
@@ -261,18 +263,18 @@ void ActionConfiguration::createAction()
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
-  } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_RATIO) {
+  } else if (_configuredAction.type == NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO) {
     action = action::PtrAction(
         new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
-                                    mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_RATIO));
-  } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_PART_RATIO) {
+                                    mesh, action::ScaleByDtAction::SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO));
+  } else if (_configuredAction.type == NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO) {
     action = action::PtrAction(
         new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
-                                    mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_PART_RATIO));
-  } else if (_configuredAction.type == NAME_SCALE_BY_DT) {
+                                    mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO));
+  } else if (_configuredAction.type == NAME_SCALING_BY_TIME_WINDOW_SIZE) {
     action = action::PtrAction(
         new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
-                                    mesh, action::ScaleByDtAction::SCALING_BY_DT));
+                                    mesh, action::ScaleByDtAction::SCALING_BY_TIME_WINDOW_SIZE));
   } else if (_configuredAction.type == NAME_COMPUTE_CURVATURE) {
     action = action::PtrAction(
         new action::ComputeCurvatureAction(timing, targetDataID,

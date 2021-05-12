@@ -17,8 +17,8 @@ extern bool syncMode;
 namespace m2n {
 
 M2N::M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom, bool useTwoLevelInit)
-    : _masterCom(masterCom),
-      _distrFactory(distrFactory),
+    : _masterCom(std::move(masterCom)),
+      _distrFactory(std::move(distrFactory)),
       _useOnlyMasterCom(useOnlyMasterCom),
       _useTwoLevelInit(useTwoLevelInit)
 {
@@ -201,13 +201,11 @@ void M2N::send(
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
-    if (precice::syncMode) {
-      if (not utils::MasterSlave::isSlave()) {
-        bool ack = true;
-        _masterCom->send(ack, 0);
-        _masterCom->receive(ack, 0);
-        _masterCom->send(ack, 0);
-      }
+    if (precice::syncMode && not utils::MasterSlave::isSlave()) {
+      bool ack = true;
+      _masterCom->send(ack, 0);
+      _masterCom->receive(ack, 0);
+      _masterCom->send(ack, 0);
     }
     Event e("m2n.sendData", precice::syncMode);
     _distComs[meshID]->send(itemsToSend, size, valueDimension);

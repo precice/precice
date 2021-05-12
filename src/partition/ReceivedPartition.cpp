@@ -20,6 +20,7 @@
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
+#include "utils/fmt.hpp"
 
 using precice::utils::Event;
 
@@ -149,7 +150,6 @@ void ReceivedPartition::compute()
 
   // (2) Tag vertices 1st round (i.e. who could be owned by this rank)
   PRECICE_DEBUG("Tag vertices for filtering: 1st round.");
-  _mesh->computeState(); // normals need to be ready for NP mapping
   // go to both meshes, vertex is tagged if already one mesh tags him
   tagMeshFirstRound();
 
@@ -164,7 +164,7 @@ void ReceivedPartition::compute()
   // (5) Filter mesh according to tag
   PRECICE_INFO("Filter mesh {} by mappings", _mesh->getName());
   Event      e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
-  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
   mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
   PRECICE_DEBUG("Mapping filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                 _mesh->vertices().size(), filteredMesh.vertices().size(),
@@ -279,14 +279,18 @@ void ReceivedPartition::compute()
 }
 
 namespace {
-std::string errorMeshFilteredOut(const std::string &meshName)
+auto errorMeshFilteredOut(const std::string &meshName, const int rank)
 {
-  return "The re-partitioning completely filtered out the mesh \"" + meshName +
-         "\" received on this rank at the coupling interface. "
-         "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-         "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-         "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
-         "of the decomposition strategy might be necessary.";
+  return fmt::format("The re-partitioning completely filtered out the mesh \"{0}\" received on rank {1} "
+                     "at the coupling interface, although the provided mesh partition on this rank is "
+                     "non-empty. Most probably, the coupling interfaces of your coupled participants do "
+                     "not match geometry-wise. Please check your geometry setup again. Small overlaps or "
+                     "gaps are no problem. If your geometry setup is correct and if you have very different "
+                     "mesh resolutions on both sides, you may want to increase the safety-factor: "
+                     "\"<use-mesh mesh=\"{0} \" ... safety-factor=\"N\"/> (default value is 0.5) of the "
+                     "decomposition strategy or disable the filtering completely: "
+                     "\"<use-mesh mesh=\"{0}\" ... geometric-filter=\"no-filter\" />",
+                     meshName, rank);
 }
 } // namespace
 
@@ -317,7 +321,7 @@ void ReceivedPartition::filterByBoundingBox()
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
 
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::MasterSlave::getRank()));
       }
 
     } else { // Master
@@ -329,14 +333,14 @@ void ReceivedPartition::filterByBoundingBox()
         com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(slaveBB, rankSlave);
 
         PRECICE_DEBUG("From slave {}, bounding mesh: {}", rankSlave, slaveBB);
-        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return slaveBB.contains(v); });
         PRECICE_DEBUG("Send filtered mesh to slave: {}", rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
       }
 
       // Now also filter the remaining master mesh
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
       PRECICE_DEBUG("Master mesh, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->vertices().size(), filteredMesh.vertices().size(),
@@ -346,7 +350,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->addMesh(filteredMesh);
 
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::MasterSlave::getRank()));
       }
     }
   } else {
@@ -366,12 +370,8 @@ void ReceivedPartition::filterByBoundingBox()
       PRECICE_INFO("Filter mesh {} by bounding box on slaves", _mesh->getName());
       Event e("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);
 
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
-
-      if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
-      }
 
       PRECICE_DEBUG("Bounding box filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->vertices().size(), filteredMesh.vertices().size(),
@@ -380,6 +380,9 @@ void ReceivedPartition::filterByBoundingBox()
 
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
+      if (isAnyProvidedMeshNonEmpty()) {
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::MasterSlave::getRank()));
+      }
     } else {
       PRECICE_ASSERT(_geometricFilter == NO_FILTER);
     }
@@ -871,20 +874,20 @@ bool ReceivedPartition::hasAnyMapping() const
 
 void ReceivedPartition::tagMeshFirstRound()
 {
-  for (mapping::PtrMapping fromMapping : _fromMappings) {
+  for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshFirstRound();
   }
-  for (mapping::PtrMapping toMapping : _toMappings) {
+  for (const mapping::PtrMapping &toMapping : _toMappings) {
     toMapping->tagMeshFirstRound();
   }
 }
 
 void ReceivedPartition::tagMeshSecondRound()
 {
-  for (mapping::PtrMapping fromMapping : _fromMappings) {
+  for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshSecondRound();
   }
-  for (mapping::PtrMapping toMapping : _toMappings) {
+  for (const mapping::PtrMapping &toMapping : _toMappings) {
     toMapping->tagMeshSecondRound();
   }
 }

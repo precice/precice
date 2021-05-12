@@ -23,14 +23,14 @@ public:
 
   const Value &dereference() const
   {
-    using Coord = decltype(src_->vertex(idx_).getCoords());
+    using Coord = decltype(src_->vertex(idx_).rawCoords());
     static_assert(
         std::is_reference<Coord>::value,
         "Coordinate type must be a reference!");
     static_assert(
         std::is_convertible<Coord, Value>::value,
         "Exposed and accessed types must match!");
-    return static_cast<const Value &>(src_->vertex(idx_).getCoords());
+    return static_cast<const Value &>(src_->vertex(idx_).rawCoords());
   }
 
   size_t equal(const IndexRangeIterator<Source, Value> &other) const

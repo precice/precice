@@ -8,6 +8,8 @@
 #include <map>
 #include <set>
 #include <thread>
+#include <utility>
+
 #include <vector>
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
@@ -285,7 +287,7 @@ PointToPointCommunication::PointToPointCommunication(
     com::PtrCommunicationFactory communicationFactory,
     mesh::PtrMesh                mesh)
     : DistributedCommunication(mesh),
-      _communicationFactory(communicationFactory)
+      _communicationFactory(std::move(communicationFactory))
 {
 }
 
@@ -581,13 +583,11 @@ void PointToPointCommunication::send(double const *itemsToSend,
                                      int           valueDimension)
 {
 
-  if (_mappings.empty()) {
+  if (_mappings.empty() || size == 0) {
     return;
   }
 
   for (auto &mapping : _mappings) {
-    // if (utils::MasterSlave::isMaster())
-    //   std::cout<< "indices " << mapping.indices << std::endl;
     auto buffer = std::make_shared<std::vector<double>>();
     buffer->reserve(mapping.indices.size() * valueDimension);
     for (auto index : mapping.indices) {
@@ -605,7 +605,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
                                         size_t  size,
                                         int     valueDimension)
 {
-  if (_mappings.empty()) {
+  if (_mappings.empty() || size == 0) {
     return;
   }
 

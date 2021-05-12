@@ -1,5 +1,9 @@
 #include "Index.hpp"
+#include <Eigen/src/Core/Matrix.h>
+#include <algorithm>
 #include <boost/range/irange.hpp>
+#include <utility>
+
 #include "impl/Indexer.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/Event.hpp"
@@ -17,15 +21,13 @@ struct Index::IndexImpl {
   impl::MeshIndices indices;
 };
 
-Index::Index(const mesh::PtrMesh &mesh)
-    : _mesh(mesh)
+Index::Index(mesh::PtrMesh mesh)
+    : _mesh(std::move(mesh))
 {
   _pimpl = std::make_unique<IndexImpl>(IndexImpl{});
 }
 
-Index::~Index()
-{
-}
+Index::~Index() = default;
 
 VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
 {
@@ -37,6 +39,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
     event.stop();
   }
 
+  PRECICE_ASSERT(not _mesh->vertices().empty(), _mesh->getName());
   VertexMatch match;
   _pimpl->indices.vertexRTree->query(bgi::nearest(sourceCoord, 1), boost::make_function_output_iterator([&](size_t matchID) {
                                        match = VertexMatch(bg::distance(sourceCoord, _mesh->vertices()[matchID]), matchID);
@@ -92,8 +95,8 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::Vertex &centerVertex
   }
 
   // Prepare boost::geometry box
-  auto &          coords = centerVertex.getCoords();
-  query::RTreeBox searchBox{coords.array() - radius, coords.array() + radius};
+  auto coords    = centerVertex.getCoords();
+  auto searchBox = query::makeBox(coords.array() - radius, coords.array() + radius);
 
   std::vector<size_t> matches;
   _pimpl->indices.vertexRTree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
@@ -111,7 +114,7 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
     event.stop();
   }
   std::vector<size_t> matches;
-  _pimpl->indices.vertexRTree->query(bgi::intersects(query::RTreeBox{bb.minCorner(), bb.maxCorner()}), std::back_inserter(matches));
+  _pimpl->indices.vertexRTree->query(bgi::intersects(query::makeBox(bb.minCorner(), bb.maxCorner())), std::back_inserter(matches));
   return matches;
 }
 

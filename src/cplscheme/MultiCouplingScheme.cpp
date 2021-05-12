@@ -31,7 +31,7 @@ MultiCouplingScheme::MultiCouplingScheme(
     constants::TimesteppingMethod dtMethod,
     int                           maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, Implicit, dtMethod),
-      _m2ns(m2ns)
+      _m2ns(std::move(m2ns))
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   setDoesFirstStep(false); // MultiCouplingScheme never does the first step, because it is never the first participant
@@ -103,7 +103,7 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   PRECICE_DEBUG("Perform acceleration (only second participant)...");
   bool convergence = accelerate();
 
-  for (m2n::PtrM2N m2n : _m2ns) {
+  for (const m2n::PtrM2N &m2n : _m2ns) {
     sendConvergence(m2n, convergence);
   }
 

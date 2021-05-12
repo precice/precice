@@ -20,12 +20,12 @@ BroydenAcceleration::BroydenAcceleration(
     double                  initialRelaxation,
     bool                    forceInitialRelaxation,
     int                     maxIterationsUsed,
-    int                     timestepsReused,
+    int                     pastTimeWindowsReused,
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
-    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
+    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
                          filter, singularityLimit, dataIDs, preconditioner),
       _maxColumns(maxIterationsUsed)
 {

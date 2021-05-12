@@ -3,6 +3,8 @@
 #include <list>
 #include <memory>
 #include <stdexcept>
+#include <utility>
+
 #include "action/Action.hpp"
 #include "action/config/ActionConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
@@ -36,9 +38,9 @@ namespace precice {
 namespace config {
 
 ParticipantConfiguration::ParticipantConfiguration(
-    xml::XMLTag &                     parent,
-    const mesh::PtrMeshConfiguration &meshConfiguration)
-    : _meshConfig(meshConfiguration)
+    xml::XMLTag &              parent,
+    mesh::PtrMeshConfiguration meshConfiguration)
+    : _meshConfig(std::move(meshConfiguration))
 {
   PRECICE_ASSERT(_meshConfig);
   using namespace xml;
@@ -250,7 +252,7 @@ void ParticipantConfiguration::xmlTagCallback(
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
-    std::string          name = tag.getStringAttributeValue(ATTR_NAME);
+    const std::string &  name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::Participant(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_USE_MESH) {
@@ -259,7 +261,7 @@ void ParticipantConfiguration::xmlTagCallback(
     Eigen::VectorXd offset(_dimensions);
     /// @todo offset currently not supported
     //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
-    std::string                                   from         = tag.getStringAttributeValue(ATTR_FROM);
+    const std::string &                           from         = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     partition::ReceivedPartition::GeometricFilter geoFilter    = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
     PRECICE_CHECK(safetyFactor >= 0,
@@ -286,18 +288,18 @@ void ParticipantConfiguration::xmlTagCallback(
     }
     _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter);
   } else if (tag.getName() == TAG_WRITE) {
-    std::string   dataName = tag.getStringAttributeValue(ATTR_NAME);
-    std::string   meshName = tag.getStringAttributeValue(ATTR_MESH);
-    mesh::PtrMesh mesh     = _meshConfig->getMesh(meshName);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
+    std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
+    mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
                   "Participant \"{}\" has to use mesh \"{}\" in order to write data to it. Please add a use-mesh node with name=\"{}\".",
                   _participants.back()->getName(), meshName, meshName);
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addWriteData(data, mesh);
   } else if (tag.getName() == TAG_READ) {
-    std::string   dataName = tag.getStringAttributeValue(ATTR_NAME);
-    std::string   meshName = tag.getStringAttributeValue(ATTR_MESH);
-    mesh::PtrMesh mesh     = _meshConfig->getMesh(meshName);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
+    std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
+    mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
                   "Participant \"{}\" has to use mesh \"{}\" in order to read data from it. Please add a use-mesh node with name=\"{}\".",
                   _participants.back()->getName(), meshName, meshName);
@@ -351,20 +353,6 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
     PRECICE_ASSERT(geoFilter == VALUE_NO_FILTER);
     return partition::ReceivedPartition::GeometricFilter::NO_FILTER;
   }
-}
-
-/// @todo remove
-mesh::PtrMesh ParticipantConfiguration::copy(
-    const mesh::PtrMesh &mesh) const
-{
-  int         dim = mesh->getDimensions();
-  std::string name(mesh->getName());
-  bool        flipNormals = mesh->isFlipNormals();
-  mesh::Mesh *meshCopy    = new mesh::Mesh("Local_" + name, dim, flipNormals, mesh::Mesh::MESH_ID_UNDEFINED);
-  for (const mesh::PtrData &data : mesh->data()) {
-    meshCopy->createData(data->getName(), data->getDimensions());
-  }
-  return mesh::PtrMesh(meshCopy);
 }
 
 const mesh::PtrData &ParticipantConfiguration::getData(
@@ -492,7 +480,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (mappingContext.fromMeshID == fromMeshID) {
         dataContext.mappingContext     = mappingContext;
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.toMeshID);
-        for (mesh::PtrData data : meshContext.mesh->data()) {
+        for (const mesh::PtrData &data : meshContext.mesh->data()) {
           if (data->getName() == dataContext.fromData->getName()) {
             dataContext.toData = data;
           }
@@ -516,7 +504,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (mappingContext.toMeshID == toMeshID) {
         dataContext.mappingContext     = mappingContext;
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.fromMeshID);
-        for (mesh::PtrData data : meshContext.mesh->data()) {
+        for (const mesh::PtrData &data : meshContext.mesh->data()) {
           if (data->getName() == dataContext.toData->getName()) {
             dataContext.fromData = data;
           }
@@ -546,9 +534,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
       if (context.size > 1) {
-        exporter = io::PtrExport(new io::ExportVTKXML(exportContext.plotNormals));
+        exporter = io::PtrExport(new io::ExportVTKXML());
       } else {
-        exporter = io::PtrExport(new io::ExportVTK(exportContext.plotNormals));
+        exporter = io::PtrExport(new io::ExportVTK());
       }
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
@@ -562,38 +550,36 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Create watch points
   for (const WatchPointConfig &config : _watchPointConfigs) {
-    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
-
-    PRECICE_CHECK(meshContext && meshContext->mesh,
+    PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
                   "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not used by the participant. "
                   "Please add a use-mesh node with name=\"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
-    PRECICE_CHECK(meshContext->provideMesh,
+    const auto &meshContext = participant->usedMeshContext(config.nameMesh);
+    PRECICE_CHECK(meshContext.provideMesh,
                   "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
 
     std::string         filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
-    impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, meshContext->mesh, filename));
+    impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, meshContext.mesh, filename));
     participant->addWatchPoint(watchPoint);
   }
   _watchPointConfigs.clear();
 
   // Create watch integrals
   for (const WatchIntegralConfig &config : _watchIntegralConfigs) {
-    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
-
-    PRECICE_CHECK(meshContext && meshContext->mesh,
+    PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
                   "Participant \"{}\" defines watch integral \"{}\" for mesh \"{}\" which is not used by the participant. "
                   "Please add a use-mesh node with name=\"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
-    PRECICE_CHECK(meshContext->provideMesh,
+    const auto &meshContext = participant->usedMeshContext(config.nameMesh);
+    PRECICE_CHECK(meshContext.provideMesh,
                   "Participant \"{}\" defines watch integral \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
 
     std::string            filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
-    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext->mesh, filename, config.isScalingOn));
+    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext.mesh, filename, config.isScalingOn));
     participant->addWatchIntegral(watchIntegral);
   }
   _watchIntegralConfigs.clear();

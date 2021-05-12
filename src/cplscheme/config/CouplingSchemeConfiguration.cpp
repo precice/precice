@@ -38,9 +38,9 @@ namespace cplscheme {
 using precice::impl::PtrParticipant;
 
 CouplingSchemeConfiguration::CouplingSchemeConfiguration(
-    xml::XMLTag &                               parent,
-    const mesh::PtrMeshConfiguration &          meshConfig,
-    const m2n::M2NConfiguration::SharedPointer &m2nConfig)
+    xml::XMLTag &                        parent,
+    mesh::PtrMeshConfiguration           meshConfig,
+    m2n::M2NConfiguration::SharedPointer m2nConfig)
     : TAG("coupling-scheme"),
       TAG_PARTICIPANTS("participants"),
       TAG_PARTICIPANT("participant"),
@@ -80,8 +80,8 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       VALUE_FIXED("fixed"),
       VALUE_FIRST_PARTICIPANT("first-participant"),
       _config(),
-      _meshConfig(meshConfig),
-      _m2nConfig(m2nConfig),
+      _meshConfig(std::move(meshConfig)),
+      _m2nConfig(std::move(m2nConfig)),
       _couplingSchemes(),
       _couplingSchemeCompositions()
 {
@@ -219,35 +219,35 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                   "in the <coupling-scheme:...> of your precice-config.xml",
                   _config.timeWindowSize, _config.validDigits, tag.getStringAttributeValue(ATTR_METHOD));
   } else if (tag.getName() == TAG_ABS_CONV_MEASURE) {
-    std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
-    std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
-    double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool        strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
+    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_REL_CONV_MEASURE) {
-    std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
-    std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
-    double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool        strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
+    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_RES_REL_CONV_MEASURE) {
-    std::string dataName = tag.getStringAttributeValue(ATTR_DATA);
-    std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
-    double      limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
-    bool        suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool        strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
+    double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
+    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_MIN_ITER_CONV_MEASURE) {
-    std::string dataName      = tag.getStringAttributeValue(ATTR_DATA);
-    std::string meshName      = tag.getStringAttributeValue(ATTR_MESH);
-    int         minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
-    bool        suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool        strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
+    const std::string &dataName      = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName      = tag.getStringAttributeValue(ATTR_MESH);
+    int                minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
+    bool               suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices, strict);
   } else if (tag.getName() == TAG_EXCHANGE) {
@@ -258,9 +258,9 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     bool          initialize          = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
     mesh::PtrData exchangeData;
     mesh::PtrMesh exchangeMesh;
-    for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+    for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
       if (mesh->getName() == nameMesh) {
-        for (mesh::PtrData data : mesh->data()) {
+        for (const mesh::PtrData &data : mesh->data()) {
           if (data->getName() == nameData) {
             exchangeData = data;
             exchangeMesh = mesh;
@@ -740,7 +740,7 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
     const std::string &dataName,
     const std::string &meshName) const
 {
-  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+  for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
     if (meshName == mesh->getName()) {
       for (mesh::PtrData data : mesh->data()) {
         if (dataName == data->getName()) {
@@ -755,7 +755,7 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
 mesh::PtrData CouplingSchemeConfiguration::findDataByID(
     int ID) const
 {
-  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+  for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
     for (mesh::PtrData data : mesh->data()) {
       if (data->getID() == ID) {
         return data;
@@ -980,7 +980,7 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
     return constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE;
   } else {
     // We should never reach this point.
-    PRECICE_UNREACHABLE("Unknown timestepping method '" << method << "'.");
+    PRECICE_UNREACHABLE("Unknown timestepping method '{}'.", method);
   }
 }
 

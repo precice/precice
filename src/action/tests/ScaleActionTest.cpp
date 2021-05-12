@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea)
 {
   PRECICE_TEST(1_rank);
   using namespace mesh;
-  PtrMesh mesh(new Mesh("Mesh", 2, true, testing::nextMeshID()));
+  PtrMesh mesh(new Mesh("Mesh", 2, testing::nextMeshID()));
   PtrData data   = mesh->createData("test-data", 1);
   int     dataID = data->getID();
   Vertex &v0     = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
@@ -41,7 +41,6 @@ BOOST_AUTO_TEST_CASE(DivideByArea)
   Vertex &v2     = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   mesh->createEdge(v0, v1);
   mesh->createEdge(v1, v2);
-  mesh->computeState();
   mesh->allocateDataValues();
   auto &values = data->values();
   values << 2.0, 3.0, 4.0;
@@ -62,11 +61,11 @@ BOOST_AUTO_TEST_CASE(DivideByArea)
   BOOST_TEST(values(2) == 8.0);
 }
 
-BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepLength)
+BOOST_AUTO_TEST_CASE(ScaleByTimeStepSizeToTimeWindowSize)
 {
   PRECICE_TEST(1_rank);
   using namespace mesh;
-  PtrMesh mesh(new Mesh("Mesh", 3, true, testing::nextMeshID()));
+  PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
   PtrData sourceData   = mesh->createData("SourceData", 1);
   PtrData targetData   = mesh->createData("TargetData", 1);
   int     sourceDataID = sourceData->getID();
@@ -83,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepLength)
 
   action::ScaleByDtAction scale(
       action::ScaleByDtAction::WRITE_MAPPING_POST, sourceDataID, targetDataID, mesh,
-      action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_RATIO);
+      action::ScaleByDtAction::SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO);
 
   scale.performAction(0.0, 0.0, 0.0, 1.0);
   BOOST_TEST(sourceValues(0) == 2.0);
@@ -118,11 +117,11 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepLength)
   BOOST_TEST(targetValues(2) == 1.0);
 }
 
-BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepPartLength)
+BOOST_AUTO_TEST_CASE(ScaleByComputedTimeWindowPart)
 {
   PRECICE_TEST(1_rank);
   using namespace mesh;
-  PtrMesh mesh(new Mesh("Mesh", 3, true, testing::nextMeshID()));
+  PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
   PtrData sourceData   = mesh->createData("SourceData", 1);
   PtrData targetData   = mesh->createData("TargetData", 1);
   int     sourceDataID = sourceData->getID();
@@ -138,7 +137,7 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimestepPartLength)
 
   action::ScaleByDtAction scale(
       action::ScaleByDtAction::WRITE_MAPPING_POST, sourceDataID, targetDataID, mesh,
-      action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_PART_RATIO);
+      action::ScaleByDtAction::SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO);
 
   scale.performAction(0.0, 0.0, 0.0, 1.0);
   BOOST_TEST(sourceValues(0) == 2.0);

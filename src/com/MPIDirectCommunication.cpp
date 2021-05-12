@@ -49,7 +49,7 @@ void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
 
 void MPIDirectCommunication::closeConnection()
 {
-  PRECICE_TRACE()
+  PRECICE_TRACE();
 
   if (not isConnected())
     return;

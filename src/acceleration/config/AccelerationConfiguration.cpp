@@ -167,9 +167,9 @@ void AccelerationConfiguration::xmlTagCallback(
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
     }
 
-    for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+    for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
       if (mesh->getName() == _meshName) {
-        for (mesh::PtrData data : mesh->data()) {
+        for (const mesh::PtrData &data : mesh->data()) {
           if (dataName == data->getName()) {
             _config.dataIDs.push_back(data->getID());
             _config.scalings.insert(std::make_pair(data->getID(), scaling));
@@ -195,7 +195,7 @@ void AccelerationConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_TIME_WINDOWS_REUSED) {
     _config.timeWindowsReused = callingTag.getIntAttributeValue(ATTR_VALUE);
   } else if (callingTag.getName() == TAG_FILTER) {
-    auto f = callingTag.getStringAttributeValue(ATTR_TYPE);
+    const auto &f = callingTag.getStringAttributeValue(ATTR_TYPE);
     if (f == VALUE_QR1FILTER) {
       _config.filter = Acceleration::QR1FILTER;
     } else if (f == VALUE_QR1_ABSFILTER) {
@@ -207,8 +207,8 @@ void AccelerationConfiguration::xmlTagCallback(
     }
     _config.singularityLimit = callingTag.getDoubleAttributeValue(ATTR_SINGULARITYLIMIT);
   } else if (callingTag.getName() == TAG_PRECONDITIONER) {
-    _config.preconditionerType       = callingTag.getStringAttributeValue(ATTR_TYPE);
-    _config.precond_nbNonConstTSteps = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
+    _config.preconditionerType         = callingTag.getStringAttributeValue(ATTR_TYPE);
+    _config.precond_nbNonConstTWindows = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
 
     if (_config.alwaysBuildJacobian)
@@ -217,7 +217,7 @@ void AccelerationConfiguration::xmlTagCallback(
 
 #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
-    auto f                = callingTag.getStringAttributeValue(ATTR_TYPE);
+    const auto &f         = callingTag.getStringAttributeValue(ATTR_TYPE);
     if (f == VALUE_NO_RESTART) {
       _config.imvjRestartType = MVQNAcceleration::NO_RESTART;
     } else if (f == VALUE_ZERO_RESTART) {
@@ -250,10 +250,10 @@ void AccelerationConfiguration::xmlEndTagCallback(
     //create preconditioner
     if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_MVQN) {
 
-      // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time steps is limited by the chunksize
+      // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
       if (callingTag.getName() == VALUE_MVQN && _config.imvjRestartType > 0)
-        if (_config.precond_nbNonConstTSteps > _config.imvjChunkSize)
-          _config.precond_nbNonConstTSteps = _config.imvjChunkSize;
+        if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
+          _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
 
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
         std::vector<double> factors;
@@ -262,11 +262,11 @@ void AccelerationConfiguration::xmlEndTagCallback(
         }
         _preconditioner = PtrPreconditioner(new ConstantPreconditioner(factors));
       } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
-        _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_nbNonConstTSteps));
+        _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_nbNonConstTWindows));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER) {
-        _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.precond_nbNonConstTSteps));
+        _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.precond_nbNonConstTWindows));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER) {
-        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_nbNonConstTSteps));
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_nbNonConstTWindows));
       } else {
         // no preconditioner defined
         std::vector<double> factors;
@@ -445,11 +445,11 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                                    VALUE_RESIDUAL_SUM_PRECONDITIONER})
                                       .setDocumentation("The type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
-    auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
-                              .setDocumentation(
-                                  "After the given number of time steps, the preconditioner weights "
-                                  "are frozen and the preconditioner acts like a constant preconditioner.");
-    tagPreconditioner.addAttribute(nonconstTSteps);
+    auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
+                                .setDocumentation(
+                                    "After the given number of time windows, the preconditioner weights "
+                                    "are frozen and the preconditioner acts like a constant preconditioner.");
+    tagPreconditioner.addAttribute(nonconstTWindows);
     tag.addSubtag(tagPreconditioner);
 
   } else if (tag.getName() == VALUE_MVQN) {
@@ -473,14 +473,14 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagIMVJRESTART.addAttribute(attrRestartName);
     tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used:\n"
                                     "- `no-restart`: IMVJ runs in normal mode with explicit representation of Jacobian\n"
-                                    "- `RS-ZERO`:    IMVJ runs in restart mode. After M time steps all Jacobain information is dropped, restart with no information\n"
-                                    "- `RS-LS`:      IMVJ runs in restart mode. After M time steps a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
-                                    "- `RS-SVD`:     IMVJ runs in restart mode. After M time steps a truncated SVD of the Jacobian is updated.\n"
+                                    "- `RS-ZERO`:    IMVJ runs in restart mode. After M time windows all Jacobain information is dropped, restart with no information\n"
+                                    "- `RS-LS`:      IMVJ runs in restart mode. After M time windows a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
+                                    "- `RS-SVD`:     IMVJ runs in restart mode. After M time windows a truncated SVD of the Jacobian is updated.\n"
                                     "- `RS-SLIDE`:   IMVJ runs in sliding window restart mode.\n");
     auto attrChunkSize = makeXMLAttribute(ATTR_IMVJCHUNKSIZE, 8)
-                             .setDocumentation("Specifies the number of time steps M after which the IMVJ restarts, if run in restart-mode. Defaul value is M=8.");
+                             .setDocumentation("Specifies the number of time windows M after which the IMVJ restarts, if run in restart-mode. Defaul value is M=8.");
     auto attrReusedTimeWindowsAtRestart = makeXMLAttribute(ATTR_RSLS_REUSED_TIME_WINDOWS, 8)
-                                              .setDocumentation("If IMVJ restart-mode=RS-LS, the number of reused time steps at restart can be specified.");
+                                              .setDocumentation("If IMVJ restart-mode=RS-LS, the number of reused time windows at restart can be specified.");
     auto attrRSSVD_truncationEps = makeXMLAttribute(ATTR_RSSVD_TRUNCATIONEPS, 1e-4)
                                        .setDocumentation("If IMVJ restart-mode=RS-SVD, the truncation threshold for the updated SVD can be set.");
     tagIMVJRESTART.addAttribute(attrChunkSize);
@@ -517,9 +517,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                                    VALUE_RESIDUAL_SUM_PRECONDITIONER})
                                       .setDocumentation("Type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
-    auto nonconstTSteps = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
-                              .setDocumentation("After the given number of time steps, the preconditioner weights are frozen and the preconditioner acts like a constant preconditioner.");
-    tagPreconditioner.addAttribute(nonconstTSteps);
+    auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
+                                .setDocumentation("After the given number of time windows, the preconditioner weights are frozen and the preconditioner acts like a constant preconditioner.");
+    tagPreconditioner.addAttribute(nonconstTWindows);
     tag.addSubtag(tagPreconditioner);
 
   } else if (tag.getName() == VALUE_BROYDEN) {

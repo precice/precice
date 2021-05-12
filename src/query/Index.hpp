@@ -14,13 +14,15 @@ namespace precice {
 namespace query {
 
 /// Struct to hold index and distance information of the closest primitive
+/// @todo Replace default magic number initialization with a dedicated variable
 template <class Tag>
 struct MatchType {
-  double distance;
-  int    index;
+  double distance{-1};
+  int    index{-1};
   MatchType() = default;
   MatchType(double d, int i)
       : distance(d), index(i){};
+
   constexpr bool operator<(MatchType const &other) const
   {
     return distance < other.distance;
@@ -37,7 +39,7 @@ using TriangleMatch = MatchType<struct TriangleTag>;
 class Index {
 
 public:
-  Index(const mesh::PtrMesh &mesh);
+  Index(mesh::PtrMesh mesh);
   ~Index();
 
   /// Get n number of closest vertices to the given vertex

@@ -47,7 +47,7 @@ void ProvidedPartition::communicate()
     return;
 
   // Temporary globalMesh such that the master also keeps his local mesh
-  mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+  mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   bool       hasMeshBeenGathered = false;
 
   bool twoLevelInitAlreadyUsed = false;
@@ -346,7 +346,7 @@ void ProvidedPartition::prepareTriangles()
 void ProvidedPartition::compute()
 {
   PRECICE_TRACE();
-  for (auto m2n : _m2ns) {
+  for (const auto &m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
       // @todo this will probably not work for more than one m2n
       PRECICE_ASSERT(_m2ns.size() <= 1);
