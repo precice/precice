@@ -129,7 +129,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
                     "an implicit coupling scheme.");
       // setup convergence measures
       for (ConvergenceMeasureContext &convergenceMeasure : _convergenceMeasures) {
-        int dataID = convergenceMeasure.data->getID();
+        int dataID = convergenceMeasure.couplingData->getDataID();
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
       // reserve memory and initialize data with zero
@@ -455,19 +455,24 @@ void BaseCouplingScheme::newConvergenceMeasurements()
 }
 
 void BaseCouplingScheme::addConvergenceMeasure(
-    mesh::PtrData               data,
+    int                         dataID,
     bool                        suffices,
     bool                        strict,
     impl::PtrConvergenceMeasure measure,
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  convMeasure.data         = std::move(data);
-  convMeasure.couplingData = nullptr;
-  convMeasure.suffices     = suffices;
-  convMeasure.strict       = strict;
-  convMeasure.measure      = std::move(measure);
-  convMeasure.doesLogging  = doesLogging;
+  // @todo this assertion should always hold!, Currently mpirun --oversubscribe -np 4 ./testprecice -t PreciceTests/Serial/MultiCoupling fails.
+  //PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
+  if (_allData.count(dataID) == 1) {
+    convMeasure.couplingData = &(*_allData[dataID]);
+  } else { // @todo "else" branch should not be required.
+    convMeasure.couplingData = nullptr;
+  }
+  convMeasure.suffices    = suffices;
+  convMeasure.strict      = strict;
+  convMeasure.measure     = std::move(measure);
+  convMeasure.doesLogging = doesLogging;
   _convergenceMeasures.push_back(convMeasure);
 }
 
@@ -498,7 +503,7 @@ bool BaseCouplingScheme::measureConvergence()
       if (convMeasure.strict) {
         oneStrict = true;
         PRECICE_CHECK(_iterations < _maxIterations,
-                      "The strict convergence measure for data \"" + convMeasure.data->getName() +
+                      "The strict convergence measure for data \"" + convMeasure.couplingData->getDataName() +
                           "\" did not converge within the maximum allowed iterations, which terminates the simulation. "
                           "To avoid this forced termination do not mark the convergence measure as strict.")
       }

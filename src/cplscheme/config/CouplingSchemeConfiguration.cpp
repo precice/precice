@@ -829,7 +829,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   for (auto &elem : _config.convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(second, elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
@@ -877,7 +877,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   for (auto &elem : _config.convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(_config.participants[1], elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters
@@ -943,7 +943,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   for (auto &elem : _config.convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(_config.controller, elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
   }
 
   // Set relaxation parameters

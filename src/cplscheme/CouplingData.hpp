@@ -61,6 +61,16 @@ public:
     return mesh->getID();
   }
 
+  int getDataID()
+  {
+    return data->getID();
+  }
+
+  std::string getDataName()
+  {
+    return data->getName();
+  }
+
   std::vector<int> getVertexOffsets()
   {
     return mesh->getVertexOffsets();

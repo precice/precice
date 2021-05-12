@@ -228,7 +228,7 @@ public:
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
-      mesh::PtrData               data,
+      int                         dataID,
       bool                        suffices,
       bool                        strict,
       impl::PtrConvergenceMeasure measure,
@@ -470,7 +470,6 @@ private:
    * @param doesLogging Whether this measure is logged in the convergence file
    */
   struct ConvergenceMeasureContext {
-    mesh::PtrData               data;
     CouplingData *              couplingData;
     bool                        suffices;
     bool                        strict;
@@ -479,7 +478,7 @@ private:
 
     std::string logHeader() const
     {
-      return "Res" + measure->getAbbreviation() + "(" + data->getName() + ")";
+      return "Res" + measure->getAbbreviation() + "(" + couplingData->getDataName() + ")";
     }
   };
 

@@ -544,14 +544,17 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  int         sendDataIndex    = -1;
-  int         receiveDataIndex = -1;
+  int         sendDataIndex        = -1;
+  int         receiveDataIndex     = -1;
+  int         convergenceDataIndex = -1;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex    = 0;
-    receiveDataIndex = 1;
+    sendDataIndex        = 0;
+    receiveDataIndex     = 1;
+    convergenceDataIndex = receiveDataIndex;
   } else {
-    sendDataIndex    = 1;
-    receiveDataIndex = 0;
+    sendDataIndex        = 1;
+    receiveDataIndex     = 0;
+    convergenceDataIndex = sendDataIndex;
   }
 
   // Create the coupling scheme object
@@ -565,7 +568,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
   cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
       new cplscheme::impl::AbsoluteConvergenceMeasure(convergenceLimit1));
-  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, absoluteConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, absoluteConvMeasure1, true);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {5, 5, 5};
@@ -641,14 +644,17 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   double      timestepLength = 0.1;
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
-  int         sendDataIndex    = -1;
-  int         receiveDataIndex = -1;
+  int         sendDataIndex        = -1;
+  int         receiveDataIndex     = -1;
+  int         convergenceDataIndex = -1;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex    = 0;
-    receiveDataIndex = 1;
+    sendDataIndex        = 0;
+    receiveDataIndex     = 1;
+    convergenceDataIndex = receiveDataIndex;
   } else {
-    sendDataIndex    = 1;
-    receiveDataIndex = 0;
+    sendDataIndex        = 1;
+    receiveDataIndex     = 0;
+    convergenceDataIndex = sendDataIndex;
   }
 
   // Create the coupling scheme object
@@ -663,7 +669,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, minIterationConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {3, 3, 3};
@@ -699,17 +705,20 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   double           timestepLength = 0.1;
   std::string      nameParticipant0("Participant0");
   std::string      nameParticipant1("Participant1");
-  int              sendDataIndex    = -1;
-  int              receiveDataIndex = -1;
+  int              sendDataIndex        = -1;
+  int              receiveDataIndex     = -1;
+  int              convergenceDataIndex = -1;
   std::vector<int> validIterations;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex    = 0;
-    receiveDataIndex = 1;
-    validIterations  = {3, 3, 3};
+    sendDataIndex        = 0;
+    receiveDataIndex     = 1;
+    validIterations      = {3, 3, 3};
+    convergenceDataIndex = receiveDataIndex;
   } else {
-    sendDataIndex    = 1;
-    receiveDataIndex = 0;
-    validIterations  = {3, 3, 3};
+    sendDataIndex        = 1;
+    receiveDataIndex     = 0;
+    validIterations      = {3, 3, 3};
+    convergenceDataIndex = sendDataIndex;
   }
 
   // Create the coupling scheme object
@@ -724,7 +733,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, minIterationConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
   runCouplingWithSubcycling(
       cplScheme, context.name, meshConfig, validIterations);
 }
@@ -763,13 +772,16 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   int         sendDataIndex              = -1;
   int         receiveDataIndex           = -1;
   bool        dataRequiresInitialization = false;
+  int         convergenceDataIndex       = -1;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex    = 0;
-    receiveDataIndex = 1;
+    sendDataIndex        = 0;
+    receiveDataIndex     = 1;
+    convergenceDataIndex = receiveDataIndex;
   } else {
     sendDataIndex              = 1;
     receiveDataIndex           = 0;
     dataRequiresInitialization = true;
+    convergenceDataIndex       = sendDataIndex;
   }
 
   // Create the coupling scheme object
@@ -784,7 +796,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   int                                    minIterations = 3;
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, minIterationConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
