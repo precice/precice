@@ -176,6 +176,108 @@ BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
 
 BOOST_AUTO_TEST_SUITE_END()
 
+// In order to test enforced gather scatter communication with an empty master rank (see below)
+void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::string configFile)
+{
+  PRECICE_TEST("ParallelSolver"_on(2_ranks), "SerialSolver"_on(1_rank));
+  std::string configFilename = configFile;
+
+  if (context.isNamed("ParallelSolver")) {
+    // Get mesh and data IDs
+    SolverInterface interface(context.name, configFilename, context.rank, context.size);
+    const int       meshID      = interface.getMeshID("ParallelMesh");
+    const int       writeDataID = interface.getDataID("MyData1", meshID);
+    const int       readDataID  = interface.getDataID("MyData2", meshID);
+    const int       dim         = interface.getDimensions();
+    BOOST_TEST(dim == 2);
+
+    // Set coordinates, master according to input argument
+    const std::vector<double> coordinates = context.isMaster() ? masterPartition : std::vector<double>{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
+    const unsigned int        size        = coordinates.size() / dim;
+    std::vector<int>          ids(size, 0);
+
+    // Set mesh vertices
+    interface.setMeshVertices(meshID, size, coordinates.data(), ids.data());
+
+    // Initialize the solverinterface
+    double dt = interface.initialize();
+
+    // Create some dummy writeData
+    std::vector<double> writeData;
+    for (unsigned int i = 0; i < size; ++i) {
+      writeData.emplace_back(i + 1);
+    }
+
+    // Allocate memory for readData
+    std::vector<double> readData(size);
+    while (interface.isCouplingOngoing()) {
+      // Write data, advance the solverinterface and readData
+      interface.writeBlockScalarData(writeDataID, size,
+                                     ids.data(), writeData.data());
+
+      dt = interface.advance(dt);
+      interface.readBlockScalarData(readDataID, size,
+                                    ids.data(), readData.data());
+      // The received data on the slave rank is always the same
+      if (!context.isMaster()) {
+        BOOST_TEST(readData == std::vector<double>({3.4, 5.7, 4.0}));
+      }
+    }
+  } else {
+    // The serial participant
+    BOOST_REQUIRE(context.isNamed("SerialSolver"));
+    SolverInterface interface(context.name, configFilename, context.rank, context.size);
+    // Get IDs
+    const int meshID      = interface.getMeshID("SerialMesh");
+    const int writeDataID = interface.getDataID("MyData2", meshID);
+    const int readDataID  = interface.getDataID("MyData1", meshID);
+    const int dim         = interface.getDimensions();
+    BOOST_TEST(interface.getDimensions() == 2);
+
+    // Define the interface
+    const std::vector<double> coordinates{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
+    const unsigned int        size = coordinates.size() / dim;
+    std::vector<int>          ids(size);
+
+    // Set vertices
+    interface.setMeshVertices(meshID, size, coordinates.data(), ids.data());
+
+    // Initialize the solverinterface
+    double dt = interface.initialize();
+
+    // Somce arbitrary write data
+    std::vector<double> writeData{3.4, 5.7, 4.0};
+    std::vector<double> readData(size);
+
+    // Start the time loop
+    while (interface.isCouplingOngoing()) {
+      // Write data, advance solverinterface and read data
+      interface.writeBlockScalarData(writeDataID, size,
+                                     ids.data(), writeData.data());
+      dt = interface.advance(dt);
+      interface.readBlockScalarData(readDataID, size,
+                                    ids.data(), readData.data());
+      // The received data is always the same
+      if (!context.isMaster()) {
+        BOOST_TEST(readData == std::vector<double>({1, 2, 3}));
+      }
+    }
+  }
+}
+// Test case for an enforced gather scatter communication, where the partition
+// on the master rank is empty (recieved and provided). See issue #1013 for details.
+BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyMaster)
+{
+  // Provided master partition is empty and received master partition is empty
+  runTestEnforceGatherScatter(std::vector<double>{}, _pathToTests + "enforce-gather-scatter.xml");
+}
+
+BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyReceivedMaster)
+{
+  // Provided master partition is not empty, but received master partitionis empty
+  runTestEnforceGatherScatter(std::vector<double>{0.0, 2.0, 0.0, 2.5}, _pathToTests + "enforce-gather-scatter.xml");
+}
+
 BOOST_AUTO_TEST_CASE(GlobalRBFPartitioning)
 {
   PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
