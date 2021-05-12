@@ -462,17 +462,12 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  // @todo this assertion should always hold!, Currently mpirun --oversubscribe -np 4 ./testprecice -t PreciceTests/Serial/MultiCoupling fails.
-  //PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
-  if (_allData.count(dataID) == 1) {
-    convMeasure.couplingData = &(*_allData[dataID]);
-  } else { // @todo "else" branch should not be required.
-    convMeasure.couplingData = nullptr;
-  }
-  convMeasure.suffices    = suffices;
-  convMeasure.strict      = strict;
-  convMeasure.measure     = std::move(measure);
-  convMeasure.doesLogging = doesLogging;
+  PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = &(*_allData[dataID]);
+  convMeasure.suffices     = suffices;
+  convMeasure.strict       = strict;
+  convMeasure.measure      = std::move(measure);
+  convMeasure.doesLogging  = doesLogging;
   _convergenceMeasures.push_back(convMeasure);
 }
 
