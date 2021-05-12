@@ -120,11 +120,11 @@ void ReceivedPartition::compute()
   }
 
   // check to prevent false configuration
-  //  if (not utils::MasterSlave::isSlave()) {
-  //    PRECICE_CHECK(hasAnyMapping(),
-  //                  "The received mesh " << _mesh->getName()
-  //                                       << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
-  //  }
+  if (not utils::MasterSlave::isSlave()) {
+    PRECICE_CHECK(hasAnyMapping() || _partitionByBoundingBox,
+                  "The received mesh " << _mesh->getName()
+                                       << " needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?")
+  }
 
   // To better understand steps (2) to (5), it is recommended to look at BU's thesis, especially Figure 69 on page 89
   // for RBF-based filtering. https://mediatum.ub.tum.de/doc/1320661/document.pdf
