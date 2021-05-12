@@ -32,6 +32,8 @@ BOOST_FIXTURE_TEST_SUITE(AccelerationSerialTests, AccelerationSerialTestsFixture
 BOOST_AUTO_TEST_CASE(testMVQNPP)
 {
   PRECICE_TEST(1_rank);
+  using namespace precice::cplscheme;
+
   //use two vectors and see if underrelaxation works
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
@@ -131,8 +133,9 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
 BOOST_AUTO_TEST_CASE(testVIQNPP)
 {
   PRECICE_TEST(1_rank);
-  //use two vectors and see if underrelaxation works
+  using namespace precice::cplscheme;
 
+  //use two vectors and see if underrelaxation works
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
   int              timestepsReused          = 6;
@@ -187,8 +190,8 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false));
 
   DataMap data;
-  data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
-  data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
 
   pp.initialize(data);
 
