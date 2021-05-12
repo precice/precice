@@ -8,6 +8,7 @@
 #include <iterator>
 #include <memory>
 #include <ostream>
+#include <sstream>
 #include <tuple>
 #include <utility>
 #include "action/SharedPointer.hpp"
@@ -212,25 +213,10 @@ void SolverInterfaceImpl::configure(
       config.getCouplingSchemeConfiguration();
   _couplingScheme = cplSchemeConfig->getCouplingScheme(_accessorName);
 
-  // Add meshIDs and data IDs
-  for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
-    const mesh::PtrMesh &mesh   = meshContext->mesh;
-    const auto           meshID = mesh->getID();
-    _meshIDs[mesh->getName()]   = meshID;
-    PRECICE_ASSERT(_dataIDs.find(meshID) == _dataIDs.end());
-    _dataIDs[meshID] = std::map<std::string, int>();
-    PRECICE_ASSERT(_dataIDs.find(meshID) != _dataIDs.end());
-    for (const mesh::PtrData &data : mesh->data()) {
-      PRECICE_ASSERT(_dataIDs[meshID].find(data->getName()) == _dataIDs[meshID].end());
-      _dataIDs[meshID][data->getName()] = data->getID();
-    }
-    std::string                meshName   = mesh->getName();
-    mesh::PtrMeshConfiguration meshConfig = config.getMeshConfiguration();
-  }
   // Register all MeshIds to the lock, but unlock them straight away as
   // writing is allowed after configuration.
-  for (const auto &meshID : _meshIDs) {
-    _meshLock.add(meshID.second, false);
+  for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
+    _meshLock.add(meshContext->mesh->getID(), false);
   }
 
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
@@ -601,19 +587,22 @@ bool SolverInterfaceImpl::hasMesh(
     const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
-  return utils::contained(meshName, _meshIDs);
+  return _accessor->hasMesh(meshName);
 }
 
 int SolverInterfaceImpl::getMeshID(
     const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
-  const auto pos = _meshIDs.find(meshName);
-  PRECICE_CHECK(pos != _meshIDs.end(),
+  PRECICE_CHECK(_accessor->hasMesh(meshName),
                 "The given mesh name \"{}\" is unknown to preCICE. "
                 "Please check the mesh definitions in the configuration.",
                 meshName);
-  return pos->second;
+  PRECICE_CHECK(_accessor->isMeshUsed(meshName),
+                "The given mesh name \"{0}\" is not used by the participant \"{1}\". "
+                "Please define a <use-mesh name=\"{0}\"/> node for the particpant \"{1}\".",
+                meshName, _accessorName);
+  return _accessor->getUsedMeshID(meshName);
 }
 
 std::set<int> SolverInterfaceImpl::getMeshIDs() const
@@ -631,8 +620,7 @@ bool SolverInterfaceImpl::hasData(
 {
   PRECICE_TRACE(dataName, meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
-  const auto &sub_dataIDs = _dataIDs.at(meshID);
-  return sub_dataIDs.find(dataName) != sub_dataIDs.end();
+  return _accessor->isDataUsed(dataName, meshID);
 }
 
 int SolverInterfaceImpl::getDataID(
@@ -640,12 +628,11 @@ int SolverInterfaceImpl::getDataID(
 {
   PRECICE_TRACE(dataName, meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
-  impl::MeshContext &context = _accessor->meshContext(meshID);
-  PRECICE_CHECK(hasData(dataName, meshID),
+  PRECICE_CHECK(_accessor->isDataUsed(dataName, meshID),
                 "Data with name \"{0}\" is not defined on mesh \"{1}\". "
                 "Please add <use-data name=\"{0}\"/> under <mesh name=\"{1}\"/>.",
-                dataName, context.mesh->getName());
-  return _dataIDs.at(meshID).at(dataName);
+                dataName, _accessor->getMeshName(meshID));
+  return _accessor->getUsedDataID(dataName, meshID);
 }
 
 int SolverInterfaceImpl::getMeshVertexSize(
@@ -654,11 +641,9 @@ int SolverInterfaceImpl::getMeshVertexSize(
   PRECICE_TRACE(meshID);
   int size = 0;
   PRECICE_REQUIRE_MESH_USE(meshID);
-  MeshContext &context = _accessor->meshContext(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
-  size = context.mesh->vertices().size();
-  PRECICE_DEBUG("Return mesh size of {}", size);
-  return size;
+  return context.mesh->vertices().size();
 }
 
 /// @todo Currently not supported as we would need to re-compute the re-partition
@@ -667,7 +652,7 @@ void SolverInterfaceImpl::resetMesh(
 {
   PRECICE_TRACE(meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
-  impl::MeshContext &context = _accessor->meshContext(meshID);
+  impl::MeshContext &context = _accessor->usedMeshContext(meshID);
   /*
   bool               hasMapping = context.fromMappingContext.mapping || context.toMappingContext.mapping;
   bool               isStationary =
@@ -685,12 +670,12 @@ int SolverInterfaceImpl::setMeshVertex(
     const double *position)
 {
   PRECICE_TRACE(meshID);
+  PRECICE_REQUIRE_MESH_MODIFY(meshID);
   Eigen::VectorXd internalPosition{
       Eigen::Map<const Eigen::VectorXd>{position, _dimensions}};
   PRECICE_DEBUG("Position = {}", internalPosition.format(utils::eigenio::debug()));
-  int index = -1;
-  PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext & context = _accessor->meshContext(meshID);
+  int           index   = -1;
+  MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("MeshRequirement: {}", context.meshRequirement);
   index = mesh->createVertex(internalPosition).getID();
@@ -706,7 +691,7 @@ void SolverInterfaceImpl::setMeshVertices(
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext & context = _accessor->meshContext(meshID);
+  MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Set positions");
   const Eigen::Map<const Eigen::MatrixXd> posMatrix{
@@ -726,7 +711,7 @@ void SolverInterfaceImpl::getMeshVertices(
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_USE(meshID);
-  MeshContext & context = _accessor->meshContext(meshID);
+  MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Get positions");
   auto &vertices = mesh->vertices();
@@ -748,7 +733,7 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_USE(meshID);
-  MeshContext & context = _accessor->meshContext(meshID);
+  MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Get IDs");
   const auto &                      vertices = mesh->vertices();
@@ -783,7 +768,7 @@ int SolverInterfaceImpl::setMeshEdge(
 {
   PRECICE_TRACE(meshID, firstVertexID, secondVertexID);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext &context = _accessor->meshContext(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
@@ -807,7 +792,7 @@ void SolverInterfaceImpl::setMeshTriangle(
   PRECICE_CHECK(_dimensions == 3, "setMeshTriangle is only possible for 3D cases."
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext &context = _accessor->meshContext(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidEdgeID;
@@ -838,7 +823,7 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
   PRECICE_CHECK(_dimensions == 3, "setMeshTriangleWithEdges is only possible for 3D cases."
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext &context = _accessor->meshContext(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
@@ -874,10 +859,10 @@ void SolverInterfaceImpl::setMeshQuad(
 {
   PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases. "
+                                  "Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext &context = _accessor->meshContext(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidEdgeID;
@@ -937,7 +922,7 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
   PRECICE_CHECK(_dimensions == 3, "setMeshQuadWithEdges is only possible for 3D cases."
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext &context = _accessor->meshContext(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     PRECICE_ASSERT(context.mesh);
     mesh::Mesh &mesh = *(context.mesh);
@@ -992,7 +977,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
 {
   PRECICE_TRACE(fromMeshID);
   PRECICE_VALIDATE_MESH_ID(fromMeshID);
-  impl::MeshContext &context = _accessor->meshContext(fromMeshID);
+  impl::MeshContext &context = _accessor->usedMeshContext(fromMeshID);
 
   PRECICE_CHECK(not context.fromMappingContexts.empty(),
                 "You attempt to \"mapWriteDataFrom\" mesh {}, but there is no mapping from this mesh configured. Maybe you don't want to call this function at all or you forgot to configure the mapping.",
@@ -1027,7 +1012,7 @@ void SolverInterfaceImpl::mapReadDataTo(
 {
   PRECICE_TRACE(toMeshID);
   PRECICE_VALIDATE_MESH_ID(toMeshID);
-  impl::MeshContext &context = _accessor->meshContext(toMeshID);
+  impl::MeshContext &context = _accessor->usedMeshContext(toMeshID);
 
   PRECICE_CHECK(not context.toMappingContexts.empty(),
                 "You attempt to \"mapReadDataTo\" mesh {}, but there is no mapping to this mesh configured. Maybe you don't want to call this function at all or you forgot to configure the mapping.",
@@ -1064,12 +1049,11 @@ void SolverInterfaceImpl::writeBlockVectorData(
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
+  PRECICE_REQUIRE_DATA_WRITE(dataID);
   if (size == 0)
     return;
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
-  PRECICE_REQUIRE_DATA_WRITE(dataID);
+  PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, "writeBlockVectorData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.fromData != nullptr);
   mesh::Data &data = *context.fromData;
@@ -1102,9 +1086,8 @@ void SolverInterfaceImpl::writeVectorData(
 {
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called before finalize().");
-
-  PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
   PRECICE_REQUIRE_DATA_WRITE(dataID);
+  PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.fromData != nullptr);
   mesh::Data &data = *context.fromData;
@@ -1132,12 +1115,11 @@ void SolverInterfaceImpl::writeBlockScalarData(
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "writeBlockScalarData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
+  PRECICE_REQUIRE_DATA_WRITE(dataID);
   if (size == 0)
     return;
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
-  PRECICE_REQUIRE_DATA_WRITE(dataID);
+  PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, "writeBlockScalarData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.fromData != nullptr);
   mesh::Data &data = *context.fromData;
@@ -1164,7 +1146,6 @@ void SolverInterfaceImpl::writeScalarData(
 {
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.fromData != nullptr);
@@ -1196,12 +1177,11 @@ void SolverInterfaceImpl::readBlockVectorData(
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
+  PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
-  PRECICE_REQUIRE_DATA_READ(dataID);
+  PRECICE_CHECK(valueIndices != nullptr, "readBlockVectorData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.toData != nullptr);
   mesh::Data &data = *context.toData;
@@ -1232,7 +1212,6 @@ void SolverInterfaceImpl::readVectorData(
 {
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
   PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.toData != nullptr);
@@ -1265,13 +1244,11 @@ void SolverInterfaceImpl::readBlockScalarData(
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
+  PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
-  PRECICE_DEBUG("size = {}", size);
-  PRECICE_ASSERT(valueIndices != nullptr);
-  PRECICE_ASSERT(values != nullptr);
-  PRECICE_REQUIRE_DATA_READ(dataID);
+  PRECICE_CHECK(valueIndices != nullptr, "readBlockScalarData() was called with valueIndices == nullptr");
+  PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.toData != nullptr);
   mesh::Data &data = *context.toData;
@@ -1298,7 +1275,6 @@ void SolverInterfaceImpl::readScalarData(
 {
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
-  PRECICE_VALIDATE_DATA_ID(dataID);
   PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.toData != nullptr);
@@ -1696,9 +1672,7 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
-  const MeshContext *context = _accessor->usedMeshContextByName(meshName);
-  PRECICE_ASSERT(context && context->mesh, "Participant does not use mesh! ", _accessorName, meshName);
-  return *context->mesh;
+  return *_accessor->usedMeshContext(meshName).mesh;
 }
 
 } // namespace impl

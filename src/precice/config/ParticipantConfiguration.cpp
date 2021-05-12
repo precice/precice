@@ -564,38 +564,36 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Create watch points
   for (const WatchPointConfig &config : _watchPointConfigs) {
-    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
-
-    PRECICE_CHECK(meshContext && meshContext->mesh,
+    PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
                   "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not used by the participant. "
                   "Please add a use-mesh node with name=\"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
-    PRECICE_CHECK(meshContext->provideMesh,
+    const auto &meshContext = participant->usedMeshContext(config.nameMesh);
+    PRECICE_CHECK(meshContext.provideMesh,
                   "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
 
     std::string         filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
-    impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, meshContext->mesh, filename));
+    impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, meshContext.mesh, filename));
     participant->addWatchPoint(watchPoint);
   }
   _watchPointConfigs.clear();
 
   // Create watch integrals
   for (const WatchIntegralConfig &config : _watchIntegralConfigs) {
-    const impl::MeshContext *meshContext = participant->usedMeshContextByName(config.nameMesh);
-
-    PRECICE_CHECK(meshContext && meshContext->mesh,
+    PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
                   "Participant \"{}\" defines watch integral \"{}\" for mesh \"{}\" which is not used by the participant. "
                   "Please add a use-mesh node with name=\"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
-    PRECICE_CHECK(meshContext->provideMesh,
+    const auto &meshContext = participant->usedMeshContext(config.nameMesh);
+    PRECICE_CHECK(meshContext.provideMesh,
                   "Participant \"{}\" defines watch integral \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
 
     std::string            filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
-    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext->mesh, filename, config.isScalingOn));
+    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext.mesh, filename, config.isScalingOn));
     participant->addWatchIntegral(watchIntegral);
   }
   _watchIntegralConfigs.clear();

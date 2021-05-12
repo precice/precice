@@ -132,9 +132,14 @@ public:
       const std::string &name,
       int                dimension);
 
+  /// Allows access to all data
   const DataContainer &data() const;
 
+  /// Returns the data with the matching ID
   const PtrData &data(int dataID) const;
+
+  /// Returns the data with the matching name
+  const PtrData &data(const std::string &dataName) const;
 
   /// Returns the name of the mesh, as set in the config file.
   const std::string &getName() const;
