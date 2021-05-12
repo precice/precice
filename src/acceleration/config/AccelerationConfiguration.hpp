@@ -109,7 +109,7 @@ private:
     int                   imvjRestartType            = 0;
     int                   imvjChunkSize              = 0;
     int                   imvjRSLS_reusedTimeWindows = 0;
-    int                   precond_nbNonConstTSteps   = -1;
+    int                   precond_nbNonConstTWindows = -1;
     double                singularityLimit           = 0;
     double                imvjRSSVD_truncationEps    = 0;
     bool                  estimateJacobian           = false;

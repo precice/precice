@@ -135,11 +135,11 @@ BOOST_AUTO_TEST_CASE(Triangles)
       auto       ibegin = triangle.begin();
       const auto iend   = triangle.end();
       BOOST_TEST(std::distance(ibegin, iend) == 3);
-      BOOST_TEST(*ibegin == v0.getCoords());
+      BOOST_TEST(*ibegin == v0.rawCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v1.getCoords());
+      BOOST_TEST(*ibegin == v1.rawCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v2.getCoords());
+      BOOST_TEST(*ibegin == v2.rawCoords());
       ++ibegin;
       BOOST_TEST((ibegin == iend));
     }
@@ -149,11 +149,11 @@ BOOST_AUTO_TEST_CASE(Triangles)
       auto            ibegin    = ctriangle.begin();
       const auto      iend      = ctriangle.end();
       BOOST_TEST(std::distance(ibegin, iend) == 3);
-      BOOST_TEST(*ibegin == v0.getCoords());
+      BOOST_TEST(*ibegin == v0.rawCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v1.getCoords());
+      BOOST_TEST(*ibegin == v1.rawCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v2.getCoords());
+      BOOST_TEST(*ibegin == v2.rawCoords());
       ++ibegin;
       BOOST_TEST((ibegin == iend));
     }
@@ -162,11 +162,11 @@ BOOST_AUTO_TEST_CASE(Triangles)
       auto       ibegin = triangle.cbegin();
       const auto iend   = triangle.cend();
       BOOST_TEST(std::distance(ibegin, iend) == 3);
-      BOOST_TEST(*ibegin == v0.getCoords());
+      BOOST_TEST(*ibegin == v0.rawCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v1.getCoords());
+      BOOST_TEST(*ibegin == v1.rawCoords());
       ++ibegin;
-      BOOST_TEST(*ibegin == v2.getCoords());
+      BOOST_TEST(*ibegin == v2.rawCoords());
       ++ibegin;
       BOOST_TEST((ibegin == iend));
     }

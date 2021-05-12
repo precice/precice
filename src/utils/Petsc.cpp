@@ -200,13 +200,13 @@ Vector &Vector::operator=(const Vector &other)
   return *this;
 }
 
-Vector::Vector(Vector &&other)
+Vector::Vector(Vector &&other) noexcept
 {
   vector       = other.vector;
   other.vector = nullptr;
 }
 
-Vector &Vector::operator=(Vector &&other)
+Vector &Vector::operator=(Vector &&other) noexcept
 {
   swap(other);
   return *this;
@@ -745,7 +745,7 @@ PetscReal KSPSolver::getRealtiveTolerance()
 {
   PetscErrorCode ierr = 0;
   PetscReal      rtol;
-  ierr = KSPGetTolerances(ksp, &rtol, NULL, NULL, NULL);
+  ierr = KSPGetTolerances(ksp, &rtol, nullptr, nullptr, nullptr);
   CHKERRQ(ierr);
   return rtol;
 }

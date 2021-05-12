@@ -8,6 +8,8 @@
 #include <map>
 #include <set>
 #include <thread>
+#include <utility>
+
 #include <vector>
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
@@ -218,11 +220,11 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
     std::cout << std::fixed << std::setprecision(3) //
               << "Number of LVDIs per Interface Process:"
               << "\n"
-              << "  Total:   " << total << "\n"
-              << "  Maximum: " << maximum << "\n"
-              << "  Minimum: " << minimum << "\n"
-              << "  Average: " << average << "\n"
-              << "Number of Interface Processes: " << count << "\n"
+              << "  Total:   " << total << '\n'
+              << "  Maximum: " << maximum << '\n'
+              << "  Minimum: " << minimum << '\n'
+              << "  Average: " << average << '\n'
+              << "Number of Interface Processes: " << count << '\n'
               << '\n';
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
@@ -285,7 +287,7 @@ PointToPointCommunication::PointToPointCommunication(
     com::PtrCommunicationFactory communicationFactory,
     mesh::PtrMesh                mesh)
     : DistributedCommunication(mesh),
-      _communicationFactory(communicationFactory)
+      _communicationFactory(std::move(communicationFactory))
 {
 }
 

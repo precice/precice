@@ -30,9 +30,9 @@ SummationAction::SummationAction(
 
 void SummationAction::performAction(
     double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double timeStepSize,
+    double computedTimeWindowPart,
+    double timeWindowSize)
 {
   PRECICE_TRACE();
 
@@ -40,10 +40,7 @@ void SummationAction::performAction(
   targetValues.setZero();
 
   for (const auto &sourceData : _sourceDataVector) {
-    auto sourceValues = sourceData->values();
-    for (int i = 0; i < targetValues.size(); ++i) {
-      targetValues[i] += sourceValues[i];
-    }
+    targetValues += sourceData->values();
   }
 }
 

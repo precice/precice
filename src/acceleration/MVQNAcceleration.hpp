@@ -22,7 +22,7 @@ namespace acceleration {
  *
  * Performs a multi vector quasi-Newton to accelerate the convergence of implicit coupling
  * iterations. A multi Broyden update, together with the reuse of the approximate inverse 
- * Jacobian from the old time step are used to approximate the inverse Jacobian. After every
+ * Jacobian from the old time window are used to approximate the inverse Jacobian. After every
  * coupling iteration, the data values used are enhanced by the new coupling iterates.
  *
  * If more coupling data is present than used to compute the MVQN acceleration,
@@ -45,7 +45,7 @@ public:
       double                  initialRelaxation,
       bool                    forceInitialRelaxation,
       int                     maxIterationsUsed,
-      int                     timestepsReused,
+      int                     pastTimeWindowsReused,
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
@@ -53,7 +53,7 @@ public:
       bool                    alwaysBuildJacobian,
       int                     imvjRestartType,
       int                     chunkSize,
-      int                     RSLSreusedTimesteps,
+      int                     RSLSreusedTimeWindows,
       double                  RSSVDtruncationEps);
 
   /**
@@ -75,10 +75,10 @@ public:
   virtual void specializedIterationsConverged(DataMap &cplData);
 
 private:
-  /// @brief stores the approximation of the inverse Jacobian of the system at current time step.
+  /// @brief stores the approximation of the inverse Jacobian of the system at current time window.
   Eigen::MatrixXd _invJacobian;
 
-  /// @brief stores the approximation of the inverse Jacobian from the previous time step.
+  /// @brief stores the approximation of the inverse Jacobian from the previous time window.
   Eigen::MatrixXd _oldInvJacobian;
 
   /// @brief stores the sub result (W-J_prev*V) for the current iteration
@@ -90,13 +90,13 @@ private:
   /// @brief stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
   std::vector<Eigen::MatrixXd> _pseudoInverseChunk;
 
-  /// @brief stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
+  /// @brief stores columns from previous  #_RSLSreusedTimeWindows time windows if RS-LS restart-mode is active
   Eigen::MatrixXd _matrixV_RSLS;
 
-  /// @brief stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
+  /// @brief stores columns from previous  #_RSLSreusedTimeWindows time windows if RS-LS restart-mode is active
   Eigen::MatrixXd _matrixW_RSLS;
 
-  /// @brief number of cols per time step
+  /// @brief number of cols per time window
   std::deque<int> _matrixCols_RSLS;
 
   /// @brief encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
@@ -113,9 +113,9 @@ private:
 
   /** @brief: Indicates the type of the imvj restart-mode:
     *  - NO_RESTART: imvj is run on normal mode which builds the Jacobian explicitly
-    *  - RS-ZERO:    imvj is run in restart-mode. After M time steps all stored matrices are dropped
-    *  - RS-LS:      imvj in restart-mode. After M time steps restart with LS approximation for initial Jacobian
-    *  - RS-SVD:     imvj in restart mode. After M time steps, update of an truncated SVD of the Jacobian.
+    *  - RS-ZERO:    imvj is run in restart-mode. After M time windows all stored matrices are dropped
+    *  - RS-LS:      imvj in restart-mode. After M time windows restart with LS approximation for initial Jacobian
+    *  - RS-SVD:     imvj in restart mode. After M time windows, update of an truncated SVD of the Jacobian.
     */
   int _imvjRestartType;
 
@@ -125,14 +125,14 @@ private:
     */
   bool _imvjRestart;
 
-  /// @brief: Number of time steps between restarts for the imvj method in restart mode
+  /// @brief: Number of time windows between restarts for the imvj method in restart mode
   int _chunkSize;
 
-  /// @brief: Number of reused time steps at restart if restart-mode = RS-LS
-  int _RSLSreusedTimesteps;
+  /// @brief: Number of reused time windows at restart if restart-mode = RS-LS
+  int _RSLSreusedTimeWindows;
 
-  /// @brief: Number of used columns per time step. Always the first _usedColumnsPerTstep are used.
-  int _usedColumnsPerTstep;
+  /// @brief: Number of used columns per time window. Always the first _usedColumnsPerTwindow are used.
+  int _usedColumnsPerTimeWindow;
 
   /// @brief tracks the number of restarts of IMVJ
   int _nbRestarts;
@@ -166,7 +166,7 @@ private:
     *  via the formula W_til.col(j) = W.col(j) - J_inv * V.col(j).
     *  Then, pure matrix-vector products are sufficient to compute the update within one iteration, i.e.,
     *  (1) x1 := J_prev*(-res) (2) y := Z(-res) (3) xUp := W_til*y + x1
-    *  The Jacobian matrix only needs to be set up in the very last iteration of one time step, i.e.
+    *  The Jacobian matrix only needs to be set up in the very last iteration of one time window, i.e.
     *  in iterationsConverged.
     */
   void computeNewtonUpdateEfficient(DataMap &cplData, Eigen::VectorXd &update);
@@ -185,7 +185,7 @@ private:
 
   /** @brief: restarts the imvj method, i.e., drops all stored matrices Wtil and Z and computes a
     *  initial guess of the Jacobian based on the given restart strategy:
-    *  RS-LS:   Perform a IQN-LS least squares initial guess with _RSLSreusedTimesteps
+    *  RS-LS:   Perform a IQN-LS least squares initial guess with _RSLSreusedTimeWindows
     *  RS-SVD:  Update a truncated SVD decomposition of the SVD with rank-1 modifications from Wtil*Z
     *  RS-Zero: Start with zero information, initial guess J = 0.
     */

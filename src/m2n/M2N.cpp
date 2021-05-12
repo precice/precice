@@ -17,8 +17,8 @@ extern bool syncMode;
 namespace m2n {
 
 M2N::M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom, bool useTwoLevelInit)
-    : _masterCom(masterCom),
-      _distrFactory(distrFactory),
+    : _masterCom(std::move(masterCom)),
+      _distrFactory(std::move(distrFactory)),
       _useOnlyMasterCom(useOnlyMasterCom),
       _useTwoLevelInit(useTwoLevelInit)
 {
@@ -299,7 +299,7 @@ void M2N::receive(bool &itemToReceive)
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  PRECICE_DEBUG("receive(bool): " << itemToReceive);
+  PRECICE_DEBUG("receive(bool): {}", itemToReceive);
 }
 
 void M2N::receive(double &itemToReceive)
@@ -311,7 +311,7 @@ void M2N::receive(double &itemToReceive)
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  PRECICE_DEBUG("receive(double): " << itemToReceive);
+  PRECICE_DEBUG("receive(double): {}", itemToReceive);
 }
 
 void M2N::broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh)

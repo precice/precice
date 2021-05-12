@@ -27,9 +27,9 @@ private:
   /**
    * @brief Update the scaling after every FSI iteration.
    *
-   * @param[in] timestepComplete True if this FSI iteration also completed a timestep
+   * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
    */
-  virtual void _update_(bool timestepComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res);
+  virtual void _update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res);
 
   logging::Logger _log{"acceleration::ConstantPreconditioner"};
 

@@ -41,7 +41,7 @@ void ExportVTK::doExport(
     fs::create_directories(outfile);
   outfile = outfile / fs::path(name + ".vtk");
   std::ofstream outstream(outfile.string(), std::ios::trunc);
-  PRECICE_CHECK(outstream, "VTK export failed to open destination file \"" << outfile << '"');
+  PRECICE_CHECK(outstream, "VTK export failed to open destination file \"{}\"", outfile);
 
   initializeWriting(outstream);
   writeHeader(outstream);
@@ -132,7 +132,7 @@ void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
     //    }
   }
 
-  for (mesh::PtrData data : mesh.data()) { // Plot vertex data
+  for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values = data->values();
     if (data->getDimensions() > 1) {
       Eigen::VectorXd viewTemp(data->getDimensions());

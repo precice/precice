@@ -1,18 +1,22 @@
-#include <boost/filesystem/operations.hpp>
 #ifndef PRECICE_NO_PYTHON
+
+#include "PythonAction.hpp"
 #include <Eigen/Core>
 #include <Python.h>
+#include <boost/filesystem/operations.hpp>
 #include <cstdlib>
 #include <memory>
 #include <numpy/arrayobject.h>
 #include <ostream>
 #include <pthread.h>
 #include <string>
-#include "PythonAction.hpp"
+#include <utility>
+
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -50,17 +54,18 @@ std::string python_error_as_string()
 
 PythonAction::PythonAction(
     Timing               timing,
-    const std::string &  modulePath,
-    const std::string &  moduleName,
+    std::string          modulePath,
+    std::string          moduleName,
     const mesh::PtrMesh &mesh,
     int                  targetDataID,
     int                  sourceDataID)
     : Action(timing, mesh),
-      _modulePath(modulePath),
-      _moduleName(moduleName)
+      _modulePath(std::move(modulePath)),
+      _moduleName(std::move(moduleName))
 {
   PRECICE_CHECK(boost::filesystem::is_directory(_modulePath),
-                "The module path of the python action \"" << _moduleName << "\" does not exist. The configured path is \"" << _modulePath << "\".");
+                "The module path of the python action \"{}\" does not exist. The configured path is \"{}\".",
+                _moduleName, _modulePath);
   if (targetDataID != -1) {
     _targetData = getMesh()->data(targetDataID);
     _numberArguments++;
@@ -83,21 +88,21 @@ PythonAction::~PythonAction()
 }
 
 void PythonAction::performAction(double time,
-                                 double dt,
-                                 double computedPartFullDt,
-                                 double fullDt)
+                                 double timeStepSize,
+                                 double computedTimeWindowPart,
+                                 double timeWindowSize)
 {
-  PRECICE_TRACE(time, dt, computedPartFullDt, fullDt);
+  PRECICE_TRACE(time, timeStepSize, computedTimeWindowPart, timeWindowSize);
 
   if (not _isInitialized)
     initialize();
 
   PyObject *dataArgs = PyTuple_New(_numberArguments);
   if (_performAction != nullptr) {
-    PyObject *pythonTime = PyFloat_FromDouble(time);
-    PyObject *pythonDt   = PyFloat_FromDouble(fullDt);
+    PyObject *pythonTime           = PyFloat_FromDouble(time);
+    PyObject *pythonTimeWindowSize = PyFloat_FromDouble(timeWindowSize);
     PyTuple_SetItem(dataArgs, 0, pythonTime);
-    PyTuple_SetItem(dataArgs, 1, pythonDt);
+    PyTuple_SetItem(dataArgs, 1, pythonTimeWindowSize);
     if (_sourceData) {
       npy_intp sourceDim[]  = {_sourceData->values().size()};
       double * sourceValues = _sourceData->values().data();
@@ -118,7 +123,9 @@ void PythonAction::performAction(double time,
     }
     PyObject_CallObject(_performAction, dataArgs);
     if (PyErr_Occurred()) {
-      PRECICE_ERROR("Error occurred during call of function performAction() in python module \"" << _moduleName << "\". The error message is: " << python_error_as_string());
+      PRECICE_ERROR("Error occurred during call of function performAction() in python module \"{}\". "
+                    "The error message is: {}",
+                    _moduleName, python_error_as_string());
     }
   }
 
@@ -143,7 +150,9 @@ void PythonAction::performAction(double time,
       PyTuple_SetItem(vertexArgs, 2, pythonNormal);
       PyObject_CallObject(_vertexCallback, vertexArgs);
       if (PyErr_Occurred()) {
-        PRECICE_ERROR("Error occurred during call of function vertexCallback() in python module \"" << _moduleName << "\". The error message is: " << python_error_as_string());
+        PRECICE_ERROR("Error occurred during call of function vertexCallback() in python module \"{}\". "
+                      "The error message is: {}",
+                      _moduleName, python_error_as_string());
       }
     }
     Py_DECREF(vertexArgs);
@@ -153,7 +162,9 @@ void PythonAction::performAction(double time,
     PyObject *postActionArgs = PyTuple_New(0);
     PyObject_CallObject(_postAction, postActionArgs);
     if (PyErr_Occurred()) {
-      PRECICE_ERROR("Error occurred during call of function postAction() in python module \"" << _moduleName << "\". The error message is: " << python_error_as_string());
+      PRECICE_ERROR("Error occurred during call of function postAction() in python module \"{}\". "
+                    "The error message is: {}",
+                    _moduleName, python_error_as_string());
     }
     Py_DECREF(postActionArgs);
   }
@@ -174,14 +185,14 @@ void PythonAction::initialize()
   _moduleNameObject = PyUnicode_FromString(_moduleName.c_str());
   _module           = PyImport_Import(_moduleNameObject);
   if (_module == nullptr) {
-    PRECICE_ERROR("An error occurred while loading python module \"" << _moduleName << "\": " << python_error_as_string());
+    PRECICE_ERROR("An error occurred while loading python module \"{}\": {}", _moduleName, python_error_as_string());
   }
 
   // Construct method performAction
   _performAction = PyObject_GetAttrString(_module, "performAction");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    PRECICE_WARN("Python module \"" << _module << "\" does not define function performAction().");
+    PRECICE_WARN("Python module \"{}\" does not define function performAction().", _moduleName);
     _performAction = nullptr;
   }
   //  bool valid = _performAction != NULL;
@@ -193,7 +204,7 @@ void PythonAction::initialize()
   _vertexCallback = PyObject_GetAttrString(_module, "vertexCallback");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    PRECICE_WARN("Python module \"" << _module << "\" does not define function vertexCallback().");
+    PRECICE_WARN("Python module \"{}\" does not define function vertexCallback().", _moduleName);
     _vertexCallback = nullptr;
   }
 
@@ -201,7 +212,7 @@ void PythonAction::initialize()
   _postAction = PyObject_GetAttrString(_module, "postAction");
   if (PyErr_Occurred()) {
     PyErr_Clear();
-    PRECICE_WARN("Python module \"" << _module << "\" does not define function postAction().");
+    PRECICE_WARN("Python module \"{}\" does not define function postAction().", _moduleName);
     _postAction = nullptr;
   }
 }

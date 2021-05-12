@@ -46,6 +46,7 @@ PtrMesh fullMesh()
   // Triangles
   mesh.createTriangle(e1, e5, e4);
   mesh.createTriangle(e2, e3, e5);
+  mesh.computeState();
   return ptr;
 }
 
@@ -91,19 +92,18 @@ PtrMesh vertexMesh3D()
 }
 } // namespace
 
+BOOST_AUTO_TEST_SUITE(QueryTests)
 BOOST_AUTO_TEST_SUITE(MeshTests)
-BOOST_AUTO_TEST_SUITE(RTreeTests)
-BOOST_AUTO_TEST_SUITE(Query)
 BOOST_AUTO_TEST_SUITE(Vertex)
 
 BOOST_AUTO_TEST_CASE(Query2DVertex)
 {
   PRECICE_TEST(1_rank);
-  auto         mesh = edgeMesh2D();
-  Index        indexTree(mesh);
-  mesh::Vertex searchVertex(Eigen::Vector2d(0.2, 0.8), 0);
+  auto            mesh = edgeMesh2D();
+  Index           indexTree(mesh);
+  Eigen::Vector2d location(0.2, 0.8);
 
-  auto result = indexTree.getClosestVertex(searchVertex);
+  auto result = indexTree.getClosestVertex(location);
   BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector2d(0, 1));
   BOOST_TEST(result.distance == 0.28284271247461906);
 }
@@ -111,11 +111,11 @@ BOOST_AUTO_TEST_CASE(Query2DVertex)
 BOOST_AUTO_TEST_CASE(Query3DVertex)
 {
   PRECICE_TEST(1_rank);
-  auto         mesh = edgeMesh3D();
-  Index        indexTree(mesh);
-  mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 0.0, 0.8), 0);
+  auto            mesh = edgeMesh3D();
+  Index           indexTree(mesh);
+  Eigen::Vector3d location(0.8, 0.0, 0.8);
 
-  auto result = indexTree.getClosestVertex(searchVertex);
+  auto result = indexTree.getClosestVertex(location);
   BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
   BOOST_TEST(result.distance == 0.28284271247461906);
 }
@@ -147,9 +147,9 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
   mesh->createTriangle(erl, ert, erd);
   mesh->createTriangle(erd, erb, err);
 
-  mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 0.0, 0.8), 0);
-  Index        indexTree(mesh);
-  auto         result = indexTree.getClosestVertex(searchVertex);
+  Eigen::Vector3d location(0.8, 0.0, 0.8);
+  Index           indexTree(mesh);
+  auto            result = indexTree.getClosestVertex(location);
 
   BOOST_TEST(mesh->vertices().at(result.index).getID() == v10.getID());
 }
@@ -208,11 +208,11 @@ BOOST_AUTO_TEST_SUITE(Edge)
 BOOST_AUTO_TEST_CASE(Query2DEdge)
 {
   PRECICE_TEST(1_rank);
-  auto         mesh = edgeMesh2D();
-  Index        indexTree(mesh);
-  mesh::Vertex searchVertex(Eigen::Vector2d(0.2, 0.8), 0);
+  auto            mesh = edgeMesh2D();
+  Index           indexTree(mesh);
+  Eigen::Vector2d location(0.2, 0.8);
 
-  auto results = indexTree.getClosestEdges(searchVertex, 1);
+  auto results = indexTree.getClosestEdges(location, 1);
   BOOST_TEST(results.size() == 1);
   auto &edge = mesh->edges().at(results.front().index);
 
@@ -223,11 +223,11 @@ BOOST_AUTO_TEST_CASE(Query2DEdge)
 BOOST_AUTO_TEST_CASE(Query3DEdge)
 {
   PRECICE_TEST(1_rank);
-  auto         mesh = edgeMesh3D();
-  Index        indexTree(mesh);
-  mesh::Vertex searchVertex(Eigen::Vector3d(1.8, 0.0, 0.8), 0);
+  auto            mesh = edgeMesh3D();
+  Index           indexTree(mesh);
+  Eigen::Vector3d location(1.8, 0.0, 0.8);
 
-  auto results = indexTree.getClosestEdges(searchVertex, 1);
+  auto results = indexTree.getClosestEdges(location, 1);
 
   BOOST_TEST(results.size() == 1);
   auto match = results.front().index;
@@ -271,9 +271,9 @@ BOOST_AUTO_TEST_CASE(Query3DFullEdge)
   mesh->createTriangle(erl, ert, erd);
   mesh->createTriangle(erd, erb, err);
 
-  Index        indexTree(mesh);
-  mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 0.5, 0.0), 0);
-  auto         results = indexTree.getClosestEdges(searchVertex, 2);
+  Index           indexTree(mesh);
+  Eigen::Vector3d location(0.8, 0.5, 0.0);
+  auto            results = indexTree.getClosestEdges(location, 2);
 
   BOOST_TEST(results.size() == 2);
   BOOST_TEST(results.at(0).index == eld.getID());
@@ -314,9 +314,9 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
 
   Index indexTree(mesh);
 
-  mesh::Vertex searchVertex(Eigen::Vector3d(0.7, 0.5, 0.0), 0);
+  Eigen::Vector3d location(0.7, 0.5, 0.0);
 
-  auto results = indexTree.getClosestTriangles(searchVertex, 3);
+  auto results = indexTree.getClosestTriangles(location, 3);
   BOOST_TEST(results.size() == 3);
   BOOST_TEST(results.at(0).index == tlb.getID());
   BOOST_TEST(results.at(1).index == tlt.getID());
@@ -404,6 +404,75 @@ BOOST_AUTO_TEST_CASE(CacheAll)
 
 BOOST_AUTO_TEST_SUITE_END() // Cache
 
-BOOST_AUTO_TEST_SUITE_END() // Query
-BOOST_AUTO_TEST_SUITE_END() // Index
+BOOST_AUTO_TEST_SUITE(Projection)
+
+BOOST_AUTO_TEST_CASE(ProjectionToVertex)
+{
+  PRECICE_TEST(1_rank);
+  auto  meshPtr = fullMesh();
+  Index indexTree(meshPtr);
+
+  Eigen::Vector3d     location(4.0, 0.0, 0.0);
+  std::vector<int>    expectedIndices = {2};
+  std::vector<double> expectedWeights = {1.0};
+
+  auto interpolation = indexTree.findNearestProjection(location, 1);
+
+  BOOST_TEST(interpolation.first.getWeightedElements().size() == 1); // Check number of weights
+  BOOST_TEST(interpolation.second == 1.0);                           // Check the distance
+  BOOST_TEST(interpolation.first.isInterpolation());
+
+  for (int i = 0; i < interpolation.first.getWeightedElements().size(); ++i) {
+    BOOST_TEST(interpolation.first.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
+    BOOST_TEST(interpolation.first.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ProjectionToEdge)
+{
+  PRECICE_TEST(1_rank);
+  auto  meshPtr = fullMesh();
+  Index indexTree(meshPtr);
+
+  Eigen::Vector3d     location(2.0, -1.0, 0.0);
+  std::vector<int>    expectedIndices = {2, 3};
+  std::vector<double> expectedWeights = {0.5, 0.5};
+
+  auto interpolation = indexTree.findNearestProjection(location, 1);
+
+  BOOST_TEST(interpolation.first.getWeightedElements().size() == 2); // Check number of weights
+  BOOST_TEST(interpolation.second == 1.0);                           // Check the distance
+  BOOST_TEST(interpolation.first.isInterpolation());
+
+  for (int i = 0; i < interpolation.first.getWeightedElements().size(); ++i) {
+    BOOST_TEST(interpolation.first.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
+    BOOST_TEST(interpolation.first.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
+{
+  PRECICE_TEST(1_rank);
+  auto  meshPtr = fullMesh();
+  Index indexTree(meshPtr);
+
+  Eigen::Vector3d     location(1.0, 1.0, 0.1);
+  std::vector<int>    expectedIndices = {0, 1, 3};
+  std::vector<double> expectedWeights = {1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0};
+
+  auto interpolation = indexTree.findNearestProjection(location, 1);
+
+  BOOST_TEST(interpolation.first.getWeightedElements().size() == 3); // Check number of weights
+  BOOST_TEST(interpolation.second == 0.0);                           // Check the distance
+  BOOST_TEST(interpolation.first.isInterpolation());
+
+  for (int i = 0; i < interpolation.first.getWeightedElements().size(); ++i) {
+    BOOST_TEST(interpolation.first.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
+    BOOST_TEST(interpolation.first.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Projection
+
 BOOST_AUTO_TEST_SUITE_END() // Mesh
+BOOST_AUTO_TEST_SUITE_END() // Query

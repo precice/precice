@@ -1,6 +1,10 @@
 #include "MeshConfiguration.hpp"
+#include <memory>
+
 #include <sstream>
 #include <stdexcept>
+#include <utility>
+
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -22,7 +26,7 @@ MeshConfiguration::MeshConfiguration(
       TAG_DATA("use-data"),
       ATTR_SIDE_INDEX("side"),
       _dimensions(0),
-      _dataConfig(config),
+      _dataConfig(std::move(config)),
       _meshes(),
       _neededMeshes(),
       _meshIdManager(new utils::ManageUniqueIDs())
@@ -72,7 +76,7 @@ void MeshConfiguration::xmlTagCallback(
     std::string name        = tag.getStringAttributeValue(ATTR_NAME);
     bool        flipNormals = tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS);
     PRECICE_ASSERT(_meshIdManager);
-    _meshes.push_back(PtrMesh(new Mesh(name, _dimensions, flipNormals, _meshIdManager->getFreeID())));
+    _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, flipNormals, _meshIdManager->getFreeID()));
   } else if (tag.getName() == TAG_DATA) {
     std::string name  = tag.getStringAttributeValue(ATTR_NAME);
     bool        found = false;
@@ -84,9 +88,9 @@ void MeshConfiguration::xmlTagCallback(
       }
     }
     if (not found) {
-      PRECICE_ERROR("Data with name \"" << name << "\" used by "
-                                        << "mesh \"" << _meshes.back()->getName() << "\" is not defined. "
-                                        << "Please define a data tag with name=\"" << name << "\".");
+      PRECICE_ERROR("Data with name \"{}\" used by mesh \"{}\" is not defined. "
+                    "Please define a data tag with name=\"{}\".",
+                    name, _meshes.back()->getName(), name);
     }
   }
 }
@@ -105,7 +109,7 @@ const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
 void MeshConfiguration::addMesh(
     const mesh::PtrMesh &mesh)
 {
-  for (PtrData dataNewMesh : mesh->data()) {
+  for (const PtrData &dataNewMesh : mesh->data()) {
     bool found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
       if ((dataNewMesh->getName() == data.name) && (dataNewMesh->getDimensions() == data.dimensions)) {
@@ -113,7 +117,7 @@ void MeshConfiguration::addMesh(
         break;
       }
     }
-    PRECICE_ASSERT(found, "Data " << dataNewMesh->getName() << " is not defined. Please define a data tag with name=\"" << dataNewMesh->getName() << "\".");
+    PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".", dataNewMesh->getName());
   }
   _meshes.push_back(mesh);
 }

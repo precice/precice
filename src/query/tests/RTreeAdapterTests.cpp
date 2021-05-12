@@ -17,12 +17,14 @@
 
 using namespace precice;
 using namespace precice::mesh;
+using namespace precice::query;
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
 
+BOOST_AUTO_TEST_SUITE(QueryTests)
 BOOST_AUTO_TEST_SUITE(MeshTests)
-BOOST_AUTO_TEST_SUITE(RTree)
+BOOST_AUTO_TEST_SUITE(RTreeTests)
 BOOST_AUTO_TEST_SUITE(BGAdapters)
 
 BOOST_AUTO_TEST_CASE(VectorAdapter)
@@ -32,8 +34,6 @@ BOOST_AUTO_TEST_CASE(VectorAdapter)
   BOOST_TEST(bg::get<0>(vec) == 1);
   BOOST_TEST(bg::get<1>(vec) == 2);
   BOOST_TEST(bg::get<2>(vec) == 0);
-  bg::set<1>(vec, 5);
-  BOOST_TEST(bg::get<1>(vec) == 5);
 }
 
 BOOST_AUTO_TEST_CASE(VertexAdapter)
@@ -44,8 +44,20 @@ BOOST_AUTO_TEST_CASE(VertexAdapter)
   BOOST_TEST(bg::get<0>(v) == 1);
   BOOST_TEST(bg::get<1>(v) == 2);
   BOOST_TEST(bg::get<2>(v) == 0);
+}
+
+BOOST_AUTO_TEST_CASE(RawCoordinateAdapter)
+{
+  PRECICE_TEST(1_rank);
+  mesh::Vertex::RawCoords v{1, 2, 3};
+  BOOST_TEST(bg::get<0>(v) == 1);
+  BOOST_TEST(bg::get<1>(v) == 2);
+  BOOST_TEST(bg::get<2>(v) == 3);
   bg::set<1>(v, 5);
+  bg::set<2>(v, 1);
+  BOOST_TEST(bg::get<0>(v) == 1);
   BOOST_TEST(bg::get<1>(v) == 5);
+  BOOST_TEST(bg::get<2>(v) == 1);
 }
 
 BOOST_AUTO_TEST_CASE(EdgeAdapter)
@@ -61,8 +73,6 @@ BOOST_AUTO_TEST_CASE(EdgeAdapter)
   BOOST_TEST((bg::get<1, 0>(e)) == 3.0);
   BOOST_TEST((bg::get<1, 1>(e)) == 4.0);
   BOOST_TEST((bg::get<1, 2>(e)) == 0.0);
-  bg::set<1, 1>(e, 5.0);
-  BOOST_TEST((bg::get<1, 1>(e)) == 5.0);
 }
 
 BOOST_AUTO_TEST_CASE(TriangleAdapter)
@@ -77,14 +87,14 @@ BOOST_AUTO_TEST_CASE(TriangleAdapter)
   auto &              e3 = mesh.createEdge(v3, v1);
   auto &              t  = mesh.createTriangle(e1, e2, e3);
 
-  std::vector<Eigen::VectorXd> vertices(t.begin(), t.end());
-  std::vector<Eigen::VectorXd> refs{v1.getCoords(), v2.getCoords(), v3.getCoords()};
+  std::vector<Vertex::RawCoords> vertices(t.begin(), t.end());
+  std::vector<Vertex::RawCoords> refs{v1.rawCoords(), v2.rawCoords(), v3.rawCoords()};
   BOOST_TEST(vertices.size() == refs.size());
   BOOST_TEST((std::is_permutation(
       vertices.begin(), vertices.end(),
       refs.begin(),
-      [](const Eigen::VectorXd &lhs, const Eigen::VectorXd &rhs) {
-        return precice::math::equals(lhs, rhs);
+      [](const auto &lhs, const auto &rhs) {
+        return precice::math::equals(rawToEigen(lhs), rawToEigen(rhs));
       })));
 }
 
@@ -213,7 +223,6 @@ BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
 BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
 {
   PRECICE_TEST(1_rank);
-  using precice::testing::equals;
   precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto &              v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto &              v2  = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
@@ -223,14 +232,19 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
   auto &              e3  = mesh.createEdge(v3, v1);
   auto &              t   = mesh.createTriangle(e1, e2, e3);
   auto                box = bg::return_envelope<precice::query::RTreeBox>(t);
-  BOOST_TEST(equals(box.min_corner(), Eigen::Vector3d{0, 0, 0}));
-  BOOST_TEST(equals(box.max_corner(), Eigen::Vector3d{1, 1, 1}));
+  auto                min = box.min_corner();
+  BOOST_TEST(min[0] == 0.0);
+  BOOST_TEST(min[1] == 0.0);
+  BOOST_TEST(min[2] == 0.0);
+  auto max = box.max_corner();
+  BOOST_TEST(max[0] == 1.0);
+  BOOST_TEST(max[1] == 1.0);
+  BOOST_TEST(max[2] == 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
 {
   PRECICE_TEST(1_rank);
-  using precice::testing::equals;
   precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
   auto &              v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto &              v2  = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
@@ -240,10 +254,17 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
   auto &              e3  = mesh.createEdge(v2, v1);
   auto &              t   = mesh.createTriangle(e1, e2, e3);
   auto                box = bg::return_envelope<precice::query::RTreeBox>(t);
-  BOOST_TEST(equals(box.min_corner(), Eigen::Vector3d{0, 0, 0}));
-  BOOST_TEST(equals(box.max_corner(), Eigen::Vector3d{1, 1, 1}));
+  auto                min = box.min_corner();
+  BOOST_TEST(min[0] == 0.0);
+  BOOST_TEST(min[1] == 0.0);
+  BOOST_TEST(min[2] == 0.0);
+  auto max = box.max_corner();
+  BOOST_TEST(max[0] == 1.0);
+  BOOST_TEST(max[1] == 1.0);
+  BOOST_TEST(max[2] == 1.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // BG Adapters
 BOOST_AUTO_TEST_SUITE_END() // RTree
 BOOST_AUTO_TEST_SUITE_END() // Mesh
+BOOST_AUTO_TEST_SUITE_END() // Query

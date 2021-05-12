@@ -7,7 +7,7 @@ namespace mesh {
 
 int Vertex::getDimensions() const
 {
-  return _coords.size();
+  return _dim;
 }
 
 const Eigen::VectorXd &Vertex::getNormal() const

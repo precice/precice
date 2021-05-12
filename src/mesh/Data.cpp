@@ -1,5 +1,7 @@
 #include "Data.hpp"
 #include <algorithm>
+#include <utility>
+
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -15,11 +17,12 @@ Data::Data()
   PRECICE_ASSERT(false);
 }
 
-Data::Data(const std::string &name,
-           int                id,
-           int                dimensions)
+Data::Data(
+    std::string name,
+    int         id,
+    int         dimensions)
     : _values(),
-      _name(name),
+      _name(std::move(name)),
       _id(id),
       _dimensions(dimensions)
 {

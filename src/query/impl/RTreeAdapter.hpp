@@ -5,6 +5,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {
@@ -43,23 +44,55 @@ template <size_t Dimension>
 struct access<Eigen::VectorXd, Dimension> {
   static double get(Eigen::VectorXd const &p)
   {
-    if (Dimension >= static_cast<size_t>(p.rows()))
+    if (Dimension >= static_cast<size_t>(p.rows())) {
       return 0;
-
-    return p[Dimension];
+    } else {
+      return p(Dimension);
+    }
   }
 
   static void set(Eigen::VectorXd &p, double const &value)
   {
-    // This handles default initialized VectorXd
-    if (p.size() == 0) {
-      p = Eigen::VectorXd::Zero(3);
+    if (Dimension >= static_cast<size_t>(p.rows())) {
+      Eigen::VectorXd tmp(Dimension);
+      std::copy_n(p.data(), Dimension - 1, tmp.data());
+      p = std::move(tmp);
     }
+    p(Dimension) = value;
+  }
+};
+
+/// Adapts Vertex::RawCoords to boost.geometry
+template <>
+struct tag<pm::Vertex::RawCoords> {
+  using type = point_tag;
+};
+template <>
+struct coordinate_type<pm::Vertex::RawCoords> {
+  using type = double;
+};
+template <>
+struct coordinate_system<pm::Vertex::RawCoords> {
+  using type = cs::cartesian;
+};
+template <>
+struct dimension<pm::Vertex::RawCoords> : boost::mpl::int_<3> {
+};
+
+template <size_t Dimension>
+struct access<pm::Vertex::RawCoords, Dimension> {
+  static double get(pm::Vertex::RawCoords const &p)
+  {
+    return p[Dimension];
+  }
+
+  static void set(pm::Vertex::RawCoords &p, double const &value)
+  {
     p[Dimension] = value;
   }
 };
 
-BOOST_CONCEPT_ASSERT((bg::concepts::Point<Eigen::VectorXd>) );
+BOOST_CONCEPT_ASSERT((bg::concepts::Point<pm::Vertex::RawCoords>) );
 
 /// Provides the necessary template specialisations to adapt precice's Vertex to boost.geometry
 /*
@@ -85,17 +118,12 @@ template <size_t Dimension>
 struct access<pm::Vertex, Dimension> {
   static double get(pm::Vertex const &p)
   {
-    if (Dimension >= static_cast<size_t>(p.getDimensions()))
-      return 0;
-
-    return p.getCoords()[Dimension];
+    return p.rawCoords()[Dimension];
   }
 
   static void set(pm::Vertex &p, double const &value)
   {
-    Eigen::VectorXd vec = p.getCoords();
-    vec[Dimension]      = value;
-    p.setCoords(vec);
+    PRECICE_UNREACHABLE("Boost.Geometry is not allowed to write to mesh::Vertex.");
   }
 };
 
@@ -112,7 +140,7 @@ struct tag<pm::Edge> {
 };
 template <>
 struct point_type<pm::Edge> {
-  using type = Eigen::VectorXd;
+  using type = pm::Vertex::RawCoords;
 };
 
 template <size_t Index, size_t Dimension>
@@ -122,14 +150,12 @@ struct indexed_access<pm::Edge, Index, Dimension> {
 
   static double get(pm::Edge const &e)
   {
-    return access<Eigen::VectorXd, Dimension>::get(e.vertex(Index).getCoords());
+    return access<point_type<pm::Edge>::type, Dimension>::get(e.vertex(Index).rawCoords());
   }
 
   static void set(pm::Edge &e, double const &value)
   {
-    Eigen::VectorXd v = e.vertex(Index).getCoords();
-    access<Eigen::VectorXd, Dimension>::set(v, value);
-    e.vertex(Index).setCoords(std::move(v));
+    PRECICE_UNREACHABLE("Boost.Geometry is not allowed to write to mesh::Edge.");
   }
 };
 
@@ -161,20 +187,48 @@ namespace precice {
 namespace query {
 
 /// The RTree box type
-using RTreeBox = boost::geometry::model::box<Eigen::VectorXd>;
+using RTreeBox = boost::geometry::model::box<pm::Vertex::RawCoords>;
+
+inline RTreeBox makeBox(const pm::Vertex::RawCoords &min, const pm::Vertex::RawCoords &max)
+{
+  return {min, max};
+}
+
+inline pm::Vertex::RawCoords eigenToRaw(const Eigen::VectorXd &v)
+{
+  const auto size = v.size();
+  PRECICE_ASSERT(size == 2 || size == 3, size);
+  pm::Vertex::RawCoords r;
+  std::copy_n(v.data(), size, r.data());
+  if (size == 2) {
+    r[2] = 0.0;
+  }
+  return r;
+}
+
+inline Eigen::VectorXd rawToEigen(const pm::Vertex::RawCoords &v)
+{
+  Eigen::VectorXd r(3);
+  std::copy(v.begin(), v.end(), r.data());
+  return r;
+}
+
+inline RTreeBox makeBox(const Eigen::VectorXd &min, const Eigen::VectorXd &max)
+{
+  return {eigenToRaw(min), eigenToRaw(max)};
+}
 
 namespace impl {
 
 /// The general rtree parameter type used in precice
 using RTreeParameters = boost::geometry::index::rstar<16>;
-using Box3d           = boost::geometry::model::box<boost::geometry::model::point<double, 3, boost::geometry::cs::cartesian>>;
 
 /// Type trait to extract information based on the type of a Primitive
 template <class T>
 struct PrimitiveTraits;
 
 template <>
-struct PrimitiveTraits<mesh::Vertex> {
+struct PrimitiveTraits<pm::Vertex> {
   using MeshContainer = mesh::Mesh::VertexContainer;
 };
 

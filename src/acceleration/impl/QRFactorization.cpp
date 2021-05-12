@@ -2,9 +2,11 @@
 #include <Eigen/Core>
 #include <algorithm> // std::sort
 #include <cmath>
+#include <cstddef>
 #include <iostream>
 #include <memory>
-#include <stddef.h>
+#include <utility>
+
 #include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "com/Communication.hpp"
@@ -27,8 +29,8 @@ QRFactorization::QRFactorization(
     double          theta,
     double          sigma)
 
-    : _Q(Q),
-      _R(R),
+    : _Q(std::move(Q)),
+      _R(std::move(R)),
       _rows(rows),
       _cols(cols),
       _filter(filter),
@@ -245,7 +247,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   // rho_orth: the norm of the orthogonalized (but not normalized) column
   // rho0:     the norm of the initial column that is to be inserted
   if (applyFilter && (rho0 * singularityLimit > rho_orth)) {
-    PRECICE_DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: " << rho0 * singularityLimit << " > " << rho_orth);
+    PRECICE_DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: {} > {}", rho0 * singularityLimit, rho_orth);
     _cols--;
     return false;
   }
@@ -734,7 +736,7 @@ void QRFactorization::reset(
     bool            inserted = insertColumn(k, v);
     if (not inserted) {
       k--;
-      PRECICE_DEBUG("column " << col << " has not been inserted in the QR-factorization, failed to orthogonalize.");
+      PRECICE_DEBUG("column {} has not been inserted in the QR-factorization, failed to orthogonalize.", col);
     }
   }
   PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);

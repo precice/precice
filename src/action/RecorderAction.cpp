@@ -13,12 +13,12 @@ RecorderAction::RecorderAction(
 
 void RecorderAction::performAction(
     double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double timeStepSize,
+    double computedTimeWindowPart,
+    double timeWindowSize)
 {
   records.push_back(Record{
-      getTiming(), time, dt, computedPartFullDt, fullDt});
+      getTiming(), time, timeStepSize, computedTimeWindowPart, timeWindowSize});
 }
 
 std::vector<RecorderAction::Record> RecorderAction::records{};

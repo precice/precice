@@ -142,8 +142,9 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   PRECICE_ASSERT(iter != _eigenVectorXdAttributes.end());
   const auto size = iter->second.getValue().size();
   PRECICE_CHECK(size == dimensions,
-                "Vector attribute \"" << name << "\" of tag <" << getFullName() << "> is "
-                                      << size << "D, which does not match the dimension of the " << dimensions << "D solver-interface.");
+                "Vector attribute \"{}\" of tag <{}> is {}D, "
+                "which does not match the dimension of the {}D solver-interface.",
+                name, getFullName(), size, dimensions);
 
   // Read only first "dimensions" components of the parsed vector values
   Eigen::VectorXd        result(dimensions);
@@ -151,7 +152,7 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, 
   for (int i = 0; i < dimensions; i++) {
     result[i] = parsed[i];
   }
-  PRECICE_DEBUG("Returning value = " << result);
+  PRECICE_DEBUG("Returning value = {}", result);
   return result;
 }
 
@@ -163,7 +164,7 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
     auto name = element.first;
 
     if (not utils::contained(name, _attributes)) {
-      PRECICE_ERROR("Tag <" << _name << "> contains an unknown attribute named \"" << name << "\".");
+      PRECICE_ERROR("Tag <{}> contains an unknown attribute named \"{}\".", _name, name);
     }
   }
 
@@ -268,7 +269,7 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
 
 void XMLTag::areAllSubtagsConfigured() const
 {
-  for (auto tag : _subtags) {
+  for (const auto &tag : _subtags) {
     std::string ns         = tag->_namespace;
     bool        configured = tag->isConfigured();
 
@@ -283,9 +284,9 @@ void XMLTag::areAllSubtagsConfigured() const
     if ((not configured) && (occurOnce || occurOnceOrMore)) {
 
       if (tag->getNamespace().empty()) {
-        PRECICE_ERROR("Tag <" << tag->getName() << "> was not found but is required to occur at least once.");
+        PRECICE_ERROR("Tag <{}> was not found but is required to occur at least once.", tag->getName());
       } else {
-        PRECICE_ERROR("Tag <" << tag->getNamespace() << ":... > was not found but is required to occur at least once.");
+        PRECICE_ERROR("Tag <{}:... > was not found but is required to occur at least once.", tag->getNamespace());
       }
     }
   }

@@ -80,12 +80,12 @@ public:
   /** Move construction
    * Takes ownership of the other vector.
    */
-  Vector(Vector &&other);
+  Vector(Vector &&other) noexcept;
 
   /** Move assignement
    * Destroys the current vector and takes ownership of the other.
    */
-  Vector &operator=(Vector &&other);
+  Vector &operator=(Vector &&other) noexcept;
 
   /** Constructs the object from another Vec
    * Takes ownership of the other Vec

@@ -74,7 +74,7 @@ void NearestNeighborMapping::computeMapping()
   if (distanceStatistics.empty()) {
     PRECICE_INFO("Mapping distance not available due to empty partition.");
   } else {
-    PRECICE_INFO("Mapping distance " << distanceStatistics);
+    PRECICE_INFO("Mapping distance {}", distanceStatistics);
   }
 
   _hasComputedMapping = true;

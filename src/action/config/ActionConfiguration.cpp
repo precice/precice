@@ -3,6 +3,8 @@
 #include <memory>
 #include <ostream>
 #include <stdexcept>
+#include <utility>
+
 #include "action/ComputeCurvatureAction.hpp"
 #include "action/PythonAction.hpp"
 #include "action/RecorderAction.hpp"
@@ -21,13 +23,13 @@ namespace precice {
 namespace action {
 
 ActionConfiguration::ActionConfiguration(
-    xml::XMLTag &                     parent,
-    const mesh::PtrMeshConfiguration &meshConfig)
+    xml::XMLTag &              parent,
+    mesh::PtrMeshConfiguration meshConfig)
     : NAME_DIVIDE_BY_AREA("divide-by-area"),
       NAME_MULTIPLY_BY_AREA("multiply-by-area"),
-      NAME_SCALE_BY_COMPUTED_DT_RATIO("scale-by-computed-dt-ratio"),
-      NAME_SCALE_BY_COMPUTED_DT_PART_RATIO("scale-by-computed-dt-part-ratio"),
-      NAME_SCALE_BY_DT("scale-by-dt"),
+      NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO("scale-by-computed-dt-ratio"),       //@todo rename this, breaking change!
+      NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO("scale-by-computed-dt-part-ratio"), //@todo rename this, breaking change!
+      NAME_SCALING_BY_TIME_WINDOW_SIZE("scale-by-dt"),                                    //@todo rename this, breaking change!, currently misleading. See https://github.com/precice/precice/issues/934
       NAME_SUMMATION("summation"),
       NAME_COMPUTE_CURVATURE("compute-curvature"),
       NAME_PYTHON("python"),
@@ -47,7 +49,7 @@ ActionConfiguration::ActionConfiguration(
       WRITE_MAPPING_POST("write-mapping-post"),
       READ_MAPPING_PRIOR("read-mapping-prior"),
       READ_MAPPING_POST("read-mapping-post"),
-      _meshConfig(meshConfig)
+      _meshConfig(std::move(meshConfig))
 {
   using namespace xml;
   XMLTag tagSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_ONCE);
@@ -77,24 +79,24 @@ ActionConfiguration::ActionConfiguration(
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, NAME_SCALE_BY_COMPUTED_DT_RATIO, occ, TAG);
-    tag.setDocumentation("Multiplies source data values by ratio of full dt / last computed dt,"
+    XMLTag tag(*this, NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO, occ, TAG);
+    tag.setDocumentation("Multiplies source data values by ratio of last time step size / time window size,"
                          " and writes the result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, NAME_SCALE_BY_COMPUTED_DT_PART_RATIO, occ, TAG);
-    tag.setDocumentation("Multiplies source data values by ratio of full dt / computed dt part,"
+    XMLTag tag(*this, NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO, occ, TAG);
+    tag.setDocumentation("Multiplies source data values by ratio of computed time window part / time window size,"
                          " and writes the result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, NAME_SCALE_BY_DT, occ, TAG);
-    tag.setDocumentation("Multiplies source data values by last computed dt, and writes the "
+    XMLTag tag(*this, NAME_SCALING_BY_TIME_WINDOW_SIZE, occ, TAG);
+    tag.setDocumentation("Multiplies source data values by the time window size, and writes the "
                          "result into target data.");
     tag.addSubtag(tagSourceData);
     tag.addSubtag(tagTargetData);
@@ -205,12 +207,12 @@ void ActionConfiguration::xmlEndTagCallback(
 
 int ActionConfiguration::getUsedMeshID() const
 {
-  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
+  for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
     if (mesh->getName() == _configuredAction.mesh) {
       return mesh->getID();
     }
   }
-  PRECICE_ERROR("No mesh name \"" << _configuredAction.mesh << "\" found. Please check that the correct mesh name is used.");
+  PRECICE_ERROR("No mesh name \"{}\" found. Please check that the correct mesh name is used.", _configuredAction.mesh);
   return -1; // To please compiler
 }
 
@@ -225,7 +227,7 @@ void ActionConfiguration::createAction()
   std::vector<int> sourceDataIDs;
   int              targetDataID = -1;
   mesh::PtrMesh    mesh;
-  for (mesh::PtrMesh aMesh : _meshConfig->meshes()) {
+  for (const mesh::PtrMesh &aMesh : _meshConfig->meshes()) {
     if (aMesh->getName() == _configuredAction.mesh) {
       mesh = aMesh;
       for (const mesh::PtrData &data : mesh->data()) {
@@ -239,38 +241,40 @@ void ActionConfiguration::createAction()
     }
   }
   PRECICE_CHECK(mesh,
-                "Data action uses mesh \"" << _configuredAction.mesh << "\" which is not configured. Please ensure that the correct mesh name is given in <action:python mesh=\"...\">");
+                "Data action uses mesh \"{}\" which is not configured. Please ensure that the correct mesh name is given in <action:python mesh=\"...\">", _configuredAction.mesh);
   PRECICE_CHECK((_configuredAction.sourceDataVector.empty() || not sourceDataIDs.empty()),
-                "Data action uses source data \"" << _configuredAction.sourceDataVector.back() << "\" which is not configured. Please ensure that the source data name is used by the mesh.");
+                "Data action uses source data \"{}\" which is not configured. Please ensure that the source data name is used by the mesh.", _configuredAction.sourceDataVector.back());
   PRECICE_CHECK((_configuredAction.targetData.empty() || (targetDataID != -1)),
-                "Data action uses target data \"" << _configuredAction.targetData << "\" which is not configured. Please ensure that the target data name is used by the mesh");
+                "Data action uses target data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh", _configuredAction.targetData);
   action::PtrAction action;
   if (_configuredAction.type == NAME_MULTIPLY_BY_AREA) {
     PRECICE_CHECK(mesh->getDimensions() == 2,
-                  "The action \"" << NAME_MULTIPLY_BY_AREA << "\" is only available for a solverinterface dimensionality of 2. "
-                                                              "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.");
+                  "The action \"{}\" is only available for a solverinterface dimensionality of 2. "
+                  "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.",
+                  NAME_MULTIPLY_BY_AREA);
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_MULTIPLY_BY_AREA));
   } else if (_configuredAction.type == NAME_DIVIDE_BY_AREA) {
     PRECICE_CHECK(mesh->getDimensions() == 2,
-                  "The action \"" << NAME_DIVIDE_BY_AREA << "\" is only available for a solverinterface dimensionality of 2. "
-                                                            "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.");
+                  "The action \"{}\" is only available for a solverinterface dimensionality of 2. "
+                  "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.",
+                  NAME_DIVIDE_BY_AREA);
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
-  } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_RATIO) {
+  } else if (_configuredAction.type == NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO) {
     action = action::PtrAction(
         new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
-                                    mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_RATIO));
-  } else if (_configuredAction.type == NAME_SCALE_BY_COMPUTED_DT_PART_RATIO) {
+                                    mesh, action::ScaleByDtAction::SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO));
+  } else if (_configuredAction.type == NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO) {
     action = action::PtrAction(
         new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
-                                    mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_DT_PART_RATIO));
-  } else if (_configuredAction.type == NAME_SCALE_BY_DT) {
+                                    mesh, action::ScaleByDtAction::SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO));
+  } else if (_configuredAction.type == NAME_SCALING_BY_TIME_WINDOW_SIZE) {
     action = action::PtrAction(
         new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID,
-                                    mesh, action::ScaleByDtAction::SCALING_BY_DT));
+                                    mesh, action::ScaleByDtAction::SCALING_BY_TIME_WINDOW_SIZE));
   } else if (_configuredAction.type == NAME_COMPUTE_CURVATURE) {
     action = action::PtrAction(
         new action::ComputeCurvatureAction(timing, targetDataID,
@@ -324,8 +328,9 @@ action::Action::Timing ActionConfiguration::getTiming() const
   } else if (_configuredAction.timing == READ_MAPPING_POST) {
     timing = action::Action::READ_MAPPING_POST;
   } else {
-    PRECICE_ERROR("Unknown action timing \"" << _configuredAction.timing << "\". Valid action timings are "
-                                             << "regular-prior, regular-post, on-exchange-prior, on-exchange-post, on-time-window-complete-post");
+    PRECICE_ERROR("Unknown action timing \"{}\". "
+                  "Valid action timings are regular-prior, regular-post, on-exchange-prior, on-exchange-post, on-time-window-complete-post",
+                  _configuredAction.timing);
   }
   return timing;
 }
