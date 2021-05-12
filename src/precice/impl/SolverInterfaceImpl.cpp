@@ -1326,7 +1326,7 @@ void SolverInterfaceImpl::setBoundingBoxes(
   mesh::BoundingBox providedBoundingBox(bounds);
   // Expand the mesh associated bounding box
   mesh::BoundingBox &bbox = mesh->getBoundingBox();
-  bbox.expandBy(providedBoundingBox);
+  bbox                    = std::move(providedBoundingBox);
 
   // Do not allocate data values
   // mesh->allocateDataValues();

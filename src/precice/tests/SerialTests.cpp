@@ -789,7 +789,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     double dt = interface.initialize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
-    const int otherMeshSize = interface.getMeshVertexSize(writeDataID);
+    const int otherMeshSize = interface.getMeshVertexSize(otherMeshID);
     BOOST_TEST(otherMeshSize == 5);
 
     // Allocate a vector containing the vertices
@@ -889,7 +889,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
     double dt = couplingInterface.initialize();
     // Get the size of the filtered mesh within the bounding box
     // (provided by the coupling participant)
-    const int meshSize = couplingInterface.getMeshVertexSize(otherDataID);
+    const int meshSize = couplingInterface.getMeshVertexSize(otherMeshID);
     BOOST_TEST(meshSize == 3);
 
     // Allocate a vector containing the vertices
@@ -944,7 +944,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
     // Initialize
     double dt = couplingInterface.initialize();
 
-    const int meshSize = couplingInterface.getMeshVertexSize(otherDataID);
+    const int meshSize = couplingInterface.getMeshVertexSize(otherMeshID);
     BOOST_TEST(meshSize == 4);
 
     // Allocate a vector containing the vertices
