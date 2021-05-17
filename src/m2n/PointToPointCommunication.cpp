@@ -581,7 +581,7 @@ void PointToPointCommunication::send(double const *itemsToSend,
                                      int           valueDimension)
 {
 
-  if (_mappings.empty()) {
+  if (_mappings.empty() || size == 0) {
     return;
   }
 
@@ -605,7 +605,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
                                         size_t  size,
                                         int     valueDimension)
 {
-  if (_mappings.empty()) {
+  if (_mappings.empty() || size == 0) {
     return;
   }
 
