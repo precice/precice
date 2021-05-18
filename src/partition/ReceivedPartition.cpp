@@ -328,10 +328,6 @@ void ReceivedPartition::filterByBoundingBox()
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
 
-      if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
-      }
-
       PRECICE_DEBUG("Bounding box filter, filtered from "
                     << _mesh->vertices().size() << " to " << filteredMesh.vertices().size() << " vertices, "
                     << _mesh->edges().size() << " to " << filteredMesh.edges().size() << " edges, and "
@@ -339,6 +335,9 @@ void ReceivedPartition::filterByBoundingBox()
 
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
+      if (isAnyProvidedMeshNonEmpty()) {
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
+      }
     } else {
       PRECICE_ASSERT(_geometricFilter == NO_FILTER);
     }
