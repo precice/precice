@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "boost/range/irange.hpp"
 
 namespace precice {
 namespace logging {
@@ -26,11 +27,26 @@ public:
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int getSize();
 
+  /// Returns an iterable range over salve ranks [1, _size)
+  static auto slaves()
+  {
+    return boost::irange(1, _size);
+  }
+
+  /// Returns an iterable range over all ranks [0, _size)
+  static auto ranks()
+  {
+    return boost::irange(0, _size);
+  }
+
   /// True if this process is running the master.
   static bool isMaster();
 
   /// True if this process is running a slave.
   static bool isSlave();
+
+  /// True if this process is running in parallel
+  static bool isParallel();
 
   /// The l2 norm of a vector is calculated on distributed data.
   static double l2norm(const Eigen::VectorXd &vec);

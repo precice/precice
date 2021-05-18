@@ -53,6 +53,11 @@ bool MasterSlave::isSlave()
   return _isSlave;
 }
 
+bool MasterSlave::isParallel()
+{
+  return _isMaster || _isSlave;
+}
+
 double MasterSlave::l2norm(const Eigen::VectorXd &vec)
 {
   PRECICE_TRACE();
