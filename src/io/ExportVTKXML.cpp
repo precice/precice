@@ -32,7 +32,7 @@ void ExportVTKXML::doExport(
     mesh::Mesh &       mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
-  PRECICE_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
+  PRECICE_ASSERT(utils::MasterSlave::isParallel());
   processDataNamesAndDimensions(mesh);
   if (not location.empty())
     boost::filesystem::create_directories(location);

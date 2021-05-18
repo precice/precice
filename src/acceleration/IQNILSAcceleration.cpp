@@ -161,7 +161,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
   utils::append(c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
   // compute rhs Q^T*res in parallel
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (! utils::MasterSlave::isParallel()) {
     PRECICE_ASSERT(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
     // back substitution
     c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
@@ -182,8 +182,9 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     utils::MasterSlave::reduceSum(_local_b.data(), _global_b.data(), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
 
     // back substitution R*c = b only in master node
-    if (utils::MasterSlave::isMaster())
+    if (utils::MasterSlave::isMaster()) {
       c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
+    }
 
     // broadcast coefficients c to all slaves
     utils::MasterSlave::broadcast(c.data(), c.size());
