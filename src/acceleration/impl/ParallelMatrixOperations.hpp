@@ -291,7 +291,7 @@ private:
       // distribute blocks of summarizedBlocks (result of multiplication) to corresponding slaves
       result = summarizedBlocks.block(0, 0, offsets[1], r);
 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+      for (int rankSlave : utils::MasterSlave::slaves()) {
         int off       = offsets[rankSlave];
         int send_rows = offsets[rankSlave + 1] - offsets[rankSlave];
 

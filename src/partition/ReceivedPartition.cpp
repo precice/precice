@@ -192,7 +192,7 @@ void ReceivedPartition::compute()
       }
       _mesh->getVertexDistribution()[0] = std::move(vertexIDs);
 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+      for (int rankSlave : utils::MasterSlave::slaves()) {
         int numberOfSlaveVertices = -1;
         utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
         PRECICE_ASSERT(numberOfSlaveVertices >= 0);
@@ -225,7 +225,7 @@ void ReceivedPartition::compute()
     _mesh->getVertexOffsets()[0] = _mesh->vertices().size();
 
     // receive number of slave vertices and fill vertex offsets
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+    for (int rankSlave : utils::MasterSlave::slaves()) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
       _mesh->getVertexOffsets()[rankSlave] = numberOfSlaveVertices + _mesh->getVertexOffsets()[rankSlave - 1];
@@ -287,7 +287,7 @@ void ReceivedPartition::filterByBoundingBox()
       PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
       PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+      for (int rankSlave : utils::MasterSlave::slaves()) {
         mesh::BoundingBox slaveBB(_bb.getDimension());
         com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(slaveBB, rankSlave);
 
@@ -404,7 +404,7 @@ void ReceivedPartition::compareBoundingBoxes()
     }
 
     // receive connected ranks from slaves and add them to the connection map
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+    for (int rank : utils::MasterSlave::slaves()) {
       std::vector<int> slaveConnectedRanks;
       int              connectedRanksSize = -1;
       utils::MasterSlave::_communication->receive(connectedRanksSize, rank);
@@ -535,7 +535,7 @@ void ReceivedPartition::createOwnerInformation()
     if (masterAtInterface)
       ranksAtInterface++;
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+    for (int rank : utils::MasterSlave::slaves()) {
       int localNumberOfVertices = -1;
       utils::MasterSlave::_communication->receive(localNumberOfVertices, rank);
       PRECICE_DEBUG("Rank {} has {} vertices.", rank, localNumberOfVertices);
@@ -559,7 +559,7 @@ void ReceivedPartition::createOwnerInformation()
     PRECICE_ASSERT(ranksAtInterface != 0);
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
-    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+    for (int rank : utils::MasterSlave::ranks()) {
       int counter = 0;
       for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
         // Vertex has no owner yet and rank could be owner
@@ -575,7 +575,7 @@ void ReceivedPartition::createOwnerInformation()
 
     // Second round: distribute all other vertices in a greedy way
     PRECICE_DEBUG("Decide owners, second round in greedy way");
-    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+    for (int rank : utils::MasterSlave::ranks()) {
       for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
         if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
           slaveOwnerVecs[rank][i]                 = 1;
@@ -585,7 +585,7 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     // Send information back to slaves
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+    for (int rank : utils::MasterSlave::slaves()) {
       if (not slaveTags[rank].empty()) {
         PRECICE_DEBUG("Send owner information to slave rank {}", rank);
         utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);

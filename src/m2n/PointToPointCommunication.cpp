@@ -114,7 +114,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
     std::string s;
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::slaves()) {
       utils::MasterSlave::_communication->receive(s, rank);
 
       oss << s;
@@ -140,7 +140,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::slaves()) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -196,7 +196,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::slaves()) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
