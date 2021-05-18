@@ -86,7 +86,7 @@ void MVQNAcceleration::initialize(
   int entries  = _residuals.size();
   int global_n = 0;
 
-  if (! utils::MasterSlave::isParallel()) {
+  if (!utils::MasterSlave::isParallel()) {
     global_n = entries;
   } else {
     global_n = _dimOffsets.back();

@@ -587,7 +587,7 @@ int QRFactorization::orthogonalize_stable(
         v = Eigen::VectorXd::Zero(_rows);
 
         // insert rho1 at position k with smallest u(i) = Q(i,:) * Q(i,:)
-        if (! utils::MasterSlave::isParallel()) {
+        if (!utils::MasterSlave::isParallel()) {
           v(k) = rho1;
         } else {
           if (utils::MasterSlave::getRank() == rank)

@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Eigen/Core>
+#include "boost/range/irange.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "boost/range/irange.hpp"
 
 namespace precice {
 namespace logging {

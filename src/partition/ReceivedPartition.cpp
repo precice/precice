@@ -91,7 +91,7 @@ void ReceivedPartition::compute()
   PRECICE_TRACE();
 
   // handle coupling mode first (i.e. serial participant)
-  if (! utils::MasterSlave::isParallel()) { //coupling mode
+  if (!utils::MasterSlave::isParallel()) { //coupling mode
     PRECICE_DEBUG("Handle partition data structures for serial participant");
     int vertexCounter = 0;
     for (mesh::Vertex &v : _mesh->vertices()) {
