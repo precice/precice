@@ -73,7 +73,7 @@ void MeshConfiguration::xmlTagCallback(
   if (tag.getName() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
-    if (tag.hasAttribute(ATTR_FLIP_NORMALS)) {
+    if (tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS)) {
       PRECICE_WARN("You used the attribute \"{}\" when configuring mesh \"\". "
                    "This attribute is deprecated and will be removed in the next major release. "
                    "Please remove the attribute to silence this warning.",
