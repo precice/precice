@@ -28,7 +28,7 @@ public:
   static int getSize();
 
   /// Returns an iterable range over salve ranks [1, _size)
-  static auto slaves()
+  static auto allSlaves()
   {
     return boost::irange(1, _size);
   }

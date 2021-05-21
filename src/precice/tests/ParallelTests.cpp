@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup)
   }
 
   { // slaves
-    auto             slaves = utils::MasterSlave::slaves();
+    auto             slaves = utils::MasterSlave::allSlaves();
     std::vector<int> ranks(slaves.begin(), slaves.end());
     BOOST_TEST(ranks.size() == 3);
     BOOST_TEST(std::is_sorted(ranks.begin(), ranks.end()));

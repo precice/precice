@@ -1659,7 +1659,7 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
     utils::MasterSlave::_communication->send(computedTimestepLength, 0);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isMaster());
-    for (int rankSlave : utils::MasterSlave::slaves()) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       double dt;
       utils::MasterSlave::_communication->receive(dt, rankSlave);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),

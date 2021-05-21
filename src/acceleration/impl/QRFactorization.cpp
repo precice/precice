@@ -565,7 +565,7 @@ int QRFactorization::orthogonalize_stable(
 
         if (utils::MasterSlave::isMaster()) {
           global_uk = u(k);
-          for (int rankSlave : utils::MasterSlave::slaves()) {
+          for (int rankSlave : utils::MasterSlave::allSlaves()) {
             utils::MasterSlave::_communication->receive(local_k, rankSlave);
             utils::MasterSlave::_communication->receive(local_uk, rankSlave);
             if (local_uk < global_uk) {

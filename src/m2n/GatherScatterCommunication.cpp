@@ -87,7 +87,7 @@ void GatherScatterCommunication::send(
     }
 
     // Slaves data
-    for (int rankSlave : utils::MasterSlave::slaves()) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
       PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
@@ -145,7 +145,7 @@ void GatherScatterCommunication::receive(
     }
 
     // Slaves data
-    for (int rankSlave : utils::MasterSlave::slaves()) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
       PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
