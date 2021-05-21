@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup)
   BOOST_TEST(utils::MasterSlave::getSize() == context.size);
 
   { // ranks
-    auto             ranksRange = utils::MasterSlave::ranks();
+    auto             ranksRange = utils::MasterSlave::allRanks();
     std::vector<int> ranks(ranksRange.begin(), ranksRange.end());
     BOOST_TEST(ranks.size() == 4);
     BOOST_TEST(std::is_sorted(ranks.begin(), ranks.end()));

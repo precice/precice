@@ -559,7 +559,7 @@ void ReceivedPartition::createOwnerInformation()
     PRECICE_ASSERT(ranksAtInterface != 0);
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
-    for (int rank : utils::MasterSlave::ranks()) {
+    for (int rank : utils::MasterSlave::allRanks()) {
       int counter = 0;
       for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
         // Vertex has no owner yet and rank could be owner
@@ -575,7 +575,7 @@ void ReceivedPartition::createOwnerInformation()
 
     // Second round: distribute all other vertices in a greedy way
     PRECICE_DEBUG("Decide owners, second round in greedy way");
-    for (int rank : utils::MasterSlave::ranks()) {
+    for (int rank : utils::MasterSlave::allRanks()) {
       for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
         if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
           slaveOwnerVecs[rank][i]                 = 1;

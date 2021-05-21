@@ -34,7 +34,7 @@ public:
   }
 
   /// Returns an iterable range over all ranks [0, _size)
-  static auto ranks()
+  static auto allRanks()
   {
     return boost::irange(0, _size);
   }
