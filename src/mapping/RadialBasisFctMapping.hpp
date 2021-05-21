@@ -174,7 +174,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
 
       // Receive mesh
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave) {
+      for (int rankSlave : utils::MasterSlave::allSlaves()) {
         mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveInMesh, rankSlave);
         globalInMesh.addMesh(slaveInMesh);
@@ -297,7 +297,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     {
       std::vector<double> slaveBuffer;
       int                 slaveOutputValueSize;
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      for (int rank : utils::MasterSlave::allSlaves()) {
         utils::MasterSlave::_communication->receive(slaveBuffer, rank);
         globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
 
@@ -347,7 +347,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
       // Data scattering to slaves
       int beginPoint = outputValueSizes.at(0);
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      for (int rank : utils::MasterSlave::allSlaves()) {
         utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outputValueSizes.at(rank), rank);
         beginPoint += outputValueSizes.at(rank);
       }
@@ -408,7 +408,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 
       std::vector<double> slaveBuffer;
 
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      for (int rank : utils::MasterSlave::allSlaves()) {
         utils::MasterSlave::_communication->receive(slaveBuffer, rank);
         std::copy(slaveBuffer.begin(), slaveBuffer.end(), globalInValues.begin() + inputSizeCounter);
         inputSizeCounter += slaveBuffer.size();
@@ -456,7 +456,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     int beginPoint = outValuesSize.at(0);
 
     if (utils::MasterSlave::isMaster()) {
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      for (int rank : utils::MasterSlave::allSlaves()) {
         utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outValuesSize.at(rank), rank);
         beginPoint += outValuesSize.at(rank);
       }
