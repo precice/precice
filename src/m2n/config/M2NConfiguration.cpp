@@ -123,6 +123,14 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
   PRECICE_ERROR("There is no m2n communication configured between participants \"" + from + "\" and \"" + to + "\". Please add an appropriate \"<m2n />\" tag.");
 }
 
+bool M2NConfiguration::isM2NConfigured(const std::string& from, const std::string& to) {
+  return std::any_of(std::begin(_m2ns), std::end(_m2ns), 
+    [from, to](const auto& m2nTuple) 
+    { 
+      return ((std::get<1>(m2nTuple) == from) && (std::get<2>(m2nTuple) == to)) || ((std::get<1>(m2nTuple) == to) && (std::get<2>(m2nTuple) == from)); 
+    } );
+}
+
 void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   if (tag.getNamespace() == TAG) {

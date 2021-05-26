@@ -9,6 +9,8 @@
     <mesh name="MeshA">
       <use-data name="DataAB" />
       <use-data name="DataBA" />
+      <use-data name="DataCB" />
+      <use-data name="DataBC" />
     </mesh>
 
     <mesh name="MeshB1">
@@ -22,14 +24,17 @@
     </mesh>
 
     <mesh name="MeshC">
+      <use-data name="DataBA" />
       <use-data name="DataBC" />
       <use-data name="DataCB" />
     </mesh>
 
     <participant name="SolverA">
       <use-mesh name="MeshA" provide="yes" />
+      <use-mesh name="MeshC" from="SolverC" />
       <write-data name="DataAB" mesh="MeshA" />
       <read-data name="DataBA" mesh="MeshA" />
+      <mapping:nearest-neighbor direction="read" from="MeshC" to="MeshA" constraint="consistent" />
     </participant>
 
     <participant name="SolverB">
@@ -53,26 +58,30 @@
 
     <participant name="SolverC">
       <use-mesh name="MeshC" provide="yes" />
+      <use-mesh name="MeshA" from="SolverA" />
       <write-data name="DataCB" mesh="MeshC" />
       <read-data name="DataBC" mesh="MeshC" />
     </participant>
 
     <m2n:sockets from="SolverA" to="SolverB" />
+    <m2n:sockets from="SolverC" to="SolverA" />
     <m2n:sockets from="SolverB" to="SolverC" />
 
     <coupling-scheme:multi>
-      <participant name="SolverA" />
-      <participant name="SolverB" control="yes"/>
+      <participant name="SolverA" control="yes"/>
+      <participant name="SolverB"/>
       <participant name="SolverC" />
       <max-time-windows value="10" />
       <time-window-size value="1.0" />
       <max-iterations value="2" />
       <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" />
-      <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" />
-      <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverB" />
+      <exchange data="DataBA" mesh="MeshA" from="SolverA" to="SolverB" />
+      <exchange data="DataCB" mesh="MeshC" from="SolverB" to="SolverC" />
       <exchange data="DataBC" mesh="MeshC" from="SolverB" to="SolverC" />
+      <exchange data="DataBC" mesh="MeshA" from="SolverC" to="SolverA" />
+      <exchange data="DataCB" mesh="MeshA" from="SolverC" to="SolverA" />
       <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
-      <relative-convergence-measure data="DataBC" mesh="MeshC" limit="1e-4" />
+      <relative-convergence-measure data="DataBC" mesh="MeshA" limit="1e-4" />
     </coupling-scheme:multi>
   </solver-interface>
 </precice-configuration>

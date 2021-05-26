@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include "BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
@@ -11,6 +12,7 @@
 namespace precice {
 namespace cplscheme {
 struct CouplingData;
+struct ExchangeData;
 
 /**
  * @brief A coupling scheme with multiple participants.
@@ -40,23 +42,24 @@ public:
       double                        timeWindowSize,
       int                           validDigits,
       const std::string &           localParticipant,
-      std::vector<m2n::PtrM2N>      m2ns,
+      std::map<std::string, m2n::PtrM2N>      m2ns,
       constants::TimesteppingMethod dtMethod,
-      int                           maxIterations = -1);
+      int                           maxIterations = -1,
+      bool                          isController = false);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          initialize,
-      int           index);
+      std::string   to);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          initialize,
-      int           index);
+      std::string   from);
 
   /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
@@ -66,10 +69,24 @@ public:
    */
   bool hasAnySendData() override final
   {
-    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](DataMap sendData) { return not sendData.empty(); });
+    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto& sendExchange) { return not sendExchange.data.empty(); });
   }
 
 private:
+  
+  struct ExchangeData{
+    DataMap data;
+    std::string with;
+
+    ExchangeData(DataMap data_, std::string with_) :
+      data(data_), with(with_) 
+    {}
+
+    bool operator==(const std::string& other) const{
+      return with == other;
+    }
+  };
+  
   /**
    * @brief get CouplingData from _allData using dataID
    * @param dataID identifies CouplingData to be searched for
@@ -80,7 +97,7 @@ private:
   /**
    * @brief A vector of m2ns. A m2n is a communication device to the other coupling participant.
    */
-  std::vector<m2n::PtrM2N> _m2ns;
+  std::map<std::string, m2n::PtrM2N> _m2ns;
 
   /**
    * @brief Map from data ID -> all data (receive and send) with that ID
@@ -90,12 +107,12 @@ private:
   /**
    * @brief A vector of all data to be received.
    */
-  std::vector<DataMap> _receiveDataVector;
+  std::vector<ExchangeData> _receiveDataVector;
 
   /**
    * @brief A vector of all data to be sent.
    */
-  std::vector<DataMap> _sendDataVector;
+  std::vector<ExchangeData> _sendDataVector;
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
@@ -141,13 +158,18 @@ private:
    */
   void storeData() override
   {
-    for (DataMap &sendData : _sendDataVector) {
-      store(sendData);
+    for (auto &sendData : _sendDataVector) {
+      store(sendData.data);
     }
-    for (DataMap &receiveData : _receiveDataVector) {
-      store(receiveData);
+    for (auto &receiveData : _receiveDataVector) {
+      store(receiveData.data);
     }
   }
+
+  bool receiveConvergence(m2n::PtrM2N m2n);
+
+  bool _isController = false;
+
 };
 
 } // namespace cplscheme

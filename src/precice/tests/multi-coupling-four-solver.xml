@@ -49,6 +49,7 @@
       <use-mesh name="MeshC1" from="SolverC" />
       <use-mesh name="MeshB1" provide="yes" />
       <use-mesh name="MeshB2" provide="yes" />
+      <use-mesh name="MeshD" from="SolverD"/>
       
       <write-data name="DataBA" mesh="MeshB1" />
       <write-data name="DataBC" mesh="MeshB2" />
@@ -87,6 +88,7 @@
     <m2n:sockets from="SolverA" to="SolverB" />
     <m2n:sockets from="SolverB" to="SolverC" />
     <m2n:sockets from="SolverC" to="SolverD" />
+    <m2n:sockets from="SolverD" to="SolverB" />
 
     <coupling-scheme:multi>
       <participant name="SolverA" />

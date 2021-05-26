@@ -171,16 +171,13 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                   "Please make sure that you do not provide the participant multiple times via the <participant name=\"{0}\" /> "
                   "tag in the <coupling-scheme:...> of your precice-config.xml",
                   participantName);
-    if (control) {
-      PRECICE_CHECK(not _config.setController,
-                    "Only one controller per MultiCouplingScheme can be defined. "
-                    "Please check the <participant name=\"{}\" control=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
-                    participantName, control);
-      _config.controller    = participantName;
-      _config.setController = true;
-    } else {
-      _config.participants.push_back(participantName);
-    }
+      // PRECICE_CHECK(not _config.setController,
+      //               "Only one controller per MultiCouplingScheme can be defined. "
+      //               "Please check the <participant name=\"{}\" control=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
+      //               participantName, control);
+    _config.controller    = participantName;
+    _config.setController = control;
+    _config.participants.push_back(participantName);
 
   } else if (tag.getName() == TAG_MAX_TIME) {
     _config.maxTime = tag.getDoubleAttributeValue(ATTR_VALUE);
@@ -338,16 +335,14 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       addCouplingScheme(scheme, accessor);
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
-      PRECICE_CHECK(_config.setController,
-                    "One controller per MultiCoupling needs to be defined. "
-                    "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
-                    "Make sure that at least one participant tag provides the attribute <participant name=... control=\"True\"/>.");
-      for (std::string &accessor : _config.participants) {
+      // PRECICE_CHECK(_config.setController,
+      //               "One controller per MultiCoupling needs to be defined. "
+      //               "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
+      //               "Make sure that at least one participant tag provides the attribute <participant name=... control=\"True\"/>.");
+      for (const std::string &accessor : _config.participants) {
         PtrCouplingScheme scheme = createMultiCouplingScheme(accessor);
         addCouplingScheme(scheme, accessor);
       }
-      PtrCouplingScheme scheme = createMultiCouplingScheme(_config.controller);
-      addCouplingScheme(scheme, _config.controller);
       _config = Config();
     } else {
       PRECICE_ASSERT(false, _config.type);
@@ -900,35 +895,26 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
 
   BaseCouplingScheme *scheme;
 
-  if (accessor == _config.controller) {
-    std::vector<m2n::PtrM2N> m2ns;
-    for (const std::string &participant : _config.participants) {
-      m2ns.push_back(_m2nConfig->getM2N(
-          _config.controller, participant));
+  bool isController = (accessor == _config.controller);
+
+  std::map<std::string, m2n::PtrM2N> m2ns;
+
+  for (const std::string &participant : _config.participants) {
+    if(_m2nConfig->isM2NConfigured(accessor, participant)){
+      m2ns.insert(std::make_pair(participant, _m2nConfig->getM2N(accessor, participant)));
     }
-
-    scheme = new MultiCouplingScheme(
-        _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-        _config.validDigits, accessor, m2ns, _config.dtMethod,
-        _config.maxIterations);
-    scheme->setExtrapolationOrder(_config.extrapolationOrder);
-
-    MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
-    PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
-    addMultiDataToBeExchanged(*castedScheme, accessor);
-  } else {
-    m2n::PtrM2N m2n = _m2nConfig->getM2N(
-        accessor, _config.controller);
-
-    scheme = new ParallelCouplingScheme(
-        _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-        _config.validDigits, accessor, _config.controller,
-        accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
-    scheme->setExtrapolationOrder(_config.extrapolationOrder);
-
-    BiCouplingScheme *castedScheme = dynamic_cast<BiCouplingScheme *>(scheme);
-    addDataToBeExchanged(*castedScheme, accessor);
   }
+
+  scheme = new MultiCouplingScheme(
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
+      _config.validDigits, accessor, m2ns, _config.dtMethod,
+      _config.maxIterations, isController);
+  scheme->setExtrapolationOrder(_config.extrapolationOrder);
+
+  MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
+  PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
+  addMultiDataToBeExchanged(*castedScheme, accessor);
+  
   PRECICE_CHECK(scheme->hasAnySendData(),
                 "No send data configured. Use explicit scheme for one-way coupling. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
@@ -965,7 +951,6 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
                    _accelerationConfig->getAcceleration()->getDataIDs().size());
     }
   }
-
   return PtrCouplingScheme(scheme);
 }
 
@@ -1051,27 +1036,13 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 
     const bool initialize = exchange.requiresInitialization;
     if (from == accessor) {
-      size_t index = 0;
-      for (const std::string &participant : _config.participants) {
-        PRECICE_DEBUG("from: {}, to: {}, participant: {}", from, to, participant);
-        if (to == participant) {
-          break;
-        }
-        index++;
-      }
-      PRECICE_ASSERT(index < _config.participants.size(), index, _config.participants.size());
-      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, index);
-    } else {
-      size_t index = 0;
-      for (const std::string &participant : _config.participants) {
-        PRECICE_DEBUG("from: {}, to: {}, participant: {}", from, to, participant);
-        if (from == participant) {
-          break;
-        }
-        index++;
-      }
-      PRECICE_ASSERT(index < _config.participants.size(), index, _config.participants.size());
-      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, index);
+      const auto index = std::distance(std::begin(_config.participants), std::find(std::begin(_config.participants), std::end(_config.participants), to));
+      PRECICE_ASSERT(index < _config.participants.size() && index >= 0, index, _config.participants.size());
+      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
+    } else if(to == accessor){
+      const auto index = std::distance(std::begin(_config.participants), std::find(std::begin(_config.participants), std::end(_config.participants), from));
+      PRECICE_ASSERT(index < _config.participants.size() && index >= 0, index, _config.participants.size());
+      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
     }
   }
 }
