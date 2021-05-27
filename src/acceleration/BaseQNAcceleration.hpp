@@ -78,7 +78,7 @@ public:
   virtual ~BaseQNAcceleration()
   {
     // not necessary for user, only for developer, if needed, this should be configurable
-    //     if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave())){
+    //     if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
     //       _infostream.open("precice-accelerationInfo.log", std::ios_base::out);
     //       _infostream << std::setprecision(16);
     //       _infostream << _infostringstream.str();
