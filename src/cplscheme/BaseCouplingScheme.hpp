@@ -493,7 +493,7 @@ private:
   /// Map that links DataID to Waveform
   typedef std::map<int, time::PtrWaveform> WaveformMap;
 
-  /// All waveforms this coupling scheme needs data as a map "data ID -> waveform"
+  /// All waveforms this coupling scheme needs data from as a map "data ID -> waveform"
   WaveformMap _waveforms;
 
   /// Functions needed for initialize()
