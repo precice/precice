@@ -17,46 +17,25 @@ public:
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    */
   Waveform(int numberOfData,
-           int extrapolationOrder)
-  {
-    /**
-     * Reserve storage depending on required extrapolation order. Extrapolation happens in-place. Therefore, for zeroth
-     * order extrapolation we need one column (to read from and write to), for first order two, for second order three. 
-     * Note that extrapolationOrder = 0 is an exception, since we want to always work with at least two samples. One at
-     * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
-     * extrapolation.
-     */
-    int numberOfSamples = std::max(2, extrapolationOrder + 1);
-    _timeWindows        = Eigen::MatrixXd::Zero(numberOfData, numberOfSamples);
-  }
+           int extrapolationOrder);
 
   /**
    * @brief Updates entry in _timeWindows corresponding to this window with given data
    * @param data new sample for this time window
    */
-  void updateThisWindow(Eigen::VectorXd data)
-  {
-    this->_timeWindows.col(0) = data;
-  }
+  void updateThisWindow(Eigen::VectorXd data);
 
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
    * @param timeWindows number of samples that are valid and may be used for extrapolation. Usually number of past time windows.
    */
-  void moveToNextWindow(int timeWindows, int order = 0)
-  {
-    auto initialGuess = extrapolateData(order, timeWindows);
-    utils::shiftSetFirst(this->_timeWindows, initialGuess);
-  }
+  void moveToNextWindow(int timeWindows, int order = 0);
 
   /**
    * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)
    * being the current time window.
    */
-  const Eigen::MatrixXd &lastTimeWindows()
-  {
-    return _timeWindows;
-  }
+  const Eigen::MatrixXd &lastTimeWindows();
 
 private:
   /// Data values of time windows.
@@ -73,28 +52,7 @@ private:
    * @param order Order of the extrapolation scheme to be used.
    * @param timeWindows number of valid samples.
    */
-  Eigen::VectorXd extrapolateData(int order, int timeWindows)
-  {
-    Eigen::VectorXd extrapolatedValue;
-    if ((order == 0) || (timeWindows < 2 && order > 0)) {
-      PRECICE_ASSERT(this->_timeWindows.cols() > 0);
-      extrapolatedValue = this->_timeWindows.col(0);
-    } else if ((order == 1) || (timeWindows < 3 && order > 1)) { //timesteps is increased before extrapolate is called
-      PRECICE_DEBUG("Performing first order extrapolation");
-      PRECICE_ASSERT(this->_timeWindows.cols() > 1);
-      extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
-      extrapolatedValue -= this->_timeWindows.col(1);      // = 2*x^t - x^(t-1)
-    } else if (order == 2) {
-      PRECICE_DEBUG("Performing second order extrapolation");
-      PRECICE_ASSERT(this->_timeWindows.cols() > 2);
-      extrapolatedValue = this->_timeWindows.col(0) * 2.5;  // = 2.5*x^t
-      extrapolatedValue -= this->_timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-      extrapolatedValue += this->_timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
-    } else {
-      PRECICE_ASSERT(false, "Extrapolation order is invalid.");
-    }
-    return extrapolatedValue;
-  }
+  Eigen::VectorXd extrapolateData(int order, int timeWindows);
 };
 
 } // namespace time
