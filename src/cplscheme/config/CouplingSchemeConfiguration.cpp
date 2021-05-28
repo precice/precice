@@ -826,22 +826,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
                 "<...-convergence-measure/> subtag in the precice-config.xml.");
-  for (auto &elem : _config.convergenceMeasureDefinitions) {
-    _meshConfig->addNeededMesh(second, elem.meshName);
-    checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
-  }
+  addConvergenceMeasures(scheme, second, _config.convergenceMeasureDefinitions);
 
-  // Set relaxation parameters
-  if (_accelerationConfig->getAcceleration().get() != nullptr) {
-    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
-      _meshConfig->addNeededMesh(second, neededMesh);
-    }
-    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
-      checkSerialImplicitAccelerationData(dataID, first, second);
-    }
-    scheme->setAcceleration(_accelerationConfig->getAcceleration());
-  }
+  // Set acceleration
+  setSerialAcceleration(scheme, first, second);
+
   if (scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && not _accelerationConfig->getAcceleration()->getDataIDs().empty()) {
     int dataID = *(_accelerationConfig->getAcceleration()->getDataIDs().begin());
     PRECICE_CHECK(not scheme->hasSendData(dataID),
@@ -874,22 +863,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
-  for (auto &elem : _config.convergenceMeasureDefinitions) {
-    _meshConfig->addNeededMesh(_config.participants[1], elem.meshName);
-    checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
-  }
+  addConvergenceMeasures(scheme, _config.participants[1], _config.convergenceMeasureDefinitions);
 
-  // Set relaxation parameters
-  if (_accelerationConfig->getAcceleration().get() != nullptr) {
-    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
-      _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
-    }
-    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
-      checkIfDataIsExchanged(dataID);
-    }
-    scheme->setAcceleration(_accelerationConfig->getAcceleration());
-  }
+  // Set acceleration
+  setParallelAcceleration(scheme, _config.participants[1]);
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -941,24 +919,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
                 "<...-convergence-measure/> subtag in the precice-config.xml.");
   if (accessor == _config.controller) {
-    for (auto &elem : _config.convergenceMeasureDefinitions) {
-      _meshConfig->addNeededMesh(_config.controller, elem.meshName);
-      checkIfDataIsExchanged(elem.data->getID());
-      scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
-    }
+    addConvergenceMeasures(scheme, _config.controller, _config.convergenceMeasureDefinitions);
   }
 
-  // Set relaxation parameters
-  if (_accelerationConfig->getAcceleration().get() != nullptr) {
-    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
-      _meshConfig->addNeededMesh(_config.controller, neededMesh);
-    }
-    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
-      checkIfDataIsExchanged(dataID);
-    }
-
-    scheme->setAcceleration(_accelerationConfig->getAcceleration());
-  }
+  // Set acceleration
+  setParallelAcceleration(scheme, _config.controller);
 
   if (not scheme->doesFirstStep() && _accelerationConfig->getAcceleration()) {
     if (_accelerationConfig->getAcceleration()->getDataIDs().size() < 3) {
@@ -1131,6 +1096,49 @@ void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
       "However, you configured data \"{}\" for acceleration, which is exchanged from \"{}\" to \"{}\". "
       "Please remove this acceleration data tag or switch to a parallel implicit coupling scheme.",
       dataName, first, second, second, first, dataName, first, second);
+}
+
+void CouplingSchemeConfiguration::addConvergenceMeasures(
+    BaseCouplingScheme *                           scheme,
+    const std::string                              participant,
+    const std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions) const
+{
+  for (auto &elem : convergenceMeasureDefinitions) {
+    _meshConfig->addNeededMesh(participant, elem.meshName);
+    checkIfDataIsExchanged(elem.data->getID());
+    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+  }
+}
+
+void CouplingSchemeConfiguration::setSerialAcceleration(
+    BaseCouplingScheme *scheme,
+    const std::string   first,
+    const std::string   second) const
+{
+  if (_accelerationConfig->getAcceleration().get() != nullptr) {
+    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
+      _meshConfig->addNeededMesh(second, neededMesh);
+    }
+    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
+      checkSerialImplicitAccelerationData(dataID, first, second);
+    }
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
+  }
+}
+
+void CouplingSchemeConfiguration::setParallelAcceleration(
+    BaseCouplingScheme *scheme,
+    const std::string   participant) const
+{
+  if (_accelerationConfig->getAcceleration().get() != nullptr) {
+    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
+      _meshConfig->addNeededMesh(participant, neededMesh);
+    }
+    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
+      checkIfDataIsExchanged(dataID);
+    }
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
+  }
 }
 
 } // namespace cplscheme
