@@ -615,7 +615,6 @@ bool BaseCouplingScheme::doImplicitStep()
 
   // coupling iteration converged for current time window. Advance in time.
   if (convergence) {
-    // moveToNextWindow();  // @ todo: Wrong position for moveToNextWindow(). We should write a test that catches this! See correct position below.
     if (_acceleration) {
       _acceleration->iterationsConverged(getAccelerationData());
     }
@@ -631,7 +630,7 @@ bool BaseCouplingScheme::doImplicitStep()
   storeIteration();
 
   if (convergence) {
-    moveToNextWindow(); // @ todo: Correct position for moveToNextWindow().
+    moveToNextWindow();
   }
 
   return convergence;

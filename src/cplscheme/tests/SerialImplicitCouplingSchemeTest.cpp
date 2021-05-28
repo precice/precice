@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "acceleration/ConstantRelaxationAcceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
@@ -515,21 +516,21 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 /// Test that cplScheme gives correct results when applying extrapolation.
 BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
 {
-  // provide data and call BaseCouplingScheme::advance a few times
-
   /**
-   * make sure that the following happens, if NOT converged:
-   * 1. no acceleration, read/write data
-   * 2. don't extrapolate and repeat
-   **/
-
-  // enforce convergence
-
-  /**
-   * make sure that the following happens, if converged:
-   * 1. store converged data.
-   * 2. move to next window. Converged data is now fixed and will remain unchanged (old data).
-   * 3. extrapolate from old data as initial guess for next window.
+   * Perform linear extrapolation and constant relaxation acceleration
+   * 
+   * Do two time windows with three iterations each. 
+   * 
+   * Each participant writes dummy data to other participant, received data is checked.
+   * 
+   * Make sure that the following happens, if NOT converged (first two iterations):
+   * 1. acceleration is performed
+   * 2. participants receive correct (accelerated) data
+   * 
+   * Make sure that the following happens, if converged (end of third iteration):
+   * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
+   * 2. we move to the next window
+   * 3. initial guess for first participant is computed via extrapolation from old data
    **/
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
@@ -563,8 +564,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
   const double timeWindowSize = 0.1;
   const int    maxIterations  = 3;
   double       timestepLength = timeWindowSize;
-  std::string  nameParticipant0("Participant0");
-  std::string  nameParticipant1("Participant1");
+  std::string  first("Participant0");
+  std::string  second("Participant1");
   int          sendDataIndex        = -1;
   int          receiveDataIndex     = -1;
   int          convergenceDataIndex = -1;
@@ -572,7 +573,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
   BOOST_TEST(dataID0 == 0);
   BOOST_TEST(dataID1 == 1);
 
-  if (context.isNamed(nameParticipant0)) {
+  if (context.isNamed(first)) {
     sendDataIndex        = dataID0;
     receiveDataIndex     = dataID1;
     convergenceDataIndex = receiveDataIndex;
@@ -584,12 +585,16 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations);
   cplScheme.setExtrapolationOrder(1);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+
+  // Add acceleration
+  acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
+  cplScheme.setAcceleration(ptrAcceleration);
 
   // Add convergence measures
   const int                              minIterations = maxIterations;
@@ -611,15 +616,18 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
     // first, second and third iteration
     BOOST_TEST(cplScheme.isCouplingOngoing());
 
-    if (context.isNamed(nameParticipant0)) {
+    if (context.isNamed(first)) {
       if (i == 0) {
         // data is uninitialized for first participant
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0);
-      } else {
-        // data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2);
+      } else if (i == 1) {
+        // accelerated data from second participant: 0.5 * 0 + 0.5 * 2 = 1
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
+      } else if (i == 2) {
+        // accelerated data from second participant: 0.5 * 1 + 0.5 * 2 = 1
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1.5);
       }
-    } else if (context.isNamed(nameParticipant1)) {
+    } else if (context.isNamed(second)) {
       // data from first participant
       BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
     }
@@ -635,9 +643,9 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
     }
 
     // write data to mesh
-    if (context.isNamed(nameParticipant0)) {
+    if (context.isNamed(first)) {
       v << 1.0;
-    } else if (context.isNamed(nameParticipant1)) {
+    } else if (context.isNamed(second)) {
       v << 2.0;
     }
     mesh->data(sendDataIndex)->values() = v;
@@ -657,16 +665,19 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
   for (int i = 0; i < maxIterations; i++) {
     // first, second and third iteration
     BOOST_TEST(cplScheme.isCouplingOngoing());
-    if (context.isNamed(nameParticipant0)) {
+    if (context.isNamed(first)) {
       if (i == 0) {
         // extrapolated data
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
-      } else {
-        // data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+      } else if (i == 1) {
+        // accelerated data from second participant: 0.5 * 2 + 0.5 * 3 = 2.5
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5);
+      } else if (i == 2) {
+        // accelerated data from second participant: 0.5 * 2.5 + 0.5 * 3 = 2.75
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.75);
       }
-    } else if (context.isNamed(nameParticipant1)) {
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3); // extrapolation only applied to accelerated data. So data written by first participant.
+    } else if (context.isNamed(second)) {
+      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3); // extrapolation only applied to accelerated data. Second participant receives data from first without acceleration.
     }
 
     if (i == 0) {
@@ -693,11 +704,11 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
     }
   }
 
-  if (context.isNamed(nameParticipant0)) {
+  if (context.isNamed(first)) {
     // extrapolated data
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // extrapolated data: 2, 3, 4
-  } else if (context.isNamed(nameParticipant1)) {
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // @ todo this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5
+  } else if (context.isNamed(second)) {
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5
   }
 
   // reached end of simulation, ready to finalize
@@ -708,21 +719,21 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
 
 BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
 {
-  // provide data and call BaseCouplingScheme::advance a few times
-
   /**
-   * make sure that the following happens, if NOT converged:
-   * 1. no acceleration, read/write data
-   * 2. don't extrapolate and repeat
-   **/
-
-  // enforce convergence
-
-  /**
-   * make sure that the following happens, if converged:
-   * 1. store converged data.
-   * 2. move to next window. Converged data is now fixed and will remain unchanged (old data).
-   * 3. extrapolate from old data as initial guess for next window.
+   * Perform quadratic extrapolation and constant relaxation acceleration
+   * 
+   * Do three time windows with three iterations each. 
+   * 
+   * Each participant writes dummy data to other participant, received data is checked.
+   * 
+   * Make sure that the following happens, if NOT converged (first two iterations):
+   * 1. acceleration is performed
+   * 2. participants receive correct (accelerated) data
+   * 
+   * Make sure that the following happens, if converged (end of third iteration):
+   * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
+   * 2. we move to the next window
+   * 3. initial guess for first participant is computed via extrapolation from old data (end of first window only linear extrapolation)
    **/
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
@@ -756,8 +767,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
   const double timeWindowSize = 0.1;
   const int    maxIterations  = 3;
   double       timestepLength = timeWindowSize;
-  std::string  nameParticipant0("Participant0");
-  std::string  nameParticipant1("Participant1");
+  std::string  first("Participant0");
+  std::string  second("Participant1");
   int          sendDataIndex        = -1;
   int          receiveDataIndex     = -1;
   int          convergenceDataIndex = -1;
@@ -765,7 +776,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
   BOOST_TEST(dataID0 == 0);
   BOOST_TEST(dataID1 == 1);
 
-  if (context.isNamed(nameParticipant0)) {
+  if (context.isNamed(first)) {
     sendDataIndex        = dataID0;
     receiveDataIndex     = dataID1;
     convergenceDataIndex = receiveDataIndex;
@@ -777,12 +788,16 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
 
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations);
   cplScheme.setExtrapolationOrder(2);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+
+  // Add acceleration
+  acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
+  cplScheme.setAcceleration(ptrAcceleration);
 
   // Add convergence measures
   const int                              minIterations = maxIterations;
@@ -804,15 +819,18 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     // first, second and third iteration
     BOOST_TEST(cplScheme.isCouplingOngoing());
 
-    if (context.isNamed(nameParticipant0)) {
+    if (context.isNamed(first)) {
       if (i == 0) {
         // data is uninitialized for first participant
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0);
-      } else {
-        // data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2);
+      } else if (i == 1) {
+        // accelerated data from second participant: 0.5 * 0 + 0.5 * 2 = 1
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
+      } else if (i == 2) {
+        // accelerated data from second participant: 0.5 * 1 + 0.5 * 2 = 1
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1.5);
       }
-    } else if (context.isNamed(nameParticipant1)) {
+    } else if (context.isNamed(second)) {
       // data from first participant
       BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
     }
@@ -828,9 +846,9 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     }
 
     // write data to mesh
-    if (context.isNamed(nameParticipant0)) {
+    if (context.isNamed(first)) {
       v << 1.0;
-    } else if (context.isNamed(nameParticipant1)) {
+    } else if (context.isNamed(second)) {
       v << 2.0;
     }
     mesh->data(sendDataIndex)->values() = v;
@@ -850,15 +868,18 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
   for (int i = 0; i < maxIterations; i++) {
     // first, second and third iteration
     BOOST_TEST(cplScheme.isCouplingOngoing());
-    if (context.isNamed(nameParticipant0)) {
+    if (context.isNamed(first)) {
       if (i == 0) {
         // extrapolated data
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
-      } else {
-        // data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+      } else if (i == 1) {
+        // accelerated data from second participant: 0.5 * 2 + 0.5 * 3 = 2.5
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5);
+      } else if (i == 2) {
+        // accelerated data from second participant: 0.5 * 2.5 + 0.5 * 3 = 2.75
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.75);
       }
-    } else if (context.isNamed(nameParticipant1)) {
+    } else if (context.isNamed(second)) {
       BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3); // extrapolation only applied to accelerated data. So data written by first participant.
     }
 
@@ -890,15 +911,18 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
   for (int i = 0; i < maxIterations; i++) {
     // first, second and third iteration
     BOOST_TEST(cplScheme.isCouplingOngoing());
-    if (context.isNamed(nameParticipant0)) {
+    if (context.isNamed(first)) {
       if (i == 0) {
         // extrapolated data: 0, 2, 3 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 3.5
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.5);
-      } else {
-        // data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5);
+      } else if (i == 1) {
+        // accelerated data from second participant: 0.5 * 3 + 0.5 * 5 = 4
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
+      } else if (i == 2) {
+        // accelerated data from second participant: 0.5 * 4 + 0.5 * 5 = 4.5
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.5);
       }
-    } else if (context.isNamed(nameParticipant1)) {
+    } else if (context.isNamed(second)) {
       BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // extrapolation only applied to accelerated data. So data written by first participant.
     }
 
@@ -926,11 +950,11 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     }
   }
 
-  if (context.isNamed(nameParticipant0)) {
+  if (context.isNamed(first)) {
     // extrapolated data
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7.5); // extrapolated data: 2, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7.5
-  } else if (context.isNamed(nameParticipant1)) {
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7); // @ todo this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7
+  } else if (context.isNamed(second)) {
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7
   }
 
   // reached end of simulation, ready to finalize
