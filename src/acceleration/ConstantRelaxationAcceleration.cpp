@@ -5,7 +5,6 @@
 #include <ostream>
 #include <utility>
 
-#include "cplscheme/CouplingData.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"

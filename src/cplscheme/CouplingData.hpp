@@ -4,8 +4,6 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "time/Waveform.hpp"
-#include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -16,65 +14,33 @@ public:
   CouplingData(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
-      bool          requiresInitialization)
-      : requiresInitialization(requiresInitialization),
-        data(data),
-        mesh(mesh)
-  {
-    PRECICE_ASSERT(data != nullptr);
-    PRECICE_ASSERT(mesh != nullptr);
-    PRECICE_ASSERT(mesh.use_count() > 0);
-  }
+      bool          requiresInitialization);
 
-  int getDimensions() const
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->getDimensions();
-  }
+  int getDimensions() const;
 
   /// Returns a reference to the data values.
-  Eigen::VectorXd &values()
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->values();
-  }
+  Eigen::VectorXd &values();
 
   /// Returns a const reference to the data values.
-  const Eigen::VectorXd &values() const
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->values();
-  }
+  const Eigen::VectorXd &values() const;
 
-  void storeIteration()
-  {
-    _previousIteration = this->values();
-  }
+  /// store _data->values() in read-only variable _previousIteration for convergence checks etc.
+  void storeIteration();
 
-  const Eigen::VectorXd previousIteration() const
-  {
-    return _previousIteration;
-  }
+  /// returns data value from previous iteration
+  const Eigen::VectorXd previousIteration() const;
 
-  int getMeshID()
-  {
-    return mesh->getID();
-  }
+  /// get ID of this CouplingData's mesh. See Mesh::getID().
+  int getMeshID();
 
-  int getDataID()
-  {
-    return data->getID();
-  }
+  /// get ID of this CouplingData's data. See Data::getID().
+  int getDataID();
 
-  std::string getDataName()
-  {
-    return data->getName();
-  }
+  /// get name of this CouplingData's data. See Data::getName().
+  std::string getDataName();
 
-  std::vector<int> getVertexOffsets()
-  {
-    return mesh->getVertexOffsets();
-  }
+  /// get vertex offsets of this CouplingData's mesh. See Mesh::getVertexOffsets().
+  std::vector<int> getVertexOffsets();
 
   ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
@@ -94,9 +60,11 @@ private:
   /// Data values of previous iteration.
   Eigen::VectorXd _previousIteration;
 
-  mesh::PtrData data;
+  /// Data associated with this CouplingData
+  mesh::PtrData _data;
 
-  mesh::PtrMesh mesh;
+  /// Mesh associated with this CouplingData
+  mesh::PtrMesh _mesh;
 };
 
 } // namespace cplscheme

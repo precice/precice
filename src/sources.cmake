@@ -98,6 +98,7 @@ target_sources(precice
     src/cplscheme/CompositionalCouplingScheme.hpp
     src/cplscheme/Constants.cpp
     src/cplscheme/Constants.hpp
+    src/cplscheme/CouplingData.cpp
     src/cplscheme/CouplingData.hpp
     src/cplscheme/CouplingScheme.cpp
     src/cplscheme/CouplingScheme.hpp
