@@ -1,10 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <algorithm>
-#include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
 namespace time {

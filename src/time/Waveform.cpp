@@ -1,4 +1,7 @@
 #include "time/Waveform.hpp"
+#include <algorithm>
+#include "logging/LogMacros.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
 namespace time {
