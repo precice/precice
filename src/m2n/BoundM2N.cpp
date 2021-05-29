@@ -80,7 +80,7 @@ void BoundM2N::cleanupEstablishment()
 void BoundM2N::waitForSlaves()
 {
   if (utils::MasterSlave::isMaster()) {
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       int item = 0;
       utils::MasterSlave::_communication->receive(item, rank);
       PRECICE_ASSERT(item > 0);

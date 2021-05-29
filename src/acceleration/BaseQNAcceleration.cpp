@@ -124,7 +124,7 @@ void BaseQNAcceleration::initialize(
    *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
    */
   std::stringstream ss;
-  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isParallel()) {
     PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
     PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
@@ -506,7 +506,7 @@ void BaseQNAcceleration::iterationsConverged(
 {
   PRECICE_TRACE();
 
-  if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
+  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel())
     _infostringstream << "# time window " << tWindows << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
 
@@ -655,7 +655,7 @@ int BaseQNAcceleration::getLSSystemCols() const
 
 int BaseQNAcceleration::getLSSystemRows()
 {
-  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isParallel()) {
     return _dimOffsets.back();
   }
   return _residuals.size();
@@ -664,7 +664,7 @@ int BaseQNAcceleration::getLSSystemRows()
 void BaseQNAcceleration::writeInfo(
     std::string s, bool allProcs)
 {
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isParallel()) {
     // serial acceleration mode
     _infostringstream << s;
 

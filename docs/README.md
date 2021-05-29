@@ -14,7 +14,7 @@
     <img src="https://img.shields.io/badge/twitter-%40preCICE__org-1da1f2.svg" alt="Twitter">
 </a>
 <a style="text-decoration: none" href="https://www.precice.org/" target="_blank">
-    <img src="https://img.shields.io/website-up-down-green-red/https/www.precice.org.svg?label=website" alt="preCICE website status">
+    <img src="https://img.shields.io/website-up-down-green-red/https/precice.org.svg?label=website" alt="preCICE website status">
 </a>
 
 **Project Status**  
