@@ -40,7 +40,7 @@ public:
     return _m2ns;
   }
 
-  bool isM2NConfigured(const std::string& from, const std::string& to);
+  bool isM2NConfigured(const std::string &from, const std::string &to);
 
   virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 

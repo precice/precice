@@ -171,7 +171,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                   "Please make sure that you do not provide the participant multiple times via the <participant name=\"{0}\" /> "
                   "tag in the <coupling-scheme:...> of your precice-config.xml",
                   participantName);
-    if(control){
+    if (control) {
       PRECICE_CHECK(not _config.setController,
                     "Only one controller per MultiCouplingScheme can be defined. "
                     "Please check the <participant name=\"{}\" control=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
@@ -877,7 +877,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   std::map<std::string, m2n::PtrM2N> m2ns;
 
   for (const std::string &participant : _config.participants) {
-    if(_m2nConfig->isM2NConfigured(accessor, participant)){
+    if (_m2nConfig->isM2NConfigured(accessor, participant)) {
       m2ns[participant] = _m2nConfig->getM2N(accessor, participant);
     }
   }
@@ -891,7 +891,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
   PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
   addMultiDataToBeExchanged(*castedScheme, accessor);
-  
+
   PRECICE_CHECK(scheme->hasAnySendData(),
                 "No send data configured. Use explicit scheme for one-way coupling. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
@@ -1001,7 +1001,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     const bool initialize = exchange.requiresInitialization;
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
-    } else if(to == accessor){
+    } else if (to == accessor) {
       scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
     }
   }

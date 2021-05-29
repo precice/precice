@@ -1,8 +1,8 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 #include "BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
@@ -37,15 +37,15 @@ public:
  * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
  */
   MultiCouplingScheme(
-      double                        maxTime,
-      int                           maxTimeWindows,
-      double                        timeWindowSize,
-      int                           validDigits,
-      const std::string &           localParticipant,
-      std::map<std::string, m2n::PtrM2N>      m2ns,
-      constants::TimesteppingMethod dtMethod,
-      std::string                   controller,
-      int                           maxIterations = -1);
+      double                             maxTime,
+      int                                maxTimeWindows,
+      double                             timeWindowSize,
+      int                                validDigits,
+      const std::string &                localParticipant,
+      std::map<std::string, m2n::PtrM2N> m2ns,
+      constants::TimesteppingMethod      dtMethod,
+      std::string                        controller,
+      int                                maxIterations = -1);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
@@ -69,10 +69,10 @@ public:
    */
   bool hasAnySendData() override final
   {
-    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto& sendExchange) { return not sendExchange.second.empty(); });
+    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
   }
 
-private:  
+private:
   /**
    * @brief get CouplingData from _allData using dataID
    * @param dataID identifies CouplingData to be searched for
@@ -155,7 +155,6 @@ private:
   bool receiveConvergence(m2n::PtrM2N m2n);
 
   bool _isController;
-
 };
 
 } // namespace cplscheme

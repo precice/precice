@@ -22,21 +22,20 @@ namespace precice {
 namespace cplscheme {
 
 MultiCouplingScheme::MultiCouplingScheme(
-    double                        maxTime,
-    int                           maxTimeWindows,
-    double                        timeWindowSize,
-    int                           validDigits,
-    const std::string &           localParticipant,
-    std::map<std::string, m2n::PtrM2N>      m2ns,
-    constants::TimesteppingMethod dtMethod,
-    std::string                   controller,
-    int                           maxIterations
-)
+    double                             maxTime,
+    int                                maxTimeWindows,
+    double                             timeWindowSize,
+    int                                validDigits,
+    const std::string &                localParticipant,
+    std::map<std::string, m2n::PtrM2N> m2ns,
+    constants::TimesteppingMethod      dtMethod,
+    std::string                        controller,
+    int                                maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, Implicit, dtMethod),
       _m2ns(std::move(m2ns)), _isController(localParticipant == controller)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-   
+
   PRECICE_DEBUG("CONTROLLER IS {}", controller);
 
   // Controller participant never does the first step, because it is never the first participant
@@ -72,9 +71,9 @@ void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
-  if(_isController){
+  if (_isController) {
     if (receivesInitializedData()) {
-      for(auto& receiveExchange : _receiveDataVector){
+      for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
 
@@ -88,7 +87,7 @@ void MultiCouplingScheme::exchangeInitialData()
       for (auto &sendExchange : _sendDataVector) {
         updateOldValues(sendExchange.second);
       }
-      for (auto& sendExchange : _sendDataVector) {
+      for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
     }
@@ -97,12 +96,12 @@ void MultiCouplingScheme::exchangeInitialData()
       for (auto &sendExchange : _sendDataVector) {
         updateOldValues(sendExchange.second);
       }
-      for (auto& sendExchange : _sendDataVector) {
+      for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
     }
     if (receivesInitializedData()) {
-      for(auto& receiveExchange : _receiveDataVector){
+      for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
@@ -124,8 +123,8 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
 
   PRECICE_DEBUG("Computed full length of iteration");
 
-  if(_isController){
-    for(auto& receiveExchange : _receiveDataVector){
+  if (_isController) {
+    for (auto &receiveExchange : _receiveDataVector) {
       PRECICE_DEBUG("REQUESTED RECEIVE IS: {}", receiveExchange.first);
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
@@ -137,11 +136,11 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
     for (const auto &m2nPair : _m2ns) {
       sendConvergence(m2nPair.second, convergence);
     }
-    for (auto& sendExchange : _sendDataVector) {
+    for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
   } else {
-    for (auto& sendExchange : _sendDataVector) {
+    for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
 
@@ -149,10 +148,10 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
 
     for (const auto &m2nPair : _m2ns) {
       localConvergence = receiveConvergence(m2nPair.second);
-      convergence = (convergence && localConvergence);
+      convergence      = (convergence && localConvergence);
     }
-    
-    for(auto& receiveExchange : _receiveDataVector){
+
+    for (auto &receiveExchange : _receiveDataVector) {
       PRECICE_DEBUG("REQUESTED RECEIVE IS: {}", receiveExchange.first);
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
@@ -178,7 +177,7 @@ void MultiCouplingScheme::addDataToSend(
   int id = data->getID();
   PRECICE_DEBUG("Configuring send data to {}", to);
   PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
-  DataMap::value_type dataPair   = std::make_pair(id, ptrCplData);
+  DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
   _sendDataVector[to].insert(dataPair);
   _allData.insert(dataPair);
 }
@@ -189,7 +188,7 @@ void MultiCouplingScheme::addDataToReceive(
     bool          initialize,
     std::string   from)
 {
-  int id = data->getID(); 
+  int id = data->getID();
   PRECICE_DEBUG("Configuring receive data from {}", from);
   PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
   DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
@@ -212,8 +211,8 @@ CouplingData *MultiCouplingScheme::getData(
 void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID)
 {
   //if(_isController){
-    convergenceMeasure->couplingData = getData(dataID);
-    PRECICE_ASSERT(convergenceMeasure->couplingData != nullptr);
+  convergenceMeasure->couplingData = getData(dataID);
+  PRECICE_ASSERT(convergenceMeasure->couplingData != nullptr);
   //}
 }
 
