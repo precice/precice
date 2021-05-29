@@ -44,8 +44,8 @@ public:
       const std::string &           localParticipant,
       std::map<std::string, m2n::PtrM2N>      m2ns,
       constants::TimesteppingMethod dtMethod,
-      int                           maxIterations = -1,
-      bool                          isController = false);
+      std::string                   controller,
+      int                           maxIterations = -1);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
@@ -69,24 +69,10 @@ public:
    */
   bool hasAnySendData() override final
   {
-    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto& sendExchange) { return not sendExchange.data.empty(); });
+    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto& sendExchange) { return not sendExchange.second.empty(); });
   }
 
-private:
-  
-  struct ExchangeData{
-    DataMap data;
-    std::string with;
-
-    ExchangeData(DataMap data_, std::string with_) :
-      data(data_), with(with_) 
-    {}
-
-    bool operator==(const std::string& other) const{
-      return with == other;
-    }
-  };
-  
+private:  
   /**
    * @brief get CouplingData from _allData using dataID
    * @param dataID identifies CouplingData to be searched for
@@ -107,12 +93,12 @@ private:
   /**
    * @brief A vector of all data to be received.
    */
-  std::vector<ExchangeData> _receiveDataVector;
+  std::map<std::string, DataMap> _receiveDataVector;
 
   /**
    * @brief A vector of all data to be sent.
    */
-  std::vector<ExchangeData> _sendDataVector;
+  std::map<std::string, DataMap> _sendDataVector;
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
@@ -159,16 +145,16 @@ private:
   void storeData() override
   {
     for (auto &sendData : _sendDataVector) {
-      store(sendData.data);
+      store(sendData.second);
     }
     for (auto &receiveData : _receiveDataVector) {
-      store(receiveData.data);
+      store(receiveData.second);
     }
   }
 
   bool receiveConvergence(m2n::PtrM2N m2n);
 
-  bool _isController = false;
+  bool _isController;
 
 };
 

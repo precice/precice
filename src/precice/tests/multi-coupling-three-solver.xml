@@ -24,7 +24,6 @@
     </mesh>
 
     <mesh name="MeshC">
-      <use-data name="DataBA" />
       <use-data name="DataBC" />
       <use-data name="DataCB" />
     </mesh>
@@ -32,9 +31,9 @@
     <participant name="SolverA">
       <use-mesh name="MeshA" provide="yes" />
       <use-mesh name="MeshC" from="SolverC" />
+      <use-mesh name="MeshB1" from="SolverB" />
       <write-data name="DataAB" mesh="MeshA" />
       <read-data name="DataBA" mesh="MeshA" />
-      <mapping:nearest-neighbor direction="read" from="MeshC" to="MeshA" constraint="consistent" />
     </participant>
 
     <participant name="SolverB">
@@ -64,7 +63,7 @@
     </participant>
 
     <m2n:sockets from="SolverA" to="SolverB" />
-    <m2n:sockets from="SolverC" to="SolverA" />
+    <m2n:sockets from="SolverA" to="SolverC" />
     <m2n:sockets from="SolverB" to="SolverC" />
 
     <coupling-scheme:multi>
@@ -80,8 +79,8 @@
       <exchange data="DataBC" mesh="MeshC" from="SolverB" to="SolverC" />
       <exchange data="DataBC" mesh="MeshA" from="SolverC" to="SolverA" />
       <exchange data="DataCB" mesh="MeshA" from="SolverC" to="SolverA" />
-      <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
-      <relative-convergence-measure data="DataBC" mesh="MeshA" limit="1e-4" />
+      <relative-convergence-measure data="DataCB" mesh="MeshA" limit="1e-4" />
+      <relative-convergence-measure data="DataAB" mesh="MeshA" limit="1e-4" />
     </coupling-scheme:multi>
   </solver-interface>
 </precice-configuration>
