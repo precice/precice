@@ -1,6 +1,6 @@
 #include "CommunicateBoundingBox.hpp"
+#include <cstddef>
 #include <memory>
-#include <stddef.h>
 #include <utility>
 #include "Communication.hpp"
 #include "logging/LogMacros.hpp"
@@ -11,7 +11,7 @@ namespace precice {
 namespace com {
 CommunicateBoundingBox::CommunicateBoundingBox(
     com::PtrCommunication communication)
-    : _communication(communication)
+    : _communication(std::move(communication))
 {
 }
 

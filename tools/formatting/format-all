@@ -34,7 +34,7 @@ else
 fi
 
 # Format C/C++
-CFILES=$(find . -type f -name \*.hpp -or -name \*.h -or -name \*.cpp -or -name \*.c)
+CFILES=$(git ls-files -- '*.[ch]pp' '*.[ch]' ':!thirdparty')
 echo "Formatting $(echo "$CFILES" | wc -l) C/C++ files"
 if  $HAS_PARALLEL; then
     echo "$CFILES" | parallel --bar "${BINARY} -style=file -i {}"
@@ -54,7 +54,7 @@ else
   PYCMD="python"
 fi
 
-XMLFILES=$(find . -not \( -path ./docs -prune \) -type f -name \*.xml)
+XMLFILES="$(git ls-files -- '*.xml' '!docs')"
 XMLFMT="$SCRIPTDIR/config-formatter"
 echo "Formatting $(echo "$XMLFILES" | wc -l) XML files"
 if $HAS_PARALLEL; then

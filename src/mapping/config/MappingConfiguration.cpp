@@ -1,10 +1,10 @@
 #include "MappingConfiguration.hpp"
 #include <Eigen/Core>
 #include <algorithm>
+#include <cstring>
 #include <list>
 #include <memory>
 #include <ostream>
-#include <string.h>
 #include <utility>
 #include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"
@@ -27,9 +27,9 @@ namespace precice {
 namespace mapping {
 
 MappingConfiguration::MappingConfiguration(
-    xml::XMLTag &                     parent,
-    const mesh::PtrMeshConfiguration &meshConfiguration)
-    : _meshConfig(meshConfiguration)
+    xml::XMLTag &              parent,
+    mesh::PtrMeshConfiguration meshConfiguration)
+    : _meshConfig(std::move(meshConfiguration))
 {
   PRECICE_ASSERT(_meshConfig);
   using namespace xml;
@@ -263,8 +263,14 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
-  PRECICE_CHECK(fromMesh.get() != nullptr, "Mesh \"" << fromMeshName << "\" was not found while creating a mapping. Please correct the from=\"" << fromMeshName << "\" attribute.");
-  PRECICE_CHECK(toMesh.get() != nullptr, "Mesh \"" << toMeshName << "\" was not found while creating a mapping. Please correct the to=\"" << toMeshName << "\" attribute.");
+  PRECICE_CHECK(fromMesh.get() != nullptr,
+                "Mesh \"{0}\" was not found while creating a mapping. "
+                "Please correct the from=\"{0}\" attribute.",
+                fromMeshName);
+  PRECICE_CHECK(toMesh.get() != nullptr,
+                "Mesh \"{0}\" was not found while creating a mapping. "
+                "Please correct the to=\"{0}\" attribute.",
+                toMeshName);
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh   = toMesh;
   configuredMapping.timing   = timing;
@@ -275,7 +281,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (direction == VALUE_READ) {
     configuredMapping.direction = READ;
   } else {
-    PRECICE_ASSERT(false, "Unknown mapping direction type \"" << direction << "\". Please check the documentation for available options.");
+    PRECICE_UNREACHABLE("Unknown mapping direction type \"{}\".", direction);
   }
 
   Mapping::Constraint constraintValue;
@@ -286,7 +292,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (constraint == VALUE_SCALED_CONSISTENT) {
     constraintValue = Mapping::SCALEDCONSISTENT;
   } else {
-    PRECICE_ASSERT(false, "Unknown mapping constraint \"" << constraint << "\". Please check the documentation for available options.");
+    PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
   }
 
   if (type == VALUE_NEAREST_NEIGHBOR) {
@@ -414,10 +420,10 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
     bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
     bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameMapping  = sameToMesh && sameFromMesh;
-    PRECICE_CHECK(!sameMapping, "There cannot be two mappings from mesh \""
-                                    << mapping.fromMesh->getName() << "\" to mesh \""
-                                    << mapping.toMesh->getName() << "\". "
-                                    << "Please remove one of the duplicated meshes. ");
+    PRECICE_CHECK(!sameMapping,
+                  "There cannot be two mappings from mesh \"{}\" to mesh \"{}\". "
+                  "Please remove one of the duplicated meshes. ",
+                  mapping.fromMesh->getName(), mapping.toMesh->getName());
   }
 }
 
@@ -430,7 +436,8 @@ MappingConfiguration::Timing MappingConfiguration::getTiming(const std::string &
   } else if (timing == VALUE_TIMING_ON_DEMAND) {
     return ON_DEMAND;
   }
-  PRECICE_ASSERT(false, "Unknown timing value \"" << timing << "\". Please check the documentation for available options.");
+  // We should never reach this point
+  PRECICE_UNREACHABLE("Unknown timing value \"{}\".", timing);
 }
 
 } // namespace mapping

@@ -22,13 +22,13 @@ void Communication::connectMasterSlaves(std::string const &participantName,
   constexpr int rankOffset = 1;
   int           slavesSize = size - rankOffset;
   if (rank == 0) {
-    PRECICE_INFO("Connecting Master to " << slavesSize << " Slaves");
+    PRECICE_INFO("Connecting Master to {} Slaves", slavesSize);
     prepareEstablishment(masterName, slaveName);
     acceptConnection(masterName, slaveName, tag, rank, rankOffset);
     cleanupEstablishment(masterName, slaveName);
   } else {
     int slaveRank = rank - rankOffset;
-    PRECICE_INFO("Connecting Slave #" << slaveRank << " to Master");
+    PRECICE_INFO("Connecting Slave #{} to Master", slaveRank);
     requestConnection(masterName, slaveName, tag, slaveRank, slavesSize);
   }
 }

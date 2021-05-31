@@ -41,7 +41,7 @@ public:
     PRECICE_ASSERT(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
     // if serial computation on single processor, i.e, no master-slave mode
-    if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+    if (!utils::MasterSlave::isParallel()) {
       result.noalias() = leftMatrix * rightMatrix;
 
       // if parallel computation on p processors, i.e., master-slave mode
@@ -101,7 +101,7 @@ public:
     localResult.noalias() = leftMatrix * rightMatrix;
 
     // if serial computation on single processor, i.e, no master-slave mode
-    if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+    if (!utils::MasterSlave::isParallel()) {
       result = localResult;
     } else {
       utils::MasterSlave::allreduceSum(localResult.data(), result.data(), localResult.size());
@@ -291,7 +291,7 @@ private:
       // distribute blocks of summarizedBlocks (result of multiplication) to corresponding slaves
       result = summarizedBlocks.block(0, 0, offsets[1], r);
 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+      for (int rankSlave : utils::MasterSlave::allSlaves()) {
         int off       = offsets[rankSlave];
         int send_rows = offsets[rankSlave + 1] - offsets[rankSlave];
 

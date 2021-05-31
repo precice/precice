@@ -64,7 +64,7 @@ struct MPI_EventData {
 // -----------------------------------------------------------------------
 
 EventData::EventData(std::string _name)
-    : name(_name)
+    : name(std::move(_name))
 {
 }
 
@@ -73,10 +73,10 @@ EventData::EventData(std::string _name, long _count, long _total, long _max, lon
     : max(std::chrono::milliseconds(_max)),
       min(std::chrono::milliseconds(_min)),
       total(std::chrono::milliseconds(_total)),
-      stateChanges(_stateChanges),
-      name(_name),
+      stateChanges(std::move(_stateChanges)),
+      name(std::move(_name)),
       count(_count),
-      data(data)
+      data(std::move(data))
 {
 }
 

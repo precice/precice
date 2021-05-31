@@ -8,6 +8,8 @@
 #include <map>
 #include <set>
 #include <thread>
+#include <utility>
+
 #include <vector>
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
@@ -112,7 +114,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
     std::string s;
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(s, rank);
 
       oss << s;
@@ -138,7 +140,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -194,7 +196,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -218,11 +220,11 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
     std::cout << std::fixed << std::setprecision(3) //
               << "Number of LVDIs per Interface Process:"
               << "\n"
-              << "  Total:   " << total << "\n"
-              << "  Maximum: " << maximum << "\n"
-              << "  Minimum: " << minimum << "\n"
-              << "  Average: " << average << "\n"
-              << "Number of Interface Processes: " << count << "\n"
+              << "  Total:   " << total << '\n'
+              << "  Maximum: " << maximum << '\n'
+              << "  Minimum: " << minimum << '\n'
+              << "  Average: " << average << '\n'
+              << "Number of Interface Processes: " << count << '\n'
               << '\n';
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
@@ -285,7 +287,7 @@ PointToPointCommunication::PointToPointCommunication(
     com::PtrCommunicationFactory communicationFactory,
     mesh::PtrMesh                mesh)
     : DistributedCommunication(mesh),
-      _communicationFactory(communicationFactory)
+      _communicationFactory(std::move(communicationFactory))
 {
 }
 
@@ -581,13 +583,11 @@ void PointToPointCommunication::send(double const *itemsToSend,
                                      int           valueDimension)
 {
 
-  if (_mappings.empty()) {
+  if (_mappings.empty() || size == 0) {
     return;
   }
 
   for (auto &mapping : _mappings) {
-    // if (utils::MasterSlave::isMaster())
-    //   std::cout<< "indices " << mapping.indices << std::endl;
     auto buffer = std::make_shared<std::vector<double>>();
     buffer->reserve(mapping.indices.size() * valueDimension);
     for (auto index : mapping.indices) {
@@ -605,7 +605,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
                                         size_t  size,
                                         int     valueDimension)
 {
-  if (_mappings.empty()) {
+  if (_mappings.empty() || size == 0) {
     return;
   }
 

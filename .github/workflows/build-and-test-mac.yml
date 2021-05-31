@@ -1,9 +1,8 @@
 name: Build and Test macOS
 on:
   push:
-    branches:
-      - master
-      - develop
+    branches-ignore:
+      - '**'
   workflow_dispatch:
 
 jobs:

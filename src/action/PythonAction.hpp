@@ -17,8 +17,8 @@ class PythonAction : public Action {
 public:
   PythonAction(
       Timing               timing,
-      const std::string &  modulePath,
-      const std::string &  moduleName,
+      std::string          modulePath,
+      std::string          moduleName,
       const mesh::PtrMesh &mesh,
       int                  targetDataID,
       int                  sourceDataID);
@@ -27,9 +27,9 @@ public:
 
   virtual void performAction(
       double time,
-      double dt,
-      double computedPartFullDt,
-      double fullDt);
+      double timeStepSize,
+      double computedTimeWindowPart,
+      double timeWindowSize);
 
 private:
   logging::Logger _log{"action::PythonAction"};
@@ -57,6 +57,8 @@ private:
   PyObject *_performAction = nullptr;
 
   PyObject *_vertexCallback = nullptr;
+
+  int _vertexCallbackArgs = 0;
 
   PyObject *_postAction = nullptr;
 

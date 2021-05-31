@@ -37,13 +37,13 @@ void BoundM2N::connectSlaves()
     m2n->completeSlavesConnection();
   } else {
     if (isRequesting) {
-      PRECICE_DEBUG("Awaiting slaves connection from " << remoteName);
+      PRECICE_DEBUG("Awaiting slaves connection from {}", remoteName);
       m2n->requestSlavesConnection(remoteName, localName);
-      PRECICE_DEBUG("Established slaves connection from " << remoteName);
+      PRECICE_DEBUG("Established slaves connection from {}", remoteName);
     } else {
-      PRECICE_DEBUG("Establishing slaves connection to " << remoteName);
+      PRECICE_DEBUG("Establishing slaves connection to {}", remoteName);
       m2n->acceptSlavesConnection(localName, remoteName);
-      PRECICE_DEBUG("Established  slaves connection to " << remoteName);
+      PRECICE_DEBUG("Established  slaves connection to {}", remoteName);
     }
   }
 }
@@ -56,13 +56,13 @@ void BoundM2N::preConnectSlaves()
   PRECICE_WARN("Two-level initialization is still in beta testing. Several edge cases are known to fail. Please report problems nevertheless.");
 
   if (isRequesting) {
-    PRECICE_DEBUG("Awaiting preliminary slaves connection from " << remoteName);
+    PRECICE_DEBUG("Awaiting preliminary slaves connection from {}", remoteName);
     m2n->requestSlavesPreConnection(remoteName, localName);
-    PRECICE_DEBUG("Established preliminary slaves connection from " << remoteName);
+    PRECICE_DEBUG("Established preliminary slaves connection from {}", remoteName);
   } else {
-    PRECICE_DEBUG("Establishing preliminary slaves connection to " << remoteName);
+    PRECICE_DEBUG("Establishing preliminary slaves connection to {}", remoteName);
     m2n->acceptSlavesPreConnection(localName, remoteName);
-    PRECICE_DEBUG("Established preliminary slaves connection to " << remoteName);
+    PRECICE_DEBUG("Established preliminary slaves connection to {}", remoteName);
   }
 }
 
@@ -80,7 +80,7 @@ void BoundM2N::cleanupEstablishment()
 void BoundM2N::waitForSlaves()
 {
   if (utils::MasterSlave::isMaster()) {
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       int item = 0;
       utils::MasterSlave::_communication->receive(item, rank);
       PRECICE_ASSERT(item > 0);

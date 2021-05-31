@@ -21,13 +21,11 @@ namespace precice {
 namespace mesh {
 
 Mesh::Mesh(
-    const std::string &name,
-    int                dimensions,
-    bool               flipNormals,
-    int                id)
-    : _name(name),
+    std::string name,
+    int         dimensions,
+    int         id)
+    : _name(std::move(name)),
       _dimensions(dimensions),
-      _flipNormals(flipNormals),
       _id(id),
       _boundingBox(dimensions)
 {
@@ -134,8 +132,9 @@ PtrData &Mesh::createData(
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
     PRECICE_CHECK(data->getName() != name,
-                  "Data \"" << name << "\" cannot be created twice for "
-                            << "mesh \"" << _name << "\". Please rename or remove one of the use-data tags with name \"" << name << "\".");
+                  "Data \"{}\" cannot be created twice for mesh \"{}\". "
+                  "Please rename or remove one of the use-data tags with name \"{}\".",
+                  name, _name, name);
   }
   int     id = Data::getDataCount();
   PtrData data(new Data(name, id, dimension));
@@ -148,30 +147,27 @@ const Mesh::DataContainer &Mesh::data() const
   return _data;
 }
 
-const PtrData &Mesh::data(
-    int dataID) const
+const PtrData &Mesh::data(int dataID) const
 {
-  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](PtrData const &ptr) {
-    return ptr->getID() == dataID;
+  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) {
+    return dptr->getID() == dataID;
   });
-  PRECICE_ASSERT(iter != _data.end(), "Data with ID = " << dataID << " not found in mesh \"" << _name << "\".");
+  PRECICE_ASSERT(iter != _data.end(), "Data with id not found in mesh.", dataID, _name);
+  return *iter;
+}
+
+const PtrData &Mesh::data(const std::string &dataName) const
+{
+  auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
+    return dptr->getName() == dataName;
+  });
+  PRECICE_ASSERT(iter != _data.end(), "Data not found in mesh", dataName, _name);
   return *iter;
 }
 
 const std::string &Mesh::getName() const
 {
   return _name;
-}
-
-bool Mesh::isFlipNormals() const
-{
-  return _flipNormals;
-}
-
-void Mesh::setFlipNormals(
-    bool flipNormals)
-{
-  _flipNormals = flipNormals;
 }
 
 int Mesh::getID() const
@@ -206,7 +202,7 @@ void Mesh::allocateDataValues()
       const auto leftToAllocate = expectedSize - actualSize;
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
-    PRECICE_DEBUG("Data " << data->getName() << " now has " << data->values().size() << " values");
+    PRECICE_DEBUG("Data {} now has {} values", data->getName(), data->values().size());
   }
 }
 
@@ -218,69 +214,7 @@ void Mesh::computeBoundingBox()
     bb.expandBy(vertex);
   }
   _boundingBox = std::move(bb);
-  PRECICE_DEBUG("Bounding Box, " << _boundingBox);
-}
-
-void Mesh::computeState()
-{
-  PRECICE_TRACE(_name);
-  PRECICE_ASSERT(_dimensions == 2 || _dimensions == 3, _dimensions);
-
-  // Compute normals only if faces to derive normal information are available
-  size_t size2DFaces = _edges.size();
-  size_t size3DFaces = _triangles.size();
-  if (_dimensions == 2 && size2DFaces == 0) {
-    return;
-  }
-  if (_dimensions == 3 && size3DFaces == 0) {
-    return;
-  }
-
-  // Compute (in 2D) edge normals
-  if (_dimensions == 2) {
-    for (Edge &edge : _edges) {
-      Eigen::VectorXd weightednormal = edge.computeNormal(_flipNormals);
-
-      // Accumulate normal in associated vertices
-      for (int i = 0; i < 2; i++) {
-        Eigen::VectorXd vertexNormal = edge.vertex(i).getNormal();
-        vertexNormal += weightednormal;
-        edge.vertex(i).setNormal(vertexNormal);
-      }
-    }
-  }
-
-  if (_dimensions == 3) {
-    // Compute normals
-    for (Triangle &triangle : _triangles) {
-      PRECICE_ASSERT(triangle.vertex(0) != triangle.vertex(1),
-                     triangle.vertex(0), triangle.getID());
-      PRECICE_ASSERT(triangle.vertex(1) != triangle.vertex(2),
-                     triangle.vertex(1), triangle.getID());
-      PRECICE_ASSERT(triangle.vertex(2) != triangle.vertex(0),
-                     triangle.vertex(2), triangle.getID());
-
-      // Compute normals
-      Eigen::VectorXd weightednormal = triangle.computeNormal(_flipNormals);
-
-      // Accumulate area-weighted normal in associated vertices and edges
-      for (int i = 0; i < 3; i++) {
-        triangle.edge(i).setNormal(triangle.edge(i).getNormal() + weightednormal);
-        triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + weightednormal);
-      }
-    }
-
-    // Normalize edge normals (only done in 3D)
-    for (Edge &edge : _edges) {
-      // there can be cases when an edge has no adjacent triangle though triangles exist in general (e.g. after filtering)
-      edge.setNormal(edge.getNormal().normalized());
-    }
-  }
-
-  for (Vertex &vertex : _vertices) {
-    // there can be cases when a vertex has no edge though edges exist in general (e.g. after filtering)
-    vertex.setNormal(vertex.getNormal().normalized());
-  }
+  PRECICE_DEBUG("Bounding Box, {}", _boundingBox);
 }
 
 void Mesh::clear()

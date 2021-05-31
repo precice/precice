@@ -32,13 +32,12 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   int dimensions = 2;
 
   // Setup geometry to map to
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, true, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData   = outMesh->createData("Data", 1);
   int     outDataID = outData->getID();
   Vertex &v1        = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v2        = outMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   outMesh->createEdge(v1, v2);
-  outMesh->computeState();
   outMesh->allocateDataValues();
 
   // Base-value for tests
@@ -47,7 +46,7 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   {
     // Setup mapping with mapping coordinates and geometry used
     mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
-    PtrMesh                           inMesh(new Mesh("InMesh0", dimensions, false, testing::nextMeshID()));
+    PtrMesh                           inMesh(new Mesh("InMesh0", dimensions, testing::nextMeshID()));
     PtrData                           inData   = inMesh->createData("Data0", 1);
     int                               inDataID = inData->getID();
 
@@ -62,7 +61,6 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
     inMesh->createVertex(Eigen::Vector2d(1.5, 1.5));
 
     inMesh->allocateDataValues();
-    inMesh->computeState();
 
     //assign(inData->values()) = value;
     inData->values() = Eigen::VectorXd::Constant(inData->values().size(), value);
@@ -82,7 +80,7 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   {
     // Setup mapping with mapping coordinates and geometry used
     mapping::NearestProjectionMapping mapping(mapping::Mapping::CONSERVATIVE, dimensions);
-    PtrMesh                           inMesh(new Mesh("InMesh1", dimensions, false, testing::nextMeshID()));
+    PtrMesh                           inMesh(new Mesh("InMesh1", dimensions, testing::nextMeshID()));
     PtrData                           inData   = inMesh->createData("Data1", 1);
     int                               inDataID = inData->getID();
 
@@ -91,7 +89,6 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
     inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
     inMesh->allocateDataValues();
-    inMesh->computeState();
 
     //assign(inData->values()) = value;
     inData->values() = Eigen::VectorXd::Constant(inData->values().size(), value);
@@ -128,13 +125,12 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
   int dimensions = 2;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inData   = inMesh->createData("InData", 1);
   int     inDataID = inData->getID();
   Vertex &v1       = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v2       = inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   inMesh->createEdge(v1, v2);
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -144,7 +140,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
 
   {
     // Create mesh to map to
-    PtrMesh outMesh(new Mesh("OutMesh0", dimensions, false, testing::nextMeshID()));
+    PtrMesh outMesh(new Mesh("OutMesh0", dimensions, testing::nextMeshID()));
     PtrData outData   = outMesh->createData("OutData", 1);
     int     outDataID = outData->getID();
 
@@ -180,7 +176,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
 
   {
     // Create mesh to map to
-    PtrMesh outMesh(new Mesh("OutMesh1", dimensions, false, testing::nextMeshID()));
+    PtrMesh outMesh(new Mesh("OutMesh1", dimensions, testing::nextMeshID()));
     PtrData outData   = outMesh->createData("OutData", 1);
     int     outDataID = outData->getID();
 
@@ -221,13 +217,12 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
   int dimensions = 2;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inData   = inMesh->createData("InData", 1);
   int     inDataID = inData->getID();
   Vertex &v1       = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v2       = inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   inMesh->createEdge(v1, v2);
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -237,7 +232,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
 
   auto inputIntegral = mesh::integrate(inMesh, inData);
   // Create mesh to map to
-  PtrMesh outMesh(new Mesh("OutMesh0", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh0", dimensions, testing::nextMeshID()));
   PtrData outData   = outMesh->createData("OutData", 1);
   int     outDataID = outData->getID();
   auto &  outValues = outData->values();
@@ -281,13 +276,12 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   int dimensions = 2;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inData   = inMesh->createData("InData", 1);
   int     inDataID = inData->getID();
   Vertex &v1       = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v2       = inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
   inMesh->createEdge(v1, v2);
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -298,7 +292,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   auto inputIntegral = mesh::integrate(inMesh, inData);
 
   // Create mesh to map to
-  PtrMesh outMesh(new Mesh("OutMesh1", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh1", dimensions, testing::nextMeshID()));
   PtrData outData   = outMesh->createData("OutData", 1);
   int     outDataID = outData->getID();
   auto &  outValues = outData->values();
@@ -343,7 +337,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   int dimensions = 3;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inData   = inMesh->createData("InData", 1);
   int     inDataID = inData->getID();
   Vertex &v1       = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -354,7 +348,6 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   Edge &  e31      = inMesh->createEdge(v3, v1);
   inMesh->createTriangle(e12, e23, e31);
 
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -366,7 +359,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
 
   {
     // Create mesh to map to
-    PtrMesh outMesh(new Mesh("OutMesh1", dimensions, false, testing::nextMeshID()));
+    PtrMesh outMesh(new Mesh("OutMesh1", dimensions, testing::nextMeshID()));
     PtrData outData   = outMesh->createData("OutData1", 1);
     int     outDataID = outData->getID();
 
@@ -407,7 +400,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncrementalPseudo3D)
   }
   {
     // Create mesh to map to
-    PtrMesh outMesh(new Mesh("OutMesh2", dimensions, false, testing::nextMeshID()));
+    PtrMesh outMesh(new Mesh("OutMesh2", dimensions, testing::nextMeshID()));
     PtrData outData   = outMesh->createData("OutData2", 1);
     int     outDataID = outData->getID();
 
@@ -455,7 +448,7 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
   int dimensions = 3;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inData   = inMesh->createData("InData", 1);
   int     inDataID = inData->getID();
   Vertex &v1       = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -465,7 +458,6 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
   inMesh->createEdge(v2, v3);
   inMesh->createEdge(v3, v1);
 
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -476,7 +468,7 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
   values(2)                     = valueVertex3;
 
   // Create mesh to map to
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData   = outMesh->createData("OutData", 1);
   int     outDataID = outData->getID();
 
@@ -511,14 +503,13 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnVertices)
   int dimensions = 3;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inData   = inMesh->createData("InData", 1);
   int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
   inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
 
-  inMesh->computeState();
   inMesh->allocateDataValues();
   double           valueVertex1 = 1.0;
   double           valueVertex2 = 2.0;
@@ -529,7 +520,7 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnVertices)
   values(2)                     = valueVertex3;
 
   // Create mesh to map to
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData   = outMesh->createData("OutData", 1);
   int     outDataID = outData->getID();
 
@@ -564,7 +555,7 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   constexpr int dimensions = 3;
 
   // Create mesh to map from with Triangles ABD and BDC
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inData = inMesh->createData("InData", 1);
   Vertex &inVA   = inMesh->createVertex(Eigen::Vector3d{0, 0, 0});
   Vertex &inVB   = inMesh->createVertex(Eigen::Vector3d{0, 1, 0});
@@ -580,16 +571,14 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   inMesh->createTriangle(inEAB, inEBD, inEDA);
   inMesh->createTriangle(inEBD, inEDC, inECB);
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() << 1.0, 1.0, 1.0, 1.0;
 
   // Create mesh to map to with one vertex per defined traingle
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{0.33, 0.33, 0});
   outMesh->createVertex(Eigen::Vector3d{0.66, 0.66, 0});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() << 0.0, 0.0;
 
   // Setup mapping with mapping coordinates and geometry used
@@ -612,7 +601,7 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
-  PtrMesh      inMesh(new mesh::Mesh("InMesh", 3, false, testing::nextMeshID()));
+  PtrMesh      inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
   PtrData      inData = inMesh->createData("InData", 1);
   const double z1     = 0.1;
   const double z2     = -0.1;
@@ -638,14 +627,12 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
   inMesh->createTriangle(erd, erb, err);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() = Eigen::VectorXd::Constant(6, 1.0);
 
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{0.7, 0.5, 0.0});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   // Setup mapping with mapping coordinates and geometry used
@@ -669,7 +656,7 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
-  PtrMesh      inMesh(new mesh::Mesh("InMesh", 3, false, testing::nextMeshID()));
+  PtrMesh      inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
   PtrData      inData = inMesh->createData("InData", 1);
   const double z1     = 0.1;
   const double z2     = -0.1;
@@ -695,10 +682,9 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
   inMesh->createTriangle(erd, erb, err);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() = Eigen::VectorXd::Constant(6, 1.0);
 
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   auto &  outV1   = outMesh->createVertex(Eigen::Vector3d{0.7, 0.5, 0.0});
   auto &  outV2   = outMesh->createVertex(Eigen::Vector3d{0.5, 0.0, 0.05});
@@ -708,7 +694,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
   auto &  outE3   = outMesh->createEdge(outV1, outV3);
   outMesh->createTriangle(outE1, outE2, outE3);
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(3, 0.0);
 
   // Setup mapping with mapping coordinates and geometry used
@@ -758,7 +743,7 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
-  PtrMesh inMesh(new mesh::Mesh("InMesh", 3, false, testing::nextMeshID()));
+  PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
   PtrData inData = inMesh->createData("InData", 1);
   // Close triangle - extrapolating
   auto &vc0 = inMesh->createVertex(Eigen::Vector3d(3, 0, 0));
@@ -773,14 +758,12 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() << 0, 0, 0, 1, 1, 1;
 
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{2, 1, 0});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
@@ -793,7 +776,7 @@ BOOST_AUTO_TEST_CASE(PickClosestTriangle)
   PRECICE_TEST(1_rank);
   using namespace precice::mesh;
 
-  PtrMesh inMesh(new mesh::Mesh("InMesh", 3, false, testing::nextMeshID()));
+  PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
   PtrData inData = inMesh->createData("InData", 1);
   // Far triangle - interpolating
   auto &vf0 = inMesh->createVertex(Eigen::Vector3d(0, 0, -1));
@@ -808,14 +791,12 @@ BOOST_AUTO_TEST_CASE(PickClosestTriangle)
   makeTriangle(inMesh, vc0, vc1, vc2);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() << 1, 1, 1, 0, 0, 0;
 
-  PtrMesh outMesh(new Mesh("OutMesh", 3, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", 3, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{1, 1, 0});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
@@ -829,7 +810,7 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
-  PtrMesh inMesh(new mesh::Mesh("InMesh", 3, false, testing::nextMeshID()));
+  PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
   PtrData inData = inMesh->createData("InData", 1);
   // Close edge
   auto &vc0 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
@@ -843,14 +824,12 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() << 0, 0, 1, 1, 1;
 
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{1, 1, 1});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);
@@ -864,7 +843,7 @@ BOOST_AUTO_TEST_CASE(TriangleDistances)
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
-  PtrMesh inMesh(new mesh::Mesh("InMesh", 3, false, testing::nextMeshID()));
+  PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
   PtrData inData = inMesh->createData("InData", 1);
 
   // Close triangle
@@ -880,14 +859,12 @@ BOOST_AUTO_TEST_CASE(TriangleDistances)
   makeTriangle(inMesh, vf0, vf1, vf2);
 
   inMesh->allocateDataValues();
-  inMesh->computeState();
   inData->values() << 1, 1, 1, 0, 0, 0;
 
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1);
   outMesh->createVertex(Eigen::Vector3d{1, 1, 1});
   outMesh->allocateDataValues();
-  outMesh->computeState();
   outData->values() = Eigen::VectorXd::Constant(1, 0.0);
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, inData, outMesh, outData);

@@ -20,8 +20,9 @@ PtrCommunication CommunicationConfiguration::createCommunication(
     int         port    = tag.getIntAttributeValue("port");
 
     PRECICE_CHECK(utils::isValidPort(port),
-                  "A sockets communication was configured with an invalid port \"" << port << "\". Please check the \"ports="
-                                                                                              "\" attributes of your socket connections.");
+                  "A sockets communication was configured with an invalid port \"{}\". "
+                  "Please check the \"ports=\" attributes of your socket connections.",
+                  port);
 
     std::string dir = tag.getStringAttributeValue("exchange-directory");
     com             = std::make_shared<com::SocketCommunication>(port, false, network, dir);

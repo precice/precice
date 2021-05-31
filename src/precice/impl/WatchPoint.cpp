@@ -8,6 +8,7 @@
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
+#include "mapping/Polation.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
@@ -55,14 +56,13 @@ const mesh::PtrMesh &WatchPoint::mesh() const
 void WatchPoint::initialize()
 {
   PRECICE_TRACE();
-  // Clear to allow reinitialization
-  mesh::Vertex watchVertex(_point, 1);
+
   query::Index indexTree(_mesh);
 
   if (_mesh->vertices().size() > 0) {
-    auto projectionElement = indexTree.findNearestProjection(watchVertex, 4);
-    _interpolationElements = std::move(projectionElement.first);
-    _shortestDistance      = projectionElement.second;
+    auto projection   = indexTree.findNearestProjection(_point, 4);
+    _interpolation    = std::make_unique<mapping::Polation>(projection.first);
+    _shortestDistance = projection.second;
   }
 
   if (utils::MasterSlave::isSlave()) {
@@ -74,7 +74,7 @@ void WatchPoint::initialize()
     int    closestRank           = 0;
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal  = std::numeric_limits<double>::max();
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(closestDistanceLocal, rankSlave);
       if (closestDistanceLocal < closestDistanceGlobal) {
         closestDistanceGlobal = closestDistanceLocal;
@@ -82,16 +82,12 @@ void WatchPoint::initialize()
       }
     }
     _isClosest = closestRank == 0;
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->send(closestRank == rankSlave, rankSlave);
     }
   }
 
-  if (not _isClosest) {
-    _interpolationElements.clear();
-  }
-
-  PRECICE_DEBUG("Rank: " << utils::MasterSlave::getRank() << ", isClosest: " << _isClosest);
+  PRECICE_DEBUG("Rank: {}, isClosest: {}", utils::MasterSlave::getRank(), _isClosest);
 }
 
 void WatchPoint::exportPointData(
@@ -105,8 +101,8 @@ void WatchPoint::exportPointData(
   _txtWriter.writeData("Time", time);
   // Export watch point coordinates
   Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
-  for (const auto elem : _interpolationElements) {
-    coords += elem.weight * elem.element->getCoords();
+  for (const auto &elem : _interpolation->getWeightedElements()) {
+    coords += elem.weight * _mesh->vertices()[elem.vertexID].getCoords();
   }
   if (coords.size() == 2) {
     _txtWriter.writeData("Coordinate", Eigen::Vector2d(coords));
@@ -139,8 +135,8 @@ void WatchPoint::getValue(
   int                    dim = _mesh->getDimensions();
   Eigen::VectorXd        temp(dim);
   const Eigen::VectorXd &values = data->values();
-  for (const auto &elem : _interpolationElements) {
-    int offset = elem.element->getID() * dim;
+  for (const auto &elem : _interpolation->getWeightedElements()) {
+    int offset = elem.vertexID * dim;
     for (int i = 0; i < dim; i++) {
       temp[i] = values[offset + i];
     }
@@ -154,8 +150,8 @@ void WatchPoint::getValue(
     mesh::PtrData &data)
 {
   const Eigen::VectorXd &values = data->values();
-  for (const auto &elem : _interpolationElements) {
-    value += elem.weight * values[elem.element->getID()];
+  for (const auto &elem : _interpolation->getWeightedElements()) {
+    value += elem.weight * values[elem.vertexID];
   }
 }
 

@@ -89,12 +89,16 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   if ((input()->edges().empty() and (not input()->vertices().empty())) or
       (((input()->getDimensions() == 3) and input()->triangles().empty()) and (not input()->vertices().empty()))) {
     logging::Logger _log{"mapping::Mapping"};
-    PRECICE_ERROR("Connectivity information is missing for the mesh " << input()->getName() << ". Scaled consistent mapping requires connectivity information.");
+    PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
+                  "Scaled consistent mapping requires connectivity information.",
+                  input()->getName());
   }
   if ((output()->edges().empty() and (not output()->vertices().empty())) or
       (((output()->getDimensions() == 3) and output()->triangles().empty()) and (not output()->vertices().empty()))) {
     logging::Logger _log{"mapping::Mapping"};
-    PRECICE_ERROR("Connectivity information is missing for the mesh " << output()->getName() << ". Scaled consistent mapping requires connectivity information.");
+    PRECICE_ERROR("Connectivity information is missing for the mesh {}. "
+                  "Scaled consistent mapping requires connectivity information.",
+                  output()->getName());
   }
 
   auto &outputValues    = output()->data(outputDataID)->values();

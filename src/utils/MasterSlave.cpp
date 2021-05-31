@@ -2,7 +2,7 @@
 
 #include "MasterSlave.hpp"
 #include <Eigen/Core>
-#include <math.h>
+#include <cmath>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -30,7 +30,7 @@ void MasterSlave::configure(int rank, int size)
   PRECICE_ASSERT(_rank != -1 && _size != -1);
   _isMaster = (rank == 0) && _size != 1;
   _isSlave  = (rank != 0);
-  PRECICE_DEBUG("isSlave: " << _isSlave << ", isMaster: " << _isMaster);
+  PRECICE_DEBUG("isSlave: {}, isMaster: {}", _isSlave, _isMaster);
 }
 
 int MasterSlave::getRank()
@@ -51,6 +51,11 @@ bool MasterSlave::isMaster()
 bool MasterSlave::isSlave()
 {
   return _isSlave;
+}
+
+bool MasterSlave::isParallel()
+{
+  return _isMaster || _isSlave;
 }
 
 double MasterSlave::l2norm(const Eigen::VectorXd &vec)

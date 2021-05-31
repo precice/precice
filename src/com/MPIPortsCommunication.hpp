@@ -19,7 +19,7 @@ namespace com {
  */
 class MPIPortsCommunication : public MPICommunication {
 public:
-  explicit MPIPortsCommunication(std::string const &addressDirectory = ".");
+  explicit MPIPortsCommunication(std::string addressDirectory = ".");
 
   virtual ~MPIPortsCommunication();
 
