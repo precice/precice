@@ -1,25 +1,24 @@
 #include "acceleration/impl/ValuePreconditioner.hpp"
+#include <cstddef>
+#include <vector>
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 ValuePreconditioner::ValuePreconditioner(
-    int maxNonConstTimesteps)
-    : Preconditioner(maxNonConstTimesteps),
-      _firstTimestep(true)
+    int maxNonConstTimeWindows)
+    : Preconditioner(maxNonConstTimeWindows)
 {
 }
 
-void ValuePreconditioner::_update_(bool timestepComplete,
+void ValuePreconditioner::_update_(bool                   timeWindowComplete,
                                    const Eigen::VectorXd &oldValues,
                                    const Eigen::VectorXd &res)
 {
-  if (timestepComplete || _firstTimestep) {
+  if (timeWindowComplete || _firstTimeWindow) {
 
     std::vector<double> norms(_subVectorSizes.size(), 0.0);
 
@@ -43,9 +42,11 @@ void ValuePreconditioner::_update_(bool timestepComplete,
       offset += _subVectorSizes[k];
     }
 
-    _requireNewQR  = true;
-    _firstTimestep = false;
+    _requireNewQR    = true;
+    _firstTimeWindow = false;
   }
 }
 
-}}} // namespace precice, acceleration, impl
+} // namespace impl
+} // namespace acceleration
+} // namespace precice

@@ -1,6 +1,6 @@
 #include "TXTWriter.hpp"
-
 #include <iomanip>
+#include "logging/LogMacros.hpp"
 
 namespace precice {
 namespace io {
@@ -9,10 +9,9 @@ TXTWriter::TXTWriter(
     const std::string &filename)
     : _file()
 {
-  _file.open(filename.c_str());
-  if (not _file) {
-    PRECICE_ERROR("Could not open file \"" << filename << "\" for txt writing!");
-  }
+  _file.open(filename);
+  PRECICE_CHECK(_file, "TXT writer failed to open file \"{}\"", filename);
+
   _file.setf(std::ios::showpoint);
   _file.setf(std::ios::fixed);
   _file << std::setprecision(16);

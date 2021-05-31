@@ -1,14 +1,31 @@
 #ifndef PRECICE_NO_MPI
 
+#include <Eigen/Core>
+#include <algorithm>
+#include <map>
+#include <memory>
 #include <vector>
-#include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
+#include "com/SharedPointer.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "m2n/DistributedCommunication.hpp"
 #include "m2n/PointToPointCommunication.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/MasterSlave.hpp"
 
+namespace precice {
+namespace mesh {
+class Vertex;
+} // namespace mesh
+namespace utils {
+class Parallel;
+} // namespace utils
+} // namespace precice
+
+using precice::testing::TestContext;
 using precice::utils::MasterSlave;
 using precice::utils::Parallel;
 
@@ -26,98 +43,66 @@ void process(vector<double> &data)
   }
 }
 
-void P2PComTest1(com::PtrCommunicationFactory cf)
+void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
 {
-  BOOST_TEST(Parallel::getCommunicatorSize() == 4);
+  BOOST_TEST(context.hasSize(2));
 
-  MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
-
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, testing::nextMeshID()));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
   vector<double> data;
   vector<double> expectedData;
 
-  switch (Parallel::getProcessRank()) {
-  case 0: {
-    Parallel::splitCommunicator("A.Master");
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
+      mesh->setGlobalNumberOfVertices(10);
 
-    utils::MasterSlave::configure(0, 2);
+      mesh->getVertexDistribution()[0].push_back(0);
+      mesh->getVertexDistribution()[0].push_back(1);
+      mesh->getVertexDistribution()[0].push_back(3);
+      mesh->getVertexDistribution()[0].push_back(5);
+      mesh->getVertexDistribution()[0].push_back(7);
 
-    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", 0);
-    MasterSlave::_communication->setRankOffset(1);
+      mesh->getVertexDistribution()[1].push_back(1);
+      mesh->getVertexDistribution()[1].push_back(2);
+      mesh->getVertexDistribution()[1].push_back(4);
+      mesh->getVertexDistribution()[1].push_back(5);
+      mesh->getVertexDistribution()[1].push_back(6);
 
-    mesh->setGlobalNumberOfVertices(10);
+      data         = {10, 20, 40, 60, 80};
+      expectedData = {10 + 2, 4 * 20 + 3, 40 + 2, 4 * 60 + 3, 80 + 2};
+    } else { // A Slave
+      data         = {20, 30, 50, 60, 70};
+      expectedData = {4 * 20 + 3, 30 + 1, 50 + 2, 4 * 60 + 3, 70 + 1};
+    }
+  } else {
+    BOOST_TEST(context.isNamed("B"));
+    if (context.isMaster()) {
+      mesh->setGlobalNumberOfVertices(10);
 
-    mesh->getVertexDistribution()[0].push_back(0);
-    mesh->getVertexDistribution()[0].push_back(1); 
-    mesh->getVertexDistribution()[0].push_back(3);
-    mesh->getVertexDistribution()[0].push_back(5); 
-    mesh->getVertexDistribution()[0].push_back(7);
+      mesh->getVertexDistribution()[0].push_back(1);
+      mesh->getVertexDistribution()[0].push_back(2);
+      mesh->getVertexDistribution()[0].push_back(5);
+      mesh->getVertexDistribution()[0].push_back(6);
 
-    mesh->getVertexDistribution()[1].push_back(1); 
-    mesh->getVertexDistribution()[1].push_back(2);
-    mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); 
-    mesh->getVertexDistribution()[1].push_back(6);
+      mesh->getVertexDistribution()[1].push_back(0);
+      mesh->getVertexDistribution()[1].push_back(1);
+      mesh->getVertexDistribution()[1].push_back(3);
+      mesh->getVertexDistribution()[1].push_back(4);
+      mesh->getVertexDistribution()[1].push_back(5);
+      mesh->getVertexDistribution()[1].push_back(7);
 
-    data         = {10, 20, 40, 60, 80};
-    expectedData = {10 + 2, 4 * 20 + 3, 40 + 2, 4 * 60 + 3, 80 + 2};
+      data.assign(4, -1);
+      expectedData = {2 * 20, 30, 2 * 60, 70};
 
-    break;
-  }
-  case 1: {
-    Parallel::splitCommunicator("A.Slave");
-    MasterSlave::configure(1, 2);
-
-    MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 1, 1);
-
-    data         = {20, 30, 50, 60, 70};
-    expectedData = {4 * 20 + 3, 30 + 1, 50 + 2, 4 * 60 + 3, 70 + 1};
-
-    break;
-  }
-  case 2: {
-    Parallel::splitCommunicator("B.Master");
-    MasterSlave::configure(0, 2);
-
-    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", 0);
-    MasterSlave::_communication->setRankOffset(1);
-
-    mesh->setGlobalNumberOfVertices(10);
-
-    mesh->getVertexDistribution()[0].push_back(1); 
-    mesh->getVertexDistribution()[0].push_back(2);
-    mesh->getVertexDistribution()[0].push_back(5); 
-    mesh->getVertexDistribution()[0].push_back(6);
-
-    mesh->getVertexDistribution()[1].push_back(0);
-    mesh->getVertexDistribution()[1].push_back(1); 
-    mesh->getVertexDistribution()[1].push_back(3);
-    mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); 
-    mesh->getVertexDistribution()[1].push_back(7);
-
-    data.assign(4, -1);
-    expectedData = {2 * 20, 30, 2 * 60, 70};
-
-    break;
-  }
-  case 3: {
-    Parallel::splitCommunicator("B.Slave");
-    MasterSlave::configure(1, 2);
-
-    MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 1, 1);
-
-    data.assign(6, -1);
-    expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
-
-    break;
-  }
+    } else {
+      data.assign(6, -1);
+      expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
+    }
   }
 
-  if (Parallel::getProcessRank() < 2) {
+  if (context.isNamed("A")) {
     c.requestConnection("B", "A");
 
     c.send(data.data(), data.size());
@@ -132,105 +117,68 @@ void P2PComTest1(com::PtrCommunicationFactory cf)
     process(data);
     c.send(data.data(), data.size());
   }
-
-  MasterSlave::_communication.reset();
-  MasterSlave::reset();
-
-  Parallel::synchronizeProcesses();
-  utils::Parallel::clearGroups();
 }
 
 /// a very similar test, but with a vertex that has been completely filtered out
-void P2PComTest2(com::PtrCommunicationFactory cf)
+void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
 {
-  BOOST_TEST(Parallel::getCommunicatorSize() == 4);
-
-  MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
-
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
+  BOOST_TEST(context.hasSize(2));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, testing::nextMeshID()));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
   vector<double> data;
   vector<double> expectedData;
 
-  switch (Parallel::getProcessRank()) {
-  case 0: {
-    Parallel::splitCommunicator("A.Master");
-    MasterSlave::configure(0, 2);
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
+      mesh->setGlobalNumberOfVertices(10);
 
-    MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", utils::Parallel::getProcessRank());
-    MasterSlave::_communication->setRankOffset(1);
+      mesh->getVertexDistribution()[0].push_back(0);
+      mesh->getVertexDistribution()[0].push_back(1);
+      mesh->getVertexDistribution()[0].push_back(3);
+      mesh->getVertexDistribution()[0].push_back(5);
+      mesh->getVertexDistribution()[0].push_back(7);
 
-    mesh->setGlobalNumberOfVertices(10);
+      mesh->getVertexDistribution()[1].push_back(1);
+      mesh->getVertexDistribution()[1].push_back(2);
+      mesh->getVertexDistribution()[1].push_back(4);
+      mesh->getVertexDistribution()[1].push_back(5);
+      mesh->getVertexDistribution()[1].push_back(6);
 
-    mesh->getVertexDistribution()[0].push_back(0);
-    mesh->getVertexDistribution()[0].push_back(1); 
-    mesh->getVertexDistribution()[0].push_back(3);
-    mesh->getVertexDistribution()[0].push_back(5); 
-    mesh->getVertexDistribution()[0].push_back(7);
+      data         = {10, 20, 40, 60, 80};
+      expectedData = {10 + 2, 4 * 20 + 3, 2 * 40 + 3, 4 * 60 + 3, 80 + 2};
+    } else {
+      data         = {20, 30, 50, 60, 70};
+      expectedData = {4 * 20 + 3, 0, 50 + 2, 4 * 60 + 3, 70 + 1};
+    }
+  } else {
+    BOOST_TEST(context.isNamed("B"));
+    if (context.isMaster()) {
+      mesh->setGlobalNumberOfVertices(10);
 
-    mesh->getVertexDistribution()[1].push_back(1); 
-    mesh->getVertexDistribution()[1].push_back(2);
-    mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); 
-    mesh->getVertexDistribution()[1].push_back(6);
+      mesh->getVertexDistribution()[0].push_back(1);
+      mesh->getVertexDistribution()[0].push_back(3);
+      mesh->getVertexDistribution()[0].push_back(5);
+      mesh->getVertexDistribution()[0].push_back(6);
 
-    data         = {10, 20, 40, 60, 80};
-    expectedData = {10 + 2, 4 * 20 + 3, 2 * 40 + 3, 4 * 60 + 3, 80 + 2};
+      mesh->getVertexDistribution()[1].push_back(0);
+      mesh->getVertexDistribution()[1].push_back(1);
+      mesh->getVertexDistribution()[1].push_back(3);
+      mesh->getVertexDistribution()[1].push_back(4);
+      mesh->getVertexDistribution()[1].push_back(5);
+      mesh->getVertexDistribution()[1].push_back(7);
 
-    break;
-  }
-  case 1: {
-    Parallel::splitCommunicator("A.Slave");
-    utils::MasterSlave::configure(1, 2);
+      data.assign(4, -1);
+      expectedData = {2 * 20, 40, 2 * 60, 70};
 
-    MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 0, 1);
-
-    data         = {20, 30, 50, 60, 70};
-    expectedData = {4 * 20 + 3, 0, 50 + 2, 4 * 60 + 3, 70 + 1};
-
-    break;
-  }
-  case 2: {
-    Parallel::splitCommunicator("B.Master");
-    utils::MasterSlave::configure(0, 2);
-
-    MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", utils::Parallel::getProcessRank());
-    MasterSlave::_communication->setRankOffset(1);
-
-    mesh->setGlobalNumberOfVertices(10);
-
-    mesh->getVertexDistribution()[0].push_back(1); 
-    mesh->getVertexDistribution()[0].push_back(3);
-    mesh->getVertexDistribution()[0].push_back(5); 
-    mesh->getVertexDistribution()[0].push_back(6);
-
-    mesh->getVertexDistribution()[1].push_back(0);
-    mesh->getVertexDistribution()[1].push_back(1); 
-    mesh->getVertexDistribution()[1].push_back(3);
-    mesh->getVertexDistribution()[1].push_back(4);
-    mesh->getVertexDistribution()[1].push_back(5); 
-    mesh->getVertexDistribution()[1].push_back(7);
-
-    data.assign(4, -1);
-    expectedData = {2 * 20, 40, 2 * 60, 70};
-
-    break;
-  }
-  case 3: {
-    Parallel::splitCommunicator("B.Slave");
-    MasterSlave::configure(1, 2);
-    MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
-
-    data.assign(6, -1);
-    expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
-
-    break;
-  }
+    } else {
+      data.assign(6, -1);
+      expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
+    }
   }
 
-  if (Parallel::getProcessRank() < 2) {
+  if (context.isNamed("A")) {
     c.requestConnection("B", "A");
 
     c.send(data.data(), data.size());
@@ -244,197 +192,32 @@ void P2PComTest2(com::PtrCommunicationFactory cf)
     process(data);
     c.send(data.data(), data.size());
   }
-
-  MasterSlave::_communication.reset();
-  MasterSlave::reset();
-
-  Parallel::synchronizeProcesses();
-  utils::Parallel::clearGroups();
 }
 
-void connectionTest(com::PtrCommunicationFactory cf)
+void runSameConnectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
 
-  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);    
-  
-  int dimensions = 2;
-  bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));  
+  BOOST_TEST(context.hasSize(2));
 
-  std::vector<std::string> conections = {"same", "cross"};
+  int           dimensions = 2;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
 
-  for (auto & connectionType : conections)
-  {
-    utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
-    
-    switch (utils::Parallel::getProcessRank())
-    {
-    case 0: {
-      utils::Parallel::splitCommunicator("Fluid.Master");
-      utils::MasterSlave::configure(0, 2);
-      utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
-      utils::MasterSlave::_communication->setRankOffset(1);
-
-      if (connectionType == "same")
-      {
-        mesh->getConnectedRanks().push_back(0);
-      } else
-      {
-        mesh->getConnectedRanks().push_back(1);
-      }
-      break;
-
-    }
-    case 1: {
-      utils::Parallel::splitCommunicator("Fluid.Slave");
-      utils::MasterSlave::configure(1, 2);
-      utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
-
-      if (connectionType == "same")
-      {
-        mesh->getConnectedRanks().push_back(1);
-      } else
-      {
-        mesh->getConnectedRanks().push_back(0);
-      }
-        break;
-        
-    }
-    case 2:
-    {
-      utils::Parallel::splitCommunicator("Solid.Master");
-      utils::MasterSlave::configure(0, 2);
-      utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
-      utils::MasterSlave::_communication->setRankOffset(1);
-
-      if (connectionType == "same")
-      {        
-        mesh->getConnectedRanks().push_back(0);
-      } else
-      {
-        mesh->getConnectedRanks().push_back(1);
-      }
-      break;
-    }
-    case 3:
-    {
-      utils::Parallel::splitCommunicator("Solid.Slave");
-      utils::MasterSlave::configure(1, 2);
-      utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);   
-
-      if (connectionType == "same")
-      {
-        mesh->getConnectedRanks().push_back(1);
-      } else
-      {
-        mesh->getConnectedRanks().push_back(0);
-      }   
-      break;
-    }
-    }     
-
-  m2n::PointToPointCommunication c(cf, mesh);
-
-  std::vector<int> receiveData;
-
-  if (utils::Parallel::getProcessRank() == 0) {
-  
-    c.requestPreConnection("Solid", "Fluid");
-    int sendData = 5;
-    c.broadcastSend(sendData);    
-   
-  } else if (utils::Parallel::getProcessRank() == 1) {
-  
-    c.requestPreConnection("Solid", "Fluid");
-    int sendData = 10;
-    c.broadcastSend(sendData);    
-   
-  } else
-  {    
-    c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceiveAll(receiveData);    
-  }
-
-  if(utils::Parallel::getProcessRank() == 2 )
-  {
-    if (connectionType == "same")
-      {
-        BOOST_TEST(receiveData[0] == 5);
-      } else
-      {        
-        BOOST_TEST(receiveData[1] == 10);
-      }  
-    
-  } else if(utils::Parallel::getProcessRank() == 3 )
-  {
-    if (connectionType == "same")
-      {        
-        BOOST_TEST(receiveData[0] == 10);
-      } else
-      {        
-        BOOST_TEST(receiveData[1] == 5);
-      }  
-  }
-  
-  utils::MasterSlave::_communication = nullptr;
-  utils::MasterSlave::reset();
-  utils::Parallel::synchronizeProcesses();
-  utils::Parallel::clearGroups();
-  mesh::Mesh::resetGeometryIDsGlobally();
-  mesh::Data::resetDataCount();
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
-  }
-}
-
-void emptyConnectionTest(com::PtrCommunicationFactory cf)
-{
-
-  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);    
-  
-  int dimensions = 2;
-  bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
-
-  utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
-  
-  switch (utils::Parallel::getProcessRank())
-  {
-    case 0: {
-      utils::Parallel::splitCommunicator("Fluid.Master");
-      utils::MasterSlave::configure(0, 2);
-      utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
-      utils::MasterSlave::_communication->setRankOffset(1);
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
 
       mesh->getConnectedRanks().push_back(0);
+    } else {
 
-      
-      break;
+      mesh->getConnectedRanks().push_back(1);
     }
-    case 1: {
-      utils::Parallel::splitCommunicator("Fluid.Slave");
-      utils::MasterSlave::configure(1, 2);
-      utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
- 
-      break;       
-    }
-    case 2:
-    {
-      utils::Parallel::splitCommunicator("Solid.Master");
-      utils::MasterSlave::configure(0, 2);
-      utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
-      utils::MasterSlave::_communication->setRankOffset(1);
+  } else {
+    BOOST_TEST(context.isNamed("B"));
+    if (context.isMaster()) {
 
       mesh->getConnectedRanks().push_back(0);
-      
-      break;
-    }
-    case 3:
-    {
-      utils::Parallel::splitCommunicator("Solid.Slave");
-      utils::MasterSlave::configure(1, 2);
-      utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);   
+    } else {
 
-      break;
+      mesh->getConnectedRanks().push_back(1);
     }
   }
 
@@ -442,281 +225,371 @@ void emptyConnectionTest(com::PtrCommunicationFactory cf)
 
   std::vector<int> receiveData;
 
-  if (utils::Parallel::getProcessRank() < 2) {
-  
-    c.requestPreConnection("Solid", "Fluid");
-    int sendData = 5;
-    c.broadcastSend(sendData);      
-   
-  } else if (utils::Parallel::getProcessRank() > 1) 
-  {    
-    c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceiveAll(receiveData);    
-  }
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
 
-  if(utils::Parallel::getProcessRank() == 2 )
-  {
-    BOOST_TEST(receiveData[0] == 5);
-    
-  } else if(utils::Parallel::getProcessRank() == 3 )
-  {
-    BOOST_TEST(receiveData.size() == 0);
+      c.requestPreConnection("Solid", "Fluid");
+      int sendData = 5;
+      c.broadcastSend(sendData);
+
+    } else {
+
+      c.requestPreConnection("Solid", "Fluid");
+      int sendData = 10;
+      c.broadcastSend(sendData);
+    }
+  } else {
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceiveAll(receiveData);
+
+    if (context.isMaster()) {
+      BOOST_TEST(receiveData.at(0) == 5);
+    } else {
+      BOOST_TEST(receiveData.at(0) == 10);
+    }
   }
-  
-  utils::MasterSlave::_communication = nullptr;
-  utils::MasterSlave::reset();
-  utils::Parallel::synchronizeProcesses();
-  utils::Parallel::clearGroups();
-  mesh::Mesh::resetGeometryIDsGlobally();
-  mesh::Data::resetDataCount();
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());   
 }
 
-void P2PMeshBroadcastTest(com::PtrCommunicationFactory cf)
+void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
 {
-  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
-  utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
-  
-  int dimensions = 2;
-  bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
-  
-  switch (utils::Parallel::getProcessRank()) {
-  case 0: {
-    utils::Parallel::splitCommunicator("Fluid.Master");
-    utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
-    utils::MasterSlave::_communication->setRankOffset(1);
 
-    Eigen::VectorXd position(dimensions);
-    position <<5.5, 0.0;
-    mesh::Vertex& v1 = mesh->createVertex(position);
-    position << 1.0, 2.0;
-    mesh::Vertex& v2 = mesh->createVertex(position);
-    mesh->createEdge(v1, v2);
+  BOOST_TEST(context.hasSize(2));
 
-    mesh->getConnectedRanks().push_back(0);
-    
-    break;
-  }
-  case 1: {
-    utils::Parallel::splitCommunicator("Fluid.Slave");
-    utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+  int           dimensions = 2;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
 
-    Eigen::VectorXd position(dimensions);
-    position <<1.5, 0.0;
-    mesh::Vertex& v1 = mesh->createVertex(position);
-    position << 1.5, 2.0;
-    mesh::Vertex& v2 = mesh->createVertex(position);
-    mesh->createEdge(v1, v2);
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
 
-    mesh->getConnectedRanks().push_back(1);
-    
-    break;
-  }
-  case 2: {
-    utils::Parallel::splitCommunicator("Solid.Master");
-    utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
-    utils::MasterSlave::_communication->setRankOffset(1);
+      mesh->getConnectedRanks().push_back(1);
+    } else {
 
-    mesh->getConnectedRanks().push_back(0);
+      mesh->getConnectedRanks().push_back(0);
+    }
+  } else {
+    BOOST_TEST(context.isNamed("B"));
+    if (context.isMaster()) {
 
-    break;
-  }
-  case 3: {
-    utils::Parallel::splitCommunicator("Solid.Slave");
-    utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
-    
-    mesh->getConnectedRanks().push_back(1);
+      mesh->getConnectedRanks().push_back(1);
+    } else {
 
-    break;
-  }
+      mesh->getConnectedRanks().push_back(0);
+    }
   }
 
   m2n::PointToPointCommunication c(cf, mesh);
 
-  if (utils::Parallel::getProcessRank() < 2) {
-  
+  std::vector<int> receiveData;
+
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
+
+      c.requestPreConnection("Solid", "Fluid");
+      int sendData = 5;
+      c.broadcastSend(sendData);
+
+    } else {
+
+      c.requestPreConnection("Solid", "Fluid");
+      int sendData = 10;
+      c.broadcastSend(sendData);
+    }
+  } else {
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceiveAll(receiveData);
+
+    if (context.isMaster()) {
+      BOOST_TEST(receiveData.at(0) == 10);
+    } else {
+      BOOST_TEST(receiveData.at(0) == 5);
+    }
+  }
+}
+
+void runEmptyConnectionTest(const TestContext &context, com::PtrCommunicationFactory cf)
+{
+  BOOST_TEST(context.hasSize(2));
+
+  int           dimensions = 2;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
+
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
+
+      mesh->getConnectedRanks().push_back(0);
+
+    } else {
+    }
+  } else {
+    BOOST_TEST(context.isNamed("B"));
+    if (context.isMaster()) {
+      mesh->getConnectedRanks().push_back(0);
+
+    } else {
+    }
+  }
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  std::vector<int> receiveData;
+
+  if (context.isNamed("A")) {
+    c.requestPreConnection("Solid", "Fluid");
+    int sendData = 5;
+    c.broadcastSend(sendData);
+  } else {
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceiveAll(receiveData);
+
+    if (context.isMaster()) {
+      BOOST_TEST(receiveData.at(0) == 5);
+
+    } else {
+      BOOST_TEST(receiveData.size() == 0);
+    }
+  }
+}
+
+void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFactory cf)
+{
+  BOOST_TEST(context.hasSize(2));
+
+  int           dimensions = 2;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
+
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
+      Eigen::VectorXd position(dimensions);
+      position << 5.5, 0.0;
+      mesh::Vertex &v1 = mesh->createVertex(position);
+      position << 1.0, 2.0;
+      mesh::Vertex &v2 = mesh->createVertex(position);
+      mesh->createEdge(v1, v2);
+
+      mesh->getConnectedRanks().push_back(0);
+
+    } else {
+      Eigen::VectorXd position(dimensions);
+      position << 1.5, 0.0;
+      mesh::Vertex &v1 = mesh->createVertex(position);
+      position << 1.5, 2.0;
+      mesh::Vertex &v2 = mesh->createVertex(position);
+      mesh->createEdge(v1, v2);
+
+      mesh->getConnectedRanks().push_back(1);
+    }
+  } else {
+    BOOST_TEST(context.isNamed("B"));
+    if (context.isMaster()) {
+      mesh->getConnectedRanks().push_back(0);
+
+    } else {
+      mesh->getConnectedRanks().push_back(1);
+    }
+  }
+
+  m2n::PointToPointCommunication c(cf, mesh);
+
+  if (context.isNamed("A")) {
+
     c.requestPreConnection("Solid", "Fluid");
     c.broadcastSendMesh();
   } else {
 
-    c.acceptPreConnection("Solid", "Fluid");    
-    c.broadcastReceiveMesh();
+    c.acceptPreConnection("Solid", "Fluid");
+    c.broadcastReceiveAllMesh();
 
-      if(utils::Parallel::getProcessRank() ==2 )
-      {
-        // This rank should receive the mesh from rank 0 (fluid master)
-        BOOST_TEST(mesh->vertices().size()==2);
-        BOOST_TEST(mesh->vertices()[0].getCoords()[0]==5.50);
-        BOOST_TEST(mesh->vertices()[0].getCoords()[1]==0.0);
-        BOOST_TEST(mesh->vertices()[1].getCoords()[0]==1.0);
-        BOOST_TEST(mesh->vertices()[1].getCoords()[1]==2.0);        
-      }
-
-      if(utils::Parallel::getProcessRank() ==3 )
-      {
-        // This rank should receive the mesh from rank 1 (fluid slave)
-        BOOST_TEST(mesh->vertices().size()==2);
-        BOOST_TEST(mesh->vertices()[0].getCoords()[0]==1.50);
-        BOOST_TEST(mesh->vertices()[0].getCoords()[1]==0.0);
-        BOOST_TEST(mesh->vertices()[1].getCoords()[0]==1.50);
-        BOOST_TEST(mesh->vertices()[1].getCoords()[1]==2.0);
-      }
-    
+    if (context.isMaster()) {
+      // This rank should receive the mesh from rank 0 (fluid master)
+      BOOST_TEST(mesh->vertices().size() == 2);
+      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 5.50);
+      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
+      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.0);
+      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 2.0);
+    } else {
+      // This rank should receive the mesh from rank 1 (fluid slave)
+      BOOST_TEST(mesh->vertices().size() == 2);
+      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 1.50);
+      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
+      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.50);
+      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 2.0);
+    }
   }
-  
-  utils::MasterSlave::_communication = nullptr;
-  utils::MasterSlave::reset();
-  utils::Parallel::synchronizeProcesses();
-  utils::Parallel::clearGroups();
-  mesh::Mesh::resetGeometryIDsGlobally();
-  mesh::Data::resetDataCount();
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
 }
 
-void P2PComLCMTest(com::PtrCommunicationFactory cf)
-{  
-  PRECICE_ASSERT(utils::Parallel::getCommunicatorSize() == 4);
-  utils::MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
+void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrCommunicationFactory cf)
+{
+  BOOST_TEST(context.hasSize(2));
 
-  int dimensions = 2;
-  bool flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals)); 
+  int                             dimensions = 2;
+  mesh::PtrMesh                   mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
+  const auto                      expectedId = mesh->getID();
   std::map<int, std::vector<int>> localCommunicationMap;
 
-  switch (utils::Parallel::getProcessRank()) {
-  case 0: {
-    utils::Parallel::splitCommunicator("Fluid.Master");
-    utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("Fluid.Master", "Fluid.Slave", utils::Parallel::getProcessRank());
-    utils::MasterSlave::_communication->setRankOffset(1);
+  if (context.isNamed("A")) {
+    if (context.isMaster()) {
 
-    // The numbers are chosen in this way to make it easy to test weather
-    // correct values are communicated or not! 
-    mesh->getConnectedRanks().push_back(0);    
-    localCommunicationMap[0].push_back(102);
-    localCommunicationMap[0].push_back(1022);
-    localCommunicationMap[0].push_back(10222);
-    localCommunicationMap[1].push_back(103);
-    localCommunicationMap[1].push_back(1033);
-    localCommunicationMap[1].push_back(10333);
-   
-    break;
-  }
-  case 1: {
-    utils::Parallel::splitCommunicator("Fluid.Slave");
-    utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("Fluid.Master", "Fluid.Slave", 0, 1);
+      // The numbers are chosen in this way to make it easy to test weather
+      // correct values are communicated or not!
+      mesh->getConnectedRanks().push_back(0);
+      localCommunicationMap[0].push_back(102);
+      localCommunicationMap[0].push_back(1022);
+      localCommunicationMap[0].push_back(10222);
+      localCommunicationMap[1].push_back(103);
+      localCommunicationMap[1].push_back(1033);
+      localCommunicationMap[1].push_back(10333);
 
-    // The numbers are chosen in this way to make it easy to test weather
-    // correct values are communicated or not! 
-    mesh->getConnectedRanks().push_back(1);    
-    localCommunicationMap[0].push_back(112);
-    localCommunicationMap[0].push_back(1122);
-    localCommunicationMap[0].push_back(11222);
-    localCommunicationMap[1].push_back(113);
-    localCommunicationMap[1].push_back(1133);
-    localCommunicationMap[1].push_back(11333);
+    } else {
 
-    break;
-  }
-  case 2: {
-    utils::Parallel::splitCommunicator("Solid.Master");
-    utils::MasterSlave::configure(0, 2);
-    utils::MasterSlave::_communication->acceptConnection("Solid.Master", "Solid.Slave", utils::Parallel::getProcessRank());
-    utils::MasterSlave::_communication->setRankOffset(1);
-    
-    mesh->getConnectedRanks().push_back(0);
-    
-    break;
-  }
-  case 3: {
-    utils::Parallel::splitCommunicator("Solid.Slave");
-    utils::MasterSlave::configure(1, 2);
-    utils::MasterSlave::_communication->requestConnection("Solid.Master", "Solid.Slave", 0, 1);
+      // The numbers are chosen in this way to make it easy to test weather
+      // correct values are communicated or not!
+      mesh->getConnectedRanks().push_back(1);
+      localCommunicationMap[0].push_back(112);
+      localCommunicationMap[0].push_back(1122);
+      localCommunicationMap[0].push_back(11222);
+      localCommunicationMap[1].push_back(113);
+      localCommunicationMap[1].push_back(1133);
+      localCommunicationMap[1].push_back(11333);
+    }
+  } else {
+    BOOST_TEST(context.isNamed("B"));
+    if (context.isMaster()) {
 
-    mesh->getConnectedRanks().push_back(1);
-    
-    break;
-  }
+      mesh->getConnectedRanks().push_back(0);
+
+    } else {
+
+      mesh->getConnectedRanks().push_back(1);
+    }
   }
 
   m2n::PointToPointCommunication c(cf, mesh);
 
-  if (utils::Parallel::getProcessRank() < 2) {
-  
+  if (context.isNamed("A")) {
+
     c.requestPreConnection("Solid", "Fluid");
-    c.broadcastSendLCM(localCommunicationMap);
-    BOOST_TEST(mesh->getID()==0);
-   
-  } else
-  {
+    c.scatterAllCommunicationMap(localCommunicationMap);
+    BOOST_TEST(mesh->getID() == expectedId);
+
+  } else {
     c.acceptPreConnection("Solid", "Fluid");
-    c.broadcastReceiveLCM(localCommunicationMap);
-    BOOST_TEST(mesh->getID()==0);
+    c.gatherAllCommunicationMap(localCommunicationMap);
+    BOOST_TEST(mesh->getID() == expectedId);
   }
 
- if(utils::Parallel::getProcessRank() == 2 )
-  {
-    // The numbers are chosen in this way to make it easy to test weather
-    // correct values are communicated or not! 
-    BOOST_TEST(localCommunicationMap.size() == 1);
-    BOOST_TEST(localCommunicationMap[0].size() ==3);
-    BOOST_TEST(localCommunicationMap[0][0] ==102);
-    BOOST_TEST(localCommunicationMap[0][1] ==1022);
-    BOOST_TEST(localCommunicationMap[0][2] ==10222);
-    
-  } else if(utils::Parallel::getProcessRank() == 3 )
-  {
-    // The numbers are chosen in this way to make it easy to test weather
-    // correct values are communicated or not! 
-    BOOST_TEST(localCommunicationMap.size() == 1);    
-    BOOST_TEST(localCommunicationMap[1].size() ==3);
-    BOOST_TEST(localCommunicationMap[1][0] ==113);
-    BOOST_TEST(localCommunicationMap[1][1] ==1133);
-    BOOST_TEST(localCommunicationMap[1][2] ==11333);   
+  if (context.isNamed("B")) {
+    if (context.isMaster()) {
+      // The numbers are chosen in this way to make it easy to test weather
+      // correct values are communicated or not!
+      BOOST_TEST(localCommunicationMap.size() == 1);
+      BOOST_TEST(localCommunicationMap.at(0).size() == 3);
+      BOOST_TEST(localCommunicationMap.at(0).at(0) == 102);
+      BOOST_TEST(localCommunicationMap.at(0).at(1) == 1022);
+      BOOST_TEST(localCommunicationMap.at(0).at(2) == 10222);
+
+    } else {
+      // The numbers are chosen in this way to make it easy to test weather
+      // correct values are communicated or not!
+      BOOST_TEST(localCommunicationMap.size() == 1);
+      BOOST_TEST(localCommunicationMap.at(1).size() == 3);
+      BOOST_TEST(localCommunicationMap.at(1).at(0) == 113);
+      BOOST_TEST(localCommunicationMap.at(1).at(1) == 1133);
+      BOOST_TEST(localCommunicationMap.at(1).at(2) == 11333);
+    }
   }
-  
-  utils::MasterSlave::_communication = nullptr;
-  utils::MasterSlave::reset();
-  utils::Parallel::synchronizeProcesses();
-  utils::Parallel::clearGroups();
-  mesh::Mesh::resetGeometryIDsGlobally();
-  mesh::Data::resetDataCount();
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());  
 }
 
+BOOST_AUTO_TEST_SUITE(Sockets)
 
-BOOST_AUTO_TEST_CASE(SocketCommunication,
-                     * testing::OnSize(4))
+BOOST_AUTO_TEST_CASE(P2PComTest1)
 {
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
-  if (utils::Parallel::getProcessRank() < 4) {
-    P2PComTest1(cf);
-    P2PComTest2(cf);
-    connectionTest(cf);
-    emptyConnectionTest(cf);
-    P2PMeshBroadcastTest(cf);
-    P2PComLCMTest(cf);    
-  }
+  runP2PComTest1(context, cf);
 }
 
-BOOST_AUTO_TEST_CASE(MPIPortsCommunication,
-                     * testing::OnSize(4)
-                     * boost::unit_test::label("MPI_Ports"))
+BOOST_AUTO_TEST_CASE(P2PComTest2)
 {
-  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
-  if (utils::Parallel::getProcessRank() < 4) {
-    P2PComTest1(cf);
-    P2PComTest2(cf);
-    connectionTest(cf);
-    emptyConnectionTest(cf);
-  }
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runP2PComTest2(context, cf);
 }
+
+BOOST_AUTO_TEST_CASE(TestSameConnection)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runSameConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(TestCrossConnection)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runCrossConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(EmptyConnectionTest)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runEmptyConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(P2PMeshBroadcastTest)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runP2PMeshBroadcastTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(P2PComLocalCommunicationMapTest)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  runP2PComLocalCommunicationMapTest(context, cf);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Sockets
+
+BOOST_AUTO_TEST_SUITE(MPIPorts, *boost::unit_test::label("MPI_Ports"))
+
+BOOST_AUTO_TEST_CASE(P2PComTest1)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  runP2PComTest1(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(P2PComTest2)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  runP2PComTest2(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(TestSameConnection)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  runSameConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(TestCrossConnection)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  runCrossConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_CASE(EmptyConnectionTest)
+{
+  PRECICE_TEST("A"_on(2_ranks).setupMasterSlaves(), "B"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  runEmptyConnectionTest(context, cf);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // MPIPorts
 
 BOOST_AUTO_TEST_SUITE_END()
 

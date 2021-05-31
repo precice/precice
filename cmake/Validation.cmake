@@ -5,130 +5,111 @@
 # a minimalisitic exectutable.
 # They report their activity as STATUS messages.
 # A failing validation is reported as a FATAL_ERROR.
+# 
+# Variables
+#  PRECICE_ALWAYS_VALIDATE_LIBS - Always actively validates the libs.
 #
+
+# General function to validate a given library
+# precice_validate_lib( <code-to-compile> NAME <name> [LINK_LIBRARIES <lib> ...] [COMPILE_DEFINITIONS <def> ... ]
+# 
+# Caches on success to speed up development. Set PRECICE_ALWAYS_VALIDATE_LIBS to disable this behaviour.
+#
+function(precice_validate_lib ARG_CODE)
+  include(CMakeParseArguments)
+  cmake_parse_arguments(PARSE_ARGV 1 ARG
+    ""
+    "NAME"
+    "LINK_LIBRARIES;COMPILE_DEFINITIONS")
+  if(NOT ARG_NAME)
+    message(FATAL_ERROR "Argument required: NAME")
+  endif()
+  if(NOT ARG_CODE)
+    message(FATAL_ERROR "Argument required: CODE")
+  endif()
+
+  set(_filename validate${ARG_NAME}.cpp)
+  set(_wdir ${CMAKE_CURRENT_BINARY_DIR}/validation)
+  file(MAKE_DIRECTORY ${_wdir})
+  set(_cache_success PRECICE_VALIDATE_${ARG_NAME}_SUCCESS)
+
+  message(STATUS "Validating ${ARG_NAME}")
+  file(WRITE ${_wdir}/${_filename} "${ARG_CODE}")
+
+  if(${_cache_success} AND NOT PRECICE_ALWAYS_VALIDATE_LIBS)
+    message(STATUS "Validating ${ARG_NAME} - success [cached]")
+  else()
+    unset(VAL_SUCCESS)
+    unset(VAL_OUT)
+    try_compile(VAL_SUCCESS
+      ${_wdir}
+      ${_wdir}/${_filename}
+      COMPILE_DEFINITIONS ${ARG_COMPILE_DEFINITIONS}
+      LINK_LIBRARIES ${ARG_LINK_LIBRARIES}
+      OUTPUT_VARIABLE VAL_OUT
+      CXX_STANDARD 11
+      )
+    if(NOT VAL_SUCCESS)
+      message(FATAL_ERROR "Validating ${ARG_NAME} - failure\n\n${VAL_OUT}")
+    else()
+      message(STATUS "Validating ${ARG_NAME} - success")
+      set(${_cache_success} Yes CACHE BOOL "Cached successful validation of ${ARG_NAME}." FORCE)
+    endif()
+  endif()
+endfunction()
 
 # Validation for LibPython
 macro(precice_validate_libpython)
-  message(STATUS "Validating LibPython")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/validateLibPython.cpp "#include <Python.h>\nint main() { return 0; } ")
-  unset(VAL_SUCCESS)
-  unset(VAL_OUT)
-  try_compile(VAL_SUCCESS
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/validateLibPython.cpp
-    COMPILE_DEFINITIONS "-I ${PYTHON_INCLUDE_DIRS}"
+  precice_validate_lib(
+    "#include <Python.h>\nint main() { return 0; } "
+    NAME LibPython
     LINK_LIBRARIES ${PYTHON_LIBRARIES}
-    OUTPUT_VARIABLE VAL_OUT
-    CXX_STANDARD 11
+    COMPILE_DEFINITIONS -I ${PYTHON_INCLUDE_DIRS}
     )
-  if(NOT VAL_SUCCESS)
-    message(FATAL_ERROR "Validating LibPython - failure\n\n${VAL_OUT}")
-  else()
-    message(STATUS "Validating LibPython - success")
-  endif()
 endmacro()
 
 # Validation for NumPy
 macro(precice_validate_numpy)
-  message(STATUS "Validating NumPy")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/validateNumPy.cpp "#include <Python.h>\n#include <numpy/arrayobject.h>\nint main() { return 0; } ")
-  unset(VAL_SUCCESS)
-  unset(VAL_OUT)
-  try_compile(VAL_SUCCESS
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/validateNumPy.cpp
+  precice_validate_lib(
+    "#include <Python.h>\n#include <numpy/arrayobject.h>\nint main() { return 0; } "
+    NAME NumPy
     COMPILE_DEFINITIONS "-I ${PYTHON_INCLUDE_DIRS}"
     LINK_LIBRARIES NumPy::NumPy ${PYTHON_LIBRARIES}
-    OUTPUT_VARIABLE VAL_OUT
-    CXX_STANDARD 11
     )
-  if(NOT VAL_SUCCESS)
-    message(FATAL_ERROR "Validating NumPy - failure\n\n${VAL_OUT}")
-  else()
-    message(STATUS "Validating NumPy - success")
-  endif()
-
 endmacro()
 
 # Validation for LibXML2
 # We check for the header libxml/SAX.h as we use it in preCICE
 macro(precice_validate_libxml2)
-  message(STATUS "Validating LibXML2")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/validateLibXml2.cpp "#include <libxml/SAX.h>\nint main() { return 0; } ")
-  unset(VAL_SUCCESS)
-  unset(VAL_OUT)
-  try_compile(VAL_SUCCESS
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/validateLibXml2.cpp
-    COMPILE_DEFINITIONS "-I ${LIBXML2_INCLUDE_DIR}"
-    LINK_LIBRARIES ${LIBXML2_LIBRARIES}
-    OUTPUT_VARIABLE VAL_OUT
-    CXX_STANDARD 11
-    )
-  if(NOT VAL_SUCCESS)
-    message(FATAL_ERROR "Validating LibXML2 - failure\n\n${VAL_OUT}")
-  else()
-    message(STATUS "Validating LibXML2 - success")
-  endif()
+  precice_validate_lib(
+    "#include <libxml/SAX.h>\nint main() { return 0; } "
+  NAME LibXml2
+  COMPILE_DEFINITIONS "-I ${LIBXML2_INCLUDE_DIR}"
+  LINK_LIBRARIES ${LIBXML2_LIBRARIES}
+  )
 endmacro()
 
 # Validation for Eigen
 macro(precice_validate_eigen)
-  message(STATUS "Validating Eigen")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/validateEigen.cpp "#include <Eigen/Core>\nint main() { return 0; } ")
-  unset(VAL_SUCCESS)
-  unset(VAL_OUT)
-  try_compile(VAL_SUCCESS
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/validateEigen.cpp
-    LINK_LIBRARIES Eigen3::Eigen
-    OUTPUT_VARIABLE VAL_OUT
-    CXX_STANDARD 11
-    )
-  if(NOT VAL_SUCCESS)
-    message(FATAL_ERROR "Validating Eigen - failure\n\n${VAL_OUT}")
-  else()
-    message(STATUS "Validating Eigen - success")
-  endif()
+  precice_validate_lib(
+    "#include <Eigen/Core>\nint main() { return 0; } "
+    NAME Eigen
+    LINK_LIBRARIES Eigen3::Eigen)
 endmacro()
 
 
 # Validation for JSON
 macro(precice_validate_json)
-  message(STATUS "Validating JSON")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/validateJSON.cpp "#include <nlohmann/json.hpp>\nint main() { return 0; } ")
-  unset(VAL_SUCCESS)
-  unset(VAL_OUT)
-  try_compile(VAL_SUCCESS
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/validateJSON.cpp
-    LINK_LIBRARIES JSON
-    OUTPUT_VARIABLE VAL_OUT
-    CXX_STANDARD 11
-    )
-  if(NOT VAL_SUCCESS)
-    message(FATAL_ERROR "Validating JSON - failure\n\n${VAL_OUT}")
-  else()
-    message(STATUS "Validating JSON - success")
-  endif()
+  precice_validate_lib(
+    "#include <nlohmann/json.hpp>\nint main() { return 0; } "
+    NAME JSON
+    LINK_LIBRARIES JSON)
 endmacro()
 
-# Validation for prettyprint
-macro(precice_validate_prettyprint)
-  message(STATUS "Validating Prettyprint")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/validatePrettyprint.cpp "#include <prettyprint/prettyprint.hpp>\nint main() { return 0; } ")
-  unset(VAL_SUCCESS)
-  unset(VAL_OUT)
-  try_compile(VAL_SUCCESS
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/validatePrettyprint.cpp
-    LINK_LIBRARIES prettyprint
-    OUTPUT_VARIABLE VAL_OUT
-    CXX_STANDARD 11
-    )
-  if(NOT VAL_SUCCESS)
-    message(FATAL_ERROR "Validating Prettyprint - failure\n\n${VAL_OUT}")
-  else()
-    message(STATUS "Validating Prettyprint - success")
-  endif()
+# Validation for fmtlib
+macro(precice_validate_fmtlib)
+  precice_validate_lib(
+    "#include <fmt/format.h>\nint main() { return 0; } "
+    NAME fmtlib
+    LINK_LIBRARIES fmt-header-only)
 endmacro()

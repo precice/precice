@@ -1,9 +1,10 @@
 #pragma once
 
 #include <chrono>
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <utility>
+#include <vector>
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -13,10 +14,8 @@ namespace utils {
 /** Additionally to the duration there is a special property that can be set for a event.
 A property is a a key-value pair with a numerical value that can be used to trace certain events,
 like MPI calls in an event. It is intended to be set by the user. */
-class Event
-{
+class Event {
 public:
-
   enum class State : int {
     STOPPED = 0,
     STARTED = 1,
@@ -31,7 +30,7 @@ public:
   using Data = std::map<std::string, std::vector<int>>;
 
   /// An Event can't be copied.
-  Event(const Event & other) = delete;
+  Event(const Event &other) = delete;
 
   /// Name used to identify the timer. Events of the same name are accumulated to
   std::string name;
@@ -62,31 +61,28 @@ public:
   void addData(std::string key, int value);
 
   Data data;
-  
+
   StateChanges stateChanges;
 
 private:
   logging::Logger _log{"utils::Events"};
 
   Clock::time_point starttime;
-  Clock::duration duration = Clock::duration::zero();
-  State state = State::STOPPED;
-  bool _barrier = false;
+  Clock::duration   duration = Clock::duration::zero();
+  State             state    = State::STOPPED;
+  bool              _barrier = false;
 };
 
-
 /// Class that changes the prefix in its scope
-class ScopedEventPrefix
-{
+class ScopedEventPrefix {
 public:
-
-  ScopedEventPrefix(const std::string & name);
+  ScopedEventPrefix(const std::string &name);
 
   ~ScopedEventPrefix();
 
 private:
-
   std::string previousName = "";
 };
 
-}}
+} // namespace utils
+} // namespace precice

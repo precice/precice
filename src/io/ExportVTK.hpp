@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <iosfwd>
 #include <string>
 #include "Export.hpp"
 #include "logging/Logger.hpp"
@@ -14,11 +15,9 @@ class Mesh;
 namespace precice {
 namespace io {
 
-/// Writes polygonal, triangle, or quadrangle meshes to vtk files.
+/// Writes polygonal, or triangle meshes to vtk files.
 class ExportVTK : public Export {
 public:
-  explicit ExportVTK(bool exportNormals);
-
   /// Returns the VTK type ID.
   virtual int getType() const;
 
@@ -45,15 +44,8 @@ public:
       int           vertexIndices[3],
       std::ostream &outFile);
 
-  static void writeQuadrangle(
-      int           vertexIndices[4],
-      std::ostream &outFile);
-
 private:
   logging::Logger _log{"io::ExportVTK"};
-
-  /// By default set true: plot vertex normals, false: no normals plotting
-  bool _writeNormals;
 
   void openFile(
       std::ofstream &    outFile,

@@ -1,41 +1,41 @@
+#include "acceleration/IQNILSAcceleration.hpp"
 #include <Eigen/Core>
-
+#include <algorithm>
+#include <deque>
+#include <memory>
+#include "acceleration/impl/Preconditioner.hpp"
+#include "acceleration/impl/QRFactorization.hpp"
+#include "acceleration/impl/SharedPointer.hpp"
 #include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "io/TXTReader.hpp"
-#include "io/TXTWriter.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
-#include "acceleration/IQNILSAcceleration.hpp"
-#include "acceleration/impl/Preconditioner.hpp"
-#include "acceleration/impl/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
-
+#include "utils/assertion.hpp"
 
 //#include "utils/NumericalCompare.hpp"
 
 using precice::cplscheme::PtrCouplingData;
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 IQNILSAcceleration::IQNILSAcceleration(
-    double            initialRelaxation,
-    bool              forceInitialRelaxation,
-    int               maxIterationsUsed,
-    int               timestepsReused,
-    int               filter,
-    double            singularityLimit,
-    std::vector<int>  dataIDs,
+    double                  initialRelaxation,
+    bool                    forceInitialRelaxation,
+    int                     maxIterationsUsed,
+    int                     pastTimeWindowsReused,
+    int                     filter,
+    double                  singularityLimit,
+    std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
-    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
-                           filter, singularityLimit, dataIDs, preconditioner)
-{}
+    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
+                         filter, singularityLimit, dataIDs, preconditioner)
+{
+}
 
 void IQNILSAcceleration::initialize(
     DataMap &cplData)
@@ -46,26 +46,26 @@ void IQNILSAcceleration::initialize(
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
   for (DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _dataIDs)) {
-      int secondaryEntries = pair.second->values->size();
+      int secondaryEntries = pair.second->values().size();
       utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
     }
   }
 }
 
 void IQNILSAcceleration::updateDifferenceMatrices(
-  DataMap &cplData)
+    DataMap &cplData)
 {
   // Compute residuals of secondary data
   for (int id : _secondaryDataIDs) {
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
     PtrCouplingData  data         = cplData[id];
-    PRECICE_ASSERT(secResiduals.size() == data->values->size(),
-              secResiduals.size(), data->values->size());
-    secResiduals = *(data->values);
+    PRECICE_ASSERT(secResiduals.size() == data->values().size(),
+                   secResiduals.size(), data->values().size());
+    secResiduals = data->values();
     secResiduals -= data->oldValues.col(0);
   }
 
-  if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
+  if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     // constant relaxation: for secondary data called from base class
   } else {
     if (not _firstIteration) {
@@ -87,17 +87,17 @@ void IQNILSAcceleration::updateDifferenceMatrices(
       // Compute delta_x_tilde for secondary data
       for (int id : _secondaryDataIDs) {
         Eigen::MatrixXd &secW = _secondaryMatricesW[id];
-        PRECICE_ASSERT(secW.rows() == cplData[id]->values->size(), secW.rows(), cplData[id]->values->size());
-        secW.col(0) = *(cplData[id]->values);
+        PRECICE_ASSERT(secW.rows() == cplData[id]->values().size(), secW.rows(), cplData[id]->values().size());
+        secW.col(0) = cplData[id]->values();
         secW.col(0) -= _secondaryOldXTildes[id];
       }
     }
 
     // Store x_tildes for secondary data
     for (int id : _secondaryDataIDs) {
-      PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
-                _secondaryOldXTildes[id].size(), cplData[id]->values->size());
-      _secondaryOldXTildes[id] = *(cplData[id]->values);
+      PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values().size(),
+                     _secondaryOldXTildes[id].size(), cplData[id]->values().size());
+      _secondaryOldXTildes[id] = cplData[id]->values();
     }
   }
 
@@ -110,15 +110,15 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
 {
   //Store x_tildes for secondary data
   for (int id : _secondaryDataIDs) {
-    PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
-              _secondaryOldXTildes[id].size(), cplData[id]->values->size());
-    _secondaryOldXTildes[id] = *(cplData[id]->values);
+    PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values().size(),
+                   _secondaryOldXTildes[id].size(), cplData[id]->values().size());
+    _secondaryOldXTildes[id] = cplData[id]->values();
   }
 
   // Perform underrelaxation with initial relaxation factor for secondary data
   for (int id : _secondaryDataIDs) {
     PtrCouplingData  data   = cplData[id];
-    Eigen::VectorXd &values = *(data->values);
+    Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
     secResiduals                  = data->oldValues.col(0); // old
@@ -161,7 +161,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
   utils::append(c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
   // compute rhs Q^T*res in parallel
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (!utils::MasterSlave::isParallel()) {
     PRECICE_ASSERT(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
     // back substitution
     c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
@@ -182,13 +182,14 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     utils::MasterSlave::reduceSum(_local_b.data(), _global_b.data(), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
 
     // back substitution R*c = b only in master node
-    if (utils::MasterSlave::isMaster())
+    if (utils::MasterSlave::isMaster()) {
       c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
+    }
 
     // broadcast coefficients c to all slaves
     utils::MasterSlave::broadcast(c.data(), c.size());
   }
-  
+
   PRECICE_DEBUG("   Apply Newton factors");
   // compute x updates from W and coefficients c, i.e, xUpdate = c*W
   xUpdate = _matrixW * c;
@@ -199,17 +200,17 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
      *  perform QN-Update step for the secondary Data
      */
 
-  // If the previous time step converged within one single iteration, nothing was added
+  // If the previous time window converged within one single iteration, nothing was added
   // to the LS system matrices and they need to be restored from the backup at time T-2
-  if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0) && not _forceInitialRelaxation) {
-    PRECICE_DEBUG("   Last time step converged after one iteration. Need to restore the secondaryMatricesW from backup.");
+  if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
+    PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the secondaryMatricesW from backup.");
     _secondaryMatricesW = _secondaryMatricesWBackup;
   }
 
   // Perform QN relaxation for secondary data
   for (int id : _secondaryDataIDs) {
     PtrCouplingData data   = cplData[id];
-    auto &          values = *(data->values);
+    auto &          values = data->values();
     PRECICE_ASSERT(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
     values = _secondaryMatricesW[id] * c;
     PRECICE_ASSERT(values.size() == data->oldValues.col(0).size(), values.size(), data->oldValues.col(0).size());
@@ -219,8 +220,8 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
   }
 
   // pending deletion: delete old secondaryMatricesW
-  if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
-    // save current secondaryMatrix data in case the coupling for the next time step will terminate
+  if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
+    // save current secondaryMatrix data in case the coupling for the next time window will terminate
     // after the first iteration (no new data, i.e., V = W = 0)
     if (getLSSystemCols() > 0) {
       _secondaryMatricesWBackup = _secondaryMatricesW;
@@ -234,23 +235,24 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
 void IQNILSAcceleration::specializedIterationsConverged(
     DataMap &cplData)
 {
+  PRECICE_TRACE();
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
 
-  if (_timestepsReused == 0) {
+  if (_timeWindowsReused == 0) {
     if (_forceInitialRelaxation) {
       for (int id : _secondaryDataIDs) {
         _secondaryMatricesW[id].resize(0, 0);
       }
     } else {
       /**
-       * pending deletion (after first iteration of next time step
-       * Using the matrices from the old time step for the first iteration
-       * is better than doing underrelaxation as first iteration of every time step
+       * pending deletion (after first iteration of next time window
+       * Using the matrices from the old time window for the first iteration
+       * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _timestepsReused) {
+  } else if ((int) _matrixCols.size() > _timeWindowsReused) {
     int toRemove = _matrixCols.back();
     for (int id : _secondaryDataIDs) {
       Eigen::MatrixXd &secW = _secondaryMatricesW[id];
@@ -273,5 +275,5 @@ void IQNILSAcceleration::removeMatrixColumn(
 
   BaseQNAcceleration::removeMatrixColumn(columnIndex);
 }
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

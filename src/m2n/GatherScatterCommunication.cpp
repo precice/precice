@@ -1,17 +1,24 @@
 #include "GatherScatterCommunication.hpp"
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <utility>
+
 #include "com/Communication.hpp"
+#include "logging/LogMacros.hpp"
+#include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 GatherScatterCommunication::GatherScatterCommunication(
     com::PtrCommunication com,
     mesh::PtrMesh         mesh)
     : DistributedCommunication(mesh),
-      _com(com),
+      _com(std::move(com)),
       _isConnected(false)
 {
 }
@@ -55,26 +62,21 @@ void GatherScatterCommunication::closeConnection()
 
 void GatherScatterCommunication::send(
     double const *itemsToSend,
-    size_t  size,
-    int     valueDimension)
+    size_t        size,
+    int           valueDimension)
 {
   PRECICE_TRACE(size);
-  PRECICE_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
-  PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
-  PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
-  PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
-  PRECICE_ASSERT(utils::MasterSlave::getRank() != -1);
 
   // Gather data
   if (utils::MasterSlave::isSlave()) { // Slave
     if (size > 0) {
       utils::MasterSlave::_communication->send(itemsToSend, size, 0);
     }
-  } else { // Master
+  } else { // Master or coupling mode
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
-    mesh::Mesh::VertexDistribution  &vertexDistribution = _mesh->getVertexDistribution();
-    int                              globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
-    PRECICE_DEBUG("Global Size = " << globalSize);
+    mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
+    int                             globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
+    PRECICE_DEBUG("Global Size = {}", globalSize);
     std::vector<double> globalItemsToSend(globalSize);
 
     // Master data
@@ -85,9 +87,12 @@ void GatherScatterCommunication::send(
     }
 
     // Slaves data
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
+      PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
+      PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
+
       int slaveSize = vertexDistribution[rankSlave].size() * valueDimension;
-      PRECICE_DEBUG("Slave Size = " << slaveSize);
+      PRECICE_DEBUG("Slave Size = {}", slaveSize);
       if (slaveSize > 0) {
         std::vector<double> valuesSlave(slaveSize);
         utils::MasterSlave::_communication->receive(valuesSlave.data(), slaveSize, rankSlave);
@@ -101,7 +106,7 @@ void GatherScatterCommunication::send(
 
     // Send data to other master
     _com->send(globalItemsToSend.data(), globalSize, 0);
-  } // Master
+  }
 }
 
 void GatherScatterCommunication::receive(
@@ -110,18 +115,13 @@ void GatherScatterCommunication::receive(
     int     valueDimension)
 {
   PRECICE_TRACE(size);
-  PRECICE_ASSERT(utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster());
-  PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
-  PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
-  PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
-  PRECICE_ASSERT(utils::MasterSlave::getRank() != -1);
 
   std::vector<double> globalItemsToReceive;
 
   // Receive data at master
-  if (utils::MasterSlave::isMaster()) {
+  if (not utils::MasterSlave::isSlave()) {
     int globalSize = _mesh->getGlobalNumberOfVertices() * valueDimension;
-    PRECICE_DEBUG("Global Size = " << globalSize);
+    PRECICE_DEBUG("Global Size = {}", globalSize);
     globalItemsToReceive.resize(globalSize);
     _com->receive(globalItemsToReceive.data(), globalSize, 0);
   }
@@ -129,11 +129,11 @@ void GatherScatterCommunication::receive(
   // Scatter data
   if (utils::MasterSlave::isSlave()) { // Slave
     if (size > 0) {
-      PRECICE_DEBUG("itemsToRec[0] = " << itemsToReceive[0]);
+      PRECICE_DEBUG("itemsToRec[0] = {}", itemsToReceive[0]);
       utils::MasterSlave::_communication->receive(itemsToReceive, size, 0);
-      PRECICE_DEBUG("itemsToRec[0] = " << itemsToReceive[0]);
+      PRECICE_DEBUG("itemsToRec[0] = {}", itemsToReceive[0]);
     }
-  } else { // Master
+  } else { // Master or coupling mode
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
     mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
 
@@ -145,9 +145,12 @@ void GatherScatterCommunication::receive(
     }
 
     // Slaves data
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
+      PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
+      PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
+
       int slaveSize = vertexDistribution[rankSlave].size() * valueDimension;
-      PRECICE_DEBUG("Slave Size = " << slaveSize);
+      PRECICE_DEBUG("Slave Size = {}", slaveSize);
       if (slaveSize > 0) {
         std::vector<double> valuesSlave(slaveSize);
         for (size_t i = 0; i < vertexDistribution[rankSlave].size(); i++) {
@@ -156,59 +159,59 @@ void GatherScatterCommunication::receive(
           }
         }
         utils::MasterSlave::_communication->send(valuesSlave.data(), slaveSize, rankSlave);
-        PRECICE_DEBUG("valuesSlave[0] = " << valuesSlave[0]);
+        PRECICE_DEBUG("valuesSlave[0] = {}", valuesSlave[0]);
       }
     }
   } // Master
 }
 
 void GatherScatterCommunication::acceptPreConnection(
-  std::string const &acceptorName,
-  std::string const &requesterName)
-{  
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
-}
- 
-void GatherScatterCommunication::requestPreConnection(
-  std::string const &acceptorName,
-  std::string const &requesterName)
+    std::string const &acceptorName,
+    std::string const &requesterName)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
+}
+
+void GatherScatterCommunication::requestPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName)
+{
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
 void GatherScatterCommunication::broadcastSend(const int &itemToSend)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
 void GatherScatterCommunication::broadcastReceiveAll(std::vector<int> &itemToReceive)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
 void GatherScatterCommunication::broadcastSendMesh()
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::broadcastReceiveMesh()
+void GatherScatterCommunication::broadcastReceiveAllMesh()
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::broadcastSendLCM(CommunicationMap &localCommunicationMap)
+void GatherScatterCommunication::scatterAllCommunicationMap(CommunicationMap &localCommunicationMap)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::broadcastReceiveLCM(CommunicationMap &localCommunicationMap)
+void GatherScatterCommunication::gatherAllCommunicationMap(CommunicationMap &localCommunicationMap)
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::updateVertexList()
+void GatherScatterCommunication::completeSlavesConnection()
 {
-  PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
 } // namespace m2n

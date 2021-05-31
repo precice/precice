@@ -1,9 +1,7 @@
 #include "SocketRequest.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 SocketRequest::SocketRequest()
     : _complete(false)
 {

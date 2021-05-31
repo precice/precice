@@ -1,19 +1,23 @@
+#include "acceleration/impl/QRFactorization.hpp"
+#include <Eigen/Core>
 #include <algorithm> // std::sort
 #include <cmath>
+#include <cstddef>
 #include <iostream>
+#include <memory>
+#include <utility>
+
 #include <vector>
-
+#include "acceleration/Acceleration.hpp"
 #include "com/Communication.hpp"
-#include "acceleration/BaseQNAcceleration.hpp"
-#include "acceleration/impl/QRFactorization.hpp"
+#include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 QRFactorization::QRFactorization(
     Eigen::MatrixXd Q,
@@ -25,8 +29,8 @@ QRFactorization::QRFactorization(
     double          theta,
     double          sigma)
 
-    : _Q(Q),
-      _R(R),
+    : _Q(std::move(Q)),
+      _R(std::move(R)),
       _rows(rows),
       _cols(cols),
       _filter(filter),
@@ -155,7 +159,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
 }
 
 /**
- * updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted. 
+ * updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted.
  * Returns the deleted column v(1:n)
  */
 void QRFactorization::deleteColumn(int k)
@@ -243,7 +247,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   // rho_orth: the norm of the orthogonalized (but not normalized) column
   // rho0:     the norm of the initial column that is to be inserted
   if (applyFilter && (rho0 * singularityLimit > rho_orth)) {
-    PRECICE_DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: " << rho0 * singularityLimit << " > " << rho_orth);
+    PRECICE_DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: {} > {}", rho0 * singularityLimit, rho_orth);
     _cols--;
     return false;
   }
@@ -314,10 +318,8 @@ int QRFactorization::orthogonalize(
 {
   PRECICE_TRACE();
 
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (!utils::MasterSlave::isParallel()) {
     PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
-  } else {
-    PRECICE_ASSERT(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            null        = false;
@@ -432,11 +434,8 @@ int QRFactorization::orthogonalize_stable(
   PRECICE_TRACE();
 
   // serial case
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (!utils::MasterSlave::isParallel()) {
     PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
-    // master-slave case
-  } else {
-    PRECICE_ASSERT(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::getRank());
   }
 
   bool            restart     = false;
@@ -566,7 +565,7 @@ int QRFactorization::orthogonalize_stable(
 
         if (utils::MasterSlave::isMaster()) {
           global_uk = u(k);
-          for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+          for (int rankSlave : utils::MasterSlave::allSlaves()) {
             utils::MasterSlave::_communication->receive(local_k, rankSlave);
             utils::MasterSlave::_communication->receive(local_uk, rankSlave);
             if (local_uk < global_uk) {
@@ -588,7 +587,7 @@ int QRFactorization::orthogonalize_stable(
         v = Eigen::VectorXd::Zero(_rows);
 
         // insert rho1 at position k with smallest u(i) = Q(i,:) * Q(i,:)
-        if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+        if (!utils::MasterSlave::isParallel()) {
           v(k) = rho1;
         } else {
           if (utils::MasterSlave::getRank() == rank)
@@ -636,8 +635,8 @@ void QRFactorization::computeReflector(
 }
 
 /**
- *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G, 
- *  where G is the Givens matrix grot, determined by sigma and gamma. 
+ *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G,
+ *  where G is the Givens matrix grot, determined by sigma and gamma.
  */
 void QRFactorization::applyReflector(
     const QRFactorization::givensRot &grot,
@@ -671,12 +670,12 @@ Eigen::MatrixXd &QRFactorization::matrixR()
   return _R;
 }
 
-int QRFactorization::cols()
+int QRFactorization::cols() const
 {
   return _cols;
 }
 
-int QRFactorization::rows()
+int QRFactorization::rows() const
 {
   return _rows;
 }
@@ -737,7 +736,7 @@ void QRFactorization::reset(
     bool            inserted = insertColumn(k, v);
     if (not inserted) {
       k--;
-      PRECICE_DEBUG("column " << col << " has not been inserted in the QR-factorization, failed to orthogonalize.");
+      PRECICE_DEBUG("column {} has not been inserted in the QR-factorization, failed to orthogonalize.", col);
     }
   }
   PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
@@ -778,4 +777,6 @@ void QRFactorization::setFilter(int filter)
   _filter = filter;
 }
 
-}}} // namespace precice, acceleration
+} // namespace impl
+} // namespace acceleration
+} // namespace precice

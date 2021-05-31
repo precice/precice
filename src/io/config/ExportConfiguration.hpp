@@ -24,10 +24,10 @@ public:
     return _contexts;
   }
 
-  virtual void xmlTagCallback(xml::XMLTag &callingTag);
+  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /// Callback from automatic configuration. Not utilitzed here.
-  virtual void xmlEndTagCallback(xml::XMLTag &callingTag) {}
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) {}
 
   void resetExports()
   {
@@ -44,11 +44,10 @@ private:
   const std::string ATTR_AUTO     = "auto";
   const std::string VALUE_VTK     = "vtk";
 
-  const std::string ATTR_TIMESTEP_INTERVAL = "timestep-interval";
-  const std::string ATTR_NEIGHBORS         = "neighbors";
-  const std::string ATTR_TRIGGER_SOLVER    = "trigger-solver";
-  const std::string ATTR_NORMALS           = "normals";
-  const std::string ATTR_EVERY_ITERATION   = "every-iteration";
+  const std::string ATTR_EVERY_N_TIME_WINDOWS = "every-n-time-windows";
+  const std::string ATTR_NEIGHBORS            = "neighbors";
+  const std::string ATTR_NORMALS              = "normals";
+  const std::string ATTR_EVERY_ITERATION      = "every-iteration";
 
   std::list<ExportContext> _contexts;
 };

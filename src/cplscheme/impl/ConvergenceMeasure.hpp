@@ -2,12 +2,9 @@
 
 #include <Eigen/Core>
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace impl
-{
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
 /**
  * @brief Interface for measures checking the convergence of a series of datasets.
@@ -22,8 +19,7 @@ namespace impl
  * -# call measure() for convergence measurement
  * -# retrieve the convergence status via isConvergence()
  */
-class ConvergenceMeasure
-{
+class ConvergenceMeasure {
 public:
   /// Destructor, empty.
   virtual ~ConvergenceMeasure() {}
@@ -39,8 +35,7 @@ public:
    */
   virtual void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification) = 0;
+      const Eigen::VectorXd &newValues) = 0;
 
   /// Returns true, if the last measurement indicates convergence.
   virtual bool isConvergence() const = 0;
@@ -53,7 +48,13 @@ public:
   {
     return 0;
   }
+
+  /// Returns an abreviation of the name of the measure for the log file headers
+  virtual std::string getAbbreviation() const
+  {
+    return "";
+  }
 };
-}
-}
-} // namespace precice, cplscheme, impl
+} // namespace impl
+} // namespace cplscheme
+} // namespace precice

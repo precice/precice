@@ -1,5 +1,5 @@
 #include "ExportConfiguration.hpp"
-#include "io/Export.hpp"
+#include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -21,24 +21,18 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, "")
                           .setDocumentation("Directory to export the files to.");
 
-  auto attrTimestepInterval = makeXMLAttribute(ATTR_TIMESTEP_INTERVAL, 1)
-                                  .setDocumentation("preCICE timestep interval for export of files. Choose -1 for no exports.");
+  auto attrEveryNTimeWindows = makeXMLAttribute(ATTR_EVERY_N_TIME_WINDOWS, 1)
+                                   .setDocumentation("preCICE does an export every X time windows. Choose -1 for no exports.");
 
-  auto attrTriggerSolver = makeXMLAttribute(ATTR_TRIGGER_SOLVER, false)
-                               .setDocumentation(
-                                   std::string("If set to on/yes, an action requirement is set for the participant ") +
-                                   "with frequency defined by attribute " + ATTR_TIMESTEP_INTERVAL + ".");
-
-  auto attrNormals = makeXMLAttribute(ATTR_NORMALS, true)
-                         .setDocumentation("If set to on/yes, mesh normals (if available) are added to the export.");
+  auto attrNormals = makeXMLAttribute(ATTR_NORMALS, false)
+                         .setDocumentation("Deprecated");
 
   auto attrEveryIteration = makeXMLAttribute(ATTR_EVERY_ITERATION, false)
                                 .setDocumentation("Exports in every coupling (sub)iteration. For debug purposes.");
 
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrLocation);
-    tag.addAttribute(attrTimestepInterval);
-    tag.addAttribute(attrTriggerSolver);
+    tag.addAttribute(attrEveryNTimeWindows);
     tag.addAttribute(attrNormals);
     tag.addAttribute(attrEveryIteration);
     parent.addSubtag(tag);
@@ -46,17 +40,20 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
 }
 
 void ExportConfiguration::xmlTagCallback(
-    xml::XMLTag &tag)
+    const xml::ConfigurationContext &context,
+    xml::XMLTag &                    tag)
 {
+  if (tag.getBooleanAttributeValue(ATTR_NORMALS)) {
+    PRECICE_WARN("You explicitly requrested to export the vertex normals. "
+                 "This is deprecated, no longer functional, and the attribute will be removed in a future release.");
+  }
   if (tag.getNamespace() == TAG) {
-    ExportContext context;
-    context.location          = tag.getStringAttributeValue(ATTR_LOCATION);
-    context.triggerSolverPlot = tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
-    context.timestepInterval  = tag.getIntAttributeValue(ATTR_TIMESTEP_INTERVAL);
-    context.plotNormals       = tag.getBooleanAttributeValue(ATTR_NORMALS);
-    context.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
-    context.type              = tag.getName();
-    _contexts.push_back(context);
+    ExportContext econtext;
+    econtext.location          = tag.getStringAttributeValue(ATTR_LOCATION);
+    econtext.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
+    econtext.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
+    econtext.type              = tag.getName();
+    _contexts.push_back(econtext);
   }
 }
 

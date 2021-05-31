@@ -1,7 +1,0 @@
-precice (1.1.1-1) bionic; urgency=low
-
-  * First (super experimental) debian binary package for preCICE.
-
- -- Gerasimos Chourdakis <chourdak@in.tum.de>  Fri, 18 May 2018 17:28:00 +0200
-
-# See the preCICE changelog on github.com/precice/precice.

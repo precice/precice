@@ -1,45 +1,46 @@
-<?xml version="1.0"?>
-
+<?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
+  <data:scalar name="Data0" />
+  <data:vector name="Data1" />
 
-   <data:scalar name="Data0"  />
-   <data:vector name="Data1"  />
+  <mesh name="Mesh">
+    <use-data name="Data0" />
+    <use-data name="Data1" />
+  </mesh>
 
-   <mesh name="Mesh">
-      <use-data name="Data0" />
-      <use-data name="Data1" />
-   </mesh>
-   
-   <m2n:mpi-single from="Participant0" to="Participant1" />
-   
-   <!--
+  <m2n:sockets from="Participant0" to="Participant1" />
+
+  <!--
    <participant name="Participant0">
       <use-mesh name="Mesh" />
       <write data="Data0" Mesh="Mesh" />
       <read  data="Data1" Mesh="Mesh" />
    </participant>
-   
+
    <participant name="Participant1">
       <use-mesh name="Mesh" />
       <write data="Data1" mesh="Mesh" />
       <read  data="Data0" mesh="Mesh" />
    </participant>
    -->
-   <coupling-scheme:parallel-implicit> 
-      <participants first="Participant0" second="Participant1" />
-      <timestep-length value="1e-1" />
-      <max-time value="1.0" />
-      <max-timesteps value="3" />
-      <max-iterations value="100"/>
-      <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1"/>
-      <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0"/>
-      <post-processing:constant>
-         <relaxation value="0.01" />
-      </post-processing:constant>
-      <absolute-convergence-measure 
-         data="Data1" 
-         mesh="Mesh"
-         limit="1.7320508075688772" />
-   </coupling-scheme:parallel-implicit>
+  <coupling-scheme:parallel-implicit>
+    <participants first="Participant0" second="Participant1" />
 
+    <time-window-size value="1e-1" />
+
+    <max-time value="1.0" />
+
+    <max-time-windows value="3" />
+
+    <max-iterations value="100" />
+
+    <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1" />
+    <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0" />
+
+    <acceleration:constant>
+      <relaxation value="0.01" />
+    </acceleration:constant>
+
+    <absolute-convergence-measure data="Data1" mesh="Mesh" limit="1.7320508075688772" />
+  </coupling-scheme:parallel-implicit>
 </configuration>

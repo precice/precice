@@ -1,24 +1,23 @@
 #pragma once
 
-#include "mapping/Mapping.hpp"
-#include "logging/Logger.hpp"
+#include <string>
 #include <vector>
+#include "logging/Logger.hpp"
+#include "mapping/Mapping.hpp"
 
 namespace precice {
 namespace mapping {
 
 /// Mapping using nearest neighboring vertices.
-class NearestNeighborMapping : public Mapping
-{
+class NearestNeighborMapping : public Mapping {
 public:
-
   /**
    * @brief Constructor.
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimensions Dimensionality of the meshes
    */
-  NearestNeighborMapping ( Constraint constraint, int dimensions );
+  NearestNeighborMapping(Constraint constraint, int dimensions);
 
   /// Destructor, empty.
   virtual ~NearestNeighborMapping() {}
@@ -33,9 +32,9 @@ public:
   virtual void clear() override;
 
   /// Maps input data to output data from input mesh to output mesh.
-  virtual void map (
-    int inputDataID,
-    int outputDataID ) override;
+  virtual void map(
+      int inputDataID,
+      int outputDataID) override;
 
   virtual void tagMeshFirstRound() override;
   virtual void tagMeshSecondRound() override;
@@ -50,4 +49,5 @@ private:
   std::vector<int> _vertexIndices;
 };
 
-}} // namespace precice, mapping
+} // namespace mapping
+} // namespace precice

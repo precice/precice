@@ -26,9 +26,9 @@ The example code below illustrates the usage of a coupling scheme.
 
     
 @code        
+#include "cplscheme/ExplicitCouplingScheme.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "cplscheme/ExplicitCouplingScheme.hpp"
 
 using namespace mesh;
 using namespace cplscheme;
@@ -44,8 +44,7 @@ Data data ( dataName, dataType, dataID );
 
 // Create a mesh (in a real example, it has to be filled with Vertices, ...)
 std::string meshName ( "MyMesh" );
-bool flipNormals = false;
-Mesh mesh ( meshName, flipNormals );
+Mesh mesh ( meshName );
 mesh.setVertexData ( data );
 
 // Create explicit coupling scheme object

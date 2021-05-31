@@ -1,19 +1,13 @@
 #include "Vertex.hpp"
+#include <Eigen/Core>
 #include "utils/EigenIO.hpp"
 
-namespace precice
-{
-namespace mesh
-{
+namespace precice {
+namespace mesh {
 
 int Vertex::getDimensions() const
 {
-  return _coords.size();
-}
-
-const Eigen::VectorXd &Vertex::getNormal() const
-{
-  return _normal;
+  return _dim;
 }
 
 int Vertex::getGlobalIndex() const

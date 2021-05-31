@@ -1,13 +1,13 @@
 #pragma once
 
-#include "CouplingScheme.hpp"
+#include <list>
+#include <string>
+#include <vector>
 #include "Constants.hpp"
+#include "CouplingScheme.hpp"
 #include "SharedPointer.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-
-#include <vector>
-#include <list>
 
 namespace precice {
 namespace cplscheme {
@@ -54,10 +54,8 @@ namespace cplscheme {
  * on how the participants are configured to be first and second in the schemes.
  * If not configured properly, a deadlock might be created.
  */
-class CompositionalCouplingScheme : public CouplingScheme
-{
+class CompositionalCouplingScheme final : public CouplingScheme {
 public:
-
   /// Destructor, empty.
   virtual ~CompositionalCouplingScheme() {}
 
@@ -74,34 +72,48 @@ public:
   void addCouplingScheme(PtrCouplingScheme scheme);
 
   /**
-   * @brief Initializes the coupling scheme and establishes a communiation
+   * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
-   */
-  virtual void initialize (
-    double startTime,
-    int    startTimesteps );
+* @param[in] startTime TODO
+* @param[in] startTimeWindow TODO
+*/
+  void initialize(
+      double startTime,
+      int    startTimeWindow) final override;
 
   /// Returns true, if initialize has been called.
-  virtual bool isInitialized() const;
+  bool isInitialized() const final override;
+
+  /**
+   * @brief Getter for _sendsInitializedData
+   * @returns _sendsInitializedData
+   */
+  bool sendsInitializedData() const final override;
+
+  /**
+   * @brief Getter for _receivesInitializedData
+   * @returns _receivesInitializedData
+   */
+  bool receivesInitializedData() const final override;
 
   /**
    * @brief Initializes the data for first implicit coupling scheme iteration.
    *
    * Has to be called after initialize() and before advance().
    */
-  virtual void initializeData();
+  void initializeData() final override;
 
   /// Adds newly computed time. Has to be called before every advance.
-  virtual void addComputedTime(double timeToAdd);
+  void addComputedTime(double timeToAdd) final override;
 
   /// Exchanges data and updates the state of the coupling scheme.
-  virtual void advance();
+  void advance() final override;
 
   /// Finalizes the coupling and disconnects communication.
-  virtual void finalize();
+  void finalize() final override;
 
   /// Returns list of all coupling partners
-  virtual std::vector<std::string> getCouplingPartners() const;
+  std::vector<std::string> getCouplingPartners() const final override;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
@@ -112,37 +124,24 @@ public:
    * @param lastSolverTimestepLength [IN] The length of the last timestep
    *        computed by the solver calling willDataBeExchanged().
    */
-  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const;
+  bool willDataBeExchanged(double lastSolverTimestepLength) const final override;
 
   /// Returns true, if data has been exchanged in last call of advance().
-  virtual bool hasDataBeenExchanged() const;
+  virtual bool hasDataBeenReceived() const final override;
 
   /**
    * @brief Returns the currently computed time of the coupling scheme.
    *
    * This time is the minimum time of any coupling scheme in the composition.
    */
-  virtual double getTime() const;
+  double getTime() const final override;
 
   /**
-   * @brief Returns the currently computed timesteps of the coupling scheme.
+   * @brief Returns the currently computed time windows of the coupling scheme.
    *
-   * The timestep is the minimum timestep in any coupling scheme in the composition.
+   * The time window is the minimum time window in any coupling scheme in the composition.
    */
-  virtual int getTimesteps() const;
-
-  /**
-   * @brief Returns the maximal time to be computed.
-   *
-   * This is the maximum max time of the coupling schemes in the composition.
-   */
-  virtual double getMaxTime() const;
-
-  /// Returns the maximal timesteps to be computed.
-  virtual int getMaxTimesteps() const;
-
-  /// Returns current subiteration number in timestep.
-  //virtual int getSubIteration() const;
+  int getTimeWindows() const final override;
 
   /**
    * @brief Returns true, if timestep length is prescribed by the cpl scheme.
@@ -150,39 +149,31 @@ public:
    * If any of the solvers in the composition has a timestep length limit, this
    * counts as limit.
    */
-  virtual bool hasTimestepLength() const;
+  bool hasTimeWindowSize() const final override;
 
   /**
    * @brief Returns the timestep length, if one is given by the coupling scheme.
    *
    * An assertion is thrown, if no valid timestep is given. Check with
-   * hasTimestepLength().
+   * hasTimeWindowSize().
    *
    * The smallest timestep length limit in the coupling scheme composition has
    * to be obeyed.
    */
-  virtual double getTimestepLength() const;
+  double getTimeWindowSize() const final override;
 
   /**
-   * @brief Returns the remaining timestep length of the current time step.
+   * @brief Returns the remaining timestep length inside the current time window.
    *
-   * This is not necessarily the timestep length limit the solver has to obeye
+   * This is not necessarily the timestep length limit the solver has to obey
    * which is returned by getNextTimestepMaxLength().
    *
-   * If no timestep length is precribed by the coupling scheme, always 0.0 is
+   * If no timestep length is prescribed by the coupling scheme, always 0.0 is
    * returned.
    *
-   * The maximum remainer of all composed coupling schemes is returned.
+   * The maximum remainder of all composed coupling schemes is returned.
    */
-  virtual double getThisTimestepRemainder() const;
-
-  /**
-   * @brief Returns part of the current timestep that has been computed already.
-   *
-   * This is the minimum of all computed timestep parts of the composed coupling
-   * schemes.
-   */
-  virtual double getComputedTimestepPart() const;
+  double getThisTimeWindowRemainder() const final override;
 
   /**
    * @brief Returns the maximal length of the next timestep to be computed.
@@ -192,68 +183,44 @@ public:
    *
    * This is the minimum of all max lengths of the composed coupling schemes.
    */
-  virtual double getNextTimestepMaxLength() const;
+  double getNextTimestepMaxLength() const final override;
 
   /**
    * @brief Returns true, when the coupled simulation is still ongoing.
    *
    * As long as one composed coupling scheme is still ongoing, returns true.
    */
-  virtual bool isCouplingOngoing() const;
+  bool isCouplingOngoing() const final override;
 
   /**
-   * @brief Returns true, when the accessor can advance to the next timestep.
+   * @brief Returns true, when the accessor can advance to the next time window.
    *
-   * Only true, if all composed coupling schemes have completed the timestep.
+   * Only true, if all composed coupling schemes have completed the time window.
    */
-  virtual bool isCouplingTimestepComplete() const;
+  bool isTimeWindowComplete() const final override;
 
   /**
    * @brief Returns true, if the given action has to be performed by the accessor.
    *
    * True, if any of the composed coupling schemes requires the action.
    */
-  virtual bool isActionRequired(const std::string& actionName) const;
+  bool isActionRequired(const std::string &actionName) const final override;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  virtual void performedAction(const std::string& actionName);
+  void markActionFulfilled(const std::string &actionName) final override;
 
   /// Sets an action required to be performed by the accessor.
-  virtual void requireAction(const std::string& actionName);
+  void requireAction(const std::string &actionName) final override;
 
   /// Returns a string representation of the current coupling state.
-  virtual std::string printCouplingState() const;
-
-  /**
-   * @brief Send the state of the coupling scheme to another remote scheme.
-   *
-   * Used in client-server approach for parallel solvers. There, the solver
-   * interface does hold a coupling scheme with no data but state. The state
-   * is transferred between the solver coupling scheme and the server coupling
-   * scheme via sendState and receiveState.
-   */
-  virtual void sendState (
-   com::PtrCommunication communication,
-   int                   rankReceiver );
-
-  /**
-   * @brief Receive the state of the coupling scheme from another remote scheme.
-   *
-   * Used in client-server approach for parallel solvers. There, the solver
-   * interface does hold a coupling scheme with no data but state. The state
-   * is transferred between the solver coupling scheme and the server coupling
-   * scheme via sendState and receiveState.
-   */
-  virtual void receiveState (
-   com::PtrCommunication communication,
-   int                   rankSender );
+  std::string printCouplingState() const final override;
 
 private:
   mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};
 
   /// Groups a coupling scheme with additional associated variables.
   struct Scheme {
-    
+
     /// The actual coupling scheme
     PtrCouplingScheme scheme;
 
@@ -268,10 +235,10 @@ private:
     bool onHold;
 
     Scheme(PtrCouplingScheme scheme)
-    : scheme(scheme), onHold(false) {}
+        : scheme(scheme), onHold(false) {}
   };
 
-  typedef std::list<Scheme> Schemes;
+  typedef std::list<Scheme>           Schemes;
   typedef std::list<Scheme>::iterator SchemesIt;
   //typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
 
@@ -284,7 +251,7 @@ private:
   SchemesIt _activeSchemesBegin = _couplingSchemes.end();
 
   /// Iterator to behind the end of coupling schemes currently active.
-  SchemesIt _activeSchemesEnd  = _couplingSchemes.end();
+  SchemesIt _activeSchemesEnd = _couplingSchemes.end();
 
   /// Stores time added since last call of advance.
   double _lastAddedTime = 0;
@@ -307,4 +274,5 @@ private:
   void advanceActiveCouplingSchemes();
 };
 
-}} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

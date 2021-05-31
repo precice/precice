@@ -2,10 +2,10 @@ extraction:
   cpp:
     prepare:
       packages:
-        - petsc-dev
         - libboost-all-dev
         - libopenmpi-dev
         - libxml2-dev
         - libeigen3-dev
-        - python-dev
-        - python-numpy
+    configure:
+      command:
+        - cmake -DPRECICE_PETScMapping=OFF -DPRECICE_PythonActions=OFF .

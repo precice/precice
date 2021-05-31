@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <solver-interface dimensions="3">
+    <data:scalar name="SourceOne" />
+    <data:scalar name="SourceTwo" />
+    <data:scalar name="Target" />
+
+    <mesh name="MeshOne">
+      <use-data name="SourceOne" />
+    </mesh>
+
+    <mesh name="MeshTwo">
+      <use-data name="SourceTwo" />
+    </mesh>
+
+    <mesh name="MeshTarget">
+      <use-data name="SourceOne" />
+      <use-data name="SourceTwo" />
+      <use-data name="Target" />
+    </mesh>
+
+    <participant name="SolverTarget">
+      <use-mesh name="MeshTarget" provide="yes" />
+      <read-data name="Target" mesh="MeshTarget" />
+      <action:summation timing="regular-post" mesh="MeshTarget">
+        <source-data name="SourceOne" />
+        <source-data name="SourceTwo" />
+        <target-data name="Target" />
+      </action:summation>
+    </participant>
+
+    <participant name="SolverSourceOne">
+      <use-mesh name="MeshOne" provide="yes" />
+      <use-mesh name="MeshTarget" from="SolverTarget" />
+      <mapping:nearest-neighbor
+        direction="write"
+        from="MeshOne"
+        to="MeshTarget"
+        constraint="consistent" />
+      <write-data name="SourceOne" mesh="MeshOne" />
+    </participant>
+
+    <participant name="SolverSourceTwo">
+      <use-mesh name="MeshTwo" provide="yes" />
+      <use-mesh name="MeshTarget" from="SolverTarget" />
+      <mapping:nearest-neighbor
+        direction="write"
+        from="MeshTwo"
+        to="MeshTarget"
+        constraint="consistent" />
+      <write-data name="SourceTwo" mesh="MeshTwo" />
+    </participant>
+
+    <m2n:sockets from="SolverSourceOne" to="SolverTarget" />
+    <m2n:sockets from="SolverSourceTwo" to="SolverTarget" />
+
+    <coupling-scheme:serial-explicit>
+      <participants first="SolverSourceOne" second="SolverTarget" />
+      <max-time-windows value="2" />
+      <time-window-size value="1.0" />
+      <exchange data="SourceOne" mesh="MeshTarget" from="SolverSourceOne" to="SolverTarget" />
+    </coupling-scheme:serial-explicit>
+
+    <coupling-scheme:serial-explicit>
+      <participants first="SolverSourceTwo" second="SolverTarget" />
+      <max-time-windows value="2" />
+      <time-window-size value="1.0" />
+      <exchange data="SourceTwo" mesh="MeshTarget" from="SolverSourceTwo" to="SolverTarget" />
+    </coupling-scheme:serial-explicit>
+  </solver-interface>
+</precice-configuration>

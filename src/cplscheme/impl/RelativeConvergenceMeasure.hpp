@@ -1,30 +1,30 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <limits>
+#include <math.h>
+#include <ostream>
+#include <string>
 #include "../CouplingData.hpp"
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
+#include "math/differences.hpp"
 #include "math/math.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace tests
-{
+namespace precice {
+namespace cplscheme {
+namespace tests {
 class RelativeConvergenceMeasureTest;
 }
-}
-}
+} // namespace cplscheme
+} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace impl
-{
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -37,8 +37,7 @@ namespace impl
  * For a description of how to perform the measurement, see class
  * ConvergenceMeasure.
  */
-class RelativeConvergenceMeasure : public ConvergenceMeasure
-{
+class RelativeConvergenceMeasure : public ConvergenceMeasure {
 public:
   /**
     * @brief Constructor.
@@ -58,25 +57,18 @@ public:
 
   virtual void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification)
+      const Eigen::VectorXd &newValues)
   {
     /*
      std::cout<<"\n-------\n";
      std::cout<<"   old val: \n"<<oldValues<<'\n';
      std::cout<<"   new val: \n"<<newValues<<"\n\n";
-     std::cout<<"   design spec: \n"<<designSpecification<<"\n\n";
      std::cout<<"-------\n\n";
 */
 
-    _normDiff      = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
-    _norm          = utils::MasterSlave::l2norm(newValues + designSpecification);
+    _normDiff      = utils::MasterSlave::l2norm(newValues - oldValues);
+    _norm          = utils::MasterSlave::l2norm(newValues);
     _isConvergence = _normDiff <= _norm * _convergenceLimitPercent;
-    //      PRECICE_INFO("Relative convergence measure: "
-    //                    << "two-norm differences = " << normDiff
-    //                    << ", convergence limit = "
-    //                    << normNew * _convergenceLimitPercent
-    //                    << ", convergence = " << _isConvergence );
   }
 
   virtual bool isConvergence() const
@@ -91,8 +83,9 @@ public:
   {
     std::ostringstream os;
     os << "relative convergence measure: ";
-    os << "two-norm diff = " << _normDiff;
-    os << ", relative limit = " << _norm * _convergenceLimitPercent;
+    os << "relative two-norm diff = " << getNormResidual();
+    os << ", limit = " << _convergenceLimitPercent;
+    os << ", normalization = " << _norm;
     os << ", conv = ";
     if (_isConvergence)
       os << "true";
@@ -109,6 +102,11 @@ public:
       return _normDiff / _norm;
   }
 
+  virtual std::string getAbbreviation() const
+  {
+    return "Rel";
+  }
+
 private:
   logging::Logger _log{"cplscheme::RelativeConvergenceMeasure"};
 
@@ -120,6 +118,6 @@ private:
 
   bool _isConvergence = false;
 };
-}
-}
-} // namespace precice, cplscheme, impl
+} // namespace impl
+} // namespace cplscheme
+} // namespace precice

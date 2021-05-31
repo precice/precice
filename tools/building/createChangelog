@@ -1,0 +1,29 @@
+#! /bin/bash
+
+#
+# This tool creates a changelog file for the current branch.
+# It uses the github cli to get the PR number.
+#
+
+if command -v gh > /dev/null ; then
+  INFO="$(gh pr view)"
+  if [ $? -eq 0 ]; then
+    PR="$(echo "$INFO" | grep "number:" | grep -o "[0-9]\+")"
+    FILE="`git rev-parse --show-toplevel`/docs/changelog/$PR.md"
+    if [ -f $FILE ]; then
+      echo "Changelog file for PR $PR already exists."
+      echo $FILE
+      exit 2 
+    else
+      echo "Changelog file for PR $PR created."
+      echo $FILE
+      echo "- TODO" > $FILE
+      exit 0
+    fi
+  else
+    echo "Could not find a associated pull request. Make sure you created one."
+  fi
+else
+  echo "Please install GitHub CLI first: https://cli.github.com/"
+  exit 1 
+fi

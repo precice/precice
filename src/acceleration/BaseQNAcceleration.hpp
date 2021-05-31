@@ -1,71 +1,75 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <algorithm>
 #include <deque>
 #include <fstream>
+#include <map>
 #include <sstream>
-
-#include "logging/Logger.hpp"
+#include <string>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
+#include "logging/Logger.hpp"
 
 /* ****************************************************************************
- * 
+ *
  * A few comments concerning the present design choice.
- * 
+ *
  * All the functions from the base class BAseQNAcceleration are specialized in
- * the sub classes as needed. This is done vi overwriting the base functions in 
- * the specialized sub classes and calling the respective base function after 
- * performing the specialized stuff (in order to perform the common, generalized 
+ * the sub classes as needed. This is done vi overwriting the base functions in
+ * the specialized sub classes and calling the respective base function after
+ * performing the specialized stuff (in order to perform the common, generalized
  * computations i.e. handling of V,W matrices etc.)
  * However, for the performAcceleration Method we decided (for better readability)
- * to have this method only in the base class, while introducing a function 
+ * to have this method only in the base class, while introducing a function
  * performPPSecondaryData that handles all the specialized stuff concerning acceleration
  * processing for the secondary data in the sub classes.
  *
  * Another possibility would have been to introduce a bunch of functions like
- * initializeSpecialized(), removeMatrixColumnSpecialized(), 
- * iterationsConvergedSpecialized(), etc 
+ * initializeSpecialized(), removeMatrixColumnSpecialized(),
+ * iterationsConvergedSpecialized(), etc
  * and call those function from the base class top down to the sub classes.
  *
  * The third possibility was to separate the approximation of the Jacobian from
- * the common stuff like handling V,W matrices in the acceleration. 
+ * the common stuff like handling V,W matrices in the acceleration.
  * Here, we have a class QNAcceleration that handles the V,W stuff an d the basic
- * scheme of the QN update. Furthermore we have a base class (or rather interface) 
- * JacobianApproximation with sub classes MVQNAPX and IQNAPX that handle all the 
- * specialized stuff like Jacobian approximation, handling of secondary data etc. 
- * However, this approach is not feasible, as we have to call the function 
+ * scheme of the QN update. Furthermore we have a base class (or rather interface)
+ * JacobianApproximation with sub classes MVQNAPX and IQNAPX that handle all the
+ * specialized stuff like Jacobian approximation, handling of secondary data etc.
+ * However, this approach is not feasible, as we have to call the function
  * removeMatrixColumn() down in the specialized sub classes MVQNApx and IQNApx.
- * This is not possible as the function works on the V, W matrices that are 
+ * This is not possible as the function works on the V, W matrices that are
  * completely treated by QNAcceleration.
- * 
+ *
  * ****************************************************************************
  */
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace io {
+class TXTReader;
+class TXTWriter;
+} // namespace io
+
+namespace acceleration {
 
 /**
  * @brief Base Class for quasi-Newton acceleration schemes
- * 
+ *
  */
-class BaseQNAcceleration : public Acceleration
-{
+class BaseQNAcceleration : public Acceleration {
 public:
-
   BaseQNAcceleration(
-      double            initialRelaxation,
-      bool              forceInitialRelaxation,
-      int               maxIterationsUsed,
-      int               timestepsReused,
-      int               filter,
-      double            singularityLimit,
-      std::vector<int>  dataIDs,
+      double                  initialRelaxation,
+      bool                    forceInitialRelaxation,
+      int                     maxIterationsUsed,
+      int                     timeWindowsReused,
+      int                     filter,
+      double                  singularityLimit,
+      std::vector<int>        dataIDs,
       impl::PtrPreconditioner preconditioner);
 
   /**
@@ -74,7 +78,7 @@ public:
   virtual ~BaseQNAcceleration()
   {
     // not necessary for user, only for developer, if needed, this should be configurable
-    //     if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave())){
+    //     if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
     //       _infostream.open("precice-accelerationInfo.log", std::ios_base::out);
     //       _infostream << std::setprecision(16);
     //       _infostream << _infostringstream.str();
@@ -110,22 +114,6 @@ public:
   virtual void iterationsConverged(DataMap &cplData);
 
   /**
-    * @brief sets the design specification we want to meet for the objective function,
-    *     i. e., we want to solve for argmin_x ||R(x) - q||, with R(x) = H(x) - x
-    *     Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
-    *     with q=0.
-    */
-  virtual void setDesignSpecification(Eigen::VectorXd &q);
-
-  /**
-    * @brief Returns the design specification for the optimization problem.
-    *        Information needed to measure the convergence.
-    *        In case of manifold mapping it also returns the design specification
-    *        for the surrogate model which is updated in every iteration.
-    */
-  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap &cplData);
-
-  /**
     * @brief Exports the current state of the acceleration to a file.
     */
   virtual void exportState(io::TXTWriter &writer);
@@ -137,8 +125,20 @@ public:
     */
   virtual void importState(io::TXTReader &reader);
 
-  // delete this:
-  virtual int getDeletedColumns();
+  /// how many QN columns were deleted in this time window
+  virtual int getDeletedColumns() const;
+
+  /// how many QN columns were dropped (went out of scope) in this time window
+  virtual int getDroppedColumns() const;
+
+  /** @brief: computes number of cols in least squares system, i.e, number of cols in
+    *  _matrixV, _matrixW, _qrV, etc..
+    *	 This is necessary only for master-slave mode, when some procs do not have
+    *	 any nodes on the coupling interface. In this case, the matrices are not
+    *  constructed and we have no information about the number of cols. This info
+    *  is needed for master-slave communication. Number of its =! _cols in general.
+    */
+  virtual int getLSSystemCols() const;
 
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};
@@ -152,8 +152,8 @@ protected:
   /// Maximum number of old data iterations kept.
   int _maxIterationsUsed;
 
-  /// Maximum number of old timesteps (with data values) kept.
-  int _timestepsReused;
+  /// Maximum number of old time windows (with data values) kept.
+  int _timeWindowsReused;
 
   /// Data IDs of data to be involved in the IQN algorithm.
   std::vector<int> _dataIDs;
@@ -164,19 +164,18 @@ protected:
   /// Indicates the first iteration, where constant relaxation is used.
   bool _firstIteration = true;
 
-  /* @brief Indicates the first time step, where constant relaxation is used
-    *        later, we replace the constant relaxation by a qN-update from last time step.
+  /* @brief Indicates the first time window, where constant relaxation is used
+    *        later, we replace the constant relaxation by a qN-update from last time window.
     */
-  bool _firstTimeStep = true;
+  bool _firstTimeWindow = true;
 
   /*
     * @brief If in master-slave mode: True if this process has nodes at the coupling interface
-    *        If in server mode: Always true.
     */
   bool _hasNodesOnInterface = true;
 
   /* @brief If true, the QN-scheme always performs a underrelaxation in the first iteration of
-    *        a new time step. Otherwise, the LS system from the previous time step is used in the
+    *        a new time window. Otherwise, the LS system from the previous time window is used in the
     *        first iteration.
     */
   bool _forceInitialRelaxation;
@@ -217,11 +216,11 @@ protected:
     */
   double _singularityLimit;
 
-  /** @brief Indices (of columns in W, V matrices) of 1st iterations of timesteps.
+  /** @brief Indices (of columns in W, V matrices) of 1st iterations of time windows.
     *
-    * When old timesteps are reused (_timestepsReused > 0), the indices of the
-    * first iteration of each timestep needs to be stored, such that, e.g., all
-    * iterations of the last timestep, or one specific iteration that leads to
+    * When old time windows are reused (_timeWindowsReused > 0), the indices of the
+    * first iteration of each time window needs to be stored, such that, e.g., all
+    * iterations of the last time window, or one specific iteration that leads to
     * a singular matrix in the QR decomposition can be removed and tracked.
     */
   std::deque<int> _matrixCols;
@@ -235,14 +234,6 @@ protected:
   std::ostringstream _infostringstream;
   std::fstream       _infostream;
 
-  /** @brief: computes number of cols in least squares system, i.e, number of cols in
-    *  _matrixV, _matrixW, _qrV, etc..
-    *	 This is necessary only for master-slave mode, when some procs do not have
-    *	 any nodes on the coupling interface. In this case, the matrices are not
-    *  constructed and we have no information about the number of cols. This info
-    *  is needed for master-slave communication. Number of its =! _cols in general.
-    */
-  int getLSSystemCols();
   int getLSSystemRows();
 
   /**
@@ -277,7 +268,7 @@ protected:
   /// Wwrites info to the _infostream (also in parallel)
   void writeInfo(std::string s, bool allProcs = false);
 
-  int its = 0, tSteps = 0;
+  int its = 0, tWindows = 0;
 
 private:
   /// @brief Concatenation of all coupling data involved in the QN system.
@@ -286,27 +277,22 @@ private:
   /// @brief Concatenation of all (old) coupling data involved in the QN system.
   Eigen::VectorXd _oldValues;
 
-  /// @brief Difference between solver input and output from last timestep
+  /// @brief Difference between solver input and output from last time window
   Eigen::VectorXd _oldResiduals;
 
-  /**
-    * @brief sets the design specification we want to meet for the objective function,
-    *     i. e., we want to solve for argmin_x ||R(x) - q||, with R(x) = H(x) - x
-    *     Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
-    *     with q=0.
-    */
-  Eigen::VectorXd _designSpecification;
-
   /** @brief backup of the V,W and matrixCols data structures. Needed for the skipping of
-   *  initial relaxation, if previous time step converged within one iteration i.e., V and W
-   *  are empty -- in this case restore V and W with time step t-2.
+   *  initial relaxation, if previous time window converged within one iteration i.e., V and W
+   *  are empty -- in this case restore V and W with time window t-2.
    */
   Eigen::MatrixXd _matrixVBackup;
   Eigen::MatrixXd _matrixWBackup;
   std::deque<int> _matrixColsBackup;
 
-  /// Additional debugging info, is not important for computation:
+  /// Number of filtered out columns in this time window
   int _nbDelCols = 0;
+
+  /// Number of dropped columns in this time window (old time window out of scope)
+  int _nbDropCols = 0;
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

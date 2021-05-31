@@ -1,46 +1,47 @@
 #ifndef PRECICE_NO_MPI
 
-#include <Eigen/Core>
-#include <fstream>
-#include <sstream>
-
-#include "com/Communication.hpp"
-#include "com/MPIPortsCommunication.hpp"
-#include "com/SocketCommunication.hpp"
-#include "cplscheme/CouplingData.hpp"
-#include "mesh/Mesh.hpp"
-#include "mesh/Vertex.hpp"
 #include "acceleration/MVQNAcceleration.hpp"
+#include <Eigen/Core>
+#include <algorithm>
+#include <fstream>
+#include <map>
+#include <memory>
+#include <string>
+#include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
-#include "acceleration/impl/ParallelMatrixOperations.hpp"
+#include "com/Communication.hpp"
+#include "com/MPIPortsCommunication.hpp"
+#include "cplscheme/CouplingData.hpp"
+#include "cplscheme/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
+#include "utils/Event.hpp"
 
 using precice::cplscheme::PtrCouplingData;
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 // ==================================================================================
 MVQNAcceleration::MVQNAcceleration(
-    double            initialRelaxation,
-    bool              forceInitialRelaxation,
-    int               maxIterationsUsed,
-    int               timestepsReused,
-    int               filter,
-    double            singularityLimit,
-    std::vector<int>  dataIDs,
+    double                  initialRelaxation,
+    bool                    forceInitialRelaxation,
+    int                     maxIterationsUsed,
+    int                     pastTimeWindowsReused,
+    int                     filter,
+    double                  singularityLimit,
+    std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner,
-    bool              alwaysBuildJacobian,
-    int               imvjRestartType,
-    int               chunkSize,
-    int               RSLSreusedTimesteps,
-    double            RSSVDtruncationEps)
-    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
-                           filter, singularityLimit, dataIDs, preconditioner),
+    bool                    alwaysBuildJacobian,
+    int                     imvjRestartType,
+    int                     chunkSize,
+    int                     RSLSreusedTimeWindows,
+    double                  RSSVDtruncationEps)
+    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
+                         filter, singularityLimit, dataIDs, preconditioner),
       //  _secondaryOldXTildes(),
       _invJacobian(),
       _oldInvJacobian(),
@@ -50,90 +51,43 @@ MVQNAcceleration::MVQNAcceleration(
       _matrixV_RSLS(),
       _matrixW_RSLS(),
       _matrixCols_RSLS(),
-      _cyclicCommLeft(nullptr),
-      _cyclicCommRight(nullptr),
       _parMatrixOps(nullptr),
       _svdJ(RSSVDtruncationEps, preconditioner),
       _alwaysBuildJacobian(alwaysBuildJacobian),
       _imvjRestartType(imvjRestartType),
       _imvjRestart(false),
       _chunkSize(chunkSize),
-      _RSLSreusedTimesteps(RSLSreusedTimesteps),
-      _usedColumnsPerTstep(5),
+      _RSLSreusedTimeWindows(RSLSreusedTimeWindows),
+      _usedColumnsPerTimeWindow(5),
       _nbRestarts(0),
-      //_info2(),
       _avgRank(0)
 {
 }
 
 // ==================================================================================
-MVQNAcceleration::~MVQNAcceleration()
-{
-  //if(utils::MasterSlave::isMaster() ||utils::MasterSlave::isSlave()){ // not possible because of tests, MasterSlave is deactivated when PP is killed
-
-  // close and shut down cyclic communication connections
-  if (not _imvjRestart) {
-    if (_cyclicCommRight != nullptr || _cyclicCommLeft != nullptr) {
-      if ((utils::MasterSlave::getRank() % 2) == 0) {
-        _cyclicCommLeft->closeConnection();
-        _cyclicCommRight->closeConnection();
-      } else {
-        _cyclicCommRight->closeConnection();
-        _cyclicCommLeft->closeConnection();
-      }
-      _cyclicCommRight = nullptr;
-      _cyclicCommLeft  = nullptr;
-    }
-  }
-}
+MVQNAcceleration::~MVQNAcceleration() = default;
 
 // ==================================================================================
 void MVQNAcceleration::initialize(
     DataMap &cplData)
 {
   PRECICE_TRACE();
-  
+
   // do common QN acceleration initialization
   BaseQNAcceleration::initialize(cplData);
 
   if (_imvjRestartType > 0)
     _imvjRestart = true;
 
-  // only need cyclic communication if no MVJ restart mode is used
-  if (not _imvjRestart) {
-    if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
-    /*
-     * @todo: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
-     *        Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
-     *        The master-slave communication should be modified such that direct communication between
-     *        slaves is possible (via MPIDirect)
-     */
-      _cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication());
-      _cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication());
-      //_cyclicCommLeft = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
-      //_cyclicCommRight = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
-
-      // initialize cyclic communication between successive slaves
-      int prevProc = (utils::MasterSlave::getRank() - 1 < 0) ? utils::MasterSlave::getSize() - 1 : utils::MasterSlave::getRank() - 1;
-      if ((utils::MasterSlave::getRank() % 2) == 0) {
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::getRank());
-        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", 0, 1);
-      } else {
-        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::getRank()), "", 0, 1);
-        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", utils::MasterSlave::getRank());
-      }
-    }
-  }
-
   // initialize parallel matrix-matrix operation module
-  _parMatrixOps = impl::PtrParMatrixOps(new impl::ParallelMatrixOperations());
-  _parMatrixOps->initialize(_cyclicCommLeft, _cyclicCommRight, not _imvjRestart);
+  _parMatrixOps = std::make_shared<impl::ParallelMatrixOperations>();
+  _parMatrixOps->initialize(not _imvjRestart);
   _svdJ.initialize(_parMatrixOps, getLSSystemRows());
 
   int entries  = _residuals.size();
   int global_n = 0;
 
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (!utils::MasterSlave::isParallel()) {
     global_n = entries;
   } else {
     global_n = _dimOffsets.back();
@@ -152,9 +106,10 @@ void MVQNAcceleration::initialize(
   }
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
 
-  if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
-    _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimesteps << "\n--------\n"
+  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+    _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
                       << '\n';
+  }
 }
 
 // ==================================================================================
@@ -164,7 +119,7 @@ void MVQNAcceleration::computeUnderrelaxationSecondaryData(
   // Perform underrelaxation with initial relaxation factor for secondary data
   for (int id : _secondaryDataIDs) {
     PtrCouplingData  data   = cplData[id];
-    Eigen::VectorXd &values = *(data->values);
+    Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
     secResiduals                  = data->oldValues.col(0); // old
@@ -183,7 +138,7 @@ void MVQNAcceleration::updateDifferenceMatrices(
    */
 
   PRECICE_TRACE();
-  
+
   // call the base method for common update of V, W matrices
   // important that base method is called before updating _Wtil
   BaseQNAcceleration::updateDifferenceMatrices(cplData);
@@ -191,7 +146,7 @@ void MVQNAcceleration::updateDifferenceMatrices(
   // update _Wtil if the efficient computation of the quasi-Newton update is used
   // or update current Wtil if the restart mode of imvj is used
   if (not _alwaysBuildJacobian || _imvjRestart) {
-    if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
+    if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
       // do nothing: constant relaxation
     } else {
       if (not _firstIteration) {
@@ -223,7 +178,7 @@ void MVQNAcceleration::updateDifferenceMatrices(
 
           // store columns if restart mode = RS-LS
           if (_imvjRestartType == RS_LS) {
-            if (_matrixCols_RSLS.front() < _usedColumnsPerTstep) {
+            if (_matrixCols_RSLS.front() < _usedColumnsPerTimeWindow) {
               utils::appendFront(_matrixV_RSLS, v);
               utils::appendFront(_matrixW_RSLS, w);
               _matrixCols_RSLS.front()++;
@@ -253,7 +208,7 @@ void MVQNAcceleration::updateDifferenceMatrices(
 // ==================================================================================
 void MVQNAcceleration::computeQNUpdate(
     Acceleration::DataMap &cplData,
-    Eigen::VectorXd &        xUpdate)
+    Eigen::VectorXd &      xUpdate)
 {
   /**
    * The inverse Jacobian
@@ -400,10 +355,10 @@ void MVQNAcceleration::buildJacobian()
 // ==================================================================================
 void MVQNAcceleration::computeNewtonUpdateEfficient(
     Acceleration::DataMap &cplData,
-    Eigen::VectorXd &        xUpdate)
+    Eigen::VectorXd &      xUpdate)
 {
   PRECICE_TRACE();
-  
+
   /**      --- update inverse Jacobian efficient, ---
   *   If normal mode is used:
   *   Do not recompute W_til in every iteration and do not build
@@ -411,8 +366,8 @@ void MVQNAcceleration::computeNewtonUpdateEfficient(
   *   iteration has converged, namely in the last iteration.
   *
   *   If restart-mode is used:
-  *   The Jacobian is never build. Store matrices Wtil^q and Z^q for the last M time steps.
-  *   After M time steps, a restart algorithm is performed basedon the restart-mode type, either
+  *   The Jacobian is never build. Store matrices Wtil^q and Z^q for the last M time windows.
+  *   After M time windows, a restart algorithm is performed basedon the restart-mode type, either
   *   Least-Squares restart (IQN-ILS like) or maintaining of a updated truncated SVD decomposition
   *   of the SVD.
   *
@@ -491,7 +446,7 @@ void MVQNAcceleration::computeNewtonUpdateEfficient(
   xUpdate += xUptmp;
 
   // pending deletion: delete Wtil
-  if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
+  if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
     _Wtil.conservativeResize(0, 0);
     _resetLS = true;
   }
@@ -501,7 +456,7 @@ void MVQNAcceleration::computeNewtonUpdateEfficient(
 void MVQNAcceleration::computeNewtonUpdate(Acceleration::DataMap &cplData, Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
-  
+
   /**      --- update inverse Jacobian ---
 	*
 	* J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
@@ -539,7 +494,7 @@ void MVQNAcceleration::computeNewtonUpdate(Acceleration::DataMap &cplData, Eigen
 void MVQNAcceleration::restartIMVJ()
 {
   PRECICE_TRACE();
-  
+
   //int used_storage = 0;
   //int theoreticalJ_storage = 2*getLSSystemRows()*_residuals.size() + 3*_residuals.size()*getLSSystemCols() + _residuals.size()*_residuals.size();
   //               ------------ RESTART SVD ------------
@@ -555,7 +510,7 @@ void MVQNAcceleration::restartIMVJ()
 
     int rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
 
-    // if it is the first time step, there is no initial SVD, so take all Wtil, Z matrices
+    // if it is the first time window, there is no initial SVD, so take all Wtil, Z matrices
     // otherwise, the first element of each container holds the decomposition of the current
     // truncated SVD, i.e., Wtil^0 = \phi, Z^0 = S\psi^T, this should not be added to the SVD.
     int q = _svdJ.isSVDinitialized() ? 1 : 0;
@@ -598,11 +553,13 @@ void MVQNAcceleration::restartIMVJ()
     _preconditioner->apply(_pseudoInverseChunk.front(), true);
     // |===================                             ==|
 
-    PRECICE_DEBUG("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian " << rankAfter << ", new modes: " << rankAfter - rankBefore << ", truncated modes: " << waste << " avg rank: " << _avgRank / _nbRestarts);
+    PRECICE_DEBUG("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian {}, new modes: {}, truncated modes: {} avg rank: {}", rankAfter, rankAfter - rankBefore, waste, _avgRank / _nbRestarts);
+
     //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
-    if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
+    if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
       _infostringstream << " - MVJ-RESTART " << _nbRestarts << ", mode= SVD -\n  new modes: " << rankAfter - rankBefore << "\n  rank svd: " << rankAfter << "\n  avg rank: " << _avgRank / _nbRestarts << "\n  truncated modes: " << waste << "\n"
                         << '\n';
+    }
 
     //        ------------ RESTART LEAST SQUARES ------------
   } else if (_imvjRestartType == MVQNAcceleration::RS_LS) {
@@ -676,10 +633,11 @@ void MVQNAcceleration::restartIMVJ()
       // |===================                             ==|
     }
 
-    PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with " << _matrixV_RSLS.cols() << " columns from " << _RSLSreusedTimesteps << " time steps.");
-    if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
-      _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimesteps << "\n"
+    PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with {} columns from {} time windows.", _matrixV_RSLS.cols(), _RSLSreusedTimeWindows);
+    if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+      _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimeWindows << "\n"
                         << '\n';
+    }
 
     //            ------------ RESTART ZERO ------------
   } else if (_imvjRestartType == MVQNAcceleration::RS_ZERO) {
@@ -708,7 +666,7 @@ void MVQNAcceleration::restartIMVJ()
       // drop oldest pair Wtil_0 and Z_0
       PRECICE_ASSERT(not _WtilChunk.empty());
       PRECICE_ASSERT(not _pseudoInverseChunk.empty())
-          _WtilChunk.erase(_WtilChunk.begin());
+      _WtilChunk.erase(_WtilChunk.begin());
       _pseudoInverseChunk.erase(_pseudoInverseChunk.begin());
     }
 
@@ -724,23 +682,23 @@ void MVQNAcceleration::specializedIterationsConverged(
     DataMap &cplData)
 {
   PRECICE_TRACE();
-  
-  // truncate V_RSLS and W_RSLS matrices according to _RSLSreusedTimesteps
+
+  // truncate V_RSLS and W_RSLS matrices according to _RSLSreusedTimeWindows
   if (_imvjRestartType == RS_LS) {
     if (_matrixCols_RSLS.front() == 0) { // Did only one iteration
       _matrixCols_RSLS.pop_front();
     }
-    if (_RSLSreusedTimesteps == 0) {
+    if (_RSLSreusedTimeWindows == 0) {
       _matrixV_RSLS.resize(0, 0);
       _matrixW_RSLS.resize(0, 0);
       _matrixCols_RSLS.clear();
-    } else if ((int) _matrixCols_RSLS.size() > _RSLSreusedTimesteps) {
+    } else if ((int) _matrixCols_RSLS.size() > _RSLSreusedTimeWindows) {
       int toRemove = _matrixCols_RSLS.back();
       PRECICE_ASSERT(toRemove > 0, toRemove);
       if (_matrixV_RSLS.size() > 0) {
         PRECICE_ASSERT(_matrixV_RSLS.cols() > toRemove, _matrixV_RSLS.cols(), toRemove);
       }
-      
+
       // remove columns
       for (int i = 0; i < toRemove; i++) {
         utils::removeColumnFromMatrix(_matrixV_RSLS, _matrixV_RSLS.cols() - 1);
@@ -796,7 +754,9 @@ void MVQNAcceleration::specializedIterationsConverged(
 
         // < RESTART >
         _nbRestarts++;
+        utils::Event  restartUpdate("IMVJRestart");
         restartIMVJ();
+        restartUpdate.stop();
       }
 
       // only in imvj normal mode with efficient update:
@@ -807,10 +767,10 @@ void MVQNAcceleration::specializedIterationsConverged(
     }
 
     /** in case of enforced initial relaxation, the matrices are cleared
-     *  in case of timestepsReused > 0, the columns in _Wtil are outdated, as the Jacobian changes, hence clear
-     *  in case of timestepsReused == 0 and no initial relaxation, pending deletion in performAcceleration
+     *  in case of pastTimeWindowsReused > 0, the columns in _Wtil are outdated, as the Jacobian changes, hence clear
+     *  in case of pastTimeWindowsReused == 0 and no initial relaxation, pending deletion in performAcceleration
      */
-    if (_timestepsReused > 0 || (_timestepsReused == 0 && _forceInitialRelaxation)) {
+    if (_timeWindowsReused > 0 || (_timeWindowsReused == 0 && _forceInitialRelaxation)) {
       //_Wtil.conservativeResize(0, 0);
       _resetLS = true;
     }
@@ -818,7 +778,7 @@ void MVQNAcceleration::specializedIterationsConverged(
 
   // only store Jacobian if imvj is in normal mode, i.e., the Jacobian is build
   if (not _imvjRestart) {
-    // store inverse Jacobian from converged time step. NOT SCALED with preconditioner
+    // store inverse Jacobian from converged time window. NOT SCALED with preconditioner
     _oldInvJacobian = _invJacobian;
   }
 }
@@ -864,7 +824,8 @@ void MVQNAcceleration::removeMatrixColumnRSLS(
     iter++;
   }
 }
-}
-} // namespace precice, acceleration
+
+} // namespace acceleration
+} // namespace precice
 
 #endif

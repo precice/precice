@@ -1,5 +1,7 @@
 #include "TXTTableWriter.hpp"
+#include <algorithm>
 #include <iomanip>
+#include "logging/LogMacros.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 
@@ -12,33 +14,23 @@ TXTTableWriter::TXTTableWriter(
       _writeIterator(_data.end()),
       _outputStream()
 {
-  _outputStream.open(filename.c_str());
-  if (not _outputStream) {
-    PRECICE_ERROR("Could not open file \"" << filename
-                                   << "\" for writing txt table data!");
-  }
+  _outputStream.open(filename);
+  PRECICE_CHECK(_outputStream, "TXT table writer failed to open file \"{}\"", filename);
+
   _outputStream.setf(std::ios::showpoint);
   _outputStream.setf(std::ios::fixed);
   _outputStream << std::setprecision(16);
-}
-
-TXTTableWriter::~TXTTableWriter()
-{
-  if (_outputStream.is_open()) {
-    _outputStream.close();
-  }
 }
 
 void TXTTableWriter::addData(
     const std::string &name,
     DataType           type)
 {
+  PRECICE_ASSERT(_outputStream);
   Data data;
   data.name = name;
   data.type = type;
-  PRECICE_ASSERT(not utils::contained(data, _data), data.name, data.type);
   _data.push_back(data);
-  PRECICE_ASSERT(_outputStream.is_open());
   if ((type == INT) || (type == DOUBLE)) {
     _outputStream << name << "  ";
   } else if (type == VECTOR2D) {
@@ -58,6 +50,7 @@ void TXTTableWriter::writeData(
     const std::string &name,
     int                value)
 {
+  PRECICE_ASSERT(_outputStream);
   PRECICE_ASSERT(not _data.empty());
   if (_writeIterator == _data.end()) {
     _writeIterator = _data.begin();
@@ -76,6 +69,7 @@ void TXTTableWriter::writeData(
     const std::string &name,
     double             value)
 {
+  PRECICE_ASSERT(_outputStream);
   PRECICE_ASSERT(not _data.empty());
   if (_writeIterator == _data.end()) {
     _writeIterator = _data.begin();
@@ -94,6 +88,7 @@ void TXTTableWriter::writeData(
     const std::string &    name,
     const Eigen::Vector2d &value)
 {
+  PRECICE_ASSERT(_outputStream);
   PRECICE_ASSERT(not _data.empty());
   if (_writeIterator == _data.end()) {
     _writeIterator = _data.begin();
@@ -114,6 +109,7 @@ void TXTTableWriter::writeData(
     const std::string &    name,
     const Eigen::Vector3d &value)
 {
+  PRECICE_ASSERT(_outputStream);
   PRECICE_ASSERT(not _data.empty());
   if (_writeIterator == _data.end()) {
     _writeIterator = _data.begin();
@@ -134,6 +130,13 @@ void TXTTableWriter::close()
 {
   PRECICE_ASSERT(_outputStream.is_open());
   _outputStream.close();
+}
+
+/// Resets the table information.
+void TXTTableWriter::reset()
+{
+  _data.clear();
+  _writeIterator = _data.end();
 }
 
 } // namespace io

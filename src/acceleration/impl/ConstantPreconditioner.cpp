@@ -1,26 +1,28 @@
 #include "acceleration/impl/ConstantPreconditioner.hpp"
+#include <algorithm>
+#include <utility>
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+#include "logging/LogMacros.hpp"
+#include "utils/assertion.hpp"
+
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 ConstantPreconditioner::ConstantPreconditioner(std::vector<double> factors)
     : Preconditioner(-1),
-      _factors(factors)
+      _factors(std::move(factors))
 {
 }
 
-void ConstantPreconditioner::initialize(std::vector<size_t> & svs)
+void ConstantPreconditioner::initialize(std::vector<size_t> &svs)
 {
   PRECICE_TRACE();
   Preconditioner::initialize(svs);
 
   // is always constant by definition
-  _freezed = true;
-  PRECICE_ASSERT(_maxNonConstTimesteps == -1, _maxNonConstTimesteps);
+  _frozen = true;
+  PRECICE_ASSERT(_maxNonConstTimeWindows == -1, _maxNonConstTimeWindows);
 
   PRECICE_ASSERT(_factors.size() == _subVectorSizes.size());
 
@@ -34,7 +36,7 @@ void ConstantPreconditioner::initialize(std::vector<size_t> & svs)
   }
 }
 
-void ConstantPreconditioner::_update_(bool timestepComplete,
+void ConstantPreconditioner::_update_(bool                   timeWindowComplete,
                                       const Eigen::VectorXd &oldValues,
                                       const Eigen::VectorXd &res)
 {
@@ -42,4 +44,6 @@ void ConstantPreconditioner::_update_(bool timestepComplete,
   //nothing to do here
 }
 
-}}} // namespace precice, acceleration, impl
+} // namespace impl
+} // namespace acceleration
+} // namespace precice

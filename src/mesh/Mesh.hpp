@@ -1,52 +1,45 @@
 #pragma once
 
-#include "mesh/Group.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "mesh/Data.hpp"
-#include "mesh/Vertex.hpp"
-#include "utils/PointerVector.hpp"
-#include "utils/ManageUniqueIDs.hpp"
-#include <map>
-#include <list>
-#include <vector>
+#include <Eigen/Core>
 #include <boost/signals2.hpp>
-
-namespace precice {
-  namespace mesh {
-    class PropertyContainer;
-  }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
+#include <deque>
+#include <iosfwd>
+#include <list>
+#include <map>
+#include <string>
+#include <vector>
+#include "logging/Logger.hpp"
+#include "mesh/BoundingBox.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Edge.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Triangle.hpp"
+#include "mesh/Vertex.hpp"
+#include "utils/ManageUniqueIDs.hpp"
+#include "utils/PointerVector.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {
 
-
 /**
  * @brief Container and creator for meshes.
  *
- * A Mesh can consist of Vertices, Edges, Triangles, nested Meshes, and
- * PropertyContainers. It provides functionality to conveniently create those
- * objects.
+ * A Mesh can consist of Vertices, Edges, Triangles, and nested Meshes.
+ * It provides functionality to conveniently create those objects.
  *
  * In addition to creating the topological information of a mesh, the Mesh class
  * can also be used to add data to the vertices of a mesh.
  *
  * Usage example: precice::mesh::tests::MeshTest::testDemonstration()
  */
-class Mesh : public PropertyContainer
-{
+class Mesh {
 public:
-
-  using VertexContainer            = utils::ptr_vector<Vertex>;
-  using EdgeContainer              = utils::ptr_vector<Edge>;
-  using TriangleContainer          = utils::ptr_vector<Triangle>;
-  using QuadContainer              = utils::ptr_vector<Quad>;
-  using DataContainer              = std::vector<PtrData>;
-  using PropertyContainerContainer = utils::ptr_vector<PropertyContainer>;
-  using BoundingBox                = std::vector<std::pair<double, double>>;
-  using BoundingBoxMap             = std::map<int,BoundingBox>; 
+  using VertexContainer   = std::deque<Vertex>;
+  using EdgeContainer     = std::deque<Edge>;
+  using TriangleContainer = std::deque<Triangle>;
+  using DataContainer     = std::vector<PtrData>;
+  using BoundingBoxMap    = std::map<int, BoundingBox>;
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
   using VertexDistribution = std::map<int, std::vector<int>>;
@@ -60,70 +53,46 @@ public:
   /// Signal is emitted when the mesh is destroyed
   boost::signals2::signal<void(Mesh &)> meshDestroyed;
 
-  /**
-   * @brief Resets the internal geometry ID counter to start from anew.
-   *
-   * This method is only used for test cases.
-   */
-  static void resetGeometryIDsGlobally();
+  /// Use if the id of the mesh is not necessary
+  static constexpr int MESH_ID_UNDEFINED{-1};
 
   /**
    * @brief Constructor.
    *
    * @param[in] name Unique name of the mesh.
    * @param[in] dimensions Dimensionalty of the mesh.
-   * @param[in] flipNormals Inverts the standard direction of normals.
+   * @param[in] id The id of this mesh
    */
-  Mesh (
-    const std::string& name,
-    int                dimensions,
-    bool               flipNormals );
+  Mesh(
+      std::string name,
+      int         dimensions,
+      int         id);
 
   /// Destructor, deletes created objects.
-  virtual ~Mesh();
-
-  /// Returns group object with all Triangle, Edge, Vertex objects.
-  const Group& content() const;
+  ~Mesh();
 
   /// Returns modifieable container holding all vertices.
-  VertexContainer& vertices();
+  VertexContainer &vertices();
 
   /// Returns const container holding all vertices.
-  const VertexContainer& vertices() const;
+  const VertexContainer &vertices() const;
 
   /// Returns modifiable container holding all edges.
-  EdgeContainer& edges();
+  EdgeContainer &edges();
 
   /// Returns const container holding all edges.
-  const EdgeContainer& edges() const;
+  const EdgeContainer &edges() const;
 
   /// Returns modifiable container holding all triangles.
-  TriangleContainer& triangles();
+  TriangleContainer &triangles();
 
   /// Returns const container holding all triangles.
-  const TriangleContainer& triangles() const;
-
-  /// Returns modifiable container holding all quads.
-  QuadContainer& quads();
-
-  /// Returns const container holding all quads.
-  const QuadContainer& quads() const;
-
-  PropertyContainerContainer& propertyContainers();
-
-  const PropertyContainerContainer& propertyContainers() const;
+  const TriangleContainer &triangles() const;
 
   int getDimensions() const;
 
-  template<typename VECTOR_T>
-  Vertex& createVertex ( const VECTOR_T& coords )
-  {
-    PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
-    Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID());
-    newVertex->addParent(*this);
-    _content.add(newVertex);
-    return *newVertex;
-  }
+  /// Creates and initializes a Vertex object.
+  Vertex &createVertex(const Eigen::VectorXd &coords);
 
   /**
    * @brief Creates and initializes an Edge object.
@@ -131,9 +100,9 @@ public:
    * @param[in] vertexOne Reference to first Vertex defining the Edge.
    * @param[in] vertexTwo Reference to second Vertex defining the Edge.
    */
-  Edge& createEdge (
-    Vertex& vertexOne,
-    Vertex& vertexTwo );
+  Edge &createEdge(
+      Vertex &vertexOne,
+      Vertex &vertexTwo);
 
   /**
    * @brief Creates and initializes an Edge object or returns an already existing one.
@@ -141,9 +110,9 @@ public:
    * @param[in] vertexOne Reference to first Vertex defining the Edge.
    * @param[in] vertexTwo Reference to second Vertex defining the Edge.
    */
-  Edge& createUniqueEdge (
-    Vertex& vertexOne,
-    Vertex& vertexTwo );
+  Edge &createUniqueEdge(
+      Vertex &vertexOne,
+      Vertex &vertexTwo);
 
   /**
    * @brief Creates and initializes a Triangle object.
@@ -152,67 +121,26 @@ public:
    * @param[in] edgeTwo Reference to second edge defining the Triangle.
    * @param[in] edgeThree Reference to third edge defining the Triangle.
    */
-  Triangle& createTriangle (
-    Edge& edgeOne,
-    Edge& edgeTwo,
-    Edge& edgeThree );
+  Triangle &createTriangle(
+      Edge &edgeOne,
+      Edge &edgeTwo,
+      Edge &edgeThree);
 
-  /**
-   * @brief Creates and initializes a Quad object.
-   *
-   * @param[in] edgeOne Reference to first edge defining the Quad.
-   * @param[in] edgeTwo Reference to second edge defining the Quad.
-   * @param[in] edgeThree Reference to third edge defining the Quad.
-   * @param[in] edgeFour Reference to fourth edge defining the Quad.
-   */
-  Quad& createQuad (
-    Edge& edgeOne,
-    Edge& edgeTwo,
-    Edge& edgeThree,
-    Edge& edgeFour);
+  PtrData &createData(
+      const std::string &name,
+      int                dimension);
 
-  /**
-   * @brief Creates and initializes a PropertyContainer object.
-   *
-   * A PropertyContainer can be used to serve as Property parent for other
-   * objects in the mesh. It is used, to define multiple geometry IDs for
-   * Vertices and Edges lying at the intersection of regions with different
-   * geometry IDs.
-   */
-  PropertyContainer& createPropertyContainer();
+  /// Allows access to all data
+  const DataContainer &data() const;
 
-  PtrData& createData (
-    const std::string& name,
-    int                dimension );
+  /// Returns the data with the matching ID
+  const PtrData &data(int dataID) const;
 
-  const DataContainer& data() const;
-
-  const PtrData& data ( int dataID ) const;
-
-  PropertyContainer& getPropertyContainer (const std::string & subIDName);
+  /// Returns the data with the matching name
+  const PtrData &data(const std::string &dataName) const;
 
   /// Returns the name of the mesh, as set in the config file.
-  const std::string& getName() const;
-
-  bool isFlipNormals() const;
-
-  void setFlipNormals ( bool flipNormals );
-
-  /**
-   * @brief Associates a new geometry ID to the mesh.
-   *
-   * The full name of the ID is given by:
-   * getName() + "-" + subIDNamePostfix
-   *
-   * @return Newly created property container holding the new ID.
-   */
-  PropertyContainer& setSubID ( const std::string& subIDNamePostfix );
-
-  /// Returns all used geometry IDs paired with their names
-  const std::map<std::string,int>& getNameIDPairs();
-
-  /// Returns the geometry ID corresponding to the given name.
-  int getID ( const std::string& name ) const;
+  const std::string &getName() const;
 
   /// Returns the base ID of the mesh.
   int getID() const;
@@ -226,16 +154,8 @@ public:
   /// Allocates memory for the vertex data values.
   void allocateDataValues();
 
-  /**
-   * @brief Necessary before any geom. operations can be performed on the mesh.
-   *
-   * If no edges (in 2d) or triangles/quads (in 3d) are
-   * given, no normals are computed in order to avoid dividing by zero on
-   * normalization of the vertex normals.
-   *
-   * Circumcircles of edges and triangles are computed.
-   */
-  void computeState();
+  /// Computes the boundingBox for the vertices.
+  void computeBoundingBox();
 
   /**
    * @brief Removes all mesh elements and data values (does not remove data).
@@ -244,72 +164,58 @@ public:
    * - vertex
    * - edge
    * - triangle
-   * - property container
    */
   void clear();
 
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
-  VertexDistribution & getVertexDistribution();
+  VertexDistribution &getVertexDistribution();
 
-  VertexDistribution const & getVertexDistribution() const;
+  VertexDistribution const &getVertexDistribution() const;
 
-  std::vector<int>& getVertexOffsets();
+  std::vector<int> &getVertexOffsets();
 
-  const std::vector<int>& getVertexOffsets() const;
+  const std::vector<int> &getVertexOffsets() const;
 
   /// Only used for tests
-  void setVertexOffsets(std::vector<int> & vertexOffsets);
+  void setVertexOffsets(std::vector<int> &vertexOffsets);
 
   int getGlobalNumberOfVertices() const;
 
   void setGlobalNumberOfVertices(int num);
 
+  // Get the data of owned vertices for given data ID
+  Eigen::VectorXd getOwnedVertexData(int dataID);
+
+  // Tag all the vertices
+  void tagAll();
+
   /// Returns a vector of connected ranks
-  std::vector<int> & getConnectedRanks()
+  std::vector<int> &getConnectedRanks()
   {
     return _connectedRanks;
   }
-  
+
   /// Returns a mapping from remote local connected ranks to the corresponding vertex IDs
-  CommunicationMap & getCommunicationMap()
+  CommunicationMap &getCommunicationMap()
   {
     return _communicationMap;
   }
 
-  void addMesh(Mesh& deltaMesh);
+  void addMesh(Mesh &deltaMesh);
 
   /**
    * @brief Returns the bounding box of the mesh.
    *
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
-   * computeState() has to be called after setting the mesh.
    */
-  const BoundingBox getBoundingBox() const;
+  const BoundingBox &getBoundingBox() const;
 
-  /**
-   * @brief Returns the Center Of Gravity of the mesh
-   * 
-   * Returns a vector of doubles, size d, each dimension computed as
-   * cog =  (max - min) / 2 + min
-   */
-  const std::vector<double> getCOG() const;
-  
-  bool operator==(const Mesh& other) const;
-  
-  bool operator!=(const Mesh& other) const;
+  bool operator==(const Mesh &other) const;
+
+  bool operator!=(const Mesh &other) const;
 
 private:
-
-  /// Computes the normals for all primitives.
-  void computeNormals();
-
-  /// Computes the boundingBox for the vertices.
-  void computeBoundingBox();
-
   mutable logging::Logger _log{"mesh::Mesh"};
-
-  /// Provides unique IDs for all geometry objects
-  static std::unique_ptr<utils::ManageUniqueIDs> _managePropertyIDs;
 
   /// Name of the mesh.
   std::string _name;
@@ -317,28 +223,16 @@ private:
   /// Dimension of mesh.
   int _dimensions;
 
-  /// Flag for flipping normals direction.
-  bool _flipNormals;
-
-  /// Holds all mesh names and the corresponding IDs belonging to the mesh.
-  std::map<std::string,int> _nameIDPairs;
+  /// The ID of this mesh.
+  int _id;
 
   /// Holds vertices, edges, and triangles.
-  Group _content;
-
-  /// All property containers created by the mesh.
-  PropertyContainerContainer _propertyContainers;
+  VertexContainer   _vertices;
+  EdgeContainer     _edges;
+  TriangleContainer _triangles;
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;
-
-  utils::ManageUniqueIDs _manageVertexIDs;
-
-  utils::ManageUniqueIDs _manageEdgeIDs;
-
-  utils::ManageUniqueIDs _manageTriangleIDs;
-
-  utils::ManageUniqueIDs _manageQuadIDs;
 
   /**
    * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
@@ -354,7 +248,6 @@ private:
    */
   std::vector<int> _vertexOffsets;
 
-
   /**
    * @brief Number of unique vertices for complete distributed mesh.
    *
@@ -369,15 +262,15 @@ private:
   std::vector<int> _connectedRanks;
 
   /**
-   * @brief each rank stores list of connected ranks and corresponding vertex IDs here. 
+   * @brief each rank stores list of connected ranks and corresponding vertex IDs here.
    * In the m2n package, this is used to create the final communication channels.
    */
   CommunicationMap _communicationMap;
 
   BoundingBox _boundingBox;
-
 };
 
-std::ostream& operator<<(std::ostream& os, const Mesh& q);
+std::ostream &operator<<(std::ostream &os, const Mesh &q);
 
-}} // namespace precice, mesh
+} // namespace mesh
+} // namespace precice

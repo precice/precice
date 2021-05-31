@@ -1,16 +1,16 @@
 #ifndef PRECICE_NO_MPI
 
 #include "MPISinglePortsCommunicationFactory.hpp"
+#include <memory>
+#include <utility>
 
 #include "MPISinglePortsCommunication.hpp"
 #include "com/SharedPointer.hpp"
 
-namespace precice
-{
-namespace com
-{
-MPISinglePortsCommunicationFactory::MPISinglePortsCommunicationFactory(std::string const &addressDirectory)
-    : _addressDirectory(addressDirectory)
+namespace precice {
+namespace com {
+MPISinglePortsCommunicationFactory::MPISinglePortsCommunicationFactory(std::string addressDirectory)
+    : _addressDirectory(std::move(addressDirectory))
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";

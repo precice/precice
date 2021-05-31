@@ -1,18 +1,16 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 
-#include <vector>
-
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice
-{
-namespace partition
-{
+namespace precice {
+namespace partition {
 
 /**
  * @brief Abstract base class for partitions.
@@ -29,15 +27,17 @@ namespace partition
  * Access to the associated mesh, to both mappings (from and to this mesh),
  * and to an m2n communication to another participant is necessary.
  */
-class Partition
-{
+class Partition {
 public:
   /// Constructor.
   Partition(mesh::PtrMesh mesh);
 
-  Partition& operator=(Partition &&) = delete;
+  Partition &operator=(Partition &&) = delete;
 
   virtual ~Partition() {}
+
+  /// Intersections between bounding boxes around each rank are computed
+  virtual void compareBoundingBoxes() = 0;
 
   /// The mesh is communicated between both master ranks (if required)
   virtual void communicate() = 0;
@@ -45,14 +45,14 @@ public:
   /// The partition is computed, i.e. the mesh re-partitioned if required and all data structures are set up.
   virtual void compute() = 0;
 
-  void setFromMapping(mapping::PtrMapping fromMapping)
+  void addFromMapping(mapping::PtrMapping fromMapping)
   {
-    _fromMapping = fromMapping;
+    _fromMappings.push_back(std::move(fromMapping));
   }
 
-  void setToMapping(mapping::PtrMapping toMapping)
+  void addToMapping(mapping::PtrMapping toMapping)
   {
-    _toMapping = toMapping;
+    _toMappings.push_back(std::move(toMapping));
   }
 
   void addM2N(m2n::PtrM2N m2n)
@@ -63,18 +63,12 @@ public:
 protected:
   mesh::PtrMesh _mesh;
 
-  mapping::PtrMapping _fromMapping;
+  std::vector<mapping::PtrMapping> _fromMappings;
 
-  mapping::PtrMapping _toMapping;
+  std::vector<mapping::PtrMapping> _toMappings;
 
   /// m2n connection to each connected participant
   std::vector<m2n::PtrM2N> _m2ns;
-
-  /// Decides which rank owns which vertex, information stored at each rank.
-  virtual void createOwnerInformation() = 0;
-
-  /// Generate vertex offsets from the vertexDistribution, broadcast it to all slaves
-  void computeVertexOffsets();
 
 private:
   logging::Logger _log{"partition::Partition"};

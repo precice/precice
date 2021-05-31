@@ -2,14 +2,12 @@
 
 #include <memory>
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 class Acceleration;
 class AccelerationConfiguration;
 
-using PtrAcceleration     = std::shared_ptr<Acceleration>;
+using PtrAcceleration              = std::shared_ptr<Acceleration>;
 using PtrAccelerationConfiguration = std::shared_ptr<AccelerationConfiguration>;
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

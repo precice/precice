@@ -1,6 +1,8 @@
 #pragma once
 
+#include <iosfwd>
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace mapping {
@@ -8,22 +10,23 @@ namespace mapping {
 /**
  * @brief Abstract base class for mapping of data from one mesh to another.
  */
-class Mapping
-{
+class Mapping {
 public:
-
   /**
    * @brief Specifies additional constraints for a mapping.
    *
    * A consistent mapping retains mean values. When mapping displacements, e.g.
    * rigid body motions are retained. A conservative mapping retains the sum of
-   * the values. Values integrated over some area should be mapped conservative,
-   * while area independent values such as pressure or stresses should be mapped
-   * consistent.
+   * the values. The scaled-consistent mapping first map the values consistently,
+   * then scales the mapped such that the integrals on both sides of the interface
+   * are equal. Values integrated over some area should be mapped conservative or 
+   * scaled-consistent, while area independent values such as pressure or stresses 
+   * should be mapped consistent.
    */
   enum Constraint {
     CONSISTENT,
-    CONSERVATIVE
+    CONSERVATIVE,
+    SCALEDCONSISTENT
   };
 
   /**
@@ -44,9 +47,9 @@ public:
   };
 
   /// Constructor, takes mapping constraint.
-  Mapping ( Constraint constraint, int dimensions );
+  Mapping(Constraint constraint, int dimensions);
 
-  Mapping& operator=(Mapping &&) = delete;
+  Mapping &operator=(Mapping &&) = delete;
 
   /// Destructor, empty.
   virtual ~Mapping() {}
@@ -57,13 +60,13 @@ public:
    * @param[in] input Mesh with known data values to be mapped.
    * @param[in] output Mesh with unknwon data values to be computed from input.
    */
-  void setMeshes (
-    const mesh::PtrMesh& input,
-    const mesh::PtrMesh& output );
+  void setMeshes(
+      const mesh::PtrMesh &input,
+      const mesh::PtrMesh &output);
 
-  const mesh::PtrMesh& getInputMesh() const;
+  const mesh::PtrMesh &getInputMesh() const;
 
-  const mesh::PtrMesh& getOutputMesh() const;
+  const mesh::PtrMesh &getOutputMesh() const;
 
   /// Returns the constraint (consistent/conservative) of the mapping.
   Constraint getConstraint() const;
@@ -75,14 +78,17 @@ public:
   MeshRequirement getOutputRequirement() const;
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  virtual void computeMapping() =0;
+  virtual void computeMapping() = 0;
 
   /**
    * @brief Returns true, if the mapping has been computed.
    *
    * After a call to clear(), a computed mapping is removed and false returned.
    */
-  virtual bool hasComputedMapping() const =0;
+  virtual bool hasComputedMapping() const = 0;
+
+  /// Checks whether the mapping has the given constraint or not
+  virtual bool hasConstraint(const Constraint &constraint) const;
 
   /// Removes a computed mapping.
   virtual void clear() = 0;
@@ -96,9 +102,9 @@ public:
    * Post-conditions:
    * - output values are computed from input values
    */
-  virtual void map (
-    int inputDataID,
-    int outputDataID ) =0;
+  virtual void map(
+      int inputDataID,
+      int outputDataID) = 0;
 
   /// Method used by partition. Tags vertices that could be owned by this rank.
   virtual void tagMeshFirstRound() = 0;
@@ -106,9 +112,16 @@ public:
   /// Method used by partition. Tags vertices that can be filtered out.
   virtual void tagMeshSecondRound() = 0;
 
+  /**
+   * @brief Scales the consistently mapped output data such that the surface integral
+   * of the values on input mesh and output mesh are equal
+   *
+   * 
+   * @pre Input and output mesh should have full connectivity information.
+   */
+  virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
 
 protected:
-
   /// Returns pointer to input mesh.
   mesh::PtrMesh input() const;
 
@@ -116,15 +129,14 @@ protected:
   mesh::PtrMesh output() const;
 
   /// Sets the mesh requirement for the input mesh.
-  void setInputRequirement ( MeshRequirement requirement );
+  void setInputRequirement(MeshRequirement requirement);
 
   /// Sets the mesh requirement for the output mesh.
-  void setOutputRequirement ( MeshRequirement requirement );
+  void setOutputRequirement(MeshRequirement requirement);
 
   int getDimensions() const;
 
 private:
-
   /// Determines wether mapping is consistent or conservative.
   Constraint _constraint;
 
@@ -143,7 +155,6 @@ private:
   int _dimensions;
 };
 
-
 /** Defines an ordering for MeshRequirement in terms of specificality
 * @param[in] lhs the left-hand side of the binary operator
 * @param[in] rhs the right-hand side of the binary operator
@@ -154,6 +165,7 @@ bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs);
 * @param[in,out] out stream to output to.
 * @param[in] val the value to output.
 */
-std::ostream& operator<<(std::ostream& out, Mapping::MeshRequirement val);
+std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val);
 
-}} // namespace precice, mapping
+} // namespace mapping
+} // namespace precice

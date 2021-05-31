@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <data:scalar name="SourceData1" />
+  <data:scalar name="SourceData2" />
+  <data:scalar name="SourceData3" />
+  <data:scalar name="TargetData" />
+
+  <mesh name="Mesh">
+    <use-data name="SourceData1" />
+    <use-data name="SourceData2" />
+    <use-data name="SourceData3" />
+    <use-data name="TargetData" />
+  </mesh>
+
+  <action:summation timing="regular-prior" mesh="Mesh">
+    <source-data name="SourceData1" />
+    <source-data name="SourceData2" />
+    <source-data name="SourceData3" />
+
+    <target-data name="TargetData" />
+  </action:summation>
+</configuration>

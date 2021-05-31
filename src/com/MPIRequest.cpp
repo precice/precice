@@ -2,10 +2,8 @@
 
 #include "MPIRequest.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 MPIRequest::MPIRequest(MPI_Request request)
     : _request(request)
 {

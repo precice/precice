@@ -1,26 +1,23 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <ostream>
+#include <string>
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace tests
-{
+namespace precice {
+namespace cplscheme {
+namespace tests {
 class AbsoluteConvergenceMeasureTest;
 }
-}
-}
+} // namespace cplscheme
+} // namespace precice
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace impl
-{
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -32,8 +29,7 @@ namespace impl
  * For a description of how to perform the measurement, see class
  * ConvergenceMeasure.
  */
-class AbsoluteConvergenceMeasure : public ConvergenceMeasure
-{
+class AbsoluteConvergenceMeasure : public ConvergenceMeasure {
 public:
   explicit AbsoluteConvergenceMeasure(double convergenceLimit);
 
@@ -46,15 +42,10 @@ public:
 
   virtual void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification)
+      const Eigen::VectorXd &newValues)
   {
-    _normDiff      = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
+    _normDiff      = utils::MasterSlave::l2norm(newValues - oldValues);
     _isConvergence = _normDiff <= _convergenceLimit;
-    //      PRECICE_INFO("Absolute convergence measure: "
-    //                     << "two-norm differences = " << normDiff
-    //                     << ", convergence limit = " << _convergenceLimit
-    //                     << ", convergence = " << _isConvergence );
   }
 
   virtual bool isConvergence() const
@@ -82,6 +73,11 @@ public:
     return _normDiff;
   }
 
+  virtual std::string getAbbreviation() const
+  {
+    return "Abs";
+  }
+
 private:
   logging::Logger _log{"cplscheme::AbsoluteConvergenceMeasure"};
 
@@ -91,6 +87,6 @@ private:
 
   bool _isConvergence = false;
 };
-}
-}
-} // namespace precice, cplscheme, impl
+} // namespace impl
+} // namespace cplscheme
+} // namespace precice

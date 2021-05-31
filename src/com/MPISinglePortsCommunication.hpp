@@ -2,13 +2,15 @@
 #ifndef PRECICE_NO_MPI
 
 #include <map>
+#include <mpi.h>
+#include <set>
+#include <stddef.h>
+#include <string>
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 /**
  * @brief Provides connection methods based on MPI ports (part of MPI 2.0).
  *
@@ -29,10 +31,9 @@ namespace com
  *
  * If we agree, that acceptConnection / requestConnection just does 1:1 connection, we can rewrite and simplifiy the code.
 **/
-class MPISinglePortsCommunication : public MPICommunication
-{
+class MPISinglePortsCommunication : public MPICommunication {
 public:
-  explicit MPISinglePortsCommunication(std::string const &addressDirectory = ".");
+  explicit MPISinglePortsCommunication(std::string addressDirectory = ".");
 
   virtual ~MPISinglePortsCommunication();
 
@@ -40,22 +41,33 @@ public:
 
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
-                                int                acceptorRank) override;
+                                std::string const &tag,
+                                int                acceptorRank,
+                                int                rankOffset = 0) override;
 
   virtual void acceptConnectionAsServer(std::string const &acceptorName,
                                         std::string const &requesterName,
+                                        std::string const &tag,
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) override;
 
   virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName,
+                                 std::string const &tag,
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string      const &acceptorName,
-                                         std::string      const &requesterName,
-                                         std::set<int>    const &acceptorRanks,
-                                         int                     requesterRank) override;
+  virtual void requestConnectionAsClient(std::string const &  acceptorName,
+                                         std::string const &  requesterName,
+                                         std::string const &  tag,
+                                         std::set<int> const &acceptorRanks,
+                                         int                  requesterRank) override;
+
+  virtual void prepareEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) override;
+
+  virtual void cleanupEstablishment(std::string const &acceptorName,
+                                    std::string const &requesterName) override;
 
   virtual void closeConnection() override;
 
@@ -68,14 +80,34 @@ private:
 
   std::string _addressDirectory;
 
-  /// Remote rank -> communicator map
-  std::map<int, MPI_Comm> _communicators;
+  /** @brief A map of direct communication channels based on MPI_COMM_SELF on both sides
+   *
+   * These 1-1 connections are used until the has been a @ref _global communicator established.
+   *
+   * These direct connections connect MPI_COMM_SELF on both sides.
+   * The call to establish such a connection is thus not collective.
+   *
+   * These connections are required for the Master-Master and Master-Slaves connections.
+   */
+  std::map<int, MPI_Comm> _direct;
+
+  /** @brief The global inter-communicator that connects all ranks
+   *
+   * Once established, this is the default communicator for all communication.
+   *
+   * The call to establish this communicator is collective over both communicators.
+   * Thus the call to @ref requestConnectionAsClient() and @ref acceptConnectionAsServer() is the
+   * only time window where this global communicator can be established.
+   */
+  MPI_Comm _global = MPI_COMM_NULL;
+
+  /// The communicator size known from acceptConnection and requestConnection
+  int _initialCommSize = -1;
 
   /// Name of the port used for connection.
   std::string _portName = std::string(MPI_MAX_PORT_NAME, '\0');
 
   bool _isAcceptor = false;
-
 };
 } // namespace com
 } // namespace precice

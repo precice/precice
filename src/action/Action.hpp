@@ -1,12 +1,10 @@
 #pragma once
 
-#include "mesh/SharedPointer.hpp"
 #include "mapping/Mapping.hpp"
+#include "mesh/SharedPointer.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 /**
  * @brief Abstract base class for configurable actions on data and/or meshes.
@@ -15,21 +13,20 @@ namespace action
  * precice::SolverInterface::initializeData(), and precice::SolverInterface::advance(). They can change meshes and in particular
  * data values.
  */
-class Action
-{
+class Action {
 public:
   /// Defines the time and place of application of the action.
   enum Timing {
-    ALWAYS_PRIOR,             // Everytime, before advancing cpl scheme
-    ALWAYS_POST,              // Everytime, after advancing cpl scheme
-    ON_EXCHANGE_PRIOR,        // On data exchange, before advancing cpl scheme
-    ON_EXCHANGE_POST,         // On data exchange, after advancing cpl scheme
-    ON_TIMESTEP_COMPLETE_POST // On advancing to next dt, after adv. cpl scheme
+    ON_TIME_WINDOW_COMPLETE_POST, // On advancing to next time window, after adv. cpl scheme
+    WRITE_MAPPING_PRIOR,          // Everytime, before write mapping
+    WRITE_MAPPING_POST,           // Everytime, after write mapping and before advancing cpl scheme
+    READ_MAPPING_PRIOR,           // Everytime, after advancing cpl scheme and before read mapping
+    READ_MAPPING_POST             // Everytime, after read mapping
   };
 
   Action(
-      Timing               timing,
-      const mesh::PtrMesh &mesh,
+      Timing                            timing,
+      const mesh::PtrMesh &             mesh,
       mapping::Mapping::MeshRequirement requirement)
       : _timing(timing),
         _mesh(mesh),
@@ -39,14 +36,13 @@ public:
 
   Action(
       Timing               timing,
-      const mesh::PtrMesh &mesh
-      )
+      const mesh::PtrMesh &mesh)
       : _timing(timing),
         _mesh(mesh)
   {
   }
 
-  Action& operator=(Action &&) = delete;
+  Action &operator=(Action &&) = delete;
 
   /// Destructor, empty.
   virtual ~Action() {}
@@ -54,16 +50,16 @@ public:
   /**
     * @brief Performs the action, to be overwritten by subclasses.
     *
-    * @param[in] time the current total simulation time. 
-    * @param[in] dt Length of last local timestep computed.
-    * @param[in] computedPartFullDt Sum of all local timesteps of current global timestep.
-    * @param fullDt[in] Current global timestep length.
+    * @param[in] time the current total simulation time.
+    * @param[in] timeStepSize Length of last time step computed.
+    * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
+    * @param[in] timeWindowSize Current time window size.
     */
   virtual void performAction(
       double time,
-      double dt,
-      double computedPartFullDt,
-      double fullDt) = 0;
+      double timeStepSize,
+      double computedTimeWindowPart,
+      double timeWindowSize) = 0;
 
   /// Returns the timing of the action.
   Timing getTiming() const

@@ -4,7 +4,7 @@
 
 # For Adapter Developers
 
-Please refer to the github wiki and the documentation of the \ref precice::SolverInterface SolverInterface.
+Please refer to the documentation on precice.org and to the documentation of the \ref precice::SolverInterface SolverInterface.
 
 # For Library Developers
 
@@ -16,10 +16,10 @@ Please refer to the github wiki and the documentation of the \ref precice::Solve
 - \ref tooling
 - \ref releases
 
-The directory `src` contains the sources of preCICE. The library API of preCICE
-is contained in the directory $precice$, which brings together the functionalities
-contained in the other components of preCICE. Every component has its own
-directory and namespace.
+The directory \ref src contains the sources of preCICE.
+Every component has its own directory and namespace. The namespaces of internal components are all rooted in the project namespace \ref precice.
+The library API of preCICE is contained in the directory and namespace \ref precice, which brings together the functionalities of all components.
+
 The following components currently exist:
 
 - \ref precice::acceleration "acceleration" provides various acceleration schemes.
@@ -44,6 +44,5 @@ The components of preCICE have some common subdirectory/namespace structure. Som
 - ```tests``` holds classes for automated testing of the corresponding component.
 - ```config``` provides functionality to configure the classes of a component from xml files.
 - ```impl``` contains implementation of a component which is not part of its interface and used only internally.
-
 
 */

@@ -1,0 +1,15 @@
+#! /bin/bash
+# This tool formats the entire project using the precice/ci-formatting dockerimage.
+# The dockerimage contains the required versions of the formatting tools.
+# This tool thus only requires a functioning docker installation.
+
+PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." >/dev/null 2>&1 && pwd )"
+if [[ -f "$PROJECT_ROOT/CMakeLists.txt" && -f "$PROJECT_ROOT/.clang-format" ]]; then
+  echo "Assuming project root: $PROJECT_ROOT"
+  docker run --rm -i -v $PROJECT_ROOT:/repo -w /repo precice/ci-formatting:latest tools/formatting/format-all
+  exit $?
+else
+  echo "ERROR: Could not find the root of the project."
+  echo "       We assumed: $PROJECT_ROOT"
+  exit 1
+fi

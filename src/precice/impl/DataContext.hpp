@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "MappingContext.hpp"
 #include "mesh/SharedPointer.hpp"
 
@@ -10,9 +11,10 @@ namespace impl {
  * @brief Stores one Data object with related context. If this dataContext is not associated with a mapping,
  * fromData and toData refer to the same data object.
  */
-struct DataContext
-{
+struct DataContext {
   bool used = false;
+
+  std::string getName() const;
 
   mesh::PtrData fromData;
 
@@ -23,4 +25,5 @@ struct DataContext
   MappingContext mappingContext;
 };
 
-}} // namespace precice, impl
+} // namespace impl
+} // namespace precice

@@ -1,10 +1,185 @@
 # preCICE Change Log
 
-All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://github.com/precice/precice/wiki/Roadmap).
+All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
-## develop
+## 2.2.1
 
-- drop official python2 support for python bindings ([remove tests](https://github.com/precice/systemtests/commit/dba924447996574967b2295cf652fb32bec58020)).
+- Fixed a bug leading to a freeze when using `sync-mode` with lazy indexing.
+- Fixed empty received partitions for filtering on slaves.
+- Fixed gather-scatter communication deadlock with empty master ranks.
+
+## 2.2.0
+
+- Added a file sink to the test runner, which additionally writes the test log output to the file `test.log`.
+- Added a verbose log file `test.debug.log` to tests. Submitting this file alongside bug reports will significantly simplify debugging the tests.
+- Added check for user-defined python actions.
+- Added check to ensure `advance()` isn't called with invalid timestep size.
+- Added error message for incorrectly configured acceleration data in a serial implicit coupling scheme.
+- Added missing documentation to XML tags and attributes.
+- Added support for `BUILD_TESTING`, which may be used to disable the compilation and execution of the tests.
+- Added support for escaped characters in XML.
+- Added the build configuration (Release/Debug) to the preCICE startup statement and inform the user when `Debug` an `Trace` logs are not available.
+- Added watch-integral functionality to, for instance, compute total force, total stress, or flow rate at coupling mesh.
+- Changed an error to a warning when all sub-vectors of the residual-sum preconditioner are numerically zero.
+- Changed the CMake FindPETSc module to a robust wrapper based on pkg-config. The new method is more robust and simplifies the compilation of preCICE in e.g. SLURM jobs.
+- Changed the log format for tests. They now contain the participant name and are `|`-separated.
+- Clarified the wording of errors messages in data access functions. They now refer to vertex IDs instead of indices.
+- Deprecated API method `getMeshIDs`. Call `getMeshID` for specific mesh names instead. This method will be removed in a future release.
+- Extended configuration and repartitioning to allow the user to define multiple mappings from and/or to the same mesh.
+- Fixed MacOS compilation and test errors.
+- Fixed a bug in ReceivedPartition which led to problems when coupling multiple participants.
+- Fixed a bug in the configuration of Aitken underrelexation.
+- Fixed an issue when running the tests with Intel MPI.
+- Fixed an occasional issue solving the system matrix in PETSc-based RBF mappings.
+- Fixed boost log_level issues on MacOS.
+- Fixed compilation error emitted by intel compilers.
+- Fixed cryptic assertion for forgetting the max-iterations tag. Now max-iterations is enforced in the configuration. 
+- Fixed indexing bug in solverdummies.
+- Fixed input checks for data access functions.
+- Fixed interleaved assertion output.
+- Fixed parameter type of operator"" in TestContext, which was a system-dependant error.
+- Fixed parsing error on systems without locales installed. This fixes issues when running preCICE in minimal docker containers.
+- Fixed syntax of the Fortran function `precicef_get_mesh_vertex_size_`, which lead to incorrect name de-mangling.
+- Fixed the data type and precision in exported VTK files.
+- Fixed two wrong assertions in QR factorization, which did not allow meshes with only a single partition. 
+- Improved checks of configuration related to data access.
+- Improved compiler compatibility of assertion.
+- Improved the error message for not exchanging data over the same mesh used for convergence measures.
+- Increased the minimum required C++ version from 11 to 14. This was triggered by `Boost.Geometry` increasing their minimum version to C++14 in Boost `1.75`.
+- Removed obsolete `trigger-solver-plot` config option.
+
+## 2.1.1
+
+- Fixed a compilation error emitted by intel compilers when compiling tests.
+- Fixed an error message for unique acceleration subtags.
+- Fixed parsing error on systems without locales installed. This fixes issues when running preCICE in minimal docker containers.
+- Fixed preCICE erroneously expects cyclic communicator for IMVJ with restart.
+- Fixed system-dependent compilation error when compiling tests.
+- Updated the PKGBUILD for the Arch Linux User Repository to be compatible with preCICE v2.
+
+## 2.1.0
+
+- Added MPI version detection and print it during the CMake configuration.
+- Added a new action to sum up data values, `action:summation`.
+- Added check for only allowing watchpoints on a provided meshes.
+- Added check for the coordinates of configured watchpoints. They have to match the dimensionality of the `<solver-interface>`.
+- Added check to prevent `<use-mesh>` from the same participant.
+- Added control flow checks to C bingings.
+- Added many tests for the communication abstraction.
+- Added option to make a convergence measure strict. It has to converge then and leads to a premature simulation stop if not. 
+- Added parallel support for Eigen RBF mapping.
+- Added platform-specific defaults of the loopback interface name to the `network` attribute of socket connections.
+- Added reset of written data 0 in `advance()` to simplify detection of missing write data calls.
+- Added several checks to prevent that false API usage leads to complicated quasi-Newton assertions.
+- Added support for planar quads based on triangulation, needed, for instance for nearest-projection mapping. Quads will be split along the shortest diagonal to minimize the mapping error. Note that this triangulation will be visible in configured mesh exports.
+- Added tests which build solverdummies and tests which run them in various configurations.
+- Added tooling to prevent changelog conflicts.
+- Added warning when configuring m2n as mpi when preCICE is compiled with OpenMPI. This is known to cause connection issues.
+- Allowed multiple convergence measures of same coupling data.
+- Changed `com::MPIDirectcommunication` to work only for Master-Slave connections.
+- Changed test setup to a simpler and consistent version using the new `testing::TestContext`. Tests now require to run on 4 MPI ranks. They will still compile but not run when `MPICommunication=OFF`.
+- Changed the CMake FindNumPy module to only consider information based on the selected python interpreter.
+- Changed the minimum required PETSc version to 3.12, which delivers consistent results across platforms.
+- Disabled tests based on MPIPorts and MPISinglePorts when using Open MPI.
+- Enabled RBF-based tests in partiton unit-tests and serial integration tests.
+- Extended iteration logging by total and dropped quasi-Newton columns. 
+- Extended title headers of convergence and iteration files by measure abbreviation.
+- Fixed MPIPorts and MPISinglePorts not always closing ports.
+- Fixed SocketCommunication setting up a port and writing connection info even if there are no requesters.
+- Fixed compatibility with Boost 1.73.0.
+- Fixed memory leaks and hanging communication when not calling `precice::SolverInterface::finalize()`.
+- Fixed memory leaks in C bindings.
+- Fixed memory leaks in Fortran bindings in case of missing call to`X_finalize()`.
+- Fixed memory leaks when using petrbf mappings in some conditions.
+- Fixed occasional errors when using PETRBF with a preCICE-managed MPI Communicator.
+- Fixed over-subscription error when executing the tests with recent versions of Open MPI on less than 4 physical cores.
+- Fixed silent truncation of numeric values in the config with C locales using decimal comma. The parser now always uses the locale `en_US.UTF-8`.
+- Fixed target `test_install` requiring CMake version 1.13.
+- Fixed value semantics of `precice::SolverInterface`.
+- Improved **all** error messages.
+- Improved readability of relative convergence measure INFO logs.
+- Refactored `com::Communication` handling of rank adjustments.
+- Refactored `cplscheme::BaseCouplingScheme` and derived classes. Introduce `cplscheme::BiCouplingScheme`.
+- Refactored `mesh::BoundingBox` into seperate class.
+- Removed `m2n:mpi-single`, which never worked outside tests.
+- Removed convergence file logging for min-iterations convergence measure.
+- Removed deprecated and untested Manifold Mapping. API functions `hasToEvaluateSurrogateModel` and `hasToEvaluateFineModel` remain as nop stubs.
+- Removed logging of average convergence rates.
+- Removed support for `CPP` and `CPPFLAGS` environment variables.
+- Renamed a few functions of the Fortran bindings for consistency with the C++ API. This does not break backwards compatibility, but the previous functions are now considered deprecated and will be removed in v3.
+- Removes the summary of event timing when preCICE finalizes and writes it to the file `precice-PARTICIPANT-events-summary.log` instead.
+- Restricted the configuration of WatchPoints to provided meshes.
+- Split multi-setup integration tests into multiple single-setup tests.
+
+## 2.0.2
+
+- Fixed a critical bug in the testing framework.
+- Fixed a critical bug in the partitioning for geometric filter set to `on-master` in `<use-mesh>` tags. The default configuration is `on-slave`.
+
+## 2.0.1
+
+- Fixed broken pkg-config file in some cases due to CMake `GNUInstallDirs`.
+- Fixed system-dependent error when displaying mapping distance information for empty partitions.
+- Improved RBF error messages by clarifying them and giving a hint to the user on what to do next.
+
+## 2.0.0
+
+- Added CMake build type fallback to `Debug` in case it wasn't provided.
+- Added CMake check for C++11 library conformance. This is especially helpful when using Intel Compilers.
+- Added CMake options to enable native bindings `PRECICE_ENABLE_C`, `PRECICE_ENABLE_FORTRAN` (on by default).
+- Added `examples/` to installation and package
+- Added a generator for markdown references `binprecice md`.
+- Added caching to the CMake library validation
+- Added directional directory level for file-based connection exchange. For each connection, there is now a directory in `precice-run` of the form `Accepter-Requestor`.
+- Added distance statistics of nearest-neighbour and nearest-projection mappings between mesh pairs as debug output.
+- Added grouped tests by module to CTest.
+- Added information to the log of the first written Data values.
+- Added log statements to the connection information file writers and listeners including full paths.
+- Added step to remove the connection directories after connecting the slaves. `precice-run` will be empty after a successful run.
+- Added support for python 3 in python actions.
+- Added the mesh name to the information used to generate connection information files, which is required for the two-level initialization.
+- Changed CMake to always validate dependencies. Set `PRECICE_ALWAYS_VALIDATE_LIBS=NO` to disable this behaviour.
+- Changed the internal handling of meshes by removing sub-meshes, the type hierarchy based on `mesh::PropertyContainer`, and the obsolete `mesh::Group` and `mesh::Merge`. This improves memory consumption, dramatically reduces allocations and improves locality when traversing primitives.
+- Changed unit tests to run only on MPI Rank 0.
+- Completely removed server mode. Now, the only supported parallelization concept is the peer-to-peer master-slave mode.
+- Disabled the installation of the test binary and files by default.
+- Dropped official python2 support for python bindings ([remove tests](https://github.com/precice/systemtests/commit/dba924447996574967b2295cf652fb32bec58020)).
+- Removed all experimental python bindings [`precice`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/python), [`precice-future`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/python-future), [`PySolverInterface`](https://github.com/precice/precice/tree/v1.6.1/src/precice/bindings/PySolverInterface).
+- Fixed a bug in the XML parser which did not correctly checked tag occurrence.
+- Fixed a bug in the XML parser which lead to ignored error messages from `libxml2`.
+- Fixed the Debian package generation by using `GNUInstallDirs`, providing a correct `changelog` and `SOVERSION`, as well as generating a package name including the `SOVERSION`.
+- Improved efficiency of nearest projection mapping of matching meshes using lazy generation of index trees.
+- Introduced preCICE-MATLAB bindings (https://github.com/precice/precice/pull/494, https://github.com/precice/precice/pull/580) and provided them in [`precice/matlab-bindings`](https://github.com/precice/matlab-bindings).
+- Merged the `SolverInterface::configure()` into the `SolverInterface` constructors. They now have a second parameter for the configuration file.
+- Moved Fortan 2003 bindings (`src/precice/bindings/f2003`) and solverdummy (`tools/solverdummy/f2003`) to a separate repository.
+- Refactored and made two-level initialization configurable through `"use-two-level-init"` in `m2n`.
+- Refactored the XML documentation generation out of the `xml::XMLAttribute` and `xml::XMLTag` classes into `xml/Printer.[c/h]pp`.
+- Released finalized version of python bindings in independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings). Package is named [`pyprecice`](https://github.com/precice/python-bindings/blob/3b9aec6c529814e6904a6a4697cf92388d4c4bf0/setup.py#L18) and supports the preCICE version >= 2.0.0.
+- Removed `MeshHandle` from API and replace use in integration tests by `SolverInterfaceImpl::mesh()`.
+- Removed an unnecessary assertion in `getMeshVertexIDsFromPositions()`.
+- Removed deprecated SCons.
+- Removed deprecated `HierarchicalAitkenAcceleration`.
+- Removed deprecated `ModifyCoordinatesAction`.
+- Removed deprecated voxel queries in `src/query/`.
+- Removed packaging files specific to Ubuntu 18.04 as it is covered by CPack.
+- Renamed CMake variables `MPI`, `PETSC`, `PYTHON` to `PRECICE_MPICommunication`, `PRECICE_PETScMapping`, `PRECICE_PythonActions`
+- Replaced geometric filter option "filter-first" and "broadcast-filter" by "on-master" and "on-slaves", respectively, to generalize to two-level initialization.
+- Restructured tools and bindings:
+  - Moved developer tools to `tools/`.
+  - Moved user tools to `extras/`.
+  - Moved native bindings to `extras/bindings/`.
+- Simplify parallel configuration:
+  - Automatically add `master:mpi-single` for parallel participant if necessary.
+  - No longer require `gather-scatter` distribution type for a `m2n` with at least one serial participant.
+  - Automatically choose suitable RBF implementation based on whether preCICE was built with PETSc and whether the participant is serial or parallel.
+- Sorted out the different meaning of timestep and time window:
+  - Renamed API function `isTimestepComplete` to `isTimeWindowComplete`.
+  - Renamed C bindings function `precicec_isCouplingTimestepComplete` to `precicec_isTimeWindowComplete`.
+  - Renamed `cplscheme` configuration option `timestep-length` to `time-window-size`.
+  - Renamed `cplscheme` configuration option `max-timesteps` to `max-time-windows`.
+  - Renamed `acceleration` configuration option `timesteps-reused` to `time-windows-reused`.
+  - Renamed `acceleration` configuration option `reused-timesteps-at-restart` to `reused-time-windows-at-restart`.
+  - Renamed `export` configuration option `timestep-interval` to `every-n-time-windows`.
 
 ## 1.6.1
 
@@ -94,7 +269,7 @@ All notable changes to this project will be documented in this file. For future 
 
 ## 1.4.1
 
-- Bug in re-partitioning fixed, occured for OpenFOAM and empty ranks in parallel. 
+- Bug in re-partitioning fixed, occured for OpenFOAM and empty ranks in parallel.
 
 ## 1.4.0
 - The python modules are now proper packages tracking dependencies etc.
@@ -151,8 +326,8 @@ All notable changes to this project will be documented in this file. For future 
 - Make naming of log files consistent, following the pattern `precice-SOLVERNAME-logtype.log`, example: `precice-FLUID-eventTimings.log`
 - Enable boost.geometry based preallocation. Speeds up initialization of PetRBF based mapping.
 - Actions can now specify a `MeshRequirement`, such as the `ScaleByAreaAction`.
-- Many events have been reworked and are now uniformly named. 
-- There is a `syncMode` for events (for detailed performance measurements), configurable and off by default. 
+- Many events have been reworked and are now uniformly named.
+- There is a `syncMode` for events (for detailed performance measurements), configurable and off by default.
 
 ## 1.2.0
 - Make `polynomial=separate` the default setting for PetRBF.

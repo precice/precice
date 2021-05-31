@@ -8,30 +8,30 @@
 
 #ifndef PRECICE_NO_MPI
 
+#include <Eigen/Core>
 #include <Eigen/Dense>
 #include <fstream>
-
-#include "logging/Logger.hpp"
+#include <memory>
+#include <string>
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
+#include "logging/Logger.hpp"
+#include "utils/assertion.hpp"
 
 // ------- CLASS DEFINITION
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 /**
  * @brief Class that provides functionality to maintain a SVD decomposition of a matrix
  * via succesive rank-1 updates and truncation with respect to the truncation threshold eps.
  */
-class SVDFactorization
-{
+class SVDFactorization {
 public:
   // Eigen
   typedef Eigen::MatrixXd Matrix;
@@ -170,7 +170,7 @@ public:
     _psi.conservativeResize(_rows, _cols);
     _phi.conservativeResize(_rows, _cols);
     _sigma.conservativeResize(_cols);
-    PRECICE_DEBUG("SVD factorization of Jacobian is truncated to " << _cols << " DOFs. Cut off " << waste << " DOFs");
+    PRECICE_DEBUG("SVD factorization of Jacobian is truncated to {} DOFs. Cut off {} DOFs", _cols, waste);
 
     _initialSVD = true;
   }
@@ -299,6 +299,8 @@ private:
   bool          _fstream_set = false;
 };
 
-}}} // namespace precice, acceleration, impl
+} // namespace impl
+} // namespace acceleration
+} // namespace precice
 
 #endif /* PRECICE_NO_MPI */

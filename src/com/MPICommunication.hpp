@@ -3,28 +3,28 @@
 #pragma once
 
 #include <mpi.h>
-#include "com/Communication.hpp"
-#include "logging/Logger.hpp"
+#include <string>
 #include <vector>
+#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
+#include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 /**
  * @brief Provides implementation for basic MPI point-to-point communication.
  *
  * The methods for establishing a connection between two coupling participants
  * are not implemented and left to subclasses.
  */
-class MPICommunication : public Communication
-{
+class MPICommunication : public Communication {
 public:
   MPICommunication();
 
   /// Destructor, empty.
   virtual ~MPICommunication()
-  {}
+  {
+  }
 
   /**
    * @brief Sends a std::string to process with given rank.
@@ -45,8 +45,8 @@ public:
   /// Asynchronously sends an array of double values.
   virtual PtrRequest aSend(const double *itemsToSend, int size, int rankReceiver) override;
 
-  virtual PtrRequest aSend(std::vector<double> const & itemsToSend, int rankReceiver) override;
-  
+  virtual PtrRequest aSend(std::vector<double> const &itemsToSend, int rankReceiver) override;
+
   /**
    * @brief Sends a double to process with given rank.
    *
@@ -55,7 +55,7 @@ public:
   virtual void send(double itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(const double& itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const double &itemToSend, int rankReceiver) override;
 
   /**
    * @brief Sends an int to process with given rank.
@@ -65,7 +65,7 @@ public:
   virtual void send(int itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(const int& itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const int &itemToSend, int rankReceiver) override;
 
   /**
    * @brief Sends a bool to process with given rank.
@@ -75,7 +75,7 @@ public:
   virtual void send(bool itemToSend, int rankReceiver) override;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(const bool& itemToSend, int rankReceiver) override;
+  virtual PtrRequest aSend(const bool &itemToSend, int rankReceiver) override;
 
   /**
    * @brief Receives a std::string from process with given rank.
@@ -95,8 +95,8 @@ public:
                               int     size,
                               int     rankSender) override;
 
-  virtual PtrRequest aReceive(std::vector<double> & itemsToReceive, int rankSender) override;
-  
+  virtual PtrRequest aReceive(std::vector<double> &itemsToReceive, int rankSender) override;
+
   /**
    * @brief Receives a double from process with given rank.
    *
@@ -132,7 +132,6 @@ public:
 
   void send(std::vector<double> const &v, int rankReceiver) override;
   void receive(std::vector<double> &v, int rankSender) override;
-
 
 protected:
   /// Returns the communicator.

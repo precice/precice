@@ -1,0 +1,47 @@
+name: coverity-scan
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * SAT'
+
+jobs:
+  latest:
+    runs-on: ubuntu-latest
+    container: 'precice/ci-ubuntu-2004:latest'
+    steps:
+      - name: Download Coverity Build Tool
+        run: |
+          wget -q https://scan.coverity.com/download/linux64 --post-data "token=$TOKEN&project=precice%2Fprecice" -O coverity_tool.tgz
+          mkdir coverity
+          tar xzf coverity_tool.tgz --strip 1 -C coverity
+        env:
+          TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+
+      - name: Checkout preCICE
+        uses: actions/checkout@v2
+        with:
+          path: 'precice'
+
+      - name: Configure build
+        run:  |
+          mkdir build && cd build
+          cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug ../precice
+
+      - name: Build with cov-build
+        run: '../coverity/bin/cov-build --dir cov-int make'
+        working-directory: build
+
+      - name: Submit the result to Coverity Scan
+        run: |
+          tar czvf precice.tgz cov-int
+          curl \
+            --form token=$TOKEN \
+            --form email=$EMAIL \
+            --form file=@precice.tgz \
+            --form version="develop" \
+            --form description="Nightly Coverity Scan of preCICE" \
+            https://scan.coverity.com/builds?project=precice%2Fprecice
+        working-directory: build
+        env:
+          TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+          EMAIL: ${{ secrets.COVERITY_SUBMITTER_EMAIL }}

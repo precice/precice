@@ -1,41 +1,42 @@
 #pragma once
 
+#include <string>
+#include <vector>
+#include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
 #include "xml/XMLTag.hpp"
-#include "logging/Logger.hpp"
-#include <vector>
-#include <string>
 
 namespace precice {
 namespace mesh {
 
 /// Performs and provides configuration for Data objects from XML files.
-class DataConfiguration : public xml::XMLTag::Listener
-{
+class DataConfiguration : public xml::XMLTag::Listener {
 public:
-
-  struct ConfiguredData
-  {
+  struct ConfiguredData {
     std::string name;
-    int dimensions;
+    int         dimensions;
 
-    ConfiguredData (
-      const std::string& name,
-      int                dimensions )
-    : name(name), dimensions(dimensions) {}
+    ConfiguredData(
+        const std::string &name,
+        int                dimensions)
+        : name(name), dimensions(dimensions) {}
   };
 
-  DataConfiguration ( xml::XMLTag& parent );
+  DataConfiguration(xml::XMLTag &parent);
 
-  void setDimensions ( int dimensions );
+  void setDimensions(int dimensions);
 
-  const std::vector<ConfiguredData>& data() const;
+  const std::vector<ConfiguredData> &data() const;
 
   ConfiguredData getRecentlyConfiguredData() const;
 
-  virtual void xmlTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlTagCallback(
+      const xml::ConfigurationContext &context,
+      xml::XMLTag &                    callingTag);
 
-  virtual void xmlEndTagCallback ( xml::XMLTag& callingTag );
+  virtual void xmlEndTagCallback(
+      const xml::ConfigurationContext &context,
+      xml::XMLTag &                    callingTag);
 
   /**
    * @brief Adds data manually.
@@ -43,18 +44,17 @@ public:
    * @param[in] name Unqiue name of the data.
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    */
-  void addData (
-    const std::string& name,
-    int                dataDimensions );
+  void addData(
+      const std::string &name,
+      int                dataDimensions);
 
   //int getDimensions() const;
 
 private:
-  
   mutable logging::Logger _log{"mesh::DataConfiguration"};
 
-  const std::string TAG = "data";
-  const std::string ATTR_NAME = "name";
+  const std::string TAG          = "data";
+  const std::string ATTR_NAME    = "name";
   const std::string VALUE_VECTOR = "vector";
   const std::string VALUE_SCALAR = "scalar";
 
@@ -65,7 +65,8 @@ private:
 
   int _indexLastConfigured = -1;
 
-  int getDataDimensions(const std::string& typeName) const;
+  int getDataDimensions(const std::string &typeName) const;
 };
 
-}} // namespace precice, mesh
+} // namespace mesh
+} // namespace precice

@@ -1,13 +1,15 @@
 #pragma once
 
+#include <stddef.h>
+#include <string>
+#include <vector>
 #include "DistributedCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace m2n {
 
 /**
  * @brief Implements DistributedCommunication by using a gathering/scattering methodology.
@@ -15,8 +17,7 @@ namespace m2n
  * between slaves is used.
  * For more details see m2n/DistributedCommunication.hpp
  */
-class GatherScatterCommunication : public DistributedCommunication
-{
+class GatherScatterCommunication : public DistributedCommunication {
 public:
   GatherScatterCommunication(
       com::PtrCommunication com,
@@ -53,31 +54,26 @@ public:
    */
   void requestConnection(
       const std::string &acceptorName,
-      const std::string &requesterName);
-  /** 
-   *  This method has not been implemented yet.    
+      const std::string &requesterName) override;
+  /**
+   *  This method has not been implemented yet.
    *  @todo: Ideally this should not be here
    */
-  virtual void acceptPreConnection(
-    std::string const &acceptorName,
-    std::string const &requesterName);
+  void acceptPreConnection(
+      std::string const &acceptorName,
+      std::string const &requesterName) override;
 
-  /** 
-   *  This method has not been implemented yet.    
+  /**
+   *  This method has not been implemented yet.
    *  @todo: Ideally this should not be here
    */
-  virtual void requestPreConnection(
-    std::string const &acceptorName,
-    std::string const &requesterName);
+  void requestPreConnection(
+      std::string const &acceptorName,
+      std::string const &requesterName) override;
 
-  /*
-   * @brief This function must be called by both acceptor and requester to update 
-   *        the vertex list in _mappings
-   *
-   * @todo: Ideally this should not be here
-   */
-  virtual void updateVertexList() override;
-  
+  /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
+  void completeSlavesConnection() override;
+
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
@@ -88,8 +84,8 @@ public:
   /// Sends an array of double values from all slaves (different for each slave).
   void send(
       double const *itemsToSend,
-      size_t  size,
-      int     valueDimension) override;
+      size_t        size,
+      int           valueDimension) override;
 
   /// All slaves receive an array of doubles (different for each slave).
   void receive(
@@ -97,46 +93,26 @@ public:
       size_t  size,
       int     valueDimension) override;
 
-   /**
-   * @brief Broadcasts an int to connected ranks
-   *
-   * @todo: Ideally this should not be here
-   */
+  /// Broadcasts an int to connected ranks on remote participant. Not available for GatherScatterCommunication.
   void broadcastSend(const int &itemToSend) override;
 
   /**
-   * @brief Receives an int per connected rank on remote participant
-   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order    
-   *
-   * @todo: Ideally this should not be here
+   * @brief Receives an int per connected rank on remote participant. Not available for GatherScatterCommunication.
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order
    */
   void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
 
-  /**
-   * @brief All ranks send their mesh partition to remote local  connected ranks.
-   *
-   * @todo: Ideally this should not be here
-   */
+  /// Broadcasts a mesh to connected ranks on remote participant. Not available for GatherScatterCommunication.
   void broadcastSendMesh() override;
-  
-  /**
-   * @brief All ranks receive mesh partitions from remote local ranks.
-   *
-   * @todo: Ideally this should not be here
-   */
-  void broadcastReceiveMesh() override;
 
-  /**
-   *  All ranks Send their local communication map to connected ranks
-   */
-  void broadcastSendLCM(
-    CommunicationMap &localCommunicationMap) override;
+  /// Receive mesh partitions per connected rank on remote participant. Not available for GatherScatterCommunication.
+  void broadcastReceiveAllMesh() override;
 
-  /*
-   *  Each rank revives local communication maps from connected ranks
-   */
-  void broadcastReceiveLCM(
-    CommunicationMap &localCommunicationMap) override;
+  /// Scatters a communication map over connected ranks on remote participant. Not available for GatherScatterCommunication.
+  void scatterAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
+
+  /// Gathers a communication maps from connected ranks on remote participant. Not available for GatherScatterCommunication.
+  void gatherAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};

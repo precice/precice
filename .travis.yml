@@ -14,10 +14,10 @@ addons:
       - g++-6
       - libopenmpi-dev
       - openmpi-bin
-      - python-numpy
+      - python3-dev
+      - python3-numpy
       - libblas-dev
       - liblapack-dev
-      - lcov
 
 env:
   global:
@@ -32,60 +32,13 @@ env:
     - LIBRARY_PATH="$PETSC_DIR/$PETSC_ARCH/lib:$LOCAL_INSTALL/lib:$LIBRARY_PATH"
     - PYTHONPATH="$PETSC_DIR/$PETSC_ARCH/lib:/usr/lib/python2.7:/usr/lib/python2.7/dist-packages:/usr/lib/python2.7/plat-x86_64-linux-gnu"
     - BOOST_ROOT=${LOCAL_INSTALL}
-    - BUILD_TYPE=CMAKE
     - CXXFLAGS="-Wall -Wextra -Wno-unused-parameter"
+    - BOOST_TEST_LOG_LEVEL=test_suite
 
   matrix:
     - MPI=on PETSC=on
     - MPI=on PETSC=off
     - MPI=off PETSC=off
-
-matrix:
-  include:
-
-      # testing builds on scons
-    - if: type = cron or branch = master
-      compiler: gcc
-      env: BUILD_TYPE=SCONS MPI=on PETSC=on
-    - if: type = cron or branch = master
-      compiler: gcc
-      env: BUILD_TYPE=SCONS MPI=on PETSC=off
-    - if: type = cron or branch = master
-      compiler: gcc
-      env: BUILD_TYPE=SCONS MPI=off PETSC=off
-    - if: type = cron or branch = master
-      compiler: clang
-      env: BUILD_TYPE=SCONS MPI=on PETSC=on
-    - if: type = cron or branch = master
-      compiler: clang
-      env: BUILD_TYPE=SCONS MPI=on PETSC=off
-    - if: type = cron or branch = master
-      compiler: clang
-      env: BUILD_TYPE=SCONS MPI=off PETSC=off
-
-    # Test coverage
-    - name: "Test Coverage"
-      compiler: gcc
-      script:
-        - $TRAVIS_BUILD_DIR/tools/travis-coverage.sh
-      after_success:
-        - lcov --capture --directory "$TRAVIS_BUILD_DIR/build" --output-file coverage.info
-        - lcov --remove coverage.info '/usr/*' "$LOCAL_INSTALL/*" --output-file coverage.info # filter system-files and local-dependencies
-        - lcov --list coverage.info # debug info
-        - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
-
-    # Test Bindings
-    - name: "Mock Test Python Bindings"
-      cache: false
-      before_install:
-        - pyenv global $(pyenv whence 2to3)  # activate all python versions
-        - PYTHONPATH=""
-        - PY_CMD=python3
-        - $PY_CMD -m pip install --user --upgrade pip wheel setuptools
-      install:
-        - pip3 install --user cython numpy mpi4py
-      script:
-        - $TRAVIS_BUILD_DIR/tools/travis-bindings-test.sh
 
 cache:
   ccache: true
@@ -96,21 +49,22 @@ before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-6" && export CC="gcc-6" && export CXXFLAGS="$CXXFLAGS -Wno-literal-suffix"; fi
   - export OMPI_CXX=$CXX
   - if [ "$MPI" = "on" ]; then export CXX="mpicxx"; fi
-  - pyenv global $(pyenv whence 2to3)  # activate all python versions
+  - pyenv versions
+  - pyenv global 3.6.3
   - PYTHONPATH=""  # if PYTHONPATH is set, Travis errors
   - PY_CMD=python3  # set PY_CMD
   - $PY_CMD -m pip install --user --upgrade pip wheel setuptools # install python dependencies
 
 install:
-  - $TRAVIS_BUILD_DIR/tools/travis-install-dependencies.sh $LOCAL_INSTALL
-  - pip3 install --user cython numpy mpi4py
+  - $TRAVIS_BUILD_DIR/tools/ci/travis-install-dependencies.sh $LOCAL_INSTALL
+  - pip3 install --user cython numpy mpi4py packaging
   - export PATH=${LOCAL_INSTALL}/cmake/bin:${LOCAL_INSTALL}/bin:${PATH}
 
 before_script:
   - mkdir $TRAVIS_BUILD_DIR/tests
 
 script:
-  - $TRAVIS_BUILD_DIR/tools/travis-build-test.sh
+  - $TRAVIS_BUILD_DIR/tools/ci/travis-build-test.sh
 
 after_failure:
   - cd $TRAVIS_BUILD_DIR

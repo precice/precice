@@ -1,23 +1,26 @@
 #include "M2N.hpp"
+#include <utility>
 #include "DistributedComFactory.hpp"
 #include "DistributedCommunication.hpp"
 #include "com/Communication.hpp"
+#include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 using precice::utils::Event;
 
-namespace precice
-{
+namespace precice {
 extern bool syncMode;
 
-namespace m2n
-{
+namespace m2n {
 
-M2N::M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory)
-    : _masterCom(masterCom),
-      _distrFactory(distrFactory)
+M2N::M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom, bool useTwoLevelInit)
+    : _masterCom(std::move(masterCom)),
+      _distrFactory(std::move(distrFactory)),
+      _useOnlyMasterCom(useOnlyMasterCom),
+      _useTwoLevelInit(useTwoLevelInit)
 {
 }
 
@@ -44,7 +47,7 @@ void M2N::acceptMasterConnection(
   if (not utils::MasterSlave::isSlave()) {
     PRECICE_DEBUG("Accept master-master connection");
     PRECICE_ASSERT(_masterCom);
-    _masterCom->acceptConnection(acceptorName, requesterName, utils::MasterSlave::getRank());
+    _masterCom->acceptConnection(acceptorName, requesterName, "MASTERCOM", utils::MasterSlave::getRank());
     _isMasterConnected = _masterCom->isConnected();
   }
 
@@ -62,7 +65,7 @@ void M2N::requestMasterConnection(
   if (not utils::MasterSlave::isSlave()) {
     PRECICE_ASSERT(_masterCom);
     PRECICE_DEBUG("Request master-master connection");
-    _masterCom->requestConnection(acceptorName, requesterName, 0, 1);
+    _masterCom->requestConnection(acceptorName, requesterName, "MASTERCOM", 0, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
 
@@ -74,6 +77,7 @@ void M2N::acceptSlavesConnection(
     const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_ASSERT(not _useOnlyMasterCom);
   Event e("m2n.acceptSlavesConnection", precice::syncMode);
 
   _areSlavesConnected = true;
@@ -90,6 +94,7 @@ void M2N::requestSlavesConnection(
     const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_ASSERT(not _useOnlyMasterCom);
   Event e("m2n.requestSlavesConnection", precice::syncMode);
 
   _areSlavesConnected = true;
@@ -101,16 +106,18 @@ void M2N::requestSlavesConnection(
   PRECICE_ASSERT(_areSlavesConnected);
 }
 
-void M2N::prepareEstablishment()
+void M2N::prepareEstablishment(const std::string &acceptorName,
+                               const std::string &requesterName)
 {
   PRECICE_TRACE();
-  _masterCom->prepareEstablishment();
+  _masterCom->prepareEstablishment(acceptorName, requesterName);
 }
 
-void M2N::cleanupEstablishment()
+void M2N::cleanupEstablishment(const std::string &acceptorName,
+                               const std::string &requesterName)
 {
   PRECICE_TRACE();
-  _masterCom->cleanupEstablishment();
+  _masterCom->cleanupEstablishment(acceptorName, requesterName);
 }
 
 void M2N::acceptSlavesPreConnection(
@@ -118,31 +125,34 @@ void M2N::acceptSlavesPreConnection(
     const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_ASSERT(not _useOnlyMasterCom);
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->acceptPreConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
-    }
+  }
   PRECICE_ASSERT(_areSlavesConnected);
 }
 
 void M2N::requestSlavesPreConnection(
-  const std::string &acceptorName,
-  const std::string &requesterName)
+    const std::string &acceptorName,
+    const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_ASSERT(not _useOnlyMasterCom);
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->requestPreConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
-    }
+  }
   PRECICE_ASSERT(_areSlavesConnected);
 }
 
 void M2N::completeSlavesConnection()
 {
+  PRECICE_ASSERT(not _useOnlyMasterCom);
   for (const auto &pair : _distComs) {
-    pair.second->updateVertexList();
+    pair.second->completeSlavesConnection();
   }
 }
 
@@ -156,7 +166,7 @@ void M2N::closeConnection()
 
   utils::MasterSlave::broadcast(_isMasterConnected);
 
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
+  if (not _useOnlyMasterCom) {
     _areSlavesConnected = false;
     for (const auto &pair : _distComs) {
       pair.second->closeConnection();
@@ -175,32 +185,31 @@ com::PtrCommunication M2N::getMasterCommunication()
 void M2N::createDistributedCommunication(mesh::PtrMesh mesh)
 {
   PRECICE_TRACE();
+  PRECICE_ASSERT(not _useOnlyMasterCom);
   DistributedCommunication::SharedPointer distCom = _distrFactory->newDistributedCommunication(mesh);
   _distComs[mesh->getID()]                        = distCom;
 }
 
 void M2N::send(
     double const *itemsToSend,
-    int     size,
-    int     meshID,
-    int     valueDimension)
+    int           size,
+    int           meshID,
+    int           valueDimension)
 {
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
+  if (not _useOnlyMasterCom) {
     PRECICE_ASSERT(_areSlavesConnected);
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
-    if (precice::syncMode) {
-      if (not utils::MasterSlave::isSlave()) {
-        bool ack = true;
-        _masterCom->send(ack, 0);
-        _masterCom->receive(ack, 0);
-        _masterCom->send(ack, 0);
-      }
+    if (precice::syncMode && not utils::MasterSlave::isSlave()) {
+      bool ack = true;
+      _masterCom->send(ack, 0);
+      _masterCom->receive(ack, 0);
+      _masterCom->send(ack, 0);
     }
     Event e("m2n.sendData", precice::syncMode);
     _distComs[meshID]->send(itemsToSend, size, valueDimension);
-  } else { //coupling mode
+  } else {
     PRECICE_ASSERT(_isMasterConnected);
     _masterCom->send(itemsToSend, size, 0);
   }
@@ -222,40 +231,34 @@ void M2N::send(double itemToSend)
   }
 }
 
-void M2N::broadcastSendLocalMesh(mesh::Mesh &mesh)
+void M2N::broadcastSendMesh(mesh::Mesh &mesh)
 {
   int meshID = mesh.getID();
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    PRECICE_ASSERT(_areSlavesConnected);
-    PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
-    PRECICE_ASSERT(_distComs[meshID].get() != nullptr);    
-    _distComs[meshID]->broadcastSendMesh();
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used in parallel communication mode");
-  }
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
+                 "This method can only be used for parallel participants");
+  PRECICE_ASSERT(_areSlavesConnected);
+  PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
+  PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
+  _distComs[meshID]->broadcastSendMesh();
 }
 
-void M2N::broadcastSendLCM(std::map<int, std::vector<int>> &localCommunicationMap,
-                        mesh::Mesh &mesh)
+void M2N::scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap,
+                                     mesh::Mesh &                     mesh)
 {
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    int meshID = mesh.getID();
-    PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->broadcastSendLCM(localCommunicationMap);
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used in parallel communication mode");
-  }  
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
+                 "This method can only be used for parallel participants");
+  int meshID = mesh.getID();
+  PRECICE_ASSERT(_areSlavesConnected);
+  _distComs[meshID]->scatterAllCommunicationMap(localCommunicationMap);
 }
 
 void M2N::broadcastSend(int &itemToSend, mesh::Mesh &mesh)
 {
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
+                 "This method can only be used for parallel participants");
   int meshID = mesh.getID();
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->broadcastSend(itemToSend);
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
-  }
+  PRECICE_ASSERT(_areSlavesConnected);
+  _distComs[meshID]->broadcastSend(itemToSend);
 }
 
 void M2N::receive(double *itemsToReceive,
@@ -263,7 +266,7 @@ void M2N::receive(double *itemsToReceive,
                   int     meshID,
                   int     valueDimension)
 {
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
+  if (not _useOnlyMasterCom) {
     PRECICE_ASSERT(_areSlavesConnected);
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
@@ -279,7 +282,7 @@ void M2N::receive(double *itemsToReceive,
     }
     Event e("m2n.receiveData", precice::syncMode);
     _distComs[meshID]->receive(itemsToReceive, size, valueDimension);
-  } else { //coupling mode
+  } else {
     PRECICE_ASSERT(_isMasterConnected);
     _masterCom->receive(itemsToReceive, size, 0);
   }
@@ -294,7 +297,7 @@ void M2N::receive(bool &itemToReceive)
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  PRECICE_DEBUG("receive(bool): " << itemToReceive);
+  PRECICE_DEBUG("receive(bool): {}", itemToReceive);
 }
 
 void M2N::receive(double &itemToReceive)
@@ -306,42 +309,36 @@ void M2N::receive(double &itemToReceive)
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  PRECICE_DEBUG("receive(double): " << itemToReceive);
+  PRECICE_DEBUG("receive(double): {}", itemToReceive);
 }
 
 void M2N::broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh)
 {
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    int meshID = mesh.getID();
-    PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->broadcastReceiveAll(itemToReceive);
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
-  }  
-}
-
-void M2N::broadcastReceiveLocalMesh(mesh::Mesh &mesh)
-{
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
+                 "This method can only be used for parallel participants");
   int meshID = mesh.getID();
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    PRECICE_ASSERT(_areSlavesConnected);
-    PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
-    PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
-    _distComs[meshID]->broadcastReceiveMesh();
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
-  }
+  PRECICE_ASSERT(_areSlavesConnected);
+  _distComs[meshID]->broadcastReceiveAll(itemToReceive);
 }
 
-void M2N::broadcastReceiveLCM(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh)
+void M2N::broadcastReceiveAllMesh(mesh::Mesh &mesh)
 {
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
-    int meshID = mesh.getID();
-    PRECICE_ASSERT(_areSlavesConnected);
-    _distComs[meshID]->broadcastReceiveLCM(localCommunicationMap);
-  } else { //coupling mode
-    PRECICE_ASSERT(false, "This method can only be used with the point to point communication scheme");
-  }  
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
+                 "This method can only be used for parallel participants");
+  int meshID = mesh.getID();
+  PRECICE_ASSERT(_areSlavesConnected);
+  PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
+  PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
+  _distComs[meshID]->broadcastReceiveAllMesh();
+}
+
+void M2N::gatherAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh)
+{
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
+                 "This method can only be used for parallel participants");
+  int meshID = mesh.getID();
+  PRECICE_ASSERT(_areSlavesConnected);
+  _distComs[meshID]->gatherAllCommunicationMap(localCommunicationMap);
 }
 
 } // namespace m2n

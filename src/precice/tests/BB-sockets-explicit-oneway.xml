@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <solver-interface dimensions="3">
+    <data:vector name="Forces" />
+    <data:vector name="Velocities" />
+
+    <mesh name="FluidMesh">
+      <use-data name="Forces" />
+    </mesh>
+
+    <mesh name="StructureMesh">
+      <use-data name="Forces" />
+    </mesh>
+
+    <participant name="Fluid">
+      <use-mesh name="FluidMesh" provide="yes" />
+      <write-data name="Forces" mesh="FluidMesh" />
+    </participant>
+
+    <participant name="Structure">
+      <use-mesh name="StructureMesh" provide="yes" />
+      <use-mesh name="FluidMesh" provide="no" from="Fluid" />
+      <read-data name="Forces" mesh="StructureMesh" />
+      <mapping:nearest-neighbor
+        direction="read"
+        from="FluidMesh"
+        to="StructureMesh"
+        constraint="consistent" />
+    </participant>
+
+    <m2n:sockets from="Fluid" to="Structure" use-two-level-initialization="true" />
+
+    <coupling-scheme:serial-explicit>
+      <participants first="Fluid" second="Structure" />
+      <max-time-windows value="1" />
+      <time-window-size value="1.0" />
+      <exchange data="Forces" mesh="FluidMesh" from="Fluid" to="Structure" />
+    </coupling-scheme:serial-explicit>
+  </solver-interface>
+</precice-configuration>

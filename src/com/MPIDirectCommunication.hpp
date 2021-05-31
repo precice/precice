@@ -2,15 +2,17 @@
 
 #pragma once
 
+#include <mpi.h>
+#include <set>
+#include <stddef.h>
 #include <string>
 #include "MPICommunication.hpp"
-#include "utils/assertion.hpp"
 #include "logging/Logger.hpp"
+#include "utils/Parallel.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace com {
 /**
  * @brief Provides connection methods for processes located in one communicator.
  *
@@ -22,9 +24,10 @@ namespace com
  * participate in the communication. If one of the processes does not call
  * either acceptConnection(), or closeConnection(), a deadlock is achieved.
  */
-class MPIDirectCommunication : public MPICommunication
-{
+class MPIDirectCommunication : public MPICommunication {
 public:
+  /** Creates a MPI Direct communication based on the current global communicator.
+   */
   MPIDirectCommunication();
 
   virtual ~MPIDirectCommunication();
@@ -36,27 +39,38 @@ public:
    */
   virtual size_t getRemoteCommunicatorSize() override;
 
-  /// See precice::com::Communication::acceptConnection().
+  /** See precice::com::Communication::acceptConnection().
+   * @attention Calls precice::utils::Parallel::splitCommunicator()
+   * if local and global communicators are equal.
+   */
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
-                                int                acceptorRank) override;
+                                std::string const &tag,
+                                int                acceptorRank,
+                                int                rankOffset = 0) override;
 
   virtual void acceptConnectionAsServer(std::string const &acceptorName,
                                         std::string const &requesterName,
+                                        std::string const &tag,
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) override
   {
     PRECICE_ASSERT(false, "Not implemented!");
   }
 
-  /// See precice::com::Communication::requestConnection().
+  /** See precice::com::Communication::requestConnection().
+   * @attention Calls precice::utils::Parallel::splitCommunicator()
+   * if local and global communicators are equal.
+   */
   virtual void requestConnection(std::string const &acceptorName,
                                  std::string const &requesterName,
+                                 std::string const &tag,
                                  int                requesterRank,
                                  int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string   const &acceptorName,
-                                         std::string   const &requesterName,
+  virtual void requestConnectionAsClient(std::string const &  acceptorName,
+                                         std::string const &  requesterName,
+                                         std::string const &  tag,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) override
   {
@@ -66,17 +80,17 @@ public:
   /// See precice::com::Communication::closeConnection().
   virtual void closeConnection() override;
 
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
 
-  virtual void reduceSum(double *itemsToSend, double *itemsToReceive, int size) override;
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size) override;
 
   virtual void reduceSum(int itemToSend, int &itemsToReceive, int rankMaster) override;
 
   virtual void reduceSum(int itemToSend, int &itemsToReceive) override;
 
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
 
-  virtual void allreduceSum(double *itemsToSend, double *itemsToReceive, int size) override;
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size) override;
 
   virtual void allreduceSum(double itemToSend, double &itemsToReceive, int rankMaster) override;
 
@@ -113,27 +127,12 @@ private:
 
   logging::Logger _log{"com::MPIDirectCommunication"};
 
-  MPI_Comm _communicator;
+  /// CommState to use
+  utils::Parallel::CommStatePtr _commState = nullptr;
 
-  /// Global communicator, as given by utils::Parallel::getDefaultComm().
-  MPI_Comm _globalCommunicator;
-
-  /// Communicator for communicator between process groups.
-  MPI_Comm _localCommunicator;
-
-  /**
-   * @brief Returns ID belonging to a group of processes.
-   *
-   * @pre Call exchangeGroupInformation.
-   */
-  int getGroupID(std::string const &accessorName);
-
-  /**
-   * @brief Returns rank of leading process of a group.
-   *
-   * @pre Call exchangeGroupInformation.
-   */
-  int getLeaderRank(std::string const &accessorName);
+protected:
+  /// Turn the rank adjustment into a noop for direct communication
+  virtual int adjustRank(int rank) const override;
 };
 
 } // namespace com

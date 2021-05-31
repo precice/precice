@@ -1,29 +1,35 @@
+#include "acceleration/BroydenAcceleration.hpp"
 #include <Eigen/Core>
-
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <ostream>
+#include "acceleration/impl/QRFactorization.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "acceleration/BroydenAcceleration.hpp"
+#include "logging/LogMacros.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 using namespace precice::acceleration::impl;
 
 BroydenAcceleration::BroydenAcceleration(
-    double            initialRelaxation,
-    bool              forceInitialRelaxation,
-    int               maxIterationsUsed,
-    int               timestepsReused,
-    int               filter,
-    double            singularityLimit,
-    std::vector<int>  dataIDs,
+    double                  initialRelaxation,
+    bool                    forceInitialRelaxation,
+    int                     maxIterationsUsed,
+    int                     pastTimeWindowsReused,
+    int                     filter,
+    double                  singularityLimit,
+    std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
-    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
-                           filter, singularityLimit, dataIDs, preconditioner),
+    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
+                         filter, singularityLimit, dataIDs, preconditioner),
       _maxColumns(maxIterationsUsed)
-{}
+{
+}
 
 void BroydenAcceleration::initialize(
     DataMap &cplData)
@@ -42,8 +48,8 @@ void BroydenAcceleration::computeUnderrelaxationSecondaryData(
 {
   // Perform underrelaxation with initial relaxation factor for secondary data
   for (int id : _secondaryDataIDs) {
-    cplscheme::PtrCouplingData  data   = cplData[id];
-    Eigen::VectorXd &values = *(data->values);
+    cplscheme::PtrCouplingData data   = cplData[id];
+    Eigen::VectorXd &          values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
     secResiduals                  = data->oldValues.col(0); // old
@@ -56,7 +62,7 @@ void BroydenAcceleration::updateDifferenceMatrices(
     DataMap &cplData)
 {
   if (not _firstIteration) {
-      _currentColumns++;
+    _currentColumns++;
   }
 
   // call the base method for common update of V, W matrices
@@ -67,9 +73,9 @@ void BroydenAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen:
 {
   PRECICE_TRACE();
 
-  PRECICE_DEBUG("currentColumns=" << _currentColumns);
+  PRECICE_DEBUG("currentColumns={}", _currentColumns);
   if (_currentColumns > 1) {
-    PRECICE_ERROR("truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.");
+    PRECICE_ERROR("Truncated IMVJ is no longer supported. Please use IMVJ with restart mode instead.");
     PRECICE_DEBUG("compute update with QR-dec");
     //computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   } else {
@@ -116,5 +122,5 @@ void BroydenAcceleration::specializedIterationsConverged(
   // store old Jacobian
   _oldInvJacobian = _invJacobian;
 }
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

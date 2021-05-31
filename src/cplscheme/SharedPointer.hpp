@@ -13,4 +13,5 @@ using PtrCouplingScheme              = std::shared_ptr<CouplingScheme>;
 using PtrCouplingSchemeConfiguration = std::shared_ptr<CouplingSchemeConfiguration>;
 using PtrCouplingData                = std::shared_ptr<CouplingData>;
 
-}} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

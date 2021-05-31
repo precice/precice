@@ -1,20 +1,23 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <iosfwd>
+#include <vector>
+#include "acceleration/Acceleration.hpp"
 #include "acceleration/BaseQNAcceleration.hpp"
+#include "acceleration/impl/SharedPointer.hpp"
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 /**
  * @brief Multi vector quasi-Newton update scheme 
  *
  * Performs a multi vector quasi-Newton to accelerate the convergence of implicit coupling
  * iterations. A multi Broyden update, together with the reuse of the approximate inverse 
- * Jacobian from the old time step are used to approximate the inverse Jacobian. After every
+ * Jacobian from the old time window are used to approximate the inverse Jacobian. After every
  * coupling iteration, the data values used are enhanced by the new coupling iterates.
  *
  * If more coupling data is present than used to compute the MVQN acceleration,
@@ -22,20 +25,19 @@ namespace acceleration
  * MVQN-related data. The data is called "secondary" henceforth and additional
  * old value and data matrices are needed for it.
  */
-class BroydenAcceleration : public BaseQNAcceleration
-{
+class BroydenAcceleration : public BaseQNAcceleration {
 public:
   /**
    * @brief Constructor.
    */
   BroydenAcceleration(
-      double            initialRelaxation,
-      bool              forceInitialRelaxation,
-      int               maxIterationsUsed,
-      int               timestepsReused,
-      int               filter,
-      double            singularityLimit,
-      std::vector<int>  dataIDs,
+      double                  initialRelaxation,
+      bool                    forceInitialRelaxation,
+      int                     maxIterationsUsed,
+      int                     pastTimeWindowsReused,
+      int                     filter,
+      double                  singularityLimit,
+      std::vector<int>        dataIDs,
       impl::PtrPreconditioner preconditioner);
 
   /**
@@ -62,7 +64,7 @@ private:
   std::fstream f;
   //----------------------------------------
 
-  // @brief stores the approximation of the inverse Jacobian of the system at current time step.
+  // @brief stores the approximation of the inverse Jacobian of the system at current time window.
   Eigen::MatrixXd _invJacobian;
   Eigen::MatrixXd _oldInvJacobian;
 
@@ -80,5 +82,5 @@ private:
   virtual void computeUnderrelaxationSecondaryData(DataMap &cplData);
   //void computeNewtonFactorsQRDecomposition(DataMap& cplData, Eigen::VectorXd& update);
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

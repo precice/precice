@@ -1,17 +1,19 @@
 #pragma once
 
+#include <string>
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice
-{
-namespace com
-{
+namespace precice {
+namespace mesh {
+class Mesh;
+} // namespace mesh
+
+namespace com {
 
 /// Copies a Mesh object from a sender to a receiver.
-class CommunicateMesh
-{
+class CommunicateMesh {
 public:
   /// Constructor, takes communication to be used in transfer.
   explicit CommunicateMesh(
@@ -33,17 +35,9 @@ public:
   void broadcastReceiveMesh(
       mesh::Mesh &mesh);
 
-  void sendBoundingBox(
-      const mesh::Mesh::BoundingBox &bb,
-      int                            rankReceiver);
-
-  void receiveBoundingBox(
-      mesh::Mesh::BoundingBox &bb,
-      int                      rankSender);
-
 private:
   logging::Logger _log{"com::CommunicateMesh"};
-  
+
   /// Communication means used for the transfer of the geometry.
   com::PtrCommunication _communication;
 };

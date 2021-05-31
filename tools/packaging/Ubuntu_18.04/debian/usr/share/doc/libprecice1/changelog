@@ -1,5 +1,0 @@
-libprecice1 (1.1.1-1) experimental; urgency=low
-
-  * Fix SConstruct symlink build target failing when using lowercase build (debug, release) names.
-
- -- the preCICE developers <precice@mailman.informatik.uni-stuttgart.de>  2018-04-19

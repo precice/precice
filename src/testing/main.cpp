@@ -1,18 +1,19 @@
+#include <boost/test/tree/test_case_counter.hpp>
+#include <boost/test/tree/traverse.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_parameters.hpp>
-#include <boost/filesystem.hpp>
-#include "utils/Parallel.hpp"
-#include "utils/Petsc.hpp"
-#include "utils/EventUtils.hpp"
-#include "utils/MasterSlave.hpp"
-#include "logging/LogConfiguration.hpp"
 #include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+#include "com/SharedPointer.hpp"
+#include "logging/LogConfiguration.hpp"
+#include "utils/MasterSlave.hpp"
+#include "utils/Parallel.hpp"
 
 namespace precice {
-extern bool testMode;
 extern bool syncMode;
-}
-
+} // namespace precice
 
 /// Boost test Initialization function
 /**
@@ -38,20 +39,20 @@ bool init_unit_test()
 {
   using namespace boost::unit_test;
   using namespace precice;
-  
-  auto & master_suite = framework::master_test_suite();
+
+  auto &master_suite        = framework::master_test_suite();
   master_suite.p_name.value = "preCICE Tests";
 
   auto logConfigs = logging::readLogConfFile("log.conf");
-  
+
   if (logConfigs.empty()) { // nothing has been read from log.conf
-    #if BOOST_VERSION == 106900
-    std::cerr << "Boost 1.69 get log_level is broken, preCICE log level set to debug.\n";
+#if BOOST_VERSION == 106900 || __APPLE__ && __MACH__
+    std::cerr << "Boost 1.69 and macOS get log_level is broken, preCICE log level set to debug.\n";
     auto logLevel = log_successful_tests;
-    #else
+#else
     auto logLevel = runtime_config::get<log_level>(runtime_config::btrt_log_level);
-    #endif
-    
+#endif
+
     logging::BackendConfiguration config;
     if (logLevel == log_successful_tests or logLevel == log_test_units)
       config.filter = "%Severity% >= debug";
@@ -61,7 +62,26 @@ bool init_unit_test()
       config.filter = "%Severity% >= warning";
     if (logLevel >= log_all_errors)
       config.filter = "%Severity% >= warning"; // log warnings in any case
-    
+
+    const std::string prefix{"%TimeStamp(format=\"%H:%M:%S.%f\")%|%Participant%|%Rank%|%Module%|l%Line%|%Function%|"};
+
+    // Console output
+    config.format = prefix + "%ColorizedSeverity%%Message%";
+    config.type   = "stream";
+    config.output = "stdout";
+    logConfigs.push_back(config);
+
+    // File Outputs
+    config.format = prefix + "%Severity%%Message%";
+    config.type   = "file";
+
+    // Same as console output
+    config.output = "test.log";
+    logConfigs.push_back(config);
+
+    // The full debug log
+    config.output = "test.debug.log";
+    config.filter = "%Severity% >= debug";
     logConfigs.push_back(config);
   }
 
@@ -69,49 +89,58 @@ bool init_unit_test()
   // or from the Boost Test log level.
   logging::setupLogging(logConfigs);
   logging::lockConf();
-  
 
   // Sets the default tolerance for floating point comparisions
   // Can be overwritten on a per-test or per-suite basis using decators
   // boost::unit_test::decorator::collector::instance() * boost::unit_test::tolerance(0.001);
-  * tolerance(1e-9); // Stores the decorator in the collector singleton
-  #if BOOST_VERSION < 106900
+  *tolerance(1e-9); // Stores the decorator in the collector singleton
+#if BOOST_VERSION < 106900
   decorator::collector::instance().store_in(master_suite);
-  #else
+#else
   decorator::collector_t::instance().store_in(master_suite);
-  #endif
-  
+#endif
+
   return true;
 }
 
+int countEnabledTests()
+{
+  using namespace boost::unit_test;
+  test_case_counter tcc;
+  traverse_test_tree(framework::master_test_suite(), tcc, true);
+  return tcc.p_count;
+}
+
 /// Entry point for the boost test executable
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
   using namespace precice;
 
-  precice::testMode = true;
   precice::syncMode = false;
   logging::setupLogging(); // first logging initalization, as early as possible
   utils::Parallel::initializeMPI(&argc, &argv);
-  logging::setMPIRank(utils::Parallel::getProcessRank());
-  utils::Petsc::initialize(&argc, &argv);
-  utils::EventRegistry::instance().initialize("precice-Tests", "", utils::Parallel::getGlobalCommunicator());
-    
-  if (utils::Parallel::getCommunicatorSize() < 4) {
-    if (utils::Parallel::getProcessRank() == 0)
-      std::cerr << "Running tests on less than four processors. Not all tests are executed.\n";
-  }
-  if (utils::Parallel::getCommunicatorSize() > 4) {
-    if (utils::Parallel::getProcessRank() == 0)
-      std::cerr << "Running tests on more than 4 processors is not supported. Aborting.\n";
-    std::exit(-1);
+  const auto rank = utils::Parallel::current()->rank();
+  const auto size = utils::Parallel::current()->size();
+  logging::setMPIRank(rank);
+
+  if (size < 4) {
+    if (rank == 0) {
+      std::cerr << "ERROR: The tests require at least 4 MPI processes.\n";
+    }
+    return 2;
   }
 
-  int retCode = boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
+  std::cout << "This test suite runs on rank " << rank << " of " << size << '\n';
 
-  utils::EventRegistry::instance().finalize();
-  utils::Petsc::finalize();
-  utils::Parallel::finalizeMPI();
+  int       retCode  = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
+  const int testsRan = countEnabledTests();
+
+  // Override the return code if the slaves have nothing to test
+  if ((testsRan == 0) && (rank != 0)) {
+    retCode = EXIT_SUCCESS;
+  }
+
   utils::MasterSlave::_communication = nullptr;
+  utils::Parallel::finalizeMPI();
   return retCode;
 }

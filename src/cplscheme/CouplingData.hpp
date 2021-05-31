@@ -1,55 +1,83 @@
 #pragma once
 
+#include <Eigen/Core>
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/assertion.hpp"
-#include "mesh/Data.hpp"
-#include <Eigen/Core>
 
 namespace precice {
 namespace cplscheme {
 
-struct CouplingData
-{
+class CouplingData {
+public:
+  CouplingData(
+      mesh::PtrData data,
+      mesh::PtrMesh mesh,
+      bool          requiresInitialization)
+      : requiresInitialization(requiresInitialization),
+        data(data),
+        mesh(mesh)
+  {
+    PRECICE_ASSERT(data != nullptr);
+    PRECICE_ASSERT(mesh != nullptr);
+    PRECICE_ASSERT(mesh.use_count() > 0);
+  }
+
+  int getDimensions() const
+  {
+    PRECICE_ASSERT(data != nullptr);
+    return data->getDimensions();
+  }
+
   using DataMatrix = Eigen::MatrixXd;
 
-  /// Data values of current iteration.
-  Eigen::VectorXd* values;
+  /// Returns a reference to the data values.
+  Eigen::VectorXd &values()
+  {
+    PRECICE_ASSERT(data != nullptr);
+    return data->values();
+  }
 
-  /// Data values of previous iteration (1st col) and previous timesteps.
+  /// Returns a const reference to the data values.
+  const Eigen::VectorXd &values() const
+  {
+    PRECICE_ASSERT(data != nullptr);
+    return data->values();
+  }
+
+  int getMeshID()
+  {
+    return mesh->getID();
+  }
+
+  std::vector<int> getVertexOffsets()
+  {
+    return mesh->getVertexOffsets();
+  }
+
+  /// Data values of previous iteration (1st col) and previous time windows.
   DataMatrix oldValues;
 
-  mesh::PtrMesh mesh;
+  ///  True, if the data values if this CouplingData requires to be initialized by a participant.
+  const bool requiresInitialization;
 
-  ///  True, if the data values are initialized by a participant.
-  bool initialize;
-
-  /// dimension of one data value (scalar=1, or vectorial=interface-dimension)
-  int dimension;
-
+private:
   /**
    * @brief Default constructor, not to be used!
    *
    * Necessary when compiler creates template code for std::map::operator[].
    */
-  CouplingData ()
-    {
-      PRECICE_ASSERT( false );
-    }
+  CouplingData()
+      : requiresInitialization(false)
+  {
+    PRECICE_ASSERT(false);
+  }
 
-  CouplingData (
-    Eigen::VectorXd*  values,
-    mesh::PtrMesh     mesh,
-    bool              initialize,
-    int               dimension)
-    :
-    values ( values ),
-    mesh(mesh),
-    initialize ( initialize ),
-    dimension(dimension)
-    {
-      PRECICE_ASSERT( values != NULL );
-      PRECICE_ASSERT( mesh.use_count()>0);
-    }
+  mesh::PtrData data;
+
+  mesh::PtrMesh mesh;
 };
 
-}} // namespace precice, cplscheme
+} // namespace cplscheme
+} // namespace precice

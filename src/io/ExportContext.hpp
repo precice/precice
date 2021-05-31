@@ -14,32 +14,14 @@ struct ExportContext {
   // @brief Path to export location.
   std::string location;
 
-  // @brief Exporting timestep interval (equals -1 when not set).
-  int timestepInterval;
-
-  // @brief Flag for synchronuous triggering of solver plots.
-  bool triggerSolverPlot;
+  // @brief Exporting every N time windows (equals -1 when not set).
+  int everyNTimeWindows = -1;
 
   // @brief If true, export is done in every iteration (also implicit).
-  bool everyIteration;
+  bool everyIteration = false;
 
   // @brief type of the exporter (e.g. vtk).
   std::string type;
-
-  // @brief If true, normals are plotted.
-  bool plotNormals;
-
-  /**
-   * @brief Constructor.
-   */
-  ExportContext()
-      : exporter(),
-        location(),
-        timestepInterval(-1),
-        triggerSolverPlot(false),
-        everyIteration(false),
-        type(),
-        plotNormals(false) {}
 };
 
 } // namespace io

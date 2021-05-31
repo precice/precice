@@ -1,15 +1,17 @@
 #include "ComputeCurvatureAction.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <memory>
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice
-{
-namespace action
-{
+namespace precice {
+namespace action {
 
 ComputeCurvatureAction::ComputeCurvatureAction(
     Timing               timing,
@@ -22,16 +24,15 @@ ComputeCurvatureAction::ComputeCurvatureAction(
 
 void ComputeCurvatureAction::performAction(
     double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double timeStepSize,
+    double computedTimeWindowPart,
+    double timeWindowSize)
 {
   PRECICE_TRACE();
   auto &dataValues = _data->values();
 
   if (getMesh()->getDimensions() == 2) {
     dataValues = Eigen::VectorXd::Zero(dataValues.size());
-    //assign(dataValues) = 0.0;
     Eigen::Vector2d tangent;
     for (mesh::Edge &edge : getMesh()->edges()) {
       mesh::Vertex &v0 = edge.vertex(0);
@@ -54,7 +55,7 @@ void ComputeCurvatureAction::performAction(
     Eigen::Vector3d contribution;
 
     for (mesh::Triangle &tri : getMesh()->triangles()) {
-      normal = tri.getNormal();
+      normal = tri.computeNormal();
       for (int i = 0; i < 3; i++) {
         mesh::Vertex &v0 = tri.vertex(i);
         mesh::Vertex &v1 = tri.vertex((i + 1) % 3);

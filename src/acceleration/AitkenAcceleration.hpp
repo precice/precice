@@ -1,19 +1,17 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <algorithm>
 #include <map>
-
+#include <string>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "logging/Logger.hpp"
 
+namespace precice {
+namespace acceleration {
 
-namespace precice
-{
-namespace acceleration
-{
-
-class AitkenAcceleration : public Acceleration
-{
+class AitkenAcceleration : public Acceleration {
 public:
   AitkenAcceleration(
       double           initialRelaxationFactor,
@@ -25,11 +23,6 @@ public:
   {
     return _dataIDs;
   }
-
-  virtual void setDesignSpecification(
-      Eigen::VectorXd &q);
-
-  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap &cplData);
 
   virtual void initialize(
       DataMap &cpldata);
@@ -52,8 +45,6 @@ private:
   int _iterationCounter = 0;
 
   Eigen::VectorXd _residuals;
-
-  Eigen::VectorXd _designSpecification;
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

@@ -1,15 +1,13 @@
 #pragma once
 
 #include <boost/container/flat_set.hpp>
+#include <functional>
 
-namespace precice
-{
-namespace utils
-{
+namespace precice {
+namespace utils {
 
 /// Manages a set of unique IDs.
-class ManageUniqueIDs
-{
+class ManageUniqueIDs {
 public:
   // Returns the next free, i.e. unique, ID.
   int getFreeID();

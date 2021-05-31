@@ -7,14 +7,11 @@
 
 #include <string>
 
-namespace precice
-{
-namespace com
-{
-class MPISinglePortsCommunicationFactory : public CommunicationFactory
-{
+namespace precice {
+namespace com {
+class MPISinglePortsCommunicationFactory : public CommunicationFactory {
 public:
-  explicit MPISinglePortsCommunicationFactory(std::string const &addressDirectory = ".");
+  explicit MPISinglePortsCommunicationFactory(std::string addressDirectory = ".");
 
   PtrCommunication newCommunication() override;
 

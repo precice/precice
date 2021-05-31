@@ -1,17 +1,18 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <limits>
+#include <ostream>
+#include <string>
 #include "../CouplingData.hpp"
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
+#include "math/differences.hpp"
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace impl
-{
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -24,8 +25,7 @@ namespace impl
  * For a description of how to perform the measurement, see class
  * ConvergenceMeasure.
  */
-class ResidualRelativeConvergenceMeasure : public ConvergenceMeasure
-{
+class ResidualRelativeConvergenceMeasure : public ConvergenceMeasure {
 public:
   /**
     * @brief Constructor.
@@ -47,20 +47,14 @@ public:
 
   virtual void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues,
-      const Eigen::VectorXd &designSpecification)
+      const Eigen::VectorXd &newValues)
   {
-    _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
+    _normDiff = utils::MasterSlave::l2norm(newValues - oldValues);
     if (_isFirstIteration) {
       _normFirstResidual = _normDiff;
       _isFirstIteration  = false;
     }
     _isConvergence = _normDiff < _normFirstResidual * _convergenceLimitPercent;
-    //      PRECICE_INFO("Residual Relative convergence measure: "
-    //                    << "two-norm differences = " << normDiff
-    //                    << ", convergence limit = "
-    //                    << _normFirstResidual * _convergenceLimitPercent
-    //                    << ", convergence = " << _isConvergence );
   }
 
   virtual bool isConvergence() const
@@ -73,14 +67,28 @@ public:
   {
     std::ostringstream os;
     os << "residual relative convergence measure: ";
-    os << "two-norm diff = " << _normDiff;
-    os << ", relative limit = " << _normFirstResidual * _convergenceLimitPercent;
+    os << "relative two-norm diff = " << getNormResidual();
+    os << ", limit = " << _convergenceLimitPercent;
+    os << ", normalization = " << _normFirstResidual;
     os << ", conv = ";
     if (_isConvergence)
       os << "true";
     else
       os << "false";
     return os.str();
+  }
+
+  virtual double getNormResidual()
+  {
+    if (math::equals(_normFirstResidual, 0.))
+      return std::numeric_limits<double>::infinity();
+    else
+      return _normDiff / _normFirstResidual;
+  }
+
+  virtual std::string getAbbreviation() const
+  {
+    return "Drop";
   }
 
 private:
@@ -96,6 +104,6 @@ private:
 
   bool _isConvergence = false;
 };
-}
-}
-} // namespace precice, cplscheme, impl
+} // namespace impl
+} // namespace cplscheme
+} // namespace precice

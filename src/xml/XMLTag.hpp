@@ -1,36 +1,47 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
-#include "XMLAttribute.hpp"
 #include "logging/Logger.hpp"
 #include "xml/ConfigParser.hpp"
+#include "xml/XMLAttribute.hpp"
 
-namespace precice
-{
-namespace xml
-{
+namespace precice {
+namespace xml {
 class ConfigParser;
 }
-}
+} // namespace precice
 
-namespace precice
-{
-namespace xml
-{
+namespace precice {
+namespace xml {
+
+/// Tightly coupled to the parameters of SolverInterface()
+struct ConfigurationContext {
+  std::string name;
+  int         rank;
+  int         size;
+};
 
 /// Represents an XML tag to be configured automatically.
-class XMLTag
-{
+class XMLTag {
   friend class precice::xml::ConfigParser;
 
 public:
+  using Namespaces = typename std::vector<std::string>;
+
+  using Subtags = typename std::vector<std::shared_ptr<XMLTag>>;
+
+  template <typename T>
+  using AttributeMap = typename std::map<std::string, XMLAttribute<T>>;
+
   /// Callback interface for configuration classes using XMLTag.
   struct Listener {
 
-    Listener& operator=(Listener &&) = delete;
+    Listener &operator=(Listener &&) = delete;
 
     virtual ~Listener(){};
     /**
@@ -39,7 +50,7 @@ public:
      * At this callback, the attributes of the callingTag are already parsed and
      * available, while the subtags are not yet parsed.
      */
-    virtual void xmlTagCallback(XMLTag &callingTag) = 0;
+    virtual void xmlTagCallback(ConfigurationContext const &context, XMLTag &callingTag) = 0;
 
     /**
      * @brief Callback at end of XML tag and at end of subtag.
@@ -48,7 +59,7 @@ public:
      * This callback is first done for the listener, and then for the parent tag
      * listener (if existing).
      */
-    virtual void xmlEndTagCallback(XMLTag &callingTag) = 0;
+    virtual void xmlEndTagCallback(ConfigurationContext const &context, XMLTag &callingTag) = 0;
   };
 
   /// Types of occurrences of an XML tag.
@@ -60,6 +71,8 @@ public:
     OCCUR_ARBITRARY_NESTED
   };
 
+  static std::string getOccurrenceString(Occurrence occurrence);
+
   /**
    * @brief Standard constructor
    *
@@ -69,17 +82,22 @@ public:
    * @param[in] xmlNamespace Defines a prefix/namespace for the tag. Tags with equal namespace or treated as group.
    */
   XMLTag(
-      Listener &         listener,
-      const std::string &name,
-      Occurrence         occurrence,
-      const std::string &xmlNamespace = "");
+      Listener &  listener,
+      std::string name,
+      Occurrence  occurrence,
+      std::string xmlNamespace = "");
 
   /**
    * @brief Adds a description of the purpose of this XML tag.
    *
    * The description and more information is printed with printDocumentation().
    */
-  XMLTag& setDocumentation(const std::string &documentation);
+  XMLTag &setDocumentation(const std::string &documentation);
+
+  std::string getDocumentation() const
+  {
+    return _doc;
+  };
 
   /**
    * @brief Adds a namespace to the tag.
@@ -87,28 +105,33 @@ public:
    * Only used for outputting correct XML format, such that, e.g., internet
    * browsers display no errors when viewing an XML configuration.
    */
-  XMLTag& addNamespace(const std::string &namespaceName);
+  XMLTag &addNamespace(const std::string &namespaceName);
 
   /// Adds an XML tag as subtag by making a copy of the given tag.
-  XMLTag& addSubtag(const XMLTag &tag);
+  XMLTag &addSubtag(const XMLTag &tag);
+
+  const Subtags &getSubtags() const
+  {
+    return _subtags;
+  };
 
   /// Removes the XML subtag with given name
   //XMLTag& removeSubtag ( const std::string& tagName );
 
   /// Adds a XML attribute by making a copy of the given attribute.
-  XMLTag& addAttribute(const XMLAttribute<double> &attribute);
+  XMLTag &addAttribute(const XMLAttribute<double> &attribute);
 
   // Adds a XML attribute by making a copy of the given attribute.
-  XMLTag& addAttribute(const XMLAttribute<int> &attribute);
+  XMLTag &addAttribute(const XMLAttribute<int> &attribute);
 
   /// Adds a XML attribute by making a copy of the given attribute.
-  XMLTag& addAttribute(const XMLAttribute<std::string> &attribute);
+  XMLTag &addAttribute(const XMLAttribute<std::string> &attribute);
 
   /// Adds a XML attribute by making a copy of the given attribute.
-  XMLTag& addAttribute(const XMLAttribute<bool> &attribute);
+  XMLTag &addAttribute(const XMLAttribute<bool> &attribute);
 
   /// Adds a XML attribute by making a copy of the given attribute.
-  XMLTag& addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute);
+  XMLTag &addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute);
 
   bool hasAttribute(const std::string &attributeName);
 
@@ -128,6 +151,11 @@ public:
     return _namespace;
   }
 
+  const Namespaces &getNamespaces() const
+  {
+    return _namespaces;
+  };
+
   /// Returns full name consisting of xml namespace + ":" + name.
   const std::string &getFullName() const
   {
@@ -141,6 +169,31 @@ public:
   const std::string &getStringAttributeValue(const std::string &name) const;
 
   bool getBooleanAttributeValue(const std::string &name) const;
+
+  const AttributeMap<double> &getDoubleAttributes() const
+  {
+    return _doubleAttributes;
+  };
+
+  const AttributeMap<int> &getIntAttributes() const
+  {
+    return _intAttributes;
+  };
+
+  const AttributeMap<std::string> &getStringAttributes() const
+  {
+    return _stringAttributes;
+  };
+
+  const AttributeMap<bool> &getBooleanAttributes() const
+  {
+    return _booleanAttributes;
+  };
+
+  const AttributeMap<Eigen::VectorXd> &getEigenVectorXdAttributes() const
+  {
+    return _eigenVectorXdAttributes;
+  };
 
   /**
    * @brief Returns Eigen vector attribute value with given dimensions.
@@ -168,14 +221,8 @@ public:
   /// Removes all attributes and subtags
   void clear();
 
-  /// Prints a documentation string for this tag.
-  std::string printDocumentation(int indentation) const;
-
-  /// Prints a DTD string for this tag.
-  std::string printDTD(const bool start = false) const;
-
   /// reads all attributes of this tag
-  void readAttributes(std::map<std::string, std::string> &aAttributes);
+  void readAttributes(const std::map<std::string, std::string> &aAttributes);
 
 private:
   mutable logging::Logger _log{"xml::XMLTag"};
@@ -197,37 +244,35 @@ private:
 
   Occurrence _occurrence;
 
-  std::vector<std::string> _namespaces;
+  Namespaces _namespaces;
 
-  std::vector<std::shared_ptr<XMLTag>> _subtags;
+  Subtags _subtags;
 
   std::map<std::string, bool> _configuredNamespaces;
 
   std::set<std::string> _attributes;
 
-  std::map<std::string, XMLAttribute<double>> _doubleAttributes;
+  AttributeMap<double> _doubleAttributes;
 
-  std::map<std::string, XMLAttribute<int>> _intAttributes;
+  AttributeMap<int> _intAttributes;
 
-  std::map<std::string, XMLAttribute<std::string>> _stringAttributes;
+  AttributeMap<std::string> _stringAttributes;
 
-  std::map<std::string, XMLAttribute<bool>> _booleanAttributes;
+  AttributeMap<bool> _booleanAttributes;
 
-  std::map<std::string, XMLAttribute<Eigen::VectorXd>> _eigenVectorXdAttributes;
+  AttributeMap<Eigen::VectorXd> _eigenVectorXdAttributes;
 
   void areAllSubtagsConfigured() const;
 
   void resetAttributes();
-
-  std::string getOccurrenceString(Occurrence occurrence) const;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
 
 /// No operation listener for tests.
 struct NoPListener : public XMLTag::Listener {
-  void xmlTagCallback(XMLTag &callingTag) override {}
-  void xmlEndTagCallback(XMLTag &callingTag) override {}
+  void xmlTagCallback(ConfigurationContext const &context, XMLTag &callingTag) override {}
+  void xmlEndTagCallback(ConfigurationContext const &context, XMLTag &callingTag) override {}
 };
 
 /**
@@ -246,10 +291,12 @@ XMLTag getRootTag();
 
 /// Configures the given configuration from file configurationFilename.
 void configure(
-    XMLTag &           tag,
-    const std::string &configurationFilename);
+    XMLTag &                                  tag,
+    const precice::xml::ConfigurationContext &context,
+    const std::string &                       configurationFilename);
 
-}} // namespace precice, xml
+} // namespace xml
+} // namespace precice
 
 /**
  * @brief Adds documentation of tag to output stream os.

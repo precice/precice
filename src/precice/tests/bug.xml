@@ -1,54 +1,60 @@
-<?xml version="1.0"?>
-
+<?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-   
-   <solver-interface dimensions="3">   
-      <data:vector name="Forces"           />
-      <data:vector name="Displacements"    />
-      <data:vector name="OldDisplacements" />
-   
-      <mesh name="FliteNodes">
-         <use-data name="Forces"/>
-         <use-data name="Displacements"/>
-         <use-data name="OldDisplacements"/>
-      </mesh>
-      
-      <mesh name="CalculixNodes">
-         <use-data name="Forces"/>
-         <use-data name="Displacements"/>
-         <use-data name="OldDisplacements"/>
-      </mesh>
- 
-      <participant name="Flite">
-         <use-mesh name="FliteNodes" provide="yes"/>
-         <use-mesh name="CalculixNodes"	from="Calculix"/>
-         <mapping:rbf-thin-plate-splines direction="write" 
-                  constraint="conservative" from="FliteNodes" 
-                  to="CalculixNodes" timing="initial"/>
-         <mapping:rbf-thin-plate-splines direction="read" 
-                  constraint="consistent" from="CalculixNodes" 
-                  to="FliteNodes" timing="initial"/>
-         <write-data name="Forces"           mesh="FliteNodes"/>
-         <read-data  name="Displacements"    mesh="FliteNodes"/>
-         <read-data  name="OldDisplacements" mesh="FliteNodes"/>
-         <export:vtk timestep-interval="1" normals="on"/>
-      </participant>
-      
-      <participant name="Calculix">
-         <use-mesh name="CalculixNodes" provide="yes"/>
-         <write-data name="Displacements" mesh="CalculixNodes"/>
-         <read-data  name="Forces"        mesh="CalculixNodes"/>
-	      <export:vtk timestep-interval="1" normals="on"/>
-      </participant>
-    
-      <m2n:mpi distribution-type="gather-scatter" from="Flite" to="Calculix"/>
-      
-      <coupling-scheme:serial-explicit> 
-         <participants first="Flite" second="Calculix"/> 
-         <max-time value="2.0e-5" />
-         <timestep-length value="1e-5" method="fixed"/>
-         <exchange data="Forces"        mesh="CalculixNodes" from="Flite" to="Calculix" />
-         <exchange data="Displacements" mesh="CalculixNodes" from="Calculix" to="Flite"/>
-      </coupling-scheme:serial-explicit>                           
-   </solver-interface>
+  <solver-interface dimensions="3">
+    <data:vector name="Forces" />
+    <data:vector name="Displacements" />
+    <data:vector name="OldDisplacements" />
+
+    <mesh name="FliteNodes">
+      <use-data name="Forces" />
+      <use-data name="Displacements" />
+      <use-data name="OldDisplacements" />
+    </mesh>
+
+    <mesh name="CalculixNodes">
+      <use-data name="Forces" />
+      <use-data name="Displacements" />
+      <use-data name="OldDisplacements" />
+    </mesh>
+
+    <participant name="Flite">
+      <use-mesh name="FliteNodes" provide="yes" />
+      <use-mesh name="CalculixNodes" from="Calculix" />
+      <mapping:rbf-thin-plate-splines
+        direction="write"
+        constraint="conservative"
+        from="FliteNodes"
+        to="CalculixNodes"
+        timing="initial"
+        use-qr-decomposition="yes" />
+      <mapping:rbf-thin-plate-splines
+        direction="read"
+        constraint="consistent"
+        from="CalculixNodes"
+        to="FliteNodes"
+        timing="initial"
+        use-qr-decomposition="yes" />
+      <write-data name="Forces" mesh="FliteNodes" />
+      <read-data name="Displacements" mesh="FliteNodes" />
+      <read-data name="OldDisplacements" mesh="FliteNodes" />
+      <export:vtk every-n-time-windows="1" normals="on" />
+    </participant>
+
+    <participant name="Calculix">
+      <use-mesh name="CalculixNodes" provide="yes" />
+      <write-data name="Displacements" mesh="CalculixNodes" />
+      <read-data name="Forces" mesh="CalculixNodes" />
+      <export:vtk every-n-time-windows="1" normals="on" />
+    </participant>
+
+    <m2n:mpi enforce-gather-scatter="true" from="Flite" to="Calculix" />
+
+    <coupling-scheme:serial-explicit>
+      <participants first="Flite" second="Calculix" />
+      <max-time value="2.0e-5" />
+      <time-window-size value="1e-5" method="fixed" />
+      <exchange data="Forces" mesh="CalculixNodes" from="Flite" to="Calculix" />
+      <exchange data="Displacements" mesh="CalculixNodes" from="Calculix" to="Flite" />
+    </coupling-scheme:serial-explicit>
+  </solver-interface>
 </precice-configuration>

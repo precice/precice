@@ -11,6 +11,9 @@ clang-format
 
 The tool [clang-format](https://clang.llvm.org/docs/ClangFormat.html) applies a configured code style to C and C++ files.
 It checks parent directories for a `.clang-format` file and applies the style to a given source file.
+To keep the code-base consistent, please use `clang-format` version 8.
+Scripts will explicitly use `clang-format-8` to prevent any problems.
+Looking for precompiled binaries? Here is the [official APT repository](http://apt.llvm.org/).
 
 To use the tool form the shell, run:
 ```
@@ -23,7 +26,6 @@ Editor integration is available for:
 - [Emacs](https://clang.llvm.org/docs/ClangFormat.html#emacs-integration)
 - [Vim](https://clang.llvm.org/docs/ClangFormat.html#vim-integration)
 - [Visual Studio](https://clang.llvm.org/docs/ClangFormat.html#visual-studio-integration)
-
 
 To [disable formatting](https://clang.llvm.org/docs/ClangFormatStyleOptions.html#disabling-formatting-on-a-piece-of-code) for a section of code use comments:
 ```
@@ -82,9 +84,9 @@ $ cmake \
    -DCMAKE_CXX_CPPCHECK="cppcheck;--enable=all" \
    -DCMAKE_CXX_CPPLINT="cpplint.py" \
    -DCMAKE_CXX_INCLUDE_WHAT_YOU_USE="path/to/iwyu;-p;." \
-   -DPYTHON=ON \
-   -DMPI=ON \
-   -DPETSC=ON \
+   -DPRECICE_PythonActions=ON \
+   -DPRECICE_MPICommunication=ON \
+   -DPRECICE_PETScMapping=ON \
    $PRECICE_ROOT
 $ make -j $(nproc)
 ```

@@ -1,46 +1,50 @@
 #include "MeshConfiguration.hpp"
-#include "mesh/config/DataConfiguration.hpp"
-#include "mesh/Mesh.hpp"
-#include "xml/XMLAttribute.hpp"
-#include "utils/Helpers.hpp"
+#include <memory>
+
 #include <sstream>
+#include <stdexcept>
+#include <utility>
+
+#include "logging/LogMacros.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/config/DataConfiguration.hpp"
+#include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
+#include "xml/ConfigParser.hpp"
+#include "xml/XMLAttribute.hpp"
 
 namespace precice {
 namespace mesh {
 
-MeshConfiguration:: MeshConfiguration
-(
-  xml::XMLTag&       parent,
-  PtrDataConfiguration config )
-:
-  TAG("mesh"),
-  ATTR_NAME("name"),
-  ATTR_FLIP_NORMALS("flip-normals"),
-  TAG_DATA("use-data"),
-  TAG_SUB_ID("sub-id"),
-  ATTR_SIDE_INDEX("side"),
-  _dimensions(0),
-  _dataConfig(config),
-  _meshes(),
-  _setMeshSubIDs(),
-  _meshSubIDs(),
-  _neededMeshes()
+MeshConfiguration::MeshConfiguration(
+    xml::XMLTag &        parent,
+    PtrDataConfiguration config)
+    : TAG("mesh"),
+      ATTR_NAME("name"),
+      ATTR_FLIP_NORMALS("flip-normals"),
+      TAG_DATA("use-data"),
+      ATTR_SIDE_INDEX("side"),
+      _dimensions(0),
+      _dataConfig(std::move(config)),
+      _meshes(),
+      _neededMeshes(),
+      _meshIdManager(new utils::ManageUniqueIDs())
 {
   using namespace xml;
   std::string doc;
-  XMLTag tag(*this, TAG, xml::XMLTag::OCCUR_ONCE_OR_MORE);
+  XMLTag      tag(*this, TAG, xml::XMLTag::OCCUR_ONCE_OR_MORE);
   doc = "Surface mesh consisting of vertices and (optional) of edges and ";
   doc += "triangles (only in 3D). The vertices of a mesh can carry data, ";
   doc += "configured by tag <use-data>. The mesh coordinates have to be ";
   doc += "defined by a participant (see tag <use-mesh>).";
   tag.setDocumentation(doc);
 
- auto attrName = XMLAttribute<std::string>(ATTR_NAME)
-      .setDocumentation("Unique name for the mesh.");
+  auto attrName = XMLAttribute<std::string>(ATTR_NAME)
+                      .setDocumentation("Unique name for the mesh.");
   tag.addAttribute(attrName);
 
-  auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false)
-      .setDocumentation("Flips mesh normal vector directions.");
+  auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false).setDocumentation("Deprectated.");
   tag.addAttribute(attrFlipNormals);
 
   XMLTag subtagData(*this, TAG_DATA, XMLTag::OCCUR_ARBITRARY);
@@ -50,142 +54,112 @@ MeshConfiguration:: MeshConfiguration
   subtagData.addAttribute(attrName);
   tag.addSubtag(subtagData);
 
-  xml::XMLTag tagSubID(*this, TAG_SUB_ID, xml::XMLTag::OCCUR_ARBITRARY);
-  doc = "Every mesh has a global ID (determined by preCICE). It is possible ";
-  doc += "to set additional sub-ids to distinguish parts of the mesh in ";
-  doc += "queries.";
-  tagSubID.setDocumentation(doc);
-  xml::XMLAttribute<int> attrSideIndex(ATTR_SIDE_INDEX);
-  tagSubID.addAttribute(attrSideIndex);
-  tag.addSubtag(tagSubID);
-
   parent.addSubtag(tag);
 }
 
-void MeshConfiguration:: setDimensions
-(
-  int dimensions )
+void MeshConfiguration::setDimensions(
+    int dimensions)
 {
   PRECICE_TRACE(dimensions);
   PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
-void MeshConfiguration:: xmlTagCallback
-(
-  xml::XMLTag& tag )
+void MeshConfiguration::xmlTagCallback(
+    const xml::ConfigurationContext &context,
+    xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getName());
-  if (tag.getName() == TAG){
+  if (tag.getName() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
-    bool flipNormals = tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS);
-    _meshes.push_back(PtrMesh(new Mesh(name, _dimensions, flipNormals)));
-    _meshSubIDs.push_back(std::list<std::string>());
-  }
-  else if (tag.getName() == TAG_SUB_ID){
-    int side = tag.getIntAttributeValue(ATTR_SIDE_INDEX);
-    std::stringstream conv;
-    conv << "side-" << side;
-    _meshSubIDs.back().push_back(conv.str());
-  }
-  else if (tag.getName() == TAG_DATA){
-    std::string name = tag.getStringAttributeValue(ATTR_NAME);
-    bool found = false;
-    for (const DataConfiguration::ConfiguredData& data : _dataConfig->data()){
-      if (data.name == name){
+    if (tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS)) {
+      PRECICE_WARN("You used the attribute \"{}\" when configuring mesh \"\". "
+                   "This attribute is deprecated and will be removed in the next major release. "
+                   "Please remove the attribute to silence this warning.",
+                   ATTR_FLIP_NORMALS, name);
+    }
+    PRECICE_ASSERT(_meshIdManager);
+    _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, _meshIdManager->getFreeID()));
+  } else if (tag.getName() == TAG_DATA) {
+    std::string name  = tag.getStringAttributeValue(ATTR_NAME);
+    bool        found = false;
+    for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
+      if (data.name == name) {
         _meshes.back()->createData(data.name, data.dimensions);
         found = true;
         break;
       }
     }
-    if (not found){
-      std::ostringstream stream;
-      stream << "Data with name \"" << name << "\" is not available during "
-             << "configuration of mesh \"" << _meshes.back()->getName() << "\"";
-      throw std::runtime_error{stream.str()};
+    if (not found) {
+      PRECICE_ERROR("Data with name \"{}\" used by mesh \"{}\" is not defined. "
+                    "Please define a data tag with name=\"{}\".",
+                    name, _meshes.back()->getName(), name);
     }
   }
 }
 
-void MeshConfiguration:: xmlEndTagCallback
-(
-  xml::XMLTag& tag )
+void MeshConfiguration::xmlEndTagCallback(
+    const xml::ConfigurationContext &context,
+    xml::XMLTag &                    tag)
 {
 }
 
-const PtrDataConfiguration& MeshConfiguration:: getDataConfiguration() const
+const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
 {
   return _dataConfig;
 }
 
-void MeshConfiguration:: addMesh
-(
-  const mesh::PtrMesh& mesh  )
+void MeshConfiguration::addMesh(
+    const mesh::PtrMesh &mesh)
 {
-  for (PtrData dataNewMesh : mesh->data()){
+  for (const PtrData &dataNewMesh : mesh->data()) {
     bool found = false;
-    for (const DataConfiguration::ConfiguredData & data : _dataConfig->data()){
-      if ((dataNewMesh->getName() == data.name)
-          && (dataNewMesh->getDimensions() == data.dimensions))
-      {
+    for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
+      if ((dataNewMesh->getName() == data.name) && (dataNewMesh->getDimensions() == data.dimensions)) {
         found = true;
         break;
       }
     }
-    PRECICE_CHECK(found, "Data " << dataNewMesh->getName() << " is not available in data configuration!");
+    PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".", dataNewMesh->getName());
   }
   _meshes.push_back(mesh);
 }
 
-void MeshConfiguration:: setMeshSubIDs()
-{
-  PRECICE_ASSERT( _meshes.size() == _meshSubIDs.size() );
-  PRECICE_ASSERT( not _setMeshSubIDs );
-  for ( size_t i=0; i < _meshes.size(); i++ ) {
-    for ( const std::string & subIDName : _meshSubIDs[i] ) {
-      _meshes[i]->setSubID ( subIDName );
-    }
-  }
-  _setMeshSubIDs = true;
-}
-
-const std::vector<PtrMesh>& MeshConfiguration:: meshes() const
+const std::vector<PtrMesh> &MeshConfiguration::meshes() const
 {
   return _meshes;
 }
 
-std::vector<PtrMesh>& MeshConfiguration:: meshes()
+std::vector<PtrMesh> &MeshConfiguration::meshes()
 {
   return _meshes;
 }
 
-mesh::PtrMesh MeshConfiguration:: getMesh
-(
-  const std::string& meshName ) const
+mesh::PtrMesh MeshConfiguration::getMesh(
+    const std::string &meshName) const
 {
-  for ( const mesh::PtrMesh & mesh : _meshes ) {
-    if ( mesh->getName() == meshName ) {
+  for (const mesh::PtrMesh &mesh : _meshes) {
+    if (mesh->getName() == meshName) {
       return mesh;
     }
   }
   return mesh::PtrMesh();
 }
 
-void MeshConfiguration:: addNeededMesh(
-  const std::string& participant,
-  const std::string& mesh)
+void MeshConfiguration::addNeededMesh(
+    const std::string &participant,
+    const std::string &mesh)
 {
-  PRECICE_TRACE(participant, mesh );
-  if(_neededMeshes.count(participant)==0){
+  PRECICE_TRACE(participant, mesh);
+  if (_neededMeshes.count(participant) == 0) {
     std::vector<std::string> meshes;
     meshes.push_back(mesh);
-    _neededMeshes.insert(std::pair<std::string,std::vector<std::string> >(participant, meshes));
-  }
-  else if(not utils::contained(mesh,_neededMeshes.find(participant)->second)){
+    _neededMeshes.insert(std::pair<std::string, std::vector<std::string>>(participant, meshes));
+  } else if (not utils::contained(mesh, _neededMeshes.find(participant)->second)) {
     _neededMeshes.find(participant)->second.push_back(mesh);
   }
 }
 
-}} // namespace precice, mesh
-
+} // namespace mesh
+} // namespace precice

@@ -3,12 +3,9 @@
 #include <vector>
 #include "com/SharedPointer.hpp"
 
-namespace precice
-{
-namespace com
-{
-class Request
-{
+namespace precice {
+namespace com {
+class Request {
 
 public:
   static void wait(std::vector<PtrRequest> &requests);

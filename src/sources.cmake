@@ -5,6 +5,7 @@
 target_sources(precice
     PRIVATE
     ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
+    src/acceleration/Acceleration.cpp
     src/acceleration/Acceleration.hpp
     src/acceleration/AitkenAcceleration.cpp
     src/acceleration/AitkenAcceleration.hpp
@@ -14,12 +15,8 @@ target_sources(precice
     src/acceleration/BroydenAcceleration.hpp
     src/acceleration/ConstantRelaxationAcceleration.cpp
     src/acceleration/ConstantRelaxationAcceleration.hpp
-    src/acceleration/HierarchicalAitkenAcceleration.cpp
-    src/acceleration/HierarchicalAitkenAcceleration.hpp
     src/acceleration/IQNILSAcceleration.cpp
     src/acceleration/IQNILSAcceleration.hpp
-    src/acceleration/MMAcceleration.cpp
-    src/acceleration/MMAcceleration.hpp
     src/acceleration/MVQNAcceleration.cpp
     src/acceleration/MVQNAcceleration.hpp
     src/acceleration/SharedPointer.hpp
@@ -44,15 +41,17 @@ target_sources(precice
     src/action/Action.hpp
     src/action/ComputeCurvatureAction.cpp
     src/action/ComputeCurvatureAction.hpp
-    src/action/ModifyCoordinatesAction.cpp
-    src/action/ModifyCoordinatesAction.hpp
     src/action/PythonAction.cpp
     src/action/PythonAction.hpp
+    src/action/RecorderAction.cpp
+    src/action/RecorderAction.hpp
     src/action/ScaleByAreaAction.cpp
     src/action/ScaleByAreaAction.hpp
     src/action/ScaleByDtAction.cpp
     src/action/ScaleByDtAction.hpp
     src/action/SharedPointer.hpp
+    src/action/SummationAction.cpp
+    src/action/SummationAction.hpp
     src/action/config/ActionConfiguration.cpp
     src/action/config/ActionConfiguration.hpp
     src/com/CommunicateBoundingBox.cpp
@@ -93,6 +92,8 @@ target_sources(precice
     src/com/config/CommunicationConfiguration.hpp
     src/cplscheme/BaseCouplingScheme.cpp
     src/cplscheme/BaseCouplingScheme.hpp
+    src/cplscheme/BiCouplingScheme.cpp
+    src/cplscheme/BiCouplingScheme.hpp
     src/cplscheme/CompositionalCouplingScheme.cpp
     src/cplscheme/CompositionalCouplingScheme.hpp
     src/cplscheme/Constants.cpp
@@ -127,8 +128,6 @@ target_sources(precice
     src/io/ExportVTK.hpp
     src/io/ExportVTKXML.cpp
     src/io/ExportVTKXML.hpp
-    src/io/Import.cpp
-    src/io/Import.hpp
     src/io/SharedPointer.hpp
     src/io/TXTReader.cpp
     src/io/TXTReader.hpp
@@ -171,6 +170,8 @@ target_sources(precice
     src/mapping/NearestProjectionMapping.cpp
     src/mapping/NearestProjectionMapping.hpp
     src/mapping/PetRadialBasisFctMapping.hpp
+    src/mapping/Polation.cpp
+    src/mapping/Polation.hpp
     src/mapping/RadialBasisFctMapping.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
@@ -184,55 +185,36 @@ target_sources(precice
     src/math/geometry.hpp
     src/math/la.hpp
     src/math/math.hpp
+    src/mesh/BoundingBox.cpp
+    src/mesh/BoundingBox.hpp
     src/mesh/Data.cpp
     src/mesh/Data.hpp
     src/mesh/Edge.cpp
     src/mesh/Edge.hpp
-    src/mesh/Group.cpp
-    src/mesh/Group.hpp
-    src/mesh/Merge.cpp
-    src/mesh/Merge.hpp
+    src/mesh/Filter.hpp
     src/mesh/Mesh.cpp
     src/mesh/Mesh.hpp
-    src/mesh/PropertyContainer.cpp
-    src/mesh/PropertyContainer.hpp
-    src/mesh/Quad.cpp
-    src/mesh/Quad.hpp
-    src/mesh/RTree.cpp
-    src/mesh/RTree.hpp
     src/mesh/RangeAccessor.hpp
     src/mesh/SharedPointer.hpp
     src/mesh/Triangle.cpp
     src/mesh/Triangle.hpp
+    src/mesh/Utils.cpp
+    src/mesh/Utils.hpp
     src/mesh/Vertex.cpp
     src/mesh/Vertex.hpp
     src/mesh/config/DataConfiguration.cpp
     src/mesh/config/DataConfiguration.hpp
     src/mesh/config/MeshConfiguration.cpp
     src/mesh/config/MeshConfiguration.hpp
-    src/mesh/impl/RTree.hpp
-    src/mesh/impl/RTreeAdapter.hpp
     src/partition/Partition.cpp
     src/partition/Partition.hpp
-    src/partition/ProvidedBoundingBox.cpp
-    src/partition/ProvidedBoundingBox.hpp
     src/partition/ProvidedPartition.cpp
     src/partition/ProvidedPartition.hpp
-    src/partition/ReceivedBoundingBox.cpp
-    src/partition/ReceivedBoundingBox.hpp
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
-    src/precice/MeshHandle.cpp
-    src/precice/MeshHandle.hpp
     src/precice/SolverInterface.cpp
     src/precice/SolverInterface.hpp
-    src/precice/bindings/c/SolverInterfaceC.cpp
-    src/precice/bindings/fortran/ConstantsFortran.hpp
-    src/precice/bindings/fortran/SolverInterfaceFASTEST.cpp
-    src/precice/bindings/fortran/SolverInterfaceFASTEST.hpp
-    src/precice/bindings/fortran/SolverInterfaceFortran.cpp
-    src/precice/bindings/fortran/SolverInterfaceFortran.hpp
     src/precice/config/Configuration.cpp
     src/precice/config/Configuration.hpp
     src/precice/config/ParticipantConfiguration.cpp
@@ -240,36 +222,28 @@ target_sources(precice
     src/precice/config/SharedPointer.hpp
     src/precice/config/SolverInterfaceConfiguration.cpp
     src/precice/config/SolverInterfaceConfiguration.hpp
+    src/precice/impl/CommonErrorMessages.hpp
+    src/precice/impl/DataContext.cpp
     src/precice/impl/DataContext.hpp
     src/precice/impl/MappingContext.hpp
     src/precice/impl/MeshContext.hpp
     src/precice/impl/Participant.cpp
     src/precice/impl/Participant.hpp
-    src/precice/impl/RequestManager.cpp
-    src/precice/impl/RequestManager.hpp
     src/precice/impl/SharedPointer.hpp
     src/precice/impl/SolverInterfaceImpl.cpp
     src/precice/impl/SolverInterfaceImpl.hpp
     src/precice/impl/ValidationMacros.hpp
+    src/precice/impl/WatchIntegral.cpp
+    src/precice/impl/WatchIntegral.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
-    src/query/ExportVTKNeighbors.cpp
-    src/query/ExportVTKNeighbors.hpp
-    src/query/ExportVTKVoxelQueries.cpp
-    src/query/ExportVTKVoxelQueries.hpp
-    src/query/FindClosest.cpp
-    src/query/FindClosest.hpp
-    src/query/FindClosestEdge.cpp
-    src/query/FindClosestEdge.hpp
-    src/query/FindClosestQuad.cpp
-    src/query/FindClosestQuad.hpp
-    src/query/FindClosestTriangle.cpp
-    src/query/FindClosestTriangle.hpp
-    src/query/FindClosestVertex.cpp
-    src/query/FindClosestVertex.hpp
-    src/query/FindVoxelContent.cpp
-    src/query/FindVoxelContent.hpp
+    src/query/Index.cpp
+    src/query/Index.hpp
+    src/query/impl/Indexer.cpp
+    src/query/impl/Indexer.hpp
+    src/query/impl/RTreeAdapter.hpp
+    src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
     src/utils/EigenHelperFunctions.cpp
@@ -300,10 +274,20 @@ target_sources(precice
     src/utils/TypeNames.hpp
     src/utils/algorithm.hpp
     src/utils/assertion.hpp
+    src/utils/fmt.hpp
+    src/utils/fmtEigen.hpp
+    src/utils/fmtSTL.hpp
+    src/utils/networking.cpp
+    src/utils/networking.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
+    src/utils/traits.hpp
     src/xml/ConfigParser.cpp
     src/xml/ConfigParser.hpp
+    src/xml/Printer.cpp
+    src/xml/Printer.hpp
+    src/xml/ValueParser.cpp
+    src/xml/ValueParser.hpp
     src/xml/XMLAttribute.hpp
     src/xml/XMLTag.cpp
     src/xml/XMLTag.hpp
@@ -314,7 +298,5 @@ target_sources(precice
 #
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
-    src/precice/MeshHandle.hpp
     src/precice/SolverInterface.hpp
-    src/precice/bindings/c/SolverInterfaceC.h
     )

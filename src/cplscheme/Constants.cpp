@@ -4,22 +4,24 @@ namespace precice {
 namespace cplscheme {
 namespace constants {
 
-const std::string& actionWriteIterationCheckpoint ()
+const std::string &actionWriteIterationCheckpoint()
 {
-  static std::string actionWriteIterationCheckpoint ( "write-iteration-checkpoint" );
+  static std::string actionWriteIterationCheckpoint("write-iteration-checkpoint");
   return actionWriteIterationCheckpoint;
 }
 
-const std::string& actionReadIterationCheckpoint ()
+const std::string &actionReadIterationCheckpoint()
 {
-  static std::string actionReadIterationCheckpoint ( "read-iteration-checkpoint" );
+  static std::string actionReadIterationCheckpoint("read-iteration-checkpoint");
   return actionReadIterationCheckpoint;
 }
 
-const std::string& actionWriteInitialData ()
+const std::string &actionWriteInitialData()
 {
-  static std::string actionWriteInitialData ( "write-initial-data" );
+  static std::string actionWriteInitialData("write-initial-data");
   return actionWriteInitialData;
 }
 
-}}} // namespace precice, cplscheme, constants
+} // namespace constants
+} // namespace cplscheme
+} // namespace precice

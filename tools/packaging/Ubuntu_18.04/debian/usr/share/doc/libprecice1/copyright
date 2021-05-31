@@ -1,7 +1,0 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: preCICE
-Source: https://github.com/precice/precice
-
-Files: *
-Copyright: (c) 2018 the preCICE developers <precice@mailman.informatik.uni-stuttgart.de>
-License: LGPL-3

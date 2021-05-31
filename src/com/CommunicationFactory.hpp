@@ -4,12 +4,9 @@
 #include <string>
 #include "com/SharedPointer.hpp"
 
-namespace precice
-{
-namespace com
-{
-class CommunicationFactory
-{
+namespace precice {
+namespace com {
+class CommunicationFactory {
 
 public:
   virtual ~CommunicationFactory(){};

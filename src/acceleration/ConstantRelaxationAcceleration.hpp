@@ -1,17 +1,16 @@
 #pragma once
 
+#include <algorithm>
 #include <map>
-
-#include "logging/Logger.hpp"
+#include <string>
+#include <vector>
 #include "acceleration/Acceleration.hpp"
+#include "logging/Logger.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
-class ConstantRelaxationAcceleration : public Acceleration
-{
+class ConstantRelaxationAcceleration : public Acceleration {
 public:
   ConstantRelaxationAcceleration(
       double           relaxation,
@@ -23,11 +22,6 @@ public:
   {
     return _dataIDs;
   }
-
-  virtual void setDesignSpecification(
-      Eigen::VectorXd &q);
-
-  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap &cplData);
 
   virtual void initialize(DataMap &cplData);
 
@@ -43,8 +37,6 @@ private:
   double _relaxation;
 
   std::vector<int> _dataIDs;
-
-  Eigen::VectorXd _designSpecification;
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

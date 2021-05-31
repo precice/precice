@@ -1,2 +1,0 @@
-# Trigger the ldconfig to ensure that the ldconfig cache is updated
-activate-noawait ldconfig

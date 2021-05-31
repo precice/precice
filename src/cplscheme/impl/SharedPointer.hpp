@@ -2,17 +2,14 @@
 
 #include <memory>
 
-namespace precice
-{
-namespace cplscheme
-{
-namespace impl
-{
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
 class ConvergenceMeasure;
 class ParallelMatrixOperations;
 
 using PtrConvergenceMeasure = std::shared_ptr<ConvergenceMeasure>;
-}
-}
-} // namespace precice, cplscheme, impl
+} // namespace impl
+} // namespace cplscheme
+} // namespace precice

@@ -1,2 +1,0 @@
-add_library(prettyprint INTERFACE IMPORTED GLOBAL)
-set_property(TARGET prettyprint PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/include")

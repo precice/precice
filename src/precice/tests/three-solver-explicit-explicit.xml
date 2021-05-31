@@ -1,60 +1,67 @@
-<?xml version="1.0"?>
-
+<?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-   <solver-interface dimensions="2">   
-      <data:vector name="Data"/>
-   
-      <mesh name="MeshA">
-         <use-data name="Data"/>
-      </mesh>
-      
-      <mesh name="MeshB">
-         <use-data name="Data"/>
-      </mesh>
-      
-      <mesh name="MeshC">
-         <use-data name="Data"/>
-      </mesh>
-      
-      <mesh name="MeshD">
-         <use-data name="Data"/>
-      </mesh>
-      
-      <participant name="SolverOne">
-         <use-mesh name="MeshA" provide="yes"/>
-         <use-mesh name="MeshB" provide="yes"/>
-         <write-data name="Data" mesh="MeshA" />
-      </participant>
-      
-      <participant name="SolverTwo">
-         <use-mesh name="MeshA" from="SolverOne"/>
-         <use-mesh name="MeshC" provide="yes"/>
-         <read-data name="Data" mesh="MeshC" />
-         <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshC" constraint="conservative" />
-      </participant>
-      
-      <participant name="SolverThree">
-         <use-mesh name="MeshB" from="SolverOne"/>
-         <use-mesh name="MeshD" provide="yes"/>
-         <read-data name="Data" mesh="MeshD" />
-         <mapping:nearest-neighbor direction="read" from="MeshB" to="MeshD" constraint="conservative" />
-      </participant>
-      
-      <m2n:mpi-single from="SolverOne" to="SolverTwo"/>
-      <m2n:mpi-single from="SolverOne" to="SolverThree"/>
-      
-      <coupling-scheme:serial-explicit> 
-         <participants first="SolverOne" second="SolverTwo"/> 
-         <max-timesteps value="10"/>
-         <timestep-length value="1.0"/>
-         <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverTwo"/>
-      </coupling-scheme:serial-explicit>   
-      
-      <coupling-scheme:serial-explicit> 
-         <participants first="SolverOne" second="SolverThree"/> 
-         <max-timesteps value="10"/>
-         <timestep-length value="1.0"/>
-         <exchange data="Data" mesh="MeshB" from="SolverOne" to="SolverThree"/>
-      </coupling-scheme:serial-explicit>                  
-   </solver-interface>
+  <solver-interface dimensions="2">
+    <data:vector name="Data" />
+
+    <mesh name="MeshA">
+      <use-data name="Data" />
+    </mesh>
+
+    <mesh name="MeshB">
+      <use-data name="Data" />
+    </mesh>
+
+    <mesh name="MeshC">
+      <use-data name="Data" />
+    </mesh>
+
+    <mesh name="MeshD">
+      <use-data name="Data" />
+    </mesh>
+
+    <participant name="SolverOne">
+      <use-mesh name="MeshA" provide="yes" />
+      <use-mesh name="MeshB" provide="yes" />
+      <write-data name="Data" mesh="MeshA" />
+    </participant>
+
+    <participant name="SolverTwo">
+      <use-mesh name="MeshA" from="SolverOne" />
+      <use-mesh name="MeshC" provide="yes" />
+      <read-data name="Data" mesh="MeshC" />
+      <mapping:nearest-neighbor
+        direction="read"
+        from="MeshA"
+        to="MeshC"
+        constraint="conservative" />
+    </participant>
+
+    <participant name="SolverThree">
+      <use-mesh name="MeshB" from="SolverOne" />
+      <use-mesh name="MeshD" provide="yes" />
+      <read-data name="Data" mesh="MeshD" />
+      <mapping:nearest-neighbor
+        direction="read"
+        from="MeshB"
+        to="MeshD"
+        constraint="conservative" />
+    </participant>
+
+    <m2n:sockets from="SolverOne" to="SolverTwo" />
+    <m2n:sockets from="SolverOne" to="SolverThree" />
+
+    <coupling-scheme:serial-explicit>
+      <participants first="SolverOne" second="SolverTwo" />
+      <max-time-windows value="10" />
+      <time-window-size value="1.0" />
+      <exchange data="Data" mesh="MeshA" from="SolverOne" to="SolverTwo" />
+    </coupling-scheme:serial-explicit>
+
+    <coupling-scheme:serial-explicit>
+      <participants first="SolverOne" second="SolverThree" />
+      <max-time-windows value="10" />
+      <time-window-size value="1.0" />
+      <exchange data="Data" mesh="MeshB" from="SolverOne" to="SolverThree" />
+    </coupling-scheme:serial-explicit>
+  </solver-interface>
 </precice-configuration>

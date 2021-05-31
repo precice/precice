@@ -1,11 +1,14 @@
 #pragma once
 
+#include <Eigen/Core>
+#include <map>
+#include <vector>
+#include "acceleration/Acceleration.hpp"
 #include "acceleration/BaseQNAcceleration.hpp"
+#include "acceleration/impl/SharedPointer.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
+namespace precice {
+namespace acceleration {
 
 /**
  * @brief Interface quasi-Newton with interface least-squares approximation.
@@ -20,17 +23,16 @@ namespace acceleration
  * IQN-related data. The data is called "secondary" henceforth and additional
  * old value and data matrices are needed for it.
  */
-class IQNILSAcceleration : public BaseQNAcceleration
-{
+class IQNILSAcceleration : public BaseQNAcceleration {
 public:
   IQNILSAcceleration(
-      double            initialRelaxation,
-      bool              forceInitialRelaxation,
-      int               maxIterationsUsed,
-      int               timestepsReused,
-      int               filter,
-      double            singularityLimit,
-      std::vector<int>  dataIDs,
+      double                  initialRelaxation,
+      bool                    forceInitialRelaxation,
+      int                     maxIterationsUsed,
+      int                     pastTimeWindowsReused,
+      int                     filter,
+      double                  singularityLimit,
+      std::vector<int>        dataIDs,
       impl::PtrPreconditioner preconditioner);
 
   virtual ~IQNILSAcceleration() {}
@@ -68,5 +70,5 @@ private:
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
 };
-}
-} // namespace precice, acceleration
+} // namespace acceleration
+} // namespace precice

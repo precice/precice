@@ -1,19 +1,23 @@
 #pragma once
 
+#include <cstddef>
 #include <list>
-#include <vector>
+#include <memory>
 #include <string>
-
+#include <utility>
+#include <vector>
 #include "DistributedCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 
-namespace precice
-{
-namespace m2n
-{
+namespace precice {
+namespace com {
+class Request;
+} // namespace com
+
+namespace m2n {
 /**
  * @brief Point-to-point communication implementation of DistributedCommunication.
  *
@@ -25,8 +29,7 @@ namespace m2n
  *
  * For the detailed implementation documentation refer to PointToPointCommunication.cpp.
  */
-class PointToPointCommunication : public DistributedCommunication
-{
+class PointToPointCommunication : public DistributedCommunication {
 public:
   PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
                             mesh::PtrMesh                mesh);
@@ -63,24 +66,21 @@ public:
    * @param[in] acceptorName  Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void acceptPreConnection(std::string const &acceptorName,
-                                   std::string const &requesterName);
-  
+  void acceptPreConnection(std::string const &acceptorName,
+                           std::string const &requesterName) override;
+
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
-   *        Only initial connection is created. 
+   *        Only initial connection is created.
    *
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  virtual void requestPreConnection(std::string const &acceptorName,
-                                    std::string const &requesterName);
+  void requestPreConnection(std::string const &acceptorName,
+                            std::string const &requesterName) override;
 
-  /*
-   * @brief This function must be called by both acceptor and requester to update 
-   *        the vertex list in _mappings
-   */
-  virtual void updateVertexList() override;
+  /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
+  void completeSlavesConnection() override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -103,38 +103,26 @@ public:
                size_t  size,
                int     valueDimension = 1) override;
 
-  /**
-   * @brief Broadcasts an int to connected ranks on remote participant       
-   */
+  /// Broadcasts an int to connected ranks on remote participant
   void broadcastSend(const int &itemToSend) override;
 
   /**
    * @brief Receives an int per connected rank on remote participant
-   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order 
+   * @para[out] itemToReceive received ints from remote ranks are stored with the sender rank order
    */
   void broadcastReceiveAll(std::vector<int> &itemToReceive) override;
 
-  /**
-   * @brief All ranks send their mesh partition to remote local  connected ranks.
-   */
+  /// Broadcasts a mesh to connected ranks on remote participant
   void broadcastSendMesh() override;
-  
-  /**
-   * @brief All ranks receive mesh partitions from remote local ranks.
-   */
-  void broadcastReceiveMesh() override;
 
-  /**
-   *  @brief All ranks send their local communication map to connected ranks
-   */
-  void broadcastSendLCM(
-    CommunicationMap &localCommunicationMap) override;
+  /// Receive mesh partitions per connected rank on remote participant
+  void broadcastReceiveAllMesh() override;
 
-  /**
-   *  @brief Each rank revives local communication maps from connected ranks
-   */
-  void broadcastReceiveLCM(
-    CommunicationMap &localCommunicationMap) override;
+  /// Scatters a communication map over connected ranks on remote participant
+  void scatterAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
+
+  /// Gathers a communication maps from connected ranks on remote participant
+  void gatherAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
 
 private:
   logging::Logger _log{"m2n::PointToPointCommunication"};
@@ -142,9 +130,9 @@ private:
   /// Checks all stored requests for completion and removes associated buffers
   /**
    * @param[in] blocking False means that the function returns, even when there are requests left.
-   */  
+   */
   void checkBufferedRequests(bool blocking);
-  
+
   com::PtrCommunicationFactory _communicationFactory;
 
   /// Communication class used for this PointToPointCommunication
@@ -152,7 +140,7 @@ private:
    * A Communication object represents all connections to all ranks made by this P2P instance.
    **/
   com::PtrCommunication _communication;
-  
+
   /**
    * @brief Defines mapping between:
    *        1. global remote process rank;
@@ -175,17 +163,16 @@ private:
    */
   std::vector<Mapping> _mappings;
 
-   /**
-   * @brief this data structure is used to store m2n communication information for the 1 step of 
+  /**
+   * @brief this data structure is used to store m2n communication information for the 1 step of
    *        bounding box initialization. It stores:
    *        1. global remote process rank;
    *        2. communication object (provides point-to-point communication routines).
    *        3. Request holding information about pending communication
    */
   struct ConnectionData {
-    int                   remoteRank;
-    com::PtrCommunication communication;
-    com::PtrRequest       request;
+    int             remoteRank;
+    com::PtrRequest request;
   };
 
   /**
@@ -197,8 +184,8 @@ private:
   bool _isConnected = false;
 
   std::list<std::pair<std::shared_ptr<com::Request>,
-                      std::shared_ptr<std::vector<double>>>> bufferedRequests;
-
+                      std::shared_ptr<std::vector<double>>>>
+      bufferedRequests;
 };
 } // namespace m2n
 } // namespace precice

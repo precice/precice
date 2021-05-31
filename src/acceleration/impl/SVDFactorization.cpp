@@ -1,22 +1,23 @@
 #ifndef PRECICE_NO_MPI
 
 #include "acceleration/impl/SVDFactorization.hpp"
-#include "utils/EigenHelperFunctions.hpp"
+#include <Eigen/Core>
+#include <limits>
+#include <utility>
+
 #include "utils/MasterSlave.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 SVDFactorization::SVDFactorization(
     double            eps,
     PtrPreconditioner preconditioner)
-    : _preconditioner(preconditioner),
+    : _preconditioner(std::move(preconditioner)),
       _truncationEps(eps)
-{}
+{
+}
 
 void SVDFactorization::initialize(
     PtrParMatrixOps parOps,
@@ -299,6 +300,8 @@ int SVDFactorization::rank()
   return _cols;
 }
 
-}}} // namespace precice, acceleration, impl
+} // namespace impl
+} // namespace acceleration
+} // namespace precice
 
 #endif // PRECICE_NO_MPI

@@ -2,27 +2,25 @@
 
 #include <Eigen/Core>
 #include <fstream>
+#include <limits>
+#include <string>
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
+namespace precice {
+namespace acceleration {
+namespace impl {
 
 /**
- * @brief Class that provides functionality for a dynamic QR-decomposition, that can be updated 
- * in O(mn) flops if a column is inserted or deleted. 
+ * @brief Class that provides functionality for a dynamic QR-decomposition, that can be updated
+ * in O(mn) flops if a column is inserted or deleted.
  * The new colmn is orthogonalized to the existing columns in Q using a modified GramSchmidt algorithm.
  * The zero-elements are generated using suitable givens-roatations.
- * The Interface provides fnctions such as insertColumn, deleteColumn at arbitrary position an push or pull 
- * column at front or back, resp. 
+ * The Interface provides fnctions such as insertColumn, deleteColumn at arbitrary position an push or pull
+ * column at front or back, resp.
  */
-class QRFactorization
-{
+class QRFactorization {
 public:
   /**
    * @brief Constructor.
@@ -98,7 +96,7 @@ public:
   bool insertColumn(int k, const Eigen::VectorXd &v, double singularityLimit = 0);
 
   /**
-   * @brief updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted. 
+   * @brief updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted.
    * Returns the deleted column v(1:n)
    */
   void deleteColumn(int k);
@@ -147,9 +145,9 @@ public:
   Eigen::MatrixXd &matrixR();
 
   // @brief returns the number of columns in the QR-decomposition
-  int cols();
+  int cols() const;
   // @brief returns the number of rows in the QR-decomposition
-  int rows();
+  int rows() const;
 
   // @brief optional file-stream for logging output
   void setfstream(std::fstream *stream);
@@ -199,8 +197,8 @@ private:
   void computeReflector(givensRot &grot, double &x, double &y);
 
   /**
-  *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G, 
-  *  where G is the Givens matrix grot, determined by sigma and gamma. 
+  *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G,
+  *  where G is the Givens matrix grot, determined by sigma and gamma.
   */
   void applyReflector(const givensRot &grot, int k, int l, Eigen::VectorXd &p, Eigen::VectorXd &q);
 
@@ -224,4 +222,6 @@ private:
   int _globalRows;
 };
 
-}}} // namespace precice, acceleration
+} // namespace impl
+} // namespace acceleration
+} // namespace precice

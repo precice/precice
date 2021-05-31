@@ -1,0 +1,9 @@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+
+Name: preCICE
+Description: preCICE coupling library
+Version: @preCICE_VERSION@
+URL: https://www.precice.org
+Libs: -L${libdir} -lprecice
+Cflags: -I${includedir}

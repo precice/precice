@@ -3,31 +3,29 @@
 #ifndef PRECICE_NO_MPI
 
 #include <Eigen/Core>
-
+#include <memory>
+#include <stddef.h>
+#include <string>
+#include <vector>
+#include "com/Communication.hpp"
 #include "com/MPIPortsCommunication.hpp"
+#include "com/Request.hpp"
 #include "com/SharedPointer.hpp"
+#include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
+namespace precice {
+namespace acceleration {
+namespace impl {
 
-namespace precice
-{
-namespace acceleration
-{
-namespace impl
-{
-
-class ParallelMatrixOperations
-{
+class ParallelMatrixOperations {
 public:
-  /// Destructor, empty.
-  virtual ~ParallelMatrixOperations(){};
+  ~ParallelMatrixOperations();
 
   /// Initializes the acceleration.
-  void initialize(com::PtrCommunication leftComm,
-                  com::PtrCommunication rightComm,
-                  bool                  needcyclicComm);
+  void initialize(const bool needCyclicComm);
 
   template <typename Derived1, typename Derived2>
   void multiply(
@@ -43,7 +41,7 @@ public:
     PRECICE_ASSERT(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
     // if serial computation on single processor, i.e, no master-slave mode
-    if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+    if (!utils::MasterSlave::isParallel()) {
       result.noalias() = leftMatrix * rightMatrix;
 
       // if parallel computation on p processors, i.e., master-slave mode
@@ -55,7 +53,7 @@ public:
       // if p equals r (and p = global_n), we have to perform the
       // cyclic communication with block-wise matrix-matrix multiplication
       if (p == r) {
-        PRECICE_ASSERT(_needCycliclComm);
+        PRECICE_ASSERT(_needCyclicComm);
         PRECICE_ASSERT(_cyclicCommLeft.get() != NULL);
         PRECICE_ASSERT(_cyclicCommLeft->isConnected());
         PRECICE_ASSERT(_cyclicCommRight.get() != NULL);
@@ -103,7 +101,7 @@ public:
     localResult.noalias() = leftMatrix * rightMatrix;
 
     // if serial computation on single processor, i.e, no master-slave mode
-    if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+    if (!utils::MasterSlave::isParallel()) {
       result = localResult;
     } else {
       utils::MasterSlave::allreduceSum(localResult.data(), result.data(), localResult.size());
@@ -134,7 +132,7 @@ private:
      * -----------------------------------------------------------------------
      */
 
-    PRECICE_ASSERT(_needCycliclComm);
+    PRECICE_ASSERT(_needCyclicComm);
     PRECICE_ASSERT(leftMatrix.cols() == q, leftMatrix.cols(), q);
     PRECICE_ASSERT(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
     PRECICE_ASSERT(result.rows() == p, result.rows(), p);
@@ -267,7 +265,7 @@ private:
 
     // ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
     PRECICE_ASSERT(static_cast<int>(leftMatrix.IsRowMajor) == static_cast<int>(rightMatrix.IsRowMajor),
-              leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
+                   leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
 
     // multiply local block (saxpy-based approach)
     // dimension: (n_global x n_local) * (n_local x m) = (n_global x m)
@@ -293,7 +291,7 @@ private:
       // distribute blocks of summarizedBlocks (result of multiplication) to corresponding slaves
       result = summarizedBlocks.block(0, 0, offsets[1], r);
 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+      for (int rankSlave : utils::MasterSlave::allSlaves()) {
         int off       = offsets[rankSlave];
         int send_rows = offsets[rankSlave + 1] - offsets[rankSlave];
 
@@ -313,9 +311,27 @@ private:
   /// Communication between neighboring slaves, forward
   com::PtrCommunication _cyclicCommRight = nullptr;
 
-  bool _needCycliclComm = true;
+  bool _needCyclicComm = true;
+
+  /** Establishes the circular connection between slaves
+   *
+   * This creates and connects the slaves.
+   *
+   * @precondition _cyclicCommLeft and _cyclicCommRight must be nullptr
+   * @postcondition _cyclicCommLeft, _cyclicCommRight are connected
+   */
+  void establishCircularCommunication();
+
+  /** Closes the circular connection between slaves
+   *
+   * @precondition establishCircularCommunication() was called
+   * @postcondition _cyclicCommLeft, _cyclicCommRight are disconnected and set to nullptr
+   */
+  void closeCircularCommunication();
 };
 
-}}} // namespace precice, acceleration, impl
+} // namespace impl
+} // namespace acceleration
+} // namespace precice
 
 #endif
