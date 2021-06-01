@@ -875,7 +875,6 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   BaseCouplingScheme *scheme;
 
   std::map<std::string, m2n::PtrM2N> m2ns;
-
   for (const std::string &participant : _config.participants) {
     if (_m2nConfig->isM2NConfigured(accessor, participant)) {
       m2ns[participant] = _m2nConfig->getM2N(accessor, participant);
@@ -988,8 +987,15 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 {
   PRECICE_TRACE();
   for (const Config::Exchange &exchange : _config.exchanges) {
-    const std::string &from = exchange.from;
-    const std::string &to   = exchange.to;
+    const std::string &from     = exchange.from;
+    const std::string &to       = exchange.to;
+    const std::string &dataName = exchange.data->getName();
+    const std::string &meshName = exchange.mesh->getName();
+
+    PRECICE_CHECK(to != from,
+                  "You cannot define an exchange from and to the same participant. "
+                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  dataName, meshName, from, to);
 
     PRECICE_CHECK((utils::contained(from, _config.participants) || from == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme",

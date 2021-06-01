@@ -44,7 +44,7 @@ public:
       const std::string &                localParticipant,
       std::map<std::string, m2n::PtrM2N> m2ns,
       constants::TimesteppingMethod      dtMethod,
-      std::string                        controller,
+      const std::string &                controller,
       int                                maxIterations = -1);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
@@ -152,9 +152,11 @@ private:
     }
   }
 
-  bool receiveConvergence(m2n::PtrM2N m2n);
+  bool receiveConvergence(const m2n::PtrM2N &m2n);
+  void sendConvergence(const m2n::PtrM2N &m2n, bool convergence);
 
-  bool _isController;
+  std::string _controller;
+  bool        _isController;
 };
 
 } // namespace cplscheme

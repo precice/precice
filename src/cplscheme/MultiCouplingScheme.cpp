@@ -29,14 +29,14 @@ MultiCouplingScheme::MultiCouplingScheme(
     const std::string &                localParticipant,
     std::map<std::string, m2n::PtrM2N> m2ns,
     constants::TimesteppingMethod      dtMethod,
-    std::string                        controller,
+    const std::string &                controller,
     int                                maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, Implicit, dtMethod),
-      _m2ns(std::move(m2ns)), _isController(localParticipant == controller)
+      _m2ns(std::move(m2ns)), _controller(controller), _isController(controller == localParticipant)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
-  PRECICE_DEBUG("CONTROLLER IS {}", controller);
+  PRECICE_DEBUG("AM I THE CONTROLLER? {}", _isController);
 
   // Controller participant never does the first step, because it is never the first participant
   setDoesFirstStep(!_isController);
@@ -119,23 +119,21 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
   // @todo implement MultiCouplingScheme for explicit coupling
 
-  bool convergence = true;
-
   PRECICE_DEBUG("Computed full length of iteration");
+
+  bool convergence = true;
 
   if (_isController) {
     for (auto &receiveExchange : _receiveDataVector) {
-      PRECICE_DEBUG("REQUESTED RECEIVE IS: {}", receiveExchange.first);
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     checkDataHasBeenReceived();
 
-    PRECICE_DEBUG("Perform acceleration (only second participant)...");
     convergence = accelerate();
-
     for (const auto &m2nPair : _m2ns) {
       sendConvergence(m2nPair.second, convergence);
     }
+
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
@@ -144,20 +142,13 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
       sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
 
-    bool localConvergence = true;
-
-    for (const auto &m2nPair : _m2ns) {
-      localConvergence = receiveConvergence(m2nPair.second);
-      convergence      = (convergence && localConvergence);
-    }
+    convergence = receiveConvergence(_m2ns[_controller]);
 
     for (auto &receiveExchange : _receiveDataVector) {
-      PRECICE_DEBUG("REQUESTED RECEIVE IS: {}", receiveExchange.first);
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
     checkDataHasBeenReceived();
   }
-
   return convergence;
 }
 
@@ -216,12 +207,18 @@ void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureConte
   //}
 }
 
-bool MultiCouplingScheme::receiveConvergence(m2n::PtrM2N m2n)
+bool MultiCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
 {
   PRECICE_ASSERT((!_isController), "For convergence information the receiving participant is always the non-controller one.");
   bool convergence;
   m2n->receive(convergence);
   return convergence;
+}
+
+void MultiCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n, bool convergence)
+{
+  PRECICE_ASSERT((_isController), "For convergence information the sending participant is always the controller one.");
+  m2n->send(convergence);
 }
 
 } // namespace cplscheme
