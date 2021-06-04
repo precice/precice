@@ -73,15 +73,8 @@ void MultiCouplingScheme::exchangeInitialData()
       receiveData(_m2ns[i], _receiveDataVector[i]);
     }
     checkDataHasBeenReceived();
-    // second participant has to save values for extrapolation
-    for (DataMap &receiveData : _receiveDataVector) {
-      updateOldValues(receiveData);
-    }
   }
   if (sendsInitializedData()) {
-    for (DataMap &sendData : _sendDataVector) {
-      updateOldValues(sendData);
-    }
     for (size_t i = 0; i < _m2ns.size(); i++) {
       sendData(_m2ns[i], _sendDataVector[i]);
     }
@@ -101,7 +94,7 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   checkDataHasBeenReceived();
 
   PRECICE_DEBUG("Perform acceleration (only second participant)...");
-  bool convergence = accelerate();
+  bool convergence = doImplicitStep();
 
   for (const m2n::PtrM2N &m2n : _m2ns) {
     sendConvergence(m2n, convergence);
@@ -114,17 +107,6 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   return convergence;
 }
 
-void MultiCouplingScheme::mergeData()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(_allData.empty(), "This function should only be called once.");
-  PRECICE_ASSERT(_sendDataVector.size() == _receiveDataVector.size());
-  for (size_t i = 0; i < _sendDataVector.size(); i++) {
-    _allData.insert(_sendDataVector[i].begin(), _sendDataVector[i].end());
-    _allData.insert(_receiveDataVector[i].begin(), _receiveDataVector[i].end());
-  }
-}
-
 void MultiCouplingScheme::addDataToSend(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
@@ -135,7 +117,10 @@ void MultiCouplingScheme::addDataToSend(
   if (!utils::contained(id, _sendDataVector[index])) {
     PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
+    PRECICE_ASSERT(_sendDataVector[index].count(pair.first) == 0, "Key already exists!");
     _sendDataVector[index].insert(pair);
+    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
+    _allData.insert(pair);
   } else {
     PRECICE_ERROR("Data \"{}\" of mesh \"{}\" cannot be added twice for sending.",
                   data->getName(), mesh->getName());
@@ -152,28 +137,14 @@ void MultiCouplingScheme::addDataToReceive(
   if (!utils::contained(id, _receiveDataVector[index])) {
     PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
+    PRECICE_ASSERT(_receiveDataVector[index].count(pair.first) == 0, "Key already exists!");
     _receiveDataVector[index].insert(pair);
+    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
+    _allData.insert(pair);
   } else {
     PRECICE_ERROR("Data \"{}\" of mesh \"{}\" cannot be added twice for receiving.",
                   data->getName(), mesh->getName());
   }
-}
-
-CouplingData *MultiCouplingScheme::getData(
-    int dataID)
-{
-  PRECICE_TRACE(dataID);
-  DataMap::iterator iter = _allData.find(dataID);
-  if (iter != _allData.end()) {
-    return &(*(iter->second));
-  }
-  return nullptr;
-}
-
-void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID)
-{
-  convergenceMeasure->couplingData = getData(dataID);
-  PRECICE_ASSERT(convergenceMeasure->couplingData != nullptr);
 }
 
 } // namespace cplscheme

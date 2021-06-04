@@ -11,7 +11,7 @@ namespace precice {
 namespace utils {
 
 void shiftSetFirst(
-    Eigen::MatrixXd &A, Eigen::VectorXd &v)
+    Eigen::MatrixXd &A, const Eigen::VectorXd &v)
 {
   PRECICE_ASSERT(v.size() == A.rows(), v.size(), A.rows());
   // A.bottomRightCorner(n, m - 1) = A.topLeftCorner(n, m - 1);

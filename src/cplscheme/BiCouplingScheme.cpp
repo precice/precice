@@ -56,7 +56,10 @@ void BiCouplingScheme::addDataToSend(
   if (!utils::contained(id, _sendData)) {
     PtrCouplingData     ptrCplData(new CouplingData(data, mesh, requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
+    PRECICE_ASSERT(_sendData.count(pair.first) == 0, "Key already exists!");
     _sendData.insert(pair);
+    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
+    _allData.insert(pair);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
@@ -72,7 +75,10 @@ void BiCouplingScheme::addDataToReceive(
   if (!utils::contained(id, _receiveData)) {
     PtrCouplingData     ptrCplData(new CouplingData(data, mesh, requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
+    PRECICE_ASSERT(_receiveData.count(pair.first) == 0, "Key already exists!");
     _receiveData.insert(pair);
+    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
+    _allData.insert(pair);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }

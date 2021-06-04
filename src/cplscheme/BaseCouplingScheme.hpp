@@ -19,6 +19,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -227,7 +228,7 @@ public:
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
-      mesh::PtrData               data,
+      int                         dataID,
       bool                        suffices,
       bool                        strict,
       impl::PtrConvergenceMeasure measure,
@@ -254,19 +255,14 @@ protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
 
+  /// Map from data ID -> all data (receive and send) with that ID
+  DataMap _allData;
+
   /// Sends data sendDataIDs given in mapCouplingData with communication.
   void sendData(m2n::PtrM2N m2n, DataMap sendData);
 
   /// Receives data receiveDataIDs given in mapCouplingData with communication.
   void receiveData(m2n::PtrM2N m2n, DataMap receiveData);
-
-  /**
-   * @brief Used by storeData to take care of storing individual DataMap
-   * @param data DataMap that will be stored
-   */
-  void store(DataMap data);
-
-  typedef std::map<int, Eigen::VectorXd> ValuesMap;
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -330,59 +326,10 @@ protected:
   }
 
   /**
-   * @brief Holds meta information to perform a convergence measurement.
-   * @param data Associated data field
-   * @param couplingData Coupling data history
-   * @param suffices Whether this measure already suffices for convergence
-   * @param strict Whether non-convergence of this measure leads to a premature end of the simulation
-   * @param measure Link to the actual convergence measure
-   * @param doesLogging Whether this measure is logged in the convergence file
-   */
-  struct ConvergenceMeasureContext {
-    mesh::PtrData               data;
-    CouplingData *              couplingData;
-    bool                        suffices;
-    bool                        strict;
-    impl::PtrConvergenceMeasure measure;
-    bool                        doesLogging;
-
-    std::string logHeader() const
-    {
-      return "Res" + measure->getAbbreviation() + "(" + data->getName() + ")";
-    }
-  };
-
-  /**
-   * @brief Reset all convergence measurements after convergence
-   */
-  void newConvergenceMeasurements();
-
-  /**
-   * @brief Measure whether coupling scheme has converged or not
-   * @return Whether coupling schem has converged
-   */
-  bool measureConvergence();
-
-  /**
    * @brief Sets up data matrices to store data values from previous iterations and time windows.
    * @param data Data fields for which data is stored
    */
-  void setupDataMatrices(DataMap &data);
-
-  /**
-   * @brief Getter for _acceleration
-   * @returns _acceleration
-   */
-  acceleration::PtrAcceleration getAcceleration()
-  {
-    return _acceleration;
-  }
-
-  /**
-   * @brief Set old coupling data values to current values
-   * @param dataMap Data fields to update
-   */
-  void updateOldValues(DataMap &dataMap);
+  void setupDataMatrices();
 
   /**
    * @brief sends convergence to other participant via m2n
@@ -396,24 +343,33 @@ protected:
   }
 
   /**
-   * @brief apply acceleration to the current iteration
+   * @brief perform a coupling iteration
    * @returns whether this iteration has converged or not
    *
    * This function is called from the child classes
    */
-  bool accelerate();
+  bool doImplicitStep();
 
   /**
-   * @brief Extrapolate coupling data from values of previous time windows
-   * @param data Data fields to extrapolate
+   * @brief stores current data in buffer of all Waveforms
    */
-  void extrapolateData(DataMap &data);
+  void storeDataInWaveforms();
 
   /**
-   * @brief compares _iterations with _maxIterations
-   * @returns true, if maximum number of coupling iterations is reached
+   * @brief finalizes this window's data and initializes data for next window.
    */
-  bool maxIterationsReached();
+  void moveToNextWindow();
+
+  /**
+   * @brief used for storing all Data at end of doImplicitStep for later reference.
+   */
+  void storeIteration()
+  {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+    for (DataMap::value_type &pair : _allData) {
+      pair.second->storeIteration();
+    }
+  }
 
   /**
    * @brief Sets _sendsInitializedData, if sendData requires initialization
@@ -426,13 +382,6 @@ protected:
    * @param receiveData CouplingData being checked
    */
   void determineInitialReceive(DataMap &receiveData);
-
-  /**
-   * @brief Checks whether any CouplingData in dataMap requires initialization
-   * @param dataMap map containing CouplingData
-   * @return true, if any CouplingData in dataMap requires initialization
-   */
-  bool anyDataRequiresInitialization(DataMap &dataMap) const;
 
 private:
   /// Coupling mode used by coupling scheme.
@@ -512,6 +461,28 @@ private:
   const double _eps;
 
   /**
+   * @brief Holds meta information to perform a convergence measurement.
+   * @param data Associated data field
+   * @param couplingData Coupling data history
+   * @param suffices Whether this measure already suffices for convergence
+   * @param strict Whether non-convergence of this measure leads to a premature end of the simulation
+   * @param measure Link to the actual convergence measure
+   * @param doesLogging Whether this measure is logged in the convergence file
+   */
+  struct ConvergenceMeasureContext {
+    CouplingData *              couplingData;
+    bool                        suffices;
+    bool                        strict;
+    impl::PtrConvergenceMeasure measure;
+    bool                        doesLogging;
+
+    std::string logHeader() const
+    {
+      return "Res" + measure->getAbbreviation() + "(" + couplingData->getDataName() + ")";
+    }
+  };
+
+  /**
    * @brief All convergence measures of coupling iterations.
    *
    * Before initialization, only dataID and measure variables are filled. Then,
@@ -519,12 +490,13 @@ private:
    */
   std::vector<ConvergenceMeasureContext> _convergenceMeasures;
 
-  /// Functions needed for initialize()
+  /// Map that links DataID to Waveform
+  typedef std::map<int, time::PtrWaveform> WaveformMap;
 
-  /**
-   * @brief merges all send and receive data into a single data structure.
-   */
-  virtual void mergeData() = 0;
+  /// All waveforms this coupling scheme needs data from as a map "data ID -> waveform"
+  WaveformMap _waveforms;
+
+  /// Functions needed for initialize()
 
   /**
    * @brief implements functionality for initialize in base class.
@@ -590,18 +562,31 @@ private:
   std::string printActionsState() const;
 
   /**
+   * @brief Measure whether coupling scheme has converged or not
+   * @return Whether coupling schem has converged
+   */
+  bool measureConvergence();
+
+  /**
+   * @brief Reset all convergence measurements after convergence
+   */
+  void newConvergenceMeasurements();
+
+  /**
    * @brief Needed for setting up convergence measures, implemented in child class
    * @param convMeasure Convergence measure to which the data field is assigned to
    * @param dataID Data field to be assigned
    */
-  virtual void assignDataToConvergenceMeasure(
+  void assignDataToConvergenceMeasure(
       ConvergenceMeasureContext *convMeasure,
-      int                        dataID) = 0;
+      int                        dataID);
 
   /**
-   * @brief used for storing send/receive data at end of acceleration, if not converged.
+   * @brief Checks whether any CouplingData in dataMap requires initialization
+   * @param dataMap map containing CouplingData
+   * @return true, if any CouplingData in dataMap requires initialization
    */
-  virtual void storeData() = 0;
+  bool anyDataRequiresInitialization(DataMap &dataMap) const;
 };
 } // namespace cplscheme
 } // namespace precice

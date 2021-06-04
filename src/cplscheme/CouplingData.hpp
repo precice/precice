@@ -14,52 +14,35 @@ public:
   CouplingData(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
-      bool          requiresInitialization)
-      : requiresInitialization(requiresInitialization),
-        data(data),
-        mesh(mesh)
-  {
-    PRECICE_ASSERT(data != nullptr);
-    PRECICE_ASSERT(mesh != nullptr);
-    PRECICE_ASSERT(mesh.use_count() > 0);
-  }
+      bool          requiresInitialization);
 
-  int getDimensions() const
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->getDimensions();
-  }
-
-  using DataMatrix = Eigen::MatrixXd;
+  int getDimensions() const;
 
   /// Returns a reference to the data values.
-  Eigen::VectorXd &values()
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->values();
-  }
+  Eigen::VectorXd &values();
 
   /// Returns a const reference to the data values.
-  const Eigen::VectorXd &values() const
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->values();
-  }
+  const Eigen::VectorXd &values() const;
 
-  int getMeshID()
-  {
-    return mesh->getID();
-  }
+  /// store _data->values() in read-only variable _previousIteration for convergence checks etc.
+  void storeIteration();
 
-  std::vector<int> getVertexOffsets()
-  {
-    return mesh->getVertexOffsets();
-  }
+  /// returns data value from previous iteration
+  const Eigen::VectorXd previousIteration() const;
 
-  /// Data values of previous iteration (1st col) and previous time windows.
-  DataMatrix oldValues;
+  /// get ID of this CouplingData's mesh. See Mesh::getID().
+  int getMeshID();
 
-  ///  True, if the data values if this CouplingData requires to be initialized by a participant.
+  /// get ID of this CouplingData's data. See Data::getID().
+  int getDataID();
+
+  /// get name of this CouplingData's data. See Data::getName().
+  std::string getDataName();
+
+  /// get vertex offsets of this CouplingData's mesh. See Mesh::getVertexOffsets().
+  std::vector<int> getVertexOffsets();
+
+  ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
 
 private:
@@ -74,9 +57,14 @@ private:
     PRECICE_ASSERT(false);
   }
 
-  mesh::PtrData data;
+  /// Data values of previous iteration.
+  Eigen::VectorXd _previousIteration;
 
-  mesh::PtrMesh mesh;
+  /// Data associated with this CouplingData
+  mesh::PtrData _data;
+
+  /// Mesh associated with this CouplingData
+  mesh::PtrMesh _mesh;
 };
 
 } // namespace cplscheme
