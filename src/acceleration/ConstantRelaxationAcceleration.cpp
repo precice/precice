@@ -3,6 +3,8 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <utility>
+
 #include "cplscheme/CouplingData.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -16,11 +18,12 @@ ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
     double           relaxation,
     std::vector<int> dataIDs)
     : _relaxation(relaxation),
-      _dataIDs(dataIDs)
+      _dataIDs(std::move(dataIDs))
 {
   PRECICE_CHECK((relaxation > 0.0) && (relaxation <= 1.0),
-                "Relaxation factor for constant relaxation acceleration "
-                    << "has to be larger than zero and smaller or equal to one. Current relaxation factor is: " << relaxation);
+                "Relaxation factor for constant relaxation acceleration has to be larger than zero and smaller or equal to one. "
+                "Current relaxation factor is: {}",
+                relaxation);
 }
 
 void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
@@ -51,7 +54,7 @@ void ConstantRelaxationAcceleration::performAcceleration(DataMap &cplData)
     const auto &oldValues = pair.second->oldValues.col(0);
     values *= omega;
     values += oldValues * oneMinusOmega;
-    PRECICE_DEBUG("pp values" << values);
+    PRECICE_DEBUG("pp values {}", values);
   }
 }
 

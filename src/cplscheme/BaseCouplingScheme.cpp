@@ -1,9 +1,9 @@
 #include "BaseCouplingScheme.hpp"
 #include <Eigen/Core>
+#include <cmath>
+#include <cstddef>
 #include <limits>
-#include <math.h>
 #include <sstream>
-#include <stddef.h>
 #include <utility>
 #include "acceleration/Acceleration.hpp"
 #include "cplscheme/Constants.hpp"
@@ -27,7 +27,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     int                           maxTimeWindows,
     double                        timeWindowSize,
     int                           validDigits,
-    const std::string &           localParticipant,
+    std::string                   localParticipant,
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
@@ -40,7 +40,7 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterations(1),
       _validDigits(validDigits),
-      _localParticipant(localParticipant),
+      _localParticipant(std::move(localParticipant)),
       _eps(std::pow(10.0, -1 * validDigits))
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -75,12 +75,13 @@ void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
 
   for (const DataMap::value_type &pair : sendData) {
     int size = pair.second->values().size();
-    if (size > 0) {
-      m2n->send(pair.second->values().data(), size, pair.second->mesh->getID(), pair.second->getDimensions());
-    }
+
+    // Data is actually only send if size>0, which is checked in the derived classes implementaiton
+    m2n->send(pair.second->values().data(), size, pair.second->getMeshID(), pair.second->getDimensions());
+
     sentDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of sent data sets = " << sentDataIDs.size());
+  PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
 void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
@@ -91,12 +92,13 @@ void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
   PRECICE_ASSERT(m2n->isConnected());
   for (DataMap::value_type &pair : receiveData) {
     int size = pair.second->values().size();
-    if (size > 0) {
-      m2n->receive(pair.second->values().data(), size, pair.second->mesh->getID(), pair.second->getDimensions());
-    }
+
+    // Data is only received on ranks with size>0, which is checked in the derived class implementation
+    m2n->receive(pair.second->values().data(), size, pair.second->getMeshID(), pair.second->getDimensions());
+
     receivedDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
+  PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
 }
 
 void BaseCouplingScheme::store(DataMap data)
@@ -134,7 +136,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
-                        << "an implicit coupling scheme.");
+                    "an implicit coupling scheme.");
       // merge send and receive data for all pp calls
       mergeData();
       // setup convergence measures
@@ -262,7 +264,7 @@ void BaseCouplingScheme::extrapolateData(DataMap &data)
   if ((_extrapolationOrder == 1) || getTimeWindows() == 2) { //timesteps is increased before extrapolate is called
     PRECICE_INFO("Performing first order extrapolation");
     for (DataMap::value_type &pair : data) {
-      PRECICE_DEBUG("Extrapolate data: " << pair.first);
+      PRECICE_DEBUG("Extrapolate data: {}", pair.first);
       PRECICE_ASSERT(pair.second->oldValues.cols() > 1);
       Eigen::VectorXd &values = pair.second->values();
       values *= 2.0;                           // = 2*x^t
@@ -310,11 +312,12 @@ void BaseCouplingScheme::addComputedTime(
 
   // Check validness
   bool valid = math::greaterEquals(getThisTimeWindowRemainder(), 0.0, _eps);
-  PRECICE_CHECK(valid, "The timestep "
-                       "length given to preCICE in \"advance\" "
-                           << timeToAdd << " exceeds the maximum allowed timestep length " << _timeWindowSize - _computedTimeWindowPart + timeToAdd
-                           << " in the remaining of this time window. Did you restrict your timestep length, \"dt = min(precice_dt, dt)\" ?"
-                           << " For more information, consult the adapter example in the preCICE documentation.");
+  PRECICE_CHECK(valid,
+                "The timestep length given to preCICE in \"advance\" {} exceeds the maximum allowed timestep length {} "
+                "in the remaining of this time window. "
+                "Did you restrict your timestep length, \"dt = min(precice_dt, dt)\"? "
+                "For more information, consult the adapter example in the preCICE documentation.",
+                timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
@@ -353,7 +356,7 @@ double BaseCouplingScheme::getThisTimeWindowRemainder() const
   if (not math::equals(_timeWindowSize, UNDEFINED_TIME_WINDOW_SIZE)) {
     remainder = getNextTimestepMaxLength();
   }
-  PRECICE_DEBUG("return " << remainder);
+  PRECICE_DEBUG("return {}", remainder);
   return remainder;
 }
 
@@ -456,14 +459,14 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
       }
       stream << action;
     }
-    PRECICE_ERROR("The required actions " << stream.str() << " are not fulfilled. Did you forget to call \"markActionFulfilled\"?");
+    PRECICE_ERROR("The required actions {} are not fulfilled. Did you forget to call \"markActionFulfilled\"?", stream.str());
   }
 }
 
 void BaseCouplingScheme::setupDataMatrices(DataMap &data)
 {
   PRECICE_TRACE();
-  PRECICE_DEBUG("Data size: " << data.size());
+  PRECICE_DEBUG("Data size: {}", data.size());
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
@@ -476,7 +479,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap &data)
   if (_extrapolationOrder > 0) {
     for (DataMap::value_type &pair : data) {
       int cols = pair.second->oldValues.cols();
-      PRECICE_DEBUG("Add cols: " << pair.first << ", cols: " << cols);
+      PRECICE_DEBUG("Add cols: {}, cols: {}", pair.first, cols);
       PRECICE_ASSERT(cols <= 1, cols);
       utils::append(pair.second->oldValues,
                     (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values().size(), _extrapolationOrder + 1 - cols));
@@ -530,9 +533,7 @@ bool BaseCouplingScheme::measureConvergence()
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
-  for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
-    ConvergenceMeasureContext &convMeasure = _convergenceMeasures[i];
-
+  for (const auto &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
     const auto &oldValues = convMeasure.couplingData->oldValues.col(0);

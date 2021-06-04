@@ -56,12 +56,12 @@ void DataConfiguration::xmlTagCallback(
 {
   if (tag.getNamespace() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
-    std::string name           = tag.getStringAttributeValue(ATTR_NAME);
-    std::string typeName       = tag.getName();
-    int         dataDimensions = getDataDimensions(typeName);
+    const std::string &name           = tag.getStringAttributeValue(ATTR_NAME);
+    const std::string &typeName       = tag.getName();
+    int                dataDimensions = getDataDimensions(typeName);
     addData(name, dataDimensions);
   } else {
-    PRECICE_ASSERT(false, "Received callback from unknown tag " << tag.getName());
+    PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
   }
 }
 
@@ -79,7 +79,9 @@ void DataConfiguration::addData(
 
   // Check if data with same name has been added already
   for (auto &elem : _data) {
-    PRECICE_CHECK(elem.name != data.name, "Data \"" << data.name << "\" has already been defined. Please rename or remove one of the data tags with name=\"" << data.name << "\".");
+    PRECICE_CHECK(elem.name != data.name,
+                  "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
+                  data.name);
   }
   _data.push_back(data);
 }
@@ -92,7 +94,8 @@ int DataConfiguration::getDataDimensions(
   } else if (typeName == VALUE_SCALAR) {
     return 1;
   }
-  PRECICE_ASSERT(false, "Unknown data type \"" << typeName << "\". Known data types: " << VALUE_SCALAR << ", " << VALUE_VECTOR << ".");
+  // We should never reach this point
+  PRECICE_UNREACHABLE("Unknown data type \"{}\".", typeName);
 }
 
 } // namespace mesh

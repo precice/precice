@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(testValuePreconditioner)
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
 
-  //should change, since first timestep
+  //should change, since this is the first time window
   precond.update(false, _data, _res);
   BOOST_TEST(precond.requireNewQR());
   precond.newQRfulfilled();

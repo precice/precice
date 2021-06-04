@@ -74,7 +74,7 @@ void WatchPoint::initialize()
     int    closestRank           = 0;
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal  = std::numeric_limits<double>::max();
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(closestDistanceLocal, rankSlave);
       if (closestDistanceLocal < closestDistanceGlobal) {
         closestDistanceGlobal = closestDistanceLocal;
@@ -82,12 +82,12 @@ void WatchPoint::initialize()
       }
     }
     _isClosest = closestRank == 0;
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->send(closestRank == rankSlave, rankSlave);
     }
   }
 
-  PRECICE_DEBUG("Rank: " << utils::MasterSlave::getRank() << ", isClosest: " << _isClosest);
+  PRECICE_DEBUG("Rank: {}, isClosest: {}", utils::MasterSlave::getRank(), _isClosest);
 }
 
 void WatchPoint::exportPointData(

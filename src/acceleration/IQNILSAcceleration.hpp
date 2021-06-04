@@ -29,7 +29,7 @@ public:
       double                  initialRelaxation,
       bool                    forceInitialRelaxation,
       int                     maxIterationsUsed,
-      int                     timestepsReused,
+      int                     pastTimeWindowsReused,
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,

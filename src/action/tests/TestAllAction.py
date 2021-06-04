@@ -7,7 +7,7 @@ myIteration = 0
 # parameters are the source data, followed by the target data, which are
 # omitted (selectively or both) if not mentioned in the preCICE configuration.
 #
-def performAction(time, dt, sourceData, targetData):
+def performAction(time, timeWindowSize, sourceData, targetData):
     global mySourceData
     global myTargetData
     mySourceData = sourceData # store (reference to) sourceData for later use
@@ -20,7 +20,7 @@ def performAction(time, dt, sourceData, targetData):
 # This function is called for every vertex in the configured mesh. It is called
 # after performAction, and can also be omitted.
 #
-def vertexCallback(id, coords, normal):
+def vertexCallback(id, coords):
     global mySourceData
     global myTargetData
     # Usage example:

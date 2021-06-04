@@ -27,12 +27,12 @@ IQNILSAcceleration::IQNILSAcceleration(
     double                  initialRelaxation,
     bool                    forceInitialRelaxation,
     int                     maxIterationsUsed,
-    int                     timestepsReused,
+    int                     pastTimeWindowsReused,
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
-    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
+    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
                          filter, singularityLimit, dataIDs, preconditioner)
 {
 }
@@ -65,7 +65,7 @@ void IQNILSAcceleration::updateDifferenceMatrices(
     secResiduals -= data->oldValues.col(0);
   }
 
-  if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
+  if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     // constant relaxation: for secondary data called from base class
   } else {
     if (not _firstIteration) {
@@ -161,7 +161,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
   utils::append(c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
   // compute rhs Q^T*res in parallel
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (!utils::MasterSlave::isParallel()) {
     PRECICE_ASSERT(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
     // back substitution
     c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
@@ -182,8 +182,9 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     utils::MasterSlave::reduceSum(_local_b.data(), _global_b.data(), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
 
     // back substitution R*c = b only in master node
-    if (utils::MasterSlave::isMaster())
+    if (utils::MasterSlave::isMaster()) {
       c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
+    }
 
     // broadcast coefficients c to all slaves
     utils::MasterSlave::broadcast(c.data(), c.size());
@@ -199,10 +200,10 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
      *  perform QN-Update step for the secondary Data
      */
 
-  // If the previous time step converged within one single iteration, nothing was added
+  // If the previous time window converged within one single iteration, nothing was added
   // to the LS system matrices and they need to be restored from the backup at time T-2
-  if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0) && not _forceInitialRelaxation) {
-    PRECICE_DEBUG("   Last time step converged after one iteration. Need to restore the secondaryMatricesW from backup.");
+  if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
+    PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the secondaryMatricesW from backup.");
     _secondaryMatricesW = _secondaryMatricesWBackup;
   }
 
@@ -219,8 +220,8 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
   }
 
   // pending deletion: delete old secondaryMatricesW
-  if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
-    // save current secondaryMatrix data in case the coupling for the next time step will terminate
+  if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
+    // save current secondaryMatrix data in case the coupling for the next time window will terminate
     // after the first iteration (no new data, i.e., V = W = 0)
     if (getLSSystemCols() > 0) {
       _secondaryMatricesWBackup = _secondaryMatricesW;
@@ -239,19 +240,19 @@ void IQNILSAcceleration::specializedIterationsConverged(
     _matrixCols.pop_front();
   }
 
-  if (_timestepsReused == 0) {
+  if (_timeWindowsReused == 0) {
     if (_forceInitialRelaxation) {
       for (int id : _secondaryDataIDs) {
         _secondaryMatricesW[id].resize(0, 0);
       }
     } else {
       /**
-       * pending deletion (after first iteration of next time step
-       * Using the matrices from the old time step for the first iteration
-       * is better than doing underrelaxation as first iteration of every time step
+       * pending deletion (after first iteration of next time window
+       * Using the matrices from the old time window for the first iteration
+       * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _timestepsReused) {
+  } else if ((int) _matrixCols.size() > _timeWindowsReused) {
     int toRemove = _matrixCols.back();
     for (int id : _secondaryDataIDs) {
       Eigen::MatrixXd &secW = _secondaryMatricesW[id];

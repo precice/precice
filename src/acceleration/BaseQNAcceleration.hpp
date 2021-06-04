@@ -66,7 +66,7 @@ public:
       double                  initialRelaxation,
       bool                    forceInitialRelaxation,
       int                     maxIterationsUsed,
-      int                     timestepsReused,
+      int                     timeWindowsReused,
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
@@ -78,7 +78,7 @@ public:
   virtual ~BaseQNAcceleration()
   {
     // not necessary for user, only for developer, if needed, this should be configurable
-    //     if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave())){
+    //     if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
     //       _infostream.open("precice-accelerationInfo.log", std::ios_base::out);
     //       _infostream << std::setprecision(16);
     //       _infostream << _infostringstream.str();
@@ -125,10 +125,10 @@ public:
     */
   virtual void importState(io::TXTReader &reader);
 
-  /// how many QN columns were deleted in this timestep
+  /// how many QN columns were deleted in this time window
   virtual int getDeletedColumns() const;
 
-  /// how many QN columns were dropped (went out of scope) in this timestep
+  /// how many QN columns were dropped (went out of scope) in this time window
   virtual int getDroppedColumns() const;
 
   /** @brief: computes number of cols in least squares system, i.e, number of cols in
@@ -152,8 +152,8 @@ protected:
   /// Maximum number of old data iterations kept.
   int _maxIterationsUsed;
 
-  /// Maximum number of old timesteps (with data values) kept.
-  int _timestepsReused;
+  /// Maximum number of old time windows (with data values) kept.
+  int _timeWindowsReused;
 
   /// Data IDs of data to be involved in the IQN algorithm.
   std::vector<int> _dataIDs;
@@ -164,10 +164,10 @@ protected:
   /// Indicates the first iteration, where constant relaxation is used.
   bool _firstIteration = true;
 
-  /* @brief Indicates the first time step, where constant relaxation is used
-    *        later, we replace the constant relaxation by a qN-update from last time step.
+  /* @brief Indicates the first time window, where constant relaxation is used
+    *        later, we replace the constant relaxation by a qN-update from last time window.
     */
-  bool _firstTimeStep = true;
+  bool _firstTimeWindow = true;
 
   /*
     * @brief If in master-slave mode: True if this process has nodes at the coupling interface
@@ -175,7 +175,7 @@ protected:
   bool _hasNodesOnInterface = true;
 
   /* @brief If true, the QN-scheme always performs a underrelaxation in the first iteration of
-    *        a new time step. Otherwise, the LS system from the previous time step is used in the
+    *        a new time window. Otherwise, the LS system from the previous time window is used in the
     *        first iteration.
     */
   bool _forceInitialRelaxation;
@@ -216,11 +216,11 @@ protected:
     */
   double _singularityLimit;
 
-  /** @brief Indices (of columns in W, V matrices) of 1st iterations of timesteps.
+  /** @brief Indices (of columns in W, V matrices) of 1st iterations of time windows.
     *
-    * When old timesteps are reused (_timestepsReused > 0), the indices of the
-    * first iteration of each timestep needs to be stored, such that, e.g., all
-    * iterations of the last timestep, or one specific iteration that leads to
+    * When old time windows are reused (_timeWindowsReused > 0), the indices of the
+    * first iteration of each time window needs to be stored, such that, e.g., all
+    * iterations of the last time window, or one specific iteration that leads to
     * a singular matrix in the QR decomposition can be removed and tracked.
     */
   std::deque<int> _matrixCols;
@@ -268,7 +268,7 @@ protected:
   /// Wwrites info to the _infostream (also in parallel)
   void writeInfo(std::string s, bool allProcs = false);
 
-  int its = 0, tSteps = 0;
+  int its = 0, tWindows = 0;
 
 private:
   /// @brief Concatenation of all coupling data involved in the QN system.
@@ -277,12 +277,12 @@ private:
   /// @brief Concatenation of all (old) coupling data involved in the QN system.
   Eigen::VectorXd _oldValues;
 
-  /// @brief Difference between solver input and output from last timestep
+  /// @brief Difference between solver input and output from last time window
   Eigen::VectorXd _oldResiduals;
 
   /** @brief backup of the V,W and matrixCols data structures. Needed for the skipping of
-   *  initial relaxation, if previous time step converged within one iteration i.e., V and W
-   *  are empty -- in this case restore V and W with time step t-2.
+   *  initial relaxation, if previous time window converged within one iteration i.e., V and W
+   *  are empty -- in this case restore V and W with time window t-2.
    */
   Eigen::MatrixXd _matrixVBackup;
   Eigen::MatrixXd _matrixWBackup;

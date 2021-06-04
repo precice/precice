@@ -152,7 +152,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   if (utils::MasterSlave::isSlave()) {
 
     // Input mesh may have overlaps
-    mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
     mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
 
     // Send the mesh
@@ -161,25 +161,25 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   } else { // Parallel Master or Serial
 
-    mesh::Mesh globalInMesh("globalInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-    mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::Mesh globalInMesh("globalInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
 
     if (utils::MasterSlave::isMaster()) {
       {
         // Input mesh may have overlaps
-        mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+        mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
         globalInMesh.addMesh(filteredInMesh);
         globalOutMesh.addMesh(*outMesh);
       }
 
       // Receive mesh
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave) {
-        mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      for (int rankSlave : utils::MasterSlave::allSlaves()) {
+        mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveInMesh, rankSlave);
         globalInMesh.addMesh(slaveInMesh);
 
-        mesh::Mesh slaveOutMesh(outMesh->getName(), outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+        mesh::Mesh slaveOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveOutMesh, rankSlave);
         globalOutMesh.addMesh(slaveOutMesh);
       }
@@ -192,16 +192,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     _matrixA = buildMatrixA(_basisFunction, globalInMesh, globalOutMesh, _deadAxis);
     _qr      = buildMatrixCLU(_basisFunction, globalInMesh, _deadAxis).colPivHouseholderQr();
 
-    if (not _qr.isInvertible()) {
-      PRECICE_ERROR("The interpolation matrix of the RBF mapping from mesh " << input()->getName() << " to mesh "
-                                                                             << output()->getName() << " is not invertable. This means that the mapping problem is not well-posed. "
-                                                                             << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
-                                                                             << "by marking perpendicular axes as dead?");
-    }
+    PRECICE_CHECK(_qr.isInvertible(),
+                  "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
+                  "This means that the mapping problem is not well-posed. "
+                  "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
+                  "by marking perpendicular axes as dead?",
+                  input()->getName(), output()->getName());
   }
   _hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
-}
+} // namespace mapping
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 bool RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::hasComputedMapping() const
@@ -297,7 +297,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     {
       std::vector<double> slaveBuffer;
       int                 slaveOutputValueSize;
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      for (int rank : utils::MasterSlave::allSlaves()) {
         utils::MasterSlave::_communication->receive(slaveBuffer, rank);
         globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
 
@@ -347,7 +347,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
       // Data scattering to slaves
       int beginPoint = outputValueSizes.at(0);
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      for (int rank : utils::MasterSlave::allSlaves()) {
         utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outputValueSizes.at(rank), rank);
         beginPoint += outputValueSizes.at(rank);
       }
@@ -408,7 +408,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 
       std::vector<double> slaveBuffer;
 
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      for (int rank : utils::MasterSlave::allSlaves()) {
         utils::MasterSlave::_communication->receive(slaveBuffer, rank);
         std::copy(slaveBuffer.begin(), slaveBuffer.end(), globalInValues.begin() + inputSizeCounter);
         inputSizeCounter += slaveBuffer.size();
@@ -456,7 +456,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     int beginPoint = outValuesSize.at(0);
 
     if (utils::MasterSlave::isMaster()) {
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      for (int rank : utils::MasterSlave::allSlaves()) {
         utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outValuesSize.at(rank), rank);
         beginPoint += outValuesSize.at(rank);
       }

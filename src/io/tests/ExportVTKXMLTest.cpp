@@ -44,9 +44,8 @@ BOOST_AUTO_TEST_SUITE(VTKXMLExport)
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  int        dim           = 2;
-  bool       invertNormals = false;
-  mesh::Mesh mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
+  int        dim = 2;
+  mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
@@ -78,10 +77,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::VectorXd::Constant(dim, 3.0));
   }
 
-  mesh.computeState();
-
-  bool             exportNormals = true;
-  io::ExportVTKXML exportVTKXML(exportNormals);
+  io::ExportVTKXML exportVTKXML;
   std::string      filename = "io-ExportVTKXMLTest-testExportPolygonalMesh";
   std::string      location = "";
   exportVTKXML.doExport(filename, location, mesh);
@@ -90,9 +86,8 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
-  int        dim           = 3;
-  bool       invertNormals = false;
-  mesh::Mesh mesh("MyMesh", dim, invertNormals, testing::nextMeshID());
+  int        dim = 3;
+  mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {
     mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
@@ -127,10 +122,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.createVertex(Eigen::VectorXd::Constant(dim, 3.0));
   }
 
-  mesh.computeState();
-
-  bool             exportNormals = false;
-  io::ExportVTKXML exportVTKXML(exportNormals);
+  io::ExportVTKXML exportVTKXML;
   std::string      filename = "io-ExportVTKXMLTest-testExportTriangulatedMesh";
   std::string      location = "";
   exportVTKXML.doExport(filename, location, mesh);

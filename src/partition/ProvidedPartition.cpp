@@ -43,7 +43,7 @@ void ProvidedPartition::communicate()
     return;
 
   // Temporary globalMesh such that the master also keeps his local mesh
-  mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+  mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   bool       hasMeshBeenGathered = false;
 
   bool twoLevelInitAlreadyUsed = false;
@@ -83,14 +83,14 @@ void ProvidedPartition::communicate()
         if (not utils::MasterSlave::isSlave()) {
           globalMesh.addMesh(*_mesh); // Add local master mesh to global mesh
         }
-        PRECICE_INFO("Gather mesh " + _mesh->getName());
+        PRECICE_INFO("Gather mesh {}", _mesh->getName());
         if (utils::MasterSlave::isMaster()) {
           PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
           PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
-          for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+          for (int rankSlave : utils::MasterSlave::allSlaves()) {
             com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(globalMesh, rankSlave);
-            PRECICE_DEBUG("Received sub-mesh, from slave: " << rankSlave << ", global vertexCount: " << globalMesh.vertices().size());
+            PRECICE_DEBUG("Received sub-mesh, from slave: {}, global vertexCount: {}", rankSlave, globalMesh.vertices().size());
           }
         }
         if (utils::MasterSlave::isSlave()) {
@@ -100,12 +100,13 @@ void ProvidedPartition::communicate()
       }
 
       // Send (global) Mesh
-      PRECICE_INFO("Send global mesh " << _mesh->getName());
+      PRECICE_INFO("Send global mesh {}", _mesh->getName());
       Event e("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
 
       if (not utils::MasterSlave::isSlave()) {
         PRECICE_CHECK(globalMesh.vertices().size() > 0,
-                      "The provided mesh \"" << globalMesh.getName() << "\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().");
+                      "The provided mesh \"{}\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().",
+                      globalMesh.getName());
         com::CommunicateMesh(m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
       }
     }
@@ -115,7 +116,7 @@ void ProvidedPartition::communicate()
 void ProvidedPartition::prepare()
 {
   PRECICE_TRACE();
-  PRECICE_INFO("Prepare partition for mesh " << _mesh->getName());
+  PRECICE_INFO("Prepare partition for mesh {}", _mesh->getName());
   Event e("partition.prepareMesh." + _mesh->getName(), precice::syncMode);
 
   int numberOfVertices = _mesh->vertices().size();
@@ -133,7 +134,7 @@ void ProvidedPartition::prepare()
     int globalNumberOfVertices   = numberOfVertices;
 
     // receive number of slave vertices and fill vertex offsets
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
       _mesh->getVertexOffsets()[rankSlave] = numberOfSlaveVertices + _mesh->getVertexOffsets()[rankSlave - 1];
@@ -143,11 +144,11 @@ void ProvidedPartition::prepare()
 
     // set and broadcast global number of vertices
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
-    PRECICE_DEBUG("Broadcast global number of vertices: " << globalNumberOfVertices);
+    PRECICE_DEBUG("Broadcast global number of vertices: {}", globalNumberOfVertices);
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices);
 
     // broadcast vertex offsets
-    PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
+    PRECICE_DEBUG("My vertex offsets: {}", _mesh->getVertexOffsets());
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets());
 
     // fill vertex distribution
@@ -158,7 +159,7 @@ void ProvidedPartition::prepare()
         for (int i = 0; i < _mesh->getVertexOffsets()[0]; i++) {
           localIds.push_back(i);
         }
-        for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+        for (int rankSlave : utils::MasterSlave::allSlaves()) {
           // This always creates an entry for each slave
           auto &slaveIds = _mesh->getVertexDistribution()[rankSlave];
           for (int i = _mesh->getVertexOffsets()[rankSlave - 1]; i < _mesh->getVertexOffsets()[rankSlave]; i++) {
@@ -171,7 +172,7 @@ void ProvidedPartition::prepare()
   } else if (utils::MasterSlave::isSlave()) {
 
     // send number of own vertices
-    PRECICE_DEBUG("Send number of vertices: " << numberOfVertices);
+    PRECICE_DEBUG("Send number of vertices: {}", numberOfVertices);
     utils::MasterSlave::_communication->send(numberOfVertices, 0);
 
     // set global IDs
@@ -190,7 +191,7 @@ void ProvidedPartition::prepare()
 
     // set vertex offsets
     utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
-    PRECICE_DEBUG("My vertex offsets: " << _mesh->getVertexOffsets());
+    PRECICE_DEBUG("My vertex offsets: {}", _mesh->getVertexOffsets());
 
   } else { // Coupling mode
 
@@ -211,7 +212,7 @@ void ProvidedPartition::prepare()
 void ProvidedPartition::compute()
 {
   PRECICE_TRACE();
-  for (auto m2n : _m2ns) {
+  for (const auto &m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
       // @todo this will probably not work for more than one m2n
       PRECICE_ASSERT(_m2ns.size() <= 1);
@@ -249,7 +250,7 @@ void ProvidedPartition::compareBoundingBoxes()
     PRECICE_ASSERT(!bbm.empty(), "The bounding box of the local mesh is invalid!");
 
     // master receives bbs from slaves and stores them in bbm
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       // initialize bbm
       bbm.emplace(rankSlave, bb);
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm.at(rankSlave), rankSlave);

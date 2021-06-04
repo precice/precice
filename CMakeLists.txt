@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.10.2)
-project(preCICE VERSION 2.2.0 LANGUAGES CXX)
+project(preCICE VERSION 2.2.1 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -178,16 +178,9 @@ else()
 endif()
 precice_validate_json()
 
-# prettyprint
-if(TPL_ENABLE_PRETTYPRINT)
-  xsdk_tpl_require(PRETTYPRINT PRETTYPRINT_INCLUDE_DIR)
-  add_library(prettyprint INTERFACE IMPORTED)
-  set_property(TARGET prettyprint PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${PRETTYPRINT_INCLUDE_DIR}")
-else()
-  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/prettyprint)
-endif()
-precice_validate_prettyprint()
-
+# libfmt
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
+precice_validate_fmtlib()
 
 #
 # Find Configurable Dependencies
@@ -298,11 +291,8 @@ target_compile_definitions(precice PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_M
 target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
 target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
 
-# Setup Prettyprint
-target_link_libraries(precice PRIVATE prettyprint)
-
 # Setup JSON
-target_link_libraries(precice PRIVATE JSON)
+target_link_libraries(precice PRIVATE JSON fmt-header-only)
 
 # Setup MPI
 if (PRECICE_MPICommunication)
@@ -354,7 +344,7 @@ target_link_libraries(binprecice
   PRIVATE
   Threads::Threads
   precice
-  prettyprint
+  fmt-header-only
   Eigen3::Eigen
   Boost::boost
   Boost::filesystem
@@ -393,7 +383,7 @@ IF (BUILD_TESTING)
     Threads::Threads
     precice
     Eigen3::Eigen
-    prettyprint
+    fmt-header-only
     Boost::boost
     Boost::filesystem
     Boost::log

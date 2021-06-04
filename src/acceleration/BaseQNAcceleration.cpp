@@ -2,6 +2,8 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <memory>
+#include <utility>
+
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
@@ -33,16 +35,16 @@ BaseQNAcceleration::BaseQNAcceleration(
     double                  initialRelaxation,
     bool                    forceInitialRelaxation,
     int                     maxIterationsUsed,
-    int                     timestepsReused,
+    int                     timeWindowsReused,
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
-    : _preconditioner(preconditioner),
+    : _preconditioner(std::move(preconditioner)),
       _initialRelaxation(initialRelaxation),
       _maxIterationsUsed(maxIterationsUsed),
-      _timestepsReused(timestepsReused),
-      _dataIDs(dataIDs),
+      _timeWindowsReused(timeWindowsReused),
+      _dataIDs(std::move(dataIDs)),
       _forceInitialRelaxation(forceInitialRelaxation),
       _qrV(filter),
       _filter(filter),
@@ -51,13 +53,19 @@ BaseQNAcceleration::BaseQNAcceleration(
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "Initial relaxation factor for QN acceleration has to "
-                    << "be larger than zero and smaller or equal than one. Current initial relaxation is: " << _initialRelaxation);
+                "be larger than zero and smaller or equal than one. "
+                "Current initial relaxation is {}",
+                _initialRelaxation);
   PRECICE_CHECK(_maxIterationsUsed > 0,
                 "Maximum number of iterations used in the quasi-Newton acceleration "
-                    << "scheme has to be larger than zero. Current maximum reused iterations is: " << _maxIterationsUsed);
-  PRECICE_CHECK(_timestepsReused >= 0,
-                "Number of previous time windows to be reused for quasi-Newton acceleration has to be larger than or equal to zero. "
-                    << "Current number of time windows reused is " << _timestepsReused);
+                "scheme has to be larger than zero. "
+                "Current maximum reused iterations is {}",
+                _maxIterationsUsed);
+  PRECICE_CHECK(_timeWindowsReused >= 0,
+                "Number of previous time windows to be reused for "
+                "quasi-Newton acceleration has to be larger than or equal to zero. "
+                "Current number of time windows reused is {}",
+                _timeWindowsReused);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -100,8 +108,8 @@ void BaseQNAcceleration::initialize(
   }
 
   _matrixCols.push_front(0);
-  _firstIteration = true;
-  _firstTimeStep  = true;
+  _firstIteration  = true;
+  _firstTimeWindow = true;
 
   PRECICE_ASSERT(_oldXTilde.size() == 0);
   PRECICE_ASSERT(_oldResiduals.size() == 0);
@@ -116,8 +124,8 @@ void BaseQNAcceleration::initialize(
    *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
    */
   std::stringstream ss;
-  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
-    PRECICE_ASSERT(utils::MasterSlave::_communication.get() != NULL);
+  if (utils::MasterSlave::isParallel()) {
+    PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
     PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
     if (entries <= 0) {
@@ -137,21 +145,21 @@ void BaseQNAcceleration::initialize(
     for (size_t i = 0; i < _dimOffsets.size() - 1; i++) {
       int accumulatedNumberOfUnknowns = 0;
       for (auto &elem : _dataIDs) {
-        auto &offsets = cplData[elem]->mesh->getVertexOffsets();
+        const auto &offsets = cplData[elem]->getVertexOffsets();
         accumulatedNumberOfUnknowns += offsets[i] * cplData[elem]->getDimensions();
       }
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
-    PRECICE_DEBUG("Number of unknowns at the interface (global): " << _dimOffsets.back());
+    PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
     if (utils::MasterSlave::isMaster()) {
-      _infostringstream << "\n--------\n DOFs (global): " << _dimOffsets.back() << "\n offsets: " << _dimOffsets << '\n';
+      _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
     }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::getRank() + 1] - _dimOffsets[utils::MasterSlave::getRank()];
     PRECICE_ASSERT(entries == unknowns, entries, unknowns);
   } else {
-    _infostringstream << "\n--------\n DOFs (global): " << entries << '\n';
+    _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n", entries);
   }
 
   // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
@@ -201,8 +209,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
                  "Or you just converge much further than actually necessary.");
   }
 
-  //if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
-  if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
+  //if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
+  if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
   } else {
     PRECICE_DEBUG("   Update Difference Matrices");
@@ -215,8 +223,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       if (2 * getLSSystemCols() >= getLSSystemRows())
         PRECICE_WARN(
             "The number of columns in the least squares system exceeded half the number of unknowns at the interface. "
-            << "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
-            << "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
+            "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
+            "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
 
       Eigen::VectorXd deltaR = _residuals;
       deltaR -= _oldResiduals;
@@ -224,10 +232,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
-      PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0), "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
-                                                                               "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
-                                                                               "Maybe you always write the same (or only incremented) data or you call advance without "
-                                                                               "providing  new data first.");
+      PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0),
+                    "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
+                    "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
+                    "Maybe you always write the same (or only incremented) data or you call advance without "
+                    "providing  new data first.");
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
@@ -285,19 +294,6 @@ void BaseQNAcceleration::performAcceleration(
   PRECICE_ASSERT(_oldValues.size() == _oldXTilde.size(), _oldValues.size(), _oldXTilde.size());
   PRECICE_ASSERT(_residuals.size() == _oldXTilde.size(), _residuals.size(), _oldXTilde.size());
 
-  /*
-  Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-  _debugOut<<"iteration: "<<its<<" tStep: "<<tSteps<<"   cplData entry:\n";
-  for (int id : _dataIDs) {
-      const auto& values = *cplData[id]->values;
-      const auto& oldValues = cplData[id]->oldValues.col(0);
-
-      _debugOut<<"id: "<<id<<"     values: "<<values.format(CommaInitFmt)<<'\n';
-      _debugOut<<"id: "<<id<<" old values: "<<oldValues.format(CommaInitFmt)<<'\n';
-    }
-  _debugOut<<"\n";
-  */
-
   // assume data structures associated with the LS system can be updated easily.
 
   // scale data values (and secondary data values)
@@ -310,7 +306,7 @@ void BaseQNAcceleration::performAcceleration(
    */
   updateDifferenceMatrices(cplData);
 
-  if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
+  if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     PRECICE_DEBUG("   Performing underrelaxation");
     _oldXTilde    = _values;    // Store x tilde
     _oldResiduals = _residuals; // Store current residual
@@ -325,10 +321,10 @@ void BaseQNAcceleration::performAcceleration(
   } else {
     PRECICE_DEBUG("   Performing quasi-Newton Step");
 
-    // If the previous time step converged within one single iteration, nothing was added
+    // If the previous time window converged within one single iteration, nothing was added
     // to the LS system matrices and they need to be restored from the backup at time T-2
-    if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0) && not _forceInitialRelaxation) {
-      PRECICE_DEBUG("   Last time step converged after one iteration. Need to restore the matrices from backup.");
+    if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
+      PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the matrices from backup.");
 
       _matrixCols = _matrixColsBackup;
       _matrixV    = _matrixVBackup;
@@ -336,7 +332,7 @@ void BaseQNAcceleration::performAcceleration(
 
       // re-computation of QR decomposition from _matrixV = _matrixVBackup
       // this occurs very rarely, to be precise, it occurs only if the coupling terminates
-      // after the first iteration and the matrix data from time step t-2 has to be used
+      // after the first iteration and the matrix data from time window t-2 has to be used
       _preconditioner->apply(_matrixV);
       _qrV.reset(_matrixV, getLSSystemRows());
       _preconditioner->revert(_matrixV);
@@ -367,7 +363,9 @@ void BaseQNAcceleration::performAcceleration(
     }
 
     // apply the configured filter to the LS system
+    utils::Event  applyingFilter("ApplyFilter");
     applyFilter();
+    applyingFilter.stop();
 
     // revert scaling of V, in computeQNUpdate all data objects are unscaled.
     _preconditioner->revert(_matrixV);
@@ -385,20 +383,20 @@ void BaseQNAcceleration::performAcceleration(
      */
     _values = _oldValues + xUpdate + _residuals; // = x^k + delta_x + r^k - q^k
 
-    // pending deletion: delete old V, W matrices if timestepsReused = 0
+    // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
-    if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
-      // save current matrix data in case the coupling for the next time step will terminate
+    if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
+      // save current matrix data in case the coupling for the next time window will terminate
       // after the first iteration (no new data, i.e., V = W = 0)
       if (getLSSystemCols() > 0) {
         _matrixColsBackup = _matrixCols;
         _matrixVBackup    = _matrixV;
         _matrixWBackup    = _matrixW;
       }
-      // if no time steps reused, the matrix data needs to be cleared as it was only needed for the
+      // if no time windows reused, the matrix data needs to be cleared as it was only needed for the
       // QN-step in the first iteration (idea: rather perform QN-step with information from last converged
-      // time step instead of doing a underrelaxation)
-      if (not _firstTimeStep) {
+      // time window instead of doing a underrelaxation)
+      if (not _firstTimeWindow) {
         _matrixV.resize(0, 0);
         _matrixW.resize(0, 0);
         _matrixCols.clear();
@@ -454,7 +452,7 @@ void BaseQNAcceleration::applyFilter()
 
       removeMatrixColumn(delIndices[i]);
 
-      PRECICE_DEBUG(" Filter: removing column with index " << delIndices[i] << " in iteration " << its << " of time step: " << tSteps);
+      PRECICE_DEBUG(" Filter: removing column with index {} in iteration {} of time window: {}", delIndices[i], its, tWindows);
     }
     PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
@@ -502,7 +500,7 @@ void BaseQNAcceleration::splitCouplingData(
  *
  * @brief: Is called when the convergence criterion for the coupling is fullfilled and finalizes
  *         the quasi Newton acceleration. Stores new differences in F and C, clears or
- *         updates F and C according to the number of reused time steps
+ *         updates F and C according to the number of reused time windows
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::iterationsConverged(
@@ -510,12 +508,12 @@ void BaseQNAcceleration::iterationsConverged(
 {
   PRECICE_TRACE();
 
-  if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
-    _infostringstream << "# time step " << tSteps << " converged #\n iterations: " << its
+  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel())
+    _infostringstream << "# time window " << tWindows << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
 
   its = 0;
-  tSteps++;
+  tWindows++;
 
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
@@ -542,17 +540,17 @@ void BaseQNAcceleration::iterationsConverged(
   // - save the old Jacobian matrix
   specializedIterationsConverged(cplData);
 
-  // if we already have convergence in the first iteration of the first timestep
-  // we need to do underrelax in the first iteration of the second timesteps
-  // so "_firstTimeStep" is slightly misused, but still the best way to understand
+  // if we already have convergence in the first iteration of the first time window
+  // we need to do underrelaxation in the first iteration of the second time window
+  // so "_firstTimeWindow" is slightly misused, but still the best way to understand
   // the concept
   if (not _firstIteration)
-    _firstTimeStep = false;
+    _firstTimeWindow = false;
 
   // update preconditioner depending on residuals or values (must be after specialized iterations converged --> IMVJ)
   _preconditioner->update(true, _values, _residuals);
 
-  if (_timestepsReused == 0) {
+  if (_timeWindowsReused == 0) {
     if (_forceInitialRelaxation) {
       _matrixV.resize(0, 0);
       _matrixW.resize(0, 0);
@@ -562,16 +560,16 @@ void BaseQNAcceleration::iterationsConverged(
       _matrixCols.clear(); // _matrixCols.push_front() at the end of the method.
     } else {
       /**
-       * pending deletion (after first iteration of next time step
-       * Using the matrices from the old time step for the first iteration
-       * is better than doing underrelaxation as first iteration of every time step
+       * pending deletion (after first iteration of next time window
+       * Using the matrices from the old time window for the first iteration
+       * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _timestepsReused) {
+  } else if ((int) _matrixCols.size() > _timeWindowsReused) {
     int toRemove = _matrixCols.back();
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
-    PRECICE_DEBUG("Removing " << toRemove << " cols from least-squares system with " << getLSSystemCols() << " cols");
+    PRECICE_DEBUG("Removing {} cols from least-squares system with {} cols", toRemove, getLSSystemCols());
     PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
     PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
@@ -659,7 +657,7 @@ int BaseQNAcceleration::getLSSystemCols() const
 
 int BaseQNAcceleration::getLSSystemRows()
 {
-  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isParallel()) {
     return _dimOffsets.back();
   }
   return _residuals.size();
@@ -668,7 +666,7 @@ int BaseQNAcceleration::getLSSystemRows()
 void BaseQNAcceleration::writeInfo(
     std::string s, bool allProcs)
 {
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isParallel()) {
     // serial acceleration mode
     _infostringstream << s;
 
