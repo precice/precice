@@ -483,7 +483,7 @@ void ReceivedPartition::createOwnerInformation()
 
     1- receive local bb map from master
     2- filter bb map to keep the connected ranks
-    3- own the vertices that only fits into the ranks bb
+    3- own the vertices that only fit into this rank's bb
     4- send number of owned vertices and shared vertices list to neighbors
     5- for the remaining vertices: check if we have less vertexes -> own it!
     */
