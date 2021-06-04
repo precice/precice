@@ -431,7 +431,7 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
 void BaseCouplingScheme::setupDataMatrices()
 {
   PRECICE_TRACE();
-  // Reserve storage for all data (acceleration and convergence measurement)
+  // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
     time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder));
     WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
