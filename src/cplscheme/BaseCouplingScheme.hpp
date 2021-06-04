@@ -351,9 +351,9 @@ protected:
   bool doImplicitStep();
 
   /**
-   * @brief stores current data in buffer of Waveform
+   * @brief stores current data in buffer of all Waveforms
    */
-  void updateThisWindow();
+  void storeDataInWaveforms();
 
   /**
    * @brief finalizes this window's data and initializes data for next window.

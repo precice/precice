@@ -235,12 +235,12 @@ void BaseCouplingScheme::setExtrapolationOrder(
   _extrapolationOrder = order;
 }
 
-void BaseCouplingScheme::updateThisWindow()
+void BaseCouplingScheme::storeDataInWaveforms()
 {
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->updateThisWindow(pair.second->values());
+    _waveforms[pair.first]->store(pair.second->values());
   }
 }
 
@@ -605,7 +605,7 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
 
 bool BaseCouplingScheme::doImplicitStep()
 {
-  updateThisWindow();
+  storeDataInWaveforms();
 
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   bool convergence = measureConvergence();

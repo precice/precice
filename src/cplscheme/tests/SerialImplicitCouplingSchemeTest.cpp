@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   cplData->values()(0) = 1.0;
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
-  scheme.updateThisWindow();
+  scheme.storeDataInWaveforms();
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
   scheme.moveToNextWindow();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   cplData->values()(0) = 4.0;
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
-  scheme.updateThisWindow();
+  scheme.storeDataInWaveforms();
   scheme.moveToNextWindow();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   scheme.storeIteration();
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   cplData->values()(0) = 1.0;
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
-  scheme2.updateThisWindow();
+  scheme2.storeDataInWaveforms();
   scheme2.moveToNextWindow();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
   scheme2.storeIteration();
@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   cplData->values()(0) = 4.0;
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
-  scheme2.updateThisWindow();
+  scheme2.storeDataInWaveforms();
   scheme2.moveToNextWindow();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   scheme2.storeIteration();

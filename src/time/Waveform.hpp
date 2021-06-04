@@ -20,7 +20,7 @@ public:
    * @brief Updates entry in _timeWindows corresponding to this window with given data
    * @param data new sample for this time window
    */
-  void updateThisWindow(Eigen::VectorXd data);
+  void store(Eigen::VectorXd data);
 
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)

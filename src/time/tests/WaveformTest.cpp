@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   Eigen::VectorXd value(1);
   value(0) = 1.0;
-  waveform.updateThisWindow(value);
+  waveform.store(value);
   BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 1.0));
   BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 0.0));
   timeWindowCounter++;
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 1.0));
 
   value(0) = 4.0;
-  waveform.updateThisWindow(value);
+  waveform.store(value);
   BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 4.0));
   BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 1.0));
   timeWindowCounter++;
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
 
   value(0) = 1.0;
-  waveform2.updateThisWindow(value);
+  waveform2.store(value);
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 1.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 0.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
 
   value(0) = 4.0;
-  waveform2.updateThisWindow(value);
+  waveform2.store(value);
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 4.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 1.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
