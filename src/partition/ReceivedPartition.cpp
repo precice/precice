@@ -475,10 +475,11 @@ void ReceivedPartition::createOwnerInformation()
   if (m2n().usesTwoLevelInitialization()) {
     /*
     This function ensures that each vertex is owned by only a single rank and
-    is not shared among ranks. Initially the vertexes are checked against the 
+    is not shared among ranks. Initially, the vertices are checked against the 
     bounding box of each rank. If a vertex fits into only a single bounding box, 
-    the vertex is assigend to that rank. If it fits to varous bbs, the rank with 
-    the lowest vertexes own it to keed the load as balanced as possible. 
+    the vertex is assigned to that rank. If it fits to various bbs, the rank with the 
+    lowest number of vertices gets ownership to keep the load as balanced as 
+    possible. 
     
     Following steps are taken:
 
@@ -544,7 +545,7 @@ void ReceivedPartition::createOwnerInformation()
       }
     }
 
-    // #3: check vertices and keep those only fit into the current rank's bb
+    // #3: check vertices and keep only those that fit into the current rank's bb
     int numberOfVertices = _mesh->vertices().size();
     PRECICE_DEBUG("Tag vertices, number of vertices " << numberOfVertices);
     std::vector<int> tags(numberOfVertices, -1);
@@ -664,7 +665,7 @@ void ReceivedPartition::createOwnerInformation()
     //   PRECICE_WARN(filteredVertices << " of " << _mesh->getGlobalNumberOfVertices()
     //                << " vertices of mesh " << _mesh->getName() << " have been filtered out "
     //                << "since they have no influence on the mapping.";)
-   // end of bb section 
+   // end of two-level initialization section 
   } else
   {
     if (utils::MasterSlave::isSlave()) {
