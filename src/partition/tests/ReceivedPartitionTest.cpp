@@ -1173,16 +1173,11 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
       BOOST_TEST(mesh->getCommunicationMap()[0][0] == 0);
       BOOST_TEST(mesh->getCommunicationMap()[0][1] == 1);
       BOOST_TEST(mesh->getCommunicationMap()[0][2] == 2);
-
-      // std::cout<<"master sends vertices: " << mesh->getCommunicationMap()[0] << " to rank 0 and verticees " << mesh->getCommunicationMap()[1] << " to rank 1 " << std::endl; 
-      
       
     } else {
-      // BOOST_TEST(mesh->getCommunicationMap()[0].size() == 0);
       BOOST_TEST(mesh->getCommunicationMap()[1][0] == 0);
       BOOST_TEST(mesh->getCommunicationMap()[1][1] == 1);
       BOOST_TEST(mesh->getCommunicationMap()[1][2] == 2);
-      // std::cout<<"slave sends vertices: " << mesh->getCommunicationMap()[0] << " to rank 0 and verticees " << mesh->getCommunicationMap()[1] << " to rank 1 " << std::endl; 
     }
   } else {
     m2n->createDistributedCommunication(receivedMesh);
