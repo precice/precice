@@ -666,7 +666,7 @@ void ReceivedPartition::createOwnerInformation()
     //   PRECICE_WARN(filteredVertices << " of " << _mesh->getGlobalNumberOfVertices()
     //                << " vertices of mesh " << _mesh->getName() << " have been filtered out "
     //                << "since they have no influence on the mapping.";)
-   // end of bb section 
+   // end of two-level initialization section 
   } else
   {
     if (utils::MasterSlave::isSlave()) {
