@@ -472,6 +472,12 @@ void ReceivedPartition::createOwnerInformation()
   PRECICE_TRACE();
   Event e("partition.createOwnerInformation." + _mesh->getName(), precice::syncMode);
 
+  /*
+    We follow different approaches for two-level and one-level methods. For 1LI, a centeralized
+    approach is followed, while the 2LI employs a local/parallel scheme for assigning vertices
+    to corresponding ranks.
+  */
+
   if (m2n().usesTwoLevelInitialization()) {
     /*
     This function ensures that each vertex is owned by only a single rank and
