@@ -630,10 +630,8 @@ void ReceivedPartition::createOwnerInformation()
     /* In case that a vertex can be shared between two ranks, the rank with lower
        vertex count will own the vertex. 
        If both ranks have same vertex count, the lower rank will own the vertex.
-    */ 
-
-    int minGlobalID = _mesh->vertices()[0].getGlobalIndex();
-
+    */
+    
     for(int i=0; i < sharedVerticesGlobalIDs.size(); i++)
     {
       bool owned = true;
