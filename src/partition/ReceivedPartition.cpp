@@ -626,7 +626,7 @@ void ReceivedPartition::createOwnerInformation()
       }
     }
 
-    // #6: Second round filter according to the number of owned vertices
+    // #6: Second round assignment according to the number of owned vertices
 
     /* In case that a vertex can be shared between two ranks, the rank with lower
        vertex count will own the vertex. 
