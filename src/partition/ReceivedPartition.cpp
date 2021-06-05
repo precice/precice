@@ -544,7 +544,7 @@ void ReceivedPartition::createOwnerInformation()
       }
     }
 
-    // #3: check vertices and keep those only fit into the current rank's bb
+    // #3: check vertices and keep only those that fit into the current rank's bb
     int numberOfVertices = _mesh->vertices().size();
     PRECICE_DEBUG("Tag vertices, number of vertices " << numberOfVertices);
     std::vector<int> tags(numberOfVertices, -1);
