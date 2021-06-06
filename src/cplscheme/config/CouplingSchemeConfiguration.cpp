@@ -902,7 +902,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
                 "<...-convergence-measure/> subtag in the precice-config.xml.");
-  addConvergenceMeasures(scheme, _config.controller, _config.convergenceMeasureDefinitions);
+  if (accessor == _config.controller) {
+    addConvergenceMeasures(scheme, _config.controller, _config.convergenceMeasureDefinitions);
+  }
 
   // Set acceleration
   setParallelAcceleration(scheme, _config.controller);
@@ -1076,7 +1078,7 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
   for (auto &elem : convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(participant, elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
   }
 }
 

@@ -74,21 +74,9 @@ public:
 
 private:
   /**
-   * @brief get CouplingData from _allData using dataID
-   * @param dataID identifies CouplingData to be searched for
-   * @return CouplingData from _allData corresponding to dataID
-   */
-  CouplingData *getData(int dataID);
-
-  /**
    * @brief A vector of m2ns. A m2n is a communication device to the other coupling participant.
    */
   std::map<std::string, m2n::PtrM2N> _m2ns;
-
-  /**
-   * @brief Map from data ID -> all data (receive and send) with that ID
-   */
-  DataMap _allData;
 
   /**
    * @brief A vector of all data to be received.
@@ -123,40 +111,21 @@ private:
   void initializeImplementation() override;
 
   /**
-   * @brief merges send and receive data into one map (for parallel acceleration)
-   */
-  void mergeData() override;
-
-  /**
    * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override;
 
-  /**
-   * @brief Needed for setting up convergence measures
-   * @param convMeasure Convergence measure to which the data field is assigned to
-   * @param dataID Data field to be assigned
-   */
-  void assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID) override;
-
-  /**
-   * @brief MultiCouplingScheme has to call store for all receive and send data in the vectors
-   */
-  void storeData() override
-  {
-    for (auto &sendData : _sendDataVector) {
-      store(sendData.second);
-    }
-    for (auto &receiveData : _receiveDataVector) {
-      store(receiveData.second);
-    }
-  }
-
+  /// m2n communication to receive the convergence information in non-controller participant
   bool receiveConvergence(const m2n::PtrM2N &m2n);
+
+  /// m2n communication to send the convergence information from controller participant
   void sendConvergence(const m2n::PtrM2N &m2n, bool convergence);
 
+  /// name of the controller participant
   std::string _controller;
-  bool        _isController;
+
+  /// if this is the controller or not
+  bool _isController;
 };
 
 } // namespace cplscheme

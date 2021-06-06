@@ -36,8 +36,6 @@ MultiCouplingScheme::MultiCouplingScheme(
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
-  PRECICE_DEBUG("AM I THE CONTROLLER? {}", _isController);
-
   // Controller participant never does the first step, because it is never the first participant
   setDoesFirstStep(!_isController);
 
@@ -47,9 +45,11 @@ MultiCouplingScheme::MultiCouplingScheme(
 std::vector<std::string> MultiCouplingScheme::getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
-  // Add non-local participant
-  // @todo has to be implemented!
-  PRECICE_ASSERT(false);
+
+  for (const auto &m2nPair : _m2ns) {
+    partnerNames.emplace_back(m2nPair.first);
+  }
+
   return partnerNames;
 }
 
@@ -76,26 +76,15 @@ void MultiCouplingScheme::exchangeInitialData()
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
-
       checkDataHasBeenReceived();
-      // second participant has to save values for extrapolation
-      for (auto &receiveExchange : _receiveDataVector) {
-        updateOldValues(receiveExchange.second);
-      }
     }
     if (sendsInitializedData()) {
-      for (auto &sendExchange : _sendDataVector) {
-        updateOldValues(sendExchange.second);
-      }
       for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
     }
   } else {
     if (sendsInitializedData()) {
-      for (auto &sendExchange : _sendDataVector) {
-        updateOldValues(sendExchange.second);
-      }
       for (auto &sendExchange : _sendDataVector) {
         sendData(_m2ns[sendExchange.first], sendExchange.second);
       }
@@ -105,10 +94,6 @@ void MultiCouplingScheme::exchangeInitialData()
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
       checkDataHasBeenReceived();
-      // second participant has to save values for extrapolation
-      for (auto &receiveExchange : _receiveDataVector) {
-        updateOldValues(receiveExchange.second);
-      }
     }
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
@@ -129,7 +114,7 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
     }
     checkDataHasBeenReceived();
 
-    convergence = accelerate();
+    convergence = doImplicitStep();
     for (const auto &m2nPair : _m2ns) {
       sendConvergence(m2nPair.second, convergence);
     }
@@ -152,13 +137,6 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   return convergence;
 }
 
-void MultiCouplingScheme::mergeData()
-{
-  // PRECICE_TRACE();
-  // PRECICE_ASSERT(_allData.empty(), "This function should only be called once.");
-  // PRECICE_ASSERT(_sendDataVector.size() == _receiveDataVector.size());
-}
-
 void MultiCouplingScheme::addDataToSend(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
@@ -170,7 +148,9 @@ void MultiCouplingScheme::addDataToSend(
   PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
   DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
   _sendDataVector[to].insert(dataPair);
-  _allData.insert(dataPair);
+  if (!utils::contained(id, _allData)) {
+    _allData.insert(dataPair);
+  }
 }
 
 void MultiCouplingScheme::addDataToReceive(
@@ -184,27 +164,9 @@ void MultiCouplingScheme::addDataToReceive(
   PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
   DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
   _receiveDataVector[from].insert(dataPair);
-  _allData.insert(dataPair);
-}
-
-CouplingData *MultiCouplingScheme::getData(
-    int dataID)
-{
-  PRECICE_TRACE(dataID);
-  PRECICE_DEBUG("Desired data ID is {}", dataID);
-  DataMap::iterator iter = _allData.find(dataID);
-  if (iter != _allData.end()) {
-    return &(*(iter->second));
+  if (!utils::contained(id, _allData)) {
+    _allData.insert(dataPair);
   }
-  return nullptr;
-}
-
-void MultiCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID)
-{
-  //if(_isController){
-  convergenceMeasure->couplingData = getData(dataID);
-  PRECICE_ASSERT(convergenceMeasure->couplingData != nullptr);
-  //}
 }
 
 bool MultiCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)

@@ -16,6 +16,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -121,9 +122,9 @@ void MVQNAcceleration::computeUnderrelaxationSecondaryData(
     Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
-    secResiduals                  = data->oldValues.col(0); // old
-    secResiduals *= 1.0 - _initialRelaxation;               // (1-omg) * old
-    values += secResiduals;                                 // (1-omg) * old + new * omg
+    secResiduals                  = data->previousIteration();
+    secResiduals *= 1.0 - _initialRelaxation; // (1-omg) * old
+    values += secResiduals;                   // (1-omg) * old + new * omg
   }
 }
 
@@ -553,6 +554,7 @@ void MVQNAcceleration::restartIMVJ()
     // |===================                             ==|
 
     PRECICE_DEBUG("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian {}, new modes: {}, truncated modes: {} avg rank: {}", rankAfter, rankAfter - rankBefore, waste, _avgRank / _nbRestarts);
+
     //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
     if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
       _infostringstream << " - MVJ-RESTART " << _nbRestarts << ", mode= SVD -\n  new modes: " << rankAfter - rankBefore << "\n  rank svd: " << rankAfter << "\n  avg rank: " << _avgRank / _nbRestarts << "\n  truncated modes: " << waste << "\n"
@@ -752,7 +754,9 @@ void MVQNAcceleration::specializedIterationsConverged(
 
         // < RESTART >
         _nbRestarts++;
+        utils::Event restartUpdate("IMVJRestart");
         restartIMVJ();
+        restartUpdate.stop();
       }
 
       // only in imvj normal mode with efficient update:

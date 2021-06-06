@@ -5,7 +5,6 @@
 #include <ostream>
 #include <utility>
 
-#include "cplscheme/CouplingData.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
@@ -29,19 +28,6 @@ ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
 void ConstantRelaxationAcceleration::initialize(DataMap &cplData)
 {
   checkDataIDs(cplData);
-
-  // Append column for old values if not done by coupling scheme yet
-  int entries = 0;
-  for (auto &elem : _dataIDs) {
-    entries += cplData[elem]->values().size();
-  }
-  for (DataMap::value_type &pair : cplData) {
-    int cols = pair.second->oldValues.cols();
-    if (cols < 1) {
-      PRECICE_ASSERT(pair.second->values().size() > 0, pair.first);
-      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values().size()));
-    }
-  }
 }
 
 void ConstantRelaxationAcceleration::performAcceleration(DataMap &cplData)
@@ -51,7 +37,7 @@ void ConstantRelaxationAcceleration::performAcceleration(DataMap &cplData)
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type &pair : cplData) {
     auto &      values    = pair.second->values();
-    const auto &oldValues = pair.second->oldValues.col(0);
+    const auto &oldValues = pair.second->previousIteration();
     values *= omega;
     values += oldValues * oneMinusOmega;
     PRECICE_DEBUG("pp values {}", values);
