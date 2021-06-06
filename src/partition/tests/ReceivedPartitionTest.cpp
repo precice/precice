@@ -1069,7 +1069,13 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 
 BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
 {
-  PRECICE_TEST("Solid"_on(2_ranks).setupMasterSlaves(), "Fluid"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  /*
+    This test examines an edge case for setOwnerinformation function in receivedpartition.cpp.
+    The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
+    this vertex, but only one of them can own it. Since the rank 1, has the smallest mesh partition,
+    this vertex must belong only to this rank.
+   */
+  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
   //mesh creation
   int           dimensions   = 2;
   bool          flipNormals  = true;
@@ -1084,9 +1090,28 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
   auto m2n                 = context.connectMasters("Fluid", "Solid", options);
 
   if (context.isNamed("Solid")) {
-    if (context.isMaster()) {
+    if (context.isRank(0)) {
       Eigen::VectorXd position(dimensions);
-      position << -0.5, 0.0;
+      position << 0.0, 0.0;
+      mesh->createVertex(position);
+      position << 1.0, 0.0;
+      mesh->createVertex(position);
+      position << 2.0, 0.0;
+      mesh->createVertex(position);
+      position << 0.0, 1.0;
+      mesh->createVertex(position);
+      position << 1.0, 1.0;
+      mesh->createVertex(position);
+      position << 2.0, 1.0;
+      mesh->createVertex(position);     
+    } 
+  }
+  else
+  {
+    BOOST_TEST(context.isNamed("Fluid"));
+    if (context.isRank(0)) {
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 0.0;
       mesh->createVertex(position);
       position << -1.0, 0.0;
       mesh->createVertex(position);
@@ -1098,30 +1123,15 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
       mesh->createVertex(position);
       position << -2.0, 1.0;
       mesh->createVertex(position);
-
-      
-    } else {
+    } else if (context.isRank(1)) {
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 1.0, 0.0;
-      mesh->createVertex(position);
-      position << 2.0, 0.0;
-      mesh->createVertex(position);
-      position << 1.0, 1.0;
-      mesh->createVertex(position);
-      position << 2.0, 1.0;
-      mesh->createVertex(position);
-    }
-  } else {
-    BOOST_TEST(context.isNamed("Fluid"));
-    if (context.isMaster()) {
-      Eigen::VectorXd position(dimensions);
-      position << -0.5, 0.0;
       mesh->createVertex(position);
       position << -1.0, 0.0;
       mesh->createVertex(position);
       position << -2.0, 0.0;
+      mesh->createVertex(position);
+      position <<  0.0, -1.0;
       mesh->createVertex(position);
       position << -1.0, -1.0;
       mesh->createVertex(position);
@@ -1135,8 +1145,6 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
       mesh->createVertex(position);
       position << 2.0, 0.0;
       mesh->createVertex(position);
-      position << -0.75, -1.0;
-      mesh->createVertex(position);
       position << 0.0, -1.0;
       mesh->createVertex(position);
       position << 1.0, -1.0;
@@ -1145,40 +1153,55 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
       mesh->createVertex(position);
     }
   }
-  // mesh->computeState();
   mesh->computeBoundingBox();
 
   if (context.isNamed("Solid")) {
     m2n->createDistributedCommunication(mesh);
-    ProvidedPartition part(mesh);
-    part.addM2N(m2n);
+    
+    mesh::BoundingBox bb = mesh->getBoundingBox();
+    mesh::Mesh::BoundingBoxMap bbm;
+    bbm.emplace(0, bb);
+    m2n->getMasterCommunication()->send(1, 0);
+    com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
 
-    part.compareBoundingBoxes();
+    std::vector<int> connectedRanksList;
+    std::map<int, std::vector<int>> remoteConnectionMap;
 
-    if (context.isMaster()) {
-      BOOST_TEST(mesh->getConnectedRanks().size() == 2);
-      BOOST_TEST(mesh->getConnectedRanks()[0] == 0);
-      BOOST_TEST(mesh->getConnectedRanks()[1] == 1);
-    } else {
-      BOOST_TEST(mesh->getConnectedRanks().size() == 1);
-      BOOST_TEST(mesh->getConnectedRanks()[0] == 1);      
+    m2n->getMasterCommunication()->receive(connectedRanksList, 0);
+    for (auto &rank : connectedRanksList) {
+      remoteConnectionMap[rank] = {-1};
+    }
+    
+    if (connectedRanksList.size() != 0) {
+      com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
+    }
+
+    for (auto &remoteRank : remoteConnectionMap) {
+      for (auto &includedRank : remoteRank.second) {
+        if (utils::MasterSlave::getRank() == includedRank) {
+          mesh->getConnectedRanks().push_back(remoteRank.first);
+        }
+      }
     }
 
     m2n->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
 
-    part.communicate();
-    part.compute();
 
-    if (context.isMaster()) {
-      BOOST_TEST(mesh->getCommunicationMap()[0][0] == 0);
-      BOOST_TEST(mesh->getCommunicationMap()[0][1] == 1);
-      BOOST_TEST(mesh->getCommunicationMap()[0][2] == 2);
-      
-    } else {
-      BOOST_TEST(mesh->getCommunicationMap()[1][0] == 0);
-      BOOST_TEST(mesh->getCommunicationMap()[1][1] == 1);
-      BOOST_TEST(mesh->getCommunicationMap()[1][2] == 2);
-    }
+    m2n->getMasterCommunication()->send(mesh->getGlobalNumberOfVertices(), 0);
+
+    int minGlobalVertexID = 0;
+    int maxGlobalVertexID = 5;
+
+    // each rank sends its min/max global vertex index to connected remote ranks
+    m2n->broadcastSend(minGlobalVertexID, *mesh);
+    m2n->broadcastSend(maxGlobalVertexID, *mesh);
+
+    // each rank sends its mesh partition to connected remote ranks
+    m2n->broadcastSendMesh(*mesh);
+
+    // receive communication map from all remote connected ranks
+    m2n->gatherAllCommunicationMap(mesh->getCommunicationMap(), *mesh);
+    
   } else {
     m2n->createDistributedCommunication(receivedMesh);
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
@@ -1199,6 +1222,41 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
 
     part.communicate();
     part.compute();
+
+    // to check if all ranks have received the vertex at (0, 0)
+    bool includeVertex = false;
+
+    if (context.isMaster()) { //Master
+      for (auto & vertex : receivedMesh->vertices())
+      {
+        if(vertex.getCoords()[0] == 0 && vertex.getCoords()[1] ==0)
+        {
+          includeVertex = true;
+          BOOST_TEST(vertex.isOwner() == 0);
+        }
+      }
+      BOOST_TEST(includeVertex == true);
+    } else if (context.isRank(1)) { //Slave1
+      for (auto & vertex : receivedMesh->vertices())
+      {
+        if(vertex.getCoords()[0] == 0 && vertex.getCoords()[1] ==0)
+        {
+          includeVertex = true;
+          BOOST_TEST(vertex.isOwner() == 1);
+        }
+      }
+      BOOST_TEST(includeVertex == true);
+    } else if (context.isRank(2)) { //Slave2
+      for (auto & vertex : receivedMesh->vertices())
+      {
+        if(vertex.getCoords()[0] == 0 && vertex.getCoords()[1] ==0)
+        {
+          includeVertex = true;
+          BOOST_TEST(vertex.isOwner() == 0);
+        }
+      }
+      BOOST_TEST(includeVertex == true);
+    }
   }
 }
   
