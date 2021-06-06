@@ -2634,6 +2634,10 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers)
   std::string     writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string     readIterCheckpoint(constants::actionReadIterationCheckpoint());
 
+  double valueA = 1.0;
+  double valueB = 2.0;
+  double valueC = 3.0;
+
   if (context.isNamed("SolverA")) {
     SolverInterface cplInterface("SolverA", configFile, 0, 1);
     const int       meshID   = cplInterface.getMeshID("MeshA");
@@ -2643,11 +2647,10 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers)
 
     double maxDt = cplInterface.initialize();
     double valueRead;
-    double valueWrite = 1.0;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(dataABID, vertexID, valueWrite);
+      cplInterface.writeScalarData(dataABID, vertexID, valueA);
       if (cplInterface.isActionRequired(writeIterCheckpoint)) {
         cplInterface.markActionFulfilled(writeIterCheckpoint);
       }
@@ -2659,6 +2662,9 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers)
       }
       cplInterface.readScalarData(dataBAID, vertexID, valueRead);
     }
+
+    BOOST_TEST(valueRead == valueB);
+
     cplInterface.finalize();
   } else if (context.isNamed("SolverB")) {
     SolverInterface cplInterface("SolverB", configFile, 0, 1);
@@ -2673,12 +2679,11 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers)
 
     double maxDt = cplInterface.initialize();
     double valueReadA, valueReadC;
-    double valueWriteA{1.0}, valueWriteC{1.0};
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(dataBAID, vertexID1, valueWriteA);
-      cplInterface.writeScalarData(dataBCID, vertexID2, valueWriteC);
+      cplInterface.writeScalarData(dataBAID, vertexID1, valueB);
+      cplInterface.writeScalarData(dataBCID, vertexID2, valueB);
       if (cplInterface.isActionRequired(writeIterCheckpoint)) {
         cplInterface.markActionFulfilled(writeIterCheckpoint);
       }
@@ -2691,6 +2696,10 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers)
       cplInterface.readScalarData(dataABID, vertexID1, valueReadA);
       cplInterface.readScalarData(dataCBID, vertexID2, valueReadC);
     }
+
+    BOOST_TEST(valueReadA == 1.0);
+    BOOST_TEST(valueReadC == 3.0);
+
     cplInterface.finalize();
 
   } else {
@@ -2702,12 +2711,11 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers)
 
     double maxDt = cplInterface.initialize();
     double valueRead;
-    double valueWrite = 1.0;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
 
-      cplInterface.writeScalarData(dataCBID, vertexID, valueWrite);
+      cplInterface.writeScalarData(dataCBID, vertexID, valueC);
       if (cplInterface.isActionRequired(writeIterCheckpoint)) {
         cplInterface.markActionFulfilled(writeIterCheckpoint);
       }
@@ -2719,6 +2727,9 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers)
       }
       cplInterface.readScalarData(dataBCID, vertexID, valueRead);
     }
+
+    BOOST_TEST(valueRead == 2.0);
+
     cplInterface.finalize();
   }
 }
