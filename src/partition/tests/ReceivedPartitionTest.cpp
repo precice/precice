@@ -1066,7 +1066,6 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
   tearDownParallelEnvironment();
 }
 
-
 BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
 {
   /*
@@ -1103,11 +1102,9 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
       position << 1.0, 1.0;
       mesh->createVertex(position);
       position << 2.0, 1.0;
-      mesh->createVertex(position);     
-    } 
-  }
-  else
-  {
+      mesh->createVertex(position);
+    }
+  } else {
     BOOST_TEST(context.isNamed("Fluid"));
     if (context.isRank(0)) {
       Eigen::VectorXd position(dimensions);
@@ -1131,7 +1128,7 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
       mesh->createVertex(position);
       position << -2.0, 0.0;
       mesh->createVertex(position);
-      position <<  0.0, -1.0;
+      position << 0.0, -1.0;
       mesh->createVertex(position);
       position << -1.0, -1.0;
       mesh->createVertex(position);
@@ -1157,21 +1154,21 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
 
   if (context.isNamed("Solid")) {
     m2n->createDistributedCommunication(mesh);
-    
-    mesh::BoundingBox bb = mesh->getBoundingBox();
+
+    mesh::BoundingBox          bb = mesh->getBoundingBox();
     mesh::Mesh::BoundingBoxMap bbm;
     bbm.emplace(0, bb);
     m2n->getMasterCommunication()->send(1, 0);
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
 
-    std::vector<int> connectedRanksList;
+    std::vector<int>                connectedRanksList;
     std::map<int, std::vector<int>> remoteConnectionMap;
 
     m2n->getMasterCommunication()->receive(connectedRanksList, 0);
     for (auto &rank : connectedRanksList) {
       remoteConnectionMap[rank] = {-1};
     }
-    
+
     if (connectedRanksList.size() != 0) {
       com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
     }
@@ -1185,7 +1182,6 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
     }
 
     m2n->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
-
 
     m2n->getMasterCommunication()->send(mesh->getGlobalNumberOfVertices(), 0);
 
@@ -1201,7 +1197,7 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
 
     // receive communication map from all remote connected ranks
     m2n->gatherAllCommunicationMap(mesh->getCommunicationMap(), *mesh);
-    
+
   } else {
     m2n->createDistributedCommunication(receivedMesh);
     mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
@@ -1227,30 +1223,24 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
     bool includeVertex = false;
 
     if (context.isMaster()) { //Master
-      for (auto & vertex : receivedMesh->vertices())
-      {
-        if(vertex.getCoords()[0] == 0 && vertex.getCoords()[1] ==0)
-        {
+      for (auto &vertex : receivedMesh->vertices()) {
+        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
           includeVertex = true;
           BOOST_TEST(vertex.isOwner() == 0);
         }
       }
       BOOST_TEST(includeVertex == true);
     } else if (context.isRank(1)) { //Slave1
-      for (auto & vertex : receivedMesh->vertices())
-      {
-        if(vertex.getCoords()[0] == 0 && vertex.getCoords()[1] ==0)
-        {
+      for (auto &vertex : receivedMesh->vertices()) {
+        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
           includeVertex = true;
           BOOST_TEST(vertex.isOwner() == 1);
         }
       }
       BOOST_TEST(includeVertex == true);
     } else if (context.isRank(2)) { //Slave2
-      for (auto & vertex : receivedMesh->vertices())
-      {
-        if(vertex.getCoords()[0] == 0 && vertex.getCoords()[1] ==0)
-        {
+      for (auto &vertex : receivedMesh->vertices()) {
+        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
           includeVertex = true;
           BOOST_TEST(vertex.isOwner() == 0);
         }
@@ -1259,7 +1249,7 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
     }
   }
 }
-  
+
 // Test with two "from" and two "to" mappings
 BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
 {
