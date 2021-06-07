@@ -645,10 +645,9 @@ void ReceivedPartition::createOwnerInformation()
 
     setOwnerInformation(tags);
     auto filteredVertices = std::count(tags.begin(), tags.end(), 0);
-    // if (filteredVertices)
-    //   PRECICE_WARN(filteredVertices << " of " << _mesh->getGlobalNumberOfVertices()
-    //                << " vertices of mesh " << _mesh->getName() << " have been filtered out "
-    //                << "since they have no influence on the mapping.";)
+    if (filteredVertices)
+      PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
+                   filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
     // end of two-level initialization section
   } else {
     if (utils::MasterSlave::isSlave()) {

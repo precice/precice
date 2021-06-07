@@ -1069,8 +1069,8 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
 {
   /*
-    This test examines an edge case for setOwnerinformation function in receivedpartition.cpp.
-    The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
+    This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
+    for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
     this vertex, but only one of them can own it. Since the rank 1, has the smallest mesh partition,
     this vertex must belong only to this rank.
    */
