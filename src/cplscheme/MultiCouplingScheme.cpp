@@ -16,6 +16,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -35,7 +36,7 @@ MultiCouplingScheme::MultiCouplingScheme(
       _m2ns(std::move(m2ns)), _controller(controller), _isController(controller == localParticipant)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-
+  PRECICE_CHECK((!_isController and ((not utils::MasterSlave::isMaster()) and (not utils::MasterSlave::isSlave())) or _isController), "Non-controller participants in the MultiCouplingScheme cannot be run in parallel. Either run participant {} in serial or change the controller to another participant.", localParticipant);
   // Controller participant never does the first step, because it is never the first participant
   setDoesFirstStep(!_isController);
 
@@ -175,12 +176,6 @@ bool MultiCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
   bool convergence;
   m2n->receive(convergence);
   return convergence;
-}
-
-void MultiCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n, bool convergence)
-{
-  PRECICE_ASSERT((_isController), "For convergence information the sending participant is always the controller one.");
-  m2n->send(convergence);
 }
 
 } // namespace cplscheme

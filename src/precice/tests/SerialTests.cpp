@@ -2623,13 +2623,8 @@ BOOST_AUTO_TEST_CASE(testQuadMappingScaledConsistentOnB)
 }
 
 // Simple case of A <==> B <==> C
-//  -  All of the couplings are implicit
-//  - This case should be working
-BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers)
+void multiCouplingThreeSolvers(const std::string configFile, const TestContext &context)
 {
-  PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank));
-  const std::string configFile = _pathToTests + "multi-coupling-three-solver.xml";
-
   Eigen::Vector2d coordOneA{0.0, 0.0};
   std::string     writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string     readIterCheckpoint(constants::actionReadIterationCheckpoint());
@@ -2732,6 +2727,27 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers)
 
     cplInterface.finalize();
   }
+}
+
+BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers1)
+{
+  PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank));
+  const std::string configFile = _pathToTests + "multi-coupling-three-solver-1.xml";
+  multiCouplingThreeSolvers(configFile, context);
+}
+
+BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers2)
+{
+  PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank));
+  const std::string configFile = _pathToTests + "multi-coupling-three-solver-2.xml";
+  multiCouplingThreeSolvers(configFile, context);
+}
+
+BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers3)
+{
+  PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank));
+  const std::string configFile = _pathToTests + "multi-coupling-three-solver-3.xml";
+  multiCouplingThreeSolvers(configFile, context);
 }
 
 // BOOST_AUTO_TEST_CASE(MultiCouplingFourSolvers)

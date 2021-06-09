@@ -118,9 +118,6 @@ private:
   /// m2n communication to receive the convergence information in non-controller participant
   bool receiveConvergence(const m2n::PtrM2N &m2n);
 
-  /// m2n communication to send the convergence information from controller participant
-  void sendConvergence(const m2n::PtrM2N &m2n, bool convergence);
-
   /// name of the controller participant
   std::string _controller;
 
