@@ -1275,7 +1275,7 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation3D)
   if (context.isNamed("Solid")) {
     if (context.isRank(0)) {
       Eigen::VectorXd position(dimensions);
-      position << 0.0, 0.0, 0.0; 
+      position << 0.0, 0.0, 0.0;
       mesh->createVertex(position);
       position << 1.0, 0.0, 0.0;
       mesh->createVertex(position);
@@ -1287,7 +1287,7 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation3D)
       mesh->createVertex(position);
       position << 2.0, 1.0, 0.0;
       mesh->createVertex(position);
-      position << 0.0, 0.0, 1.0; 
+      position << 0.0, 0.0, 1.0;
       mesh->createVertex(position);
       position << 1.0, 0.0, 1.0;
       mesh->createVertex(position);
