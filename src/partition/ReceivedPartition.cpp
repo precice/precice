@@ -582,6 +582,9 @@ void ReceivedPartition::createOwnerInformation()
 
     // #4: Exchange number of already owned vertices with the neighbors
 
+    // to store receive requests.
+    std::vector<com::PtrRequest> vertexNumberRequests;
+
     // Define and initialize for load balancing
     std::map<int, int> neighborRanksVertexCount;
     for (auto &neighborRank : localConnectedBBMap) {
@@ -590,7 +593,8 @@ void ReceivedPartition::createOwnerInformation()
 
     // Asynchronous recieve number of owned vertices from neighbor ranks
     for (auto &neighborRank : localConnectedBBMap) {
-      utils::MasterSlave::_communication->aReceive(neighborRanksVertexCount.at(neighborRank.first), neighborRank.first);
+      auto request = utils::MasterSlave::_communication->aReceive(neighborRanksVertexCount.at(neighborRank.first), neighborRank.first);
+      vertexNumberRequests.push_back(request);
     }
 
     // Synchronous send number of owned vertices to neighbor ranks
@@ -598,12 +602,23 @@ void ReceivedPartition::createOwnerInformation()
       utils::MasterSlave::_communication->send(counter, neighborRank.first);
     }
 
+    // wait until aReceive is complete.
+    for (auto &rqst : vertexNumberRequests) {
+      rqst->wait();
+    }
+
     // #5: Exchange list of shared vertices with the neighbor
+
+    // to store send requests.
+    std::vector<com::PtrRequest> vertexListRequests;
+
     for (auto &receivingRank : sharedVerticesSendMap) {
-      int sendSize = receivingRank.second.size();
-      utils::MasterSlave::_communication->aSend(sendSize, receivingRank.first);
+      int  sendSize = receivingRank.second.size();
+      auto request  = utils::MasterSlave::_communication->aSend(sendSize, receivingRank.first);
+      vertexListRequests.push_back(request);
       if (sendSize != 0) {
-        utils::MasterSlave::_communication->aSend(receivingRank.second, receivingRank.first);
+        auto request = utils::MasterSlave::_communication->aSend(receivingRank.second, receivingRank.first);
+        vertexListRequests.push_back(request);
       }
     }
 
@@ -615,6 +630,11 @@ void ReceivedPartition::createOwnerInformation()
         utils::MasterSlave::_communication->receive(receivedSharedVertices, neighborRank.first);
         sharedVerticesReceiveMap.insert(std::make_pair(neighborRank.first, receivedSharedVertices));
       }
+    }
+
+    // wait until aReceive is complete.
+    for (auto &rqst : vertexListRequests) {
+      rqst->wait();
     }
 
     // #6: Second round assignment according to the number of owned vertices
