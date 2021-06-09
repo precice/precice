@@ -1066,7 +1066,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
   tearDownParallelEnvironment();
 }
 
-BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
+BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
 {
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
@@ -1147,6 +1147,238 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation)
       position << 1.0, -1.0;
       mesh->createVertex(position);
       position << 2.0, -1.0;
+      mesh->createVertex(position);
+    }
+  }
+  mesh->computeBoundingBox();
+
+  if (context.isNamed("Solid")) {
+    m2n->createDistributedCommunication(mesh);
+
+    mesh::BoundingBox          bb = mesh->getBoundingBox();
+    mesh::Mesh::BoundingBoxMap bbm;
+    bbm.emplace(0, bb);
+    m2n->getMasterCommunication()->send(1, 0);
+    com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
+
+    std::vector<int>                connectedRanksList;
+    std::map<int, std::vector<int>> remoteConnectionMap;
+
+    m2n->getMasterCommunication()->receive(connectedRanksList, 0);
+    for (auto &rank : connectedRanksList) {
+      remoteConnectionMap[rank] = {-1};
+    }
+
+    if (connectedRanksList.size() != 0) {
+      com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
+    }
+
+    for (auto &remoteRank : remoteConnectionMap) {
+      for (auto &includedRank : remoteRank.second) {
+        if (utils::MasterSlave::getRank() == includedRank) {
+          mesh->getConnectedRanks().push_back(remoteRank.first);
+        }
+      }
+    }
+
+    m2n->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
+
+    m2n->getMasterCommunication()->send(mesh->getGlobalNumberOfVertices(), 0);
+
+    int minGlobalVertexID = 0;
+    int maxGlobalVertexID = 5;
+
+    // each rank sends its min/max global vertex index to connected remote ranks
+    m2n->broadcastSend(minGlobalVertexID, *mesh);
+    m2n->broadcastSend(maxGlobalVertexID, *mesh);
+
+    // each rank sends its mesh partition to connected remote ranks
+    m2n->broadcastSendMesh(*mesh);
+
+    // receive communication map from all remote connected ranks
+    m2n->gatherAllCommunicationMap(mesh->getCommunicationMap(), *mesh);
+
+  } else {
+    m2n->createDistributedCommunication(receivedMesh);
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
+    mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
+    boundingFromMapping->setMeshes(receivedMesh, mesh);
+    boundingToMapping->setMeshes(mesh, receivedMesh);
+
+    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+
+    part.addM2N(m2n);
+
+    part.addFromMapping(boundingFromMapping);
+    part.addToMapping(boundingToMapping);
+
+    part.compareBoundingBoxes();
+
+    m2n->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
+
+    part.communicate();
+    part.compute();
+
+    // to check if all ranks have received the vertex at (0, 0)
+    bool includeVertex = false;
+
+    if (context.isMaster()) { //Master
+      for (auto &vertex : receivedMesh->vertices()) {
+        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
+          includeVertex = true;
+          BOOST_TEST(vertex.isOwner() == 0);
+        }
+      }
+      BOOST_TEST(includeVertex == true);
+    } else if (context.isRank(1)) { //Slave1
+      for (auto &vertex : receivedMesh->vertices()) {
+        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
+          includeVertex = true;
+          BOOST_TEST(vertex.isOwner() == 1);
+        }
+      }
+      BOOST_TEST(includeVertex == true);
+    } else if (context.isRank(2)) { //Slave2
+      for (auto &vertex : receivedMesh->vertices()) {
+        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
+          includeVertex = true;
+          BOOST_TEST(vertex.isOwner() == 0);
+        }
+      }
+      BOOST_TEST(includeVertex == true);
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation3D)
+{
+  /*
+    This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
+    for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
+    this vertex, but only one of them can own it. Since the rank 1, has the smallest mesh partition,
+    this vertex must belong only to this rank.
+   */
+  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
+  //mesh creation
+  int           dimensions   = 3;
+  bool          flipNormals  = true;
+  double        safetyFactor = 0;
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
+  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
+
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = false;
+  options.useTwoLevelInit  = true;
+  options.type             = testing::ConnectionType::PointToPoint;
+  auto m2n                 = context.connectMasters("Fluid", "Solid", options);
+
+  if (context.isNamed("Solid")) {
+    if (context.isRank(0)) {
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 0.0, 0.0; 
+      mesh->createVertex(position);
+      position << 1.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << 2.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << 0.0, 1.0, 0.0;
+      mesh->createVertex(position);
+      position << 1.0, 1.0, 0.0;
+      mesh->createVertex(position);
+      position << 2.0, 1.0, 0.0;
+      mesh->createVertex(position);
+      position << 0.0, 0.0, 1.0; 
+      mesh->createVertex(position);
+      position << 1.0, 0.0, 1.0;
+      mesh->createVertex(position);
+      position << 2.0, 0.0, 1.0;
+      mesh->createVertex(position);
+      position << 0.0, 1.0, 1.0;
+      mesh->createVertex(position);
+      position << 1.0, 1.0, 1.0;
+      mesh->createVertex(position);
+      position << 2.0, 1.0, 1.0;
+      mesh->createVertex(position);
+    }
+  } else {
+    BOOST_TEST(context.isNamed("Fluid"));
+    if (context.isRank(0)) {
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << -1.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << -2.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << 0.0, 1.0, 0.0;
+      mesh->createVertex(position);
+      position << -1.0, 1.0, 0.0;
+      mesh->createVertex(position);
+      position << -2.0, 1.0, 0.0;
+      mesh->createVertex(position);
+      position << 0.0, 0.0, 0.1;
+      mesh->createVertex(position);
+      position << -1.0, 0.0, 0.1;
+      mesh->createVertex(position);
+      position << -2.0, 0.0, 0.1;
+      mesh->createVertex(position);
+      position << 0.0, 1.0, 0.1;
+      mesh->createVertex(position);
+      position << -1.0, 1.0, 0.1;
+      mesh->createVertex(position);
+      position << -2.0, 1.0, 0.1;
+      mesh->createVertex(position);
+    } else if (context.isRank(1)) {
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << -1.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << -2.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << 0.0, -1.0, 0.0;
+      mesh->createVertex(position);
+      position << -1.0, -1.0, 0.0;
+      mesh->createVertex(position);
+      position << -2.0, -1.0, 0.0;
+      mesh->createVertex(position);
+      position << 0.0, 0.0, 1.0;
+      mesh->createVertex(position);
+      position << -1.0, 0.0, 1.0;
+      mesh->createVertex(position);
+      position << -2.0, 0.0, 1.0;
+      mesh->createVertex(position);
+      position << 0.0, -1.0, 1.0;
+      mesh->createVertex(position);
+      position << -1.0, -1.0, 1.0;
+      mesh->createVertex(position);
+      position << -2.0, -1.0, 1.0;
+      mesh->createVertex(position);
+    } else {
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << 1.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << 2.0, 0.0, 0.0;
+      mesh->createVertex(position);
+      position << 0.0, -1.0, 0.0;
+      mesh->createVertex(position);
+      position << 1.0, -1.0, 0.0;
+      mesh->createVertex(position);
+      position << 2.0, -1.0, 0.0;
+      mesh->createVertex(position);
+      position << 0.0, 0.0, 1.0;
+      mesh->createVertex(position);
+      position << 1.0, 0.0, 1.0;
+      mesh->createVertex(position);
+      position << 2.0, 0.0, 1.0;
+      mesh->createVertex(position);
+      position << 0.0, -1.0, 1.0;
+      mesh->createVertex(position);
+      position << 1.0, -1.0, 1.0;
+      mesh->createVertex(position);
+      position << 2.0, -1.0, 1.0;
       mesh->createVertex(position);
     }
   }

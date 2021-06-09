@@ -632,7 +632,7 @@ void ReceivedPartition::createOwnerInformation()
       }
     }
 
-    // wait until aReceive is complete.
+    // wait until aSend is complete.
     for (auto &rqst : vertexListRequests) {
       rqst->wait();
     }
