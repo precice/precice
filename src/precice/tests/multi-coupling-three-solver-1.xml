@@ -46,26 +46,18 @@
       <write-data name="DataBC" mesh="MeshB2" />
       <read-data name="DataAB" mesh="MeshB1" />
       <read-data name="DataCB" mesh="MeshB2" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshA"
-        to="MeshB1"
-        constraint="conservative" />
+      <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshB1" constraint="consistent" />
       <mapping:nearest-neighbor
         direction="write"
         from="MeshB1"
         to="MeshA"
-        constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshC"
-        to="MeshB2"
         constraint="conservative" />
+      <mapping:nearest-neighbor direction="read" from="MeshC" to="MeshB2" constraint="consistent" />
       <mapping:nearest-neighbor
         direction="write"
         from="MeshB2"
         to="MeshC"
-        constraint="consistent" />
+        constraint="conservative" />
     </participant>
 
     <participant name="SolverC">

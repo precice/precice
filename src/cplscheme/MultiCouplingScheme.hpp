@@ -115,9 +115,6 @@ private:
    */
   void exchangeInitialData() override;
 
-  /// m2n communication to receive the convergence information in non-controller participant
-  bool receiveConvergence(const m2n::PtrM2N &m2n);
-
   /// name of the controller participant
   std::string _controller;
 

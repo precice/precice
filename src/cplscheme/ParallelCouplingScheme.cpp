@@ -57,7 +57,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     sendData(getM2N(), getSendData());
     PRECICE_DEBUG("Receiving data...");
     if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence();
+      convergence = receiveConvergence(getM2N());
     }
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
