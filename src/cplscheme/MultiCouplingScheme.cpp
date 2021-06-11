@@ -36,7 +36,6 @@ MultiCouplingScheme::MultiCouplingScheme(
       _m2ns(std::move(m2ns)), _controller(controller), _isController(controller == localParticipant)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
-  PRECICE_CHECK((not utils::MasterSlave::isMaster()) and (not utils::MasterSlave::isSlave()), "MultiCouplingScheme cannot be run with parallel participants. Run all participants in serial or switch to another coupling scheme.");
   // Controller participant never does the first step, because it is never the first participant
   setDoesFirstStep(!_isController);
 
