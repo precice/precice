@@ -644,5 +644,19 @@ void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContex
   convergenceMeasure->couplingData = &(*(iter->second));
 }
 
+void BaseCouplingScheme::sendConvergence(m2n::PtrM2N m2n, bool convergence)
+{
+  PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
+  m2n->send(convergence);
+}
+
+bool BaseCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
+{
+  PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
+  bool convergence;
+  m2n->receive(convergence);
+  return convergence;
+}
+
 } // namespace cplscheme
 } // namespace precice

@@ -96,14 +96,6 @@ std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
-bool BiCouplingScheme::receiveConvergence()
-{
-  PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
-  bool convergence;
-  _m2n->receive(convergence);
-  return convergence;
-}
-
 CouplingData *BiCouplingScheme::getSendData(
     int dataID)
 {
