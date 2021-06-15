@@ -1276,6 +1276,21 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
+  double dt = _couplingScheme->getThisTimeWindowRemainder();  // samples at end of time window
+  return readScalarData(dataID, valueIndex, dt, value);
+}
+
+void SolverInterfaceImpl::readScalarData(
+    int     dataID,
+    int     valueIndex,
+    double  dt,
+    double &value) const
+{
+  PRECICE_TRACE(dataID, valueIndex, value);
+  PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
+  PRECICE_CHECK(dt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_ASSERT(dt == _couplingScheme->getThisTimeWindowRemainder()); // @todo only sampling at end of window currently works.
+  PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.toData != nullptr);
   mesh::Data &data = *context.toData;

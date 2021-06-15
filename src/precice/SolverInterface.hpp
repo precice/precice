@@ -772,6 +772,28 @@ public:
       int     valueIndex,
       double &value) const;
 
+  /**
+   * @brief Reads scalar data of a vertex.
+   *
+   * This function reads a value of a specified vertex from a dataID.
+   *
+   * @param[in] dataID ID to read from.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[in] dt defines point in time where data is sampled relative to the beginning of the current time step.
+   * @param[out] value read destination of the value.
+   *
+   * @pre initialize() has been called
+   *
+   * @post value contains the read data.
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void readScalarData(
+      int     dataID,
+      int     valueIndex,
+      double  dt,
+      double &value) const;
+
   ///@}
 
   /// Disable copy construction

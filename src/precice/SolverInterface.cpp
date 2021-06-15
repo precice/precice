@@ -298,6 +298,15 @@ void SolverInterface::readScalarData(
   return _impl->readScalarData(dataID, valueIndex, value);
 }
 
+void SolverInterface::readScalarData(
+    int     dataID,
+    int     valueIndex,
+    double  dt,
+    double &value) const
+{
+  return _impl->readScalarData(dataID, valueIndex, dt, value);
+}
+
 std::string getVersionInformation()
 {
   return {precice::versionInformation};
