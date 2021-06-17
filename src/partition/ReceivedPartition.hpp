@@ -9,6 +9,14 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 
+// Forward declaration to friend the boost test struct
+namespace PartitionTests {
+namespace ReceivedPartitionTests {
+struct TestParallelSetOwnerInformation2D;
+struct TestParallelSetOwnerInformation3D;
+} // namespace ReceivedPartitionTests
+} // namespace PartitionTests
+
 namespace precice {
 namespace m2n {
 class M2N;
@@ -95,6 +103,9 @@ private:
 
   /// Min global vertex IDs of remote connected ranks
   std::vector<int> _remoteMinGlobalVertexIDs;
+
+  friend struct PartitionTests::ReceivedPartitionTests::TestParallelSetOwnerInformation2D;
+  friend struct PartitionTests::ReceivedPartitionTests::TestParallelSetOwnerInformation3D;
 };
 
 } // namespace partition

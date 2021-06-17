@@ -9,6 +9,9 @@
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
+#include "com/SocketCommunication.hpp"
+#include "com/SocketCommunicationFactory.hpp"
+#include "m2n/DistributedComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
@@ -1071,182 +1074,149 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
     for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
-    this vertex, but only one of them can own it. Since the rank 1, has the smallest mesh partition,
-    this vertex must belong only to this rank.
+    this vertex, but only one of them can own it. Since the rank 0, has the lowest rank number, this vertex 
+    must belong only to this rank.
    */
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
   //mesh creation
   int           dimensions   = 2;
   bool          flipNormals  = true;
   double        safetyFactor = 0;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
-  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
+  // mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
   testing::ConnectionOptions options;
   options.useOnlyMasterCom = false;
   options.useTwoLevelInit  = true;
   options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connectMasters("Fluid", "Solid", options);
 
-  if (context.isNamed("Solid")) {
-    if (context.isRank(0)) {
-      Eigen::VectorXd position(dimensions);
-      position << 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 1.0, 0.0;
-      mesh->createVertex(position);
-      position << 2.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, 1.0;
-      mesh->createVertex(position);
-      position << 1.0, 1.0;
-      mesh->createVertex(position);
-      position << 2.0, 1.0;
-      mesh->createVertex(position);
-    }
+  auto                                      participantCom = com::PtrCommunication(new com::SocketCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory;
+
+  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
+
+  if (context.isRank(0)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, 1.0;
+    mesh->createVertex(position);
+
+  } else if (context.isRank(1)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, 0.0;
+    mesh->createVertex(position);
+    position << -0.1, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, 1.0;
+    mesh->createVertex(position);
+  } else if (context.isRank(2)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, -0.1;
+    mesh->createVertex(position);
+    position << -2.0, -0.1;
+    mesh->createVertex(position);
+    position << 0.0, -1.0;
+    mesh->createVertex(position);
+    position << -1.0, -1.0;
+    mesh->createVertex(position);
+    position << -2.0, -1.0;
+    mesh->createVertex(position);
   } else {
-    BOOST_TEST(context.isNamed("Fluid"));
-    if (context.isRank(0)) {
-      Eigen::VectorXd position(dimensions);
-      position << 0.0, 0.0;
-      mesh->createVertex(position);
-      position << -1.0, 0.0;
-      mesh->createVertex(position);
-      position << -2.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, 1.0;
-      mesh->createVertex(position);
-      position << -1.0, 1.0;
-      mesh->createVertex(position);
-      position << -2.0, 1.0;
-      mesh->createVertex(position);
-    } else if (context.isRank(1)) {
-      Eigen::VectorXd position(dimensions);
-      position << 0.0, 0.0;
-      mesh->createVertex(position);
-      position << -1.0, 0.0;
-      mesh->createVertex(position);
-      position << -2.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, -1.0;
-      mesh->createVertex(position);
-      position << -1.0, -1.0;
-      mesh->createVertex(position);
-      position << -2.0, -1.0;
-      mesh->createVertex(position);
-    } else {
-      Eigen::VectorXd position(dimensions);
-      position << 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 1.0, 0.0;
-      mesh->createVertex(position);
-      position << 2.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, -1.0;
-      mesh->createVertex(position);
-      position << 1.0, -1.0;
-      mesh->createVertex(position);
-      position << 2.0, -1.0;
-      mesh->createVertex(position);
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, -0.1;
+    mesh->createVertex(position);
+    position << 2.0, -0.1;
+    mesh->createVertex(position);
+    position << 0.0, -1.0;
+    mesh->createVertex(position);
+    position << 1.0, -1.0;
+    mesh->createVertex(position);
+    position << 2.0, -1.0;
+    mesh->createVertex(position);
+  }
+
+  mesh->computeBoundingBox();
+  mesh->setGlobalNumberOfVertices(12);
+
+  for (auto &vertex : mesh->vertices()) {
+    vertex.setGlobalIndex(vertex.getID() + 5 * utils::MasterSlave::getRank());
+
+    if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
+      vertex.setGlobalIndex(0);
     }
   }
-  mesh->computeBoundingBox();
 
-  if (context.isNamed("Solid")) {
-    m2n->createDistributedCommunication(mesh);
+  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
+  mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
+  boundingFromMapping->setMeshes(mesh, mesh);
+  boundingToMapping->setMeshes(mesh, mesh);
 
-    mesh::BoundingBox          bb = mesh->getBoundingBox();
-    mesh::Mesh::BoundingBoxMap bbm;
-    bbm.emplace(0, bb);
-    m2n->getMasterCommunication()->send(1, 0);
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
+  ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+  part.addM2N(m2n);
 
-    std::vector<int>                connectedRanksList;
-    std::map<int, std::vector<int>> remoteConnectionMap;
+  part.addFromMapping(boundingFromMapping);
+  part.addToMapping(boundingToMapping);
 
-    m2n->getMasterCommunication()->receive(connectedRanksList, 0);
-    for (auto &rank : connectedRanksList) {
-      remoteConnectionMap[rank] = {-1};
-    }
+  part._mesh->computeBoundingBox();
+  part.prepareBoundingBox();
 
-    if (connectedRanksList.size() != 0) {
-      com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
-    }
+  part.tagMeshFirstRound();
+  part.createOwnerInformation();
 
-    for (auto &remoteRank : remoteConnectionMap) {
-      for (auto &includedRank : remoteRank.second) {
-        if (utils::MasterSlave::getRank() == includedRank) {
-          mesh->getConnectedRanks().push_back(remoteRank.first);
-        }
+  // to check if all ranks have received the vertex at (0, 0)
+  bool includeVertex = false;
+
+  if (context.isMaster()) { //Master
+    for (auto &vertex : part._mesh->vertices()) {
+      if (vertex.getGlobalIndex() == 0) {
+        includeVertex = true;
+        BOOST_TEST(vertex.isOwner() == 1);
       }
     }
-
-    m2n->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
-
-    m2n->getMasterCommunication()->send(mesh->getGlobalNumberOfVertices(), 0);
-
-    int minGlobalVertexID = 0;
-    int maxGlobalVertexID = 5;
-
-    // each rank sends its min/max global vertex index to connected remote ranks
-    m2n->broadcastSend(minGlobalVertexID, *mesh);
-    m2n->broadcastSend(maxGlobalVertexID, *mesh);
-
-    // each rank sends its mesh partition to connected remote ranks
-    m2n->broadcastSendMesh(*mesh);
-
-    // receive communication map from all remote connected ranks
-    m2n->gatherAllCommunicationMap(mesh->getCommunicationMap(), *mesh);
-
-  } else {
-    m2n->createDistributedCommunication(receivedMesh);
-    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
-    mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
-    boundingFromMapping->setMeshes(receivedMesh, mesh);
-    boundingToMapping->setMeshes(mesh, receivedMesh);
-
-    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
-
-    part.addM2N(m2n);
-
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
-
-    part.compareBoundingBoxes();
-
-    m2n->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
-
-    part.communicate();
-    part.compute();
-
-    // to check if all ranks have received the vertex at (0, 0)
-    bool includeVertex = false;
-
-    if (context.isMaster()) { //Master
-      for (auto &vertex : receivedMesh->vertices()) {
-        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
-          includeVertex = true;
-          BOOST_TEST(vertex.isOwner() == 0);
-        }
+    BOOST_TEST(includeVertex == true);
+  } else if (context.isRank(1)) { //Slave1
+    for (auto &vertex : part._mesh->vertices()) {
+      if (vertex.getGlobalIndex() == 0) {
+        includeVertex = true;
+        BOOST_TEST(vertex.isOwner() == 0);
       }
-      BOOST_TEST(includeVertex == true);
-    } else if (context.isRank(1)) { //Slave1
-      for (auto &vertex : receivedMesh->vertices()) {
-        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
-          includeVertex = true;
-          BOOST_TEST(vertex.isOwner() == 1);
-        }
-      }
-      BOOST_TEST(includeVertex == true);
-    } else if (context.isRank(2)) { //Slave2
-      for (auto &vertex : receivedMesh->vertices()) {
-        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
-          includeVertex = true;
-          BOOST_TEST(vertex.isOwner() == 0);
-        }
-      }
-      BOOST_TEST(includeVertex == true);
     }
+    BOOST_TEST(includeVertex == true);
+  } else if (context.isRank(2)) { //Slave2
+    for (auto &vertex : part._mesh->vertices()) {
+      if (vertex.getGlobalIndex() == 0) {
+        includeVertex = true;
+        BOOST_TEST(vertex.isOwner() == 0);
+      }
+    }
+    BOOST_TEST(includeVertex == true);
+  } else if (context.isRank(3)) { //Slave3
+    for (auto &vertex : part._mesh->vertices()) {
+      if (vertex.getGlobalIndex() == 0) {
+        includeVertex = true;
+        BOOST_TEST(vertex.isOwner() == 0);
+      }
+    }
+    BOOST_TEST(includeVertex == true);
   }
 }
 
@@ -1254,231 +1224,180 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation3D)
 {
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
-    for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
-    this vertex, but only one of them can own it. Since the rank 1, has the smallest mesh partition,
-    this vertex must belong only to this rank.
+    for 2LI. The provided mesh includes a vertices at point (0, 0, 0) and (0, 0, 1). Initially, all 
+    receiving ranks receive this vertex, but only one of them can own it. Since the rank 0, has the lowest 
+    rank number, this vertex must belong only to this rank.
    */
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
   //mesh creation
   int           dimensions   = 3;
   bool          flipNormals  = true;
   double        safetyFactor = 0;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
-  mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
+  // mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
   testing::ConnectionOptions options;
   options.useOnlyMasterCom = false;
   options.useTwoLevelInit  = true;
   options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connectMasters("Fluid", "Solid", options);
 
-  if (context.isNamed("Solid")) {
-    if (context.isRank(0)) {
-      Eigen::VectorXd position(dimensions);
-      position << 0.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 1.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 2.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, 1.0, 0.0;
-      mesh->createVertex(position);
-      position << 1.0, 1.0, 0.0;
-      mesh->createVertex(position);
-      position << 2.0, 1.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, 0.0, 1.0;
-      mesh->createVertex(position);
-      position << 1.0, 0.0, 1.0;
-      mesh->createVertex(position);
-      position << 2.0, 0.0, 1.0;
-      mesh->createVertex(position);
-      position << 0.0, 1.0, 1.0;
-      mesh->createVertex(position);
-      position << 1.0, 1.0, 1.0;
-      mesh->createVertex(position);
-      position << 2.0, 1.0, 1.0;
-      mesh->createVertex(position);
-    }
+  auto                                      participantCom = com::PtrCommunication(new com::SocketCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory;
+
+  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
+
+  if (context.isRank(0)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 0.0, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, 1.0, 1.0;
+    mesh->createVertex(position);
+
+  } else if (context.isRank(1)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -0.1, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -0.1, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, 1.0, 1.0;
+    mesh->createVertex(position);
+  } else if (context.isRank(2)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, -0.1, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, -0.1, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, -0.1, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, -0.1, 1.0;
+    mesh->createVertex(position);
+    position << 0.0, -1.0, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, -1.0, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, -1.0, 1.0;
+    mesh->createVertex(position);
   } else {
-    BOOST_TEST(context.isNamed("Fluid"));
-    if (context.isRank(0)) {
-      Eigen::VectorXd position(dimensions);
-      position << 0.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << -1.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << -2.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, 1.0, 0.0;
-      mesh->createVertex(position);
-      position << -1.0, 1.0, 0.0;
-      mesh->createVertex(position);
-      position << -2.0, 1.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, 0.0, 0.1;
-      mesh->createVertex(position);
-      position << -1.0, 0.0, 0.1;
-      mesh->createVertex(position);
-      position << -2.0, 0.0, 0.1;
-      mesh->createVertex(position);
-      position << 0.0, 1.0, 0.1;
-      mesh->createVertex(position);
-      position << -1.0, 1.0, 0.1;
-      mesh->createVertex(position);
-      position << -2.0, 1.0, 0.1;
-      mesh->createVertex(position);
-    } else if (context.isRank(1)) {
-      Eigen::VectorXd position(dimensions);
-      position << 0.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << -1.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << -2.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, -1.0, 0.0;
-      mesh->createVertex(position);
-      position << -1.0, -1.0, 0.0;
-      mesh->createVertex(position);
-      position << -2.0, -1.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, 0.0, 1.0;
-      mesh->createVertex(position);
-      position << -1.0, 0.0, 1.0;
-      mesh->createVertex(position);
-      position << -2.0, 0.0, 1.0;
-      mesh->createVertex(position);
-      position << 0.0, -1.0, 1.0;
-      mesh->createVertex(position);
-      position << -1.0, -1.0, 1.0;
-      mesh->createVertex(position);
-      position << -2.0, -1.0, 1.0;
-      mesh->createVertex(position);
-    } else {
-      Eigen::VectorXd position(dimensions);
-      position << 0.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 1.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 2.0, 0.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, -1.0, 0.0;
-      mesh->createVertex(position);
-      position << 1.0, -1.0, 0.0;
-      mesh->createVertex(position);
-      position << 2.0, -1.0, 0.0;
-      mesh->createVertex(position);
-      position << 0.0, 0.0, 1.0;
-      mesh->createVertex(position);
-      position << 1.0, 0.0, 1.0;
-      mesh->createVertex(position);
-      position << 2.0, 0.0, 1.0;
-      mesh->createVertex(position);
-      position << 0.0, -1.0, 1.0;
-      mesh->createVertex(position);
-      position << 1.0, -1.0, 1.0;
-      mesh->createVertex(position);
-      position << 2.0, -1.0, 1.0;
-      mesh->createVertex(position);
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, -0.1, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, -0.1, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, -0.1, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, -0.1, 1.0;
+    mesh->createVertex(position);
+    position << 0.0, -1.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, -1.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, -1.0, 1.0;
+    mesh->createVertex(position);
+  }
+
+  mesh->computeBoundingBox();
+  mesh->setGlobalNumberOfVertices(12);
+
+  for (auto &vertex : mesh->vertices()) {
+    vertex.setGlobalIndex(vertex.getID() + 10 * utils::MasterSlave::getRank());
+
+    if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
+      if (vertex.getCoords()[2] == 0) {
+        vertex.setGlobalIndex(0);
+      } else if (vertex.getCoords()[2] == 1) {
+        vertex.setGlobalIndex(6);
+      }
     }
   }
-  mesh->computeBoundingBox();
 
-  if (context.isNamed("Solid")) {
-    m2n->createDistributedCommunication(mesh);
+  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
+  mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
+  boundingFromMapping->setMeshes(mesh, mesh);
+  boundingToMapping->setMeshes(mesh, mesh);
 
-    mesh::BoundingBox          bb = mesh->getBoundingBox();
-    mesh::Mesh::BoundingBoxMap bbm;
-    bbm.emplace(0, bb);
-    m2n->getMasterCommunication()->send(1, 0);
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
+  ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+  part.addM2N(m2n);
 
-    std::vector<int>                connectedRanksList;
-    std::map<int, std::vector<int>> remoteConnectionMap;
+  part.addFromMapping(boundingFromMapping);
+  part.addToMapping(boundingToMapping);
 
-    m2n->getMasterCommunication()->receive(connectedRanksList, 0);
-    for (auto &rank : connectedRanksList) {
-      remoteConnectionMap[rank] = {-1};
-    }
+  part._mesh->computeBoundingBox();
+  part.prepareBoundingBox();
 
-    if (connectedRanksList.size() != 0) {
-      com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
-    }
+  part.tagMeshFirstRound();
+  part.createOwnerInformation();
 
-    for (auto &remoteRank : remoteConnectionMap) {
-      for (auto &includedRank : remoteRank.second) {
-        if (utils::MasterSlave::getRank() == includedRank) {
-          mesh->getConnectedRanks().push_back(remoteRank.first);
-        }
+  // to check if all ranks have received the vertex at (0, 0)
+  bool includeVertex = false;
+
+  for (auto &vertex : part._mesh->vertices()) {
+    if (vertex.getGlobalIndex() == 0) {
+      includeVertex = true;
+      if (context.isRank(0)) {
+        BOOST_TEST(vertex.isOwner() == 1);
+      } else {
+        BOOST_TEST(vertex.isOwner() == 0);
       }
     }
-
-    m2n->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
-
-    m2n->getMasterCommunication()->send(mesh->getGlobalNumberOfVertices(), 0);
-
-    int minGlobalVertexID = 0;
-    int maxGlobalVertexID = 5;
-
-    // each rank sends its min/max global vertex index to connected remote ranks
-    m2n->broadcastSend(minGlobalVertexID, *mesh);
-    m2n->broadcastSend(maxGlobalVertexID, *mesh);
-
-    // each rank sends its mesh partition to connected remote ranks
-    m2n->broadcastSendMesh(*mesh);
-
-    // receive communication map from all remote connected ranks
-    m2n->gatherAllCommunicationMap(mesh->getCommunicationMap(), *mesh);
-
-  } else {
-    m2n->createDistributedCommunication(receivedMesh);
-    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
-    mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
-    boundingFromMapping->setMeshes(receivedMesh, mesh);
-    boundingToMapping->setMeshes(mesh, receivedMesh);
-
-    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
-
-    part.addM2N(m2n);
-
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
-
-    part.compareBoundingBoxes();
-
-    m2n->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
-
-    part.communicate();
-    part.compute();
-
-    // to check if all ranks have received the vertex at (0, 0)
-    bool includeVertex = false;
-
-    if (context.isMaster()) { //Master
-      for (auto &vertex : receivedMesh->vertices()) {
-        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
-          includeVertex = true;
-          BOOST_TEST(vertex.isOwner() == 0);
-        }
-      }
-      BOOST_TEST(includeVertex == true);
-    } else if (context.isRank(1)) { //Slave1
-      for (auto &vertex : receivedMesh->vertices()) {
-        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
-          includeVertex = true;
-          BOOST_TEST(vertex.isOwner() == 1);
-        }
-      }
-      BOOST_TEST(includeVertex == true);
-    } else if (context.isRank(2)) { //Slave2
-      for (auto &vertex : receivedMesh->vertices()) {
-        if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
-          includeVertex = true;
-          BOOST_TEST(vertex.isOwner() == 0);
-        }
-      }
-      BOOST_TEST(includeVertex == true);
-    }
+    BOOST_TEST(includeVertex == true);
   }
 }
 
