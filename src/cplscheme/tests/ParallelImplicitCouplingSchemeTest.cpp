@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   const auto    dataID0 = mesh->createData("Data0", 1)->getID();
   const auto    dataID1 = mesh->createData("Data1", 3)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -120,8 +120,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
   cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure2(
       new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(mesh->data().at(1), false, false, minIterationConvMeasure1, true);
-  cplScheme.addConvergenceMeasure(mesh->data().at(0), false, false, minIterationConvMeasure2, true);
+  cplScheme.addConvergenceMeasure(1, false, false, minIterationConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(0, false, false, minIterationConvMeasure2, true);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());

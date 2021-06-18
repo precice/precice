@@ -178,10 +178,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                     participantName, control);
       _config.controller    = participantName;
       _config.setController = true;
-    } else {
-      _config.participants.push_back(participantName);
     }
-
+    _config.participants.push_back(participantName);
   } else if (tag.getName() == TAG_MAX_TIME) {
     _config.maxTime = tag.getDoubleAttributeValue(ATTR_VALUE);
     PRECICE_CHECK(_config.maxTime > 0,
@@ -342,12 +340,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
                     "One controller per MultiCoupling needs to be defined. "
                     "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
                     "Make sure that at least one participant tag provides the attribute <participant name=... control=\"True\"/>.");
-      for (std::string &accessor : _config.participants) {
+      for (const std::string &accessor : _config.participants) {
         PtrCouplingScheme scheme = createMultiCouplingScheme(accessor);
         addCouplingScheme(scheme, accessor);
       }
-      PtrCouplingScheme scheme = createMultiCouplingScheme(_config.controller);
-      addCouplingScheme(scheme, _config.controller);
       _config = Config();
     } else {
       PRECICE_ASSERT(false, _config.type);
@@ -826,22 +822,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
                 "<...-convergence-measure/> subtag in the precice-config.xml.");
-  for (auto &elem : _config.convergenceMeasureDefinitions) {
-    _meshConfig->addNeededMesh(second, elem.meshName);
-    checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
-  }
+  addConvergenceMeasures(scheme, second, _config.convergenceMeasureDefinitions);
 
-  // Set relaxation parameters
-  if (_accelerationConfig->getAcceleration().get() != nullptr) {
-    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
-      _meshConfig->addNeededMesh(second, neededMesh);
-    }
-    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
-      checkSerialImplicitAccelerationData(dataID, first, second);
-    }
-    scheme->setAcceleration(_accelerationConfig->getAcceleration());
-  }
+  // Set acceleration
+  setSerialAcceleration(scheme, first, second);
+
   if (scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && not _accelerationConfig->getAcceleration()->getDataIDs().empty()) {
     int dataID = *(_accelerationConfig->getAcceleration()->getDataIDs().begin());
     PRECICE_CHECK(not scheme->hasSendData(dataID),
@@ -874,22 +859,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
-  for (auto &elem : _config.convergenceMeasureDefinitions) {
-    _meshConfig->addNeededMesh(_config.participants[1], elem.meshName);
-    checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
-  }
+  addConvergenceMeasures(scheme, _config.participants[1], _config.convergenceMeasureDefinitions);
 
-  // Set relaxation parameters
-  if (_accelerationConfig->getAcceleration().get() != nullptr) {
-    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
-      _meshConfig->addNeededMesh(_config.participants[1], neededMesh);
-    }
-    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
-      checkIfDataIsExchanged(dataID);
-    }
-    scheme->setAcceleration(_accelerationConfig->getAcceleration());
-  }
+  // Set acceleration
+  setParallelAcceleration(scheme, _config.participants[1]);
+
   return PtrCouplingScheme(scheme);
 }
 
@@ -900,35 +874,23 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
 
   BaseCouplingScheme *scheme;
 
-  if (accessor == _config.controller) {
-    std::vector<m2n::PtrM2N> m2ns;
-    for (const std::string &participant : _config.participants) {
-      m2ns.push_back(_m2nConfig->getM2N(
-          _config.controller, participant));
+  std::map<std::string, m2n::PtrM2N> m2ns;
+  for (const std::string &participant : _config.participants) {
+    if (_m2nConfig->isM2NConfigured(accessor, participant)) {
+      m2ns[participant] = _m2nConfig->getM2N(accessor, participant);
     }
-
-    scheme = new MultiCouplingScheme(
-        _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-        _config.validDigits, accessor, m2ns, _config.dtMethod,
-        _config.maxIterations);
-    scheme->setExtrapolationOrder(_config.extrapolationOrder);
-
-    MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
-    PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
-    addMultiDataToBeExchanged(*castedScheme, accessor);
-  } else {
-    m2n::PtrM2N m2n = _m2nConfig->getM2N(
-        accessor, _config.controller);
-
-    scheme = new ParallelCouplingScheme(
-        _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-        _config.validDigits, accessor, _config.controller,
-        accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
-    scheme->setExtrapolationOrder(_config.extrapolationOrder);
-
-    BiCouplingScheme *castedScheme = dynamic_cast<BiCouplingScheme *>(scheme);
-    addDataToBeExchanged(*castedScheme, accessor);
   }
+
+  scheme = new MultiCouplingScheme(
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
+      _config.validDigits, accessor, m2ns, _config.dtMethod,
+      _config.controller, _config.maxIterations);
+  scheme->setExtrapolationOrder(_config.extrapolationOrder);
+
+  MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
+  PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
+  addMultiDataToBeExchanged(*castedScheme, accessor);
+
   PRECICE_CHECK(scheme->hasAnySendData(),
                 "No send data configured. Use explicit scheme for one-way coupling. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
@@ -940,23 +902,12 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
                 "<...-convergence-measure/> subtag in the precice-config.xml.");
-  for (auto &elem : _config.convergenceMeasureDefinitions) {
-    _meshConfig->addNeededMesh(_config.controller, elem.meshName);
-    checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data, elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+  if (accessor == _config.controller) {
+    addConvergenceMeasures(scheme, _config.controller, _config.convergenceMeasureDefinitions);
   }
 
-  // Set relaxation parameters
-  if (_accelerationConfig->getAcceleration().get() != nullptr) {
-    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
-      _meshConfig->addNeededMesh(_config.controller, neededMesh);
-    }
-    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
-      checkIfDataIsExchanged(dataID);
-    }
-
-    scheme->setAcceleration(_accelerationConfig->getAcceleration());
-  }
+  // Set acceleration
+  setParallelAcceleration(scheme, _config.controller);
 
   if (not scheme->doesFirstStep() && _accelerationConfig->getAcceleration()) {
     if (_accelerationConfig->getAcceleration()->getDataIDs().size() < 3) {
@@ -965,7 +916,6 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
                    _accelerationConfig->getAcceleration()->getDataIDs().size());
     }
   }
-
   return PtrCouplingScheme(scheme);
 }
 
@@ -1039,8 +989,15 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 {
   PRECICE_TRACE();
   for (const Config::Exchange &exchange : _config.exchanges) {
-    const std::string &from = exchange.from;
-    const std::string &to   = exchange.to;
+    const std::string &from     = exchange.from;
+    const std::string &to       = exchange.to;
+    const std::string &dataName = exchange.data->getName();
+    const std::string &meshName = exchange.mesh->getName();
+
+    PRECICE_CHECK(to != from,
+                  "You cannot define an exchange from and to the same participant. "
+                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  dataName, meshName, from, to);
 
     PRECICE_CHECK((utils::contained(from, _config.participants) || from == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme",
@@ -1051,27 +1008,9 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 
     const bool initialize = exchange.requiresInitialization;
     if (from == accessor) {
-      size_t index = 0;
-      for (const std::string &participant : _config.participants) {
-        PRECICE_DEBUG("from: {}, to: {}, participant: {}", from, to, participant);
-        if (to == participant) {
-          break;
-        }
-        index++;
-      }
-      PRECICE_ASSERT(index < _config.participants.size(), index, _config.participants.size());
-      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, index);
-    } else {
-      size_t index = 0;
-      for (const std::string &participant : _config.participants) {
-        PRECICE_DEBUG("from: {}, to: {}, participant: {}", from, to, participant);
-        if (from == participant) {
-          break;
-        }
-        index++;
-      }
-      PRECICE_ASSERT(index < _config.participants.size(), index, _config.participants.size());
-      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, index);
+      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
+    } else if (to == accessor) {
+      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
     }
   }
 }
@@ -1129,6 +1068,49 @@ void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
       "However, you configured data \"{}\" for acceleration, which is exchanged from \"{}\" to \"{}\". "
       "Please remove this acceleration data tag or switch to a parallel implicit coupling scheme.",
       dataName, first, second, second, first, dataName, first, second);
+}
+
+void CouplingSchemeConfiguration::addConvergenceMeasures(
+    BaseCouplingScheme *                           scheme,
+    const std::string                              participant,
+    const std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions) const
+{
+  for (auto &elem : convergenceMeasureDefinitions) {
+    _meshConfig->addNeededMesh(participant, elem.meshName);
+    checkIfDataIsExchanged(elem.data->getID());
+    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+  }
+}
+
+void CouplingSchemeConfiguration::setSerialAcceleration(
+    BaseCouplingScheme *scheme,
+    const std::string   first,
+    const std::string   second) const
+{
+  if (_accelerationConfig->getAcceleration().get() != nullptr) {
+    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
+      _meshConfig->addNeededMesh(second, neededMesh);
+    }
+    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
+      checkSerialImplicitAccelerationData(dataID, first, second);
+    }
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
+  }
+}
+
+void CouplingSchemeConfiguration::setParallelAcceleration(
+    BaseCouplingScheme *scheme,
+    const std::string   participant) const
+{
+  if (_accelerationConfig->getAcceleration().get() != nullptr) {
+    for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
+      _meshConfig->addNeededMesh(participant, neededMesh);
+    }
+    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
+      checkIfDataIsExchanged(dataID);
+    }
+    scheme->setAcceleration(_accelerationConfig->getAcceleration());
+  }
 }
 
 } // namespace cplscheme

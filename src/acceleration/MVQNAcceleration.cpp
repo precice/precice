@@ -16,6 +16,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -86,7 +87,7 @@ void MVQNAcceleration::initialize(
   int entries  = _residuals.size();
   int global_n = 0;
 
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (!utils::MasterSlave::isParallel()) {
     global_n = entries;
   } else {
     global_n = _dimOffsets.back();
@@ -105,9 +106,10 @@ void MVQNAcceleration::initialize(
   }
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
 
-  if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
+  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
                       << '\n';
+  }
 }
 
 // ==================================================================================
@@ -120,9 +122,9 @@ void MVQNAcceleration::computeUnderrelaxationSecondaryData(
     Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
-    secResiduals                  = data->oldValues.col(0); // old
-    secResiduals *= 1.0 - _initialRelaxation;               // (1-omg) * old
-    values += secResiduals;                                 // (1-omg) * old + new * omg
+    secResiduals                  = data->previousIteration();
+    secResiduals *= 1.0 - _initialRelaxation; // (1-omg) * old
+    values += secResiduals;                   // (1-omg) * old + new * omg
   }
 }
 
@@ -552,10 +554,12 @@ void MVQNAcceleration::restartIMVJ()
     // |===================                             ==|
 
     PRECICE_DEBUG("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian {}, new modes: {}, truncated modes: {} avg rank: {}", rankAfter, rankAfter - rankBefore, waste, _avgRank / _nbRestarts);
+
     //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
-    if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
+    if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
       _infostringstream << " - MVJ-RESTART " << _nbRestarts << ", mode= SVD -\n  new modes: " << rankAfter - rankBefore << "\n  rank svd: " << rankAfter << "\n  avg rank: " << _avgRank / _nbRestarts << "\n  truncated modes: " << waste << "\n"
                         << '\n';
+    }
 
     //        ------------ RESTART LEAST SQUARES ------------
   } else if (_imvjRestartType == MVQNAcceleration::RS_LS) {
@@ -630,9 +634,10 @@ void MVQNAcceleration::restartIMVJ()
     }
 
     PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with {} columns from {} time windows.", _matrixV_RSLS.cols(), _RSLSreusedTimeWindows);
-    if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
+    if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
       _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimeWindows << "\n"
                         << '\n';
+    }
 
     //            ------------ RESTART ZERO ------------
   } else if (_imvjRestartType == MVQNAcceleration::RS_ZERO) {
@@ -749,7 +754,9 @@ void MVQNAcceleration::specializedIterationsConverged(
 
         // < RESTART >
         _nbRestarts++;
+        utils::Event restartUpdate("IMVJRestart");
         restartIMVJ();
+        restartUpdate.stop();
       }
 
       // only in imvj normal mode with efficient update:

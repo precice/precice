@@ -10,11 +10,6 @@ int Vertex::getDimensions() const
   return _dim;
 }
 
-const Eigen::VectorXd &Vertex::getNormal() const
-{
-  return _normal;
-}
-
 int Vertex::getGlobalIndex() const
 {
   return _globalIndex;

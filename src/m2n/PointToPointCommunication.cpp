@@ -114,7 +114,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
     std::string s;
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(s, rank);
 
       oss << s;
@@ -140,7 +140,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -196,7 +196,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       count++;
     }
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -583,13 +583,11 @@ void PointToPointCommunication::send(double const *itemsToSend,
                                      int           valueDimension)
 {
 
-  if (_mappings.empty()) {
+  if (_mappings.empty() || size == 0) {
     return;
   }
 
   for (auto &mapping : _mappings) {
-    // if (utils::MasterSlave::isMaster())
-    //   std::cout<< "indices " << mapping.indices << std::endl;
     auto buffer = std::make_shared<std::vector<double>>();
     buffer->reserve(mapping.indices.size() * valueDimension);
     for (auto index : mapping.indices) {
@@ -607,7 +605,7 @@ void PointToPointCommunication::receive(double *itemsToReceive,
                                         size_t  size,
                                         int     valueDimension)
 {
-  if (_mappings.empty()) {
+  if (_mappings.empty() || size == 0) {
     return;
   }
 

@@ -44,8 +44,7 @@ MeshConfiguration::MeshConfiguration(
                       .setDocumentation("Unique name for the mesh.");
   tag.addAttribute(attrName);
 
-  auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false)
-                             .setDocumentation("Flips mesh normal vector directions.");
+  auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false).setDocumentation("Deprectated.");
   tag.addAttribute(attrFlipNormals);
 
   XMLTag subtagData(*this, TAG_DATA, XMLTag::OCCUR_ARBITRARY);
@@ -73,10 +72,15 @@ void MeshConfiguration::xmlTagCallback(
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
-    std::string name        = tag.getStringAttributeValue(ATTR_NAME);
-    bool        flipNormals = tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS);
+    std::string name = tag.getStringAttributeValue(ATTR_NAME);
+    if (tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS)) {
+      PRECICE_WARN("You used the attribute \"{}\" when configuring mesh \"\". "
+                   "This attribute is deprecated and will be removed in the next major release. "
+                   "Please remove the attribute to silence this warning.",
+                   ATTR_FLIP_NORMALS, name);
+    }
     PRECICE_ASSERT(_meshIdManager);
-    _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, flipNormals, _meshIdManager->getFreeID()));
+    _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, _meshIdManager->getFreeID()));
   } else if (tag.getName() == TAG_DATA) {
     std::string name  = tag.getStringAttributeValue(ATTR_NAME);
     bool        found = false;

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 2.2.1
+
+- Fixed a bug leading to a freeze when using `sync-mode` with lazy indexing.
+- Fixed empty received partitions for filtering on slaves.
+- Fixed gather-scatter communication deadlock with empty master ranks.
+
 ## 2.2.0
 
 - Added a file sink to the test runner, which additionally writes the test log output to the file `test.log`.

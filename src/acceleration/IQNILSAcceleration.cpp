@@ -62,7 +62,7 @@ void IQNILSAcceleration::updateDifferenceMatrices(
     PRECICE_ASSERT(secResiduals.size() == data->values().size(),
                    secResiduals.size(), data->values().size());
     secResiduals = data->values();
-    secResiduals -= data->oldValues.col(0);
+    secResiduals -= data->previousIteration();
   }
 
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
@@ -121,9 +121,9 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
     Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
-    secResiduals                  = data->oldValues.col(0); // old
-    secResiduals *= 1.0 - _initialRelaxation;               // (1-omg) * old
-    values += secResiduals;                                 // (1-omg) * old + new * omg
+    secResiduals                  = data->previousIteration(); // old
+    secResiduals *= 1.0 - _initialRelaxation;                  // (1-omg) * old
+    values += secResiduals;                                    // (1-omg) * old + new * omg
   }
 }
 
@@ -161,7 +161,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
   utils::append(c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
   // compute rhs Q^T*res in parallel
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (!utils::MasterSlave::isParallel()) {
     PRECICE_ASSERT(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
     // back substitution
     c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
@@ -182,8 +182,9 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     utils::MasterSlave::reduceSum(_local_b.data(), _global_b.data(), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
 
     // back substitution R*c = b only in master node
-    if (utils::MasterSlave::isMaster())
+    if (utils::MasterSlave::isMaster()) {
       c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
+    }
 
     // broadcast coefficients c to all slaves
     utils::MasterSlave::broadcast(c.data(), c.size());
@@ -212,8 +213,8 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     auto &          values = data->values();
     PRECICE_ASSERT(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
     values = _secondaryMatricesW[id] * c;
-    PRECICE_ASSERT(values.size() == data->oldValues.col(0).size(), values.size(), data->oldValues.col(0).size());
-    values += data->oldValues.col(0);
+    PRECICE_ASSERT(values.size() == data->previousIteration().size(), values.size(), data->previousIteration().size());
+    values += data->previousIteration();
     PRECICE_ASSERT(values.size() == _secondaryResiduals[id].size(), values.size(), _secondaryResiduals[id].size());
     values += _secondaryResiduals[id];
   }

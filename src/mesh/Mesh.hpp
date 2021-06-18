@@ -61,13 +61,11 @@ public:
    *
    * @param[in] name Unique name of the mesh.
    * @param[in] dimensions Dimensionalty of the mesh.
-   * @param[in] flipNormals Inverts the standard direction of normals.
    * @param[in] id The id of this mesh
    */
   Mesh(
       std::string name,
       int         dimensions,
-      bool        flipNormals,
       int         id);
 
   /// Destructor, deletes created objects.
@@ -143,10 +141,6 @@ public:
   /// Returns the name of the mesh, as set in the config file.
   const std::string &getName() const;
 
-  bool isFlipNormals() const;
-
-  void setFlipNormals(bool flipNormals);
-
   /// Returns the base ID of the mesh.
   int getID() const;
 
@@ -158,17 +152,6 @@ public:
 
   /// Allocates memory for the vertex data values.
   void allocateDataValues();
-
-  /**
-   * @brief Necessary before any geom. operations can be performed on the mesh.
-   *
-   * If no edges (in 2d) or triangles(in 3d) are
-   * given, no normals are computed in order to avoid dividing by zero on
-   * normalization of the vertex normals.
-   *
-   * Circumcircles of edges and triangles are computed.
-   */
-  void computeState();
 
   /// Computes the boundingBox for the vertices.
   void computeBoundingBox();
@@ -223,7 +206,6 @@ public:
    * @brief Returns the bounding box of the mesh.
    *
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
-   * computeState() has to be called after setting the mesh.
    */
   const BoundingBox &getBoundingBox() const;
 
@@ -241,9 +223,6 @@ private:
 
   /// Dimension of mesh.
   int _dimensions;
-
-  /// Flag for flipping normals direction.
-  bool _flipNormals;
 
   /// The ID of this mesh.
   int _id;

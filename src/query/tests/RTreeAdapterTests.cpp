@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(VectorAdapter)
 BOOST_AUTO_TEST_CASE(VertexAdapter)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 2, false, precice::testing::nextMeshID());
+  precice::mesh::Mesh mesh("MyMesh", 2, precice::testing::nextMeshID());
   auto &              v = mesh.createVertex(Eigen::Vector2d(1, 2));
   BOOST_TEST(bg::get<0>(v) == 1);
   BOOST_TEST(bg::get<1>(v) == 2);
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(RawCoordinateAdapter)
 BOOST_AUTO_TEST_CASE(EdgeAdapter)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 2, false, precice::testing::nextMeshID());
+  precice::mesh::Mesh mesh("MyMesh", 2, precice::testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector2d(1, 2));
   auto &              v2 = mesh.createVertex(Eigen::Vector2d(3, 4));
   auto &              e  = mesh.createEdge(v1, v2);
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(EdgeAdapter)
 BOOST_AUTO_TEST_CASE(TriangleAdapter)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, false, precice::testing::nextMeshID());
+  precice::mesh::Mesh mesh("MyMesh", 3, precice::testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
   auto &              v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
   auto &              v3 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(TriangleAdapter)
 BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
+  precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
   auto &              v2 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto &              v3 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)
 BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
+  precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              lv1 = mesh.createVertex(Eigen::Vector3d(-1, 1, 0.1));
   auto &              lv2 = mesh.createVertex(Eigen::Vector3d(0, -1, 0));
   auto &              lv3 = mesh.createVertex(Eigen::Vector3d(-2, 0, -0.1));
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
 BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangleInsideOutside)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
+  precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              a = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
   auto &              b = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
   auto &              c = mesh.createVertex(Eigen::Vector3d(1, 1, 0));
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangleInsideOutside)
 BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
+  precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto &              v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
   auto &              v3 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
@@ -223,7 +223,8 @@ BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
 BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
+  using precice::testing::equals;
+  precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto &              v2  = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
   auto &              v3  = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
@@ -245,7 +246,8 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
 BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
 {
   PRECICE_TEST(1_rank);
-  precice::mesh::Mesh mesh("MyMesh", 3, false, testing::nextMeshID());
+  using precice::testing::equals;
+  precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto &              v2  = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
   auto &              v3  = mesh.createVertex(Eigen::Vector3d(0, 0, 1));

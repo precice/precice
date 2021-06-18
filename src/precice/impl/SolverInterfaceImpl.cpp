@@ -222,7 +222,7 @@ void SolverInterfaceImpl::configure(
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
 
   PRECICE_DEBUG("Initialize master-slave communication");
-  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isParallel()) {
     initializeMasterSlaveCommunication();
   }
 
@@ -385,7 +385,7 @@ double SolverInterfaceImpl::advance(
 
 #ifndef NDEBUG
   PRECICE_DEBUG("Synchronize timestep length");
-  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isParallel()) {
     syncTimestep(computedTimestepLength);
   }
 #endif
@@ -492,7 +492,7 @@ void SolverInterfaceImpl::finalize()
 
   // Close Connections
   PRECICE_DEBUG("Close master-slave communication");
-  if (utils::MasterSlave::isSlave() || utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isParallel()) {
     utils::MasterSlave::_communication->closeConnection();
     utils::MasterSlave::_communication = nullptr;
   }
@@ -1532,7 +1532,6 @@ void SolverInterfaceImpl::computePartitions()
 
   for (MeshContext *meshContext : contexts) {
     meshContext->partition->compute();
-    meshContext->mesh->computeState();
     if (not meshContext->provideMesh) { // received mesh can only compute their bounding boxes here
       meshContext->mesh->computeBoundingBox();
     }
@@ -1721,11 +1720,12 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
 
 void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 {
-  PRECICE_ASSERT(utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave());
+  PRECICE_ASSERT(utils::MasterSlave::isParallel());
   if (utils::MasterSlave::isSlave()) {
     utils::MasterSlave::_communication->send(computedTimestepLength, 0);
-  } else if (utils::MasterSlave::isMaster()) {
-    for (int rankSlave = 1; rankSlave < _accessorCommunicatorSize; rankSlave++) {
+  } else {
+    PRECICE_ASSERT(utils::MasterSlave::isMaster());
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       double dt;
       utils::MasterSlave::_communication->receive(dt, rankSlave);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),

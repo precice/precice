@@ -18,10 +18,6 @@
 namespace precice {
 namespace io {
 
-ExportVTK::ExportVTK(bool writeNormals)
-    : Export(),
-      _writeNormals(writeNormals) {}
-
 int ExportVTK::getType() const
 {
   return constants::exportVTK();
@@ -100,37 +96,6 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
 void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
 {
   outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
-
-  if (_writeNormals) { // Plot vertex normals
-    outFile << "VECTORS VertexNormals double\n\n";
-    for (auto const &vertex : mesh.vertices()) {
-      int i = 0;
-      for (; i < mesh.getDimensions(); i++) {
-        outFile << vertex.getNormal()[i] << ' ';
-      }
-      if (i < 3) {
-        outFile << '0';
-      }
-      outFile << '\n';
-    }
-    outFile << '\n';
-
-    // Plot edge normals
-    //    if(_plotNormals) {
-    //      VTKTextFileWriter vtkWriterEdgeNormals; //(fileName + "-edgenormals.vtk");
-    //      PtrVertexWriter normalsOriginWriter (vtkWriterEdgeNormals.createVertexWriter());
-    //      PtrVertexDataWriter normalsWriter (
-    //          vtkWriterEdgeNormals.createVertexDataWriter("EdgeNormals", utils::Def::DIM));
-    //      for (mesh::Edge & edge : mesh.edges()) {
-    //  //      int vertexID = normalsOriginWriter.getNextFreeVertexNumber ();
-    //        int vertexID = normalsOriginWriter->plotVertex(edge.getCenter());
-    //        normalsWriter->plotVertex(vertexID, edge.getNormal());
-    //      }
-    //      vtkWriterEdgeNormals.writeToFile(fileName + "-edgenormals.vtk");
-    //  //    vtkWriterEdgeNormals.plotVertices(normalsOriginWriter);
-    //  //    vtkWriterEdgeNormals.plotPointData(normalsWriter);
-    //    }
-  }
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values = data->values();

@@ -381,20 +381,6 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
   }
 }
 
-/// @todo remove
-mesh::PtrMesh ParticipantConfiguration::copy(
-    const mesh::PtrMesh &mesh) const
-{
-  int         dim = mesh->getDimensions();
-  std::string name(mesh->getName());
-  bool        flipNormals = mesh->isFlipNormals();
-  mesh::Mesh *meshCopy    = new mesh::Mesh("Local_" + name, dim, flipNormals, mesh::Mesh::MESH_ID_UNDEFINED);
-  for (const mesh::PtrData &data : mesh->data()) {
-    meshCopy->createData(data->getName(), data->getDimensions());
-  }
-  return mesh::PtrMesh(meshCopy);
-}
-
 const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
     const std::string &  nameData) const
@@ -575,9 +561,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
       if (context.size > 1) {
-        exporter = io::PtrExport(new io::ExportVTKXML(exportContext.plotNormals));
+        exporter = io::PtrExport(new io::ExportVTKXML());
       } else {
-        exporter = io::PtrExport(new io::ExportVTK(exportContext.plotNormals));
+        exporter = io::PtrExport(new io::ExportVTK());
       }
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",

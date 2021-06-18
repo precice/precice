@@ -20,6 +20,7 @@
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
+#include "utils/fmt.hpp"
 
 using precice::utils::Event;
 
@@ -91,9 +92,7 @@ void ReceivedPartition::compute()
   PRECICE_TRACE();
 
   // handle coupling mode first (i.e. serial participant)
-  if (not utils::MasterSlave::isSlave() && not utils::MasterSlave::isMaster()) {
-
-    // Debug messages
+  if (!utils::MasterSlave::isParallel()) { //coupling mode
     PRECICE_DEBUG("Handle partition data structures for serial participant");
 
     if (_partitionByBoundingBox) {
@@ -134,7 +133,6 @@ void ReceivedPartition::compute()
 
   // (2) Tag vertices 1st round (i.e. who could be owned by this rank)
   PRECICE_DEBUG("Tag vertices for filtering: 1st round.");
-  _mesh->computeState(); // normals need to be ready for NP mapping
   // go to both meshes, vertex is tagged if already one mesh tags him
   tagMeshFirstRound();
 
@@ -149,7 +147,7 @@ void ReceivedPartition::compute()
   // (5) Filter mesh according to tag
   PRECICE_INFO("Filter mesh {} by mappings", _mesh->getName());
   Event      e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
-  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
   mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
   PRECICE_DEBUG("Mapping filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                 _mesh->vertices().size(), filteredMesh.vertices().size(),
@@ -209,7 +207,7 @@ void ReceivedPartition::compute()
       }
       _mesh->getVertexDistribution()[0] = std::move(vertexIDs);
 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+      for (int rankSlave : utils::MasterSlave::allSlaves()) {
         int numberOfSlaveVertices = -1;
         utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
         PRECICE_ASSERT(numberOfSlaveVertices >= 0);
@@ -242,7 +240,7 @@ void ReceivedPartition::compute()
     _mesh->getVertexOffsets()[0] = _mesh->vertices().size();
 
     // receive number of slave vertices and fill vertex offsets
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+    for (int rankSlave : utils::MasterSlave::allSlaves()) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
       _mesh->getVertexOffsets()[rankSlave] = numberOfSlaveVertices + _mesh->getVertexOffsets()[rankSlave - 1];
@@ -255,14 +253,18 @@ void ReceivedPartition::compute()
 }
 
 namespace {
-std::string errorMeshFilteredOut(const std::string &meshName)
+auto errorMeshFilteredOut(const std::string &meshName, const int rank)
 {
-  return "The re-partitioning completely filtered out the mesh \"" + meshName +
-         "\" received on this rank at the coupling interface. "
-         "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
-         "Please check your geometry setup again. Small overlaps or gaps are no problem. "
-         "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
-         "of the decomposition strategy might be necessary.";
+  return fmt::format("The re-partitioning completely filtered out the mesh \"{0}\" received on rank {1} "
+                     "at the coupling interface, although the provided mesh partition on this rank is "
+                     "non-empty. Most probably, the coupling interfaces of your coupled participants do "
+                     "not match geometry-wise. Please check your geometry setup again. Small overlaps or "
+                     "gaps are no problem. If your geometry setup is correct and if you have very different "
+                     "mesh resolutions on both sides, you may want to increase the safety-factor: "
+                     "\"<use-mesh mesh=\"{0} \" ... safety-factor=\"N\"/> (default value is 0.5) of the "
+                     "decomposition strategy or disable the filtering completely: "
+                     "\"<use-mesh mesh=\"{0}\" ... geometric-filter=\"no-filter\" />",
+                     meshName, rank);
 }
 } // namespace
 
@@ -293,26 +295,26 @@ void ReceivedPartition::filterByBoundingBox()
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(*_mesh, 0);
 
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::MasterSlave::getRank()));
       }
 
     } else { // Master
       PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
       PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+      for (int rankSlave : utils::MasterSlave::allSlaves()) {
         mesh::BoundingBox slaveBB(_bb.getDimension());
         com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(slaveBB, rankSlave);
 
         PRECICE_DEBUG("From slave {}, bounding mesh: {}", rankSlave, slaveBB);
-        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return slaveBB.contains(v); });
         PRECICE_DEBUG("Send filtered mesh to slave: {}", rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
       }
 
       // Now also filter the remaining master mesh
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
       PRECICE_DEBUG("Master mesh, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->vertices().size(), filteredMesh.vertices().size(),
@@ -322,7 +324,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->addMesh(filteredMesh);
 
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::MasterSlave::getRank()));
       }
     }
   } else {
@@ -342,12 +344,8 @@ void ReceivedPartition::filterByBoundingBox()
       PRECICE_INFO("Filter mesh {} by bounding box on slaves", _mesh->getName());
       Event e("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);
 
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
-
-      if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName()));
-      }
 
       PRECICE_DEBUG("Bounding box filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->vertices().size(), filteredMesh.vertices().size(),
@@ -356,6 +354,9 @@ void ReceivedPartition::filterByBoundingBox()
 
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
+      if (isAnyProvidedMeshNonEmpty()) {
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::MasterSlave::getRank()));
+      }
     } else {
       PRECICE_ASSERT(_geometricFilter == NO_FILTER);
     }
@@ -418,7 +419,7 @@ void ReceivedPartition::compareBoundingBoxes()
     }
 
     // receive connected ranks from slaves and add them to the connection map
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       std::vector<int> slaveConnectedRanks;
       int              connectedRanksSize = -1;
       utils::MasterSlave::_communication->receive(connectedRanksSize, rank);
@@ -565,7 +566,7 @@ void ReceivedPartition::createOwnerInformation()
     if (masterAtInterface)
       ranksAtInterface++;
 
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       int localNumberOfVertices = -1;
       utils::MasterSlave::_communication->receive(localNumberOfVertices, rank);
       PRECICE_DEBUG("Rank {} has {} vertices.", rank, localNumberOfVertices);
@@ -589,7 +590,7 @@ void ReceivedPartition::createOwnerInformation()
     PRECICE_ASSERT(ranksAtInterface != 0);
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
-    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+    for (int rank : utils::MasterSlave::allRanks()) {
       int counter = 0;
       for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
         // Vertex has no owner yet and rank could be owner
@@ -605,7 +606,7 @@ void ReceivedPartition::createOwnerInformation()
 
     // Second round: distribute all other vertices in a greedy way
     PRECICE_DEBUG("Decide owners, second round in greedy way");
-    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+    for (int rank : utils::MasterSlave::allRanks()) {
       for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
         if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
           slaveOwnerVecs[rank][i]                 = 1;
@@ -615,7 +616,7 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     // Send information back to slaves
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+    for (int rank : utils::MasterSlave::allSlaves()) {
       if (not slaveTags[rank].empty()) {
         PRECICE_DEBUG("Send owner information to slave rank {}", rank);
         utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);

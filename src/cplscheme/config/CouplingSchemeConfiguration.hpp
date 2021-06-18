@@ -263,6 +263,20 @@ private:
   void checkSerialImplicitAccelerationData(
       int dataID, const std::string &first, const std::string &second) const;
 
+  void addConvergenceMeasures(
+      BaseCouplingScheme *                           scheme,
+      const std::string                              participant,
+      const std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions) const;
+
+  void setSerialAcceleration(
+      BaseCouplingScheme *scheme,
+      const std::string   first,
+      const std::string   second) const;
+
+  void setParallelAcceleration(
+      BaseCouplingScheme *scheme,
+      const std::string   participant) const;
+
   friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;   // For whitebox tests
 };

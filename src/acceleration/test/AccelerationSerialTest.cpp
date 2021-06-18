@@ -50,52 +50,38 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   std::vector<double> factors;
   factors.resize(2, 1.0);
   impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
-  mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                       timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
                       restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
 
-  Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
   //init displacements
-  utils::append(displacements->values(), 1.0);
-  utils::append(displacements->values(), 2.0);
-  utils::append(displacements->values(), 3.0);
-  utils::append(displacements->values(), 4.0);
-
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false));
+  displacements->values().resize(4);
+  displacements->values() << 1.0, 1.0, 1.0, 1.0;
 
   //init forces
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
+  forces->values().resize(4);
+  forces->values() << 0.2, 0.2, 0.2, 0.2;
 
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-
+  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false));
   cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false));
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
+  dpcd->storeIteration();
+  fpcd->storeIteration();
 
   pp.initialize(data);
 
-  dpcd->oldValues.col(0) = dcol1;
-  fpcd->oldValues.col(0) = fcol1;
+  displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  forces->values() << 0.1, 0.1, 0.1, 0.1;
 
   pp.performAcceleration(data);
 
@@ -108,13 +94,7 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199000000000000010214));
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199000000000000010214));
 
-  Eigen::VectorXd newdvalues;
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-  utils::append(newdvalues, 10.0);
-
-  data.begin()->second->values() = newdvalues;
+  data.begin()->second->values() << 10, 10, 10, 10;
 
   pp.performAcceleration(data);
 
@@ -149,42 +129,26 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0, 1.0));
   scalings.insert(std::make_pair(1, 1.0));
-  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
-  acceleration::IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                                      timestepsReused, filter, singularityLimit, dataIDs, prec);
-
-  Eigen::VectorXd dcol1;
-  Eigen::VectorXd fcol1;
+  IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+                        timestepsReused, filter, singularityLimit, dataIDs, prec);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
   //init displacements
-  utils::append(displacements->values(), 1.0);
-  utils::append(displacements->values(), 2.0);
-  utils::append(displacements->values(), 3.0);
-  utils::append(displacements->values(), 4.0);
-
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-  utils::append(dcol1, 1.0);
-
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false));
+  displacements->values().resize(4);
+  displacements->values() << 1.0, 1.0, 1.0, 1.0;
 
   //init forces
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
-  utils::append(forces->values(), 0.1);
+  forces->values().resize(4);
+  forces->values() << 0.2, 0.2, 0.2, 0.2;
 
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-  utils::append(fcol1, 0.2);
-
+  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false));
   cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false));
+  dpcd->storeIteration();
+  fpcd->storeIteration();
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -192,8 +156,8 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
 
   pp.initialize(data);
 
-  dpcd->oldValues.col(0) = dcol1;
-  fpcd->oldValues.col(0) = fcol1;
+  displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  forces->values() << 0.1, 0.1, 0.1, 0.1;
 
   pp.performAcceleration(data);
 
