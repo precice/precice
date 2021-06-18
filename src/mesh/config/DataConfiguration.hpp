@@ -43,13 +43,9 @@ public:
    *
    * @param[in] name Unqiue name of the data.
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
-   * @param[in] mappingType data mapping type (consistent or conservative)
-   * Set a default here in order to compile the tests without any complains
    */
   void addData(const std::string &name,
                int                dataDimensions);
-
-  //int getDimensions() const;
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};

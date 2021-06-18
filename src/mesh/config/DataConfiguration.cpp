@@ -97,5 +97,6 @@ int DataConfiguration::getDataDimensions(
   // We should never reach this point
   PRECICE_UNREACHABLE("Unknown data type \"{}\".", typeName);
 }
+
 } // namespace mesh
 } // namespace precice

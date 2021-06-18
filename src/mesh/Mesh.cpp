@@ -210,6 +210,7 @@ void Mesh::computeBoundingBox()
 {
   PRECICE_TRACE(_name);
 
+  // Keep the bounding box if set via the API function.
   BoundingBox bb = _boundingBox.empty() ? BoundingBox(_dimensions) : BoundingBox(_boundingBox);
 
   for (const Vertex &vertex : _vertices) {
