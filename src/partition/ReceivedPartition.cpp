@@ -99,7 +99,7 @@ void ReceivedPartition::compute()
       // Prepare the bounding boxes
       prepareBoundingBox();
       // Filter out vertices not laying in the bounding box
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, _mesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { PRECICE_ASSERT(_bb.contains(v), "The vertex with coordinates {} "
                                                                                                           "has been filtered out in serial mode, "
                                                                                                           "which is currently undefined behavior.",
