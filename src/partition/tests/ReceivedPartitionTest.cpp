@@ -1177,7 +1177,7 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
   // to check if all ranks have received the vertex at (0, 0)
   bool includeVertex = false;
 
-    for (auto &vertex : part._mesh->vertices()) {
+  for (auto &vertex : part._mesh->vertices()) {
     if (vertex.getGlobalIndex() == 0) {
       includeVertex = true;
       if (context.isRank(2)) {
