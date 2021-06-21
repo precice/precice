@@ -496,7 +496,7 @@ void ReceivedPartition::prepareBoundingBox()
     // On the other hand, ignoring it makes the xml configuration
     // inconsistent and does not provide any configurable option for
     // 'bad' matching geometries.
-    _bb.scaleBy(_safetyFactor);
+    //    _bb.scaleBy(_safetyFactor);
     PRECICE_WARN("Ignoring the safety factor for bounding box initialization");
 
     _boundingBoxPrepared = true;
