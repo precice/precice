@@ -102,10 +102,16 @@ void ReceivedPartition::compute()
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       // To discuss: maybe check this somewhere in the SolverInterfaceImpl, as we have now a similar check for the parallel case
       PRECICE_CHECK(!_bb.empty(), "You are running in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setBoundingBox with valid data?", _mesh->getName());
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { PRECICE_CHECK(_bb.contains(v), "The vertex with coordinates {} "
-                                                                                                          "has been filtered out in serial mode, "
-                                                                                                          "which is currently undefined behavior.",
-                                                                                         v.getCoords()); return _bb.contains(v); });
+      unsigned int nFilteredVertices = 0;
+      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { if(!_bb.contains(v))
+              ++nFilteredVertices;
+          return _bb.contains(v); });
+
+      if (nFilteredVertices > 0)
+        PRECICE_WARN("{} vertices have been filtered out "
+                     "in serial mode and will be filled with zero values.",
+                     nFilteredVertices);
+
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
     }
@@ -479,21 +485,21 @@ void ReceivedPartition::prepareBoundingBox()
     _bb.scaleBy(_safetyFactor);
     _boundingBoxPrepared = true;
   }
-  // This will not be compatible in case we define a mapping on the
-  // same mesh. Still, we need to transfer the mesh own bounding box
-  // to the received partition bounding box. Otherwise the received
-  // partition bounding box will be empty and everything will be
-  // filtered out in the subsequent steps
-  // An alternative would be to use Data::DataMappingType::CONSISTENT
-  // or Data::DataMappingType::CONSERVATIVE here, but then we need to
-  // associate the mesh to a specific data set.
+
+  // Expand by user-defined bounding box in case a direct access is desired
   if (_partitionByBoundingBox) {
-    const auto other_bb = _mesh->getBoundingBox();
+    auto &other_bb = _mesh->getBoundingBox();
     _bb.expandBy(other_bb);
-    // TODO: Scale by safety factor here. Default of 1.5 is for the current
-    // mappings still too large in comparison to what we want to do here.
-    _boundingBoxPrepared = true;
+    // TODO: How to treat the scale by safety factor here?
+    // The default value of 0.5 is for the current mappings
+    // still too large in comparison to what we want to do here.
+    // On the other hand, ignoring it makes the xml configuration
+    // inconsistent and does not provide any configurable option for
+    // 'bad' matching geometries.
+    _bb.scaleBy(_safetyFactor);
     PRECICE_WARN("Ignoring the safety factor for bounding box initialization");
+
+    _boundingBoxPrepared = true;
   }
 }
 
@@ -639,9 +645,12 @@ void ReceivedPartition::createOwnerInformation()
     }
 #endif
     auto filteredVertices = std::count(globalOwnerVec.begin(), globalOwnerVec.end(), 0);
-    if (filteredVertices)
+    if (filteredVertices) {
       PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
                    filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
+      if (_partitionByBoundingBox)
+        PRECICE_WARN("Filtered vertices will be filled with the zero data.");
+    }
   }
 }
 
@@ -674,8 +683,7 @@ void ReceivedPartition::tagMeshFirstRound()
     toMapping->tagMeshFirstRound();
   }
 
-  // Same if-condition as in prepareBoundingBox. See above for
-  // the rationale.
+  // We want to have every vertex within the box
   if (_partitionByBoundingBox) {
     _mesh->tagAll();
   }
