@@ -12,8 +12,8 @@
 // Forward declaration to friend the boost test struct
 namespace PartitionTests {
 namespace ReceivedPartitionTests {
-struct TestParallelSetOwnerInformation2D;
-struct TestParallelSetOwnerInformation3D;
+template <typename T>
+void testParallelSetOwnerInformation(T &mesh, int dimensions);
 } // namespace ReceivedPartitionTests
 } // namespace PartitionTests
 
@@ -104,8 +104,8 @@ private:
   /// Min global vertex IDs of remote connected ranks
   std::vector<int> _remoteMinGlobalVertexIDs;
 
-  friend struct PartitionTests::ReceivedPartitionTests::TestParallelSetOwnerInformation2D;
-  friend struct PartitionTests::ReceivedPartitionTests::TestParallelSetOwnerInformation3D;
+  template <typename T>
+  friend void PartitionTests::ReceivedPartitionTests::testParallelSetOwnerInformation(T &mesh, int dimensions);
 };
 
 } // namespace partition

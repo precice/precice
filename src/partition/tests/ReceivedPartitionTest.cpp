@@ -1069,21 +1069,11 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
   tearDownParallelEnvironment();
 }
 
-BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
+template <typename T>
+void testParallelSetOwnerInformation(T &mesh, int dimensions)
 {
-  /*
-    This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
-    for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
-    this vertex, but only one of them can own it. Since the rank 2, has the lowest number of vertices, 
-    this vertex must belong only to it finally.
-   */
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
-  //mesh creation
-  int           dimensions   = 2;
-  bool          flipNormals  = true;
-  double        safetyFactor = 0;
-  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
-  // mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
+  bool   flipNormals  = true;
+  double safetyFactor = 0;
 
   testing::ConnectionOptions options;
   options.useOnlyMasterCom = false;
@@ -1094,6 +1084,37 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
   m2n::DistributedComFactory::SharedPointer distrFactory;
 
   auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
+
+  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
+  mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
+  boundingFromMapping->setMeshes(mesh, mesh);
+  boundingToMapping->setMeshes(mesh, mesh);
+
+  ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+  part.addM2N(m2n);
+
+  part.addFromMapping(boundingFromMapping);
+  part.addToMapping(boundingToMapping);
+
+  part._mesh->computeBoundingBox();
+  part.prepareBoundingBox();
+
+  part.tagMeshFirstRound();
+  part.createOwnerInformation();
+}
+
+BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
+{
+  /*
+    This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
+    for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
+    this vertex, but only one of them can own it. Since the rank 2, has the lowest number of vertices, 
+    this vertex must belong only to it finally.
+  */
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  //mesh creation
+  int           dimensions = 2;
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
   if (context.isRank(0)) {
     Eigen::VectorXd position(dimensions);
@@ -1147,7 +1168,7 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
   }
 
   mesh->computeBoundingBox();
-  mesh->setGlobalNumberOfVertices(6);
+  mesh->setGlobalNumberOfVertices(mesh->vertices().size());
 
   for (auto &vertex : mesh->vertices()) {
     vertex.setGlobalIndex(vertex.getID() + 5 * utils::MasterSlave::getRank());
@@ -1157,27 +1178,12 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
     }
   }
 
-  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
-  mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
-  boundingFromMapping->setMeshes(mesh, mesh);
-  boundingToMapping->setMeshes(mesh, mesh);
-
-  ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
-  part.addM2N(m2n);
-
-  part.addFromMapping(boundingFromMapping);
-  part.addToMapping(boundingToMapping);
-
-  part._mesh->computeBoundingBox();
-  part.prepareBoundingBox();
-
-  part.tagMeshFirstRound();
-  part.createOwnerInformation();
+  testParallelSetOwnerInformation(mesh, dimensions);
 
   // to check if all ranks have received the vertex at (0, 0)
   bool includeVertex = false;
 
-  for (auto &vertex : part._mesh->vertices()) {
+  for (auto &vertex : mesh->vertices()) {
     if (vertex.getGlobalIndex() == 0) {
       includeVertex = true;
       if (context.isRank(2)) {
@@ -1200,21 +1206,8 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation3D)
    */
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
   //mesh creation
-  int           dimensions   = 3;
-  bool          flipNormals  = true;
-  double        safetyFactor = 0;
+  int           dimensions = 3;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
-  // mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
-
-  testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
-  options.useTwoLevelInit  = true;
-  options.type             = testing::ConnectionType::PointToPoint;
-
-  auto                                      participantCom = com::PtrCommunication(new com::SocketCommunication());
-  m2n::DistributedComFactory::SharedPointer distrFactory;
-
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
 
   if (context.isRank(0)) {
     Eigen::VectorXd position(dimensions);
@@ -1324,7 +1317,7 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation3D)
   }
 
   mesh->computeBoundingBox();
-  mesh->setGlobalNumberOfVertices(12);
+  mesh->setGlobalNumberOfVertices(mesh->vertices().size());
 
   for (auto &vertex : mesh->vertices()) {
     vertex.setGlobalIndex(vertex.getID() + 10 * utils::MasterSlave::getRank());
@@ -1338,27 +1331,12 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation3D)
     }
   }
 
-  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
-  mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
-  boundingFromMapping->setMeshes(mesh, mesh);
-  boundingToMapping->setMeshes(mesh, mesh);
+  testParallelSetOwnerInformation(mesh, dimensions);
 
-  ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
-  part.addM2N(m2n);
-
-  part.addFromMapping(boundingFromMapping);
-  part.addToMapping(boundingToMapping);
-
-  part._mesh->computeBoundingBox();
-  part.prepareBoundingBox();
-
-  part.tagMeshFirstRound();
-  part.createOwnerInformation();
-
-  // to check if all ranks have received the vertex at (0, 0)
+  // to check if all ranks have received the vertex at (0, 0, 0)
   bool includeVertex = false;
 
-  for (auto &vertex : part._mesh->vertices()) {
+  for (auto &vertex : mesh->vertices()) {
     if (vertex.getGlobalIndex() == 0) {
       includeVertex = true;
       if (context.isRank(0)) {
