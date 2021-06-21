@@ -1074,8 +1074,8 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
     for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
-    this vertex, but only one of them can own it. Since the rank 0, has the lowest rank number, this vertex 
-    must belong only to this rank.
+    this vertex, but only one of them can own it. Since the rank 2, has the lowest number of vertices, 
+    this vertex must belong only to it finally.
    */
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
   //mesh creation
@@ -1118,7 +1118,7 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
     mesh->createVertex(position);
     position << -2.0, 0.0;
     mesh->createVertex(position);
-    position << -0.1, 1.0;
+    position << -0.5, 1.0;
     mesh->createVertex(position);
     position << -1.0, 1.0;
     mesh->createVertex(position);
@@ -1128,25 +1128,17 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
     Eigen::VectorXd position(dimensions);
     position << 0.0, 0.0;
     mesh->createVertex(position);
-    position << -1.0, -0.1;
-    mesh->createVertex(position);
-    position << -2.0, -0.1;
-    mesh->createVertex(position);
-    position << 0.0, -1.0;
-    mesh->createVertex(position);
-    position << -1.0, -1.0;
-    mesh->createVertex(position);
-    position << -2.0, -1.0;
+    position << -1.0, -0.5;
     mesh->createVertex(position);
   } else {
     Eigen::VectorXd position(dimensions);
     position << 0.0, 0.0;
     mesh->createVertex(position);
-    position << 1.0, -0.1;
+    position << 1.0, -0.5;
     mesh->createVertex(position);
-    position << 2.0, -0.1;
+    position << 2.0, -0.5;
     mesh->createVertex(position);
-    position << 0.0, -1.0;
+    position << 0.5, -1.0;
     mesh->createVertex(position);
     position << 1.0, -1.0;
     mesh->createVertex(position);
@@ -1155,7 +1147,7 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
   }
 
   mesh->computeBoundingBox();
-  mesh->setGlobalNumberOfVertices(12);
+  mesh->setGlobalNumberOfVertices(6);
 
   for (auto &vertex : mesh->vertices()) {
     vertex.setGlobalIndex(vertex.getID() + 5 * utils::MasterSlave::getRank());
@@ -1185,34 +1177,12 @@ BOOST_AUTO_TEST_CASE(TestParallelSetOwnerInformation2D)
   // to check if all ranks have received the vertex at (0, 0)
   bool includeVertex = false;
 
-  if (context.isMaster()) { //Master
     for (auto &vertex : part._mesh->vertices()) {
-      if (vertex.getGlobalIndex() == 0) {
-        includeVertex = true;
+    if (vertex.getGlobalIndex() == 0) {
+      includeVertex = true;
+      if (context.isRank(2)) {
         BOOST_TEST(vertex.isOwner() == 1);
-      }
-    }
-    BOOST_TEST(includeVertex == true);
-  } else if (context.isRank(1)) { //Slave1
-    for (auto &vertex : part._mesh->vertices()) {
-      if (vertex.getGlobalIndex() == 0) {
-        includeVertex = true;
-        BOOST_TEST(vertex.isOwner() == 0);
-      }
-    }
-    BOOST_TEST(includeVertex == true);
-  } else if (context.isRank(2)) { //Slave2
-    for (auto &vertex : part._mesh->vertices()) {
-      if (vertex.getGlobalIndex() == 0) {
-        includeVertex = true;
-        BOOST_TEST(vertex.isOwner() == 0);
-      }
-    }
-    BOOST_TEST(includeVertex == true);
-  } else if (context.isRank(3)) { //Slave3
-    for (auto &vertex : part._mesh->vertices()) {
-      if (vertex.getGlobalIndex() == 0) {
-        includeVertex = true;
+      } else {
         BOOST_TEST(vertex.isOwner() == 0);
       }
     }
