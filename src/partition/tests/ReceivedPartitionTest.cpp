@@ -1416,7 +1416,6 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationEmptyPartition)
     position << -2.0, 1.0, 1.0;
     mesh->createVertex(position);
   } else if (context.isRank(2)) {
-    Eigen::VectorXd position(dimensions);
   } else {
     Eigen::VectorXd position(dimensions);
     position << 0.0, 0.0, 0.0;
