@@ -976,7 +976,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshNoOverlap)
   const std::vector<double> expectedPositionSlave = std::vector<double>{0.0, 4.0, 0.0, 5.0};
   const std::vector<double> writeDataSlave        = std::vector<double>({4, 5});
   const std::vector<double> expectedReadDataSlave = std::vector<double>({3, 4, 5});
-  runTestAccessReceivedMesh(_pathToTests + "explicit-bounding-box.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+  runTestAccessReceivedMesh(_pathToTests + "explicit-access-direct.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
 }
 
 // Test case for parallel mesh partitioning without any mapping. Each solver
@@ -991,7 +991,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshOverlap)
   const std::vector<double> expectedPositionSlave = std::vector<double>{0.0, 3.0, 0.0, 4.0, 0.0, 5.0};
   const std::vector<double> writeDataSlave        = std::vector<double>({4, 5, 6});
   const std::vector<double> expectedReadDataSlave = std::vector<double>({7, 5, 6});
-  runTestAccessReceivedMesh(_pathToTests + "explicit-bounding-box.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+  runTestAccessReceivedMesh(_pathToTests + "explicit-access-direct.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
 }
 
 // Same as above, but only one rank writes to the shared vertices:
@@ -1007,7 +1007,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshOverlapNoWrite)
   const std::vector<double> expectedPositionSlave = std::vector<double>{0.0, 3.0, 0.0, 4.0, 0.0, 5.0};
   const std::vector<double> writeDataSlave        = std::vector<double>({4, 5, 6});
   const std::vector<double> expectedReadDataSlave = std::vector<double>({3, 4, 5});
-  runTestAccessReceivedMesh(_pathToTests + "explicit-bounding-box.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 1);
+  runTestAccessReceivedMesh(_pathToTests + "explicit-access-direct.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 1);
 }
 
 // Test case for a direct mesh access on one participant to a mesh defined
@@ -1020,7 +1020,7 @@ BOOST_AUTO_TEST_CASE(LAccessReceivedMeshAndMapping)
 
   if (context.isNamed("SolverOne")) {
     // Set up Solverinterface
-    SolverInterface interface(context.name, _pathToTests + "explicit-bounding-box-mapping.xml", context.rank, context.size);
+    SolverInterface interface(context.name, _pathToTests + "explicit-access-direct-mapping.xml", context.rank, context.size);
     BOOST_TEST(interface.getDimensions() == 2);
     constexpr int dim         = 2;
     const int     ownMeshID   = interface.getMeshID("MeshOne");
@@ -1073,7 +1073,7 @@ BOOST_AUTO_TEST_CASE(LAccessReceivedMeshAndMapping)
     }
 
   } else {
-    SolverInterface interface(context.name, _pathToTests + "explicit-bounding-box-mapping.xml", context.rank, context.size);
+    SolverInterface interface(context.name, _pathToTests + "explicit-access-direct-mapping.xml", context.rank, context.size);
     const int       dim = interface.getDimensions();
     BOOST_TEST(context.isNamed("SolverTwo"));
     std::vector<double> positions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});

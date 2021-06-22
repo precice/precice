@@ -692,7 +692,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshExplicit)
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   // Set up Solverinterface
-  SolverInterface couplingInterface(context.name, _pathToTests + "explicit-bounding-box.xml", 0, 1);
+  SolverInterface couplingInterface(context.name, _pathToTests + "explicit-access-direct.xml", 0, 1);
   BOOST_TEST(couplingInterface.getDimensions() == 2);
 
   std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
@@ -768,7 +768,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   // Set up Solverinterface
-  SolverInterface interface(context.name, _pathToTests + "explicit-bounding-box-mapping.xml", 0, 1);
+  SolverInterface interface(context.name, _pathToTests + "explicit-access-direct-mapping.xml", 0, 1);
   BOOST_TEST(interface.getDimensions() == 2);
   constexpr int dim = 2;
 
@@ -865,7 +865,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
   int    computedTimesteps  = 0;
 
   // Set up Solverinterface
-  SolverInterface couplingInterface(context.name, _pathToTests + "implicit-bounding-box.xml", 0, 1);
+  SolverInterface couplingInterface(context.name, _pathToTests + "implicit-access-direct.xml", 0, 1);
   BOOST_TEST(couplingInterface.getDimensions() == 2);
   constexpr int dim = 2;
 

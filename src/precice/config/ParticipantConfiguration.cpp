@@ -280,7 +280,7 @@ void ParticipantConfiguration::xmlTagCallback(
     partition::ReceivedPartition::GeometricFilter geoFilter              = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
     const bool                                    partitionByBoundingBox = (tag.getStringAttributeValue(ATTR_PARTITION_BY) == VALUE_BOUNDING_BOX);
     if (partitionByBoundingBox)
-      PRECICE_WARN("You configured the received mesh \" {} \" using the option partition-by=\"bounding-box\", which is experimental.", name);
+      PRECICE_WARN("You configured the received mesh \"{}\" using the option partition-by=\"bounding-box\", which is experimental.", name);
     PRECICE_CHECK(safetyFactor >= 0,
                   "Participant \"{}\" uses mesh \"{}\" with safety-factor=\"{}\". "
                   "Please use a positive or zero safety-factor instead.",
