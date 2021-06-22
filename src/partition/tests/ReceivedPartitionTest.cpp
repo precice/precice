@@ -1353,7 +1353,7 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationEmptyPartition)
 {
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
-    for 2LI. The provided mesh includes a vertices at point (0, 0, 0) and (0, 0, 1). The rank 2 has an 
+    for 2LI. The provided mesh includes vertices at points (0, 0, 0) and (0, 0, 1). Rank 2 has an 
     empty mesh partition. Initially, all ranks (except rank 2) receive this vertex, but only one of them 
     can own it. Since the rank 0, has the lowest rank number, this vertex must belong only to this rank.
    */
