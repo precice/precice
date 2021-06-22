@@ -67,15 +67,14 @@ void Participant::addWatchIntegral(
   _watchIntegrals.push_back(watchIntegral);
 }
 
-void Participant::useMesh(
-    const mesh::PtrMesh &                         mesh,
-    const Eigen::VectorXd &                       localOffset,
-    bool                                          remote,
-    const std::string &                           fromParticipant,
-    double                                        safetyFactor,
-    bool                                          provideMesh,
-    partition::ReceivedPartition::GeometricFilter geoFilter,
-    bool                                          partitionByBoundingBox)
+void Participant::useMesh(const mesh::PtrMesh &                         mesh,
+                          const Eigen::VectorXd &                       localOffset,
+                          bool                                          remote,
+                          const std::string &                           fromParticipant,
+                          double                                        safetyFactor,
+                          bool                                          provideMesh,
+                          partition::ReceivedPartition::GeometricFilter geoFilter,
+                          bool                                          allowDirectAccess)
 {
   PRECICE_TRACE(_name, mesh->getName(), mesh->getID());
   checkDuplicatedUse(mesh);
@@ -85,11 +84,11 @@ void Participant::useMesh(
   context->localOffset = localOffset;
   PRECICE_ASSERT(mesh->getDimensions() == context->localOffset.size(),
                  mesh->getDimensions(), context->localOffset.size());
-  context->receiveMeshFrom        = fromParticipant;
-  context->safetyFactor           = safetyFactor;
-  context->provideMesh            = provideMesh;
-  context->geoFilter              = geoFilter;
-  context->partitionByBoundingBox = partitionByBoundingBox;
+  context->receiveMeshFrom   = fromParticipant;
+  context->safetyFactor      = safetyFactor;
+  context->provideMesh       = provideMesh;
+  context->geoFilter         = geoFilter;
+  context->allowDirectAccess = allowDirectAccess;
 
   _meshContexts[mesh->getID()] = context;
 

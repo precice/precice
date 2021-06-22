@@ -41,7 +41,7 @@ struct MeshContext {
 
   /// In case a mapping done by the solver is favored over a preCICE mapping, apply user-defined
   /// bounding-boxes.
-  bool partitionByBoundingBox = false;
+  bool allowDirectAccess = false;
 
   /// True, if accessor does create the mesh.
   bool provideMesh = false;

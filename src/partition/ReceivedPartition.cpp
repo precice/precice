@@ -30,13 +30,13 @@ extern bool syncMode;
 namespace partition {
 
 ReceivedPartition::ReceivedPartition(
-    mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor, bool partitionByBoundingBox)
+    mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor, bool allowDirectAccess)
     : Partition(mesh),
       _geometricFilter(geometricFilter),
       _bb(mesh->getDimensions()),
       _dimensions(mesh->getDimensions()),
       _safetyFactor(safetyFactor),
-      _partitionByBoundingBox(partitionByBoundingBox)
+      _allowDirectAccess(allowDirectAccess)
 {
 }
 
@@ -95,7 +95,7 @@ void ReceivedPartition::compute()
   if (!utils::MasterSlave::isParallel()) { //coupling mode
     PRECICE_DEBUG("Handle partition data structures for serial participant");
 
-    if (_partitionByBoundingBox) {
+    if (_allowDirectAccess) {
       // Prepare the bounding boxes
       prepareBoundingBox();
       // Filter out vertices not laying in the bounding box
@@ -128,7 +128,7 @@ void ReceivedPartition::compute()
 
   // check to prevent false configuration
   if (not utils::MasterSlave::isSlave()) {
-    PRECICE_CHECK(hasAnyMapping() || _partitionByBoundingBox,
+    PRECICE_CHECK(hasAnyMapping() || _allowDirectAccess,
                   "The received mesh {} needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?",
                   _mesh->getName());
   }
@@ -487,7 +487,7 @@ void ReceivedPartition::prepareBoundingBox()
   }
 
   // Expand by user-defined bounding box in case a direct access is desired
-  if (_partitionByBoundingBox) {
+  if (_allowDirectAccess) {
     auto &other_bb = _mesh->getBoundingBox();
     _bb.expandBy(other_bb);
     // TODO: How to treat the scale by safety factor here?
@@ -596,7 +596,7 @@ void ReceivedPartition::createOwnerInformation()
     // Decide upon owners,
     PRECICE_DEBUG("Decide owners, first round by rough load balancing");
     // Provide a more descriptive error message if direct access was enabled
-    PRECICE_CHECK(ranksAtInterface != 0 || !_partitionByBoundingBox, "No rank has a valid point of mesh \"{}\". Did you call setBoundingBox with valid data?");
+    PRECICE_CHECK(ranksAtInterface != 0 || !_allowDirectAccess, "No rank has a valid point of mesh \"{}\". Did you call setBoundingBox with valid data?");
     PRECICE_ASSERT(ranksAtInterface != 0);
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
@@ -648,7 +648,7 @@ void ReceivedPartition::createOwnerInformation()
     if (filteredVertices) {
       PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
                    filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
-      if (_partitionByBoundingBox)
+      if (_allowDirectAccess)
         PRECICE_WARN("Filtered vertices will be filled with the zero data.");
     }
   }
@@ -684,7 +684,7 @@ void ReceivedPartition::tagMeshFirstRound()
   }
 
   // We want to have every vertex within the box
-  if (_partitionByBoundingBox) {
+  if (_allowDirectAccess) {
     _mesh->tagAll();
   }
 }

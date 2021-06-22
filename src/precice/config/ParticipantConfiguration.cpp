@@ -167,19 +167,18 @@ ParticipantConfiguration::ParticipantConfiguration(
                            .setDefaultValue(VALUE_FILTER_ON_SLAVES);
   tagUseMesh.addAttribute(attrGeoFilter);
 
-  auto attrPartitionBy = XMLAttribute<std::string>(ATTR_PARTITION_BY)
-                             .setDocumentation(
-                                 "If a mesh is received from another partipant (see tag <from>), it needs to be"
-                                 "decomposed at the receiving participant. In case a mapping is defined, the "
-                                 "mesh is decomposed according to the local provided mesh associated to the mapping. "
-                                 "(partition-by=\"default\"). In case no mapping has been defined (you want to access "
-                                 "the mesh and related data direct), there is no obvious way on how to decompose the "
-                                 "mesh, since no mesh needs to be provided by the participant. For this purpose, bounding "
-                                 "boxes can be defined (see API function \"setBoundingBoxes\") and used by selecting "
-                                 "the option partition-by=\"bounding-box\".")
-                             .setOptions({VALUE_DEFAULT, VALUE_BOUNDING_BOX})
-                             .setDefaultValue(VALUE_DEFAULT);
-  tagUseMesh.addAttribute(attrPartitionBy);
+  auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
+                              .setDocumentation(
+                                  "If a mesh is received from another partipant (see tag <from>), it needs to be"
+                                  "decomposed at the receiving participant. In case a mapping is defined, the "
+                                  "mesh is decomposed according to the local provided mesh associated to the mapping. "
+                                  "In case no mapping has been defined (you want to access "
+                                  "the mesh and related data direct), there is no obvious way on how to decompose the "
+                                  "mesh, since no mesh needs to be provided by the participant. For this purpose, bounding "
+                                  "boxes can be defined (see API function \"setBoundingBoxes\") and used by selecting "
+                                  "the option direct-access=\"true\".");
+
+  tagUseMesh.addAttribute(attrDirectAccess);
 
   auto attrProvide = makeXMLAttribute(ATTR_PROVIDE, false)
                          .setDocumentation(
@@ -275,12 +274,13 @@ void ParticipantConfiguration::xmlTagCallback(
     Eigen::VectorXd offset(_dimensions);
     /// @todo offset currently not supported
     //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
-    std::string                                   from                   = tag.getStringAttributeValue(ATTR_FROM);
-    double                                        safetyFactor           = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
-    partition::ReceivedPartition::GeometricFilter geoFilter              = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
-    const bool                                    partitionByBoundingBox = (tag.getStringAttributeValue(ATTR_PARTITION_BY) == VALUE_BOUNDING_BOX);
-    if (partitionByBoundingBox)
-      PRECICE_WARN("You configured the received mesh \"{}\" using the option partition-by=\"bounding-box\", which is experimental.", name);
+    std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
+    double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
+    partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
+    const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
+    ;
+    if (allowDirectAccess)
+      PRECICE_WARN("You configured the received mesh \"{}\" using the option access-direct=\"true\", which is experimental.", name);
     PRECICE_CHECK(safetyFactor >= 0,
                   "Participant \"{}\" uses mesh \"{}\" with safety-factor=\"{}\". "
                   "Please use a positive or zero safety-factor instead.",
@@ -306,13 +306,13 @@ void ParticipantConfiguration::xmlTagCallback(
     }
 
     // TODO: Maybe merge later with the config check above
-    if ((partitionByBoundingBox == true) && from == "") {
-      PRECICE_ERROR("Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a bounding-box partitioning defined. "
+    if ((allowDirectAccess == true) && from == "") {
+      PRECICE_ERROR("Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a direct access defined. "
                     "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />",
                     _participants.back()->getName(), name, name);
     }
 
-    _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter, partitionByBoundingBox);
+    _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter, allowDirectAccess);
   } else if (tag.getName() == TAG_WRITE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);

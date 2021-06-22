@@ -110,7 +110,7 @@ public:
       double                                        safetyFactor,
       bool                                          provideMesh,
       partition::ReceivedPartition::GeometricFilter geoFilter,
-      bool                                          partitionByBoundingBox);
+      bool                                          allowDirectAccess);
   /// @}
 
   /// @name Data queries

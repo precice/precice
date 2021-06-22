@@ -8,7 +8,7 @@
     </mesh>
 
     <participant name="SolverOne">
-      <use-mesh name="MeshTwo" from="SolverTwo" partition-by="bounding-box" />
+      <use-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
       <write-data name="Velocities" mesh="MeshTwo" />
     </participant>
 

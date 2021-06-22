@@ -1464,7 +1464,7 @@ void SolverInterfaceImpl::configurePartitions(
 
       PRECICE_DEBUG("Receiving mesh from {}", provider);
 
-      context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor, context->partitionByBoundingBox));
+      context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor, context->allowDirectAccess));
 
       m2n::PtrM2N m2n = m2nConfig->getM2N(receiver, provider);
       m2n->createDistributedCommunication(context->mesh);
