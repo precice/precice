@@ -41,8 +41,10 @@ void ParallelCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
+      storeIteration();
     }
     if (sendsInitializedData()) {
+      storeIteration();
       sendData(getM2N(), getSendData());
     }
   }
