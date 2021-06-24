@@ -16,17 +16,23 @@ class DataContext {
 public:
   DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
-  std::string getDataName() const;
+  std::string getFromDataName() const;
+
+  int getFromDataID() const;
+
+  std::string getToDataName() const;
+
+  int getToDataID() const;
 
   std::string getMeshName() const;
 
   int getMeshID() const;
 
-  const mesh::PtrData fromData() const;
+  mesh::PtrData fromData();
 
   void setFromData(mesh::PtrData data);
 
-  const mesh::PtrData toData() const;
+  mesh::PtrData toData();
 
   void setToData(mesh::PtrData data);
 

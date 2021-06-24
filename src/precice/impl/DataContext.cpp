@@ -13,9 +13,24 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
   _mesh     = mesh;
 }
 
-std::string DataContext::getDataName() const
+std::string DataContext::getFromDataName() const
 {
   return _fromData->getName();
+}
+
+int DataContext::getFromDataID() const
+{
+  return _fromData->getID();
+}
+
+std::string DataContext::getToDataName() const
+{
+  return _toData->getName();
+}
+
+int DataContext::getToDataID() const
+{
+  return _toData->getID();
 }
 
 std::string DataContext::getMeshName() const
@@ -28,7 +43,7 @@ int DataContext::getMeshID() const
   return _mesh->getID();
 }
 
-const mesh::PtrData DataContext::fromData() const
+mesh::PtrData DataContext::fromData()
 {
   return _fromData;
 }
@@ -38,7 +53,7 @@ void DataContext::setFromData(mesh::PtrData data)
   _fromData = data;
 }
 
-const mesh::PtrData DataContext::toData() const
+mesh::PtrData DataContext::toData()
 {
   return _toData;
 }

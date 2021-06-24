@@ -201,14 +201,14 @@ bool Participant::isDataUsed(int dataID) const
 bool Participant::isDataRead(int dataID) const
 {
   return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](const DataContext &context) {
-    return context.toData()->getID() == dataID;
+    return context.getToDataID() == dataID;
   });
 }
 
 bool Participant::isDataWrite(int dataID) const
 {
   return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](const DataContext &context) {
-    return context.fromData()->getID() == dataID;
+    return context.getFromDataID() == dataID;
   });
 }
 
