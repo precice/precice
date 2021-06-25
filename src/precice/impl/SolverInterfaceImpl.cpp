@@ -1475,6 +1475,7 @@ void SolverInterfaceImpl::computePartitions()
 
 void SolverInterfaceImpl::computeMappings(utils::ptr_vector<MappingContext> contexts, std::string mappingType)
 {
+  PRECICE_TRACE();
   using namespace mapping;
   MappingConfiguration::Timing timing;
   for (impl::MappingContext &context : contexts) {
@@ -1493,6 +1494,7 @@ void SolverInterfaceImpl::computeMappings(utils::ptr_vector<MappingContext> cont
 
 void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, std::string mappingType)
 {
+  PRECICE_TRACE();
   using namespace mapping;
   MappingConfiguration::Timing timing;
   for (impl::DataContext &context : contexts) {
@@ -1516,6 +1518,7 @@ void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, std::
 
 void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contexts)
 {
+  PRECICE_TRACE();
   // Clear non-stationary, non-incremental mappings
   using namespace mapping;
   for (impl::MappingContext &context : contexts) {
