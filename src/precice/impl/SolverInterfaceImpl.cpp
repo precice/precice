@@ -1473,46 +1473,55 @@ void SolverInterfaceImpl::computePartitions()
   }
 }
 
-void SolverInterfaceImpl::mapWrittenData()
+void SolverInterfaceImpl::computeMappings(utils::ptr_vector<MappingContext> contexts, const std::string &mappingType)
 {
   PRECICE_TRACE();
   using namespace mapping;
   MappingConfiguration::Timing timing;
-  // Compute mappings
-  for (impl::MappingContext &context : _accessor->writeMappingContexts()) {
-    timing         = context.timing;
-    bool rightTime = timing == MappingConfiguration::ON_ADVANCE;
-    rightTime |= timing == MappingConfiguration::INITIAL;
+  for (impl::MappingContext &context : contexts) {
+    timing      = context.timing;
+    bool mapNow = timing == MappingConfiguration::ON_ADVANCE;
+    mapNow |= timing == MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
-    if (rightTime && not hasComputed) {
-      PRECICE_INFO("Compute write mapping from mesh \"{}\" to mesh \"{}\".",
-                   _accessor->meshContext(context.fromMeshID).mesh->getName(), _accessor->meshContext(context.toMeshID).mesh->getName());
+    if (mapNow && not hasComputed) {
+      PRECICE_INFO("Compute \"{}\" mapping from mesh \"{}\" to mesh \"{}\".",
+                   mappingType, _accessor->meshContext(context.fromMeshID).mesh->getName(), _accessor->meshContext(context.toMeshID).mesh->getName());
 
       context.mapping->computeMapping();
     }
   }
+}
 
-  // Map data
-  for (impl::DataContext &context : _accessor->writeDataContexts()) {
+void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, const std::string &mappingType)
+{
+  PRECICE_TRACE();
+  using namespace mapping;
+  MappingConfiguration::Timing timing;
+  for (impl::DataContext &context : contexts) {
     timing          = context.mappingContext.timing;
     bool hasMapping = context.mappingContext.mapping.get() != nullptr;
-    bool rightTime  = timing == MappingConfiguration::ON_ADVANCE;
-    rightTime |= timing == MappingConfiguration::INITIAL;
-    bool hasMapped = context.mappingContext.hasMappedData;
-    if (hasMapping && rightTime && (not hasMapped)) {
+    bool hasMapped  = context.mappingContext.hasMappedData;
+    bool mapNow     = timing == MappingConfiguration::ON_ADVANCE;
+    mapNow |= timing == MappingConfiguration::INITIAL;
+    if (mapNow && hasMapping && (not hasMapped)) {
       int inDataID  = context.getFromDataID();
       int outDataID = context.getToDataID();
-      PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"",
-                    context.getFromDataName(), context.getMeshName());
+      PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
+                    mappingType, context.getFromDataName(), context.getMeshName());
       context.toData()->values() = Eigen::VectorXd::Zero(context.toData()->values().size());
       PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
       PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values()));
     }
   }
+}
 
+void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contexts)
+{
+  PRECICE_TRACE();
   // Clear non-stationary, non-incremental mappings
-  for (impl::MappingContext &context : _accessor->writeMappingContexts()) {
+  using namespace mapping;
+  for (impl::MappingContext &context : contexts) {
     bool isStationary = context.timing == MappingConfiguration::INITIAL;
     if (not isStationary) {
       context.mapping->clear();
@@ -1521,50 +1530,20 @@ void SolverInterfaceImpl::mapWrittenData()
   }
 }
 
+void SolverInterfaceImpl::mapWrittenData()
+{
+  PRECICE_TRACE();
+  computeMappings(_accessor->writeMappingContexts(), "write");
+  mapData(_accessor->writeDataContexts(), "write");
+  clearMappings(_accessor->writeMappingContexts());
+}
+
 void SolverInterfaceImpl::mapReadData()
 {
   PRECICE_TRACE();
-  mapping::MappingConfiguration::Timing timing;
-  // Compute mappings
-  for (impl::MappingContext &context : _accessor->readMappingContexts()) {
-    timing      = context.timing;
-    bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
-    mapNow |= timing == mapping::MappingConfiguration::INITIAL;
-    bool hasComputed = context.mapping->hasComputedMapping();
-    if (mapNow && not hasComputed) {
-      PRECICE_INFO("Compute read mapping from mesh \"{}\" to mesh \"{}\".",
-                   _accessor->meshContext(context.fromMeshID).mesh->getName(),
-                   _accessor->meshContext(context.toMeshID).mesh->getName());
-
-      context.mapping->computeMapping();
-    }
-  }
-
-  // Map data
-  for (impl::DataContext &context : _accessor->readDataContexts()) {
-    timing      = context.mappingContext.timing;
-    bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
-    mapNow |= timing == mapping::MappingConfiguration::INITIAL;
-    bool hasMapping = context.mappingContext.mapping.get() != nullptr;
-    bool hasMapped  = context.mappingContext.hasMappedData;
-    if (mapNow && hasMapping && (not hasMapped)) {
-      int inDataID               = context.getFromDataID();
-      int outDataID              = context.getToDataID();
-      context.toData()->values() = Eigen::VectorXd::Zero(context.toData()->values().size());
-      PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"",
-                    context.getFromDataName(), context.getMeshName());
-      context.mappingContext.mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values()));
-    }
-  }
-  // Clear non-initial, non-incremental mappings
-  for (impl::MappingContext &context : _accessor->readMappingContexts()) {
-    bool isStationary = context.timing == mapping::MappingConfiguration::INITIAL;
-    if (not isStationary) {
-      context.mapping->clear();
-    }
-    context.hasMappedData = false;
-  }
+  computeMappings(_accessor->readMappingContexts(), "read");
+  mapData(_accessor->readDataContexts(), "read");
+  clearMappings(_accessor->readMappingContexts());
 }
 
 void SolverInterfaceImpl::performDataActions(

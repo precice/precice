@@ -103,9 +103,6 @@ protected:
     return _m2n;
   }
 
-  /// @brief Receive from coupling partner and return whether coupling scheme has converged
-  bool receiveConvergence();
-
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
 
