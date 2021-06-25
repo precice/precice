@@ -1480,8 +1480,8 @@ void SolverInterfaceImpl::computeMappings(utils::ptr_vector<MappingContext> cont
   MappingConfiguration::Timing timing;
   for (impl::MappingContext &context : contexts) {
     timing      = context.timing;
-    bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
-    mapNow |= timing == mapping::MappingConfiguration::INITIAL;
+    bool mapNow = timing == MappingConfiguration::ON_ADVANCE;
+    mapNow |= timing == MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     if (mapNow && not hasComputed) {
       PRECICE_INFO("Compute \"{}\" mapping from mesh \"{}\" to mesh \"{}\".",
@@ -1501,8 +1501,8 @@ void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, std::
     timing          = context.mappingContext.timing;
     bool hasMapping = context.mappingContext.mapping.get() != nullptr;
     bool hasMapped  = context.mappingContext.hasMappedData;
-    bool mapNow     = timing == mapping::MappingConfiguration::ON_ADVANCE;
-    mapNow |= timing == mapping::MappingConfiguration::INITIAL;
+    bool mapNow     = timing == MappingConfiguration::ON_ADVANCE;
+    mapNow |= timing == MappingConfiguration::INITIAL;
     if (mapNow && hasMapping && (not hasMapped)) {
       int inDataID  = context.fromData->getID();
       int outDataID = context.toData->getID();
