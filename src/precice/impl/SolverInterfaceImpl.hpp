@@ -626,10 +626,10 @@ private:
   void computePartitions();
 
   /// Helper for mapWrittenData and mapReadData
-  void computeMappings(utils::ptr_vector<MappingContext> contexts, std::string mappingType);
+  void computeMappings(utils::ptr_vector<MappingContext> contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
-  void mapData(utils::ptr_vector<DataContext> contexts, std::string mappingType);
+  void mapData(utils::ptr_vector<DataContext> contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
