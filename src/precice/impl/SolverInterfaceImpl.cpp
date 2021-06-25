@@ -999,7 +999,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
 
       context.toData()->values() = Eigen::VectorXd::Zero(context.toData()->values().size());
       PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", context.getFromDataName(), context.getMeshName());
-      PRECICE_ASSERT(mappingContext.mapping == context._mappingContext.mapping);
+      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
     }
     mappingContext.hasMappedData = true;
@@ -1032,7 +1032,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       }
       context.toData()->values() = Eigen::VectorXd::Zero(context.toData()->values().size());
       PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", context.getFromDataName(), context.getMeshName());
-      PRECICE_ASSERT(mappingContext.mapping == context._mappingContext.mapping);
+      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
       PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values()));
     }
@@ -1498,9 +1498,9 @@ void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, const
   using namespace mapping;
   MappingConfiguration::Timing timing;
   for (impl::DataContext &context : contexts) {
-    timing          = context._mappingContext.timing;
-    bool hasMapping = context._mappingContext.mapping.get() != nullptr;
-    bool hasMapped  = context._mappingContext.hasMappedData;
+    timing          = context.mappingContext().timing;
+    bool hasMapping = context.mappingContext().mapping.get() != nullptr;
+    bool hasMapped  = context.mappingContext().hasMappedData;
     bool mapNow     = timing == MappingConfiguration::ON_ADVANCE;
     mapNow |= timing == MappingConfiguration::INITIAL;
     if (mapNow && hasMapping && (not hasMapped)) {
@@ -1510,7 +1510,7 @@ void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, const
                     mappingType, context.getFromDataName(), context.getMeshName());
       context.toData()->values() = Eigen::VectorXd::Zero(context.toData()->values().size());
       PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
-      context._mappingContext.mapping->map(inDataID, outDataID);
+      context.mappingContext().mapping->map(inDataID, outDataID);
       PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values()));
     }
   }

@@ -95,5 +95,10 @@ bool DataContext::hasMapping() const
   return _toData && _fromData && (_toData != _fromData);
 }
 
+const MappingContext DataContext::mappingContext() const
+{
+  return _mappingContext;
+}
+
 } // namespace impl
 } // namespace precice

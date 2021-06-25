@@ -40,9 +40,9 @@ public:
 
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 
-  MappingContext _mappingContext;
-
   bool hasMapping() const;
+
+  const MappingContext mappingContext() const;
 
 private:
   mesh::PtrMesh _mesh;
@@ -52,6 +52,8 @@ private:
   mesh::PtrData _fromData;
 
   mesh::PtrData _toData;
+
+  MappingContext _mappingContext;
 };
 
 } // namespace impl
