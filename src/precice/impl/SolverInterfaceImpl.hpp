@@ -625,6 +625,15 @@ private:
   /// Communicate meshes and create partitions
   void computePartitions();
 
+  /// Helper for mapWrittenData and mapReadData
+  void computeMappings(utils::ptr_vector<MappingContext> contexts, std::string mappingType);
+
+  /// Helper for mapWrittenData and mapReadData
+  void mapData(utils::ptr_vector<DataContext> contexts, std::string mappingType);
+
+  /// Helper for mapWrittenData and mapReadData
+  void clearMappings(utils::ptr_vector<MappingContext> contexts);
+
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();
 
