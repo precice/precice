@@ -16,9 +16,19 @@ class DataContext {
 public:
   DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
+  mesh::PtrData participantData();
+
+  std::string getParticipantDataName() const;
+
+  int getParticipantDataID() const;
+
+  mesh::PtrData fromData();
+
   std::string getFromDataName() const;
 
   int getFromDataID() const;
+
+  mesh::PtrData toData();
 
   std::string getToDataName() const;
 
@@ -28,18 +38,16 @@ public:
 
   int getMeshID() const;
 
-  mesh::PtrData fromData();
+  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 
-  void setFromData(mesh::PtrData data);
+  MappingContext _mappingContext;
 
-  mesh::PtrData toData();
-
-  void setToData(mesh::PtrData data);
-
-  MappingContext mappingContext;
+  bool hasMapping() const;
 
 private:
   mesh::PtrMesh _mesh;
+
+  mesh::PtrData _participantData; // data this participant will write to and read from
 
   mesh::PtrData _fromData;
 

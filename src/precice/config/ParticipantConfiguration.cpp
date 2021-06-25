@@ -478,17 +478,17 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
       if (mappingContext.fromMeshID == fromMeshID) {
-        dataContext.mappingContext     = mappingContext;
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.toMeshID);
-        for (const mesh::PtrData &data : meshContext.mesh->data()) {
-          if (data->getName() == dataContext.getFromDataName()) {
-            dataContext.setToData(data);
+        for (const mesh::PtrData &data : meshContext.mesh->data()) { // find correct data in meshContext
+          if (data->getName() == dataContext.getParticipantDataName()) {
+            dataContext.setMapping(mappingContext, dataContext.participantData(), data);
+            break; // dataContext configured. Leave for loop
           }
         }
-        PRECICE_CHECK(dataContext.fromData() != dataContext.toData(),
+        PRECICE_CHECK(dataContext.participantData() != dataContext.toData(),
                       "Mesh \"{}\" needs to use data \"{}\" to allow a write mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
-                      meshContext.mesh->getName(), dataContext.getFromDataName(), dataContext.getFromDataName());
+                      meshContext.mesh->getName(), dataContext.getParticipantDataName(), dataContext.getParticipantDataName());
       }
     }
   }
@@ -502,17 +502,17 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     for (impl::MappingContext &mappingContext : participant->readMappingContexts()) {
       if (mappingContext.toMeshID == toMeshID) {
-        dataContext.mappingContext     = mappingContext;
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.fromMeshID);
-        for (const mesh::PtrData &data : meshContext.mesh->data()) {
-          if (data->getName() == dataContext.getToDataName()) {
-            dataContext.setFromData(data);
+        for (const mesh::PtrData &data : meshContext.mesh->data()) { // find correct data in meshContext
+          if (data->getName() == dataContext.getParticipantDataName()) {
+            dataContext.setMapping(mappingContext, data, dataContext.participantData());
+            break; // dataContext configured. Leave for loop
           }
         }
-        PRECICE_CHECK(dataContext.toData() != dataContext.fromData(),
+        PRECICE_CHECK(dataContext.participantData() != dataContext.fromData(),
                       "Mesh \"{}\" needs to use data \"{}\" to allow a read mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
-                      meshContext.mesh->getName(), dataContext.getToDataName(), dataContext.getToDataName());
+                      meshContext.mesh->getName(), dataContext.getParticipantDataName(), dataContext.getParticipantDataName());
       }
     }
   }
@@ -626,14 +626,18 @@ void ParticipantConfiguration::checkIllDefinedMappings(
 
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
             for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
-              PRECICE_ASSERT(dataContext.getFromDataName() == dataContext.getToDataName());
-              sameDirection |= data->getName() == dataContext.getFromDataName();
+              if (dataContext.hasMapping()) {
+                PRECICE_ASSERT(dataContext.getFromDataName() == dataContext.getToDataName());
+                sameDirection |= data->getName() == dataContext.getFromDataName();
+              }
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
             for (const impl::DataContext &dataContext : participant->readDataContexts()) {
-              PRECICE_ASSERT(dataContext.getFromDataName() == dataContext.getToDataName());
-              sameDirection |= data->getName() == dataContext.getFromDataName();
+              if (dataContext.hasMapping()) {
+                PRECICE_ASSERT(dataContext.getFromDataName() == dataContext.getToDataName());
+                sameDirection |= data->getName() == dataContext.getFromDataName();
+              }
             }
           }
           PRECICE_CHECK(!sameDirection,
