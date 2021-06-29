@@ -20,7 +20,7 @@ mesh::PtrData DataContext::participantData()
   return _participantData;
 }
 
-std::string DataContext::getParticipantDataName() const
+std::string DataContext::getDataName() const
 {
   PRECICE_ASSERT(_participantData);
   return _participantData->getName();
@@ -38,12 +38,6 @@ mesh::PtrData DataContext::fromData()
   return _fromData;
 }
 
-std::string DataContext::getFromDataName() const
-{
-  PRECICE_ASSERT(_fromData);
-  return _fromData->getName();
-}
-
 int DataContext::getFromDataID() const
 {
   PRECICE_ASSERT(_fromData);
@@ -54,12 +48,6 @@ mesh::PtrData DataContext::toData()
 {
   PRECICE_ASSERT(_toData);
   return _toData;
-}
-
-std::string DataContext::getToDataName() const
-{
-  PRECICE_ASSERT(_toData);
-  return _toData->getName();
 }
 
 int DataContext::getToDataID() const
@@ -86,7 +74,9 @@ void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromDa
   PRECICE_ASSERT(fromData);
   PRECICE_ASSERT(toData);
   _mappingContext = mappingContext;
+  PRECICE_ASSERT(fromData->getName() == getDataName());
   _fromData       = fromData;
+  PRECICE_ASSERT(toData->getName() == getDataName());
   _toData         = toData;
 }
 

@@ -18,19 +18,15 @@ public:
 
   mesh::PtrData participantData();
 
-  std::string getParticipantDataName() const;
+  std::string getDataName() const;
 
   int getParticipantDataID() const;
 
   mesh::PtrData fromData();
 
-  std::string getFromDataName() const;
-
   int getFromDataID() const;
 
   mesh::PtrData toData();
-
-  std::string getToDataName() const;
 
   int getToDataID() const;
 

@@ -480,7 +480,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (mappingContext.fromMeshID == fromMeshID) {
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.toMeshID);
         for (const mesh::PtrData &data : meshContext.mesh->data()) { // find correct data in meshContext
-          if (data->getName() == dataContext.getParticipantDataName()) {
+          if (data->getName() == dataContext.getDataName()) {
             dataContext.setMapping(mappingContext, dataContext.participantData(), data);
             break; // dataContext configured. Leave for loop
           }
@@ -488,7 +488,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         PRECICE_CHECK(dataContext.participantData() != dataContext.toData(),
                       "Mesh \"{}\" needs to use data \"{}\" to allow a write mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
-                      meshContext.mesh->getName(), dataContext.getParticipantDataName(), dataContext.getParticipantDataName());
+                      meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
       }
     }
   }
@@ -504,7 +504,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (mappingContext.toMeshID == toMeshID) {
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.fromMeshID);
         for (const mesh::PtrData &data : meshContext.mesh->data()) { // find correct data in meshContext
-          if (data->getName() == dataContext.getParticipantDataName()) {
+          if (data->getName() == dataContext.getDataName()) {
             dataContext.setMapping(mappingContext, data, dataContext.participantData());
             break; // dataContext configured. Leave for loop
           }
@@ -512,7 +512,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         PRECICE_CHECK(dataContext.participantData() != dataContext.fromData(),
                       "Mesh \"{}\" needs to use data \"{}\" to allow a read mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
-                      meshContext.mesh->getName(), dataContext.getParticipantDataName(), dataContext.getParticipantDataName());
+                      meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
       }
     }
   }
@@ -627,16 +627,14 @@ void ParticipantConfiguration::checkIllDefinedMappings(
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
             for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
               if (dataContext.hasMapping()) {
-                PRECICE_ASSERT(dataContext.getFromDataName() == dataContext.getToDataName());
-                sameDirection |= data->getName() == dataContext.getFromDataName();
+                sameDirection |= data->getName() == dataContext.getDataName();
               }
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
             for (const impl::DataContext &dataContext : participant->readDataContexts()) {
               if (dataContext.hasMapping()) {
-                PRECICE_ASSERT(dataContext.getFromDataName() == dataContext.getToDataName());
-                sameDirection |= data->getName() == dataContext.getFromDataName();
+                sameDirection |= data->getName() == dataContext.getDataName();
               }
             }
           }
