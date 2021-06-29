@@ -50,6 +50,8 @@ private:
   mesh::PtrData _toData;
 
   MappingContext _mappingContext;
+
+  bool _hasMapping;
 };
 
 } // namespace impl

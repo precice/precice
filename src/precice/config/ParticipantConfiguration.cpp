@@ -626,16 +626,12 @@ void ParticipantConfiguration::checkIllDefinedMappings(
 
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
             for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
-              if (dataContext.hasMapping()) {
-                sameDirection |= data->getName() == dataContext.getDataName();
-              }
+              sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
             for (const impl::DataContext &dataContext : participant->readDataContexts()) {
-              if (dataContext.hasMapping()) {
-                sameDirection |= data->getName() == dataContext.getDataName();
-              }
+              sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           PRECICE_CHECK(!sameDirection,
