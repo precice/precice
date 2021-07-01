@@ -456,7 +456,7 @@ public:
       double *   values) const;
 
   /**
-   * @brief Read scalar data from the interface mesh.
+   * @brief Read scalar data from the interface mesh at the end of the time window
    *
    * The exact mapping and communication must be specified in XYZ.
    *
@@ -467,6 +467,22 @@ public:
   void readScalarData(
       int     toDataID,
       int     valueIndex,
+      double &value) const;
+
+  /**
+   * @brief Read scalar data from the interface mesh at beginning of time step + dt.
+   *
+   * The exact mapping and communication must be specified in XYZ.
+   *
+   * @param[in] toDataID     ID of the data to be read, e.g. 2 = temperatures
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be read
+   * @param[in] dt           Point in time where data is sampled
+   * @param[in] dataValue    Read data value
+   */
+  void readScalarData(
+      int     toDataID,
+      int     valueIndex,
+      double  dt,
       double &value) const;
 
   /**

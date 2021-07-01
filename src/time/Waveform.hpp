@@ -12,9 +12,11 @@ public:
    * @brief Waveform object which stores data of current and past time windows for performing extrapolation.
    * @param numberOfData defines how many pieces of data one sample in time consists of
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
+   * @param interpolationOrder defines the maximum interpolation order supported by this Waveform and reserves storage correspondingly
    */
   Waveform(int numberOfData,
-           int extrapolationOrder);
+           int extrapolationOrder = 0,
+           int interpolationOrder = 0);
 
   /**
    * @brief Updates entry in _timeWindows corresponding to this window with given data
@@ -27,6 +29,14 @@ public:
    * @param timeWindows number of samples that are valid and may be used for extrapolation. Usually number of past time windows.
    */
   void moveToNextWindow(int timeWindows, int order = 0);
+
+  /**
+   * @brief sample Waveform
+   * @param dt time where the sampling inside the window happens. dt = 0 refers to the beginning of the window and dt = 1 to the end.
+   * @param timeWindows number of past samples that are valid and may be used for interpolation. Usually number of past time windows.
+   * @param order interpolation order being used.
+   */
+  Eigen::VectorXd sample(double dt, int timeWindows, int order = 0);
 
   /**
    * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)
@@ -50,6 +60,15 @@ private:
    * @param timeWindows number of valid samples.
    */
   Eigen::VectorXd extrapolateData(int order, int timeWindows);
+
+  /**
+   * @brief Interpolates data inside current time time window using an interpolation scheme of given order.
+   *
+   * @param order Order of the interpolation scheme to be used.
+   * @param timeWindows number of valid samples.
+   * @param dt time where the sampling inside the window happens. dt = 0 refers to the beginning of the window and dt = 1 to the end.
+   */
+  Eigen::VectorXd interpolateData(int order, int timeWindows, double dt);
 };
 
 } // namespace time
