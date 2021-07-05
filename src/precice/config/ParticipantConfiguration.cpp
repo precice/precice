@@ -278,9 +278,9 @@ void ParticipantConfiguration::xmlTagCallback(
     double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
     const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
-    ;
+
     if (allowDirectAccess)
-      PRECICE_WARN("You configured the received mesh \"{}\" using the option access-direct=\"true\", which is experimental.", name);
+      PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
     PRECICE_CHECK(safetyFactor >= 0,
                   "Participant \"{}\" uses mesh \"{}\" with safety-factor=\"{}\". "
                   "Please use a positive or zero safety-factor instead.",
@@ -305,10 +305,11 @@ void ParticipantConfiguration::xmlTagCallback(
           _participants.back()->getName(), name, name);
     }
 
-    // TODO: Maybe merge later with the config check above
-    if ((allowDirectAccess == true) && from == "") {
+    if ((allowDirectAccess == true) && (from == "")) {
       PRECICE_ERROR("Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a direct access defined. "
-                    "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />",
+                    "This combination of options is not allowed. "
+                    "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />"
+                    " or remove the direct access option.",
                     _participants.back()->getName(), name, name);
     }
 
@@ -498,10 +499,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   for (impl::DataContext &dataContext : participant->writeDataContexts()) {
     int fromMeshID = dataContext.mesh->getID();
 
-    //    PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
-    //                  "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
-    //                  "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
-    //                  participant->getName(), dataContext.mesh->getName(), dataContext.mesh->getName());
+    PRECICE_CHECK(participant->isMeshProvided(fromMeshID) || participant->isDirectAccessAllowed(fromMeshID),
+                  "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
+                  "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
+                  participant->getName(), dataContext.mesh->getName(), dataContext.mesh->getName());
 
     for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
       if (mappingContext.fromMeshID == fromMeshID) {

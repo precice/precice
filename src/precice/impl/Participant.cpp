@@ -74,7 +74,7 @@ void Participant::useMesh(const mesh::PtrMesh &                         mesh,
                           double                                        safetyFactor,
                           bool                                          provideMesh,
                           partition::ReceivedPartition::GeometricFilter geoFilter,
-                          bool                                          allowDirectAccess)
+                          const bool                                    allowDirectAccess)
 {
   PRECICE_TRACE(_name, mesh->getName(), mesh->getID());
   checkDuplicatedUse(mesh);
@@ -353,6 +353,13 @@ bool Participant::isMeshProvided(int meshID) const
 int Participant::getUsedMeshID(const std::string &meshName) const
 {
   return usedMeshContext(meshName).mesh->getID();
+}
+
+bool Participant::isDirectAccessAllowed(const int meshID) const
+{
+  PRECICE_ASSERT((meshID >= 0) && (meshID < (int) _meshContexts.size()));
+  auto context = _meshContexts[meshID];
+  return context->allowDirectAccess;
 }
 
 std::string Participant::getMeshName(int meshID) const

@@ -782,14 +782,19 @@ public:
    *        mapping. As opposed to the usual preCICE mapping, only a single
    *        mesh (from the other participant) is now involved in this
    *        situation since an 'own' mesh defined by the participant itself
-   *        is not required any more. In order to partition the receiving
-   *        interface mesh, the solver needs to define the mesh region he
-   *        wants to work on and write data to.
+   *        is not required any more. In order to re-partition the receiving
+   *        interface mesh, the participant needs to define the mesh region it
+   *        wants read data from and write data to.
    *
    *        The complete concept on the receiving participant looks as follows
    * @code
+   *    // Allocate a bounding-box vector containing lower and upper bounds per
+   *    // space dimension
    *    std::vector<double> boundingBoxes(dim * 2 * nBoundingBoxes);
-   *    // fill boundingBoxes ...
+   *    // fill boundingBoxes according to interested region ...
+   *    // Get relevant IDs. Note that "ReceivedMeshname" is not a name of a
+   *    // provided mesh. This behavior is not allowed in the default precice
+   *    // configuration.
    *    const int otherMeshID = precice.getMeshID("ReceivedMeshname");
    *    const int writeDataID = precice.getDataID("WriteDataName", otherMeshID);
    *
@@ -799,51 +804,52 @@ public:
    *    double dt = precice.initialize();
    *    // Get the size of the filtered mesh within the bounding box
    *    // (provided by the coupling participant)
-   *    const int otherMeshSize = precice.getMeshVertexSize(writeDataID);
+   *    const int otherMeshSize = precice.getMeshVertexSize(otherMeshID);
    *
    *    // Allocate a vector for the vertices
    *    std::vector<double> otherSolverMesh(otherMeshSize * dim);
+   *    std::vector<int>    ids(otherMeshSize);
    *    precice.getMeshVerticesWithIDs(otherMeshID, otherMeshSize, ids.data(), otherSolverMesh.data());
    *    // continue with time loop and write data directly to writeDataID
    * @endcode
    *        Defining a bounding box for serial runs of the solver (not to
-   *        be confused with serial coupling mode) is valid. However, an
-   *        exception is thrown (TODO) in case vertices are filtered out
-   *        completely on the receiving side as long as this is not explicitly
-   *        enabled in the configuration file (TODO).
+   *        be confused with serial coupling mode) is valid. However, a
+   *        warning is raised in case vertices are filtered out completely
+   *        on the receiving side, since the associated data values of the
+   *        filtered vertices are filled with zero data.
    *        The mesh region is specified through a collection of axis-aligned
    *        bounding boxes given by the lower and upper [min and max]
    *        bounding-box limits in each space dimension [x, y, z].
    *
-   * @param[in] dataID ID of the Data you want to access through the bounding box
-   * @param[in] boundingBoxes collection of (axis aligned) bounding boxes which
+   * @param[in] meshID ID of the mesh you want to access through the bounding box
+   * @param[in] boundingBoxCollection collection of (axis aligned) bounding boxes which
    *            has in 3D the format
    *            [x_min0, x_max0, y_min0, y_max0, z_min0, z_max0, x_min1 ... ]
-   * @param[in] nBoundingBoxes number of bounding boxes.
+   * @param[in] size number of bounding boxes.
    *
    * @warning This functions is currently only implemented for nBoundingBoxes = 1.
    *
    * @pre 'initialize' has not yet been called.
    */
   void setBoundingBoxes(
-      const int     dataID,
+      const int     meshID,
       const double *boundingBoxCollection,
-      const int     nBoundingBoxes) const;
+      const int     size) const;
 
   /**
-   * @brief getMeshVerticesWithIDs Iterates over the region of
+   * @brief getMeshVerticesAndIDs Iterates over the region of
    *        interest defined by bounding boxes and reads the corresponding
    *        coordinates omitting the mapping.
    *
    * @param[in]  meshID corresponding mesh ID
    * @param[in]  size return value of getMeshSize
-   * @param[out]  ids ids corresponding to the coordinates
+   * @param[out] ids ids corresponding to the coordinates
    * @param[out] coordinates associated to the values (dim * @p getLocallyRelevantMeshSize)
    *
-   * @pre IDs and coordinates need to have the correct size, which can be requested by getMeshSize)
-   * @pre bounding box has been defined using @p setBoundingBox
+   * @pre IDs and coordinates need to have the correct size, which can be requested by getMeshVertexSize)
+   * @pre bounding box has been defined using @p setBoundingBoxes
    */
-  void getMeshVerticesWithIDs(
+  void getMeshVerticesAndIDs(
       const int meshID,
       const int size,
       int *     ids,

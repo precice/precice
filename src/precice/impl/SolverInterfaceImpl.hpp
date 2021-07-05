@@ -473,12 +473,15 @@ public:
    * @brief setBoundingBox Define a region of interest in order to filter a
    *        received mesh for a certain mesh region
    *
-   * @param[in] boundingBox (axis aligned) which has in 3D the format
-   *            [x_min, x_max, y_min, y_max, z_min, z_max]
+   * @param[in] meshID ID of the mesh you want to access through the bounding box
+   * @param[in] boundingBoxCollection collection of (axis aligned) bounding boxes which
+   *            has in 3D the format
+   *            [x_min0, x_max0, y_min0, y_max0, z_min0, z_max0, x_min1 ... ]
+   * @param[in] size number of bounding boxes.
    */
-  void setBoundingBoxes(const int     dataID,
-                        const double *boundingBox,
-                        const int     nBoundingBoxes) const;
+  void setBoundingBoxes(const int     meshID,
+                        const double *boundingBoxCollection,
+                        const int     size) const;
 
   /**
    * @brief getMeshVerticesWithIDs Iterates over the region of
@@ -493,7 +496,7 @@ public:
    * @pre IDs and coordinates need to have the correct size, which can be requested by getMeshSize)
    * @pre bounding box has been defined using @p setBoundingBox
    */
-  void getMeshVerticesWithIDs(
+  void getMeshVerticesAndIDs(
       const int meshID,
       const int size,
       int *     ids,

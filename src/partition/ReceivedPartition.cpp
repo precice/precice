@@ -101,16 +101,16 @@ void ReceivedPartition::compute()
       // Filter out vertices not laying in the bounding box
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       // To discuss: maybe check this somewhere in the SolverInterfaceImpl, as we have now a similar check for the parallel case
-      PRECICE_CHECK(!_bb.empty(), "You are running in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setBoundingBox with valid data?", _mesh->getName());
+      PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setBoundingBoxes with valid data?", _mesh->getName());
       unsigned int nFilteredVertices = 0;
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { if(!_bb.contains(v))
               ++nFilteredVertices;
           return _bb.contains(v); });
 
       if (nFilteredVertices > 0)
-        PRECICE_WARN("{} vertices have been filtered out "
-                     "in serial mode and will be filled with zero values.",
-                     nFilteredVertices);
+        PRECICE_WARN("{} vertices on mesh \"{}\" have been filtered out due to the defined bounding box in \"setBoundingBoxes\" "
+                     "in serial mode. Associated data values of the filtered vertices will be filled with zero values in order to provide valid data for other participants when reading data.",
+                     nFilteredVertices, _mesh->getName());
 
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
@@ -497,8 +497,9 @@ void ReceivedPartition::prepareBoundingBox()
     // inconsistent and does not provide any configurable option for
     // 'bad' matching geometries.
     //    _bb.scaleBy(_safetyFactor);
+    // TODO: Prevent duplicated scale by bounding boxes here?
+    // (Aren't there cases where we duplicate the scaling above)
     PRECICE_WARN("Ignoring the safety factor for bounding box initialization");
-
     _boundingBoxPrepared = true;
   }
 }
@@ -596,7 +597,8 @@ void ReceivedPartition::createOwnerInformation()
     // Decide upon owners,
     PRECICE_DEBUG("Decide owners, first round by rough load balancing");
     // Provide a more descriptive error message if direct access was enabled
-    PRECICE_CHECK(ranksAtInterface != 0 || !_allowDirectAccess, "No rank has a valid point of mesh \"{}\". Did you call setBoundingBox with valid data?");
+    PRECICE_CHECK(!(ranksAtInterface == 0 && _allowDirectAccess), "After repartitioning of mesh \"{}\" all ranks are empty. Did you forget to call \"setBoundingBoxes\" with valid data?", _mesh->getName());
+
     PRECICE_ASSERT(ranksAtInterface != 0);
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
@@ -649,7 +651,7 @@ void ReceivedPartition::createOwnerInformation()
       PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
                    filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
       if (_allowDirectAccess)
-        PRECICE_WARN("Filtered vertices will be filled with the zero data.");
+        PRECICE_WARN("Associated data values of the filtered vertices will be filled with zero values in order to provide valid data for other participants when reading data.");
     }
   }
 }
@@ -676,21 +678,27 @@ bool ReceivedPartition::hasAnyMapping() const
 
 void ReceivedPartition::tagMeshFirstRound()
 {
+  // We want to have every vertex within the box if we access the mesh directly
+  if (_allowDirectAccess) {
+    _mesh->tagAll();
+    return;
+  }
+
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshFirstRound();
   }
   for (const mapping::PtrMapping &toMapping : _toMappings) {
     toMapping->tagMeshFirstRound();
   }
-
-  // We want to have every vertex within the box
-  if (_allowDirectAccess) {
-    _mesh->tagAll();
-  }
 }
 
 void ReceivedPartition::tagMeshSecondRound()
 {
+  // We have already tagged every node in this case in the first round
+  if (_allowDirectAccess) {
+    return;
+  }
+
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshSecondRound();
   }

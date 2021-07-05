@@ -1258,7 +1258,7 @@ void SolverInterfaceImpl::readBlockScalarData(
                 data.getName());
   auto &     valuesInternal = data.values();
   const auto vertexCount    = valuesInternal.size();
-  // Open issue: how to handle filtered data sets? valuesInternal is set to zero initially
+
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1301,15 +1301,15 @@ void SolverInterfaceImpl::readScalarData(
 void SolverInterfaceImpl::setBoundingBoxes(
     const int     meshID,
     const double *boundingBox,
-    const int     nBoundingBoxes) const
+    const int     size) const
 {
   PRECICE_TRACE(meshID);
   PRECICE_REQUIRE_MESH_USE(meshID);
-  if (nBoundingBoxes == 0)
+  if (size == 0)
     return;
   PRECICE_CHECK(boundingBox != nullptr, "The provided bounding boxes are empty.");
   //  PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  PRECICE_CHECK(nBoundingBoxes == 1, "Using more than one bounding box is not yet implemented.");
+  PRECICE_CHECK(size == 1, "Using more than one bounding box is not yet supported.");
 
   // Get the related mesh
   MeshContext & context = _accessor->meshContext(meshID);
@@ -1328,14 +1328,10 @@ void SolverInterfaceImpl::setBoundingBoxes(
   // Create a bounding box
   mesh::BoundingBox providedBoundingBox(bounds);
   // Expand the mesh associated bounding box
-  mesh::BoundingBox &bbox = mesh->getBoundingBox();
-  bbox                    = std::move(providedBoundingBox);
-
-  // Do not allocate data values
-  // mesh->allocateDataValues();
+  mesh->expandBoundingBox(providedBoundingBox);
 }
 
-void SolverInterfaceImpl::getMeshVerticesWithIDs(
+void SolverInterfaceImpl::getMeshVerticesAndIDs(
     const int meshID,
     const int size,
     int *     ids,

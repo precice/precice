@@ -209,7 +209,7 @@ public:
    */
   const BoundingBox &getBoundingBox() const;
 
-  BoundingBox &getBoundingBox();
+  void expandBoundingBox(const BoundingBox &bounding_box);
 
   bool operator==(const Mesh &other) const;
 

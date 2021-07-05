@@ -902,7 +902,7 @@ void runTestAccessReceivedMesh(const std::string         configName,
     // Allocate memory
     std::vector<int>    ids(meshSize);
     std::vector<double> coordinates(meshSize * dim);
-    interface.getMeshVerticesWithIDs(otherMeshID, meshSize, ids.data(), coordinates.data());
+    interface.getMeshVerticesAndIDs(otherMeshID, meshSize, ids.data(), coordinates.data());
 
     // Check the received vertex coordinates
     std::vector<double> expectedPositions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : expectedPositionSlave;
@@ -1014,7 +1014,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshOverlapNoWrite)
 // by another participant (see above). In addition to the direct mesh access
 // and data writing in one direction, an additional mapping (NN) is defined
 // in the other direction.
-BOOST_AUTO_TEST_CASE(LAccessReceivedMeshAndMapping)
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
 
@@ -1046,7 +1046,7 @@ BOOST_AUTO_TEST_CASE(LAccessReceivedMeshAndMapping)
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, 0);
-    interface.getMeshVerticesWithIDs(otherMeshID, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
+    interface.getMeshVerticesAndIDs(otherMeshID, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
     BOOST_TEST(solverTwoMesh == expectedData);

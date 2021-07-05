@@ -348,9 +348,9 @@ const BoundingBox &Mesh::getBoundingBox() const
   return _boundingBox;
 }
 
-BoundingBox &Mesh::getBoundingBox()
+void Mesh::expandBoundingBox(const BoundingBox &boundingBox)
 {
-  return _boundingBox;
+  _boundingBox.expandBy(boundingBox);
 }
 
 bool Mesh::operator==(const Mesh &other) const
