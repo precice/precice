@@ -1069,8 +1069,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
   tearDownParallelEnvironment();
 }
 
-template <typename T>
-void testParallelSetOwnerInformation(T &mesh, int dimensions)
+void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
 {
   bool   flipNormals  = true;
   double safetyFactor = 0;
@@ -1096,11 +1095,12 @@ void testParallelSetOwnerInformation(T &mesh, int dimensions)
   part.addFromMapping(boundingFromMapping);
   part.addToMapping(boundingToMapping);
 
-  part._mesh->computeBoundingBox();
-  part.prepareBoundingBox();
+  mesh->computeBoundingBox();
 
-  part.tagMeshFirstRound();
-  part.createOwnerInformation();
+  receivedPartitionFixture fixture;
+  fixture.prepareBoundingBox(part);
+  fixture.tagMeshFirstRound(part);
+  fixture.createOwnerInformation(part);
 }
 
 BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationVertexCount)

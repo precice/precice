@@ -9,20 +9,15 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 
-// Forward declaration to friend the boost test struct
-namespace PartitionTests {
-namespace ReceivedPartitionTests {
-template <typename T>
-void testParallelSetOwnerInformation(T &mesh, int dimensions);
-} // namespace ReceivedPartitionTests
-} // namespace PartitionTests
-
 namespace precice {
 namespace m2n {
 class M2N;
 } // namespace m2n
 
 namespace partition {
+
+// Forward declaration to friend the accessor fixture
+struct receivedPartitionFixture;
 
 /**
  * @brief A partition that is computed from a mesh received from another participant.
@@ -104,8 +99,28 @@ private:
   /// Min global vertex IDs of remote connected ranks
   std::vector<int> _remoteMinGlobalVertexIDs;
 
-  template <typename T>
-  friend void PartitionTests::ReceivedPartitionTests::testParallelSetOwnerInformation(T &mesh, int dimensions);
+  // Make the fixture friend of this class
+  friend struct receivedPartitionFixture;
+};
+
+/*
+ * @brief A fixture that is used to access private functions of the receivedPartition class.
+ *
+ * The fixture can be used to call private functions for individual testing. 
+ */
+struct receivedPartitionFixture {
+  void createOwnerInformation(ReceivedPartition &part)
+  {
+    part.createOwnerInformation();
+  }
+  void tagMeshFirstRound(ReceivedPartition &part)
+  {
+    part.tagMeshFirstRound();
+  }
+  void prepareBoundingBox(ReceivedPartition &part)
+  {
+    part.prepareBoundingBox();
+  }
 };
 
 } // namespace partition
