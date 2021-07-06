@@ -772,21 +772,30 @@ public:
       int     valueIndex,
       double &value) const;
 
+  ///@}
+
+  /** @name Experimental Data Access
+   * These API functions are \b experimental and may change in future versions.
+   */
+  ///@{
+
   /**
    * @brief setBoundingBoxes Define a region of interest on a received mesh
    *        (<use-mesh ... from="otherParticipant />") in order to receive
    *        only a certain mesh region.
    *
-   *        This function is required if you don't want to use the preCICE
-   *        own mappings, but rather want to use your own solver for data
-   *        mapping. As opposed to the usual preCICE mapping, only a single
-   *        mesh (from the other participant) is now involved in this
-   *        situation since an 'own' mesh defined by the participant itself
-   *        is not required any more. In order to re-partition the receiving
-   *        interface mesh, the participant needs to define the mesh region it
-   *        wants read data from and write data to.
+   * @experimental
    *
-   *        The complete concept on the receiving participant looks as follows
+   * This function is required if you don't want to use the preCICE
+   * own mappings, but rather want to use your own solver for data
+   * mapping. As opposed to the usual preCICE mapping, only a single
+   * mesh (from the other participant) is now involved in this
+   * situation since an 'own' mesh defined by the participant itself
+   * is not required any more. In order to re-partition the receiving
+   * interface mesh, the participant needs to define the mesh region it
+   * wants read data from and write data to.
+   *
+   * The complete concept on the receiving participant looks as follows
    * @code
    *    // Allocate a bounding-box vector containing lower and upper bounds per
    *    // space dimension
@@ -812,14 +821,15 @@ public:
    *    precice.getMeshVerticesWithIDs(otherMeshID, otherMeshSize, ids.data(), otherSolverMesh.data());
    *    // continue with time loop and write data directly to writeDataID
    * @endcode
-   *        Defining a bounding box for serial runs of the solver (not to
-   *        be confused with serial coupling mode) is valid. However, a
-   *        warning is raised in case vertices are filtered out completely
-   *        on the receiving side, since the associated data values of the
-   *        filtered vertices are filled with zero data.
-   *        The mesh region is specified through a collection of axis-aligned
-   *        bounding boxes given by the lower and upper [min and max]
-   *        bounding-box limits in each space dimension [x, y, z].
+   *
+   * Defining a bounding box for serial runs of the solver (not to
+   * be confused with serial coupling mode) is valid. However, a
+   * warning is raised in case vertices are filtered out completely
+   * on the receiving side, since the associated data values of the
+   * filtered vertices are filled with zero data.
+   * The mesh region is specified through a collection of axis-aligned
+   * bounding boxes given by the lower and upper [min and max]
+   * bounding-box limits in each space dimension [x, y, z].
    *
    * @param[in] meshID ID of the mesh you want to access through the bounding box
    * @param[in] boundingBoxCollection collection of (axis aligned) bounding boxes which
