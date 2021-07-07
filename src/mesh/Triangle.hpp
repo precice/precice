@@ -100,6 +100,15 @@ public:
   /// Returns a among triangles globally unique ID.
   int getID() const;
 
+  /// Globally unique index
+  int getGlobalIndex() const;
+
+  void setGlobalIndex(int globalIndex);
+
+  bool isOwner() const;
+
+  void setOwner(bool owner);
+
   /// Returns the surface area of the triangle
   double getArea() const;
 
@@ -129,6 +138,12 @@ private:
 
   /// ID of the edge.
   int _id;
+
+  /// global (unique) index for parallel simulations
+  int _globalIndex = -1;
+
+  /// true if this processors is the owner of the triangle (for parallel simulations)
+  bool _owner = true;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS

@@ -41,7 +41,9 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
     int vertexIndex2 = edge.vertex(1).getID();
     if (vertexMap.count(vertexIndex1) == 1 &&
         vertexMap.count(vertexIndex2) == 1) {
-      Edge &e               = destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
+      Edge &e = destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
+      e.setGlobalIndex(edge.getGlobalIndex());
+      e.setOwner(edge.isOwner());
       edgeMap[edge.getID()] = &e;
     }
   }
@@ -55,7 +57,9 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
       if (edgeMap.count(edgeIndex1) == 1 &&
           edgeMap.count(edgeIndex2) == 1 &&
           edgeMap.count(edgeIndex3) == 1) {
-        destination.createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
+        Triangle &t = destination.createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
+        t.setGlobalIndex(triangle.getGlobalIndex());
+        t.setOwner(triangle.isOwner());
       }
     }
   }
