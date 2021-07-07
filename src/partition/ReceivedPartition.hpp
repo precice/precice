@@ -95,6 +95,8 @@ private:
 
   /// Min global vertex IDs of remote connected ranks
   std::vector<int> _remoteMinGlobalVertexIDs;
+
+  bool _filterWithConnectivity = false;
 };
 
 } // namespace partition
