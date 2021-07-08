@@ -782,7 +782,9 @@ public:
   /**
    * @brief setBoundingBoxes Define a region of interest on a received mesh
    *        (<use-mesh ... from="otherParticipant />") in order to receive
-   *        only a certain mesh region.
+   *        only a certain mesh region. Have a look at the website under
+   *        [sidebar]->Couple your code -> Advanced topics -> Accessing
+   *        received meshes directly for a comprehensive documentation
    *
    * @experimental
    *
@@ -794,34 +796,6 @@ public:
    * is not required any more. In order to re-partition the receiving
    * interface mesh, the participant needs to define the mesh region it
    * wants read data from and write data to.
-   *
-   * The complete concept on the receiving participant looks as follows
-   * @code
-   *    // Allocate a bounding-box vector containing lower and upper bounds per
-   *    // space dimension
-   *    std::vector<double> boundingBoxes(dim * 2 * nBoundingBoxes);
-   *    // fill boundingBoxes according to interested region ...
-   *    // Get relevant IDs. Note that "ReceivedMeshname" is not a name of a
-   *    // provided mesh. This behavior is not allowed in the default precice
-   *    // configuration.
-   *    const int otherMeshID = precice.getMeshID("ReceivedMeshname");
-   *    const int writeDataID = precice.getDataID("WriteDataName", otherMeshID);
-   *
-   *    // Define region of interest, where we could obtain direct write access
-   *    precice.setBoundingBoxes(otherMeshID, boundingBox.data(), nBoundingBoxes);
-   *
-   *    double dt = precice.initialize();
-   *    // Get the size of the filtered mesh within the bounding box
-   *    // (provided by the coupling participant)
-   *    const int otherMeshSize = precice.getMeshVertexSize(otherMeshID);
-   *
-   *    // Allocate a vector for the vertices
-   *    std::vector<double> otherSolverMesh(otherMeshSize * dim);
-   *    std::vector<int>    ids(otherMeshSize);
-   *    precice.getMeshVerticesWithIDs(otherMeshID, otherMeshSize, ids.data(), otherSolverMesh.data());
-   *    // continue with time loop and write data directly to writeDataID
-   * @endcode
-   *
    * Defining a bounding box for serial runs of the solver (not to
    * be confused with serial coupling mode) is valid. However, a
    * warning is raised in case vertices are filtered out completely
