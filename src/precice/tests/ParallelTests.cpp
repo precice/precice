@@ -1040,6 +1040,31 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshOverlapNoWriteTwoLevelInit)
   runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access-two-level.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 1);
 }
 
+// Same as above, but one rank of SolverOne does not receive any vertices due
+// to the defined bounding box. Test case for parallel mesh partitioning without
+// any mapping. Each solver runs on two ranks. SolverTwo defines 5(2 and 3)
+// vertices which need to be repartitioned on SolverOne according to the defined
+// boundingBoxes (resulting in 3  vertices on one rank and 2 completely filtered
+// vertices). Filtered vertices are filled with zero data values
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshEmptyPartition)
+{
+  const std::vector<double> boundingBoxSlave      = std::vector<double>{10.0, 10.0, 13.0, 17};
+  const std::vector<double> expectedPositionSlave = std::vector<double>{};
+  const std::vector<double> writeDataSlave        = std::vector<double>({});
+  const std::vector<double> expectedReadDataSlave = std::vector<double>({3., 0., 0.});
+  runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+}
+
+// Same as above using the two-level-initialization
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshEmptyPartitionTwoLevelInit)
+{
+  const std::vector<double> boundingBoxSlave      = std::vector<double>{10.0, 10.0, 13.0, 17};
+  const std::vector<double> expectedPositionSlave = std::vector<double>{};
+  const std::vector<double> writeDataSlave        = std::vector<double>({});
+  const std::vector<double> expectedReadDataSlave = std::vector<double>({3., 0., 0.});
+  runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access-two-level.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+}
+
 // Test case for a direct mesh access on one participant to a mesh defined
 // by another participant (see above). In addition to the direct mesh access
 // and data writing in one direction, an additional mapping (NN) is defined
