@@ -783,8 +783,10 @@ public:
    * @brief setBoundingBoxes Define a region of interest on a received mesh
    *        (<use-mesh ... from="otherParticipant />") in order to receive
    *        only a certain mesh region. Have a look at the website under
-   *        [sidebar]->Couple your code -> Advanced topics -> Accessing
-   *        received meshes directly for a comprehensive documentation
+   *        https://precice.org/couple-your-code-direct-access.html or
+   *        navigate manually to the page  [sidebar]->Couple your code
+   *        -> Advanced topics -> Accessing received meshes directly for
+   *        a comprehensive documentation
    *
    * @experimental
    *
