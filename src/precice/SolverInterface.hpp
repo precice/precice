@@ -790,14 +790,14 @@ public:
    *
    * @experimental
    *
-   * This function is required if you don't want to use the preCICE
-   * own mappings, but rather want to use your own solver for data
-   * mapping. As opposed to the usual preCICE mapping, only a single
-   * mesh (from the other participant) is now involved in this
+   * This function is required if you don't want to use the mapping
+   * schemes in preCICE, but rather want to use your own solver for
+   * data mapping. As opposed to the usual preCICE mapping, only a
+   * single mesh (from the other participant) is now involved in this
    * situation since an 'own' mesh defined by the participant itself
-   * is not required any more. In order to re-partition the receiving
-   * interface mesh, the participant needs to define the mesh region it
-   * wants read data from and write data to.
+   * is not required any more. In order to re-partition the received
+   * mesh, the participant needs to define the mesh region it wants
+   * read data from and write data to.
    * Defining a bounding box for serial runs of the solver (not to
    * be confused with serial coupling mode) is valid. However, a
    * warning is raised in case vertices are filtered out completely
