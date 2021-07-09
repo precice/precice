@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/AitkenAcceleration.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/BiCouplingScheme.hpp"
@@ -1110,6 +1111,12 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
       checkIfDataIsExchanged(dataID);
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
+
+    if (dynamic_cast<acceleration::AitkenAcceleration *>(_accelerationConfig->getAcceleration().get()) != nullptr)
+      PRECICE_WARN("You configured participant \"{}\" in a parallel-implicit coupling scheme with \"Aitken\" "
+                   "acceleration, which is known to perform bad. Consider switching to a serial-implicit coupling "
+                   "scheme or change the acceleration method.",
+                   participant);
   }
 }
 
