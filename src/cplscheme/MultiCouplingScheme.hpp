@@ -11,7 +11,7 @@
 
 namespace precice {
 namespace cplscheme {
-struct CouplingData;
+class CouplingData;
 struct ExchangeData;
 
 /**

@@ -639,7 +639,6 @@ int SolverInterfaceImpl::getMeshVertexSize(
     int meshID) const
 {
   PRECICE_TRACE(meshID);
-  int size = 0;
   PRECICE_REQUIRE_MESH_USE(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
