@@ -1114,8 +1114,8 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
 
     if (dynamic_cast<acceleration::AitkenAcceleration *>(_accelerationConfig->getAcceleration().get()) != nullptr)
       PRECICE_WARN("You configured participant \"{}\" in a parallel-implicit coupling scheme with \"Aitken\" "
-                   "acceleration, which is known to perform bad. Consider switching to a serial-implicit coupling "
-                   "scheme or change the acceleration method.",
+                   "acceleration, which is known to perform bad in parallel coupling schemes. Consider switching to a serial-implicit coupling "
+                   "scheme or changing the acceleration method.",
                    participant);
   }
 }
