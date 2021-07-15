@@ -13,6 +13,7 @@
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
+#include "mesh/BoundingBox.hpp"
 #include "mesh/Filter.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -469,144 +470,345 @@ void ReceivedPartition::createOwnerInformation()
   PRECICE_TRACE();
   Event e("partition.createOwnerInformation." + _mesh->getName(), precice::syncMode);
 
-  if (utils::MasterSlave::isSlave()) {
-    int numberOfVertices = _mesh->vertices().size();
-    utils::MasterSlave::_communication->send(numberOfVertices, 0);
+  /*
+    We follow different approaches for two-level and one-level methods. For 1LI, a centeralized
+    approach is followed, while the 2LI employs a local/parallel scheme for assigning vertices
+    to corresponding ranks.
+  */
 
-    if (numberOfVertices != 0) {
-      PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
-      std::vector<int> tags(numberOfVertices, -1);
-      std::vector<int> globalIDs(numberOfVertices, -1);
-      bool             atInterface = false;
-      for (int i = 0; i < numberOfVertices; i++) {
-        globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
-        if (_mesh->vertices()[i].isTagged()) {
+  if (m2n().usesTwoLevelInitialization()) {
+    /*
+    This function ensures that each vertex is owned by only a single rank and
+    is not shared among ranks. Initially, the vertices are checked against the 
+    bounding box of each rank. If a vertex fits into only a single bounding box, 
+    the vertex is assigned to that rank. If it fits to various bbs, the rank with the 
+    lowest number of vertices gets ownership to keep the load as balanced as 
+    possible. 
+    
+    Following steps are taken:
+
+    1- receive local bb map from master
+    2- filter bb map to keep the connected ranks
+    3- own the vertices that only fit into this rank's bb
+    4- send number of owned vertices and the list of shared vertices to neighbors
+    5- for the remaining vertices: check if we have less vertices -> own it!
+    */
+
+    // #1: receive local bb map from master
+    // Define and initialize localBBMap to save local bbs
+
+    mesh::Mesh::BoundingBoxMap localBBMap;
+    mesh::BoundingBox          dummyBB(_dimensions);
+    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+      localBBMap.emplace(rank, dummyBB);
+    }
+
+    // Define a bb map to save the local connected ranks and respective boundingboxes
+    mesh::Mesh::BoundingBoxMap localConnectedBBMap;
+
+    // store global IDs and list of possible shared vertices
+
+    // Global IDs to be saved in:
+    std::vector<int> sharedVerticesGlobalIDs;
+    // Local IDs to be saved in:
+    std::vector<int> sharedVerticesLocalIDs;
+
+    // store possible shared vertices in a map to communicate with neighbors, map: rank -> vertex_global_id
+    std::map<int, std::vector<double>> sharedVerticesSendMap;
+
+    // receive list of possible shared vertices from neighboring ranks
+    std::map<int, std::vector<double>> sharedVerticesReceiveMap;
+
+    if (utils::MasterSlave::isMaster()) {
+
+      // Insert masters bounding box
+      localBBMap.at(0) = _bb;
+
+      // master receives local bb from each slave rank
+      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+        com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(localBBMap.at(rankSlave), rankSlave);
+      }
+
+      // master broadcast localBBMap to all slaves
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendBoundingBoxMap(localBBMap);
+    } else if (utils::MasterSlave::isSlave()) {
+      // slaves send local bb to master
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_bb, 0);
+      // slaves receive localBBMap from master
+      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveBoundingBoxMap(localBBMap);
+    }
+
+    // #2: filter bb map to keep the connected ranks
+    // remove the own bb from the map since we compare the own bb only with other ranks bb.
+    localBBMap.erase(utils::MasterSlave::getRank());
+    // find and store local connected ranks
+    for (auto &localBB : localBBMap) {
+      if (_bb.overlapping(localBB.second)) {
+        localConnectedBBMap.emplace(localBB.first, localBB.second);
+      }
+    }
+
+    // #3: check vertices and keep only those that fit into the current rank's bb
+    int numberOfVertices = _mesh->vertices().size();
+    PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
+    std::vector<int> tags(numberOfVertices, -1);
+    std::vector<int> globalIDs(numberOfVertices, -1);
+    bool             atInterface = false;
+    int              counter     = 0; // number of vertices owned by this rank
+    for (int i = 0; i < numberOfVertices; i++) {
+      globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
+      if (_mesh->vertices()[i].isTagged()) {
+        bool vertexIsShared = false;
+        for (auto &neighborRank : localConnectedBBMap) {
+          if (neighborRank.second.contains(_mesh->vertices()[i])) {
+            vertexIsShared = true;
+            sharedVerticesSendMap[neighborRank.first].push_back(globalIDs[i]);
+            sharedVerticesGlobalIDs.push_back(globalIDs[i]);
+            sharedVerticesLocalIDs.push_back(i);
+          }
+        }
+
+        if (not vertexIsShared) {
           tags[i]     = 1;
           atInterface = true;
-        } else {
-          tags[i] = 0;
-        }
-      }
-      PRECICE_DEBUG("My tags: {}", tags);
-      PRECICE_DEBUG("My global IDs: {}", globalIDs);
-      PRECICE_DEBUG("Send tags and global IDs");
-      utils::MasterSlave::_communication->send(tags, 0);
-      utils::MasterSlave::_communication->send(globalIDs, 0);
-      utils::MasterSlave::_communication->send(atInterface, 0);
-
-      PRECICE_DEBUG("Receive owner information");
-      std::vector<int> ownerVec(numberOfVertices, -1);
-      utils::MasterSlave::_communication->receive(ownerVec, 0);
-      PRECICE_DEBUG("My owner information: {}", ownerVec);
-      PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfVertices));
-      setOwnerInformation(ownerVec);
-    }
-  }
-
-  else if (utils::MasterSlave::isMaster()) {
-    // To temporary store which vertices already have an owner
-    std::vector<int> globalOwnerVec(_mesh->getGlobalNumberOfVertices(), 0);
-    // The same per rank
-    std::vector<std::vector<int>> slaveOwnerVecs(utils::MasterSlave::getSize());
-    // Global IDs per rank
-    std::vector<std::vector<int>> slaveGlobalIDs(utils::MasterSlave::getSize());
-    // Tag information per rank
-    std::vector<std::vector<int>> slaveTags(utils::MasterSlave::getSize());
-
-    // Fill master data
-    PRECICE_DEBUG("Tag master vertices");
-    bool masterAtInterface = false;
-    slaveOwnerVecs[0].resize(_mesh->vertices().size());
-    slaveGlobalIDs[0].resize(_mesh->vertices().size());
-    slaveTags[0].resize(_mesh->vertices().size());
-    for (size_t i = 0; i < _mesh->vertices().size(); i++) {
-      slaveGlobalIDs[0][i] = _mesh->vertices()[i].getGlobalIndex();
-      if (_mesh->vertices()[i].isTagged()) {
-        masterAtInterface = true;
-        slaveTags[0][i]   = 1;
-      } else {
-        slaveTags[0][i] = 0;
-      }
-    }
-    PRECICE_DEBUG("My tags: {}", slaveTags[0]);
-
-    // receive slave data
-    int ranksAtInterface = 0;
-    if (masterAtInterface)
-      ranksAtInterface++;
-
-    for (int rank : utils::MasterSlave::allSlaves()) {
-      int localNumberOfVertices = -1;
-      utils::MasterSlave::_communication->receive(localNumberOfVertices, rank);
-      PRECICE_DEBUG("Rank {} has {} vertices.", rank, localNumberOfVertices);
-      slaveOwnerVecs[rank].resize(localNumberOfVertices, 0);
-
-      if (localNumberOfVertices != 0) {
-        PRECICE_DEBUG("Receive tags from slave rank {}", rank);
-        utils::MasterSlave::_communication->receive(slaveTags[rank], rank);
-        utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank], rank);
-        PRECICE_DEBUG("Rank {} has tags {}", rank, slaveTags[rank]);
-        PRECICE_DEBUG("Rank {} has global IDs {}", rank, slaveGlobalIDs[rank]);
-        bool atInterface = false;
-        utils::MasterSlave::_communication->receive(atInterface, rank);
-        if (atInterface)
-          ranksAtInterface++;
-      }
-    }
-
-    // Decide upon owners,
-    PRECICE_DEBUG("Decide owners, first round by rough load balancing");
-    PRECICE_ASSERT(ranksAtInterface != 0);
-    int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
-    // First round: every slave gets localGuess vertices
-    for (int rank : utils::MasterSlave::allRanks()) {
-      int counter = 0;
-      for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
-        // Vertex has no owner yet and rank could be owner
-        if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
-          slaveOwnerVecs[rank][i]                 = 1; // Now rank is owner
-          globalOwnerVec[slaveGlobalIDs[rank][i]] = 1; // Vertex now has owner
           counter++;
-          if (counter == localGuess)
-            break;
         }
       }
+
+      else {
+        tags[i] = 0;
+      }
     }
 
-    // Second round: distribute all other vertices in a greedy way
-    PRECICE_DEBUG("Decide owners, second round in greedy way");
-    for (int rank : utils::MasterSlave::allRanks()) {
-      for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
-        if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
-          slaveOwnerVecs[rank][i]                 = 1;
-          globalOwnerVec[slaveGlobalIDs[rank][i]] = rank + 1;
+    // #4: Exchange number of already owned vertices with the neighbors
+
+    // to store receive requests.
+    std::vector<com::PtrRequest> vertexNumberRequests;
+
+    // Define and initialize for load balancing
+    std::map<int, int> neighborRanksVertexCount;
+    for (auto &neighborRank : localConnectedBBMap) {
+      neighborRanksVertexCount.insert(std::make_pair(neighborRank.first, 0));
+    }
+
+    // Asynchronous recieve number of owned vertices from neighbor ranks
+    for (auto &neighborRank : localConnectedBBMap) {
+      auto request = utils::MasterSlave::_communication->aReceive(neighborRanksVertexCount.at(neighborRank.first), neighborRank.first);
+      vertexNumberRequests.push_back(request);
+    }
+
+    // Synchronous send number of owned vertices to neighbor ranks
+    for (auto &neighborRank : localConnectedBBMap) {
+      utils::MasterSlave::_communication->send(counter, neighborRank.first);
+    }
+
+    // wait until aReceive is complete.
+    for (auto &rqst : vertexNumberRequests) {
+      rqst->wait();
+    }
+
+    // #5: Exchange list of shared vertices with the neighbor
+
+    // to store send requests.
+    std::vector<com::PtrRequest> vertexListRequests;
+
+    for (auto &receivingRank : sharedVerticesSendMap) {
+      int  sendSize = receivingRank.second.size();
+      auto request  = utils::MasterSlave::_communication->aSend(sendSize, receivingRank.first);
+      vertexListRequests.push_back(request);
+      if (sendSize != 0) {
+        auto request = utils::MasterSlave::_communication->aSend(receivingRank.second, receivingRank.first);
+        vertexListRequests.push_back(request);
+      }
+    }
+
+    for (auto &neighborRank : sharedVerticesSendMap) {
+      int receiveSize = 0;
+      utils::MasterSlave::_communication->receive(receiveSize, neighborRank.first);
+      if (receiveSize != 0) {
+        std::vector<double> receivedSharedVertices;
+        utils::MasterSlave::_communication->receive(receivedSharedVertices, neighborRank.first);
+        sharedVerticesReceiveMap.insert(std::make_pair(neighborRank.first, receivedSharedVertices));
+      }
+    }
+
+    // wait until aSend is complete.
+    for (auto &rqst : vertexListRequests) {
+      rqst->wait();
+    }
+
+    // #6: Second round assignment according to the number of owned vertices
+
+    /* In case that a vertex can be shared between two ranks, the rank with lower
+       vertex count will own the vertex. 
+       If both ranks have same vertex count, the lower rank will own the vertex.
+    */
+
+    for (int i = 0; i < sharedVerticesGlobalIDs.size(); i++) {
+      bool owned = true;
+
+      for (auto &sharingRank : sharedVerticesReceiveMap) {
+        std::vector<double> vec = sharingRank.second;
+        if (std::find(vec.begin(), vec.end(), sharedVerticesGlobalIDs[i]) != vec.end()) {
+          if ((counter > neighborRanksVertexCount[sharingRank.first]) ||
+              (counter == neighborRanksVertexCount[sharingRank.first] && utils::MasterSlave::getRank() > sharingRank.first)) {
+            owned = false;
+          }
         }
       }
-    }
-
-    // Send information back to slaves
-    for (int rank : utils::MasterSlave::allSlaves()) {
-      if (not slaveTags[rank].empty()) {
-        PRECICE_DEBUG("Send owner information to slave rank {}", rank);
-        utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);
+      if (owned) {
+        tags[sharedVerticesLocalIDs[i]] = 1;
+      } else {
+        tags[sharedVerticesLocalIDs[i]] = 0;
       }
     }
-    // Master data
-    PRECICE_DEBUG("My owner information: {}", slaveOwnerVecs[0]);
-    setOwnerInformation(slaveOwnerVecs[0]);
 
-#ifndef NDEBUG
-    for (size_t i = 0; i < globalOwnerVec.size(); i++) {
-      if (globalOwnerVec[i] == 0) {
-        PRECICE_DEBUG("The Vertex with global index {} of mesh: {} was completely filtered out, since it has no influence on any mapping.",
-                      i, _mesh->getName());
-      }
-    }
-#endif
-    auto filteredVertices = std::count(globalOwnerVec.begin(), globalOwnerVec.end(), 0);
+    setOwnerInformation(tags);
+    auto filteredVertices = std::count(tags.begin(), tags.end(), 0);
     if (filteredVertices)
       PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
                    filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
+    // end of two-level initialization section
+  } else {
+    if (utils::MasterSlave::isSlave()) {
+      int numberOfVertices = _mesh->vertices().size();
+      utils::MasterSlave::_communication->send(numberOfVertices, 0);
+
+      if (numberOfVertices != 0) {
+        PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
+        std::vector<int> tags(numberOfVertices, -1);
+        std::vector<int> globalIDs(numberOfVertices, -1);
+        bool             atInterface = false;
+        for (int i = 0; i < numberOfVertices; i++) {
+          globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
+          if (_mesh->vertices()[i].isTagged()) {
+            tags[i]     = 1;
+            atInterface = true;
+          } else {
+            tags[i] = 0;
+          }
+        }
+        PRECICE_DEBUG("My tags: {}", tags);
+        PRECICE_DEBUG("My global IDs: {}", globalIDs);
+        PRECICE_DEBUG("Send tags and global IDs");
+        utils::MasterSlave::_communication->send(tags, 0);
+        utils::MasterSlave::_communication->send(globalIDs, 0);
+        utils::MasterSlave::_communication->send(atInterface, 0);
+
+        PRECICE_DEBUG("Receive owner information");
+        std::vector<int> ownerVec(numberOfVertices, -1);
+        utils::MasterSlave::_communication->receive(ownerVec, 0);
+        PRECICE_DEBUG("My owner information: {}", ownerVec);
+        PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfVertices));
+        setOwnerInformation(ownerVec);
+      }
+    }
+
+    else if (utils::MasterSlave::isMaster()) {
+      // To temporary store which vertices already have an owner
+      std::vector<int> globalOwnerVec(_mesh->getGlobalNumberOfVertices(), 0);
+      // The same per rank
+      std::vector<std::vector<int>> slaveOwnerVecs(utils::MasterSlave::getSize());
+      // Global IDs per rank
+      std::vector<std::vector<int>> slaveGlobalIDs(utils::MasterSlave::getSize());
+      // Tag information per rank
+      std::vector<std::vector<int>> slaveTags(utils::MasterSlave::getSize());
+
+      // Fill master data
+      PRECICE_DEBUG("Tag master vertices");
+      bool masterAtInterface = false;
+      slaveOwnerVecs[0].resize(_mesh->vertices().size());
+      slaveGlobalIDs[0].resize(_mesh->vertices().size());
+      slaveTags[0].resize(_mesh->vertices().size());
+      for (size_t i = 0; i < _mesh->vertices().size(); i++) {
+        slaveGlobalIDs[0][i] = _mesh->vertices()[i].getGlobalIndex();
+        if (_mesh->vertices()[i].isTagged()) {
+          masterAtInterface = true;
+          slaveTags[0][i]   = 1;
+        } else {
+          slaveTags[0][i] = 0;
+        }
+      }
+      PRECICE_DEBUG("My tags: {}", slaveTags[0]);
+
+      // receive slave data
+      int ranksAtInterface = 0;
+      if (masterAtInterface)
+        ranksAtInterface++;
+
+      for (int rank : utils::MasterSlave::allSlaves()) {
+        int localNumberOfVertices = -1;
+        utils::MasterSlave::_communication->receive(localNumberOfVertices, rank);
+        PRECICE_DEBUG("Rank {} has {} vertices.", rank, localNumberOfVertices);
+        slaveOwnerVecs[rank].resize(localNumberOfVertices, 0);
+
+        if (localNumberOfVertices != 0) {
+          PRECICE_DEBUG("Receive tags from slave rank {}", rank);
+          utils::MasterSlave::_communication->receive(slaveTags[rank], rank);
+          utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank], rank);
+          PRECICE_DEBUG("Rank {} has tags {}", rank, slaveTags[rank]);
+          PRECICE_DEBUG("Rank {} has global IDs {}", rank, slaveGlobalIDs[rank]);
+          bool atInterface = false;
+          utils::MasterSlave::_communication->receive(atInterface, rank);
+          if (atInterface)
+            ranksAtInterface++;
+        }
+      }
+
+      // Decide upon owners,
+      PRECICE_DEBUG("Decide owners, first round by rough load balancing");
+      PRECICE_ASSERT(ranksAtInterface != 0);
+      int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
+      // First round: every slave gets localGuess vertices
+      for (int rank : utils::MasterSlave::allRanks()) {
+        int counter = 0;
+        for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
+          // Vertex has no owner yet and rank could be owner
+          if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
+            slaveOwnerVecs[rank][i]                 = 1; // Now rank is owner
+            globalOwnerVec[slaveGlobalIDs[rank][i]] = 1; // Vertex now has owner
+            counter++;
+            if (counter == localGuess)
+              break;
+          }
+        }
+      }
+
+      // Second round: distribute all other vertices in a greedy way
+      PRECICE_DEBUG("Decide owners, second round in greedy way");
+      for (int rank : utils::MasterSlave::allRanks()) {
+        for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
+          if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
+            slaveOwnerVecs[rank][i]                 = 1;
+            globalOwnerVec[slaveGlobalIDs[rank][i]] = rank + 1;
+          }
+        }
+      }
+
+      // Send information back to slaves
+      for (int rank : utils::MasterSlave::allSlaves()) {
+        if (not slaveTags[rank].empty()) {
+          PRECICE_DEBUG("Send owner information to slave rank {}", rank);
+          utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);
+        }
+      }
+      // Master data
+      PRECICE_DEBUG("My owner information: {}", slaveOwnerVecs[0]);
+      setOwnerInformation(slaveOwnerVecs[0]);
+
+#ifndef NDEBUG
+      for (size_t i = 0; i < globalOwnerVec.size(); i++) {
+        if (globalOwnerVec[i] == 0) {
+          PRECICE_DEBUG("The Vertex with global index {} of mesh: {} was completely filtered out, since it has no influence on any mapping.",
+                        i, _mesh->getName());
+        }
+      }
+#endif
+      auto filteredVertices = std::count(globalOwnerVec.begin(), globalOwnerVec.end(), 0);
+      if (filteredVertices)
+        PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
+                     filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
+    }
   }
 }
 
