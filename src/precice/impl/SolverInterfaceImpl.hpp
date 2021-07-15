@@ -470,6 +470,39 @@ public:
       double &value) const;
 
   /**
+   * @brief setBoundingBox Define a region of interest in order to filter a
+   *        received mesh for a certain mesh region
+   *
+   * @param[in] meshID ID of the mesh you want to access through the bounding box
+   * @param[in] boundingBoxCollection collection of (axis aligned) bounding boxes which
+   *            has in 3D the format
+   *            [x_min0, x_max0, y_min0, y_max0, z_min0, z_max0, x_min1 ... ]
+   * @param[in] size number of bounding boxes.
+   */
+  void setBoundingBoxes(const int     meshID,
+                        const double *boundingBoxCollection,
+                        const int     size) const;
+
+  /**
+   * @brief getMeshVerticesWithIDs Iterates over the region of
+   *        interest defined by bounding boxes and reads the corresponding
+   *        coordinates omitting the mapping.
+   *
+   * @param[in]  meshID corresponding mesh ID
+   * @param[in]  size return value of getMeshSize
+   * @param[out]  ids ids corresponding to the coordinates
+   * @param[out] coordinates associated to the values (dim * @p getLocallyRelevantMeshSize)
+   *
+   * @pre IDs and coordinates need to have the correct size, which can be requested by getMeshSize)
+   * @pre bounding box has been defined using @p setBoundingBox
+   */
+  void getMeshVerticesAndIDs(
+      const int meshID,
+      const int size,
+      int *     ids,
+      double *  coordinates) const;
+
+  /**
    * @brief Sets the location for all output of preCICE.
    *
    * If done after configuration, this overwrites the output location specified

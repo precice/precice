@@ -67,14 +67,14 @@ void Participant::addWatchIntegral(
   _watchIntegrals.push_back(watchIntegral);
 }
 
-void Participant::useMesh(
-    const mesh::PtrMesh &                         mesh,
-    const Eigen::VectorXd &                       localOffset,
-    bool                                          remote,
-    const std::string &                           fromParticipant,
-    double                                        safetyFactor,
-    bool                                          provideMesh,
-    partition::ReceivedPartition::GeometricFilter geoFilter)
+void Participant::useMesh(const mesh::PtrMesh &                         mesh,
+                          const Eigen::VectorXd &                       localOffset,
+                          bool                                          remote,
+                          const std::string &                           fromParticipant,
+                          double                                        safetyFactor,
+                          bool                                          provideMesh,
+                          partition::ReceivedPartition::GeometricFilter geoFilter,
+                          const bool                                    allowDirectAccess)
 {
   PRECICE_TRACE(_name, mesh->getName(), mesh->getID());
   checkDuplicatedUse(mesh);
@@ -84,10 +84,11 @@ void Participant::useMesh(
   context->localOffset = localOffset;
   PRECICE_ASSERT(mesh->getDimensions() == context->localOffset.size(),
                  mesh->getDimensions(), context->localOffset.size());
-  context->receiveMeshFrom = fromParticipant;
-  context->safetyFactor    = safetyFactor;
-  context->provideMesh     = provideMesh;
-  context->geoFilter       = geoFilter;
+  context->receiveMeshFrom   = fromParticipant;
+  context->safetyFactor      = safetyFactor;
+  context->provideMesh       = provideMesh;
+  context->geoFilter         = geoFilter;
+  context->allowDirectAccess = allowDirectAccess;
 
   _meshContexts[mesh->getID()] = context;
 
@@ -352,6 +353,13 @@ bool Participant::isMeshProvided(int meshID) const
 int Participant::getUsedMeshID(const std::string &meshName) const
 {
   return usedMeshContext(meshName).mesh->getID();
+}
+
+bool Participant::isDirectAccessAllowed(const int meshID) const
+{
+  PRECICE_ASSERT((meshID >= 0) && (meshID < (int) _meshContexts.size()));
+  auto context = _meshContexts[meshID];
+  return context->allowDirectAccess;
 }
 
 std::string Participant::getMeshName(int meshID) const

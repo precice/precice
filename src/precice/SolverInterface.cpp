@@ -298,6 +298,21 @@ void SolverInterface::readScalarData(
   return _impl->readScalarData(dataID, valueIndex, value);
 }
 
+void SolverInterface::setBoundingBoxes(const int     meshID,
+                                       const double *boundingBox,
+                                       const int     size) const
+{
+  _impl->setBoundingBoxes(meshID, boundingBox, size);
+}
+
+void SolverInterface::getMeshVerticesAndIDs(const int meshID,
+                                            const int size,
+                                            int *     ids,
+                                            double *  coordinates) const
+{
+  _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
+}
+
 std::string getVersionInformation()
 {
   return {precice::versionInformation};

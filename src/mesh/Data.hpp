@@ -57,10 +57,9 @@ public:
   /**
    * @brief Constructor.
    */
-  Data(
-      std::string name,
-      int         id,
-      int         dimension);
+  Data(std::string name,
+       int         id,
+       int         dimension);
 
   /// Destructor, decrements data count.
   ~Data();
@@ -76,11 +75,6 @@ public:
 
   /// Returns the ID of the data set (supposed to be unique).
   int getID() const;
-
-  /**
-   * @brief Returns the type constant of the data set.
-   */
-  //  DataType getType () const;
 
   /// Sets all values to zero
   void toZero();
@@ -101,9 +95,6 @@ private:
 
   /// ID of the data set (supposed to be unique).
   int _id;
-
-  //  // @brief Type of data (scalar or vector).
-  //  DataType _type;
 
   /// Dimensionality of one data value.
   int _dimensions;

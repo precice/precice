@@ -37,7 +37,7 @@ public:
   };
 
   /// Constructor
-  ReceivedPartition(mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor);
+  ReceivedPartition(mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor, bool allowDirectAccess = false);
 
   virtual ~ReceivedPartition() {}
 
@@ -87,6 +87,8 @@ private:
   int _dimensions;
 
   double _safetyFactor;
+
+  bool _allowDirectAccess;
 
   logging::Logger _log{"partition::ReceivedPartition"};
 

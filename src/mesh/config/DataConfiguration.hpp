@@ -44,11 +44,8 @@ public:
    * @param[in] name Unqiue name of the data.
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    */
-  void addData(
-      const std::string &name,
-      int                dataDimensions);
-
-  //int getDimensions() const;
+  void addData(const std::string &name,
+               int                dataDimensions);
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
