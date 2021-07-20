@@ -474,14 +474,11 @@ public:
    *        received mesh for a certain mesh region
    *
    * @param[in] meshID ID of the mesh you want to access through the bounding box
-   * @param[in] boundingBoxCollection collection of (axis aligned) bounding boxes which
-   *            has in 3D the format
-   *            [x_min0, x_max0, y_min0, y_max0, z_min0, z_max0, x_min1 ... ]
-   * @param[in] size number of bounding boxes.
+   * @param[in] boundingBox Axis aligned bounding boxes which havein 3D the format
+   *            [x_min, x_max, y_min, y_max, z_min, z_max]
    */
   void setMeshAccessRegion(const int     meshID,
-                           const double *boundingBoxCollection,
-                           const int     size) const;
+                           const double *boundingBox) const;
 
   /**
    * @brief getMeshVerticesWithIDs Iterates over the region of

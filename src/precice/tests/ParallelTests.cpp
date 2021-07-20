@@ -888,7 +888,7 @@ void runTestAccessReceivedMesh(const std::string         configName,
 
     std::vector<double> boundingBox = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : boundingBoxSlave;
     // Set bounding box
-    interface.setMeshAccessRegion(otherMeshID, boundingBox.data(), 1);
+    interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
     // Initialize the solverinterface
     double dt = interface.initialize();
 
@@ -1090,7 +1090,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     std::array<double, dim * 2> boundingBox = context.isMaster() ? std::array<double, dim * 2>{0.0, 1.0, 0.0, 3.5} : std::array<double, dim * 2>{0.0, 1.0, 3.5, 5.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setMeshAccessRegion(otherMeshID, boundingBox.data(), 1);
+    interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
 
     double dt = interface.initialize();
     // Get the size of the filtered mesh within the bounding box
