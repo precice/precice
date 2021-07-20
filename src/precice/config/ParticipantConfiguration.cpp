@@ -307,7 +307,7 @@ void ParticipantConfiguration::xmlTagCallback(
           _participants.back()->getName(), name, name);
     }
 
-    PRECICE_CHECK(allowDirectAccess && from.empty(),
+    PRECICE_CHECK(!(allowDirectAccess && from.empty()),
                   "Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a direct access defined. "
                   "This combination of options is not allowed. "
                   "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />"
