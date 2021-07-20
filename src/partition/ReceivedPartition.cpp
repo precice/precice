@@ -107,10 +107,11 @@ void ReceivedPartition::compute()
               ++nFilteredVertices;
           return _bb.contains(v); });
 
-      if (nFilteredVertices > 0)
+      if (nFilteredVertices > 0) {
         PRECICE_WARN("{} vertices on mesh \"{}\" have been filtered out due to the defined bounding box in \"setMeshAccessRegion\" "
                      "in serial mode. Associated data values of the filtered vertices will be filled with zero values in order to provide valid data for other participants when reading data.",
                      nFilteredVertices, _mesh->getName());
+      }
 
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
@@ -648,10 +649,11 @@ void ReceivedPartition::createOwnerInformation()
 #endif
     auto filteredVertices = std::count(globalOwnerVec.begin(), globalOwnerVec.end(), 0);
     if (filteredVertices) {
-      PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
-                   filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
-      if (_allowDirectAccess)
-        PRECICE_WARN("Associated data values of the filtered vertices will be filled with zero values in order to provide valid data for other participants when reading data.");
+      PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.{}",
+                   filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName(),
+                   _allowDirectAccess ? " Associated data values of the filtered vertices will be filled with zero values in order to "
+                                        "provide valid data for other participants when reading data."
+                                      : "");
     }
   }
 }

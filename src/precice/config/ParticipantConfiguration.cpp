@@ -279,8 +279,10 @@ void ParticipantConfiguration::xmlTagCallback(
     partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
     const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
 
-    if (allowDirectAccess)
+    if (allowDirectAccess) {
       PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
+    }
+
     PRECICE_CHECK(safetyFactor >= 0,
                   "Participant \"{}\" uses mesh \"{}\" with safety-factor=\"{}\". "
                   "Please use a positive or zero safety-factor instead.",
@@ -305,13 +307,12 @@ void ParticipantConfiguration::xmlTagCallback(
           _participants.back()->getName(), name, name);
     }
 
-    if ((allowDirectAccess == true) && (from == "")) {
-      PRECICE_ERROR("Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a direct access defined. "
-                    "This combination of options is not allowed. "
-                    "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />"
-                    " or remove the direct access option.",
-                    _participants.back()->getName(), name, name);
-    }
+    PRECICE_CHECK(allowDirectAccess && from.empty(),
+                  "Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a direct access defined. "
+                  "This combination of options is not allowed. "
+                  "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />"
+                  " or remove the direct access option.",
+                  _participants.back()->getName(), name, name);
 
     _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter, allowDirectAccess);
   } else if (tag.getName() == TAG_WRITE) {
