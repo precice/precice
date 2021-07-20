@@ -780,11 +780,11 @@ public:
   ///@{
 
   /**
-   * @brief setBoundingBoxes Define a region of interest on a received mesh
+   * @brief setMeshAccessRegion Define a region of interest on a received mesh
    *        (<use-mesh ... from="otherParticipant />") in order to receive
    *        only a certain mesh region. Have a look at the website under
    *        https://precice.org/couple-your-code-direct-access.html or
-   *        navigate manually to the page  [sidebar]->Couple your code
+   *        navigate manually to the page  Docs->Couple your code
    *        -> Advanced topics -> Accessing received meshes directly for
    *        a comprehensive documentation
    *
@@ -817,7 +817,7 @@ public:
    *
    * @pre 'initialize' has not yet been called.
    */
-  void setBoundingBoxes(
+  void setMeshAccessRegion(
       const int     meshID,
       const double *boundingBoxCollection,
       const int     size) const;
@@ -833,7 +833,7 @@ public:
    * @param[out] coordinates associated to the values (dim * @p getLocallyRelevantMeshSize)
    *
    * @pre IDs and coordinates need to have the correct size, which can be requested by getMeshVertexSize)
-   * @pre bounding box has been defined using @p setBoundingBoxes
+   * @pre bounding box has been defined using @p setMeshAccessRegion
    */
   void getMeshVerticesAndIDs(
       const int meshID,

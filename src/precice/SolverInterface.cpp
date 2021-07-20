@@ -298,11 +298,11 @@ void SolverInterface::readScalarData(
   return _impl->readScalarData(dataID, valueIndex, value);
 }
 
-void SolverInterface::setBoundingBoxes(const int     meshID,
-                                       const double *boundingBox,
-                                       const int     size) const
+void SolverInterface::setMeshAccessRegion(const int     meshID,
+                                          const double *boundingBox,
+                                          const int     size) const
 {
-  _impl->setBoundingBoxes(meshID, boundingBox, size);
+  _impl->setMeshAccessRegion(meshID, boundingBox, size);
 }
 
 void SolverInterface::getMeshVerticesAndIDs(const int meshID,

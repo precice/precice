@@ -101,14 +101,14 @@ void ReceivedPartition::compute()
       // Filter out vertices not laying in the bounding box
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       // To discuss: maybe check this somewhere in the SolverInterfaceImpl, as we have now a similar check for the parallel case
-      PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setBoundingBoxes with valid data?", _mesh->getName());
+      PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
       unsigned int nFilteredVertices = 0;
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { if(!_bb.contains(v))
               ++nFilteredVertices;
           return _bb.contains(v); });
 
       if (nFilteredVertices > 0)
-        PRECICE_WARN("{} vertices on mesh \"{}\" have been filtered out due to the defined bounding box in \"setBoundingBoxes\" "
+        PRECICE_WARN("{} vertices on mesh \"{}\" have been filtered out due to the defined bounding box in \"setMeshAccessRegion\" "
                      "in serial mode. Associated data values of the filtered vertices will be filled with zero values in order to provide valid data for other participants when reading data.",
                      nFilteredVertices, _mesh->getName());
 
@@ -597,7 +597,7 @@ void ReceivedPartition::createOwnerInformation()
     // Decide upon owners,
     PRECICE_DEBUG("Decide owners, first round by rough load balancing");
     // Provide a more descriptive error message if direct access was enabled
-    PRECICE_CHECK(!(ranksAtInterface == 0 && _allowDirectAccess), "After repartitioning of mesh \"{}\" all ranks are empty. Did you forget to call \"setBoundingBoxes\" with valid data?", _mesh->getName());
+    PRECICE_CHECK(!(ranksAtInterface == 0 && _allowDirectAccess), "After repartitioning of mesh \"{}\" all ranks are empty. Did you forget to call \"setMeshAccessRegion\" with valid data?", _mesh->getName());
 
     PRECICE_ASSERT(ranksAtInterface != 0);
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing

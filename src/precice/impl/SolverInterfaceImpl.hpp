@@ -479,9 +479,9 @@ public:
    *            [x_min0, x_max0, y_min0, y_max0, z_min0, z_max0, x_min1 ... ]
    * @param[in] size number of bounding boxes.
    */
-  void setBoundingBoxes(const int     meshID,
-                        const double *boundingBoxCollection,
-                        const int     size) const;
+  void setMeshAccessRegion(const int     meshID,
+                           const double *boundingBoxCollection,
+                           const int     size) const;
 
   /**
    * @brief getMeshVerticesWithIDs Iterates over the region of

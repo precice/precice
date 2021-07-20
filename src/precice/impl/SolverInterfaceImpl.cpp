@@ -1298,7 +1298,7 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_DEBUG("Read value = {}", value);
 }
 
-void SolverInterfaceImpl::setBoundingBoxes(
+void SolverInterfaceImpl::setMeshAccessRegion(
     const int     meshID,
     const double *boundingBox,
     const int     size) const

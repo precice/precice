@@ -175,7 +175,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                                   "In case no mapping has been defined (you want to access "
                                   "the mesh and related data direct), there is no obvious way on how to decompose the "
                                   "mesh, since no mesh needs to be provided by the participant. For this purpose, bounding "
-                                  "boxes can be defined (see API function \"setBoundingBoxes\") and used by selecting "
+                                  "boxes can be defined (see API function \"setMeshAccessRegion\") and used by selecting "
                                   "the option direct-access=\"true\".");
 
   tagUseMesh.addAttribute(attrDirectAccess);

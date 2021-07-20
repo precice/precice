@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshExplicit)
     const int dataID      = couplingInterface.getDataID("Velocities", otherMeshID);
 
     // Define region of interest, where we could obtain direct write access
-    couplingInterface.setBoundingBoxes(otherMeshID, boundingBox.data(), 1);
+    couplingInterface.setMeshAccessRegion(otherMeshID, boundingBox.data(), 1);
 
     double dt = couplingInterface.initialize();
     // Get the size of the filtered mesh within the bounding box
@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setBoundingBoxes(otherMeshID, boundingBox.data(), 1);
+    interface.setMeshAccessRegion(otherMeshID, boundingBox.data(), 1);
 
     double dt = interface.initialize();
     // Get the size of the filtered mesh within the bounding box
@@ -884,7 +884,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
     // TODO: Implement something in order to derive the bounding box from the mesh
 
     // Define region of interest, where we could obtain direct write access
-    couplingInterface.setBoundingBoxes(otherMeshID, boundingBox.data(), 1);
+    couplingInterface.setMeshAccessRegion(otherMeshID, boundingBox.data(), 1);
 
     double dt = couplingInterface.initialize();
     // Get the size of the filtered mesh within the bounding box
@@ -940,7 +940,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
     // Define the mesh
     couplingInterface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
     // Define region of interest, where we could obtain direct write access
-    couplingInterface.setBoundingBoxes(otherMeshID, boundingBox.data(), 1);
+    couplingInterface.setMeshAccessRegion(otherMeshID, boundingBox.data(), 1);
     // Initialize
     double dt = couplingInterface.initialize();
 
