@@ -947,6 +947,18 @@ void runTestAccessReceivedMesh(const std::string         configName,
 
     interface.setMeshVertices(meshID, size, positions.data(), ids.data());
 
+    {
+      // Check, if we can use the 'getMeshVerticesAndIDs' function on provided meshes as well,
+      // though the actual purpose is of course using it on received meshes
+      const int ownMeshSize = interface.getMeshVertexSize(meshID);
+      BOOST_TEST(ownMeshSize == size);
+      std::vector<int>    ownIDs(ownMeshSize);
+      std::vector<double> ownCoordinates(ownMeshSize * dim);
+      interface.getMeshVerticesAndIDs(meshID, ownMeshSize, ownIDs.data(), ownCoordinates.data());
+      BOOST_TEST(ownIDs == ids);
+      BOOST_TEST(ownCoordinates == ownCoordinates);
+    }
+
     // Initialize the solverinterface
     double dt = interface.initialize();
 
