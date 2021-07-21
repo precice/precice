@@ -1304,6 +1304,7 @@ void SolverInterfaceImpl::setMeshAccessRegion(
 {
   PRECICE_TRACE(meshID);
   PRECICE_REQUIRE_MESH_USE(meshID);
+  PRECICE_CHECK(!_accessRegionDefined, "setMeshAccessRegion may only be called once.");
   PRECICE_CHECK(boundingBox != nullptr, "setMeshAccessRegion was called with boundingBox == nullptr.");
   //  PRECICE_REQUIRE_MESH_MODIFY(meshID);
 
@@ -1316,7 +1317,7 @@ void SolverInterfaceImpl::setMeshAccessRegion(
   std::vector<double> bounds(dim * 2);
 
   for (int d = 0; d < dim; ++d) {
-    // Assert that min is lower or equal to max
+    // Check that min is lower or equal to max
     PRECICE_CHECK(boundingBox[2 * d] <= boundingBox[2 * d + 1], "Your bounding box is ill defined, i.e. it has a negative volume. The required format is [x_min, x_max...]");
     bounds[2 * d]     = boundingBox[2 * d];
     bounds[2 * d + 1] = boundingBox[2 * d + 1];
@@ -1325,6 +1326,8 @@ void SolverInterfaceImpl::setMeshAccessRegion(
   mesh::BoundingBox providedBoundingBox(bounds);
   // Expand the mesh associated bounding box
   mesh->expandBoundingBox(providedBoundingBox);
+  // and set a flag so that we know the function was called
+  _accessRegionDefined = true;
 }
 
 void SolverInterfaceImpl::getMeshVerticesAndIDs(

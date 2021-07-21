@@ -798,17 +798,18 @@ public:
    * is not required any more. In order to re-partition the received
    * mesh, the participant needs to define the mesh region it wants
    * read data from and write data to.
-   * Defining a bounding box for serial runs of the solver (not to
-   * be confused with serial coupling mode) is valid. However, a
+   * The mesh region is specified through an axis-aligned bounding
+   * box given by the lower and upper [min and max] bounding-box
+   * limits in each space dimension [x, y, z].
+   *
+   * @note Defining a bounding box for serial runs of the solver (not
+   * to be confused with serial coupling mode) is valid. However, a
    * warning is raised in case vertices are filtered out completely
    * on the receiving side, since the associated data values of the
    * filtered vertices are filled with zero data.
-   * The mesh region is specified through a collection of axis-aligned
-   * bounding boxes given by the lower and upper [min and max]
-   * bounding-box limits in each space dimension [x, y, z].
    *
    * @param[in] meshID ID of the mesh you want to access through the bounding box
-   * @param[in] boundingBox Axis aligned bounding boxes which havein 3D the format
+   * @param[in] boundingBox Axis aligned bounding boxes which has in 3D the format
    *            [x_min, x_max, y_min, y_max, z_min, z_max]
    *
    * @pre 'initialize' has not yet been called.
@@ -827,8 +828,7 @@ public:
    * @param[out] ids ids corresponding to the coordinates
    * @param[out] coordinates associated to the values (dim * @p getLocallyRelevantMeshSize)
    *
-   * @pre IDs and coordinates need to have the correct size, which can be requested by getMeshVertexSize)
-   * @pre bounding box has been defined using @p setMeshAccessRegion
+   * @pre IDs and coordinates need to have the correct size, which can be queried by getMeshVertexSize
    */
   void getMeshVerticesAndIDs(
       const int meshID,

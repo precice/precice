@@ -598,8 +598,12 @@ void ReceivedPartition::createOwnerInformation()
     // Decide upon owners,
     PRECICE_DEBUG("Decide owners, first round by rough load balancing");
     // Provide a more descriptive error message if direct access was enabled
-    PRECICE_CHECK(!(ranksAtInterface == 0 && _allowDirectAccess), "After repartitioning of mesh \"{}\" all ranks are empty. Did you forget to call \"setMeshAccessRegion\" with valid data?", _mesh->getName());
-
+    PRECICE_CHECK(!(ranksAtInterface == 0 && _allowDirectAccess),
+                  "After repartitioning of mesh \"{}\" all ranks are empty. "
+                  "Please check the dimensions of the provided bounding box "
+                  "(in \"setMeshAccessRegion\") and verify that it covers vertices "
+                  "in the mesh or check the definition of the provided meshes.",
+                  _mesh->getName());
     PRECICE_ASSERT(ranksAtInterface != 0);
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
