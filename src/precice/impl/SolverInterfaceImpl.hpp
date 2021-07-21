@@ -587,7 +587,7 @@ private:
   // SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
   // setMeshAccessRegion may only be called once
-  bool _accessRegionDefined = false;
+  mutable bool _accessRegionDefined = false;
 
   /// The current State of the solverinterface
   State _state{State::Constructed};

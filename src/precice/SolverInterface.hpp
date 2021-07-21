@@ -808,6 +808,9 @@ public:
    * on the receiving side, since the associated data values of the
    * filtered vertices are filled with zero data.
    *
+   * @note This function can only be called once per participant and
+   * rank and an assert is thrown, if you try to call it more than once.
+   *
    * @param[in] meshID ID of the mesh you want to access through the bounding box
    * @param[in] boundingBox Axis aligned bounding boxes which has in 3D the format
    *            [x_min, x_max, y_min, y_max, z_min, z_max]
