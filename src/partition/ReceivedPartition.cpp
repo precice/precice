@@ -491,16 +491,20 @@ void ReceivedPartition::prepareBoundingBox()
   if (_allowDirectAccess) {
     auto &other_bb = _mesh->getBoundingBox();
     _bb.expandBy(other_bb);
-    // TODO: How to treat the scale by safety factor here?
-    // The default value of 0.5 is for the current mappings
-    // still too large in comparison to what we want to do here.
-    // On the other hand, ignoring it makes the xml configuration
-    // inconsistent and does not provide any configurable option for
-    // 'bad' matching geometries.
-    //    _bb.scaleBy(_safetyFactor);
-    // TODO: Prevent duplicated scale by bounding boxes here?
-    // (Aren't there cases where we duplicate the scaling above)
-    PRECICE_WARN("Ignoring the safety factor for bounding box initialization");
+
+    // The safety factor is for mapping based partitionings applied, as usual.
+    // For the direct access, however, we don't apply any safety factor scaling.
+    // If the user defines a safety factor and the partitioning is entirely based
+    // on the defined access region (setMeshAccessRegion), we raise a warning
+    // to inform the user
+    const float defaultSafetyFactor = 0.5;
+    if (utils::MasterSlave::isMaster() && !hasAnyMapping() && (_safetyFactor != defaultSafetyFactor)) {
+      PRECICE_WARN("The received mesh \"{}\" was entirely partitioned based on the defined access region "
+                   "(setMeshAccessRegion) and a safety-factor was defined. However, the safety factor "
+                   "will be ignored in this case. You may want to modify the access region by modifying "
+                   "the specified region in the function itself.",
+                   _mesh->getName());
+    }
     _boundingBoxPrepared = true;
   }
 }

@@ -811,6 +811,24 @@ public:
    * @note This function can only be called once per participant and
    * rank and an assert is thrown, if you try to call it more than once.
    *
+   * @note If you combine the direct access with a mpping (say you want
+   * to read data from a defined mesh, as usual, but you want to directly
+   * access and write data on a received mesh without a mapping) you may
+   * not need this function at all since the region of interest is already
+   * defined through the defined mesh used for data reading. This is the
+   * case if you define any mapping involving the directly accessed mesh
+   * on the receiving participant. (In parallel, only the cases
+   * read-consistent and write-conservative are relevant, as usual).
+   *
+   * @note The safety factor scaling (see safety-factor in the configuration
+   * file) is not applied to the defined access region and a specified safety
+   * will be ignored in case there is no additional mapping involved. However,
+   * in case a mapping is in addition to the direct access involved, you will
+   * receive (and gain access to) vertices inside the defined access region
+   * plus vertices inside the safety factor region resulting from the mapping.
+   * The default value of the safety factor is 0.5,i.e., the defined access
+   * region as computed through the involved provided mesh is by 50% enlarged.
+   *
    * @param[in] meshID ID of the mesh you want to access through the bounding box
    * @param[in] boundingBox Axis aligned bounding boxes which has in 3D the format
    *            [x_min, x_max, y_min, y_max, z_min, z_max]
