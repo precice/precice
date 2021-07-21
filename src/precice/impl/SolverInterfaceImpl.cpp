@@ -1308,7 +1308,6 @@ void SolverInterfaceImpl::setMeshAccessRegion(
   PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
   PRECICE_CHECK(!_accessRegionDefined, "setMeshAccessRegion may only be called once.");
   PRECICE_CHECK(boundingBox != nullptr, "setMeshAccessRegion was called with boundingBox == nullptr.");
-  //  PRECICE_REQUIRE_MESH_MODIFY(meshID);
 
   // Get the related mesh
   MeshContext & context = _accessor->meshContext(meshID);
