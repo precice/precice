@@ -393,6 +393,22 @@ const char *precicec_actionReadIterationCheckpoint()
   return precice::constants::actionReadIterationCheckpoint().c_str();
 }
 
+void precicec_setMeshAccessRegion(
+    const int     meshID,
+    const double *boundingBox)
+{
+  impl->setMeshAccessRegion(meshID, boundingBox);
+}
+
+void precicec_getMeshVerticesAndIDs(
+    const int meshID,
+    const int size,
+    int *     ids,
+    double *  coordinates)
+{
+  impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
+}
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif

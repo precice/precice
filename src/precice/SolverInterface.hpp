@@ -847,7 +847,7 @@ public:
    * @param[in]  meshID corresponding mesh ID
    * @param[in]  size return value of getMeshSize
    * @param[out] ids ids corresponding to the coordinates
-   * @param[out] coordinates associated to the values (dim * @p getLocallyRelevantMeshSize)
+   * @param[out] coordinates associated to the values (dim * @p getMeshVertexSize)
    *
    * @pre IDs and coordinates need to have the correct size, which can be queried by getMeshVertexSize
    */

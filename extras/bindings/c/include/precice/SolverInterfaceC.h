@@ -450,6 +450,31 @@ const char *precicec_actionWriteIterationCheckpoint();
 // @brief Name of action for reading iteration checkpoint.
 const char *precicec_actionReadIterationCheckpoint();
 
+///@}
+
+/** @name Experimental Data Access
+ * These API functions are \b experimental and may change in future versions.
+ */
+///@{
+
+/**
+ * @brief Have a look at the c++ API documentation
+ */
+void precicec_setMeshAccessRegion(
+    const int     meshID,
+    const double *boundingBox);
+
+/**
+ * @brief Have a look at the c++ API documentation
+ */
+void precicec_getMeshVerticesAndIDs(
+    const int meshID,
+    const int size,
+    int *     ids,
+    double *  coordinates);
+
+///@}
+
 #ifdef __cplusplus
 }
 #endif
