@@ -46,16 +46,6 @@ void AitkenAcceleration::initialize(DataMap &cplData)
   double          initializer = std::numeric_limits<double>::max();
   Eigen::VectorXd toAppend    = Eigen::VectorXd::Constant(entries, initializer);
   utils::append(_residuals, toAppend);
-
-  // Append column for old values if not done by coupling scheme yet
-  for (DataMap::value_type &pair : cplData) {
-    int cols = pair.second->oldValues.cols();
-    if (cols < 1) {
-      PRECICE_ASSERT(pair.second->values().size() > 0, pair.first);
-      utils::append(pair.second->oldValues,
-                    (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values().size()));
-    }
-  }
 }
 
 void AitkenAcceleration::performAcceleration(
@@ -70,7 +60,7 @@ void AitkenAcceleration::performAcceleration(
   Eigen::VectorXd oldValues;
   for (int id : _dataIDs) {
     utils::append(values, cplData[id]->values());
-    utils::append(oldValues, (Eigen::VectorXd) cplData[id]->oldValues.col(0));
+    utils::append(oldValues, (Eigen::VectorXd) cplData[id]->previousIteration());
   }
 
   // Compute current residuals
@@ -99,7 +89,7 @@ void AitkenAcceleration::performAcceleration(
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type &pair : cplData) {
     auto &      values    = pair.second->values();
-    const auto &oldValues = pair.second->oldValues.col(0);
+    const auto &oldValues = pair.second->previousIteration();
     values *= omega;
     for (int i = 0; i < values.size(); i++) {
       values(i) += oldValues(i) * oneMinusOmega;

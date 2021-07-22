@@ -81,7 +81,6 @@ void SerialCouplingScheme::exchangeInitialData()
   } else { // second participant
     PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
     if (sendsInitializedData()) {
-      updateOldValues(getSendData());
       // The second participant sends the initialized data to the first participant
       // here, which receives the data on call of initialize().
       sendData(getM2N(), getSendData());
@@ -105,7 +104,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     }
     sendData(getM2N(), getSendData());
     if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence();
+      convergence = receiveConvergence(getM2N());
     }
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
@@ -113,7 +112,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
-      convergence = accelerate();
+      convergence = doImplicitStep();
       sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");
