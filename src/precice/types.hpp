@@ -1,0 +1,37 @@
+#pragma once
+
+namespace precice {
+
+/**
+ * Type used for the IDs of vertices
+ */
+using VertexID = int;
+
+/**
+ * Type used for the IDs of edges
+ */
+using EdgeID = int;
+
+/**
+ * Type used for the IDs of triangles
+ */
+using TriangleID = int;
+
+/**
+ * Type used for the IDs of matching entities
+ */
+using MatchID = int;
+
+/**
+ * Type used for the IDs of data
+ */
+using DataID = int;
+
+/**
+ * Type used for the IDs of meshes
+ */
+using MeshID = int;
+
+using Rank = int;
+
+} // namespace precice

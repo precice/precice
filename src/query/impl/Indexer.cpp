@@ -1,6 +1,8 @@
-#include "Indexer.hpp"
 #include <boost/range/irange.hpp>
+
+#include "Indexer.hpp"
 #include "mesh/BoundingBox.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace query {
@@ -12,7 +14,7 @@ std::shared_ptr<Indexer> Indexer::instance()
   return indexer;
 }
 
-MeshIndices &Indexer::cacheEntry(int meshID)
+MeshIndices &Indexer::cacheEntry(MeshID meshID)
 {
   auto result = _cachedTrees.emplace(std::make_pair(meshID, MeshIndices{}));
   return result.first->second;
@@ -95,7 +97,7 @@ void Indexer::clearCache()
   _cachedTrees.clear();
 }
 
-void Indexer::clearCache(int meshID)
+void Indexer::clearCache(MeshID meshID)
 {
   _cachedTrees.erase(meshID);
 }
