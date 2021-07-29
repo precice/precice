@@ -246,9 +246,9 @@ void CommunicateMesh::broadcastReceiveMesh(
   int  dim             = mesh.getDimensions();
   Rank rankBroadcaster = 0;
 
-  std::vector<mesh::Vertex *>   vertices;
+  std::vector<mesh::Vertex *>        vertices;
   std::map<VertexID, mesh::Vertex *> vertexMap;
-  int                           numberOfVertices = 0;
+  int                                numberOfVertices = 0;
   _communication->broadcast(numberOfVertices, rankBroadcaster);
 
   if (numberOfVertices > 0) {
