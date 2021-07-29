@@ -136,12 +136,10 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   if (context.isNamed(nameParticipant0)) {
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     BOOST_TEST(receiveCouplingData->values().size() == 3);
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 0); // @todo: This is not expected.
-    //BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);  // @todo: Currently failing, previousIteration should be initialized for all participants?
+    BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
     BOOST_TEST(sendCouplingData->values().size() == 1);
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 0); // @todo: This is not expected.
-    //BOOST_TEST(sendCouplingData->previousIteration().size() == 1);  // @todo: Currently failing, previousIteration should be initialized for all participants?
+    BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
     BOOST_TEST(cplScheme.isImplicitCouplingScheme());
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     sendCouplingData->values() = Eigen::VectorXd::Constant(1, 4.0);
@@ -172,10 +170,10 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
     BOOST_TEST(receiveCouplingData->values().size() == 1);
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1); // here, previousIteration is correctly initialized, see above
+    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(sendCouplingData->values().size() == 3);
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 3); // here, previousIteration is correctly initialized, see above
+    BOOST_TEST(sendCouplingData->previousIteration().size() == 3);
     cplScheme.initializeData();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
