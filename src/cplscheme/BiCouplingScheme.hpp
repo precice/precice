@@ -18,7 +18,7 @@ struct testExtrapolateData;
 
 namespace precice {
 namespace cplscheme {
-struct CouplingData;
+class CouplingData;
 
 /**
  * @brief Abstract base class for coupling schemes with two participants.
@@ -102,9 +102,6 @@ protected:
     PRECICE_ASSERT(_m2n);
     return _m2n;
   }
-
-  /// @brief Receive from coupling partner and return whether coupling scheme has converged
-  bool receiveConvergence();
 
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
