@@ -53,8 +53,8 @@ void runCoupling(
   BOOST_TEST(mesh->vertices().size() > 0);
   mesh::Vertex &  vertex               = mesh->vertices().at(0);
   int             index                = vertex.getID();
-  auto &          dataValues0          = mesh->data().at(0)->values();
-  auto &          dataValues1          = mesh->data().at(1)->values();
+  auto &          dataValues0          = mesh->data(0)->values();
+  auto &          dataValues1          = mesh->data(1)->values();
   double          initialStepsizeData0 = 5.0;
   double          stepsizeData0        = 5.0;
   Eigen::VectorXd initialStepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
@@ -1013,8 +1013,8 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
   cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
@@ -1113,8 +1113,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1177,8 +1177,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1240,8 +1240,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, dataRequiresInitialization);
-  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, not dataRequiresInitialization);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization);
 
   // Add convergence measures
   int                                    minIterations = 3;
