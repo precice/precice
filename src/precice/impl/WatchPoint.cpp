@@ -59,12 +59,10 @@ void WatchPoint::initialize()
 {
   PRECICE_TRACE();
 
-  query::Index indexTree(_mesh);
-
   if (_mesh->vertices().size() > 0) {
-    auto projection   = indexTree.findNearestProjection(_point, 4);
-    _interpolation    = std::make_unique<mapping::Polation>(projection.first);
-    _shortestDistance = projection.second;
+    auto match        = query::Index{_mesh}.findNearestProjection(_point, 4);
+    _interpolation    = std::make_unique<mapping::Polation>(match.polation);
+    _shortestDistance = match.distance;
   }
 
   if (utils::MasterSlave::isSlave()) {
