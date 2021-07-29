@@ -65,7 +65,7 @@ private:
   short _dim;
 
   /// Unique (among vertices in one mesh) ID of the vertex.
-  int _id;
+  VertexID _id;
 
   /// global (unique) index for parallel simulations
   int _globalIndex = -1;
@@ -102,7 +102,7 @@ void Vertex::setCoords(
   _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
 }
 
-inline int Vertex::getID() const
+inline VertexID Vertex::getID() const
 {
   return _id;
 }
