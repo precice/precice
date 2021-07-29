@@ -1,4 +1,5 @@
 #ifndef PRECICE_NO_MPI
+
 #include <Eigen/Core>
 #include <algorithm>
 #include <deque>
@@ -9,6 +10,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
+
 #include "action/RecorderAction.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/constants.hpp"
@@ -23,6 +25,7 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -204,12 +207,12 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
 
   //was necessary to replace pre-defined geometries
   if (context.isNamed("SolverOne") && couplingInterface.hasMesh("MeshOne")) {
-    int meshID = couplingInterface.getMeshID("MeshOne");
+    MeshID meshID = couplingInterface.getMeshID("MeshOne");
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
   }
   if (context.isNamed("SolverTwo") && couplingInterface.hasMesh("Test-Square")) {
-    int meshID = couplingInterface.getMeshID("Test-Square");
+    MeshID meshID = couplingInterface.getMeshID("Test-Square");
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
   }
@@ -268,7 +271,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling)
     BOOST_TEST(timestep == 20);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int meshID = precice.getMeshID("Test-Square");
+    MeshID meshID = precice.getMeshID("Test-Square");
     precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     double maxDt     = precice.initialize();
@@ -339,7 +342,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int meshID = cplInterface.getMeshID("Test-Square");
+    MeshID meshID = cplInterface.getMeshID("Test-Square");
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
@@ -520,12 +523,12 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
 
-    int squareID       = cplInterface.getMeshID("Test-Square");
-    int forcesID       = cplInterface.getDataID("Forces", squareID);
-    int pressuresID    = cplInterface.getDataID("Pressures", squareID);
-    int velocitiesID   = cplInterface.getDataID("Velocities", squareID);
-    int temperaturesID = cplInterface.getDataID("Temperatures", squareID);
-    int meshID         = cplInterface.getMeshID("Test-Square");
+    int    squareID       = cplInterface.getMeshID("Test-Square");
+    int    forcesID       = cplInterface.getDataID("Forces", squareID);
+    int    pressuresID    = cplInterface.getDataID("Pressures", squareID);
+    int    velocitiesID   = cplInterface.getDataID("Velocities", squareID);
+    int    temperaturesID = cplInterface.getDataID("Temperatures", squareID);
+    MeshID meshID         = cplInterface.getMeshID("Test-Square");
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     cplInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
@@ -588,7 +591,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSolverGeometry)
   BOOST_TEST(couplingInterface.getDimensions() == 3);
   if (context.isNamed("SolverOne")) {
     //was necessary to replace pre-defined geometries
-    int meshID = couplingInterface.getMeshID("MeshOne");
+    MeshID meshID = couplingInterface.getMeshID("MeshOne");
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
 
@@ -601,13 +604,13 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSolverGeometry)
     couplingInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int meshID = couplingInterface.getMeshID("SolverGeometry");
-    int i0     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    int i1     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    int i2     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
-    int e0     = couplingInterface.setMeshEdge(meshID, i0, i1);
-    int e1     = couplingInterface.setMeshEdge(meshID, i1, i2);
-    int e2     = couplingInterface.setMeshEdge(meshID, i2, i0);
+    MeshID meshID = couplingInterface.getMeshID("SolverGeometry");
+    int    i0     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    int    i1     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    int    i2     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
+    int    e0     = couplingInterface.setMeshEdge(meshID, i0, i1);
+    int    e1     = couplingInterface.setMeshEdge(meshID, i1, i2);
+    int    e2     = couplingInterface.setMeshEdge(meshID, i2, i0);
     couplingInterface.setMeshTriangle(meshID, e0, e1, e2);
     double dt = couplingInterface.initialize();
 
@@ -641,7 +644,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling)
   std::vector<int>    ids       = {0, 0, 0, 0};
 
   if (context.isNamed("SolverOne")) {
-    int meshID = cplInterface.getMeshID("Test-Square-One");
+    MeshID meshID = cplInterface.getMeshID("Test-Square-One");
     cplInterface.setMeshVertices(meshID, 4, positions.data(), ids.data());
     for (int i = 0; i < 4; i++)
       cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
@@ -659,7 +662,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling)
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int meshID = cplInterface.getMeshID("Test-Square-Two");
+    MeshID meshID = cplInterface.getMeshID("Test-Square-Two");
     cplInterface.setMeshVertices(meshID, 4, positions.data(), ids.data());
     for (int i = 0; i < 4; i++)
       cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
@@ -1012,10 +1015,10 @@ BOOST_AUTO_TEST_CASE(testBug)
   if (context.isNamed("Flite")) {
     SolverInterface precice("Flite", configName, 0, 1);
 
-    int meshID             = precice.getMeshID("FliteNodes");
-    int forcesID           = precice.getDataID("Forces", meshID);
-    int displacementsID    = precice.getDataID("Displacements", meshID);
-    int oldDisplacementsID = precice.getDataID("OldDisplacements", meshID);
+    MeshID meshID             = precice.getMeshID("FliteNodes");
+    int    forcesID           = precice.getDataID("Forces", meshID);
+    int    displacementsID    = precice.getDataID("Displacements", meshID);
+    int    oldDisplacementsID = precice.getDataID("OldDisplacements", meshID);
     BOOST_TEST(precice.getDimensions() == 3);
     for (Vector3d &coord : coords) {
       precice.setMeshVertex(meshID, coord.data());
@@ -1042,7 +1045,7 @@ BOOST_AUTO_TEST_CASE(testBug)
     BOOST_TEST(context.isNamed("Calculix"));
     SolverInterface precice("Calculix", configName, 0, 1);
 
-    int meshID = precice.getMeshID("CalculixNodes");
+    MeshID meshID = precice.getMeshID("CalculixNodes");
     for (Vector3d &coord : coords) {
       precice.setMeshVertex(meshID, coord.data());
     }
@@ -1108,7 +1111,7 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
   } else if (context.isNamed("SolverTwo")) {
     SolverInterface precice(context.name, config, 0, 1);
 
-    int meshID = precice.getMeshID("MeshC");
+    MeshID meshID = precice.getMeshID("MeshC");
     precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
     double dt = precice.initialize();
 
@@ -1133,7 +1136,7 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
     BOOST_TEST(context.isNamed("SolverThree"));
     SolverInterface precice(context.name, config, 0, 1);
 
-    int meshID = precice.getMeshID("MeshD");
+    MeshID meshID = precice.getMeshID("MeshD");
     precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
     double dt = precice.initialize();
 
@@ -1229,9 +1232,9 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
   if (context.isNamed("SOLIDZ1") ||
       context.isNamed("SOLIDZ2") ||
       context.isNamed("SOLIDZ3")) {
-    int meshID      = -1;
-    int dataWriteID = -1;
-    int dataReadID  = -1;
+    MeshID meshID      = -1;
+    int    dataWriteID = -1;
+    int    dataReadID  = -1;
 
     SolverInterface precice(context.name, _pathToTests + "/multi.xml", 0, 1);
     BOOST_TEST(precice.getDimensions() == 2);
@@ -1290,12 +1293,12 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
     BOOST_TEST(context.isNamed("NASTIN"));
     SolverInterface precice("NASTIN", _pathToTests + "/multi.xml", 0, 1);
     BOOST_TEST(precice.getDimensions() == 2);
-    int meshID1      = precice.getMeshID("NASTIN_Mesh1");
-    int meshID2      = precice.getMeshID("NASTIN_Mesh2");
-    int meshID3      = precice.getMeshID("NASTIN_Mesh3");
-    int dataWriteID1 = precice.getDataID("Forces1", meshID1);
-    int dataWriteID2 = precice.getDataID("Forces2", meshID2);
-    int dataWriteID3 = precice.getDataID("Forces3", meshID3);
+    MeshID meshID1      = precice.getMeshID("NASTIN_Mesh1");
+    MeshID meshID2      = precice.getMeshID("NASTIN_Mesh2");
+    MeshID meshID3      = precice.getMeshID("NASTIN_Mesh3");
+    int    dataWriteID1 = precice.getDataID("Forces1", meshID1);
+    int    dataWriteID2 = precice.getDataID("Forces2", meshID2);
+    int    dataWriteID3 = precice.getDataID("Forces3", meshID3);
 
     std::vector<int> vertexIDs1;
     int              vertexID = -1;
@@ -1483,13 +1486,13 @@ BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
 
   SolverInterface cplInterface(context.name, configFile, 0, 1);
 
-  const int meshID = cplInterface.getMeshID(meshName);
+  const MeshID meshID = cplInterface.getMeshID(meshName);
 
-  int vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
+  VertexID vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
 
   double maxDt = cplInterface.initialize();
 
-  int dataID = cplInterface.getDataID("Data", meshID);
+  DataID dataID = cplInterface.getDataID("Data", meshID);
 
   if (context.isNamed("SolverOne")) {
     cplInterface.writeScalarData(dataID, vertexID, value);
@@ -1523,7 +1526,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
 
   Vector2d vertex{0.0, 0.0};
 
-  int vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
+  VertexID vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
 
   cplInterface.initialize();
   int numberOfAdvanceCalls = 0;
@@ -1535,7 +1538,7 @@ BOOST_AUTO_TEST_CASE(PreconditionerBug)
       cplInterface.markActionFulfilled(actionReadIterationCheckpoint());
 
     if (context.isNamed("SolverTwo")) {
-      int dataID = cplInterface.getDataID("DataOne", meshID);
+      DataID dataID = cplInterface.getDataID("DataOne", meshID);
       // to get convergence in first timestep (everything 0), but not in second timestep
       Vector2d value{0.0, 2.0 + numberOfAdvanceCalls * numberOfAdvanceCalls};
       cplInterface.writeVectorData(dataID, vertexID, value.data());
@@ -1566,7 +1569,7 @@ void testSummationAction(const std::string &configFile, TestContext const &conte
     Vector3d coordC{1.0, 1.0, 0.3};
     Vector3d coordD{0.0, 1.0, 0.3};
 
-    const int meshID = cplInterface.getMeshID("MeshTarget");
+    const MeshID meshID = cplInterface.getMeshID("MeshTarget");
 
     int idA = cplInterface.setMeshVertex(meshID, coordA.data());
     int idB = cplInterface.setMeshVertex(meshID, coordB.data());
@@ -1606,7 +1609,7 @@ void testSummationAction(const std::string &configFile, TestContext const &conte
     Vector3d coordC{1.0, 1.0, 0.3};
     Vector3d coordD{0.0, 1.0, 0.3};
 
-    const int meshID = cplInterface.getMeshID("MeshOne");
+    const MeshID meshID = cplInterface.getMeshID("MeshOne");
 
     int idA = cplInterface.setMeshVertex(meshID, coordA.data());
     int idB = cplInterface.setMeshVertex(meshID, coordB.data());
@@ -1642,7 +1645,7 @@ void testSummationAction(const std::string &configFile, TestContext const &conte
     Vector3d coordC{1.0, 1.0, 0.3};
     Vector3d coordD{0.0, 1.0, 0.3};
 
-    const int meshID = cplInterface.getMeshID("MeshTwo");
+    const MeshID meshID = cplInterface.getMeshID("MeshTwo");
 
     int idA = cplInterface.setMeshVertex(meshID, coordA.data());
     int idB = cplInterface.setMeshVertex(meshID, coordB.data());
@@ -1695,7 +1698,7 @@ void testWatchIntegral(const std::string &configFile, TestContext &context)
     Vector2d coordB{1.0, 0.0};
     Vector2d coordC{1.0, 2.0};
 
-    const int meshID = cplInterface.getMeshID("MeshOne");
+    const MeshID meshID = cplInterface.getMeshID("MeshOne");
 
     int idA = cplInterface.setMeshVertex(meshID, coordA.data());
     int idB = cplInterface.setMeshVertex(meshID, coordB.data());
@@ -2095,7 +2098,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
 
   std::vector<double> writeValues = {1.0, 1.01, 2.0, 2.5, 2.8, 2.81};
 
-  int vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
+  VertexID vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
 
   cplInterface.initialize();
   int numberOfAdvanceCalls = 0;
@@ -2109,7 +2112,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
     }
 
     if (context.isNamed("SolverTwo")) {
-      int dataID = cplInterface.getDataID("Data2", meshID);
+      DataID dataID = cplInterface.getDataID("Data2", meshID);
       cplInterface.writeScalarData(dataID, vertexID, writeValues.at(numberOfAdvanceCalls));
     }
 
@@ -2381,12 +2384,12 @@ BOOST_AUTO_TEST_CASE(MultipleFromMappings)
   Vector2d        vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    const int meshIDTop      = interface.getMeshID("MeshATop");
-    const int meshIDBottom   = interface.getMeshID("MeshABottom");
-    int       vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
-    int       vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
-    int       dataIDTop      = interface.getDataID("Pressure", meshIDTop);
-    int       dataIDBottom   = interface.getDataID("Pressure", meshIDBottom);
+    const MeshID meshIDTop      = interface.getMeshID("MeshATop");
+    const MeshID meshIDBottom   = interface.getMeshID("MeshABottom");
+    int          vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
+    int          vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
+    int          dataIDTop      = interface.getDataID("Pressure", meshIDTop);
+    int          dataIDBottom   = interface.getDataID("Pressure", meshIDBottom);
 
     double dt = interface.initialize();
     interface.advance(dt);
@@ -2401,9 +2404,9 @@ BOOST_AUTO_TEST_CASE(MultipleFromMappings)
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const int meshID   = interface.getMeshID("MeshB");
-    int       vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int       dataID   = interface.getDataID("Pressure", meshID);
+    const MeshID meshID   = interface.getMeshID("MeshB");
+    int          vertexID = interface.setMeshVertex(meshID, vertex.data());
+    int          dataID   = interface.getDataID("Pressure", meshID);
 
     double dt       = interface.initialize();
     double pressure = 1.0;
@@ -2427,12 +2430,12 @@ BOOST_AUTO_TEST_CASE(MultipleToMappings)
   Vector2d        vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    const int meshIDTop      = interface.getMeshID("MeshATop");
-    const int meshIDBottom   = interface.getMeshID("MeshABottom");
-    int       vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
-    int       vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
-    int       dataIDTop      = interface.getDataID("DisplacementTop", meshIDTop);
-    int       dataIDBottom   = interface.getDataID("DisplacementBottom", meshIDBottom);
+    const MeshID meshIDTop      = interface.getMeshID("MeshATop");
+    const MeshID meshIDBottom   = interface.getMeshID("MeshABottom");
+    int          vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
+    int          vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
+    int          dataIDTop      = interface.getDataID("DisplacementTop", meshIDTop);
+    int          dataIDBottom   = interface.getDataID("DisplacementBottom", meshIDBottom);
 
     double dt              = interface.initialize();
     double displacementTop = 1.0;
@@ -2445,9 +2448,9 @@ BOOST_AUTO_TEST_CASE(MultipleToMappings)
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const int meshID   = interface.getMeshID("MeshB");
-    int       vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int       dataID   = interface.getDataID("DisplacementSum", meshID);
+    const MeshID meshID   = interface.getMeshID("MeshB");
+    int          vertexID = interface.setMeshVertex(meshID, vertex.data());
+    int          dataID   = interface.getDataID("DisplacementSum", meshID);
 
     double dt = interface.initialize();
     interface.advance(dt);
@@ -2472,9 +2475,9 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
   Vector2d        vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    const int meshID   = interface.getMeshID("A-Mesh");
-    int       vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int       dataID   = interface.getDataID("Data", meshID);
+    const MeshID meshID   = interface.getMeshID("A-Mesh");
+    int          vertexID = interface.setMeshVertex(meshID, vertex.data());
+    int          dataID   = interface.getDataID("Data", meshID);
 
     double dt    = interface.initialize();
     double value = 1.0;
@@ -2489,9 +2492,9 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const int meshID   = interface.getMeshID("B-Mesh");
-    int       vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int       dataID   = interface.getDataID("Data", meshID);
+    const MeshID meshID   = interface.getMeshID("B-Mesh");
+    int          vertexID = interface.setMeshVertex(meshID, vertex.data());
+    int          dataID   = interface.getDataID("Data", meshID);
 
     double dt = interface.initialize();
     interface.markActionFulfilled(actionWriteIterationCheckpoint());

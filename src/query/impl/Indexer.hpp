@@ -1,7 +1,9 @@
 #pragma once
 
 #include <map>
-#include "RTreeAdapter.hpp"
+
+#include "precice/types.hpp"
+#include "query/impl/RTreeAdapter.hpp"
 
 namespace precice {
 namespace query {
@@ -40,11 +42,11 @@ public:
   void clearCache();
 
   /// Clear the cache only for the given mesh
-  void clearCache(int meshID);
+  void clearCache(MeshID meshID);
 
 private:
   Indexer(){};
-  MeshIndices &              cacheEntry(int meshID);
+  MeshIndices &              cacheEntry(MeshID meshID);
   std::map<int, MeshIndices> _cachedTrees;
 };
 

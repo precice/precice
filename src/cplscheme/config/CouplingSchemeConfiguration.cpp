@@ -1,4 +1,3 @@
-#include "CouplingSchemeConfiguration.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <memory>
@@ -6,6 +5,8 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
+#include "CouplingSchemeConfiguration.hpp"
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/AitkenAcceleration.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
@@ -27,6 +28,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "precice/types.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"
@@ -829,7 +831,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   setSerialAcceleration(scheme, first, second);
 
   if (scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && not _accelerationConfig->getAcceleration()->getDataIDs().empty()) {
-    int dataID = *(_accelerationConfig->getAcceleration()->getDataIDs().begin());
+    DataID dataID = *(_accelerationConfig->getAcceleration()->getDataIDs().begin());
     PRECICE_CHECK(not scheme->hasSendData(dataID),
                   "In case of serial coupling, acceleration can be defined for data of second participant only!");
   }
@@ -1017,7 +1019,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 }
 
 void CouplingSchemeConfiguration::checkIfDataIsExchanged(
-    int dataID) const
+    DataID dataID) const
 {
   const auto match = std::find_if(_config.exchanges.begin(),
                                   _config.exchanges.end(),
@@ -1092,7 +1094,7 @@ void CouplingSchemeConfiguration::setSerialAcceleration(
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(second, neededMesh);
     }
-    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
+    for (const DataID dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkSerialImplicitAccelerationData(dataID, first, second);
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
@@ -1107,7 +1109,7 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(participant, neededMesh);
     }
-    for (const int dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
+    for (const DataID dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());

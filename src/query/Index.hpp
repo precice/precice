@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+
 #include "logging/Logger.hpp"
 #include "mapping/Polation.hpp"
 #include "mesh/BoundingBox.hpp"
@@ -9,6 +10,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace query {
@@ -90,7 +92,7 @@ private:
 void clearCache();
 
 /// Clear the cache of given mesh
-void clearCache(int meshID);
+void clearCache(MeshID meshID);
 
 /// Clear the cache of given mesh
 void clearCache(mesh::Mesh &mesh);

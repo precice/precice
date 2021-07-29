@@ -1,11 +1,12 @@
-#include "Index.hpp"
-#include <Eigen/src/Core/Matrix.h>
+#include <Eigen/Core>
 #include <algorithm>
 #include <boost/range/irange.hpp>
 #include <utility>
 
+#include "Index.hpp"
 #include "impl/Indexer.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/Event.hpp"
 
 namespace precice {
@@ -160,7 +161,7 @@ void clearCache()
   impl::Indexer::instance()->clearCache();
 }
 
-void clearCache(int meshID)
+void clearCache(MeshID meshID)
 {
   impl::Indexer::instance()->clearCache(meshID);
 }

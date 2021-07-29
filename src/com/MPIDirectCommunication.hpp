@@ -6,8 +6,10 @@
 #include <set>
 #include <stddef.h>
 #include <string>
+
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
@@ -80,50 +82,50 @@ public:
   /// See precice::com::Communication::closeConnection().
   virtual void closeConnection() override;
 
-  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
+  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size, Rank rankMaster) override;
 
   virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size) override;
 
-  virtual void reduceSum(int itemToSend, int &itemsToReceive, int rankMaster) override;
+  virtual void reduceSum(int itemToSend, int &itemsToReceive, Rank rankMaster) override;
 
   virtual void reduceSum(int itemToSend, int &itemsToReceive) override;
 
-  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster) override;
+  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, Rank rankMaster) override;
 
   virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size) override;
 
-  virtual void allreduceSum(double itemToSend, double &itemsToReceive, int rankMaster) override;
+  virtual void allreduceSum(double itemToSend, double &itemsToReceive, Rank rankMaster) override;
 
   virtual void allreduceSum(double itemToSend, double &itemsToReceive) override;
 
-  virtual void allreduceSum(int itemToSend, int &itemsToReceive, int rankMaster) override;
+  virtual void allreduceSum(int itemToSend, int &itemsToReceive, Rank rankMaster) override;
 
   virtual void allreduceSum(int itemToSend, int &itemsToReceive) override;
 
   virtual void broadcast(const int *itemsToSend, int size) override;
 
-  virtual void broadcast(int *itemsToReceive, int size, int rankBroadcaster) override;
+  virtual void broadcast(int *itemsToReceive, int size, Rank rankBroadcaster) override;
 
   virtual void broadcast(int itemToSend) override;
 
-  virtual void broadcast(int &itemToReceive, int rankBroadcaster) override;
+  virtual void broadcast(int &itemToReceive, Rank rankBroadcaster) override;
 
   virtual void broadcast(const double *itemsToSend, int size) override;
 
-  virtual void broadcast(double *itemsToReceive, int size, int rankBroadcaster) override;
+  virtual void broadcast(double *itemsToReceive, int size, Rank rankBroadcaster) override;
 
   virtual void broadcast(double itemToSend) override;
 
-  virtual void broadcast(double &itemToReceive, int rankBroadcaster) override;
+  virtual void broadcast(double &itemToReceive, Rank rankBroadcaster) override;
 
   virtual void broadcast(bool itemToSend) override;
 
-  virtual void broadcast(bool &itemToReceive, int rankBroadcaster) override;
+  virtual void broadcast(bool &itemToReceive, Rank rankBroadcaster) override;
 
 private:
-  virtual MPI_Comm &communicator(int rank = 0) override;
+  virtual MPI_Comm &communicator(Rank rank = 0) override;
 
-  virtual int rank(int rank) override;
+  virtual Rank rank(int rank) override;
 
   logging::Logger _log{"com::MPIDirectCommunication"};
 
@@ -132,7 +134,7 @@ private:
 
 protected:
   /// Turn the rank adjustment into a noop for direct communication
-  virtual int adjustRank(int rank) const override;
+  virtual int adjustRank(Rank rank) const override;
 };
 
 } // namespace com

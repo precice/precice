@@ -1,20 +1,22 @@
 //#ifndef PRECICE_NO_MPI
 
-#include "MasterSlave.hpp"
 #include <Eigen/Core>
 #include <cmath>
 #include <memory>
 #include <ostream>
 #include <string>
+
+#include "MasterSlave.hpp"
 #include "com/Communication.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
 namespace utils {
 
-int                   MasterSlave::_rank     = -1;
+Rank                  MasterSlave::_rank     = -1;
 int                   MasterSlave::_size     = -1;
 bool                  MasterSlave::_isMaster = false;
 bool                  MasterSlave::_isSlave  = false;
@@ -22,7 +24,7 @@ com::PtrCommunication MasterSlave::_communication;
 
 logging::Logger MasterSlave::_log("utils::MasterSlave");
 
-void MasterSlave::configure(int rank, int size)
+void MasterSlave::configure(Rank rank, int size)
 {
   PRECICE_TRACE(rank, size);
   _rank = rank;
@@ -33,7 +35,7 @@ void MasterSlave::configure(int rank, int size)
   PRECICE_DEBUG("isSlave: {}, isMaster: {}", _isSlave, _isMaster);
 }
 
-int MasterSlave::getRank()
+Rank MasterSlave::getRank()
 {
   return _rank;
 }
@@ -84,11 +86,11 @@ double MasterSlave::l2norm(const Eigen::VectorXd &vec)
   }
   if(_isMaster){
     globalSum2 += localSum2;
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+    for(Rank rankSlave = 1; rankSlave < _size; rankSlave++){
       _communication->receive(localSum2, rankSlave);
       globalSum2 += localSum2;
     }
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+    for(Rank rankSlave = 1; rankSlave < _size; rankSlave++){
       _communication->send(globalSum2, rankSlave);
     }
   }
@@ -125,11 +127,11 @@ double MasterSlave::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2
   }
   if(_isMaster){
     globalSum += localSum;
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+    for(Rank rankSlave = 1; rankSlave < _size; rankSlave++){
       _communication->receive(localSum, rankSlave);
       globalSum += localSum;
     }
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+    for(Rank rankSlave = 1; rankSlave < _size; rankSlave++){
       _communication->send(globalSum, rankSlave);
     }
   }

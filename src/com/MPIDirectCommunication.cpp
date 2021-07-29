@@ -1,8 +1,10 @@
 #ifndef PRECICE_NO_MPI
 
-#include "MPIDirectCommunication.hpp"
 #include <memory>
+
+#include "MPIDirectCommunication.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
@@ -77,11 +79,11 @@ void MPIDirectCommunication::requestConnection(std::string const &acceptorName,
 void MPIDirectCommunication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size)
 {
   PRECICE_TRACE(size);
-  int rank = _commState->rank();
+  Rank rank = _commState->rank();
   MPI_Reduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rank, _commState->comm);
 }
 
-void MPIDirectCommunication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster)
+void MPIDirectCommunication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size, Rank rankMaster)
 {
   PRECICE_TRACE(size);
   MPI_Reduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rankMaster, _commState->comm);
@@ -90,11 +92,11 @@ void MPIDirectCommunication::reduceSum(double const *itemsToSend, double *itemsT
 void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive)
 {
   PRECICE_TRACE();
-  int rank = _commState->rank();
+  Rank rank = _commState->rank();
   MPI_Reduce(&itemToSend, &itemsToReceive, 1, MPI_INT, MPI_SUM, rank, _commState->comm);
 }
 
-void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive, int rankMaster)
+void MPIDirectCommunication::reduceSum(int itemToSend, int &itemsToReceive, Rank rankMaster)
 {
   PRECICE_TRACE();
   MPI_Reduce(&itemToSend, &itemsToReceive, 1, MPI_INT, MPI_SUM, rankMaster, _commState->comm);
@@ -106,7 +108,7 @@ void MPIDirectCommunication::allreduceSum(double const *itemsToSend, double *ite
   MPI_Allreduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _commState->comm);
 }
 
-void MPIDirectCommunication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster)
+void MPIDirectCommunication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, Rank rankMaster)
 {
   PRECICE_TRACE(size);
   MPI_Allreduce(const_cast<double *>(itemsToSend), itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _commState->comm);
@@ -118,7 +120,7 @@ void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToRecei
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _commState->comm);
 }
 
-void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToReceive, int rankMaster)
+void MPIDirectCommunication::allreduceSum(double itemToSend, double &itemToReceive, Rank rankMaster)
 {
   PRECICE_TRACE();
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _commState->comm);
@@ -130,7 +132,7 @@ void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive)
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _commState->comm);
 }
 
-void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, int rankMaster)
+void MPIDirectCommunication::allreduceSum(int itemToSend, int &itemToReceive, Rank rankMaster)
 {
   PRECICE_TRACE();
   MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_INT, MPI_SUM, _commState->comm);
@@ -156,7 +158,7 @@ void MPIDirectCommunication::broadcast(int itemToSend)
   broadcast(&itemToSend, 1);
 }
 
-void MPIDirectCommunication::broadcast(int &itemToReceive, int rankBroadcaster)
+void MPIDirectCommunication::broadcast(int &itemToReceive, Rank rankBroadcaster)
 {
   PRECICE_TRACE();
   broadcast(&itemToReceive, 1, rankBroadcaster);
@@ -182,7 +184,7 @@ void MPIDirectCommunication::broadcast(double itemToSend)
   broadcast(&itemToSend, 1);
 }
 
-void MPIDirectCommunication::broadcast(double &itemToReceive, int rankBroadcaster)
+void MPIDirectCommunication::broadcast(double &itemToReceive, Rank rankBroadcaster)
 {
   PRECICE_TRACE();
   broadcast(&itemToReceive, 1, rankBroadcaster);
@@ -195,7 +197,7 @@ void MPIDirectCommunication::broadcast(bool itemToSend)
   broadcast(item);
 }
 
-void MPIDirectCommunication::broadcast(bool &itemToReceive, int rankBroadcaster)
+void MPIDirectCommunication::broadcast(bool &itemToReceive, Rank rankBroadcaster)
 {
   PRECICE_TRACE();
   int item;
@@ -203,18 +205,18 @@ void MPIDirectCommunication::broadcast(bool &itemToReceive, int rankBroadcaster)
   itemToReceive = item;
 }
 
-MPI_Comm &MPIDirectCommunication::communicator(int rank)
+MPI_Comm &MPIDirectCommunication::communicator(Rank rank)
 {
   return _commState->comm;
 }
 
-int MPIDirectCommunication::rank(int rank)
+int MPIDirectCommunication::rank(Rank rank)
 {
   // Correct _rankOffset if we are on master
   return rank;
 }
 
-int MPIDirectCommunication::adjustRank(int rank) const
+int MPIDirectCommunication::adjustRank(Rank rank) const
 {
   return rank;
 }

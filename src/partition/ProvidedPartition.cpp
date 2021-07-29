@@ -1,10 +1,10 @@
-#include "partition/ProvidedPartition.hpp"
 #include <algorithm>
 #include <map>
 #include <memory>
 #include <ostream>
 #include <utility>
 #include <vector>
+
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
@@ -16,6 +16,8 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
+#include "partition/ProvidedPartition.hpp"
+#include "precice/types.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -88,7 +90,7 @@ void ProvidedPartition::communicate()
           PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
           PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
-          for (int rankSlave : utils::MasterSlave::allSlaves()) {
+          for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
             com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(globalMesh, rankSlave);
             PRECICE_DEBUG("Received sub-mesh, from slave: {}, global vertexCount: {}", rankSlave, globalMesh.vertices().size());
           }
@@ -134,7 +136,7 @@ void ProvidedPartition::prepare()
     int globalNumberOfVertices   = numberOfVertices;
 
     // receive number of slave vertices and fill vertex offsets
-    for (int rankSlave : utils::MasterSlave::allSlaves()) {
+    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
       _mesh->getVertexOffsets()[rankSlave] = numberOfSlaveVertices + _mesh->getVertexOffsets()[rankSlave - 1];
@@ -159,7 +161,7 @@ void ProvidedPartition::prepare()
         for (int i = 0; i < _mesh->getVertexOffsets()[0]; i++) {
           localIds.push_back(i);
         }
-        for (int rankSlave : utils::MasterSlave::allSlaves()) {
+        for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
           // This always creates an entry for each slave
           auto &slaveIds = _mesh->getVertexDistribution()[rankSlave];
           for (int i = _mesh->getVertexOffsets()[rankSlave - 1]; i < _mesh->getVertexOffsets()[rankSlave]; i++) {
@@ -250,7 +252,7 @@ void ProvidedPartition::compareBoundingBoxes()
     PRECICE_ASSERT(!bbm.empty(), "The bounding box of the local mesh is invalid!");
 
     // master receives bbs from slaves and stores them in bbm
-    for (int rankSlave : utils::MasterSlave::allSlaves()) {
+    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       // initialize bbm
       bbm.emplace(rankSlave, bb);
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm.at(rankSlave), rankSlave);
@@ -301,7 +303,7 @@ void ProvidedPartition::compareBoundingBoxes()
     utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);
 
     if (!connectedRanksList.empty()) {
-      for (int rank : connectedRanksList) {
+      for (Rank rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
       }
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveConnectionMap(remoteConnectionMap);
