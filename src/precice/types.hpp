@@ -18,11 +18,6 @@ using EdgeID = int;
 using TriangleID = int;
 
 /**
- * Type used for the IDs of matching entities
- */
-using MatchID = int;
-
-/**
  * Type used for the IDs of data
  */
 using DataID = int;
