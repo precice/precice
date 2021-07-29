@@ -53,7 +53,7 @@ public:
       CouplingMode                  cplMode,
       int                           maxIterations = -1);
 
-    friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testInitializeData; // For whitebox tests
+  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testInitializeData; // For whitebox tests
 
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};

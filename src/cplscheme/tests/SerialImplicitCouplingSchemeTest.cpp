@@ -1241,9 +1241,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, dataRequiresInitialization);
-  CouplingData* sendCouplingData = cplScheme.getSendData(sendDataIndex);
+  CouplingData *sendCouplingData = cplScheme.getSendData(sendDataIndex);
   cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, not dataRequiresInitialization);
-  CouplingData* receiveCouplingData = cplScheme.getReceiveData(receiveDataIndex);
+  CouplingData *receiveCouplingData = cplScheme.getReceiveData(receiveDataIndex);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1254,7 +1254,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  sendCouplingData->values() = mesh->data(sendDataIndex)->values();
+  sendCouplingData->values()    = mesh->data(sendDataIndex)->values();
   receiveCouplingData->values() = mesh->data(receiveDataIndex)->values();
 
   cplScheme.initialize(0.0, 1);
@@ -1262,11 +1262,11 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   if (context.isNamed(nameParticipant0)) {
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     BOOST_TEST(receiveCouplingData->values().size() == 3);
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 0);  // @todo: This is not expected.
+    BOOST_TEST(receiveCouplingData->previousIteration().size() == 0); // @todo: This is not expected.
     //BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);  // @todo: Currently failing, previousIteration should be initialized for all participants?
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
     BOOST_TEST(sendCouplingData->values().size() == 1);
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 0);  // @todo: This is not expected.
+    BOOST_TEST(sendCouplingData->previousIteration().size() == 0); // @todo: This is not expected.
     //BOOST_TEST(sendCouplingData->previousIteration().size() == 1);  // @todo: Currently failing, previousIteration should be initialized for all participants?
     BOOST_TEST(cplScheme.isImplicitCouplingScheme());
     cplScheme.initializeData();
@@ -1276,7 +1276,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
-    mesh->data(sendDataIndex)->values() = Eigen::VectorXd::Constant(mesh->data(sendDataIndex)->values().size(), 4.0);
+    sendCouplingData->values() = Eigen::VectorXd::Constant(sendCouplingData->values().size(), 4.0);
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
         cplScheme.markActionFulfilled(writeIterationCheckpoint);
@@ -1290,24 +1290,28 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
-    cplScheme.markActionFulfilled(constants::actionWriteInitialData());    
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
     sendCouplingData->values() = v;
-    BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
+    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
     BOOST_TEST(receiveCouplingData->values().size() == 1);
-    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);  // here, previousIteration is correctly initialized, see above
-    BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
+    BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
+    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
+    BOOST_TEST(receiveCouplingData->previousIteration().size() == 1); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(sendCouplingData->values().size() == 3);
-    BOOST_TEST(sendCouplingData->previousIteration().size() == 3);  // here, previousIteration is correctly initialized, see above
+    BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
+    BOOST_TEST(sendCouplingData->previousIteration().size() == 3); // here, previousIteration is correctly initialized, see above
+    BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     cplScheme.initializeData();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(receiveCouplingData->values().size() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
     BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->previousIteration()(0), 0.0));
+    BOOST_TEST(sendCouplingData->values().size() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(sendCouplingData->previousIteration().size() == 3);
-    BOOST_TEST(testing::equals(sendCouplingData->previousIteration(), Eigen::Vector3d(1.0, 2.0, 3.0)));    
+    BOOST_TEST(testing::equals(sendCouplingData->previousIteration(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     while (cplScheme.isCouplingOngoing()) {
       if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
         cplScheme.markActionFulfilled(writeIterationCheckpoint);
