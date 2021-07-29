@@ -72,10 +72,6 @@ void SerialCouplingScheme::initializeImplementation()
 
 void SerialCouplingScheme::exchangeInitialData()
 {
-  if (isImplicitCouplingScheme()) {
-    storeIteration();
-  }
-
   if (doesFirstStep()) {
     PRECICE_ASSERT(not sendsInitializedData(), "First participant cannot send data during initialization.");
     if (receivesInitializedData()) {

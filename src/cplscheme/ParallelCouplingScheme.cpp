@@ -28,10 +28,6 @@ void ParallelCouplingScheme::initializeImplementation()
 
 void ParallelCouplingScheme::exchangeInitialData()
 {
-  if (isImplicitCouplingScheme()) {
-    storeIteration();
-  }
-
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
