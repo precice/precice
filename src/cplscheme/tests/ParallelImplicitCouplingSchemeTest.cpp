@@ -111,9 +111,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   ParallelCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
   CouplingData *sendCouplingData = cplScheme.getSendData(sendDataIndex);
-  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization);
   CouplingData *receiveCouplingData = cplScheme.getReceiveData(receiveDataIndex);
 
   // Add convergence measures
@@ -127,9 +127,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  sendCouplingData->values()    = mesh->data(sendDataIndex)->values();
-  receiveCouplingData->values() = mesh->data(receiveDataIndex)->values();
 
   cplScheme.initialize(0.0, 0);
 
