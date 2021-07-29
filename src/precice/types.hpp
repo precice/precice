@@ -27,6 +27,11 @@ using DataID = int;
  */
 using MeshID = int;
 
+/**
+ * Type used to represent local ranks of a parallel participant.
+ *
+ * The primary participant has Rank 0.
+ */
 using Rank = int;
 
 } // namespace precice
