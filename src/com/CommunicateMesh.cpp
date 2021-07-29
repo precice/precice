@@ -247,7 +247,7 @@ void CommunicateMesh::broadcastReceiveMesh(
   Rank rankBroadcaster = 0;
 
   std::vector<mesh::Vertex *>   vertices;
-  std::map<int, mesh::Vertex *> vertexMap;
+  std::map<VertexID, mesh::Vertex *> vertexMap;
   int                           numberOfVertices = 0;
   _communication->broadcast(numberOfVertices, rankBroadcaster);
 
