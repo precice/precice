@@ -8,6 +8,13 @@
 #include "m2n/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
+// Forward declaration to friend the boost test struct
+namespace CplSchemeTests {
+namespace ParallelImplicitCouplingSchemeTests {
+struct testInitializeData;
+}
+} // namespace CplSchemeTests
+
 namespace precice {
 namespace cplscheme {
 
@@ -46,6 +53,8 @@ public:
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
       int                           maxIterations = -1);
+
+  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testInitializeData; // For whitebox tests
 
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
