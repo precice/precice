@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/AitkenAcceleration.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/BiCouplingScheme.hpp"
@@ -178,10 +179,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                     participantName, control);
       _config.controller    = participantName;
       _config.setController = true;
-    } else {
-      _config.participants.push_back(participantName);
     }
-
+    _config.participants.push_back(participantName);
   } else if (tag.getName() == TAG_MAX_TIME) {
     _config.maxTime = tag.getDoubleAttributeValue(ATTR_VALUE);
     PRECICE_CHECK(_config.maxTime > 0,
@@ -342,12 +341,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
                     "One controller per MultiCoupling needs to be defined. "
                     "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
                     "Make sure that at least one participant tag provides the attribute <participant name=... control=\"True\"/>.");
-      for (std::string &accessor : _config.participants) {
+      for (const std::string &accessor : _config.participants) {
         PtrCouplingScheme scheme = createMultiCouplingScheme(accessor);
         addCouplingScheme(scheme, accessor);
       }
-      PtrCouplingScheme scheme = createMultiCouplingScheme(_config.controller);
-      addCouplingScheme(scheme, _config.controller);
       _config = Config();
     } else {
       PRECICE_ASSERT(false, _config.type);
@@ -878,35 +875,23 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
 
   BaseCouplingScheme *scheme;
 
-  if (accessor == _config.controller) {
-    std::vector<m2n::PtrM2N> m2ns;
-    for (const std::string &participant : _config.participants) {
-      m2ns.push_back(_m2nConfig->getM2N(
-          _config.controller, participant));
+  std::map<std::string, m2n::PtrM2N> m2ns;
+  for (const std::string &participant : _config.participants) {
+    if (_m2nConfig->isM2NConfigured(accessor, participant)) {
+      m2ns[participant] = _m2nConfig->getM2N(accessor, participant);
     }
-
-    scheme = new MultiCouplingScheme(
-        _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-        _config.validDigits, accessor, m2ns, _config.dtMethod,
-        _config.maxIterations);
-    scheme->setExtrapolationOrder(_config.extrapolationOrder);
-
-    MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
-    PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
-    addMultiDataToBeExchanged(*castedScheme, accessor);
-  } else {
-    m2n::PtrM2N m2n = _m2nConfig->getM2N(
-        accessor, _config.controller);
-
-    scheme = new ParallelCouplingScheme(
-        _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-        _config.validDigits, accessor, _config.controller,
-        accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
-    scheme->setExtrapolationOrder(_config.extrapolationOrder);
-
-    BiCouplingScheme *castedScheme = dynamic_cast<BiCouplingScheme *>(scheme);
-    addDataToBeExchanged(*castedScheme, accessor);
   }
+
+  scheme = new MultiCouplingScheme(
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
+      _config.validDigits, accessor, m2ns, _config.dtMethod,
+      _config.controller, _config.maxIterations);
+  scheme->setExtrapolationOrder(_config.extrapolationOrder);
+
+  MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
+  PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
+  addMultiDataToBeExchanged(*castedScheme, accessor);
+
   PRECICE_CHECK(scheme->hasAnySendData(),
                 "No send data configured. Use explicit scheme for one-way coupling. "
                 "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
@@ -932,7 +917,6 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
                    _accelerationConfig->getAcceleration()->getDataIDs().size());
     }
   }
-
   return PtrCouplingScheme(scheme);
 }
 
@@ -1006,8 +990,15 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 {
   PRECICE_TRACE();
   for (const Config::Exchange &exchange : _config.exchanges) {
-    const std::string &from = exchange.from;
-    const std::string &to   = exchange.to;
+    const std::string &from     = exchange.from;
+    const std::string &to       = exchange.to;
+    const std::string &dataName = exchange.data->getName();
+    const std::string &meshName = exchange.mesh->getName();
+
+    PRECICE_CHECK(to != from,
+                  "You cannot define an exchange from and to the same participant. "
+                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  dataName, meshName, from, to);
 
     PRECICE_CHECK((utils::contained(from, _config.participants) || from == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme",
@@ -1018,27 +1009,9 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 
     const bool initialize = exchange.requiresInitialization;
     if (from == accessor) {
-      size_t index = 0;
-      for (const std::string &participant : _config.participants) {
-        PRECICE_DEBUG("from: {}, to: {}, participant: {}", from, to, participant);
-        if (to == participant) {
-          break;
-        }
-        index++;
-      }
-      PRECICE_ASSERT(index < _config.participants.size(), index, _config.participants.size());
-      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, index);
-    } else {
-      size_t index = 0;
-      for (const std::string &participant : _config.participants) {
-        PRECICE_DEBUG("from: {}, to: {}, participant: {}", from, to, participant);
-        if (from == participant) {
-          break;
-        }
-        index++;
-      }
-      PRECICE_ASSERT(index < _config.participants.size(), index, _config.participants.size());
-      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, index);
+      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
+    } else if (to == accessor) {
+      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
     }
   }
 }
@@ -1138,6 +1111,13 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
       checkIfDataIsExchanged(dataID);
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
+
+    if (dynamic_cast<acceleration::AitkenAcceleration *>(_accelerationConfig->getAcceleration().get()) != nullptr)
+      PRECICE_WARN("You configured participant \"{}\" in a parallel-implicit coupling scheme with \"Aitken\" "
+                   "acceleration, which is known to perform bad in parallel coupling schemes. "
+                   "See https://precice.org/configuration-acceleration.html#dynamic-aitken-under-relaxation for details."
+                   "Consider switching to a serial-implicit coupling scheme or changing the acceleration method.",
+                   participant);
   }
 }
 

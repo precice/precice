@@ -108,7 +108,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     }
     sendData(getM2N(), getSendData());
     if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence();
+      convergence = receiveConvergence(getM2N());
     }
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());

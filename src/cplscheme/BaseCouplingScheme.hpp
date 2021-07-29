@@ -28,7 +28,7 @@ class TXTTableWriter;
 } // namespace io
 
 namespace cplscheme {
-struct CouplingData;
+class CouplingData;
 
 /**
  * @brief Abstract base class for standard coupling schemes.
@@ -336,11 +336,14 @@ protected:
    * @param m2n used for sending
    * @param convergence bool that is being sent
    */
-  void sendConvergence(m2n::PtrM2N m2n, bool convergence)
-  {
-    PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
-    m2n->send(convergence);
-  }
+  void sendConvergence(m2n::PtrM2N m2n, bool convergence);
+
+  /**
+   * @brief receives convergence from other participant via m2n
+   * @param m2n used for receiving
+   * @returns convergence bool
+   */
+  bool receiveConvergence(const m2n::PtrM2N &m2n);
 
   /**
    * @brief perform a coupling iteration
