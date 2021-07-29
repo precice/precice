@@ -68,6 +68,8 @@ void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
+  storeIteration();
+
   if (receivesInitializedData()) {
     for (size_t i = 0; i < _m2ns.size(); i++) {
       receiveData(_m2ns[i], _receiveDataVector[i]);
