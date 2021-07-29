@@ -290,7 +290,7 @@ void EventRegistry::printAll() const
 
 void EventRegistry::writeSummary(std::ostream &out) const
 {
-  Rank rank, size;
+  int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
@@ -411,7 +411,7 @@ void EventRegistry::collect()
   MPI_Type_create_struct(4, blocklengths, displacements, types, &MPI_EVENTDATA);
   MPI_Type_commit(&MPI_EVENTDATA);
 
-  Rank rank, MPIsize;
+  int rank, MPIsize;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &MPIsize);
 
