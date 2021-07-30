@@ -6,6 +6,7 @@
 #include "Request.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace com {
@@ -41,6 +42,7 @@ void Communication::connectMasterSlaves(std::string const &participantName,
 void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
+  PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
   std::copy(itemsToSend.begin(), itemsToSend.end(), itemsToReceive.begin());
 
@@ -58,6 +60,7 @@ void Communication::reduceSum(precice::span<double const> itemsToSend, precice::
 void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
+  PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
   auto request = aSend(itemsToSend, rankMaster);
   request->wait();
@@ -91,6 +94,7 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive, Rank rankMaste
 void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
+  PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
   reduceSum(itemsToSend, itemsToReceive);
 
@@ -109,6 +113,7 @@ void Communication::allreduceSum(precice::span<double const> itemsToSend, precic
 void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
+  PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
   reduceSum(itemsToSend, itemsToReceive, rankMaster);
   // receive reduced data from master
