@@ -9,6 +9,7 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
+#include "utils/span.hpp"
 
 namespace precice {
 namespace com {
@@ -198,15 +199,15 @@ public:
   /// @{
 
   /// Performs a reduce summation on the rank given by rankMaster
-  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size, Rank rankMaster);
+  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster);
   /// Performs a reduce summation on the master, every other rank has to call reduceSum
-  virtual void reduceSum(double const *itemsToSend, double *itemsToReceive, int size);
+  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
   virtual void reduceSum(int itemToSend, int &itemToReceive, Rank rankMaster);
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
-  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, Rank rankMaster);
-  virtual void allreduceSum(double const *itemsToSend, double *itemsToReceive, int size);
+  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster);
+  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
   virtual void allreduceSum(double itemToSend, double &itemToReceive, Rank rankMaster);
   virtual void allreduceSum(double itemToSend, double &itemToReceive);
@@ -219,14 +220,14 @@ public:
   /// @name Broadcast
   /// @{
 
-  virtual void broadcast(const int *itemsToSend, int size);
-  virtual void broadcast(int *itemsToReceive, int size, Rank rankBroadcaster);
+  virtual void broadcast(precice::span<const int> itemsToSend);
+  virtual void broadcast(precice::span<int> itemsToReceive, Rank rankBroadcaster);
 
   virtual void broadcast(int itemToSend);
   virtual void broadcast(int &itemToReceive, Rank rankBroadcaster);
 
-  virtual void broadcast(const double *itemsToSend, int size);
-  virtual void broadcast(double *itemsToReceive, int size, Rank rankBroadcaster);
+  virtual void broadcast(precice::span<const double> itemsToSend);
+  virtual void broadcast(precice::span<double> itemsToReceive, Rank rankBroadcaster);
 
   virtual void broadcast(double itemToSend);
   virtual void broadcast(double &itemToReceive, Rank rankBroadcaster);
@@ -249,18 +250,18 @@ public:
   virtual void send(std::string const &itemToSend, Rank rankReceiver) = 0;
 
   /// Sends an array of integer values.
-  virtual void send(const int *itemsToSend, int size, Rank rankReceiver) = 0;
+  virtual void send(precice::span<const int> itemsToSend, Rank rankReceiver) = 0;
 
   /// Asynchronously sends an array of integer values.
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
-  virtual PtrRequest aSend(const int *itemsToSend, int size, Rank rankReceiver) = 0;
+  virtual PtrRequest aSend(precice::span<const int> itemsToSend, Rank rankReceiver) = 0;
 
   /// Sends an array of double values.
-  virtual void send(const double *itemsToSend, int size, Rank rankReceiver) = 0;
+  virtual void send(precice::span<const double> itemsToSend, Rank rankReceiver) = 0;
 
   /// Asynchronously sends an array of double values.
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
-  virtual PtrRequest aSend(const double *itemsToSend, int size, Rank rankReceiver) = 0;
+  virtual PtrRequest aSend(precice::span<const double> itemsToSend, Rank rankReceiver) = 0;
 
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
   virtual PtrRequest aSend(std::vector<double> const &itemsToSend, Rank rankReceiver) = 0;
@@ -295,15 +296,13 @@ public:
   virtual void receive(std::string &itemToReceive, Rank rankSender) = 0;
 
   /// Receives an array of integer values.
-  virtual void receive(int *itemsToReceive, int size, Rank rankSender) = 0;
+  virtual void receive(precice::span<int> itemsToReceive, Rank rankSender) = 0;
 
   /// Receives an array of double values.
-  virtual void receive(double *itemsToReceive, int size, Rank rankSender) = 0;
+  virtual void receive(precice::span<double> itemsToReceive, Rank rankSender) = 0;
 
   /// Asynchronously receives an array of double values.
-  virtual PtrRequest aReceive(double *itemsToReceive,
-                              int     size,
-                              int     rankSender) = 0;
+  virtual PtrRequest aReceive(precice::span<double> itemsToReceive, int rankSender) = 0;
 
   /// Asynchronously receives a vector of double values.
   /*
