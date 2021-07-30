@@ -47,7 +47,7 @@ void Communication::reduceSum(precice::span<double const> itemsToSend, precice::
   std::vector<double> received(itemsToReceive.size());
   // receive local results from slaves
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aReceive({received}, rank + _rankOffset);
+    auto request = aReceive(received, rank + _rankOffset);
     request->wait();
     for (size_t i = 0; i < itemsToReceive.size(); i++) {
       itemsToReceive[i] += received[i];
@@ -96,7 +96,7 @@ void Communication::allreduceSum(precice::span<double const> itemsToSend, precic
 
   // send reduced result to all slaves
   std::vector<PtrRequest> requests;
-  requests.resize(getRemoteCommunicatorSize());
+  requests.reserve(getRemoteCommunicatorSize());
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     requests.push_back(aSend(itemsToReceive, rank + _rankOffset));
   }
