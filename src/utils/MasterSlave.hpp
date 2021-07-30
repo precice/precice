@@ -1,9 +1,11 @@
 #pragma once
 
 #include <Eigen/Core>
+
 #include "boost/range/irange.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace logging {
@@ -19,10 +21,10 @@ public:
   static com::PtrCommunication _communication;
 
   /// Configures the master-slave communication.
-  static void configure(int rank, int size);
+  static void configure(Rank rank, int size);
 
   /// Current rank
-  static int getRank();
+  static Rank getRank();
 
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int getSize();
@@ -76,7 +78,7 @@ private:
   static logging::Logger _log;
 
   /// Current rank
-  static int _rank;
+  static Rank _rank;
 
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int _size;

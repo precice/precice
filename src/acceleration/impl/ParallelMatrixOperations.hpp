@@ -7,12 +7,14 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+
 #include "com/Communication.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Request.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -226,7 +228,7 @@ private:
   {
     PRECICE_TRACE();
     for (int i = 0; i < leftMatrix.rows(); i++) {
-      int rank = 0;
+      Rank rank = 0;
       // find rank of processor that stores the result
       // the second while is necessary if processors with no vertices are present
       // Note: the >'=' here is crucial: In case some procs do not have any vertices,
@@ -291,7 +293,7 @@ private:
       // distribute blocks of summarizedBlocks (result of multiplication) to corresponding slaves
       result = summarizedBlocks.block(0, 0, offsets[1], r);
 
-      for (int rankSlave : utils::MasterSlave::allSlaves()) {
+      for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
         int off       = offsets[rankSlave];
         int send_rows = offsets[rankSlave + 1] - offsets[rankSlave];
 

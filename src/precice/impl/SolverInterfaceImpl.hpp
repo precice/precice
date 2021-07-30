@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
@@ -16,6 +17,7 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "precice/types.hpp"
 #include "utils/MultiLock.hpp"
 
 namespace precice {
@@ -242,13 +244,13 @@ public:
   std::set<int> getMeshIDs() const;
 
   /// Returns true, if the data with given name is used in the given mesh.
-  bool hasData(const std::string &dataName, int meshID) const;
+  bool hasData(const std::string &dataName, MeshID meshID) const;
 
   /// Returns data id corresponding to the given name (from configuration) and mesh.
-  int getDataID(const std::string &dataName, int meshID) const;
+  int getDataID(const std::string &dataName, MeshID meshID) const;
 
   /// Returns the number of nodes of a mesh.
-  int getMeshVertexSize(int meshID) const;
+  int getMeshVertexSize(MeshID meshID) const;
 
   /**
    * @brief Resets mesh with given ID.
@@ -257,7 +259,7 @@ public:
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  void resetMesh(int meshID);
+  void resetMesh(MeshID meshID);
 
   /**
    * @brief Set the position of a solver mesh vertex.
@@ -310,39 +312,39 @@ public:
    * @return Index of the edge to be used when setting a triangle.
    */
   int setMeshEdge(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID);
 
   /// Set a triangle of a solver mesh.
   void setMeshTriangle(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID);
+      MeshID meshID,
+      int    firstEdgeID,
+      int    secondEdgeID,
+      int    thirdEdgeID);
 
   /// Sets a triangle and creates/sets edges automatically of a solver mesh.
   void setMeshTriangleWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID);
 
   /// Set a quadrangle of a solver mesh.
   void setMeshQuad(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID,
-      int fourthEdgeID);
+      MeshID meshID,
+      int    firstEdgeID,
+      int    secondEdgeID,
+      int    thirdEdgeID,
+      int    fourthEdgeID);
 
   /// Sets a quadrangle and creates/sets edges automatically of a solver mesh.
   void setMeshQuadWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID,
-      int fourthVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID,
+      int    fourthVertexID);
 
   /**
    * @brief Computes and maps all write data mapped from mesh with given ID.
@@ -655,6 +657,15 @@ private:
 
   /// Communicate meshes and create partitions
   void computePartitions();
+
+  /// Helper for mapWrittenData and mapReadData
+  void computeMappings(utils::ptr_vector<MappingContext> contexts, const std::string &mappingType);
+
+  /// Helper for mapWrittenData and mapReadData
+  void mapData(utils::ptr_vector<DataContext> contexts, const std::string &mappingType);
+
+  /// Helper for mapWrittenData and mapReadData
+  void clearMappings(utils::ptr_vector<MappingContext> contexts);
 
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();

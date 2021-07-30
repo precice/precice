@@ -3,7 +3,9 @@
 #include <Eigen/Core>
 #include <stddef.h>
 #include <string>
+
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace mesh {
@@ -57,9 +59,11 @@ public:
   /**
    * @brief Constructor.
    */
-  Data(std::string name,
-       int         id,
-       int         dimension);
+
+  Data(
+      std::string name,
+      DataID      id,
+      int         dimension);
 
   /// Destructor, decrements data count.
   ~Data();
@@ -74,7 +78,7 @@ public:
   const std::string &getName() const;
 
   /// Returns the ID of the data set (supposed to be unique).
-  int getID() const;
+  DataID getID() const;
 
   /// Sets all values to zero
   void toZero();
@@ -94,7 +98,7 @@ private:
   std::string _name;
 
   /// ID of the data set (supposed to be unique).
-  int _id;
+  DataID _id;
 
   /// Dimensionality of one data value.
   int _dimensions;

@@ -4,9 +4,11 @@
 #include <algorithm>
 #include <array>
 #include <iostream>
+
 #include "math/differences.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/RangeAccessor.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -39,10 +41,10 @@ public:
 
   /// Constructor, the order of edges defines the outer normal direction.
   Triangle(
-      Edge &edgeOne,
-      Edge &edgeTwo,
-      Edge &edgeThree,
-      int   id);
+      Edge &     edgeOne,
+      Edge &     edgeTwo,
+      Edge &     edgeThree,
+      TriangleID id);
 
   /// Returns dimensionalty of space the triangle is embedded in.
   int getDimensions() const;
@@ -98,7 +100,7 @@ public:
   Eigen::VectorXd computeNormal() const;
 
   /// Returns a among triangles globally unique ID.
-  int getID() const;
+  TriangleID getID() const;
 
   /// Returns the surface area of the triangle
   double getArea() const;
@@ -127,8 +129,8 @@ private:
   /// Decider for choosing unique vertices from _edges.
   std::array<bool, 3> _vertexMap;
 
-  /// ID of the edge.
-  int _id;
+  /// ID of the triangle.
+  TriangleID _id;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
@@ -185,7 +187,7 @@ inline Triangle::const_iterator Triangle::cend() const
   return end();
 }
 
-inline int Triangle::getID() const
+inline TriangleID Triangle::getID() const
 {
   return _id;
 }
