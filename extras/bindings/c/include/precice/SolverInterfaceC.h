@@ -458,14 +458,14 @@ const char *precicec_actionReadIterationCheckpoint();
 ///@{
 
 /**
- * @brief Have a look at the c++ API documentation
+ * @brief See precice::SolverInterface::setMeshAccessRegion().
  */
 void precicec_setMeshAccessRegion(
     const int     meshID,
     const double *boundingBox);
 
 /**
- * @brief Have a look at the c++ API documentation
+ * @brief See precice::SolverInterface::getMeshVerticesAndIDs().
  */
 void precicec_getMeshVerticesAndIDs(
     const int meshID,

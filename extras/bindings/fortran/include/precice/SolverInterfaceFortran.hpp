@@ -715,7 +715,7 @@ void precicef_get_version_information_(
 ///@{
 
 /**
- * @brief Have a look at the c++ API documentation
+ * @brief See precice::SolverInterface::setMeshAccessRegion().
  * Fortran syntax:
  * precicef_setMeshAccessRegion(
  *   INTEGER          meshID,
@@ -726,7 +726,7 @@ void precicef_setMeshAccessRegion(
     const double *boundingBox);
 
 /**
- * @brief Have a look at the c++ API documentation
+ * @brief See precice::SolverInterface::getMeshVerticesAndIDs().
  * Fortran syntax:
  * precicef_getMeshVerticesAndIDs(
  *   INTEGER          meshID,
