@@ -11,6 +11,7 @@
 #include "com/SharedPointer.hpp"
 #include "com/SocketCommunication.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "fixtures.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
