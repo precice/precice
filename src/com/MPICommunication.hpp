@@ -47,6 +47,8 @@ public:
 
   virtual PtrRequest aSend(std::vector<double> const &itemsToSend, int rankReceiver) override;
 
+  virtual PtrRequest aSend(std::vector<int> const &itemsToSend, int rankReceiver) override;
+
   /**
    * @brief Sends a double to process with given rank.
    *

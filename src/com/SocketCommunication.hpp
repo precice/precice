@@ -85,6 +85,8 @@ public:
   /// Asynchronously sends an int to process with given rank.
   virtual PtrRequest aSend(const int &itemToSend, int rankReceiver) override;
 
+  virtual PtrRequest aSend(std::vector<int> const &itemsToSend, int rankReceiver) override;
+
   /// Sends a bool to process with given rank.
   virtual void send(bool itemToSend, int rankReceiver) override;
 
