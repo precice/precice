@@ -497,10 +497,9 @@ void ReceivedPartition::createOwnerInformation()
     // #1: receive local bb map from master
     // Define and initialize localBBMap to save local bbs
 
-    mesh::Mesh::BoundingBoxMap localBBMap;
-    mesh::BoundingBox          dummyBB(_dimensions);
+    mesh::Mesh::BoundingBoxMap localBBMap;    
     for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
-      localBBMap.emplace(rank, dummyBB);
+      localBBMap.emplace(rank, mesh::BoundingBox(_dimensions));
     }
 
     // Define a bb map to save the local connected ranks and respective boundingboxes
@@ -514,10 +513,10 @@ void ReceivedPartition::createOwnerInformation()
     std::vector<int> sharedVerticesLocalIDs;
 
     // store possible shared vertices in a map to communicate with neighbors, map: rank -> vertex_global_id
-    std::map<int, std::vector<double>> sharedVerticesSendMap;
+    std::map<int, std::vector<int>> sharedVerticesSendMap;
 
     // receive list of possible shared vertices from neighboring ranks
-    std::map<int, std::vector<double>> sharedVerticesReceiveMap;
+    std::map<int, std::vector<int>> sharedVerticesReceiveMap;
 
     if (utils::MasterSlave::isMaster()) {
 
@@ -542,24 +541,24 @@ void ReceivedPartition::createOwnerInformation()
     // remove the own bb from the map since we compare the own bb only with other ranks bb.
     localBBMap.erase(utils::MasterSlave::getRank());
     // find and store local connected ranks
-    for (auto &localBB : localBBMap) {
+    for (const auto &localBB : localBBMap) {
       if (_bb.overlapping(localBB.second)) {
         localConnectedBBMap.emplace(localBB.first, localBB.second);
       }
     }
 
     // #3: check vertices and keep only those that fit into the current rank's bb
-    int numberOfVertices = _mesh->vertices().size();
+    const int numberOfVertices = _mesh->vertices().size();
     PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
     std::vector<int> tags(numberOfVertices, -1);
     std::vector<int> globalIDs(numberOfVertices, -1);
     bool             atInterface = false;
-    int              counter     = 0; // number of vertices owned by this rank
+    int              ownedVerticesCount     = 0; // number of vertices owned by this rank
     for (int i = 0; i < numberOfVertices; i++) {
       globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
       if (_mesh->vertices()[i].isTagged()) {
         bool vertexIsShared = false;
-        for (auto &neighborRank : localConnectedBBMap) {
+        for (const auto &neighborRank : localConnectedBBMap) {
           if (neighborRank.second.contains(_mesh->vertices()[i])) {
             vertexIsShared = true;
             sharedVerticesSendMap[neighborRank.first].push_back(globalIDs[i]);
@@ -571,7 +570,7 @@ void ReceivedPartition::createOwnerInformation()
         if (not vertexIsShared) {
           tags[i]     = 1;
           atInterface = true;
-          counter++;
+          ownedVerticesCount++;
         }
       }
 
@@ -588,7 +587,7 @@ void ReceivedPartition::createOwnerInformation()
     // Define and initialize for load balancing
     std::map<int, int> neighborRanksVertexCount;
     for (auto &neighborRank : localConnectedBBMap) {
-      neighborRanksVertexCount.insert(std::make_pair(neighborRank.first, 0));
+      neighborRanksVertexCount.emplace(neighborRank.first, 0);
     }
 
     // Asynchronous recieve number of owned vertices from neighbor ranks
@@ -599,16 +598,15 @@ void ReceivedPartition::createOwnerInformation()
 
     // Synchronous send number of owned vertices to neighbor ranks
     for (auto &neighborRank : localConnectedBBMap) {
-      utils::MasterSlave::_communication->send(counter, neighborRank.first);
+      utils::MasterSlave::_communication->send(ownedVerticesCount, neighborRank.first);
     }
 
-    // wait until aReceive is complete.
+    // wait until all aReceives are complete.
     for (auto &rqst : vertexNumberRequests) {
       rqst->wait();
     }
 
-    // #5: Exchange list of shared vertices with the neighbor
-
+    // Exchange list of shared vertices with the neighbor
     // to store send requests.
     std::vector<com::PtrRequest> vertexListRequests;
 
@@ -626,18 +624,18 @@ void ReceivedPartition::createOwnerInformation()
       int receiveSize = 0;
       utils::MasterSlave::_communication->receive(receiveSize, neighborRank.first);
       if (receiveSize != 0) {
-        std::vector<double> receivedSharedVertices;
+        std::vector<int> receivedSharedVertices;
         utils::MasterSlave::_communication->receive(receivedSharedVertices, neighborRank.first);
         sharedVerticesReceiveMap.insert(std::make_pair(neighborRank.first, receivedSharedVertices));
       }
     }
 
-    // wait until aSend is complete.
+    // wait until all aSends are complete.
     for (auto &rqst : vertexListRequests) {
       rqst->wait();
     }
 
-    // #6: Second round assignment according to the number of owned vertices
+    // #5: Second round assignment according to the number of owned vertices
 
     /* In case that a vertex can be shared between two ranks, the rank with lower
        vertex count will own the vertex. 
@@ -648,19 +646,16 @@ void ReceivedPartition::createOwnerInformation()
       bool owned = true;
 
       for (auto &sharingRank : sharedVerticesReceiveMap) {
-        std::vector<double> vec = sharingRank.second;
+        std::vector<int> vec = sharingRank.second;
         if (std::find(vec.begin(), vec.end(), sharedVerticesGlobalIDs[i]) != vec.end()) {
-          if ((counter > neighborRanksVertexCount[sharingRank.first]) ||
-              (counter == neighborRanksVertexCount[sharingRank.first] && utils::MasterSlave::getRank() > sharingRank.first)) {
+          if ((ownedVerticesCount > neighborRanksVertexCount[sharingRank.first]) ||
+              (ownedVerticesCount == neighborRanksVertexCount[sharingRank.first] && utils::MasterSlave::getRank() > sharingRank.first)) {
             owned = false;
+            break;
           }
         }
       }
-      if (owned) {
-        tags[sharedVerticesLocalIDs[i]] = 1;
-      } else {
-        tags[sharedVerticesLocalIDs[i]] = 0;
-      }
+      tags[sharedVerticesLocalIDs[i]] = owned ? 1 : 0;
     }
 
     setOwnerInformation(tags);

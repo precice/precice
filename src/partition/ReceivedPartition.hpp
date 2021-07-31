@@ -16,6 +16,9 @@ class M2N;
 
 namespace partition {
 
+// Forward declaration to friend the accessor fixture
+// struct receivedPartitionFixture;
+
 /**
  * @brief A partition that is computed from a mesh received from another participant.
  *

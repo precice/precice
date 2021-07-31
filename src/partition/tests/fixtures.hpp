@@ -1,3 +1,5 @@
+#include "partition/ReceivedPartition.hpp"
+
 namespace precice {
 namespace partition {
 

@@ -181,7 +181,7 @@ PtrRequest MPICommunication::aSend(std::vector<int> const &itemsToSend, int rank
   MPI_Request request;
   MPI_Isend(const_cast<int *>(itemsToSend.data()),
             itemsToSend.size(),
-            MPI_DOUBLE,
+            MPI_INT,
             rank(rankReceiver),
             0,
             communicator(rankReceiver),
