@@ -28,7 +28,7 @@ WatchIntegral::WatchIntegral(
   }
 
   for (size_t i = 0; i < _mesh->data().size(); i++) {
-    _dataToExport.push_back(_mesh->data(i));
+    _dataToExport.push_back(_mesh->data()[i]);
 
     if (not utils::MasterSlave::isSlave()) {
       if (_dataToExport[i]->getDimensions() > 1) {
