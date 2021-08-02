@@ -501,7 +501,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                       "Mesh \"{}\" needs to use data \"{}\" to allow a read mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
                       meshContext.mesh->getName(), dataContext.toData->getName(), dataContext.toData->getName());
-        dataContext.toData = meshContext.mesh->data(dataContext.toData->getName());
+        dataContext.fromData = meshContext.mesh->data(dataContext.toData->getName());
       }
     }
   }
