@@ -755,7 +755,9 @@ mesh::PtrData CouplingSchemeConfiguration::findDataByID(
     int ID) const
 {
   for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
-    return mesh->data(ID);
+    if (mesh->hasDataID(ID)) {
+      return mesh->data(ID);
+    }
   }
   return nullptr;
 }
