@@ -359,14 +359,11 @@ const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
     const std::string &  nameData) const
 {
-  for (const mesh::PtrData &data : mesh->data()) {
-    if (data->getName() == nameData) {
-      return data;
-    }
-  }
-  PRECICE_ERROR("Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
+  PRECICE_CHECK(mesh->hasDataName(nameData),
+                "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
                 "Please add a use-data tag with name=\"{}\" to this mesh.",
                 _participants.back()->getName(), nameData, mesh->getName(), nameData);
+  return mesh->data(nameData);
 }
 
 void ParticipantConfiguration::finishParticipantConfiguration(

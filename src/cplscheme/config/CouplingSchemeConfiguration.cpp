@@ -259,22 +259,18 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     bool          initialize          = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
     mesh::PtrData exchangeData;
     mesh::PtrMesh exchangeMesh;
-    for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
-      if (mesh->getName() == nameMesh) {
-        for (const mesh::PtrData &data : mesh->data()) {
-          if (data->getName() == nameData) {
-            exchangeData = data;
-            exchangeMesh = mesh;
-            break;
-          }
-        }
-      }
-    }
-    PRECICE_CHECK(exchangeData.get(),
+
+    PRECICE_CHECK(_meshConfig->hasMeshName(nameMesh) && _meshConfig->getMesh(nameMesh)->hasDataName(nameData),
                   "Mesh \"{}\" with data \"{}\" not defined. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> "
                   "tag in the <coupling-scheme:... /> of your precice-config.xml.",
                   nameMesh, nameData, nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
+
+    const mesh::PtrMesh &mesh = _meshConfig->getMesh(nameMesh);
+    const mesh::PtrData &data = mesh->data(nameData);
+    exchangeData              = data;
+    exchangeMesh              = mesh;
+
     _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
     _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
     _config.exchanges.emplace_back(Config::Exchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize});
@@ -739,16 +735,10 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
     const std::string &dataName,
     const std::string &meshName) const
 {
-  for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
-    if (meshName == mesh->getName()) {
-      for (mesh::PtrData data : mesh->data()) {
-        if (dataName == data->getName()) {
-          return data;
-        }
-      }
-    }
-  }
-  PRECICE_ERROR("Data \"{}\" used by mesh \"{}\" is not configured.", dataName, meshName);
+  PRECICE_CHECK(_meshConfig->hasMeshName(meshName) && _meshConfig->getMesh(meshName)->data(dataName),
+                "Data \"{}\" used by mesh \"{}\" is not configured.", dataName, meshName);
+  const mesh::PtrMesh &mesh = _meshConfig->getMesh(meshName);
+  return mesh->data(dataName);
 }
 
 mesh::PtrData CouplingSchemeConfiguration::findDataByID(
