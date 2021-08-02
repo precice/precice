@@ -4,7 +4,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 
 #ifndef PRECICE_NO_MPI
 #include <mpi.h>
@@ -101,7 +103,7 @@ public:
     /// @{
 
     /// Returns the current rank in comm
-    int rank() const;
+    Rank rank() const;
 
     /// Returns size of comm
     int size() const;
@@ -226,7 +228,7 @@ public:
 
   /// Returns the global process rank.
   //@todo remove
-  static int getProcessRank();
+  static Rank getProcessRank();
 
   /**
    * @brief Returns the local process rank.
@@ -234,7 +236,7 @@ public:
    * If only one accessor group is present, returns getProcessRank().
    */
   //@todo remove
-  static int getLocalProcessRank();
+  static Rank getLocalProcessRank();
 
   /// Returns the number of processes in the global communicator.
   //@todo remove

@@ -3,7 +3,9 @@
 #include <Eigen/Core>
 #include <stddef.h>
 #include <string>
+
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace mesh {
@@ -59,7 +61,7 @@ public:
    */
   Data(
       std::string name,
-      int         id,
+      DataID      id,
       int         dimension);
 
   /// Destructor, decrements data count.
@@ -75,7 +77,7 @@ public:
   const std::string &getName() const;
 
   /// Returns the ID of the data set (supposed to be unique).
-  int getID() const;
+  DataID getID() const;
 
   /**
    * @brief Returns the type constant of the data set.
@@ -100,7 +102,7 @@ private:
   std::string _name;
 
   /// ID of the data set (supposed to be unique).
-  int _id;
+  DataID _id;
 
   //  // @brief Type of data (scalar or vector).
   //  DataType _type;

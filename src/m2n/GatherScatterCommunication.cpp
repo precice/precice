@@ -1,14 +1,15 @@
-#include "GatherScatterCommunication.hpp"
 #include <algorithm>
 #include <map>
 #include <memory>
 #include <ostream>
 #include <utility>
 
+#include "GatherScatterCommunication.hpp"
 #include "com/Communication.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"
+#include "precice/types.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -87,7 +88,7 @@ void GatherScatterCommunication::send(
     }
 
     // Slaves data
-    for (int rankSlave : utils::MasterSlave::allSlaves()) {
+    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
       PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
@@ -145,7 +146,7 @@ void GatherScatterCommunication::receive(
     }
 
     // Slaves data
-    for (int rankSlave : utils::MasterSlave::allSlaves()) {
+    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
       PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 

@@ -1,7 +1,9 @@
 #pragma once
 
 #include <boost/container/flat_map.hpp>
+
 #include "mesh/Mesh.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace mesh {
@@ -16,7 +18,7 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
 {
   // Create a flat_map which can contain all vertices of the original mesh.
   // This prevents resizes during the map build-up.
-  boost::container::flat_map<int, Vertex *> vertexMap;
+  boost::container::flat_map<VertexID, Vertex *> vertexMap;
   vertexMap.reserve(source.vertices().size());
 
   for (const Vertex &vertex : source.vertices()) {
@@ -32,13 +34,13 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
 
   // Create a flat_map which can contain all edges of the original mesh.
   // This prevents resizes during the map build-up.
-  boost::container::flat_map<int, Edge *> edgeMap;
+  boost::container::flat_map<EdgeID, Edge *> edgeMap;
   edgeMap.reserve(source.edges().size());
 
   // Add all edges formed by the contributing vertices
   for (const Edge &edge : source.edges()) {
-    int vertexIndex1 = edge.vertex(0).getID();
-    int vertexIndex2 = edge.vertex(1).getID();
+    VertexID vertexIndex1 = edge.vertex(0).getID();
+    VertexID vertexIndex2 = edge.vertex(1).getID();
     if (vertexMap.count(vertexIndex1) == 1 &&
         vertexMap.count(vertexIndex2) == 1) {
       Edge &e               = destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
@@ -49,9 +51,9 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
   // Add all triangles formed by the contributing edges
   if (source.getDimensions() == 3) {
     for (const Triangle &triangle : source.triangles()) {
-      int edgeIndex1 = triangle.edge(0).getID();
-      int edgeIndex2 = triangle.edge(1).getID();
-      int edgeIndex3 = triangle.edge(2).getID();
+      EdgeID edgeIndex1 = triangle.edge(0).getID();
+      EdgeID edgeIndex2 = triangle.edge(1).getID();
+      EdgeID edgeIndex3 = triangle.edge(2).getID();
       if (edgeMap.count(edgeIndex1) == 1 &&
           edgeMap.count(edgeIndex2) == 1 &&
           edgeMap.count(edgeIndex3) == 1) {

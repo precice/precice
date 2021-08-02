@@ -1,4 +1,3 @@
-#include "CommunicateMesh.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <boost/container/flat_map.hpp>
@@ -8,14 +7,16 @@
 #include <memory>
 #include <ostream>
 #include <utility>
-
 #include <vector>
+
+#include "CommunicateMesh.hpp"
 #include "Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -242,12 +243,12 @@ void CommunicateMesh::broadcastReceiveMesh(
     mesh::Mesh &mesh)
 {
   PRECICE_TRACE(mesh.getName());
-  int dim             = mesh.getDimensions();
-  int rankBroadcaster = 0;
+  int  dim             = mesh.getDimensions();
+  Rank rankBroadcaster = 0;
 
-  std::vector<mesh::Vertex *>   vertices;
-  std::map<int, mesh::Vertex *> vertexMap;
-  int                           numberOfVertices = 0;
+  std::vector<mesh::Vertex *>        vertices;
+  std::map<VertexID, mesh::Vertex *> vertexMap;
+  int                                numberOfVertices = 0;
   _communication->broadcast(numberOfVertices, rankBroadcaster);
 
   if (numberOfVertices > 0) {

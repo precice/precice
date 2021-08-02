@@ -1,4 +1,4 @@
-#include "acceleration/impl/QRFactorization.hpp"
+
 #include <Eigen/Core>
 #include <algorithm> // std::sort
 #include <cmath>
@@ -6,12 +6,14 @@
 #include <iostream>
 #include <memory>
 #include <utility>
-
 #include <vector>
+
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -565,7 +567,7 @@ int QRFactorization::orthogonalize_stable(
 
         if (utils::MasterSlave::isMaster()) {
           global_uk = u(k);
-          for (int rankSlave : utils::MasterSlave::allSlaves()) {
+          for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
             utils::MasterSlave::_communication->receive(local_k, rankSlave);
             utils::MasterSlave::_communication->receive(local_uk, rankSlave);
             if (local_uk < global_uk) {

@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "SharedPointer.hpp"
 #include "action/SharedPointer.hpp"
 #include "cplscheme/SharedPointer.hpp"
@@ -16,12 +17,14 @@
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/DataContext.hpp"
+#include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/PointerVector.hpp"
 
 namespace precice {
 namespace impl {
+struct DataContext;
 struct MeshContext;
 struct MappingContext;
 } // namespace impl
@@ -117,12 +120,12 @@ public:
   /** Provides access to both write and read \ref DataContext
    * @pre there exists a \ref DataContext for \ref dataID
    */
-  const DataContext &dataContext(int dataID) const;
+  const DataContext &dataContext(DataID dataID) const;
 
   /** Provides access to both write and read \ref DataContext
    * @pre there exists a \ref DataContext for \ref dataID
    */
-  DataContext &dataContext(int dataID);
+  DataContext &dataContext(DataID dataID);
 
   /** Provides access to write \ref DataContext
    * @remarks does not contain nullptr.
@@ -145,25 +148,25 @@ public:
   utils::ptr_vector<DataContext> &readDataContexts();
 
   /// Is the dataID know to preCICE?
-  bool hasData(int dataID) const;
+  bool hasData(DataID dataID) const;
 
   /// Is the data used by this participant?
-  bool isDataUsed(int dataID) const;
+  bool isDataUsed(DataID dataID) const;
 
   /// Is the data used by this participant?
-  bool isDataUsed(const std::string &dataName, int meshId) const;
+  bool isDataUsed(const std::string &dataName, MeshID meshId) const;
 
   /// Is the participant allowed to read the data?
-  bool isDataRead(int dataID) const;
+  bool isDataRead(DataID dataID) const;
 
   /// Is the participant allowed to write the data?
-  bool isDataWrite(int dataID) const;
+  bool isDataWrite(DataID dataID) const;
 
   /// What is the dataID of the used data from a used mesh given the meshid and the data name?
-  int getUsedDataID(const std::string &dataName, int meshID) const;
+  int getUsedDataID(const std::string &dataName, MeshID meshID) const;
 
   /// What is the name of the given data id
-  std::string getDataName(int dataID) const;
+  std::string getDataName(DataID dataID) const;
   /// @}
 
   /// @name Mesh queries
@@ -173,14 +176,14 @@ public:
    * @returns a reference to the matching \ref MeshContext
    * @pre the \ref Mesh with \ref meshID is used by the Participant
    */
-  const MeshContext &meshContext(int meshID) const;
+  const MeshContext &meshContext(MeshID meshID) const;
 
   /*** Provides direct access to a \ref MeshContext given the \ref meshid
    * @param[in] meshID the id of the \ref Mesh
    * @returns a reference to the matching \ref MeshContext
    * @pre the \ref Mesh with \ref meshID is used by the Participant
    */
-  MeshContext &meshContext(int meshID);
+  MeshContext &meshContext(MeshID meshID);
 
   /** Provides unordered access to all \ref MeshContext.used by this \ref Participant
    * @remarks The sequence does not contain nullptr
@@ -211,38 +214,38 @@ public:
    * @return a reference to the MeshContext
    * @pre there is a matching mesh
    */
-  MeshContext &usedMeshContext(int meshID);
+  MeshContext &usedMeshContext(MeshID meshID);
 
   /** Looks for a used MeshContext with a given meshID
    * @param[in] meshID the id of the \ref Mesh
    * @return a reference to the MeshContext
    * @pre there is a matching mesh
    */
-  MeshContext const &usedMeshContext(int meshID) const;
+  MeshContext const &usedMeshContext(MeshID meshID) const;
 
   /// Does preCICE know a mesh with this meshID?
-  bool hasMesh(int meshID) const;
+  bool hasMesh(MeshID meshID) const;
 
   /// Does preCICE know a mesh with this name?
   bool hasMesh(const std::string &meshName) const;
 
   /// Is a mesh with this id used by this participant?
-  bool isMeshUsed(int meshID) const;
+  bool isMeshUsed(MeshID meshID) const;
 
   /// Is a mesh with this name used by this participant?
   bool isMeshUsed(const std::string &meshID) const;
 
   /// Is a mesh with this id provided?
-  bool isMeshProvided(int meshID) const;
+  bool isMeshProvided(MeshID meshID) const;
 
   /// Get the used mesh id of a mesh with this name.
   int getUsedMeshID(const std::string &meshName) const;
 
   /// Get the name of a mesh given by its id.
-  std::string getMeshName(int meshID) const;
+  std::string getMeshName(MeshID meshID) const;
 
   /// Get a mesh name which uses the given data id.
-  std::string getMeshNameFromData(int dataID) const;
+  std::string getMeshNameFromData(DataID dataID) const;
   /// @}
 
   /// @name Other queries

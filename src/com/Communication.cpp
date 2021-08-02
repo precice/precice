@@ -1,9 +1,11 @@
-#include "Communication.hpp"
 #include <algorithm>
 #include <memory>
 #include <ostream>
+
+#include "Communication.hpp"
 #include "Request.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace com {
@@ -19,8 +21,8 @@ void Communication::connectMasterSlaves(std::string const &participantName,
   std::string masterName = participantName + "Master";
   std::string slaveName  = participantName + "Slave";
 
-  constexpr int rankOffset = 1;
-  int           slavesSize = size - rankOffset;
+  constexpr Rank rankOffset = 1;
+  int            slavesSize = size - rankOffset;
   if (rank == 0) {
     PRECICE_INFO("Connecting Master to {} Slaves", slavesSize);
     prepareEstablishment(masterName, slaveName);
@@ -53,7 +55,7 @@ void Communication::reduceSum(double const *itemsToSend, double *itemsToReceive,
   }
 }
 
-void Communication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster)
+void Communication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size, Rank rankMaster)
 {
   PRECICE_TRACE(size);
 
@@ -75,7 +77,7 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive)
   }
 }
 
-void Communication::reduceSum(int itemToSend, int &itemToReceive, int rankMaster)
+void Communication::reduceSum(int itemToSend, int &itemToReceive, Rank rankMaster)
 {
   PRECICE_TRACE();
 
@@ -114,7 +116,7 @@ void Communication::allreduceSum(double const *itemsToSend, double *itemsToRecei
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, int rankMaster)
+void Communication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, Rank rankMaster)
 {
   PRECICE_TRACE(size);
 
@@ -146,7 +148,7 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
   Request::wait(requests);
 }
 
-void Communication::allreduceSum(double itemToSend, double &itemsToReceive, int rankMaster)
+void Communication::allreduceSum(double itemToSend, double &itemsToReceive, Rank rankMaster)
 {
   PRECICE_TRACE();
 
@@ -178,7 +180,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
   Request::wait(requests);
 }
 
-void Communication::allreduceSum(int itemToSend, int &itemToReceive, int rankMaster)
+void Communication::allreduceSum(int itemToSend, int &itemToReceive, Rank rankMaster)
 {
   PRECICE_TRACE();
 
@@ -202,7 +204,7 @@ void Communication::broadcast(const int *itemsToSend, int size)
   Request::wait(requests);
 }
 
-void Communication::broadcast(int *itemsToReceive, int size, int rankBroadcaster)
+void Communication::broadcast(int *itemsToReceive, int size, Rank rankBroadcaster)
 {
   PRECICE_TRACE(size);
 
@@ -223,7 +225,7 @@ void Communication::broadcast(int itemToSend)
   Request::wait(requests);
 }
 
-void Communication::broadcast(int &itemToReceive, int rankBroadcaster)
+void Communication::broadcast(int &itemToReceive, Rank rankBroadcaster)
 {
   PRECICE_TRACE();
   receive(itemToReceive, rankBroadcaster + _rankOffset);
@@ -265,7 +267,7 @@ void Communication::broadcast(double itemToSend)
   Request::wait(requests);
 }
 
-void Communication::broadcast(double &itemToReceive, int rankBroadcaster)
+void Communication::broadcast(double &itemToReceive, Rank rankBroadcaster)
 {
   PRECICE_TRACE();
   receive(itemToReceive, rankBroadcaster + _rankOffset);
@@ -278,7 +280,7 @@ void Communication::broadcast(bool itemToSend)
   broadcast(item);
 }
 
-void Communication::broadcast(bool &itemToReceive, int rankBroadcaster)
+void Communication::broadcast(bool &itemToReceive, Rank rankBroadcaster)
 {
   PRECICE_TRACE();
   int item;
@@ -292,7 +294,7 @@ void Communication::broadcast(std::vector<int> const &v)
   broadcast(const_cast<int *>(v.data()), v.size()); // make it send vector
 }
 
-void Communication::broadcast(std::vector<int> &v, int rankBroadcaster)
+void Communication::broadcast(std::vector<int> &v, Rank rankBroadcaster)
 {
   v.clear();
   int size = 0;
@@ -307,7 +309,7 @@ void Communication::broadcast(std::vector<double> const &v)
   broadcast(v.data(), v.size()); // make it send vector
 }
 
-void Communication::broadcast(std::vector<double> &v, int rankBroadcaster)
+void Communication::broadcast(std::vector<double> &v, Rank rankBroadcaster)
 {
   v.clear();
   int size = 0;
@@ -316,7 +318,7 @@ void Communication::broadcast(std::vector<double> &v, int rankBroadcaster)
   broadcast(v.data(), size, rankBroadcaster);
 }
 
-int Communication::adjustRank(int rank) const
+int Communication::adjustRank(Rank rank) const
 {
   return rank - _rankOffset;
 }

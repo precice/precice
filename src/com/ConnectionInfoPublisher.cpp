@@ -1,4 +1,3 @@
-#include "ConnectionInfoPublisher.hpp"
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/name_generator.hpp>
@@ -7,12 +6,15 @@
 #include <chrono>
 #include <istream>
 #include <thread>
+
+#include "ConnectionInfoPublisher.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace com {
 
-std::string impl::hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &tag, int rank)
+std::string impl::hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &tag, Rank rank)
 {
   using namespace boost::filesystem;
 

@@ -1,7 +1,9 @@
 #pragma once
 #include <string>
 #include <utility>
+
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace com {
@@ -12,7 +14,7 @@ namespace impl {
    * It has the form first two letters from hash of 
    * (acceptorName, requesterName, mesh, rank)/rest of hash.
    */
-std::string hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &meshName, int rank);
+std::string hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &meshName, Rank rank);
 
 /** Returns the local directory which is the root for storing connection information.
    * It has the form addressDirectory/precice-run/acceptorName-requesterName

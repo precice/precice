@@ -1,4 +1,3 @@
-#include "Mesh.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
@@ -9,11 +8,14 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
 #include "Edge.hpp"
+#include "Mesh.hpp"
 #include "Triangle.hpp"
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
+#include "precice/types.hpp"
 #include "query/Index.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
@@ -23,7 +25,7 @@ namespace mesh {
 Mesh::Mesh(
     std::string name,
     int         dimensions,
-    int         id)
+    MeshID      id)
     : _name(std::move(name)),
       _dimensions(dimensions),
       _id(id),
@@ -97,11 +99,11 @@ Edge &Mesh::createUniqueEdge(
     Vertex &vertexOne,
     Vertex &vertexTwo)
 {
-  const std::array<int, 2> vids{vertexOne.getID(), vertexTwo.getID()};
-  const auto               eend = edges().end();
-  auto                     pos  = std::find_if(edges().begin(), eend,
+  const std::array<VertexID, 2> vids{vertexOne.getID(), vertexTwo.getID()};
+  const auto                    eend = edges().end();
+  auto                          pos  = std::find_if(edges().begin(), eend,
                           [&vids](const Edge &e) -> bool {
-                            const std::array<int, 2> eids{e.vertex(0).getID(), e.vertex(1).getID()};
+                            const std::array<VertexID, 2> eids{e.vertex(0).getID(), e.vertex(1).getID()};
                             return std::is_permutation(vids.begin(), vids.end(), eids.begin());
                           });
   if (pos != eend) {
@@ -147,7 +149,15 @@ const Mesh::DataContainer &Mesh::data() const
   return _data;
 }
 
-const PtrData &Mesh::data(int dataID) const
+bool Mesh::hasDataID(DataID dataID) const
+{
+  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) {
+    return dptr->getID() == dataID;
+  });
+  return iter != _data.end(); // if id was not found in mesh, iter == _data.end()
+}
+
+const PtrData &Mesh::data(DataID dataID) const
 {
   auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) {
     return dptr->getID() == dataID;
@@ -170,17 +180,17 @@ const std::string &Mesh::getName() const
   return _name;
 }
 
-int Mesh::getID() const
+MeshID Mesh::getID() const
 {
   return _id;
 }
 
-bool Mesh::isValidVertexID(int vertexID) const
+bool Mesh::isValidVertexID(VertexID vertexID) const
 {
   return (0 <= vertexID) && (static_cast<size_t>(vertexID) < vertices().size());
 }
 
-bool Mesh::isValidEdgeID(int edgeID) const
+bool Mesh::isValidEdgeID(EdgeID edgeID) const
 {
   return (0 <= edgeID) && (static_cast<size_t>(edgeID) < edges().size());
 }
@@ -265,7 +275,7 @@ void Mesh::setGlobalNumberOfVertices(int num)
   _globalNumberOfVertices = num;
 }
 
-Eigen::VectorXd Mesh::getOwnedVertexData(int dataID)
+Eigen::VectorXd Mesh::getOwnedVertexData(DataID dataID)
 {
 
   std::vector<double> ownedDataVector;
@@ -298,7 +308,7 @@ void Mesh::addMesh(
   PRECICE_TRACE();
   PRECICE_ASSERT(_dimensions == deltaMesh.getDimensions());
 
-  boost::container::flat_map<int, Vertex *> vertexMap;
+  boost::container::flat_map<VertexID, Vertex *> vertexMap;
   vertexMap.reserve(deltaMesh.vertices().size());
   Eigen::VectorXd coords(_dimensions);
   for (const Vertex &vertex : deltaMesh.vertices()) {
@@ -312,14 +322,14 @@ void Mesh::addMesh(
     vertexMap[vertex.getID()] = &v;
   }
 
-  boost::container::flat_map<int, Edge *> edgeMap;
+  boost::container::flat_map<EdgeID, Edge *> edgeMap;
   edgeMap.reserve(deltaMesh.edges().size());
   // you cannot just take the vertices from the edge and add them,
   // since you need the vertices from the new mesh
   // (which may differ in IDs)
   for (const Edge &edge : deltaMesh.edges()) {
-    int vertexIndex1 = edge.vertex(0).getID();
-    int vertexIndex2 = edge.vertex(1).getID();
+    VertexID vertexIndex1 = edge.vertex(0).getID();
+    VertexID vertexIndex2 = edge.vertex(1).getID();
     PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
                    (vertexMap.count(vertexIndex2) == 1));
     Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
@@ -328,9 +338,9 @@ void Mesh::addMesh(
 
   if (_dimensions == 3) {
     for (const Triangle &triangle : deltaMesh.triangles()) {
-      int edgeIndex1 = triangle.edge(0).getID();
-      int edgeIndex2 = triangle.edge(1).getID();
-      int edgeIndex3 = triangle.edge(2).getID();
+      EdgeID edgeIndex1 = triangle.edge(0).getID();
+      EdgeID edgeIndex2 = triangle.edge(1).getID();
+      EdgeID edgeIndex3 = triangle.edge(2).getID();
       PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
                      (edgeMap.count(edgeIndex2) == 1) &&
                      (edgeMap.count(edgeIndex3) == 1));

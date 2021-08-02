@@ -4,6 +4,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+
 #include "acceleration/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingScheme.hpp"
@@ -15,6 +16,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
+#include "precice/types.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
@@ -258,10 +260,10 @@ private:
       const std::string &  accessor) const;
 
   void checkIfDataIsExchanged(
-      int dataID) const;
+      DataID dataID) const;
 
   void checkSerialImplicitAccelerationData(
-      int dataID, const std::string &first, const std::string &second) const;
+      DataID dataID, const std::string &first, const std::string &second) const;
 
   void addConvergenceMeasures(
       BaseCouplingScheme *                           scheme,

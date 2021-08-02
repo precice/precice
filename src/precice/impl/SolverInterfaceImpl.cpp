@@ -1,4 +1,3 @@
-#include "SolverInterfaceImpl.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
@@ -11,6 +10,8 @@
 #include <sstream>
 #include <tuple>
 #include <utility>
+
+#include "SolverInterfaceImpl.hpp"
 #include "action/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
@@ -54,6 +55,7 @@
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "precice/impl/versions.hpp"
+#include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/EigenIO.hpp"
 #include "utils/Event.hpp"
@@ -616,7 +618,7 @@ std::set<int> SolverInterfaceImpl::getMeshIDs() const
 }
 
 bool SolverInterfaceImpl::hasData(
-    const std::string &dataName, int meshID) const
+    const std::string &dataName, MeshID meshID) const
 {
   PRECICE_TRACE(dataName, meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
@@ -624,7 +626,7 @@ bool SolverInterfaceImpl::hasData(
 }
 
 int SolverInterfaceImpl::getDataID(
-    const std::string &dataName, int meshID) const
+    const std::string &dataName, MeshID meshID) const
 {
   PRECICE_TRACE(dataName, meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
@@ -636,10 +638,9 @@ int SolverInterfaceImpl::getDataID(
 }
 
 int SolverInterfaceImpl::getMeshVertexSize(
-    int meshID) const
+    MeshID meshID) const
 {
   PRECICE_TRACE(meshID);
-  int size = 0;
   PRECICE_REQUIRE_MESH_USE(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
@@ -648,7 +649,7 @@ int SolverInterfaceImpl::getMeshVertexSize(
 
 /// @todo Currently not supported as we would need to re-compute the re-partition
 void SolverInterfaceImpl::resetMesh(
-    int meshID)
+    MeshID meshID)
 {
   PRECICE_TRACE(meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
@@ -762,9 +763,9 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
 }
 
 int SolverInterfaceImpl::setMeshEdge(
-    int meshID,
-    int firstVertexID,
-    int secondVertexID)
+    MeshID meshID,
+    int    firstVertexID,
+    int    secondVertexID)
 {
   PRECICE_TRACE(meshID, firstVertexID, secondVertexID);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
@@ -782,10 +783,10 @@ int SolverInterfaceImpl::setMeshEdge(
 }
 
 void SolverInterfaceImpl::setMeshTriangle(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID)
+    MeshID meshID,
+    int    firstEdgeID,
+    int    secondEdgeID,
+    int    thirdEdgeID)
 {
   PRECICE_TRACE(meshID, firstEdgeID,
                 secondEdgeID, thirdEdgeID);
@@ -813,10 +814,10 @@ void SolverInterfaceImpl::setMeshTriangle(
 }
 
 void SolverInterfaceImpl::setMeshTriangleWithEdges(
-    int meshID,
-    int firstVertexID,
-    int secondVertexID,
-    int thirdVertexID)
+    MeshID meshID,
+    int    firstVertexID,
+    int    secondVertexID,
+    int    thirdVertexID)
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
@@ -851,11 +852,11 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
 }
 
 void SolverInterfaceImpl::setMeshQuad(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID,
-    int fourthEdgeID)
+    MeshID meshID,
+    int    firstEdgeID,
+    int    secondEdgeID,
+    int    thirdEdgeID,
+    int    fourthEdgeID)
 {
   PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
@@ -911,11 +912,11 @@ void SolverInterfaceImpl::setMeshQuad(
 }
 
 void SolverInterfaceImpl::setMeshQuadWithEdges(
-    int meshID,
-    int firstVertexID,
-    int secondVertexID,
-    int thirdVertexID,
-    int fourthVertexID)
+    MeshID meshID,
+    int    firstVertexID,
+    int    secondVertexID,
+    int    thirdVertexID,
+    int    fourthVertexID)
 {
   PRECICE_TRACE(meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
@@ -1640,7 +1641,7 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
     utils::MasterSlave::_communication->send(computedTimestepLength, 0);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isMaster());
-    for (int rankSlave : utils::MasterSlave::allSlaves()) {
+    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       double dt;
       utils::MasterSlave::_communication->receive(dt, rankSlave);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
