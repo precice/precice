@@ -415,15 +415,15 @@ BOOST_AUTO_TEST_CASE(ProjectionToVertex)
   std::vector<int>    expectedIndices = {2};
   std::vector<double> expectedWeights = {1.0};
 
-  auto interpolation = indexTree.findNearestProjection(location, 1);
+  auto match = indexTree.findNearestProjection(location, 1);
 
-  BOOST_TEST(interpolation.first.getWeightedElements().size() == 1); // Check number of weights
-  BOOST_TEST(interpolation.second == 1.0);                           // Check the distance
-  BOOST_TEST(interpolation.first.isInterpolation());
+  BOOST_TEST(match.polation.getWeightedElements().size() == 1); // Check number of weights
+  BOOST_TEST(match.distance == 1.0);                            // Check the distance
+  BOOST_TEST(match.polation.isInterpolation());
 
-  for (int i = 0; i < interpolation.first.getWeightedElements().size(); ++i) {
-    BOOST_TEST(interpolation.first.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
-    BOOST_TEST(interpolation.first.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
+  for (int i = 0; i < match.polation.getWeightedElements().size(); ++i) {
+    BOOST_TEST(match.polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
+    BOOST_TEST(match.polation.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
   }
 }
 
@@ -437,15 +437,15 @@ BOOST_AUTO_TEST_CASE(ProjectionToEdge)
   std::vector<int>    expectedIndices = {2, 3};
   std::vector<double> expectedWeights = {0.5, 0.5};
 
-  auto interpolation = indexTree.findNearestProjection(location, 1);
+  auto match = indexTree.findNearestProjection(location, 1);
 
-  BOOST_TEST(interpolation.first.getWeightedElements().size() == 2); // Check number of weights
-  BOOST_TEST(interpolation.second == 1.0);                           // Check the distance
-  BOOST_TEST(interpolation.first.isInterpolation());
+  BOOST_TEST(match.polation.getWeightedElements().size() == 2); // Check number of weights
+  BOOST_TEST(match.distance == 1.0);                            // Check the distance
+  BOOST_TEST(match.polation.isInterpolation());
 
-  for (int i = 0; i < interpolation.first.getWeightedElements().size(); ++i) {
-    BOOST_TEST(interpolation.first.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
-    BOOST_TEST(interpolation.first.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
+  for (int i = 0; i < match.polation.getWeightedElements().size(); ++i) {
+    BOOST_TEST(match.polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
+    BOOST_TEST(match.polation.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
   }
 }
 
@@ -459,15 +459,15 @@ BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
   std::vector<int>    expectedIndices = {0, 1, 3};
   std::vector<double> expectedWeights = {1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0};
 
-  auto interpolation = indexTree.findNearestProjection(location, 1);
+  auto match = indexTree.findNearestProjection(location, 1);
 
-  BOOST_TEST(interpolation.first.getWeightedElements().size() == 3); // Check number of weights
-  BOOST_TEST(interpolation.second == 0.0);                           // Check the distance
-  BOOST_TEST(interpolation.first.isInterpolation());
+  BOOST_TEST(match.polation.getWeightedElements().size() == 3); // Check number of weights
+  BOOST_TEST(match.distance == 0.0);                            // Check the distance
+  BOOST_TEST(match.polation.isInterpolation());
 
-  for (int i = 0; i < interpolation.first.getWeightedElements().size(); ++i) {
-    BOOST_TEST(interpolation.first.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
-    BOOST_TEST(interpolation.first.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
+  for (int i = 0; i < match.polation.getWeightedElements().size(); ++i) {
+    BOOST_TEST(match.polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
+    BOOST_TEST(match.polation.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
   }
 }
 
