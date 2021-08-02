@@ -2,11 +2,13 @@
 
 #include <string>
 #include <vector>
+
 #include "BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 // Forward declaration to friend the boost test struct
@@ -18,7 +20,7 @@ struct testExtrapolateData;
 
 namespace precice {
 namespace cplscheme {
-struct CouplingData;
+class CouplingData;
 
 /**
  * @brief Abstract base class for coupling schemes with two participants.
@@ -72,7 +74,7 @@ public:
   /**
    * @returns true, if coupling scheme has sendData with given DataID
    */
-  bool hasSendData(int dataID)
+  bool hasSendData(DataID dataID)
   {
     return getSendData(dataID) != nullptr;
   }
@@ -91,10 +93,10 @@ protected:
   }
 
   /// Sets the values
-  CouplingData *getSendData(int dataID);
+  CouplingData *getSendData(DataID dataID);
 
   /// Returns all data to be received with data ID as given.
-  CouplingData *getReceiveData(int dataID);
+  CouplingData *getReceiveData(DataID dataID);
 
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N() const
@@ -102,9 +104,6 @@ protected:
     PRECICE_ASSERT(_m2n);
     return _m2n;
   }
-
-  /// @brief Receive from coupling partner and return whether coupling scheme has converged
-  bool receiveConvergence();
 
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};

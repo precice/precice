@@ -1,12 +1,13 @@
 #ifndef PRECICE_NO_MPI
 
-#include "acceleration/MVQNAcceleration.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <fstream>
 #include <map>
 #include <memory>
 #include <string>
+
+#include "acceleration/MVQNAcceleration.hpp"
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
@@ -15,6 +16,7 @@
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
@@ -508,7 +510,7 @@ void MVQNAcceleration::restartIMVJ()
     }
     // |===================                            ===|
 
-    int rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
+    Rank rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
 
     // if it is the first time window, there is no initial SVD, so take all Wtil, Z matrices
     // otherwise, the first element of each container holds the decomposition of the current
@@ -540,8 +542,8 @@ void MVQNAcceleration::restartIMVJ()
       for (int j = 0; j < (int) Z.cols(); j++)
         Z(i, j) = phi(j, i) * sigma[i];
 
-    int rankAfter = _svdJ.rank();
-    int waste     = _svdJ.getWaste();
+    Rank rankAfter = _svdJ.rank();
+    int  waste     = _svdJ.getWaste();
     _avgRank += rankAfter;
 
     // store factorized truncated SVD of J

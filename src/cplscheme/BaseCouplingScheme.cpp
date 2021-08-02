@@ -1,10 +1,11 @@
-#include "BaseCouplingScheme.hpp"
 #include <Eigen/Core>
 #include <cmath>
 #include <cstddef>
 #include <limits>
 #include <sstream>
 #include <utility>
+
+#include "BaseCouplingScheme.hpp"
 #include "acceleration/Acceleration.hpp"
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingData.hpp"
@@ -16,6 +17,7 @@
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "precice/types.hpp"
 #include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -131,7 +133,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
                     "an implicit coupling scheme.");
       // setup convergence measures
       for (ConvergenceMeasureContext &convergenceMeasure : _convergenceMeasures) {
-        int dataID = convergenceMeasure.couplingData->getDataID();
+        DataID dataID = convergenceMeasure.couplingData->getDataID();
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
       // reserve memory and initialize data with zero
@@ -636,12 +638,26 @@ bool BaseCouplingScheme::doImplicitStep()
   return convergence;
 }
 
-void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID)
+void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, DataID dataID)
 {
   PRECICE_TRACE(dataID);
   DataMap::iterator iter = _allData.find(dataID);
   PRECICE_ASSERT(iter != _allData.end(), "Given data ID does not exist in _allData!");
   convergenceMeasure->couplingData = &(*(iter->second));
+}
+
+void BaseCouplingScheme::sendConvergence(m2n::PtrM2N m2n, bool convergence)
+{
+  PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
+  m2n->send(convergence);
+}
+
+bool BaseCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
+{
+  PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
+  bool convergence;
+  m2n->receive(convergence);
+  return convergence;
 }
 
 } // namespace cplscheme

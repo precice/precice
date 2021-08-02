@@ -102,7 +102,8 @@ else (EIGEN3_INCLUDE_DIR)
   endif(EIGEN3_INCLUDE_DIR)
 
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(Eigen3 DEFAULT_MSG EIGEN3_INCLUDE_DIR EIGEN3_VERSION_OK)
+  find_package_handle_standard_args(Eigen3 "Could NOT find Eigen3 (missing: EIGEN3_INCLUDE_DIR EIGEN3_VERSION_OK).
+      You may want to export your Eigen3_ROOT which is picked up by cmake automatically." EIGEN3_INCLUDE_DIR EIGEN3_VERSION_OK)
 
   mark_as_advanced(EIGEN3_INCLUDE_DIR)
 

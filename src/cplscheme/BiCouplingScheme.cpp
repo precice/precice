@@ -1,10 +1,11 @@
-#include "BiCouplingScheme.hpp"
 #include <algorithm>
 #include <map>
 #include <memory>
 #include <ostream>
 #include <type_traits>
 #include <utility>
+
+#include "BiCouplingScheme.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
@@ -12,6 +13,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
+#include "precice/types.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice {
@@ -96,16 +98,8 @@ std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
-bool BiCouplingScheme::receiveConvergence()
-{
-  PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
-  bool convergence;
-  _m2n->receive(convergence);
-  return convergence;
-}
-
 CouplingData *BiCouplingScheme::getSendData(
-    int dataID)
+    DataID dataID)
 {
   PRECICE_TRACE(dataID);
   DataMap::iterator iter = _sendData.find(dataID);
@@ -116,7 +110,7 @@ CouplingData *BiCouplingScheme::getSendData(
 }
 
 CouplingData *BiCouplingScheme::getReceiveData(
-    int dataID)
+    DataID dataID)
 {
   PRECICE_TRACE(dataID);
   DataMap::iterator iter = _receiveData.find(dataID);
