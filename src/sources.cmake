@@ -98,6 +98,7 @@ target_sources(precice
     src/cplscheme/CompositionalCouplingScheme.hpp
     src/cplscheme/Constants.cpp
     src/cplscheme/Constants.hpp
+    src/cplscheme/CouplingData.cpp
     src/cplscheme/CouplingData.hpp
     src/cplscheme/CouplingScheme.cpp
     src/cplscheme/CouplingScheme.hpp
@@ -243,6 +244,8 @@ target_sources(precice
     src/query/impl/Indexer.cpp
     src/query/impl/Indexer.hpp
     src/query/impl/RTreeAdapter.hpp
+    src/time/Waveform.cpp
+    src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp

@@ -50,9 +50,6 @@ public:
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
-  /// Map from data ID -> all data (receive and send) with that ID
-  DataMap _allData;
-
   /**
    * @brief Exchanges all data between the participants of the ParallelCouplingScheme and applies acceleration.
    * @returns true, if iteration converged
@@ -73,11 +70,6 @@ private:
    * @brief determine whether data has to be sent/received
    */
   void initializeImplementation() override;
-
-  /**
-   * @brief merges send and receive data into one map (for parallel acceleration)
-   */
-  void mergeData() override;
 
   /**
    * @brief Exchanges data, if it has to be initialized.

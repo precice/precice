@@ -13,12 +13,14 @@
 #include <fstream>
 #include <memory>
 #include <string>
+
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 // ------- CLASS DEFINITION
@@ -208,7 +210,7 @@ public:
   int rows();
 
   /// @brief: returns the rank of the truncated SVD factorization
-  int rank();
+  Rank rank();
 
   /// @brief: returns the total number of truncated modes since last call to this method
   int getWaste();

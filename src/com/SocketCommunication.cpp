@@ -1,4 +1,3 @@
-#include "SocketCommunication.hpp"
 #include <algorithm>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -6,9 +5,12 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+
 #include "ConnectionInfoPublisher.hpp"
+#include "SocketCommunication.hpp"
 #include "SocketRequest.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
 
@@ -338,7 +340,7 @@ void SocketCommunication::closeConnection()
   _isConnected = false;
 }
 
-void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
+void SocketCommunication::send(std::string const &itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
@@ -356,7 +358,7 @@ void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
   }
 }
 
-void SocketCommunication::send(const int *itemsToSend, int size, int rankReceiver)
+void SocketCommunication::send(const int *itemsToSend, int size, Rank rankReceiver)
 {
   PRECICE_TRACE(size, rankReceiver);
 
@@ -398,7 +400,7 @@ void SocketCommunication::cleanupEstablishment(std::string const &acceptorName,
   }
 }
 
-PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, Rank rankReceiver)
 {
   PRECICE_TRACE(size, rankReceiver);
 
@@ -417,7 +419,7 @@ PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, int rank
   return request;
 }
 
-void SocketCommunication::send(const double *itemsToSend, int size, int rankReceiver)
+void SocketCommunication::send(const double *itemsToSend, int size, Rank rankReceiver)
 {
   PRECICE_TRACE(size, rankReceiver);
 
@@ -433,7 +435,7 @@ void SocketCommunication::send(const double *itemsToSend, int size, int rankRece
   }
 }
 
-PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, Rank rankReceiver)
 {
   PRECICE_TRACE(size, rankReceiver);
 
@@ -452,7 +454,7 @@ PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int r
   return request;
 }
 
-PtrRequest SocketCommunication::aSend(std::vector<double> const &itemsToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(std::vector<double> const &itemsToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -471,7 +473,7 @@ PtrRequest SocketCommunication::aSend(std::vector<double> const &itemsToSend, in
   return request;
 }
 
-void SocketCommunication::send(double itemToSend, int rankReceiver)
+void SocketCommunication::send(double itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
@@ -487,12 +489,12 @@ void SocketCommunication::send(double itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(const double &itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const double &itemToSend, Rank rankReceiver)
 {
   return aSend(&itemToSend, 1, rankReceiver);
 }
 
-void SocketCommunication::send(int itemToSend, int rankReceiver)
+void SocketCommunication::send(int itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
@@ -508,12 +510,12 @@ void SocketCommunication::send(int itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(const int &itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const int &itemToSend, Rank rankReceiver)
 {
   return aSend(&itemToSend, 1, rankReceiver);
 }
 
-PtrRequest SocketCommunication::aSend(std::vector<int> const &itemsToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(std::vector<int> const &itemsToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -532,7 +534,8 @@ PtrRequest SocketCommunication::aSend(std::vector<int> const &itemsToSend, int r
   return request;
 }
 
-void SocketCommunication::send(bool itemToSend, int rankReceiver)
+
+void SocketCommunication::send(bool itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
@@ -548,7 +551,7 @@ void SocketCommunication::send(bool itemToSend, int rankReceiver)
   }
 }
 
-PtrRequest SocketCommunication::aSend(const bool &itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const bool &itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -567,7 +570,7 @@ PtrRequest SocketCommunication::aSend(const bool &itemToSend, int rankReceiver)
   return request;
 }
 
-void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
+void SocketCommunication::receive(std::string &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -588,7 +591,7 @@ void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
   }
 }
 
-void SocketCommunication::receive(int *itemsToReceive, int size, int rankSender)
+void SocketCommunication::receive(int *itemsToReceive, int size, Rank rankSender)
 {
   PRECICE_TRACE(size, rankSender);
 
@@ -604,7 +607,7 @@ void SocketCommunication::receive(int *itemsToReceive, int size, int rankSender)
   }
 }
 
-void SocketCommunication::receive(double *itemsToReceive, int size, int rankSender)
+void SocketCommunication::receive(double *itemsToReceive, int size, Rank rankSender)
 {
   PRECICE_TRACE(size, rankSender);
 
@@ -646,7 +649,7 @@ PtrRequest SocketCommunication::aReceive(double *itemsToReceive,
   return request;
 }
 
-PtrRequest SocketCommunication::aReceive(std::vector<double> &itemsToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(std::vector<double> &itemsToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -670,7 +673,7 @@ PtrRequest SocketCommunication::aReceive(std::vector<double> &itemsToReceive, in
   return request;
 }
 
-void SocketCommunication::receive(double &itemToReceive, int rankSender)
+void SocketCommunication::receive(double &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -686,12 +689,12 @@ void SocketCommunication::receive(double &itemToReceive, int rankSender)
   }
 }
 
-PtrRequest SocketCommunication::aReceive(double &itemToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(double &itemToReceive, Rank rankSender)
 {
   return aReceive(&itemToReceive, 1, rankSender);
 }
 
-void SocketCommunication::receive(int &itemToReceive, int rankSender)
+void SocketCommunication::receive(int &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -707,7 +710,7 @@ void SocketCommunication::receive(int &itemToReceive, int rankSender)
   }
 }
 
-PtrRequest SocketCommunication::aReceive(int &itemToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(int &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -732,7 +735,7 @@ PtrRequest SocketCommunication::aReceive(int &itemToReceive, int rankSender)
   return request;
 }
 
-void SocketCommunication::receive(bool &itemToReceive, int rankSender)
+void SocketCommunication::receive(bool &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -748,7 +751,7 @@ void SocketCommunication::receive(bool &itemToReceive, int rankSender)
   }
 }
 
-PtrRequest SocketCommunication::aReceive(bool &itemToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(bool &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -772,7 +775,7 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, int rankSender)
   return request;
 }
 
-void SocketCommunication::send(std::vector<int> const &v, int rankReceiver)
+void SocketCommunication::send(std::vector<int> const &v, Rank rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -790,7 +793,7 @@ void SocketCommunication::send(std::vector<int> const &v, int rankReceiver)
   }
 }
 
-void SocketCommunication::receive(std::vector<int> &v, int rankSender)
+void SocketCommunication::receive(std::vector<int> &v, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -810,7 +813,7 @@ void SocketCommunication::receive(std::vector<int> &v, int rankSender)
   }
 }
 
-void SocketCommunication::send(std::vector<double> const &v, int rankReceiver)
+void SocketCommunication::send(std::vector<double> const &v, Rank rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -828,7 +831,7 @@ void SocketCommunication::send(std::vector<double> const &v, int rankReceiver)
   }
 }
 
-void SocketCommunication::receive(std::vector<double> &v, int rankSender)
+void SocketCommunication::receive(std::vector<double> &v, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 

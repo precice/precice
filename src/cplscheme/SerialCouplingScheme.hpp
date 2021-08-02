@@ -79,11 +79,6 @@ private:
   void initializeImplementation() override;
 
   /**
-   * @brief noop for SerialCouplingScheme
-   */
-  void mergeData() override{};
-
-  /**
    * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override;
