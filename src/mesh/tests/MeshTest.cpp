@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(Demonstration)
 
     // Validate state of mesh with data
     BOOST_TEST(mesh.data().size() == 1);
-    BOOST_TEST(mesh.data().at(0)->getName() == dataName);
+    BOOST_TEST(mesh.data(0)->getName() == dataName);
 
     // Allocate memory for the data values of set data. Before data value access
     // leads to assertions.

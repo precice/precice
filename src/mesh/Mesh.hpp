@@ -135,6 +135,9 @@ public:
   /// Allows access to all data
   const DataContainer &data() const;
 
+  /// Returns whether Mesh has Data with the matchingID
+  bool hasDataID(DataID dataID) const;
+
   /// Returns the data with the matching ID
   const PtrData &data(DataID dataID) const;
 

@@ -149,6 +149,14 @@ const Mesh::DataContainer &Mesh::data() const
   return _data;
 }
 
+bool Mesh::hasDataID(DataID dataID) const
+{
+  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) {
+    return dptr->getID() == dataID;
+  });
+  return iter != _data.end(); // if id was not found in mesh, iter == _data.end()
+}
+
 const PtrData &Mesh::data(DataID dataID) const
 {
   auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) {
