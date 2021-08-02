@@ -1098,10 +1098,10 @@ void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
 
   mesh->computeBoundingBox();
 
-  receivedPartitionFixture fixture;
-  fixture.prepareBoundingBox(part);
-  fixture.tagMeshFirstRound(part);
-  fixture.createOwnerInformation(part);
+  using Access = receivedPartitionFixture;
+  Access::prepareBoundingBox(part);
+  Access::tagMeshFirstRound(part);
+  Access::createOwnerInformation(part);
 }
 
 BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationVertexCount)

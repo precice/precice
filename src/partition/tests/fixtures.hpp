@@ -9,15 +9,15 @@ namespace partition {
  * The fixture can be used to call private functions for individual testing. 
  */
 struct receivedPartitionFixture {
-  void createOwnerInformation(ReceivedPartition &part)
+  static void createOwnerInformation(ReceivedPartition &part)
   {
     part.createOwnerInformation();
   }
-  void tagMeshFirstRound(ReceivedPartition &part)
+  static void tagMeshFirstRound(ReceivedPartition &part)
   {
     part.tagMeshFirstRound();
   }
-  void prepareBoundingBox(ReceivedPartition &part)
+  static void prepareBoundingBox(ReceivedPartition &part)
   {
     part.prepareBoundingBox();
   }
