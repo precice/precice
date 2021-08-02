@@ -498,7 +498,7 @@ void ReceivedPartition::createOwnerInformation()
     // Define and initialize localBBMap to save local bbs
 
     mesh::Mesh::BoundingBoxMap localBBMap;
-    for (int rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+    for (Rank rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
       localBBMap.emplace(rank, mesh::BoundingBox(_dimensions));
     }
 
@@ -727,11 +727,11 @@ void ReceivedPartition::createOwnerInformation()
       PRECICE_DEBUG("My tags: {}", slaveTags[0]);
 
       // receive slave data
-      int ranksAtInterface = 0;
+      Rank ranksAtInterface = 0;
       if (masterAtInterface)
         ranksAtInterface++;
 
-      for (int rank : utils::MasterSlave::allSlaves()) {
+      for (Rank rank : utils::MasterSlave::allSlaves()) {
         int localNumberOfVertices = -1;
         utils::MasterSlave::_communication->receive(localNumberOfVertices, rank);
         PRECICE_DEBUG("Rank {} has {} vertices.", rank, localNumberOfVertices);
@@ -755,7 +755,7 @@ void ReceivedPartition::createOwnerInformation()
       PRECICE_ASSERT(ranksAtInterface != 0);
       int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
       // First round: every slave gets localGuess vertices
-      for (int rank : utils::MasterSlave::allRanks()) {
+      for (Rank rank : utils::MasterSlave::allRanks()) {
         int counter = 0;
         for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
           // Vertex has no owner yet and rank could be owner
@@ -771,7 +771,7 @@ void ReceivedPartition::createOwnerInformation()
 
       // Second round: distribute all other vertices in a greedy way
       PRECICE_DEBUG("Decide owners, second round in greedy way");
-      for (int rank : utils::MasterSlave::allRanks()) {
+      for (Rank rank : utils::MasterSlave::allRanks()) {
         for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
           if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
             slaveOwnerVecs[rank][i]                 = 1;
@@ -781,7 +781,7 @@ void ReceivedPartition::createOwnerInformation()
       }
 
       // Send information back to slaves
-      for (int rank : utils::MasterSlave::allSlaves()) {
+      for (Rank rank : utils::MasterSlave::allSlaves()) {
         if (not slaveTags[rank].empty()) {
           PRECICE_DEBUG("Send owner information to slave rank {}", rank);
           utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);
