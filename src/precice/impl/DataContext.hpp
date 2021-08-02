@@ -2,25 +2,29 @@
 
 #include <string>
 #include "MappingContext.hpp"
+#include "MeshContext.hpp"
 #include "mesh/SharedPointer.hpp"
 
 namespace precice {
 namespace impl {
 
 /**
- * @brief Stores one Data object with related context. If this dataContext is not associated with a mapping,
- * fromData and toData refer to the same data object.
+ * @brief Stores one Data object with related mesh.
+ *
+ * - If this dataContext is associated with a mapping, fromData and toData will be set correspondingly.
+ *   One of the two must be equal to provdedData.
+ * - If this dataContext is not associated with a mapping, fromData and toData will be unset.
  */
 class DataContext {
 
 public:
   DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
-  mesh::PtrData participantData();
+  mesh::PtrData providedData();
 
   std::string getDataName() const;
 
-  int getParticipantDataID() const;
+  int getProvidedDataID() const;
 
   mesh::PtrData fromData();
 
@@ -34,7 +38,9 @@ public:
 
   int getMeshID() const;
 
-  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
+  void configureForReadMapping(MappingContext mappingContext, MeshContext meshContext);
+
+  void configureForWriteMapping(MappingContext mappingContext, MeshContext meshContext);
 
   bool hasMapping() const;
 
@@ -43,7 +49,8 @@ public:
 private:
   mesh::PtrMesh _mesh;
 
-  mesh::PtrData _participantData; // data this participant will write to and read from
+  // data this participant will write to and read from
+  mesh::PtrData _providedData;
 
   mesh::PtrData _fromData;
 
@@ -52,6 +59,8 @@ private:
   MappingContext _mappingContext;
 
   bool _hasMapping = false;
+
+  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 };
 
 } // namespace impl
