@@ -141,6 +141,9 @@ public:
   /// Returns the data with the matching ID
   const PtrData &data(DataID dataID) const;
 
+  /// Returns whether Mesh has Data with the dataName
+  bool hasDataName(const std::string &dataName) const;
+
   /// Returns the data with the matching name
   const PtrData &data(const std::string &dataName) const;
 
