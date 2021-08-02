@@ -534,7 +534,6 @@ PtrRequest SocketCommunication::aSend(std::vector<int> const &itemsToSend, Rank 
   return request;
 }
 
-
 void SocketCommunication::send(bool itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
