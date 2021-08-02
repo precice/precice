@@ -12,7 +12,6 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
   _participantData = data;
   PRECICE_ASSERT(mesh);
   _mesh       = mesh;
-  _hasMapping = false;
 }
 
 mesh::PtrData DataContext::participantData()

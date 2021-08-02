@@ -51,7 +51,7 @@ private:
 
   MappingContext _mappingContext;
 
-  bool _hasMapping;
+  bool _hasMapping = false;
 };
 
 } // namespace impl
