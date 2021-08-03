@@ -231,9 +231,9 @@ void ActionConfiguration::createAction()
     targetDataID = -1;
   }
 
-  for (const mesh::PtrData &data : mesh->data()) {
-    if (std::find(_configuredAction.sourceDataVector.begin(), _configuredAction.sourceDataVector.end(), data->getName()) != _configuredAction.sourceDataVector.end()) {
-      sourceDataIDs.push_back(data->getID());
+  for (const std::string &dataName : _configuredAction.sourceDataVector) {
+    if (mesh->hasDataName(dataName)) {
+      sourceDataIDs.push_back(mesh->data(dataName)->getID());
     }
   }
   PRECICE_CHECK((_configuredAction.sourceDataVector.empty() || not sourceDataIDs.empty()),
