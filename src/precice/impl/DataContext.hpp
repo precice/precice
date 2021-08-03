@@ -4,6 +4,7 @@
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/SharedPointer.hpp"
 
 namespace precice {
 namespace impl {
@@ -56,16 +57,22 @@ private:
   mesh::PtrMesh _mesh;
 
   // data this participant will write to and read from
+  time::PtrWaveform _providedWaveform;
+
   mesh::PtrData _providedData;
 
+  time::PtrWaveform _fromWaveform;
+
   mesh::PtrData _fromData;
+
+  time::PtrWaveform _toWaveform;
 
   mesh::PtrData _toData;
 
   MappingContext _mappingContext;
 
   // helper function for creating read and write mappings
-  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
+  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData, time::PtrWaveform fromWaveform, time::PtrWaveform toWaveform);
 };
 
 } // namespace impl

@@ -1524,7 +1524,10 @@ void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, const
                       mappingType, context.getDataName(), context.getMeshName());
         context.resetToData();
         PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
+        // TODO we have to iterate over all the samples in the _fromWaveform, put them into _fromData
+        // mapping then maps from _fromData to _toData
         context.mappingContext().mapping->map(inDataID, outDataID);
+        // TODO we have to store _toData at the right place into the _toWaveform
       }
     }
   }
