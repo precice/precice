@@ -240,7 +240,7 @@ void ExportVTKXML::exportData(
   outFile << "\">\n";
 
   // Export the current rank
-  outFile << "            <DataArray type=\"Int32\" Name=\"Rank\" NumberOfComponents=\"1\" format=\"ascii\">\n";
+  outFile << "            <DataArray type=\"UInt32\" Name=\"Rank\" NumberOfComponents=\"1\" format=\"ascii\">\n";
   const auto rank = utils::MasterSlave::getRank();
   for (size_t count = 0; count < mesh.vertices().size(); ++count) {
     outFile << rank << ' ';
