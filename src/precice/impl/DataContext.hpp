@@ -12,7 +12,7 @@ namespace impl {
  * @brief Stores one Data object with related mesh.
  *
  * - If this dataContext is associated with a mapping, fromData and toData will be set correspondingly.
- *   One of the two must be equal to provdedData.
+ *   One of the two must be equal to providedData. fromData and toData must be different.
  * - If this dataContext is not associated with a mapping, fromData and toData will be unset.
  */
 class DataContext {
@@ -38,11 +38,17 @@ public:
 
   int getMeshID() const;
 
+  // links a read mapping to this data context
   void configureForReadMapping(MappingContext mappingContext, MeshContext meshContext);
 
+  // links a write mapping to this data context
   void configureForWriteMapping(MappingContext mappingContext, MeshContext meshContext);
 
   bool hasMapping() const;
+
+  bool hasReadMapping() const;
+
+  bool hasWriteMapping() const;
 
   const MappingContext mappingContext() const;
 
@@ -58,8 +64,7 @@ private:
 
   MappingContext _mappingContext;
 
-  bool _hasMapping = false;
-
+  // helper function for creating read and write mappings
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 };
 

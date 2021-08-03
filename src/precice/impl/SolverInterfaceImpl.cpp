@@ -1603,7 +1603,7 @@ void SolverInterfaceImpl::resetWrittenData()
   for (DataContext &context : _accessor->writeDataContexts()) {
     context.providedData()->toZero();
     if (context.hasMapping()) {
-      PRECICE_ASSERT(context.fromData() == context.providedData());
+      PRECICE_ASSERT(context.hasWriteMapping());
       context.toData()->toZero();
     }
   }
