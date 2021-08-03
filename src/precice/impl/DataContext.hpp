@@ -26,11 +26,11 @@ public:
 
   int getProvidedDataID() const;
 
-  mesh::PtrData fromData();
-
   int getFromDataID() const;
 
-  mesh::PtrData toData();
+  void resetProvidedData();
+
+  void resetToData();
 
   int getToDataID() const;
 

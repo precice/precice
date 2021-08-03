@@ -32,13 +32,6 @@ int DataContext::getProvidedDataID() const
   return _providedData->getID();
 }
 
-mesh::PtrData DataContext::fromData()
-{
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_ASSERT(_fromData);
-  return _fromData;
-}
-
 int DataContext::getFromDataID() const
 {
   PRECICE_ASSERT(hasMapping());
@@ -46,11 +39,14 @@ int DataContext::getFromDataID() const
   return _fromData->getID();
 }
 
-mesh::PtrData DataContext::toData()
+void DataContext::resetProvidedData()
 {
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_ASSERT(_toData);
-  return _toData;
+  _providedData->toZero();
+}
+
+void DataContext::resetToData()
+{
+  _toData->toZero();
 }
 
 int DataContext::getToDataID() const

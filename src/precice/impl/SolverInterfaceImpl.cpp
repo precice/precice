@@ -997,8 +997,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
-
-      context.toData()->values() = Eigen::VectorXd::Zero(context.toData()->values().size());
+      context.resetToData();
       PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
@@ -1031,11 +1030,10 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.getMeshID() != toMeshID) {
         continue;
       }
-      context.toData()->values() = Eigen::VectorXd::Zero(context.toData()->values().size());
+      context.resetToData();
       PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
-      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values()));
     }
     mappingContext.hasMappedData = true;
   }
@@ -1509,10 +1507,9 @@ void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, const
         int outDataID = context.getToDataID();
         PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
                       mappingType, context.getDataName(), context.getMeshName());
-        context.toData()->values() = Eigen::VectorXd::Zero(context.toData()->values().size());
+        context.resetToData();
         PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
         context.mappingContext().mapping->map(inDataID, outDataID);
-        PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values()));
       }
     }
   }
@@ -1601,10 +1598,10 @@ void SolverInterfaceImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (DataContext &context : _accessor->writeDataContexts()) {
-    context.providedData()->toZero();
+    context.resetProvidedData();
     if (context.hasMapping()) {
       PRECICE_ASSERT(context.hasWriteMapping());
-      context.toData()->toZero();
+      context.resetToData();
     }
   }
 }
