@@ -208,8 +208,7 @@ void ActionConfiguration::xmlEndTagCallback(
 int ActionConfiguration::getUsedMeshID() const
 {
   PRECICE_CHECK(_meshConfig->hasMeshName(_configuredAction.mesh), "No mesh name \"{}\" found. Please check that the correct mesh name is used.", _configuredAction.mesh);
-  const mesh::PtrMesh &mesh = _meshConfig->getMesh(_configuredAction.mesh);
-  return mesh->getID();
+  return _meshConfig->getMesh(_configuredAction.mesh)->getID();
 }
 
 void ActionConfiguration::createAction()
