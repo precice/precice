@@ -1275,7 +1275,7 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
-  double dt = _couplingScheme->getThisTimeWindowRemainder();  // samples at end of time window
+  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
   return readScalarData(dataID, valueIndex, dt, value);
 }
 
