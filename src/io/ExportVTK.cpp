@@ -97,6 +97,10 @@ void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
 {
   outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
 
+  outFile << "SCALARS Rank unsigned_int\n";
+  std::fill_n(std::ostream_iterator<char const *>(outFile), mesh.vertices().size(), "0 ");
+  outFile << "\n\n";
+
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values = data->values();
     if (data->getDimensions() > 1) {
