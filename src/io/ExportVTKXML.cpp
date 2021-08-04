@@ -137,7 +137,11 @@ void ExportVTKXML::writeSubFile(
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name + "_r" + std::to_string(utils::MasterSlave::getRank()) + ".vtu");
+  if (utils::MasterSlave::isParallel()) {
+    outfile /= fs::path(name + "_r" + std::to_string(utils::MasterSlave::getRank()) + ".vtu");
+  } else {
+    outfile /= fs::path(name + ".vtu");
+  }
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
   PRECICE_CHECK(outSubFile, "VTKXML export failed to open slave file \"{}\"", outfile);
