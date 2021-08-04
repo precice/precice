@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   }
 
   io::ExportVTK exportVTK;
-  std::string      filename = "io-ExportVTKTest-testExportPolygonalMesh";
-  std::string      location = "";
+  std::string   filename = "io-ExportVTKTest-testExportPolygonalMesh";
+  std::string   location = "";
   exportVTK.doExport(filename, location, mesh);
 }
 
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   }
 
   io::ExportVTK exportVTK;
-  std::string      filename = "io-ExportVTKTest-testExportTriangulatedMesh";
-  std::string      location = "";
+  std::string   filename = "io-ExportVTKTest-testExportTriangulatedMesh";
+  std::string   location = "";
   exportVTK.doExport(filename, location, mesh);
 }
 
