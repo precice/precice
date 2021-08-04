@@ -125,8 +125,6 @@ target_sources(precice
     src/io/Constants.hpp
     src/io/Export.hpp
     src/io/ExportContext.hpp
-    src/io/ExportVTK.cpp
-    src/io/ExportVTK.hpp
     src/io/ExportVTKXML.cpp
     src/io/ExportVTKXML.hpp
     src/io/SharedPointer.hpp
@@ -239,11 +237,13 @@ target_sources(precice
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
+    src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp
     src/query/impl/Indexer.cpp
     src/query/impl/Indexer.hpp
     src/query/impl/RTreeAdapter.hpp
+    src/time/SharedPointer.hpp
     src/time/Waveform.cpp
     src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
@@ -302,4 +302,5 @@ target_sources(precice
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     src/precice/SolverInterface.hpp
+    src/precice/types.hpp
     )

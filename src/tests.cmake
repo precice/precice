@@ -29,7 +29,6 @@ target_sources(testprecice
     src/cplscheme/tests/ResidualRelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/SerialImplicitCouplingSchemeTest.cpp
     src/io/tests/ExportConfigurationTest.cpp
-    src/io/tests/ExportVTKTest.cpp
     src/io/tests/ExportVTKXMLTest.cpp
     src/io/tests/TXTTableWriterTest.cpp
     src/io/tests/TXTWriterReaderTest.cpp
