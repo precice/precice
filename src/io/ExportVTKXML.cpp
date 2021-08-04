@@ -32,7 +32,6 @@ void ExportVTKXML::doExport(
     mesh::Mesh &       mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
-  PRECICE_ASSERT(utils::MasterSlave::isParallel());
   processDataNamesAndDimensions(mesh);
   if (not location.empty())
     boost::filesystem::create_directories(location);
@@ -65,6 +64,7 @@ void ExportVTKXML::writeMasterFile(
     const std::string &location,
     mesh::Mesh &       mesh)
 {
+  PRECICE_ASSERT(utils::MasterSlave::isParallel());
   namespace fs = boost::filesystem;
   fs::path outfile(location);
   outfile = outfile / fs::path(name + "_master.pvtu");
