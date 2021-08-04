@@ -125,8 +125,8 @@ target_sources(precice
     src/io/Constants.hpp
     src/io/Export.hpp
     src/io/ExportContext.hpp
-    src/io/ExportVTKXML.cpp
-    src/io/ExportVTKXML.hpp
+    src/io/ExportVTK.cpp
+    src/io/ExportVTK.hpp
     src/io/SharedPointer.hpp
     src/io/TXTReader.cpp
     src/io/TXTReader.hpp

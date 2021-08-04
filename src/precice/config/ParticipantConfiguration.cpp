@@ -11,7 +11,7 @@
 #include "com/SharedPointer.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "io/ExportContext.hpp"
-#include "io/ExportVTKXML.hpp"
+#include "io/ExportVTK.hpp"
 #include "io/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "logging/LogMacros.hpp"
@@ -532,7 +532,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
-      exporter = io::PtrExport(new io::ExportVTKXML());
+      exporter = io::PtrExport(new io::ExportVTK());
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
                     _participants.back()->getName(), exportContext.type);

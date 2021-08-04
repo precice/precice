@@ -6,7 +6,7 @@
 #include <string>
 #include "com/SharedPointer.hpp"
 #include "io/Export.hpp"
-#include "io/ExportVTKXML.hpp"
+#include "io/ExportVTK.hpp"
 #include "mesh/Mesh.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -19,7 +19,7 @@ class Vertex;
 } // namespace mesh
 } // namespace precice
 
-// void ExportVTKXMLTest:: run()
+// void ExportVTKTest:: run()
 // {
 //   PRECICE_TRACE();
 //   typedef utils::Parallel Par;
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(IOTests)
 
 using namespace precice;
 
-BOOST_AUTO_TEST_SUITE(VTKXMLExport)
+BOOST_AUTO_TEST_SUITE(VTKExport)
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
@@ -77,10 +77,10 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::VectorXd::Constant(dim, 3.0));
   }
 
-  io::ExportVTKXML exportVTKXML;
-  std::string      filename = "io-ExportVTKXMLTest-testExportPolygonalMesh";
+  io::ExportVTK exportVTK;
+  std::string      filename = "io-ExportVTKTest-testExportPolygonalMesh";
   std::string      location = "";
-  exportVTKXML.doExport(filename, location, mesh);
+  exportVTK.doExport(filename, location, mesh);
 }
 
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
@@ -122,13 +122,13 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.createVertex(Eigen::VectorXd::Constant(dim, 3.0));
   }
 
-  io::ExportVTKXML exportVTKXML;
-  std::string      filename = "io-ExportVTKXMLTest-testExportTriangulatedMesh";
+  io::ExportVTK exportVTK;
+  std::string      filename = "io-ExportVTKTest-testExportTriangulatedMesh";
   std::string      location = "";
-  exportVTKXML.doExport(filename, location, mesh);
+  exportVTK.doExport(filename, location, mesh);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests
-BOOST_AUTO_TEST_SUITE_END() // VTKXMLExport
+BOOST_AUTO_TEST_SUITE_END() // VTKExport
 
 #endif // PRECICE_NO_MPI
