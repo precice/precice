@@ -239,11 +239,13 @@ target_sources(precice
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/versions.hpp
+    src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp
     src/query/impl/Indexer.cpp
     src/query/impl/Indexer.hpp
     src/query/impl/RTreeAdapter.hpp
+    src/time/SharedPointer.hpp
     src/time/Waveform.cpp
     src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
@@ -282,6 +284,8 @@ target_sources(precice
     src/utils/fmtSTL.hpp
     src/utils/networking.cpp
     src/utils/networking.hpp
+    src/utils/span.hpp
+    src/utils/span_tools.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
     src/utils/traits.hpp
@@ -302,4 +306,5 @@ target_sources(precice
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     src/precice/SolverInterface.hpp
+    src/precice/types.hpp
     )

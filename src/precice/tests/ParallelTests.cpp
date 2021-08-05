@@ -38,50 +38,6 @@ struct ParallelTestFixture : testing::WhiteboxAccessor {
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 
-BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup)
-{
-  PRECICE_TEST("SolverOne"_on(4_ranks));
-  std::string     configFilename = _pathToTests + "config1.xml";
-  SolverInterface interface(context.name, configFilename, context.rank, context.size);
-  BOOST_TEST(interface.getDimensions() == 3);
-
-  if (context.isMaster()) {
-    BOOST_TEST(utils::MasterSlave::isMaster() == true);
-    BOOST_TEST(utils::MasterSlave::isSlave() == false);
-    BOOST_TEST(utils::MasterSlave::isParallel() == true);
-  } else {
-    BOOST_TEST(utils::MasterSlave::isMaster() == false);
-    BOOST_TEST(utils::MasterSlave::isSlave() == true);
-    BOOST_TEST(utils::MasterSlave::isParallel() == true);
-  }
-
-  BOOST_TEST(utils::MasterSlave::getRank() == context.rank);
-  BOOST_TEST(utils::MasterSlave::getSize() == context.size);
-
-  { // ranks
-    auto             ranksRange = utils::MasterSlave::allRanks();
-    std::vector<int> ranks(ranksRange.begin(), ranksRange.end());
-    BOOST_TEST(ranks.size() == 4);
-    BOOST_TEST(std::is_sorted(ranks.begin(), ranks.end()));
-    BOOST_TEST(ranks.front() == 0);
-    auto lastUnique = std::unique(ranks.begin(), ranks.end());
-    BOOST_TEST((lastUnique == ranks.end()));
-  }
-
-  { // slaves
-    auto             slaves = utils::MasterSlave::allSlaves();
-    std::vector<int> ranks(slaves.begin(), slaves.end());
-    BOOST_TEST(ranks.size() == 3);
-    BOOST_TEST(std::is_sorted(ranks.begin(), ranks.end()));
-    BOOST_TEST(ranks.front() == 1);
-    auto lastUnique = std::unique(ranks.begin(), ranks.end());
-    BOOST_TEST((lastUnique == ranks.end()));
-  }
-
-  BOOST_TEST(utils::MasterSlave::_communication.use_count() > 0);
-  BOOST_TEST(utils::MasterSlave::_communication->isConnected());
-}
-
 BOOST_AUTO_TEST_CASE(TestFinalize)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
