@@ -10,6 +10,7 @@
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
 #include "utils/span.hpp"
+#include "boost/range/irange.hpp"
 
 namespace precice {
 namespace com {
@@ -72,6 +73,18 @@ public:
    * @pre A connection to the remote participant has been set up.
    */
   virtual size_t getRemoteCommunicatorSize() = 0;
+
+  /**
+   * @brief Returns a range over all valid remote ranks.
+   *
+   * @pre A connection to the remote participant has been set up.
+   *
+   * @see getRemoteCommunicatorSize()
+   */
+  auto remoteCommunicatorRanks()
+  {
+    return boost::irange<Rank>(0, static_cast<Rank>(getRemoteCommunicatorSize()));
+  }
 
   /**
    * @brief Accepts connection from another communicator, which has to call requestConnection().
