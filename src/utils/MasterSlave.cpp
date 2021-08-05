@@ -266,6 +266,28 @@ void MasterSlave::allreduceSum(int &sendData, int &rcvData)
   }
 }
 
+void MasterSlave::broadcast(precice::span<double> values)
+{
+  PRECICE_TRACE();
+
+  if (not _isMaster && not _isSlave) {
+    return;
+  }
+
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
+
+  if (_isMaster) {
+    // Broadcast (send) value.
+    _communication->broadcast(values);
+  }
+
+  if (_isSlave) {
+    // Broadcast (receive) value.
+    _communication->broadcast(values, 0);
+  }
+}
+
 void MasterSlave::broadcast(bool &value)
 {
   PRECICE_TRACE();
@@ -307,28 +329,6 @@ void MasterSlave::broadcast(double &value)
   if (_isSlave) {
     // Broadcast (receive) value.
     _communication->broadcast(value, 0);
-  }
-}
-
-void MasterSlave::broadcast(precice::span<double> values)
-{
-  PRECICE_TRACE();
-
-  if (not _isMaster && not _isSlave) {
-    return;
-  }
-
-  PRECICE_ASSERT(_communication.get() != nullptr);
-  PRECICE_ASSERT(_communication->isConnected());
-
-  if (_isMaster) {
-    // Broadcast (send) value.
-    _communication->broadcast(values);
-  }
-
-  if (_isSlave) {
-    // Broadcast (receive) value.
-    _communication->broadcast(values, 0);
   }
 }
 
