@@ -179,7 +179,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     utils::append(_global_b, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
     // do a reduce operation to sum up all the _local_b vectors
-    utils::MasterSlave::reduceSum(_local_b, _global_b); // size = getLSSystemCols() = _local_b.size()
+    utils::MasterSlave::reduceSum(_local_b, _global_b);
 
     // back substitution R*c = b only in master node
     if (utils::MasterSlave::isMaster()) {
