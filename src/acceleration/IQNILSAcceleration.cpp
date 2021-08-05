@@ -179,7 +179,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     utils::append(_global_b, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
     // do a reduce operation to sum up all the _local_b vectors
-    utils::MasterSlave::reduceSum(_local_b.data(), _global_b.data(), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
+    utils::MasterSlave::reduceSum(_local_b, _global_b);
 
     // back substitution R*c = b only in master node
     if (utils::MasterSlave::isMaster()) {
@@ -187,7 +187,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     }
 
     // broadcast coefficients c to all slaves
-    utils::MasterSlave::broadcast(c.data(), c.size());
+    utils::MasterSlave::broadcast(c);
   }
 
   PRECICE_DEBUG("   Apply Newton factors");

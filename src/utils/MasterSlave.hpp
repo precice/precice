@@ -6,6 +6,7 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
+#include "utils/span.hpp"
 
 namespace precice {
 namespace logging {
@@ -58,21 +59,23 @@ public:
 
   static void reset();
 
-  static void reduceSum(double *sendData, double *rcvData, int size);
+  static void reduceSum(precice::span<const double> sendData, precice::span<double> rcvData);
 
-  static void reduceSum(int &sendData, int &rcvData, int size);
+  static void reduceSum(const int &sendData, int &rcvData);
 
-  static void allreduceSum(double *sendData, double *rcvData, int size);
+  static void reduceSum(const double &sendData, double &rcvData);
 
-  static void allreduceSum(double &sendData, double &rcvData, int size);
+  static void allreduceSum(precice::span<const double> sendData, precice::span<double> rcvData);
 
-  static void allreduceSum(int &sendData, int &rcvData, int size);
+  static void allreduceSum(double &sendData, double &rcvData);
+
+  static void allreduceSum(int &sendData, int &rcvData);
 
   static void broadcast(bool &value);
 
   static void broadcast(double &value);
 
-  static void broadcast(double *values, int size);
+  static void broadcast(precice::span<double> values);
 
 private:
   static logging::Logger _log;

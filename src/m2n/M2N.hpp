@@ -140,10 +140,9 @@ public:
   void createDistributedCommunication(mesh::PtrMesh mesh);
 
   /// Sends an array of double values from all slaves (different for each slave).
-  void send(double const *itemsToSend,
-            int           size,
-            int           meshID,
-            int           valueDimension);
+  void send(precice::span<double const> itemsToSend,
+            int                         meshID,
+            int                         valueDimension);
 
   /**
    * @brief The master sends a bool to the other master, for performance reasons, we
@@ -167,10 +166,9 @@ public:
   void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
   /// All slaves receive an array of doubles (different for each slave).
-  void receive(double *itemsToReceive,
-               int     size,
-               int     meshID,
-               int     valueDimension);
+  void receive(precice::span<double> itemsToReceive,
+               int                   meshID,
+               int                   valueDimension);
 
   /// All slaves receive a bool (the same for each slave).
   void receive(bool &itemToReceive);
