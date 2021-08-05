@@ -13,6 +13,7 @@
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
+#include "utils/span_tools.hpp"
 
 namespace precice {
 namespace com {
@@ -491,7 +492,7 @@ void SocketCommunication::send(double itemToSend, Rank rankReceiver)
 
 PtrRequest SocketCommunication::aSend(const double &itemToSend, Rank rankReceiver)
 {
-  return aSend(precice::span<const double>{&itemToSend, 1}, rankReceiver);
+  return aSend(precice::refToSpan<const double>(itemToSend), rankReceiver);
 }
 
 void SocketCommunication::send(int itemToSend, Rank rankReceiver)
@@ -512,7 +513,7 @@ void SocketCommunication::send(int itemToSend, Rank rankReceiver)
 
 PtrRequest SocketCommunication::aSend(const int &itemToSend, Rank rankReceiver)
 {
-  return aSend(precice::span<const int>{&itemToSend, 1}, rankReceiver);
+  return aSend(precice::refToSpan<const int>(itemToSend), rankReceiver);
 }
 
 void SocketCommunication::send(bool itemToSend, Rank rankReceiver)
@@ -670,7 +671,7 @@ void SocketCommunication::receive(double &itemToReceive, Rank rankSender)
 
 PtrRequest SocketCommunication::aReceive(double &itemToReceive, Rank rankSender)
 {
-  return aReceive(precice::span<double>{&itemToReceive, 1}, rankSender);
+  return aReceive(precice::refToSpan<double>(itemToReceive), rankSender);
 }
 
 void SocketCommunication::receive(int &itemToReceive, Rank rankSender)

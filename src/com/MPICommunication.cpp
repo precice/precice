@@ -7,6 +7,7 @@
 #include "MPIRequest.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
+#include "utils/span_tools.hpp"
 
 template <size_t>
 struct MPI_Select_unsigned_integer_datatype;
@@ -143,7 +144,7 @@ void MPICommunication::send(double itemToSend, Rank rankReceiver)
 
 PtrRequest MPICommunication::aSend(const double &itemToSend, Rank rankReceiver)
 {
-  return aSend(precice::span<const double>{&itemToSend, 1}, rankReceiver);
+  return aSend(precice::refToSpan<const double>(itemToSend), rankReceiver);
 }
 
 void MPICommunication::send(int itemToSend, Rank rankReceiver)
@@ -160,7 +161,7 @@ void MPICommunication::send(int itemToSend, Rank rankReceiver)
 
 PtrRequest MPICommunication::aSend(const int &itemToSend, Rank rankReceiver)
 {
-  return aSend(precice::span<const int>{&itemToSend, 1}, rankReceiver);
+  return aSend(precice::refToSpan<const int>(itemToSend), rankReceiver);
 }
 
 void MPICommunication::send(bool itemToSend, Rank rankReceiver)
@@ -282,7 +283,7 @@ void MPICommunication::receive(double &itemToReceive, Rank rankSender)
 
 PtrRequest MPICommunication::aReceive(double &itemToReceive, Rank rankSender)
 {
-  return aReceive(precice::span<double>{&itemToReceive, 1}, rankSender);
+  return aReceive(precice::refToSpan<double>(itemToReceive), rankSender);
 }
 
 void MPICommunication::receive(int &itemToReceive, Rank rankSender)

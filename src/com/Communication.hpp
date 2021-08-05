@@ -6,11 +6,11 @@
 #include <vector>
 
 #include "Request.hpp"
+#include "boost/range/irange.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
 #include "utils/span.hpp"
-#include "boost/range/irange.hpp"
 
 namespace precice {
 namespace com {

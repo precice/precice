@@ -12,6 +12,7 @@
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
+#include "utils/span_tools.hpp"
 
 namespace precice {
 namespace utils {
@@ -173,8 +174,8 @@ void MasterSlave::reduceSum(precice::span<const double> sendData, precice::span<
 void MasterSlave::reduceSum(const double &sendData, double &rcvData)
 {
   PRECICE_TRACE();
-  reduceSum(precice::span<const double>{&sendData, 1},
-            precice::span<double>{&rcvData, 1});
+  reduceSum(precice::refToSpan<const double>(sendData),
+            precice::refToSpan<double>(rcvData));
 }
 
 void MasterSlave::reduceSum(const int &sendData, int &rcvData)

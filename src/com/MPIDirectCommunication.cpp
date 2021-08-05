@@ -8,6 +8,7 @@
 #include "precice/types.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
+#include "utils/span_tools.hpp"
 
 namespace precice {
 namespace com {
@@ -158,13 +159,13 @@ void MPIDirectCommunication::broadcast(precice::span<int> itemsToReceive, int ra
 void MPIDirectCommunication::broadcast(int itemToSend)
 {
   PRECICE_TRACE();
-  broadcast(precice::span<const int>{&itemToSend, 1});
+  broadcast(precice::refToSpan<const int>(itemToSend));
 }
 
 void MPIDirectCommunication::broadcast(int &itemToReceive, Rank rankBroadcaster)
 {
   PRECICE_TRACE();
-  broadcast(precice::span<int>{&itemToReceive, 1}, rankBroadcaster);
+  broadcast(precice::refToSpan<int>(itemToReceive), rankBroadcaster);
 }
 
 void MPIDirectCommunication::broadcast(precice::span<const double> itemsToSend)
@@ -182,13 +183,13 @@ void MPIDirectCommunication::broadcast(precice::span<double> itemsToReceive, int
 void MPIDirectCommunication::broadcast(double itemToSend)
 {
   PRECICE_TRACE();
-  broadcast(precice::span<const double>{&itemToSend, 1});
+  broadcast(precice::refToSpan<const double>(itemToSend));
 }
 
 void MPIDirectCommunication::broadcast(double &itemToReceive, Rank rankBroadcaster)
 {
   PRECICE_TRACE();
-  broadcast(precice::span<double>{&itemToReceive, 1}, rankBroadcaster);
+  broadcast(precice::refToSpan<double>(itemToReceive), rankBroadcaster);
 }
 
 void MPIDirectCommunication::broadcast(bool itemToSend)
