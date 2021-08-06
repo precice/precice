@@ -102,6 +102,7 @@ void NearestProjectionMapping::computeMapping()
   query::Index                           indexTree(searchSpace);
   utils::statistics::DistanceAccumulator distanceStatistics;
 
+  _interpolations.clear();
   _interpolations.reserve(fVertices.size());
 
   for (const auto &fVertex : fVertices) {
