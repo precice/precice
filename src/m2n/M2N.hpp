@@ -129,9 +129,16 @@ public:
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
+   * Calls closeMasterConnection() and closeSlaveConnections()
    * This method is called on destruction.
    */
   void closeConnection();
+
+  /// Disconnects the Master-Master connection
+  void closeMasterConnection();
+
+  /// Disconnects all connections of the DistributedCommunication
+  void closeDistributedConnections();
 
   /// Get the basic communication between the 2 masters.
   com::PtrCommunication getMasterCommunication();

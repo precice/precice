@@ -161,21 +161,35 @@ void M2N::completeSlavesConnection()
 void M2N::closeConnection()
 {
   PRECICE_TRACE();
+  closeMasterConnection();
+  closeDistributedConnections();
+}
+
+void M2N::closeMasterConnection()
+{
+  PRECICE_TRACE();
   if (not utils::MasterSlave::isSlave() && _masterCom->isConnected()) {
     _masterCom->closeConnection();
     _isMasterConnected = false;
   }
 
   utils::MasterSlave::broadcast(_isMasterConnected);
+  PRECICE_ASSERT(not _isMasterConnected);
+}
 
-  if (not _useOnlyMasterCom) {
-    _areSlavesConnected = false;
-    for (const auto &pair : _distComs) {
-      pair.second->closeConnection();
-      _areSlavesConnected = _areSlavesConnected || pair.second->isConnected();
-    }
-    PRECICE_ASSERT(not _areSlavesConnected);
+void M2N::closeDistributedConnections()
+{
+  PRECICE_TRACE();
+  if (_useOnlyMasterCom) {
+    return;
   }
+
+  _areSlavesConnected = false;
+  for (const auto &pair : _distComs) {
+    pair.second->closeConnection();
+    _areSlavesConnected |= pair.second->isConnected();
+  }
+  PRECICE_ASSERT(not _areSlavesConnected);
 }
 
 com::PtrCommunication M2N::getMasterCommunication()
