@@ -247,11 +247,16 @@ double SolverInterfaceImpl::initialize()
 
   PRECICE_INFO("Setting up master communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
-    auto &bm2n = m2nPair.second;
-    PRECICE_DEBUG((bm2n.isRequesting ? "Awaiting master connection from {}" : "Establishing master connection to {}"), bm2n.remoteName);
-    bm2n.prepareEstablishment();
-    bm2n.connectMasters();
-    PRECICE_DEBUG("Established master connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
+    auto &bm2n       = m2nPair.second;
+    bool  requesting = bm2n.isRequesting;
+    if (bm2n.m2n->isConnected()) {
+      PRECICE_DEBUG("Master connection {} {} already connected.", (requesting ? "from" : "to"), bm2n.remoteName);
+    } else {
+      PRECICE_DEBUG((requesting ? "Awaiting master connection from {}" : "Establishing master connection to {}"), bm2n.remoteName);
+      bm2n.prepareEstablishment();
+      bm2n.connectMasters();
+      PRECICE_DEBUG("Established master connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
+    }
   }
 
   PRECICE_INFO("Masters are connected");
