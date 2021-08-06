@@ -172,6 +172,9 @@ public:
    */
   void clear();
 
+  /// Clears the partitioning information
+  void clearPartitioning();
+
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
   VertexDistribution &getVertexDistribution();
 

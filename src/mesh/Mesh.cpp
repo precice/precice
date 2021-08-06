@@ -240,6 +240,16 @@ void Mesh::clear()
   }
 }
 
+/// @todo this should be handled by the Parition
+void Mesh::clearPartitioning()
+{
+  _connectedRanks.clear();
+  _communicationMap.clear();
+  _vertexDistribution.clear();
+  _vertexOffsets.clear();
+  _globalNumberOfVertices = 0;
+}
+
 Mesh::VertexDistribution &Mesh::getVertexDistribution()
 {
   return _vertexDistribution;

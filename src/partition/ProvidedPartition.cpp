@@ -230,6 +230,8 @@ void ProvidedPartition::compareBoundingBoxes()
   if (_m2ns.empty())
     return;
 
+  _mesh->clearPartitioning();
+
   //@todo coupling mode
 
   //@todo treatment of multiple m2ns
@@ -290,6 +292,7 @@ void ProvidedPartition::compareBoundingBoxes()
     }
 
     // master checks which ranks are connected to it
+    _mesh->getConnectedRanks().clear();
     for (auto &remoteRank : remoteConnectionMap) {
       for (auto &includedRank : remoteRank.second) {
         if (utils::MasterSlave::getRank() == includedRank) {
@@ -309,6 +312,7 @@ void ProvidedPartition::compareBoundingBoxes()
       com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveConnectionMap(remoteConnectionMap);
     }
 
+    _mesh->getConnectedRanks().clear();
     for (const auto &remoteRank : remoteConnectionMap) {
       for (int includedRanks : remoteRank.second) {
         if (utils::MasterSlave::getRank() == includedRanks) {
