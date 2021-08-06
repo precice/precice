@@ -680,6 +680,15 @@ private:
   /// Syncs the timestep between slaves and master (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
 
+  /// Which channels to close in closeCommunicationChannels()
+  enum class CloseChannels : bool {
+    All         = false,
+    Distributed = true
+  };
+
+  /// Syncs the masters of all connected participants
+  void closeCommunicationChannels(CloseChannels cc);
+
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfigurationPeano;
   friend struct PreciceTests::Serial::TestConfigurationComsol;
