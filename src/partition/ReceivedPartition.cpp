@@ -354,6 +354,8 @@ void ReceivedPartition::compareBoundingBoxes()
 {
   PRECICE_TRACE();
 
+  _mesh->clearPartitioning();
+
   // @todo handle coupling mode (i.e. serial participant)
   // @todo treatment of multiple m2ns
   PRECICE_ASSERT(_m2ns.size() == 1);
@@ -395,6 +397,7 @@ void ReceivedPartition::compareBoundingBoxes()
     std::vector<int>                connectedRanksList; // local ranks with any connection
 
     // connected ranks for master
+    _mesh->getConnectedRanks().clear();
     for (auto &remoteBB : remoteBBMap) {
       if (_bb.overlapping(remoteBB.second)) {
         _mesh->getConnectedRanks().push_back(remoteBB.first); //connected remote ranks for this rank
@@ -428,6 +431,7 @@ void ReceivedPartition::compareBoundingBoxes()
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
 
+    _mesh->getConnectedRanks().clear();
     for (const auto &remoteBB : remoteBBMap) {
       if (_bb.overlapping(remoteBB.second)) {
         _mesh->getConnectedRanks().push_back(remoteBB.first);
