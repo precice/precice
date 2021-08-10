@@ -377,6 +377,7 @@ void ReceivedPartition::compareBoundingBoxes()
 {
   PRECICE_TRACE();
 
+  _mesh->clear();
   _mesh->clearPartitioning();
 
   // @todo handle coupling mode (i.e. serial participant)
