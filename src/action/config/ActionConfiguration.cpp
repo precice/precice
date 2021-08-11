@@ -225,7 +225,7 @@ void ActionConfiguration::createAction()
                 "Data action uses mesh \"{}\" which is not configured. Please ensure that the correct mesh name is given in <action:python mesh=\"...\">", _configuredAction.mesh);
   mesh::PtrMesh mesh = _meshConfig->getMesh(_configuredAction.mesh);
 
-  if(!_configuredAction.targetData.empty()){
+  if (!_configuredAction.targetData.empty()) {
     PRECICE_CHECK(mesh->hasDataName(_configuredAction.targetData),
                   "Data action uses target data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh", _configuredAction.targetData);
     targetDataID = mesh->data(_configuredAction.targetData)->getID();
