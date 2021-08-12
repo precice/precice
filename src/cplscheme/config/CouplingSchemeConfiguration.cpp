@@ -268,8 +268,9 @@ void CouplingSchemeConfiguration::xmlTagCallback(
 
     const mesh::PtrMesh &mesh = _meshConfig->getMesh(nameMesh);
     const mesh::PtrData &data = mesh->data(nameData);
-    exchangeData              = data;
-    exchangeMesh              = mesh;
+    PRECICE_ASSERT(mesh && data);
+    exchangeData = data;
+    exchangeMesh = mesh;
 
     _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
     _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
