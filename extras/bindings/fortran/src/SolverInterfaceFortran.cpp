@@ -518,6 +518,22 @@ void precicef_get_version_information_(
   }
 }
 
+void precicef_setMeshAccessRegion(
+    const int     meshID,
+    const double *boundingBox)
+{
+  impl->setMeshAccessRegion(meshID, boundingBox);
+}
+
+void precicef_getMeshVerticesAndIDs(
+    const int meshID,
+    const int size,
+    int *     ids,
+    double *  coordinates)
+{
+  impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
+}
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
