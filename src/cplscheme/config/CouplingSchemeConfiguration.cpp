@@ -355,8 +355,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
 }
 
 void CouplingSchemeConfiguration::addCouplingScheme(
-    PtrCouplingScheme  cplScheme,
-    const std::string &participantName)
+    const PtrCouplingScheme &cplScheme,
+    const std::string &      participantName)
 {
   PRECICE_TRACE(participantName);
   if (utils::contained(participantName, _couplingSchemes)) {
@@ -1072,9 +1072,9 @@ void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
 }
 
 void CouplingSchemeConfiguration::addConvergenceMeasures(
-    BaseCouplingScheme *                           scheme,
-    const std::string                              participant,
-    const std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions) const
+    BaseCouplingScheme *                            scheme,
+    const std::string &                             participant,
+    const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const
 {
   for (auto &elem : convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(participant, elem.meshName);
@@ -1085,8 +1085,8 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
 
 void CouplingSchemeConfiguration::setSerialAcceleration(
     BaseCouplingScheme *scheme,
-    const std::string   first,
-    const std::string   second) const
+    const std::string & first,
+    const std::string & second) const
 {
   if (_accelerationConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
@@ -1101,7 +1101,7 @@ void CouplingSchemeConfiguration::setSerialAcceleration(
 
 void CouplingSchemeConfiguration::setParallelAcceleration(
     BaseCouplingScheme *scheme,
-    const std::string   participant) const
+    const std::string & participant) const
 {
   if (_accelerationConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {

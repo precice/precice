@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "acceleration/MVQNAcceleration.hpp"
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
@@ -29,21 +30,21 @@ namespace acceleration {
 
 // ==================================================================================
 MVQNAcceleration::MVQNAcceleration(
-    double                  initialRelaxation,
-    bool                    forceInitialRelaxation,
-    int                     maxIterationsUsed,
-    int                     pastTimeWindowsReused,
-    int                     filter,
-    double                  singularityLimit,
-    std::vector<int>        dataIDs,
-    impl::PtrPreconditioner preconditioner,
-    bool                    alwaysBuildJacobian,
-    int                     imvjRestartType,
-    int                     chunkSize,
-    int                     RSLSreusedTimeWindows,
-    double                  RSSVDtruncationEps)
+    double                         initialRelaxation,
+    bool                           forceInitialRelaxation,
+    int                            maxIterationsUsed,
+    int                            pastTimeWindowsReused,
+    int                            filter,
+    double                         singularityLimit,
+    std::vector<int>               dataIDs,
+    const impl::PtrPreconditioner &preconditioner,
+    bool                           alwaysBuildJacobian,
+    int                            imvjRestartType,
+    int                            chunkSize,
+    int                            RSLSreusedTimeWindows,
+    double                         RSSVDtruncationEps)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, dataIDs, preconditioner),
+                         filter, singularityLimit, std::move(dataIDs), preconditioner),
       //  _secondaryOldXTildes(),
       _invJacobian(),
       _oldInvJacobian(),

@@ -12,10 +12,10 @@ namespace precice {
 namespace action {
 
 SummationAction::SummationAction(
-    Timing               timing,
-    std::vector<int>     sourceDataIDs,
-    int                  targetDataID,
-    const mesh::PtrMesh &mesh)
+    Timing                  timing,
+    const std::vector<int> &sourceDataIDs,
+    int                     targetDataID,
+    const mesh::PtrMesh &   mesh)
     : Action(timing, mesh, mapping::Mapping::MeshRequirement::VERTEX), _targetData(mesh->data(targetDataID))
 {
 

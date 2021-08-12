@@ -32,7 +32,7 @@ extern bool syncMode;
 namespace partition {
 
 ReceivedPartition::ReceivedPartition(
-    mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor)
+    const mesh::PtrMesh &mesh, GeometricFilter geometricFilter, double safetyFactor)
     : Partition(mesh),
       _geometricFilter(geometricFilter),
       _bb(mesh->getDimensions()),

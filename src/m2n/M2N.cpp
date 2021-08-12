@@ -198,7 +198,7 @@ com::PtrCommunication M2N::getMasterCommunication()
   return _masterCom; /// @todo maybe it would be a nicer design to not offer this
 }
 
-void M2N::createDistributedCommunication(mesh::PtrMesh mesh)
+void M2N::createDistributedCommunication(const mesh::PtrMesh &mesh)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(not _useOnlyMasterCom);

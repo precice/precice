@@ -18,7 +18,7 @@ namespace m2n {
 GatherScatterCommunication::GatherScatterCommunication(
     com::PtrCommunication com,
     mesh::PtrMesh         mesh)
-    : DistributedCommunication(mesh),
+    : DistributedCommunication(std::move(mesh)),
       _com(std::move(com)),
       _isConnected(false)
 {

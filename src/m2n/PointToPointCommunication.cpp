@@ -31,7 +31,7 @@ namespace m2n {
 
 void send(mesh::Mesh::VertexDistribution const &m,
           int                                   rankReceiver,
-          com::PtrCommunication                 communication)
+          const com::PtrCommunication &         communication)
 {
   communication->send(static_cast<int>(m.size()), rankReceiver);
 
@@ -45,7 +45,7 @@ void send(mesh::Mesh::VertexDistribution const &m,
 
 void receive(mesh::Mesh::VertexDistribution &m,
              int                             rankSender,
-             com::PtrCommunication           communication)
+             const com::PtrCommunication &   communication)
 {
   m.clear();
   int size = 0;
@@ -59,7 +59,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
 }
 
 void broadcastSend(mesh::Mesh::VertexDistribution const &m,
-                   com::PtrCommunication                 communication = utils::MasterSlave::_communication)
+                   const com::PtrCommunication &         communication = utils::MasterSlave::_communication)
 {
   communication->broadcast(static_cast<int>(m.size()));
 
@@ -73,7 +73,7 @@ void broadcastSend(mesh::Mesh::VertexDistribution const &m,
 
 void broadcastReceive(mesh::Mesh::VertexDistribution &m,
                       int                             rankBroadcaster,
-                      com::PtrCommunication           communication = utils::MasterSlave::_communication)
+                      const com::PtrCommunication &   communication = utils::MasterSlave::_communication)
 {
   m.clear();
   int size = 0;
@@ -287,7 +287,7 @@ std::map<int, std::vector<int>> buildCommunicationMap(
 PointToPointCommunication::PointToPointCommunication(
     com::PtrCommunicationFactory communicationFactory,
     mesh::PtrMesh                mesh)
-    : DistributedCommunication(mesh),
+    : DistributedCommunication(std::move(mesh)),
       _communicationFactory(std::move(communicationFactory))
 {
 }

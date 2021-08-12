@@ -23,7 +23,7 @@ void SocketSendQueue::dispatch(std::shared_ptr<Socket>      sock,
                                boost::asio::const_buffers_1 data,
                                std::function<void()>        callback)
 {
-  _itemQueue.push_back({std::move(sock), std::move(data), callback});
+  _itemQueue.push_back({std::move(sock), std::move(data), std::move(callback)});
   process(); // if queue was previously empty, start it now.
 }
 

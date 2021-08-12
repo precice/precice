@@ -144,7 +144,7 @@ public:
   com::PtrCommunication getMasterCommunication();
 
   /// Creates a new distributes communication for that mesh, stores the pointer in _distComs
-  void createDistributedCommunication(mesh::PtrMesh mesh);
+  void createDistributedCommunication(const mesh::PtrMesh &mesh);
 
   /// Sends an array of double values from all slaves (different for each slave).
   void send(precice::span<double const> itemsToSend,

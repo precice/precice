@@ -657,7 +657,7 @@ int BaseQNAcceleration::getLSSystemRows()
 }
 
 void BaseQNAcceleration::writeInfo(
-    std::string s, bool allProcs)
+    const std::string &s, bool allProcs)
 {
   if (not utils::MasterSlave::isParallel()) {
     // serial acceleration mode
