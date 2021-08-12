@@ -867,7 +867,7 @@ std::vector<Interface> detectInterfaces()
       continue;
     }
 
-    const char *addr = inet_ntoa(((struct sockaddr_in *) &request.ifr_addr)->sin_addr);
+    const char *addr = inet_ntoa((reinterpret_cast<struct sockaddr_in *>(&request.ifr_addr))->sin_addr);
     if (!addr) {
       continue;
     }

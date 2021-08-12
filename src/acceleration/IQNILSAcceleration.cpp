@@ -47,7 +47,7 @@ void IQNILSAcceleration::initialize(
   for (DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _dataIDs)) {
       int secondaryEntries = pair.second->values().size();
-      utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
+      utils::append(_secondaryOldXTildes[pair.first], Eigen::VectorXd(Eigen::VectorXd::Zero(secondaryEntries)));
     }
   }
 }
@@ -158,7 +158,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
 
   PRECICE_ASSERT(c.size() == 0, c.size());
   // reserve memory for c
-  utils::append(c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
+  utils::append(c, Eigen::VectorXd(Eigen::VectorXd::Zero(_local_b.size())));
 
   // compute rhs Q^T*res in parallel
   if (!utils::MasterSlave::isParallel()) {
@@ -176,7 +176,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     if (utils::MasterSlave::isMaster()) {
       PRECICE_ASSERT(_global_b.size() == 0, _global_b.size());
     }
-    utils::append(_global_b, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
+    utils::append(_global_b, Eigen::VectorXd(Eigen::VectorXd::Zero(_local_b.size())));
 
     // do a reduce operation to sum up all the _local_b vectors
     utils::MasterSlave::reduceSum(_local_b, _global_b);
@@ -252,7 +252,7 @@ void IQNILSAcceleration::specializedIterationsConverged(
        * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _timeWindowsReused) {
+  } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
     int toRemove = _matrixCols.back();
     for (int id : _secondaryDataIDs) {
       Eigen::MatrixXd &secW = _secondaryMatricesW[id];

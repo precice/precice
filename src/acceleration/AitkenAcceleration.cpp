@@ -60,7 +60,7 @@ void AitkenAcceleration::performAcceleration(
   Eigen::VectorXd oldValues;
   for (int id : _dataIDs) {
     utils::append(values, cplData[id]->values());
-    utils::append(oldValues, (Eigen::VectorXd) cplData[id]->previousIteration());
+    utils::append(oldValues, Eigen::VectorXd(cplData[id]->previousIteration()));
   }
 
   // Compute current residuals

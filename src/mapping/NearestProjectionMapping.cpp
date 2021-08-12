@@ -159,7 +159,7 @@ void NearestProjectionMapping::map(
       size_t      inOffset = i * dimensions;
       const auto &elems    = _interpolations[i].getWeightedElements();
       for (const auto &elem : elems) {
-        size_t outOffset = (size_t) elem.vertexID * dimensions;
+        size_t outOffset = static_cast<size_t>(elem.vertexID) * dimensions;
         for (int dim = 0; dim < dimensions; dim++) {
           PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
           PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
@@ -175,7 +175,7 @@ void NearestProjectionMapping::map(
       const auto &elems     = _interpolations[i].getWeightedElements();
       size_t      outOffset = i * dimensions;
       for (const auto &elem : elems) {
-        size_t inOffset = (size_t) elem.vertexID * dimensions;
+        size_t inOffset = static_cast<size_t>(elem.vertexID) * dimensions;
         for (int dim = 0; dim < dimensions; dim++) {
           PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
           PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());

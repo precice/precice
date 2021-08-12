@@ -23,10 +23,10 @@ std::string wrapText(
     wrapped += ' ';
     length++;
   }
-  for (int i = 0; i < (int) tokens.size() - 1; i++) {
-    length += (int) tokens[i].length();
+  for (int i = 0; i < static_cast<int>(tokens.size()) - 1; i++) {
+    length += static_cast<int>(tokens[i].length());
     wrapped += tokens[i];
-    if (length + (int) tokens[i + 1].length() + 1 > linewidth) {
+    if (length + static_cast<int>(tokens[i + 1].length()) + 1 > linewidth) {
       wrapped += '\n';
       for (int ws = 0; ws < indentation; ws++) {
         wrapped += ' ';

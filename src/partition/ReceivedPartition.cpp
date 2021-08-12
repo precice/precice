@@ -439,7 +439,7 @@ void ReceivedPartition::compareBoundingBoxes()
     }
 
     // send connected ranks to master
-    utils::MasterSlave::_communication->send((int) _mesh->getConnectedRanks().size(), 0);
+    utils::MasterSlave::_communication->send(static_cast<int>(_mesh->getConnectedRanks().size()), 0);
     if (not _mesh->getConnectedRanks().empty()) {
       utils::MasterSlave::_communication->send(_mesh->getConnectedRanks(), 0);
     }

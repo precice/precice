@@ -558,7 +558,7 @@ void BaseQNAcceleration::iterationsConverged(
        * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _timeWindowsReused) {
+  } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
     int toRemove = _matrixCols.back();
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
