@@ -233,10 +233,10 @@ void ActionConfiguration::createAction()
   }
 
   for (const std::string &dataName : _configuredAction.sourceDataVector) {
-    if (mesh->hasDataName(dataName)) {
-      sourceDataIDs.push_back(mesh->data(dataName)->getID());
-    }
+    PRECICE_CHECK(mesh->hasDataName(dataName), "Data action uses source data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh", dataName);
+    sourceDataIDs.push_back(mesh->data(dataName)->getID());
   }
+
   PRECICE_CHECK((_configuredAction.sourceDataVector.empty() || not sourceDataIDs.empty()),
                 "Data action uses source data \"{}\" which is not configured. Please ensure that the source data name is used by the mesh.", _configuredAction.sourceDataVector.back());
 
