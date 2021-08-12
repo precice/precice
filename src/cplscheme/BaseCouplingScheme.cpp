@@ -91,7 +91,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   std::vector<int> receivedDataIDs;
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
-  for (DataMap::value_type &pair : receiveData) {
+  for (const DataMap::value_type &pair : receiveData) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
