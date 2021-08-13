@@ -8,15 +8,11 @@
 #include "m2n/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
-// Forward declaration to friend the boost test struct
-namespace CplSchemeTests {
-namespace ParallelImplicitCouplingSchemeTests {
-struct testInitializeData;
-}
-} // namespace CplSchemeTests
-
 namespace precice {
 namespace cplscheme {
+
+// Forward declaration to friend the boost test struct
+struct parallelCouplingSchemeFixture;
 
 /**
  * @brief Coupling scheme for parallel coupling, i.e. simultaneous execution of two coupled participants
@@ -25,6 +21,7 @@ namespace cplscheme {
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class ParallelCouplingScheme : public BiCouplingScheme {
+  friend struct parallelCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
    * @brief Constructor.
@@ -54,8 +51,6 @@ public:
       CouplingMode                  cplMode,
       int                           maxIterations = -1);
 
-  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testInitializeData; // For whitebox tests
-
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
@@ -84,6 +79,28 @@ private:
    * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override;
+};
+
+/*
+ * @brief A fixture that is used to access private functions of the ParallelCouplingScheme class.
+ *
+ * The fixture can be used to call private functions for individual testing. 
+ */
+struct parallelCouplingSchemeFixture {
+  bool isImplicitCouplingScheme(ParallelCouplingScheme &cplscheme)
+  {
+    return cplscheme.isImplicitCouplingScheme();
+  }
+
+  CouplingData *getReceiveData(ParallelCouplingScheme &cplscheme, int dataID)
+  {
+    return cplscheme.getReceiveData(dataID);
+  }
+
+  CouplingData *getSendData(ParallelCouplingScheme &cplscheme, int dataID)
+  {
+    return cplscheme.getSendData(dataID);
+  }
 };
 
 } // namespace cplscheme

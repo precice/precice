@@ -1240,10 +1240,12 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
+  serialCouplingSchemeFixture fixture;
+
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
-  CouplingData *sendCouplingData = cplScheme.getSendData(sendDataIndex);
+  CouplingData *sendCouplingData = fixture.getSendData(cplScheme, sendDataIndex);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization);
-  CouplingData *receiveCouplingData = cplScheme.getReceiveData(receiveDataIndex);
+  CouplingData *receiveCouplingData = fixture.getReceiveData(cplScheme, receiveDataIndex);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1263,7 +1265,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
     BOOST_TEST(sendCouplingData->values().size() == 1);
     BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
-    BOOST_TEST(cplScheme.isImplicitCouplingScheme());
+    BOOST_TEST(fixture.isImplicitCouplingScheme(cplScheme));
     cplScheme.initializeData();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));

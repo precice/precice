@@ -7,15 +7,11 @@
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 
-// Forward declaration to friend the boost test struct
-namespace CplSchemeTests {
-namespace SerialImplicitCouplingSchemeTests {
-struct testInitializeData;
-}
-} // namespace CplSchemeTests
-
 namespace precice {
 namespace cplscheme {
+
+// Forward declaration to friend the boost test struct
+struct serialCouplingSchemeFixture;
 
 /**
  * @brief Coupling scheme for serial coupling, i.e. staggered execution of two coupled participants
@@ -24,6 +20,7 @@ namespace cplscheme {
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class SerialCouplingScheme : public BiCouplingScheme {
+  friend struct serialCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
  * @brief Constructor.
@@ -52,8 +49,6 @@ public:
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
       int                           maxIterations = -1);
-
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testInitializeData; // For whitebox tests
 
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
@@ -91,6 +86,28 @@ private:
    * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override;
+};
+
+/*
+ * @brief A fixture that is used to access private functions of the SerialCouplingScheme class.
+ *
+ * The fixture can be used to call private functions for individual testing. 
+ */
+struct serialCouplingSchemeFixture {
+  bool isImplicitCouplingScheme(SerialCouplingScheme &cplscheme)
+  {
+    return cplscheme.isImplicitCouplingScheme();
+  }
+
+  CouplingData *getReceiveData(SerialCouplingScheme &cplscheme, int dataID)
+  {
+    return cplscheme.getReceiveData(dataID);
+  }
+
+  CouplingData *getSendData(SerialCouplingScheme &cplscheme, int dataID)
+  {
+    return cplscheme.getSendData(dataID);
+  }
 };
 
 } // namespace cplscheme
