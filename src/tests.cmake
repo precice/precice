@@ -70,6 +70,7 @@ target_sources(testprecice
     src/utils/tests/DimensionsTest.cpp
     src/utils/tests/EigenHelperFunctionsTest.cpp
     src/utils/tests/ManageUniqueIDsTest.cpp
+    src/utils/tests/MasterSlaveTest.cpp
     src/utils/tests/MultiLockTest.cpp
     src/utils/tests/ParallelTest.cpp
     src/utils/tests/PointerVectorTest.cpp

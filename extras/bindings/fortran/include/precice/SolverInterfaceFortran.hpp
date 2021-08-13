@@ -709,6 +709,39 @@ void precicef_get_version_information_(
     char *versionInfo,
     int   lengthVersionInfo);
 
+/** @name Experimental Data Access
+ * These API functions are \b experimental and may change in future versions.
+ */
+///@{
+
+/**
+ * @brief See precice::SolverInterface::setMeshAccessRegion().
+ * Fortran syntax:
+ * precicef_setMeshAccessRegion(
+ *   INTEGER          meshID,
+ *   DOUBLE PRECISION bounding_box(dim*2))
+ */
+void precicef_setMeshAccessRegion(
+    const int     meshID,
+    const double *boundingBox);
+
+/**
+ * @brief See precice::SolverInterface::getMeshVerticesAndIDs().
+ * Fortran syntax:
+ * precicef_getMeshVerticesAndIDs(
+ *   INTEGER          meshID,
+ *   INTEGER          size,
+ *   INTEGER          ids(size),
+ *   DOUBLE PRECISION coordinates(dim*size))
+ */
+void precicef_getMeshVerticesAndIDs(
+    const int meshID,
+    const int size,
+    int *     ids,
+    double *  coordinates);
+
+///@}
+
 #ifdef __cplusplus
 }
 #endif

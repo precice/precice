@@ -38,50 +38,6 @@ struct ParallelTestFixture : testing::WhiteboxAccessor {
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 
-BOOST_AUTO_TEST_CASE(TestMasterSlaveSetup)
-{
-  PRECICE_TEST("SolverOne"_on(4_ranks));
-  std::string     configFilename = _pathToTests + "config1.xml";
-  SolverInterface interface(context.name, configFilename, context.rank, context.size);
-  BOOST_TEST(interface.getDimensions() == 3);
-
-  if (context.isMaster()) {
-    BOOST_TEST(utils::MasterSlave::isMaster() == true);
-    BOOST_TEST(utils::MasterSlave::isSlave() == false);
-    BOOST_TEST(utils::MasterSlave::isParallel() == true);
-  } else {
-    BOOST_TEST(utils::MasterSlave::isMaster() == false);
-    BOOST_TEST(utils::MasterSlave::isSlave() == true);
-    BOOST_TEST(utils::MasterSlave::isParallel() == true);
-  }
-
-  BOOST_TEST(utils::MasterSlave::getRank() == context.rank);
-  BOOST_TEST(utils::MasterSlave::getSize() == context.size);
-
-  { // ranks
-    auto             ranksRange = utils::MasterSlave::allRanks();
-    std::vector<int> ranks(ranksRange.begin(), ranksRange.end());
-    BOOST_TEST(ranks.size() == 4);
-    BOOST_TEST(std::is_sorted(ranks.begin(), ranks.end()));
-    BOOST_TEST(ranks.front() == 0);
-    auto lastUnique = std::unique(ranks.begin(), ranks.end());
-    BOOST_TEST((lastUnique == ranks.end()));
-  }
-
-  { // slaves
-    auto             slaves = utils::MasterSlave::allSlaves();
-    std::vector<int> ranks(slaves.begin(), slaves.end());
-    BOOST_TEST(ranks.size() == 3);
-    BOOST_TEST(std::is_sorted(ranks.begin(), ranks.end()));
-    BOOST_TEST(ranks.front() == 1);
-    auto lastUnique = std::unique(ranks.begin(), ranks.end());
-    BOOST_TEST((lastUnique == ranks.end()));
-  }
-
-  BOOST_TEST(utils::MasterSlave::_communication.use_count() > 0);
-  BOOST_TEST(utils::MasterSlave::_communication->isConnected());
-}
-
 BOOST_AUTO_TEST_CASE(TestFinalize)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
@@ -868,6 +824,315 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
   }
 
   precice.finalize();
+}
+
+// StartIndex is here the first index to be used for writing on the slave rank
+void runTestAccessReceivedMesh(const std::string         configName,
+                               const std::vector<double> boundingBoxSlave,
+                               const std::vector<double> writeDataSlave,
+                               const std::vector<double> expectedPositionSlave,
+                               const std::vector<double> expectedReadDataSlave,
+                               const int                 startIndex)
+{
+
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  std::string configFilename = configName;
+
+  if (context.isNamed("SolverOne")) {
+    // Defines the bounding box and writes data to the received mesh
+    SolverInterface interface(context.name, configFilename, context.rank, context.size);
+    const int       otherMeshID = interface.getMeshID("MeshTwo");
+    const int       dataID      = interface.getDataID("Velocities", otherMeshID);
+    const int       dim         = interface.getDimensions();
+
+    std::vector<double> boundingBox = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 3.5}) : boundingBoxSlave;
+    // Set bounding box
+    interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+    // Initialize the solverinterface
+    double dt = interface.initialize();
+
+    // Get relevant size, allocate data structures and retrieve coordinates
+    const int meshSize = interface.getMeshVertexSize(dataID);
+
+    // According to the bounding boxes and vertices: the master rank receives 3 vertices, the slave rank 2
+    const bool expectedSize = (context.isMaster() && meshSize == 3) || (!context.isMaster() && meshSize == expectedPositionSlave.size() / dim);
+    BOOST_TEST(expectedSize);
+
+    // Allocate memory
+    std::vector<int>    ids(meshSize);
+    std::vector<double> coordinates(meshSize * dim);
+    interface.getMeshVerticesAndIDs(otherMeshID, meshSize, ids.data(), coordinates.data());
+
+    // Check the received vertex coordinates
+    std::vector<double> expectedPositions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : expectedPositionSlave;
+    BOOST_TEST(expectedPositions == coordinates);
+
+    // Check the received vertex IDs (IDs are local?!)
+    std::vector<int> expectedIDs;
+    for (int i = 0; i < meshSize; ++i)
+      expectedIDs.emplace_back(i);
+    BOOST_TEST(expectedIDs == ids);
+
+    // Create some unique writeData in order to check it in the other participant
+    std::vector<double> writeData = context.isMaster() ? std::vector<double>({1, 2, 3}) : writeDataSlave;
+
+    while (interface.isCouplingOngoing()) {
+      // Write data
+      if (context.isMaster()) {
+        interface.writeBlockScalarData(dataID, meshSize,
+                                       ids.data(), writeData.data());
+      } else {
+        interface.writeBlockScalarData(dataID, meshSize - startIndex,
+                                       &ids[startIndex], writeData.data());
+      }
+
+      dt = interface.advance(dt);
+    }
+  } else {
+    // Defines the mesh and reads data
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    SolverInterface interface(context.name, configFilename, context.rank, context.size);
+    BOOST_TEST(interface.getDimensions() == 2);
+
+    // Get IDs
+    const int meshID = interface.getMeshID("MeshTwo");
+    const int dataID = interface.getDataID("Velocities", meshID);
+    const int dim    = interface.getDimensions();
+    // Define the interface
+    std::vector<double> positions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.0, 0.0, 4.0, 0.0, 5.0});
+
+    const int        size = positions.size() / dim;
+    std::vector<int> ids(size);
+
+    interface.setMeshVertices(meshID, size, positions.data(), ids.data());
+
+    {
+      // Check, if we can use the 'getMeshVerticesAndIDs' function on provided meshes as well,
+      // though the actual purpose is of course using it on received meshes
+      const int ownMeshSize = interface.getMeshVertexSize(meshID);
+      BOOST_TEST(ownMeshSize == size);
+      std::vector<int>    ownIDs(ownMeshSize);
+      std::vector<double> ownCoordinates(ownMeshSize * dim);
+      interface.getMeshVerticesAndIDs(meshID, ownMeshSize, ownIDs.data(), ownCoordinates.data());
+      BOOST_TEST(ownIDs == ids);
+      BOOST_TEST(ownCoordinates == ownCoordinates);
+    }
+
+    // Initialize the solverinterface
+    double dt = interface.initialize();
+
+    // Start the time loop
+    std::vector<double> readData(size);
+    while (interface.isCouplingOngoing()) {
+
+      dt = interface.advance(dt);
+      interface.readBlockScalarData(dataID, size,
+                                    ids.data(), readData.data());
+
+      // Check the received data
+      const std::vector<double> expectedReadData = context.isMaster() ? std::vector<double>({1, 2}) : expectedReadDataSlave;
+      BOOST_TEST(expectedReadData == readData);
+    }
+  }
+}
+
+// Test case for parallel mesh partitioning without any mapping. Each solver
+// runs on two ranks. SolverTwo defines 5(2 and 3) vertices which need to be
+// repartitioned on SolverOne according to the defined boundingBoxes
+// (resulting in 3 and 2 vertices per rank. The boundingBoxes don't have any
+// overlap.
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshNoOverlap)
+{
+  const std::vector<double> boundingBoxSlave      = std::vector<double>{0.0, 1.0, 4.0, 7};
+  const std::vector<double> expectedPositionSlave = std::vector<double>{0.0, 4.0, 0.0, 5.0};
+  const std::vector<double> writeDataSlave        = std::vector<double>({4, 5});
+  const std::vector<double> expectedReadDataSlave = std::vector<double>({3, 4, 5});
+  runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+}
+
+// Same as above using the two-level-initialization
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshNoOverlapTwoLevelInit)
+{
+  const std::vector<double> boundingBoxSlave      = std::vector<double>{0.0, 1.0, 4.0, 7};
+  const std::vector<double> expectedPositionSlave = std::vector<double>{0.0, 4.0, 0.0, 5.0};
+  const std::vector<double> writeDataSlave        = std::vector<double>({4, 5});
+  const std::vector<double> expectedReadDataSlave = std::vector<double>({3, 4, 5});
+  runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access-two-level.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+}
+
+// Test case for parallel mesh partitioning without any mapping. Each solver
+// runs on two ranks. SolverTwo defines 5(2 and 3) vertices which need to be
+// repartitioned on SolverOne according to the defined boundingBoxes
+// (resulting in 3 and 3 vertices per rank). The boundingBoxes of the other
+// participant have an overlap including the common vertex with position 3.
+// The vertex is 'written' by both ranks and summed up on the receiver side.
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshOverlap)
+{
+  const std::vector<double> boundingBoxSlave      = std::vector<double>{0.0, 1.0, 3.0, 7};
+  const std::vector<double> expectedPositionSlave = std::vector<double>{0.0, 3.0, 0.0, 4.0, 0.0, 5.0};
+  const std::vector<double> writeDataSlave        = std::vector<double>({4, 5, 6});
+  const std::vector<double> expectedReadDataSlave = std::vector<double>({7, 5, 6});
+  runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+}
+
+// Same as above using the two-level-initialization
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshOverlapTwoLevelInit)
+{
+  const std::vector<double> boundingBoxSlave      = std::vector<double>{0.0, 1.0, 3.0, 7};
+  const std::vector<double> expectedPositionSlave = std::vector<double>{0.0, 3.0, 0.0, 4.0, 0.0, 5.0};
+  const std::vector<double> writeDataSlave        = std::vector<double>({4, 5, 6});
+  const std::vector<double> expectedReadDataSlave = std::vector<double>({7, 5, 6});
+  runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access-two-level.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+}
+
+// Same as above, but only one rank writes to the shared vertices:
+// Test case for parallel mesh partitioning without any mapping. Each solver
+// runs on two ranks. SolverTwo defines 5(2 and 3) vertices which need to be
+// repartitioned on SolverOne according to the defined boundingBoxes
+// (resulting in 3 and 3 vertices per rank). The boundingBoxes of the other
+// participant have an overlap including the common vertex with position 3.
+// The vertex is 'written' by only one rank.
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshOverlapNoWrite)
+{
+  const std::vector<double> boundingBoxSlave      = std::vector<double>{0.0, 1.0, 3.0, 7};
+  const std::vector<double> expectedPositionSlave = std::vector<double>{0.0, 3.0, 0.0, 4.0, 0.0, 5.0};
+  const std::vector<double> writeDataSlave        = std::vector<double>({4, 5, 6});
+  const std::vector<double> expectedReadDataSlave = std::vector<double>({3, 4, 5});
+  runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 1);
+}
+
+// Same as above using the two-level-initialization
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshOverlapNoWriteTwoLevelInit)
+{
+  const std::vector<double> boundingBoxSlave      = std::vector<double>{0.0, 1.0, 3.0, 7};
+  const std::vector<double> expectedPositionSlave = std::vector<double>{0.0, 3.0, 0.0, 4.0, 0.0, 5.0};
+  const std::vector<double> writeDataSlave        = std::vector<double>({4, 5, 6});
+  const std::vector<double> expectedReadDataSlave = std::vector<double>({3, 4, 5});
+  runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access-two-level.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 1);
+}
+
+// Same as above, but one rank of SolverOne does not receive any vertices due
+// to the defined bounding box. Test case for parallel mesh partitioning without
+// any mapping. Each solver runs on two ranks. SolverTwo defines 5(2 and 3)
+// vertices which need to be repartitioned on SolverOne according to the defined
+// boundingBoxes (resulting in 3  vertices on one rank and 2 completely filtered
+// vertices). Filtered vertices are filled with zero data values
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshEmptyPartition)
+{
+  const std::vector<double> boundingBoxSlave      = std::vector<double>{10.0, 10.0, 13.0, 17};
+  const std::vector<double> expectedPositionSlave = std::vector<double>{};
+  const std::vector<double> writeDataSlave        = std::vector<double>({});
+  const std::vector<double> expectedReadDataSlave = std::vector<double>({3., 0., 0.});
+  runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+}
+
+// Same as above using the two-level-initialization
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshEmptyPartitionTwoLevelInit)
+{
+  const std::vector<double> boundingBoxSlave      = std::vector<double>{10.0, 10.0, 13.0, 17};
+  const std::vector<double> expectedPositionSlave = std::vector<double>{};
+  const std::vector<double> writeDataSlave        = std::vector<double>({});
+  const std::vector<double> expectedReadDataSlave = std::vector<double>({3., 0., 0.});
+  runTestAccessReceivedMesh(_pathToTests + "explicit-direct-access-two-level.xml", boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+}
+
+// Test case for a direct mesh access on one participant to a mesh defined
+// by another participant (see above). In addition to the direct mesh access
+// and data writing in one direction, an additional mapping (NN) is defined
+// in the other direction.
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+
+  if (context.isNamed("SolverOne")) {
+    // Set up Solverinterface
+    SolverInterface interface(context.name, _pathToTests + "explicit-direct-access-mapping.xml", context.rank, context.size);
+    BOOST_TEST(interface.getDimensions() == 2);
+    constexpr int dim         = 2;
+    const int     ownMeshID   = interface.getMeshID("MeshOne");
+    const int     otherMeshID = interface.getMeshID("MeshTwo");
+    const int     readDataID  = interface.getDataID("Forces", ownMeshID);
+    const int     writeDataID = interface.getDataID("Velocities", otherMeshID);
+
+    std::vector<double> positions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
+
+    std::vector<int> ownIDs(positions.size() / dim, 0);
+    interface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
+
+    std::array<double, dim * 2> boundingBox = context.isMaster() ? std::array<double, dim * 2>{0.0, 1.0, 0.0, 3.5} : std::array<double, dim * 2>{0.0, 1.0, 3.5, 5.0};
+    // Define region of interest, where we could obtain direct write access
+    interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+
+    double dt = interface.initialize();
+    // Get the size of the filtered mesh within the bounding box
+    // (provided by the coupling participant)
+    const int otherMeshSize = interface.getMeshVertexSize(otherMeshID);
+    BOOST_TEST(otherMeshSize == 3);
+
+    // Allocate a vector containing the vertices
+    std::vector<double> solverTwoMesh(otherMeshSize * dim);
+    std::vector<int>    otherIDs(otherMeshSize, 0);
+    interface.getMeshVerticesAndIDs(otherMeshID, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
+    // Expected data = positions of the other participant's mesh
+    const std::vector<double> expectedData = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
+    BOOST_TEST(solverTwoMesh == expectedData);
+
+    // Some dummy writeData
+    std::vector<double> writeData;
+    for (size_t i = 0; i < otherMeshSize; ++i)
+      writeData.emplace_back(i + 5 + (10 * context.isMaster()));
+
+    std::vector<double> readData(ownIDs.size(), 0);
+
+    while (interface.isCouplingOngoing()) {
+      // Write data
+      interface.writeBlockScalarData(writeDataID, otherMeshSize,
+                                     otherIDs.data(), writeData.data());
+      dt = interface.advance(dt);
+      interface.readBlockScalarData(readDataID, ownIDs.size(),
+                                    ownIDs.data(), readData.data());
+
+      // Expected data according to the writeData
+      // Values are summed up
+      std::vector<double> expectedData = context.isMaster() ? std::vector<double>({0, 1, 0}) : std::vector<double>({1, 2, 2});
+      BOOST_TEST(expectedData == readData);
+    }
+
+  } else {
+    SolverInterface interface(context.name, _pathToTests + "explicit-direct-access-mapping.xml", context.rank, context.size);
+    const int       dim = interface.getDimensions();
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    std::vector<double> positions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
+    std::vector<int>    ids(positions.size() / dim, 0);
+
+    // Query IDs
+    const int meshID      = interface.getMeshID("MeshTwo");
+    const int writeDataID = interface.getDataID("Forces", meshID);
+    const int readDataID  = interface.getDataID("Velocities", meshID);
+
+    // Define the mesh
+    interface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
+    // Allocate data to read
+    std::vector<double> readData(ids.size(), 0);
+    std::vector<double> writeData;
+    for (int i = 0; i < ids.size(); ++i)
+      writeData.emplace_back(i);
+
+    // Initialize
+    double dt = interface.initialize();
+    while (interface.isCouplingOngoing()) {
+
+      interface.writeBlockScalarData(writeDataID, ids.size(),
+                                     ids.data(), writeData.data());
+      dt = interface.advance(dt);
+      interface.readBlockScalarData(readDataID, ids.size(),
+                                    ids.data(), readData.data());
+      // Expected data according to the writeData
+      // Values are summed up
+      std::vector<double> expectedData = context.isMaster() ? std::vector<double>({15, 16}) : std::vector<double>({22, 6, 7});
+      BOOST_TEST(expectedData == readData);
+    }
+  }
 }
 
 BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
