@@ -16,9 +16,6 @@ class M2N;
 
 namespace partition {
 
-// Forward declaration to friend the accessor fixture
-// struct receivedPartitionFixture;
-
 /**
  * @brief A partition that is computed from a mesh received from another participant.
  *
@@ -26,6 +23,9 @@ namespace partition {
  * Afterwards necessary distribution data structures are set up.
  */
 class ReceivedPartition : public Partition {
+  /// Make the fixture friend of this class
+  friend struct receivedPartitionFixture;
+
 public:
   /// Defines the typ of geometric filter used
   enum GeometricFilter {
@@ -98,9 +98,6 @@ private:
 
   /// Min global vertex IDs of remote connected ranks
   std::vector<int> _remoteMinGlobalVertexIDs;
-
-  /// Make the fixture friend of this class
-  friend struct receivedPartitionFixture;
 };
 
 } // namespace partition
