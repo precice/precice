@@ -1,4 +1,3 @@
-#include "PointToPointCommunication.hpp"
 #include <algorithm>
 #include <boost/container/flat_map.hpp>
 #include <functional>
@@ -9,8 +8,9 @@
 #include <set>
 #include <thread>
 #include <utility>
-
 #include <vector>
+
+#include "PointToPointCommunication.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
@@ -18,6 +18,7 @@
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"
+#include "precice/types.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -51,7 +52,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
   communication->receive(size, rankSender);
 
   while (size--) {
-    int rank = -1;
+    Rank rank = -1;
     communication->receive(rank, rankSender);
     communication->receive(m[rank], rankSender);
   }
@@ -79,7 +80,7 @@ void broadcastReceive(mesh::Mesh::VertexDistribution &m,
   communication->broadcast(size, rankBroadcaster);
 
   while (size--) {
-    int rank = -1;
+    Rank rank = -1;
     communication->broadcast(rank, rankBroadcaster);
     communication->broadcast(m[rank], rankBroadcaster);
   }
@@ -114,7 +115,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
     std::string s;
 
-    for (int rank : utils::MasterSlave::allSlaves()) {
+    for (Rank rank : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(s, rank);
 
       oss << s;
@@ -140,7 +141,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       count++;
     }
 
-    for (int rank : utils::MasterSlave::allSlaves()) {
+    for (Rank rank : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -196,7 +197,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       count++;
     }
 
-    for (int rank : utils::MasterSlave::allSlaves()) {
+    for (Rank rank : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(size, rank);
 
       total += size;
@@ -578,12 +579,10 @@ void PointToPointCommunication::closeConnection()
   _isConnected = false;
 }
 
-void PointToPointCommunication::send(double const *itemsToSend,
-                                     size_t        size,
-                                     int           valueDimension)
+void PointToPointCommunication::send(precice::span<double const> itemsToSend, int valueDimension)
 {
 
-  if (_mappings.empty() || size == 0) {
+  if (_mappings.empty() || itemsToSend.empty()) {
     return;
   }
 
@@ -601,19 +600,15 @@ void PointToPointCommunication::send(double const *itemsToSend,
   checkBufferedRequests(false);
 }
 
-void PointToPointCommunication::receive(double *itemsToReceive,
-                                        size_t  size,
-                                        int     valueDimension)
+void PointToPointCommunication::receive(precice::span<double> itemsToReceive, int valueDimension)
 {
-  if (_mappings.empty() || size == 0) {
+  if (_mappings.empty() || itemsToReceive.empty()) {
     return;
   }
 
-  std::fill(itemsToReceive, itemsToReceive + size, 0);
+  std::fill(itemsToReceive.begin(), itemsToReceive.end(), 0.0);
 
   for (auto &mapping : _mappings) {
-    // if (not utils::MasterSlave::isMaster())
-    //   std::cout<< "indices " << mapping.indices << std::endl;
     mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);
     mapping.request = _communication->aReceive(mapping.recvBuffer, mapping.remoteRank);
   }

@@ -1,9 +1,12 @@
 #pragma once
 
 #include <Eigen/Core>
+
 #include "boost/range/irange.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
+#include "utils/span.hpp"
 
 namespace precice {
 namespace logging {
@@ -19,10 +22,10 @@ public:
   static com::PtrCommunication _communication;
 
   /// Configures the master-slave communication.
-  static void configure(int rank, int size);
+  static void configure(Rank rank, int size);
 
   /// Current rank
-  static int getRank();
+  static Rank getRank();
 
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int getSize();
@@ -56,27 +59,29 @@ public:
 
   static void reset();
 
-  static void reduceSum(double *sendData, double *rcvData, int size);
+  static void reduceSum(precice::span<const double> sendData, precice::span<double> rcvData);
 
-  static void reduceSum(int &sendData, int &rcvData, int size);
+  static void reduceSum(const int &sendData, int &rcvData);
 
-  static void allreduceSum(double *sendData, double *rcvData, int size);
+  static void reduceSum(const double &sendData, double &rcvData);
 
-  static void allreduceSum(double &sendData, double &rcvData, int size);
+  static void allreduceSum(precice::span<const double> sendData, precice::span<double> rcvData);
 
-  static void allreduceSum(int &sendData, int &rcvData, int size);
+  static void allreduceSum(double &sendData, double &rcvData);
+
+  static void allreduceSum(int &sendData, int &rcvData);
 
   static void broadcast(bool &value);
 
   static void broadcast(double &value);
 
-  static void broadcast(double *values, int size);
+  static void broadcast(precice::span<double> values);
 
 private:
   static logging::Logger _log;
 
   /// Current rank
-  static int _rank;
+  static Rank _rank;
 
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int _size;

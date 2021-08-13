@@ -1,10 +1,10 @@
-#include "testing/TestContext.hpp"
 #include <algorithm>
 #include <exception>
 #include <memory>
 #include <numeric>
 #include <ostream>
 #include <utility>
+
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/SharedPointer.hpp"
@@ -15,7 +15,9 @@
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
 #include "mesh/Data.hpp"
+#include "precice/types.hpp"
 #include "query/Index.hpp"
+#include "testing/TestContext.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
@@ -63,7 +65,7 @@ bool TestContext::isNamed(const std::string &name) const
   return this->name == name;
 }
 
-bool TestContext::isRank(int rank) const
+bool TestContext::isRank(Rank rank) const
 {
   if (rank >= size) {
     throw std::runtime_error("The requested Rank does not exist!");
@@ -102,7 +104,7 @@ void TestContext::handleOption(Participants &participants, Participant participa
   participants.emplace_back(std::move(participant));
 }
 
-void TestContext::setContextFrom(const Participant &p, int rank)
+void TestContext::setContextFrom(const Participant &p, Rank rank)
 {
   this->name         = p.name;
   this->size         = p.size;
@@ -170,15 +172,11 @@ void TestContext::initializeMasterSlave()
   if (invalid)
     return;
 
-  if (_initMS && hasSize(1)) {
-    throw std::runtime_error{
-        "Initializing a Master Slave communication does not make sense for serial participant \"" + name + "\"!"};
-  }
-
   // Establish a consistent state for all tests
   utils::MasterSlave::configure(rank, size);
+  utils::MasterSlave::_communication.reset();
 
-  if (!_initMS)
+  if (!_initMS || hasSize(1))
     return;
 
 #ifndef PRECICE_NO_MPI

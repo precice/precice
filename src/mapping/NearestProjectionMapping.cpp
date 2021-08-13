@@ -102,14 +102,15 @@ void NearestProjectionMapping::computeMapping()
   query::Index                           indexTree(searchSpace);
   utils::statistics::DistanceAccumulator distanceStatistics;
 
+  _interpolations.clear();
   _interpolations.reserve(fVertices.size());
 
   for (const auto &fVertex : fVertices) {
     // Nearest projection element is edge for 2d if exists, if not, it is the nearest vertex
     // Nearest projection element is triangle for 3d if exists, if not the edge and at the worst case it is the nearest vertex
-    auto interpolation = indexTree.findNearestProjection(fVertex.getCoords(), nnearest);
-    _interpolations.push_back(std::move(interpolation.first));
-    distanceStatistics(interpolation.second);
+    auto match = indexTree.findNearestProjection(fVertex.getCoords(), nnearest);
+    _interpolations.push_back(std::move(match.polation));
+    distanceStatistics(match.distance);
   }
 
   if (distanceStatistics.empty()) {

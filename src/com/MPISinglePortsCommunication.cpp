@@ -1,13 +1,15 @@
 #ifndef PRECICE_NO_MPI
 
-#include "MPISinglePortsCommunication.hpp"
 #include <boost/filesystem.hpp>
 #include <memory>
 #include <mpi.h>
 #include <ostream>
 #include <utility>
+
 #include "ConnectionInfoPublisher.hpp"
+#include "MPISinglePortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
@@ -107,7 +109,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
 
   _isAcceptor = true;
 
-  const int rank = utils::Parallel::current()->rank();
+  const Rank rank = utils::Parallel::current()->rank();
 
   if (rank == 0) { // only master opens a port
     ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
@@ -213,7 +215,7 @@ void MPISinglePortsCommunication::closeConnection()
   _isConnected     = false;
 }
 
-MPI_Comm &MPISinglePortsCommunication::communicator(int rank)
+MPI_Comm &MPISinglePortsCommunication::communicator(Rank rank)
 {
   if (_global != MPI_COMM_NULL) {
     // Always prefer the global communicator
@@ -224,7 +226,7 @@ MPI_Comm &MPISinglePortsCommunication::communicator(int rank)
   }
 }
 
-int MPISinglePortsCommunication::rank(int rank)
+int MPISinglePortsCommunication::rank(Rank rank)
 {
   if (_global != MPI_COMM_NULL) {
     // Always prefer the global communicator

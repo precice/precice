@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
@@ -16,6 +17,7 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "precice/types.hpp"
 #include "utils/MultiLock.hpp"
 
 namespace precice {
@@ -242,13 +244,13 @@ public:
   std::set<int> getMeshIDs() const;
 
   /// Returns true, if the data with given name is used in the given mesh.
-  bool hasData(const std::string &dataName, int meshID) const;
+  bool hasData(const std::string &dataName, MeshID meshID) const;
 
   /// Returns data id corresponding to the given name (from configuration) and mesh.
-  int getDataID(const std::string &dataName, int meshID) const;
+  int getDataID(const std::string &dataName, MeshID meshID) const;
 
   /// Returns the number of nodes of a mesh.
-  int getMeshVertexSize(int meshID) const;
+  int getMeshVertexSize(MeshID meshID) const;
 
   /**
    * @brief Resets mesh with given ID.
@@ -257,7 +259,7 @@ public:
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  void resetMesh(int meshID);
+  void resetMesh(MeshID meshID);
 
   /**
    * @brief Set the position of a solver mesh vertex.
@@ -310,39 +312,39 @@ public:
    * @return Index of the edge to be used when setting a triangle.
    */
   int setMeshEdge(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID);
 
   /// Set a triangle of a solver mesh.
   void setMeshTriangle(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID);
+      MeshID meshID,
+      int    firstEdgeID,
+      int    secondEdgeID,
+      int    thirdEdgeID);
 
   /// Sets a triangle and creates/sets edges automatically of a solver mesh.
   void setMeshTriangleWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID);
 
   /// Set a quadrangle of a solver mesh.
   void setMeshQuad(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID,
-      int fourthEdgeID);
+      MeshID meshID,
+      int    firstEdgeID,
+      int    secondEdgeID,
+      int    thirdEdgeID,
+      int    fourthEdgeID);
 
   /// Sets a quadrangle and creates/sets edges automatically of a solver mesh.
   void setMeshQuadWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID,
-      int fourthVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID,
+      int    fourthVertexID);
 
   /**
    * @brief Computes and maps all write data mapped from mesh with given ID.
@@ -470,6 +472,35 @@ public:
       double &value) const;
 
   /**
+   * @brief setMeshAccessRegion Define a region of interest in order to filter a
+   *        received mesh for a certain mesh region
+   *
+   * @param[in] meshID ID of the mesh you want to access through the bounding box
+   * @param[in] boundingBox Axis aligned bounding boxes which has in 3D the format
+   *            [x_min, x_max, y_min, y_max, z_min, z_max]
+   */
+  void setMeshAccessRegion(const int     meshID,
+                           const double *boundingBox) const;
+
+  /**
+   * @brief getMeshVerticesWithIDs Iterates over the region of
+   *        interest defined by bounding boxes and reads the corresponding
+   *        coordinates omitting the mapping.
+   *
+   * @param[in]  meshID corresponding mesh ID
+   * @param[in]  size return value of getMeshSize
+   * @param[out] ids ids corresponding to the coordinates
+   * @param[out] coordinates associated to the values (dim * @p getMeshVertexSize)
+   *
+   * @pre IDs and coordinates need to have the correct size, which can be requested by getMeshVertexSize)
+   */
+  void getMeshVerticesAndIDs(
+      const int meshID,
+      const int size,
+      int *     ids,
+      double *  coordinates) const;
+
+  /**
    * @brief Sets the location for all output of preCICE.
    *
    * If done after configuration, this overwrites the output location specified
@@ -556,6 +587,8 @@ private:
 
   // SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
+  // setMeshAccessRegion may only be called once
+  mutable bool _accessRegionDefined = false;
 
   /// The current State of the solverinterface
   State _state{State::Constructed};
@@ -677,6 +710,15 @@ private:
 
   /// Syncs the timestep between slaves and master (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
+
+  /// Which channels to close in closeCommunicationChannels()
+  enum class CloseChannels : bool {
+    All         = false,
+    Distributed = true
+  };
+
+  /// Syncs the masters of all connected participants
+  void closeCommunicationChannels(CloseChannels cc);
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfigurationPeano;

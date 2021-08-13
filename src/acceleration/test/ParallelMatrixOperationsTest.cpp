@@ -106,12 +106,12 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
   int    iaa   = (int) a;
   int    ires1 = 0, ires2 = 0;
 
-  utils::MasterSlave::allreduceSum(a, res1, 1);
-  utils::MasterSlave::allreduceSum(iaa, ires2, 1);
-  utils::MasterSlave::allreduceSum(aa.data(), res2.data(), 2);
+  utils::MasterSlave::allreduceSum(a, res1);
+  utils::MasterSlave::allreduceSum(iaa, ires2);
+  utils::MasterSlave::allreduceSum(aa, res2);
 
-  utils::MasterSlave::reduceSum(aa.data(), res3.data(), 2);
-  utils::MasterSlave::reduceSum(iaa, ires1, 1);
+  utils::MasterSlave::reduceSum(aa, res3);
+  utils::MasterSlave::reduceSum(iaa, ires1);
 
   BOOST_TEST(testing::equals(res1, 10.));
   BOOST_TEST(testing::equals(ires2, 10));

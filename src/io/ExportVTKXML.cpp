@@ -88,7 +88,7 @@ void ExportVTKXML::writeMasterFile(
   outMasterFile << "      </PCells>\n";
 
   // write scalar data names
-  outMasterFile << "      <PPointData Scalars=\"";
+  outMasterFile << "      <PPointData Scalars=\"Rank ";
   for (const auto &scalarDataName : _scalarDataNames) {
     outMasterFile << scalarDataName << ' ';
   }
@@ -98,6 +98,8 @@ void ExportVTKXML::writeMasterFile(
     outMasterFile << vectorDataName << ' ';
   }
   outMasterFile << "\">\n";
+
+  outMasterFile << "         <PDataArray type=\"Int32\" Name=\"Rank\" NumberOfComponents=\"1\"/>\n";
 
   for (const auto &scalarDataName : _scalarDataNames) {
     outMasterFile << "         <PDataArray type=\"Float64\" Name=\"" << scalarDataName << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
@@ -227,7 +229,7 @@ void ExportVTKXML::exportData(
     std::ofstream &outFile,
     mesh::Mesh &   mesh)
 {
-  outFile << "         <PointData Scalars=\"";
+  outFile << "         <PointData Scalars=\"Rank ";
   for (const auto &scalarDataName : _scalarDataNames) {
     outFile << scalarDataName << ' ';
   }
@@ -236,6 +238,14 @@ void ExportVTKXML::exportData(
     outFile << vectorDataName << ' ';
   }
   outFile << "\">\n";
+
+  // Export the current rank
+  outFile << "            <DataArray type=\"UInt32\" Name=\"Rank\" NumberOfComponents=\"1\" format=\"ascii\">\n";
+  const auto rank = utils::MasterSlave::getRank();
+  for (size_t count = 0; count < mesh.vertices().size(); ++count) {
+    outFile << rank << ' ';
+  }
+  outFile << "\n            </DataArray>\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values         = data->values();

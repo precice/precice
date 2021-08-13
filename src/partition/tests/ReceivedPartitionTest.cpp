@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
@@ -26,6 +27,7 @@
 #include "partition/ProvidedPartition.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/versions.hpp"
+#include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
@@ -99,7 +101,7 @@ void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
   pSolidzMesh->computeBoundingBox();
 }
 
-void createNastinMesh2D(mesh::PtrMesh pNastinMesh, int rank)
+void createNastinMesh2D(mesh::PtrMesh pNastinMesh, Rank rank)
 {
   int dimensions = 2;
   BOOST_TEST(pNastinMesh);
@@ -123,7 +125,7 @@ void createNastinMesh2D(mesh::PtrMesh pNastinMesh, int rank)
   pNastinMesh->computeBoundingBox();
 }
 
-void createNastinMesh2D2(mesh::PtrMesh pNastinMesh, int rank)
+void createNastinMesh2D2(mesh::PtrMesh pNastinMesh, Rank rank)
 {
   int dimensions = 2;
   PRECICE_ASSERT(pNastinMesh.use_count() > 0);
@@ -181,7 +183,7 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
   pSolidzMesh->computeBoundingBox();
 }
 
-void createNastinMesh3D(mesh::PtrMesh pNastinMesh, int rank)
+void createNastinMesh3D(mesh::PtrMesh pNastinMesh, Rank rank)
 {
   int dimensions = 3;
   BOOST_TEST(pNastinMesh);
@@ -205,7 +207,7 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, int rank)
   pNastinMesh->computeBoundingBox();
 }
 
-void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, int rank)
+void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, Rank rank)
 {
   int dimensions = 3;
   PRECICE_ASSERT(pNastinMesh.use_count() > 0);

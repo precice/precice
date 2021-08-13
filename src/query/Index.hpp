@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+
 #include "logging/Logger.hpp"
 #include "mapping/Polation.hpp"
 #include "mesh/BoundingBox.hpp"
@@ -9,18 +10,27 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace query {
 
+/// Type used for the IDs of matching entities
+using MatchID = int;
+
+constexpr MatchID NO_MATCH{-1};
+
+/// Type used for the distance of a match to the queried point
+using Distance = double;
+constexpr double INVALID_DISTANCE{-1};
+
 /// Struct to hold index and distance information of the closest primitive
-/// @todo Replace default magic number initialization with a dedicated variable
 template <class Tag>
 struct MatchType {
-  double distance{-1};
-  int    index{-1};
+  Distance distance{INVALID_DISTANCE};
+  MatchID  index{NO_MATCH};
   MatchType() = default;
-  MatchType(double d, int i)
+  MatchType(Distance d, MatchID i)
       : distance(d), index(i){};
 
   constexpr bool operator<(MatchType const &other) const
@@ -34,6 +44,12 @@ using GenericMatch  = MatchType<struct GenericMatchTag>;
 using VertexMatch   = MatchType<struct VertexMatchTag>;
 using EdgeMatch     = MatchType<struct EdgeMatchTag>;
 using TriangleMatch = MatchType<struct TriangleTag>;
+
+/// Struct representing a projection match
+struct ProjectionMatch {
+  mapping::Polation polation;
+  Distance          distance;
+};
 
 /// Class to query the index trees of the mesh
 class Index {
@@ -52,10 +68,10 @@ public:
   std::vector<TriangleMatch> getClosestTriangles(const Eigen::VectorXd &sourceCoord, int n);
 
   /// Return all the vertices inside the box formed by vertex and radius
-  std::vector<size_t> getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius);
+  std::vector<VertexID> getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius);
 
   /// Return all the vertices inside a bounding box
-  std::vector<size_t> getVerticesInsideBox(const mesh::BoundingBox &bb);
+  std::vector<VertexID> getVerticesInsideBox(const mesh::BoundingBox &bb);
 
   /**
    * @brief Find the closest interpolation element to the given location. 
@@ -67,7 +83,7 @@ public:
    * param[out] pair of interpolation and the distance to corresponding vertex/edge/triangle
    *
   */
-  std::pair<mapping::Polation, double> findNearestProjection(const Eigen::VectorXd &location, int n);
+  ProjectionMatch findNearestProjection(const Eigen::VectorXd &location, int n);
 
 private:
   struct IndexImpl;
@@ -77,20 +93,20 @@ private:
   static precice::logging::Logger _log;
 
   /// Closest vertex projection element is always the nearest neighbor
-  std::pair<mapping::Polation, double> findVertexProjection(const Eigen::VectorXd &location);
+  ProjectionMatch findVertexProjection(const Eigen::VectorXd &location);
 
   /// Find closest edge interpolation element. If cannot be found, it falls back to vertex projection
-  std::pair<mapping::Polation, double> findEdgeProjection(const Eigen::VectorXd &location, int n);
+  ProjectionMatch findEdgeProjection(const Eigen::VectorXd &location, int n);
 
   /// Find closest face interpolation element. If cannot be found, it falls back to first edge interpolation element, then vertex if necessary
-  std::pair<mapping::Polation, double> findTriangleProjection(const Eigen::VectorXd &location, int n);
+  ProjectionMatch findTriangleProjection(const Eigen::VectorXd &location, int n);
 };
 
 /// Clear all the cache
 void clearCache();
 
 /// Clear the cache of given mesh
-void clearCache(int meshID);
+void clearCache(MeshID meshID);
 
 /// Clear the cache of given mesh
 void clearCache(mesh::Mesh &mesh);

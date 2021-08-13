@@ -913,8 +913,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb = otherMesh->getBoundingBox();
     bb.expandBy(_basisFunction.getSupportRadius());
 
-    query::Index indexTree(filterMesh);
-    auto         vertices = indexTree.getVerticesInsideBox(bb);
+    const auto vertices = query::Index{filterMesh}.getVerticesInsideBox(bb);
     std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertices()[v].tag(); });
   } else {
     filterMesh->tagAll();
@@ -953,8 +952,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
 
-  query::Index indexTree(mesh);
-  auto         vertices = indexTree.getVerticesInsideBox(bb);
+  auto vertices = query::Index{mesh}.getVerticesInsideBox(bb);
   std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertices()[v].tag(); });
 }
 
@@ -1405,7 +1403,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
     }
   }
 
-  std::vector<size_t> results;
   for (const mesh::Vertex &inVertex : inMesh->vertices()) {
     if (not inVertex.isOwner())
       continue;
@@ -1414,14 +1411,10 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
     PetscInt const global_row = local_row + _matrixC.ownerRange().first;
     d_nnz[local_row]          = 0;
     o_nnz[local_row]          = 0;
-    results.clear();
 
     // -- PREALLOCATES THE COEFFICIENTS --
-    query::Index indexTree(inMesh);
-    results = indexTree.getVerticesInsideBox(inVertex, supportRadius);
 
-    // for (mesh::Vertex& vj : inMesh->vertices()) {
-    for (auto const i : results) {
+    for (auto const i : query::Index{inMesh}.getVerticesInsideBox(inVertex, supportRadius)) {
       const mesh::Vertex &vj = inMesh->vertices()[i];
 
       PetscInt mappedCol = vj.getGlobalIndex() + polyparams;
@@ -1508,10 +1501,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
     }
 
     // -- PREALLOCATE THE COEFFICIENTS --
-    query::Index indexTree(inMesh);
-    auto         results = indexTree.getVerticesInsideBox(oVertex, supportRadius);
-
-    for (auto i : results) {
+    for (auto i : query::Index{inMesh}.getVerticesInsideBox(oVertex, supportRadius)) {
       const mesh::Vertex &inVertex = inMesh->vertices()[i];
       distance                     = oVertex.getCoords() - inVertex.getCoords();
 
