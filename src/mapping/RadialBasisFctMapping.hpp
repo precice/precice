@@ -271,7 +271,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
     localOutputSize *= output()->data(outputDataID)->getDimensions();
 
-    utils::MasterSlave::_communication->send(localInData.data(), localInData.size(), 0);
+    utils::MasterSlave::_communication->send(localInData, 0);
     utils::MasterSlave::_communication->send(localOutputSize, 0);
 
   } else { // Parallel Master or Serial case
@@ -348,7 +348,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       // Data scattering to slaves
       int beginPoint = outputValueSizes.at(0);
       for (Rank rank : utils::MasterSlave::allSlaves()) {
-        utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outputValueSizes.at(rank), rank);
+        precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outputValueSizes.at(rank))};
+        utils::MasterSlave::_communication->send(toSend, rank);
         beginPoint += outputValueSizes.at(rank);
       }
     } else { // Serial
@@ -386,7 +387,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     int  localOutputSize     = output()->data(outputDataID)->values().size();
 
     // Send data and output size
-    utils::MasterSlave::_communication->send(localInDataFiltered.data(), localInDataFiltered.size(), 0);
+    utils::MasterSlave::_communication->send(localInDataFiltered, 0);
     utils::MasterSlave::_communication->send(localOutputSize, 0);
 
   } else { // Master or Serial case
@@ -457,7 +458,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 
     if (utils::MasterSlave::isMaster()) {
       for (Rank rank : utils::MasterSlave::allSlaves()) {
-        utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outValuesSize.at(rank), rank);
+        precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outValuesSize.at(rank))};
+        utils::MasterSlave::_communication->send(toSend, rank);
         beginPoint += outValuesSize.at(rank);
       }
     }

@@ -62,16 +62,16 @@ public:
   virtual void send(std::string const &itemToSend, Rank rankReceiver) override;
 
   /// Sends an array of integer values.
-  virtual void send(const int *itemsToSend, int size, Rank rankReceiver) override;
+  virtual void send(precice::span<const int> itemsToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends an array of integer values.
-  virtual PtrRequest aSend(const int *itemsToSend, int size, Rank rankReceiver) override;
+  virtual PtrRequest aSend(precice::span<const int> itemsToSend, Rank rankReceiver) override;
 
   /// Sends an array of double values.
-  virtual void send(const double *itemsToSend, int size, Rank rankReceiver) override;
+  virtual void send(precice::span<const double> itemsToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends an array of double values.
-  virtual PtrRequest aSend(const double *itemsToSend, int size, Rank rankReceiver) override;
+  virtual PtrRequest aSend(precice::span<const double> itemsToSend, Rank rankReceiver) override;
 
   virtual PtrRequest aSend(std::vector<double> const &itemsToSend, Rank rankReceiver) override;
 
@@ -97,15 +97,14 @@ public:
   virtual void receive(std::string &itemToReceive, Rank rankSender) override;
 
   /// Receives an array of integer values.
-  virtual void receive(int *itemsToReceive, int size, Rank rankSender) override;
+  virtual void receive(precice::span<int> itemsToReceive, Rank rankSender) override;
 
   /// Receives an array of double values.
-  virtual void receive(double *itemsToReceive, int size, Rank rankSender) override;
+  virtual void receive(precice::span<double> itemsToReceive, Rank rankSender) override;
 
   /// Asynchronously receives an array of double values.
-  virtual PtrRequest aReceive(double *itemsToReceive,
-                              int     size,
-                              int     rankSender) override;
+  virtual PtrRequest aReceive(precice::span<double> itemsToReceive,
+                              int                   rankSender) override;
 
   virtual PtrRequest aReceive(std::vector<double> &itemsToReceive, Rank rankSender) override;
 

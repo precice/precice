@@ -172,15 +172,11 @@ void TestContext::initializeMasterSlave()
   if (invalid)
     return;
 
-  if (_initMS && hasSize(1)) {
-    throw std::runtime_error{
-        "Initializing a Master Slave communication does not make sense for serial participant \"" + name + "\"!"};
-  }
-
   // Establish a consistent state for all tests
   utils::MasterSlave::configure(rank, size);
+  utils::MasterSlave::_communication.reset();
 
-  if (!_initMS)
+  if (!_initMS || hasSize(1))
     return;
 
 #ifndef PRECICE_NO_MPI
