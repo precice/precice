@@ -32,12 +32,13 @@ extern bool syncMode;
 namespace partition {
 
 ReceivedPartition::ReceivedPartition(
-    mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor)
+    mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor, bool allowDirectAccess)
     : Partition(mesh),
       _geometricFilter(geometricFilter),
       _bb(mesh->getDimensions()),
       _dimensions(mesh->getDimensions()),
-      _safetyFactor(safetyFactor)
+      _safetyFactor(safetyFactor),
+      _allowDirectAccess(allowDirectAccess)
 {
 }
 
@@ -95,6 +96,29 @@ void ReceivedPartition::compute()
   // handle coupling mode first (i.e. serial participant)
   if (!utils::MasterSlave::isParallel()) { //coupling mode
     PRECICE_DEBUG("Handle partition data structures for serial participant");
+
+    if (_allowDirectAccess) {
+      // Prepare the bounding boxes
+      prepareBoundingBox();
+      // Filter out vertices not laying in the bounding box
+      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
+      // To discuss: maybe check this somewhere in the SolverInterfaceImpl, as we have now a similar check for the parallel case
+      PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
+      unsigned int nFilteredVertices = 0;
+      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { if(!_bb.contains(v))
+              ++nFilteredVertices;
+          return _bb.contains(v); });
+
+      if (nFilteredVertices > 0) {
+        PRECICE_WARN("{} vertices on mesh \"{}\" have been filtered out due to the defined bounding box in \"setMeshAccessRegion\" "
+                     "in serial mode. Associated data values of the filtered vertices will be filled with zero values in order to provide valid data for other participants when reading data.",
+                     nFilteredVertices, _mesh->getName());
+      }
+
+      _mesh->clear();
+      _mesh->addMesh(filteredMesh);
+    }
+
     int vertexCounter = 0;
     for (mesh::Vertex &v : _mesh->vertices()) {
       v.setOwner(true);
@@ -107,7 +131,7 @@ void ReceivedPartition::compute()
 
   // check to prevent false configuration
   if (not utils::MasterSlave::isSlave()) {
-    PRECICE_CHECK(hasAnyMapping(),
+    PRECICE_CHECK(hasAnyMapping() || _allowDirectAccess,
                   "The received mesh {} needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?",
                   _mesh->getName());
   }
@@ -354,6 +378,8 @@ void ReceivedPartition::compareBoundingBoxes()
 {
   PRECICE_TRACE();
 
+  _mesh->clearPartitioning();
+
   // @todo handle coupling mode (i.e. serial participant)
   // @todo treatment of multiple m2ns
   PRECICE_ASSERT(_m2ns.size() == 1);
@@ -395,6 +421,7 @@ void ReceivedPartition::compareBoundingBoxes()
     std::vector<int>                connectedRanksList; // local ranks with any connection
 
     // connected ranks for master
+    _mesh->getConnectedRanks().clear();
     for (auto &remoteBB : remoteBBMap) {
       if (_bb.overlapping(remoteBB.second)) {
         _mesh->getConnectedRanks().push_back(remoteBB.first); //connected remote ranks for this rank
@@ -428,6 +455,7 @@ void ReceivedPartition::compareBoundingBoxes()
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
 
+    _mesh->getConnectedRanks().clear();
     for (const auto &remoteBB : remoteBBMap) {
       if (_bb.overlapping(remoteBB.second)) {
         _mesh->getConnectedRanks().push_back(remoteBB.first);
@@ -462,6 +490,27 @@ void ReceivedPartition::prepareBoundingBox()
     auto other_bb = toMapping->getInputMesh()->getBoundingBox();
     _bb.expandBy(other_bb);
     _bb.scaleBy(_safetyFactor);
+    _boundingBoxPrepared = true;
+  }
+
+  // Expand by user-defined bounding box in case a direct access is desired
+  if (_allowDirectAccess) {
+    auto &other_bb = _mesh->getBoundingBox();
+    _bb.expandBy(other_bb);
+
+    // The safety factor is for mapping based partitionings applied, as usual.
+    // For the direct access, however, we don't apply any safety factor scaling.
+    // If the user defines a safety factor and the partitioning is entirely based
+    // on the defined access region (setMeshAccessRegion), we raise a warning
+    // to inform the user
+    const float defaultSafetyFactor = 0.5;
+    if (utils::MasterSlave::isMaster() && !hasAnyMapping() && (_safetyFactor != defaultSafetyFactor)) {
+      PRECICE_WARN("The received mesh \"{}\" was entirely partitioned based on the defined access region "
+                   "(setMeshAccessRegion) and a safety-factor was defined. However, the safety factor "
+                   "will be ignored in this case. You may want to modify the access region by modifying "
+                   "the specified region in the function itself.",
+                   _mesh->getName());
+    }
     _boundingBoxPrepared = true;
   }
 }
@@ -558,6 +607,13 @@ void ReceivedPartition::createOwnerInformation()
 
     // Decide upon owners,
     PRECICE_DEBUG("Decide owners, first round by rough load balancing");
+    // Provide a more descriptive error message if direct access was enabled
+    PRECICE_CHECK(!(ranksAtInterface == 0 && _allowDirectAccess),
+                  "After repartitioning of mesh \"{}\" all ranks are empty. "
+                  "Please check the dimensions of the provided bounding box "
+                  "(in \"setMeshAccessRegion\") and verify that it covers vertices "
+                  "in the mesh or check the definition of the provided meshes.",
+                  _mesh->getName());
     PRECICE_ASSERT(ranksAtInterface != 0);
     int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
     // First round: every slave gets localGuess vertices
@@ -606,9 +662,13 @@ void ReceivedPartition::createOwnerInformation()
     }
 #endif
     auto filteredVertices = std::count(globalOwnerVec.begin(), globalOwnerVec.end(), 0);
-    if (filteredVertices)
-      PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
-                   filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
+    if (filteredVertices) {
+      PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.{}",
+                   filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName(),
+                   _allowDirectAccess ? " Associated data values of the filtered vertices will be filled with zero values in order to "
+                                        "provide valid data for other participants when reading data."
+                                      : "");
+    }
   }
 }
 
@@ -634,6 +694,12 @@ bool ReceivedPartition::hasAnyMapping() const
 
 void ReceivedPartition::tagMeshFirstRound()
 {
+  // We want to have every vertex within the box if we access the mesh directly
+  if (_allowDirectAccess) {
+    _mesh->tagAll();
+    return;
+  }
+
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshFirstRound();
   }
@@ -644,6 +710,11 @@ void ReceivedPartition::tagMeshFirstRound()
 
 void ReceivedPartition::tagMeshSecondRound()
 {
+  // We have already tagged every node in this case in the first round
+  if (_allowDirectAccess) {
+    return;
+  }
+
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshSecondRound();
   }

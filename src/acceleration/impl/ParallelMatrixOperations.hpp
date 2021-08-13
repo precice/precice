@@ -106,7 +106,7 @@ public:
     if (!utils::MasterSlave::isParallel()) {
       result = localResult;
     } else {
-      utils::MasterSlave::allreduceSum(localResult.data(), result.data(), localResult.size());
+      utils::MasterSlave::allreduceSum(localResult, result);
     }
   }
 
@@ -150,11 +150,11 @@ private:
 
     // initiate asynchronous send operation of leftMatrix (W_til) --> nextProc (this data is needed in cycle 1)    dim: n_local x cols
     if (leftMatrix.size() > 0)
-      requestSend = _cyclicCommRight->aSend(leftMatrix.data(), leftMatrix.size(), 0);
+      requestSend = _cyclicCommRight->aSend(leftMatrix, 0);
 
     // initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til      dim: rows_rcv x cols
     if (leftMatrix_rcv.size() > 0)
-      requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv.data(), leftMatrix_rcv.size(), 0);
+      requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv, 0);
 
     // compute diagonal blocks where all data is local and no communication is needed
     // compute block matrices of J_inv of size (n_til x n_til), n_til = local n
@@ -183,7 +183,7 @@ private:
       // initiate async send to hand over leftMatrix (W_til) to the next proc (this data will be needed in the next cycle)    dim: n_local x cols
       if (cycle < utils::MasterSlave::getSize() - 1) {
         if (leftMatrix_copy.size() > 0)
-          requestSend = _cyclicCommRight->aSend(leftMatrix_copy.data(), leftMatrix_copy.size(), 0);
+          requestSend = _cyclicCommRight->aSend(leftMatrix_copy, 0);
       }
 
       // compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cylce
@@ -198,7 +198,7 @@ private:
       // initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til (this data is needed in the next cycle)
       if (cycle < utils::MasterSlave::getSize() - 1) {
         if (leftMatrix_rcv.size() > 0) // only receive data, if data has been sent
-          requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv.data(), leftMatrix_rcv.size(), 0);
+          requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv, 0);
       }
 
       if (requestSend != NULL)
@@ -280,12 +280,12 @@ private:
 
     // sum up blocks in master, reduce
     Eigen::MatrixXd summarizedBlocks = Eigen::MatrixXd::Zero(p, r); /// @todo: only master should allocate memory.
-    utils::MasterSlave::reduceSum(block.data(), summarizedBlocks.data(), block.size());
+    utils::MasterSlave::reduceSum(block, summarizedBlocks);
 
     // slaves wait to receive their local result
     if (utils::MasterSlave::isSlave()) {
       if (result.size() > 0)
-        utils::MasterSlave::_communication->receive(result.data(), result.size(), 0);
+        utils::MasterSlave::_communication->receive(result, 0);
     }
 
     // master distributes the sub blocks of the results
@@ -301,7 +301,7 @@ private:
           // necessary to save the matrix-block that is to be sent in a temporary matrix-object
           // otherwise, the send routine walks over the bounds of the block (matrix structure is still from the entire matrix)
           Eigen::MatrixXd sendBlock = summarizedBlocks.block(off, 0, send_rows, r);
-          utils::MasterSlave::_communication->send(sendBlock.data(), sendBlock.size(), rankSlave);
+          utils::MasterSlave::_communication->send(sendBlock, rankSlave);
         }
       }
     }

@@ -98,17 +98,17 @@ void TestSendAndReceiveVectors(TestContext const &context)
     com.acceptConnection("process0", "process1", "", 0);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
-      com.receive(msg.data(), msg.size(), 0);
+      com.receive(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector3d::Constant(1)));
       msg = Eigen::Vector3d::Constant(2);
-      com.send(msg.data(), msg.size(), 0);
+      com.send(msg, 0);
     }
     {
       Eigen::Vector4i msg = Eigen::Vector4i::Constant(0);
-      com.receive(msg.data(), msg.size(), 0);
+      com.receive(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Constant(1)));
       msg = Eigen::Vector4i::Constant(0);
-      com.send(msg.data(), msg.size(), 0);
+      com.send(msg, 0);
     }
     {
       std::vector<int> msg;
@@ -128,14 +128,14 @@ void TestSendAndReceiveVectors(TestContext const &context)
     com.requestConnection("process0", "process1", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(1);
-      com.send(msg.data(), msg.size(), 0);
-      com.receive(msg.data(), msg.size(), 0);
+      com.send(msg, 0);
+      com.receive(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector3d::Constant(2)));
     }
     {
       Eigen::Vector4i msg = Eigen::Vector4i::Constant(1);
-      com.send(msg.data(), msg.size(), 0);
-      com.receive(msg.data(), msg.size(), 0);
+      com.send(msg, 0);
+      com.receive(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Zero()));
     }
     {
@@ -247,41 +247,41 @@ void TestBroadcastVectors(TestContext const &context)
     com.acceptConnection("process0", "process1", "", 0);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(3.1415);
-      com.broadcast(msg.data(), msg.size());
+      com.broadcast(msg);
     }
     {
       Eigen::Vector4i msg = Eigen::Vector4i::Constant(21);
-      com.broadcast(msg.data(), msg.size());
+      com.broadcast(msg);
     }
     {
       std::vector<int> msg{2, 3, 5, 8};
-      com.broadcast(msg.data(), msg.size());
+      com.broadcast(msg);
     }
     {
       std::vector<double> msg{1.2, 2.3, 3.5, 4.8};
-      com.broadcast(msg.data(), msg.size());
+      com.broadcast(msg);
     }
     com.closeConnection();
   } else {
     com.requestConnection("process0", "process1", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
-      com.broadcast(msg.data(), msg.size(), 0);
+      com.broadcast(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector3d::Constant(3.1415)));
     }
     {
       Eigen::Vector4i msg = Eigen::Vector4i::Constant(0);
-      com.broadcast(msg.data(), msg.size(), 0);
+      com.broadcast(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Constant(21)));
     }
     {
       std::vector<int> msg(4);
-      com.broadcast(msg.data(), msg.size(), 0);
+      com.broadcast(msg, 0);
       BOOST_CHECK(msg == std::vector<int>({2, 3, 5, 8}));
     }
     {
       std::vector<double> msg(4);
-      com.broadcast(msg.data(), msg.size(), 0);
+      com.broadcast(msg, 0);
       BOOST_CHECK(msg == std::vector<double>({1.2, 2.3, 3.5, 4.8}));
     }
     com.closeConnection();
@@ -355,7 +355,7 @@ void TestReduceVectors(TestContext const &context)
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
-      com.reduceSum(msg.data(), rcv.data(), msg.size());
+      com.reduceSum(msg, rcv);
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
       BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
                                     msg_expected.begin(), msg_expected.end());
@@ -366,7 +366,7 @@ void TestReduceVectors(TestContext const &context)
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
-      com.allreduceSum(msg.data(), rcv.data(), msg.size());
+      com.allreduceSum(msg, rcv);
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
       BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
                                     msg_expected.begin(), msg_expected.end());
@@ -380,7 +380,7 @@ void TestReduceVectors(TestContext const &context)
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
-      com.reduceSum(msg.data(), rcv.data(), msg.size(), 0);
+      com.reduceSum(msg, rcv, 0);
       std::vector<double> msg_expected{1, 2, 3};
       BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
                                     msg_expected.begin(), msg_expected.end());
@@ -391,7 +391,7 @@ void TestReduceVectors(TestContext const &context)
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
-      com.allreduceSum(msg.data(), rcv.data(), msg.size(), 0);
+      com.allreduceSum(msg, rcv, 0);
       std::vector<double> msg_expected{1, 2, 3};
       BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
                                     msg_expected.begin(), msg_expected.end());
@@ -498,17 +498,17 @@ void TestSendAndReceiveVectors(TestContext const &context)
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
-      com.receive(msg.data(), msg.size(), 1);
+      com.receive(msg, 1);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector3d::Constant(1)));
       msg = Eigen::Vector3d::Constant(2);
-      com.send(msg.data(), msg.size(), 1);
+      com.send(msg, 1);
     }
     {
       Eigen::Vector4i msg = Eigen::Vector4i::Constant(0);
-      com.receive(msg.data(), msg.size(), 1);
+      com.receive(msg, 1);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Constant(1)));
       msg = Eigen::Vector4i::Constant(0);
-      com.send(msg.data(), msg.size(), 1);
+      com.send(msg, 1);
     }
     {
       std::vector<int> msg;
@@ -528,14 +528,14 @@ void TestSendAndReceiveVectors(TestContext const &context)
     com.requestConnection("Master", "Slave", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(1);
-      com.send(msg.data(), msg.size(), 0);
-      com.receive(msg.data(), msg.size(), 0);
+      com.send(msg, 0);
+      com.receive(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector3d::Constant(2)));
     }
     {
       Eigen::Vector4i msg = Eigen::Vector4i::Constant(1);
-      com.send(msg.data(), msg.size(), 0);
-      com.receive(msg.data(), msg.size(), 0);
+      com.send(msg, 0);
+      com.receive(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Zero()));
     }
     {
@@ -604,41 +604,41 @@ void TestBroadcastVectors(TestContext const &context)
     com.acceptConnection("Master", "Slave", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(3.1415);
-      com.broadcast(msg.data(), msg.size());
+      com.broadcast(msg);
     }
     {
       Eigen::Vector4i msg = Eigen::Vector4i::Constant(21);
-      com.broadcast(msg.data(), msg.size());
+      com.broadcast(msg);
     }
     {
       std::vector<int> msg{2, 3, 5, 8};
-      com.broadcast(msg.data(), msg.size());
+      com.broadcast(msg);
     }
     {
       std::vector<double> msg{1.2, 2.3, 3.5, 4.8};
-      com.broadcast(msg.data(), msg.size());
+      com.broadcast(msg);
     }
     com.closeConnection();
   } else {
     com.requestConnection("Master", "Slave", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
-      com.broadcast(msg.data(), msg.size(), 0);
+      com.broadcast(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector3d::Constant(3.1415)));
     }
     {
       Eigen::Vector4i msg = Eigen::Vector4i::Constant(0);
-      com.broadcast(msg.data(), msg.size(), 0);
+      com.broadcast(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Constant(21)));
     }
     {
       std::vector<int> msg(4);
-      com.broadcast(msg.data(), msg.size(), 0);
+      com.broadcast(msg, 0);
       BOOST_CHECK(msg == std::vector<int>({2, 3, 5, 8}));
     }
     {
       std::vector<double> msg(4);
-      com.broadcast(msg.data(), msg.size(), 0);
+      com.broadcast(msg, 0);
       BOOST_CHECK(msg == std::vector<double>({1.2, 2.3, 3.5, 4.8}));
     }
     com.closeConnection();
@@ -712,7 +712,7 @@ void TestReduceVectors(TestContext const &context)
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
-      com.reduceSum(msg.data(), rcv.data(), msg.size());
+      com.reduceSum(msg, rcv);
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
       BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
                                     msg_expected.begin(), msg_expected.end());
@@ -723,7 +723,7 @@ void TestReduceVectors(TestContext const &context)
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
-      com.allreduceSum(msg.data(), rcv.data(), msg.size());
+      com.allreduceSum(msg, rcv);
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
       BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
                                     msg_expected.begin(), msg_expected.end());
@@ -737,7 +737,7 @@ void TestReduceVectors(TestContext const &context)
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
-      com.reduceSum(msg.data(), rcv.data(), msg.size(), 0);
+      com.reduceSum(msg, rcv, 0);
       std::vector<double> msg_expected{1, 2, 3};
       BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
                                     msg_expected.begin(), msg_expected.end());
@@ -748,7 +748,7 @@ void TestReduceVectors(TestContext const &context)
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
-      com.allreduceSum(msg.data(), rcv.data(), msg.size(), 0);
+      com.allreduceSum(msg, rcv, 0);
       std::vector<double> msg_expected{1, 2, 3};
       BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
                                     msg_expected.begin(), msg_expected.end());

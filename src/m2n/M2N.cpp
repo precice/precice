@@ -161,21 +161,35 @@ void M2N::completeSlavesConnection()
 void M2N::closeConnection()
 {
   PRECICE_TRACE();
+  closeMasterConnection();
+  closeDistributedConnections();
+}
+
+void M2N::closeMasterConnection()
+{
+  PRECICE_TRACE();
   if (not utils::MasterSlave::isSlave() && _masterCom->isConnected()) {
     _masterCom->closeConnection();
     _isMasterConnected = false;
   }
 
   utils::MasterSlave::broadcast(_isMasterConnected);
+  PRECICE_ASSERT(not _isMasterConnected);
+}
 
-  if (not _useOnlyMasterCom) {
-    _areSlavesConnected = false;
-    for (const auto &pair : _distComs) {
-      pair.second->closeConnection();
-      _areSlavesConnected = _areSlavesConnected || pair.second->isConnected();
-    }
-    PRECICE_ASSERT(not _areSlavesConnected);
+void M2N::closeDistributedConnections()
+{
+  PRECICE_TRACE();
+  if (_useOnlyMasterCom) {
+    return;
   }
+
+  _areSlavesConnected = false;
+  for (const auto &pair : _distComs) {
+    pair.second->closeConnection();
+    _areSlavesConnected |= pair.second->isConnected();
+  }
+  PRECICE_ASSERT(not _areSlavesConnected);
 }
 
 com::PtrCommunication M2N::getMasterCommunication()
@@ -193,10 +207,9 @@ void M2N::createDistributedCommunication(mesh::PtrMesh mesh)
 }
 
 void M2N::send(
-    double const *itemsToSend,
-    int           size,
-    int           meshID,
-    int           valueDimension)
+    precice::span<double const> itemsToSend,
+    int                         meshID,
+    int                         valueDimension)
 {
   if (not _useOnlyMasterCom) {
     PRECICE_ASSERT(_areSlavesConnected);
@@ -210,10 +223,10 @@ void M2N::send(
       _masterCom->send(ack, 0);
     }
     Event e("m2n.sendData", precice::syncMode);
-    _distComs[meshID]->send(itemsToSend, size, valueDimension);
+    _distComs[meshID]->send(itemsToSend, valueDimension);
   } else {
     PRECICE_ASSERT(_isMasterConnected);
-    _masterCom->send(itemsToSend, size, 0);
+    _masterCom->send(itemsToSend, 0);
   }
 }
 
@@ -263,10 +276,9 @@ void M2N::broadcastSend(int &itemToSend, mesh::Mesh &mesh)
   _distComs[meshID]->broadcastSend(itemToSend);
 }
 
-void M2N::receive(double *itemsToReceive,
-                  int     size,
-                  int     meshID,
-                  int     valueDimension)
+void M2N::receive(precice::span<double> itemsToReceive,
+                  int                   meshID,
+                  int                   valueDimension)
 {
   if (not _useOnlyMasterCom) {
     PRECICE_ASSERT(_areSlavesConnected);
@@ -283,10 +295,10 @@ void M2N::receive(double *itemsToReceive,
       }
     }
     Event e("m2n.receiveData", precice::syncMode);
-    _distComs[meshID]->receive(itemsToReceive, size, valueDimension);
+    _distComs[meshID]->receive(itemsToReceive, valueDimension);
   } else {
     PRECICE_ASSERT(_isMasterConnected);
-    _masterCom->receive(itemsToReceive, size, 0);
+    _masterCom->receive(itemsToReceive, 0);
   }
 }
 

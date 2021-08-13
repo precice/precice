@@ -72,7 +72,7 @@ void WatchIntegral::exportIntegralData(
 
     if (utils::MasterSlave::getSize() > 1) {
       Eigen::VectorXd valueRecv = Eigen::VectorXd::Zero(dataDimensions);
-      utils::MasterSlave::reduceSum(integral.data(), valueRecv.data(), integral.size());
+      utils::MasterSlave::reduceSum(integral, valueRecv);
       integral = std::move(valueRecv);
     }
     if (not utils::MasterSlave::isSlave()) {
@@ -91,7 +91,7 @@ void WatchIntegral::exportIntegralData(
     double surfaceArea = calculateSurfaceArea();
     if (utils::MasterSlave::getSize() > 1) {
       double surfaceAreaSum = 0.0;
-      utils::MasterSlave::reduceSum(&surfaceArea, &surfaceAreaSum, 1);
+      utils::MasterSlave::reduceSum(surfaceArea, surfaceAreaSum);
       surfaceArea = surfaceAreaSum;
     }
     if (not utils::MasterSlave::isSlave()) {
@@ -102,7 +102,7 @@ void WatchIntegral::exportIntegralData(
     if (utils::MasterSlave::getSize() > 1) {
       double surfaceArea    = 0.0;
       double surfaceAreaSum = 0.0;
-      utils::MasterSlave::reduceSum(&surfaceArea, &surfaceAreaSum, 1);
+      utils::MasterSlave::reduceSum(surfaceArea, surfaceAreaSum);
     }
   }
 }
