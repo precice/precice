@@ -252,13 +252,11 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices, strict);
   } else if (tag.getName() == TAG_EXCHANGE) {
-    std::string   nameData            = tag.getStringAttributeValue(ATTR_DATA);
-    std::string   nameMesh            = tag.getStringAttributeValue(ATTR_MESH);
-    std::string   nameParticipantFrom = tag.getStringAttributeValue(ATTR_FROM);
-    std::string   nameParticipantTo   = tag.getStringAttributeValue(ATTR_TO);
-    bool          initialize          = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
-    mesh::PtrData exchangeData;
-    mesh::PtrMesh exchangeMesh;
+    std::string nameData            = tag.getStringAttributeValue(ATTR_DATA);
+    std::string nameMesh            = tag.getStringAttributeValue(ATTR_MESH);
+    std::string nameParticipantFrom = tag.getStringAttributeValue(ATTR_FROM);
+    std::string nameParticipantTo   = tag.getStringAttributeValue(ATTR_TO);
+    bool        initialize          = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
 
     PRECICE_CHECK(_meshConfig->hasMeshName(nameMesh) && _meshConfig->getMesh(nameMesh)->hasDataName(nameData),
                   "Mesh \"{}\" with data \"{}\" not defined. "
@@ -266,11 +264,10 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                   "tag in the <coupling-scheme:... /> of your precice-config.xml.",
                   nameMesh, nameData, nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
 
-    const mesh::PtrMesh &mesh = _meshConfig->getMesh(nameMesh);
-    const mesh::PtrData &data = mesh->data(nameData);
-    PRECICE_ASSERT(mesh && data);
-    exchangeData = data;
-    exchangeMesh = mesh;
+    mesh::PtrMesh exchangeMesh = _meshConfig->getMesh(nameMesh);
+    PRECICE_ASSERT(exchangeMesh);
+    mesh::PtrData exchangeData = exchangeMesh->data(nameData);
+    PRECICE_ASSERT(exchangeData);
 
     _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
     _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
