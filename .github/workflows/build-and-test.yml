@@ -12,6 +12,7 @@ on:
       - 'thirdparty/**'
       - 'CMakeLists.txt'
       - 'extras/bindings/**'
+      - '.github/workflows/build-and-test.yml'
   workflow_dispatch:
 
 jobs:
