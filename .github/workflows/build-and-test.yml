@@ -72,6 +72,14 @@ jobs:
             CONFIG: MPIPETSc
             CXX: 'clang++'
             TYPE: Release
+          - IMAGE: 'fedora-34'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
+          - IMAGE: 'fedora-34'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Release
     env:
       CCACHE_DIR: "$GITHUB_WORKSPACE/ccache"
       OMPI_MCA_rmaps_base_oversubscribe: 1
