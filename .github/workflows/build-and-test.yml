@@ -12,6 +12,7 @@ on:
       - 'thirdparty/**'
       - 'CMakeLists.txt'
       - 'extras/bindings/**'
+  workflow_dispatch:
 
 jobs:
   build:
