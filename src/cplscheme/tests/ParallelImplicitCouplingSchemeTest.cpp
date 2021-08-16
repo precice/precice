@@ -21,9 +21,9 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "testing/ParallelCouplingSchemeFixture.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "testing/ParallelCouplingSchemeFixture.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "xml/XMLTag.hpp"
 
