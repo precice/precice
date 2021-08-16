@@ -11,7 +11,7 @@ namespace precice {
 namespace cplscheme {
 
 // Forward declaration to friend the boost test struct
-struct serialCouplingSchemeFixture;
+struct SerialCouplingSchemeFixture;
 
 /**
  * @brief Coupling scheme for serial coupling, i.e. staggered execution of two coupled participants
@@ -20,7 +20,7 @@ struct serialCouplingSchemeFixture;
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class SerialCouplingScheme : public BiCouplingScheme {
-  friend struct serialCouplingSchemeFixture; // Make the fixture friend of this class
+  friend struct SerialCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
  * @brief Constructor.
@@ -93,7 +93,7 @@ private:
  *
  * The fixture can be used to call private functions for individual testing. 
  */
-struct serialCouplingSchemeFixture {
+struct SerialCouplingSchemeFixture {
   bool isImplicitCouplingScheme(SerialCouplingScheme &cplscheme)
   {
     return cplscheme.isImplicitCouplingScheme();

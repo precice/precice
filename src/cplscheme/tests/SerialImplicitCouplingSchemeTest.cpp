@@ -1245,7 +1245,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100);
-  serialCouplingSchemeFixture fixture;
+  SerialCouplingSchemeFixture fixture;
 
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
   CouplingData *sendCouplingData = fixture.getSendData(cplScheme, sendDataIndex);

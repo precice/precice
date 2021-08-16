@@ -12,7 +12,7 @@ namespace precice {
 namespace cplscheme {
 
 // Forward declaration to friend the boost test struct
-struct parallelCouplingSchemeFixture;
+struct ParallelCouplingSchemeFixture;
 
 /**
  * @brief Coupling scheme for parallel coupling, i.e. simultaneous execution of two coupled participants
@@ -21,7 +21,7 @@ struct parallelCouplingSchemeFixture;
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class ParallelCouplingScheme : public BiCouplingScheme {
-  friend struct parallelCouplingSchemeFixture; // Make the fixture friend of this class
+  friend struct ParallelCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
    * @brief Constructor.
@@ -86,7 +86,7 @@ private:
  *
  * The fixture can be used to call private functions for individual testing. 
  */
-struct parallelCouplingSchemeFixture {
+struct ParallelCouplingSchemeFixture {
   bool isImplicitCouplingScheme(ParallelCouplingScheme &cplscheme)
   {
     return cplscheme.isImplicitCouplingScheme();
