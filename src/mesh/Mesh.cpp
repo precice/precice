@@ -166,6 +166,14 @@ const PtrData &Mesh::data(DataID dataID) const
   return *iter;
 }
 
+bool Mesh::hasDataName(const std::string &dataName) const
+{
+  auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
+    return dptr->getName() == dataName;
+  });
+  return iter != _data.end(); // if name was not found in mesh, iter == _data.end()
+}
+
 const PtrData &Mesh::data(const std::string &dataName) const
 {
   auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
@@ -219,7 +227,10 @@ void Mesh::allocateDataValues()
 void Mesh::computeBoundingBox()
 {
   PRECICE_TRACE(_name);
-  BoundingBox bb(_dimensions);
+
+  // Keep the bounding box if set via the API function.
+  BoundingBox bb = _boundingBox.empty() ? BoundingBox(_dimensions) : BoundingBox(_boundingBox);
+
   for (const Vertex &vertex : _vertices) {
     bb.expandBy(vertex);
   }
@@ -363,6 +374,11 @@ void Mesh::addMesh(
 const BoundingBox &Mesh::getBoundingBox() const
 {
   return _boundingBox;
+}
+
+void Mesh::expandBoundingBox(const BoundingBox &boundingBox)
+{
+  _boundingBox.expandBy(boundingBox);
 }
 
 bool Mesh::operator==(const Mesh &other) const

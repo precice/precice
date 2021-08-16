@@ -128,9 +128,8 @@ public:
       Edge &edgeTwo,
       Edge &edgeThree);
 
-  PtrData &createData(
-      const std::string &name,
-      int                dimension);
+  PtrData &createData(const std::string &name,
+                      int                dimension);
 
   /// Allows access to all data
   const DataContainer &data() const;
@@ -140,6 +139,9 @@ public:
 
   /// Returns the data with the matching ID
   const PtrData &data(DataID dataID) const;
+
+  /// Returns whether Mesh has Data with the dataName
+  bool hasDataName(const std::string &dataName) const;
 
   /// Returns the data with the matching name
   const PtrData &data(const std::string &dataName) const;
@@ -217,6 +219,8 @@ public:
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
    */
   const BoundingBox &getBoundingBox() const;
+
+  void expandBoundingBox(const BoundingBox &bounding_box);
 
   bool operator==(const Mesh &other) const;
 

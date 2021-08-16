@@ -136,6 +136,14 @@ std::vector<PtrMesh> &MeshConfiguration::meshes()
   return _meshes;
 }
 
+bool MeshConfiguration::hasMeshName(const std::string &meshName) const
+{
+  auto iter = std::find_if(_meshes.begin(), _meshes.end(), [&meshName](const auto &mptr) {
+    return mptr->getName() == meshName;
+  });
+  return iter != _meshes.end(); // if name was not found in _meshes, iter == _meshes.end()
+}
+
 mesh::PtrMesh MeshConfiguration::getMesh(
     const std::string &meshName) const
 {
