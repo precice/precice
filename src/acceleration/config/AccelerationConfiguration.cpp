@@ -167,21 +167,16 @@ void AccelerationConfiguration::xmlTagCallback(
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
     }
 
-    for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
-      if (mesh->getName() == _meshName) {
-        for (const mesh::PtrData &data : mesh->data()) {
-          if (dataName == data->getName()) {
-            _config.dataIDs.push_back(data->getID());
-            _config.scalings.insert(std::make_pair(data->getID(), scaling));
-          }
-        }
-      }
-    }
-
-    PRECICE_CHECK(!_config.dataIDs.empty(),
+    PRECICE_CHECK(_meshConfig->hasMeshName(_meshName) && _meshConfig->getMesh(_meshName)->hasDataName(dataName),
                   "Data with name \"{0}\" associated to mesh \"{1}\" not found on configuration of acceleration. "
                   "Add \"{0}\" to the \"<mesh name={1}>\" tag, or change the data name in the acceleration scheme.",
                   dataName, _meshName);
+
+    const mesh::PtrMesh &mesh = _meshConfig->getMesh(_meshName);
+    const mesh::PtrData &data = mesh->data(dataName);
+    _config.dataIDs.push_back(data->getID());
+    _config.scalings.insert(std::make_pair(data->getID(), scaling));
+
     _neededMeshes.push_back(_meshName);
   } else if (callingTag.getName() == TAG_INIT_RELAX) {
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);

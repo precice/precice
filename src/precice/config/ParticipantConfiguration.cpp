@@ -387,14 +387,11 @@ const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
     const std::string &  nameData) const
 {
-  for (const mesh::PtrData &data : mesh->data()) {
-    if (data->getName() == nameData) {
-      return data;
-    }
-  }
-  PRECICE_ERROR("Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
+  PRECICE_CHECK(mesh->hasDataName(nameData),
+                "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
                 "Please add a use-data tag with name=\"{}\" to this mesh.",
                 _participants.back()->getName(), nameData, mesh->getName(), nameData);
+  return mesh->data(nameData);
 }
 
 void ParticipantConfiguration::finishParticipantConfiguration(
@@ -509,15 +506,11 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (mappingContext.fromMeshID == fromMeshID) {
         dataContext.mappingContext     = mappingContext;
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.toMeshID);
-        for (const mesh::PtrData &data : meshContext.mesh->data()) {
-          if (data->getName() == dataContext.fromData->getName()) {
-            dataContext.toData = data;
-          }
-        }
-        PRECICE_CHECK(dataContext.fromData != dataContext.toData,
+        PRECICE_CHECK(meshContext.mesh->hasDataName(dataContext.fromData->getName()),
                       "Mesh \"{}\" needs to use data \"{}\" to allow a write mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
                       meshContext.mesh->getName(), dataContext.fromData->getName(), dataContext.fromData->getName());
+        dataContext.toData = meshContext.mesh->data(dataContext.fromData->getName());
       }
     }
   }
@@ -533,15 +526,11 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (mappingContext.toMeshID == toMeshID) {
         dataContext.mappingContext     = mappingContext;
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.fromMeshID);
-        for (const mesh::PtrData &data : meshContext.mesh->data()) {
-          if (data->getName() == dataContext.toData->getName()) {
-            dataContext.fromData = data;
-          }
-        }
-        PRECICE_CHECK(dataContext.toData != dataContext.fromData,
+        PRECICE_CHECK(meshContext.mesh->hasDataName(dataContext.toData->getName()),
                       "Mesh \"{}\" needs to use data \"{}\" to allow a read mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
                       meshContext.mesh->getName(), dataContext.toData->getName(), dataContext.toData->getName());
+        dataContext.fromData = meshContext.mesh->data(dataContext.toData->getName());
       }
     }
   }
