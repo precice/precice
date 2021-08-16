@@ -9,10 +9,13 @@
 #include "utils/assertion.hpp"
 
 namespace precice {
-namespace cplscheme {
 
+namespace testing {
 // Forward declaration to friend the boost test struct
 struct ParallelCouplingSchemeFixture;
+} // namespace testing
+
+namespace cplscheme {
 
 /**
  * @brief Coupling scheme for parallel coupling, i.e. simultaneous execution of two coupled participants
@@ -21,7 +24,7 @@ struct ParallelCouplingSchemeFixture;
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class ParallelCouplingScheme : public BiCouplingScheme {
-  friend struct ParallelCouplingSchemeFixture; // Make the fixture friend of this class
+  friend struct testing::ParallelCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
    * @brief Constructor.
@@ -79,28 +82,6 @@ private:
    * @brief Exchanges data, if it has to be initialized.
    */
   void exchangeInitialData() override;
-};
-
-/*
- * @brief A fixture that is used to access private functions of the ParallelCouplingScheme class.
- *
- * The fixture can be used to call private functions for individual testing. 
- */
-struct ParallelCouplingSchemeFixture {
-  bool isImplicitCouplingScheme(ParallelCouplingScheme &cplscheme)
-  {
-    return cplscheme.isImplicitCouplingScheme();
-  }
-
-  CouplingData *getReceiveData(ParallelCouplingScheme &cplscheme, int dataID)
-  {
-    return cplscheme.getReceiveData(dataID);
-  }
-
-  CouplingData *getSendData(ParallelCouplingScheme &cplscheme, int dataID)
-  {
-    return cplscheme.getSendData(dataID);
-  }
 };
 
 } // namespace cplscheme
