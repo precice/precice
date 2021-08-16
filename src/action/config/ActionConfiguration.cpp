@@ -227,18 +227,18 @@ void ActionConfiguration::createAction()
 
   if (!_configuredAction.targetData.empty()) {
     PRECICE_CHECK(mesh->hasDataName(_configuredAction.targetData),
-                  "Data action uses target data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh", _configuredAction.targetData);
+                  "Data action uses target data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh with name \"{}\".", _configuredAction.targetData, _configuredAction.mesh);
     targetDataID = mesh->data(_configuredAction.targetData)->getID();
     PRECICE_ASSERT(targetDataID != -1);
   }
 
   for (const std::string &dataName : _configuredAction.sourceDataVector) {
-    PRECICE_CHECK(mesh->hasDataName(dataName), "Data action uses source data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh", dataName);
+    PRECICE_CHECK(mesh->hasDataName(dataName), "Data action uses source data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh with name \"{}\".", dataName, _configuredAction.mesh);
     sourceDataIDs.push_back(mesh->data(dataName)->getID());
   }
 
   PRECICE_CHECK((_configuredAction.sourceDataVector.empty() || not sourceDataIDs.empty()),
-                "Data action uses source data \"{}\" which is not configured. Please ensure that the source data name is used by the mesh.", _configuredAction.sourceDataVector.back());
+                "Data action uses source data \"{}\" which is not configured. Please ensure that the source data name is used by the mesh with name \"{}\".", _configuredAction.sourceDataVector.back(), _configuredAction.mesh);
 
   action::PtrAction action;
   if (_configuredAction.type == NAME_MULTIPLY_BY_AREA) {
