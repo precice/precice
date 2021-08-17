@@ -1494,6 +1494,8 @@ void SolverInterfaceImpl::compareBoundingBoxes()
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     if (meshContext->provideMesh) // provided meshes need their bounding boxes already for the re-partitioning
       meshContext->mesh->computeBoundingBox();
+
+    meshContext->clearMappings();
   }
 
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
