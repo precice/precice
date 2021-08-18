@@ -220,7 +220,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
     using asio::ip::tcp;
 
-    tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::canonical_name);
+    tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::numeric_host);
 
     while (not isConnected()) {
       tcp::resolver                resolver(*_ioService);
@@ -283,7 +283,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
 
       PRECICE_DEBUG("Requesting connection to {}, port {}", ipAddress, portNumber);
 
-      tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
+      tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::numeric_host);
 
       while (not isConnected()) {
         tcp::resolver             resolver(*_ioService);
