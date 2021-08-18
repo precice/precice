@@ -379,6 +379,7 @@ void ReceivedPartition::compareBoundingBoxes()
 
   _mesh->clear();
   _mesh->clearPartitioning();
+  _boundingBoxPrepared = false;
 
   // @todo handle coupling mode (i.e. serial participant)
   // @todo treatment of multiple m2ns
@@ -478,6 +479,9 @@ void ReceivedPartition::prepareBoundingBox()
     return;
 
   PRECICE_DEBUG("Merge bounding boxes and increase by safety factor");
+
+  // Reset the BoundingBox
+  _bb = mesh::BoundingBox{_dimensions};
 
   // Create BB around all "other" meshes
   for (mapping::PtrMapping &fromMapping : _fromMappings) {
