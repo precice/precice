@@ -53,6 +53,20 @@ public:
 
   const MappingContext mappingContext() const;
 
+  // for updating waveforms after communication
+  void initializeProvidedWaveform();
+
+  void initializeFromWaveform();
+
+  void initializeToWaveform();
+
+  // for mapping waveforms
+  void moveWaveformSampleToData(int sampleID);
+
+  void moveDataToWaveformSample(int sampleID);
+
+  int numberOfSamplesInWaveform();
+
 private:
   mesh::PtrMesh _mesh;
 
@@ -70,6 +84,9 @@ private:
   mesh::PtrData _toData;
 
   MappingContext _mappingContext;
+
+  // helper function for initializing waveforms from given data
+  void initializeWaveform(mesh::PtrData initializingData, time::PtrWaveform initializedWaveform);
 
   // helper function for creating read and write mappings
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData, time::PtrWaveform fromWaveform, time::PtrWaveform toWaveform);

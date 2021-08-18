@@ -19,10 +19,23 @@ public:
            int interpolationOrder = 0);
 
   /**
+   * @brief resizes _timeWindows to store more data. Used for already created waveforms.
+   * @param numberOfData defines how many pieces of data one sample in time consists of
+   */
+  void resizeData(int numberOfData);
+
+  /**
    * @brief Updates entry in _timeWindows corresponding to this window with given data
    * @param data new sample for this time window
    */
   void store(Eigen::VectorXd data);
+
+  /**
+   * @brief Updates entry in _timeWindows corresponding to a given column ID with given data
+   * @param data new sample for this time window
+   * @param columnID ID of column to be updated
+   */
+  void storeAt(Eigen::VectorXd data, int columnID);
 
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
@@ -37,6 +50,16 @@ public:
    * @param order interpolation order being used.
    */
   Eigen::VectorXd sample(double dt, int timeWindows, int order = 0);
+
+  /**
+   * @brief returns number of samples in time stored by this waveform
+   */
+  int numberOfSamples();
+
+  /**
+   * @brief returns number of data per sample in time stored by this waveform
+   */
+  int numberOfData();
 
   /**
    * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)

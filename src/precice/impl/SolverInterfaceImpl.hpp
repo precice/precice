@@ -603,6 +603,13 @@ private:
 
   // SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
+
+  // SolverInterface.initializeWrittenWaveforms() triggers transition from false to true.
+  bool _hasInitializedWrittenWaveforms = false;
+
+  // SolverInterface.initializeReadWaveforms() triggers transition from false to true.
+  bool _hasInitializedReadWaveforms = false;
+
   // setMeshAccessRegion may only be called once
   mutable bool _accessRegionDefined = false;
 
@@ -682,6 +689,12 @@ private:
 
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
+
+  /// Initializes waveforms of write data contexts before mapping.
+  void initializeWrittenWaveforms();
+
+  /// Initializes waveforms of read data contexts before mapping.
+  void initializeReadWaveforms();
 
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();

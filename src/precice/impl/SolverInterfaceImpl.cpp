@@ -305,6 +305,7 @@ double SolverInterfaceImpl::initialize()
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+    initializeReadWaveforms();
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
@@ -341,12 +342,16 @@ void SolverInterfaceImpl::initializeData()
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
+  initializeWrittenWaveforms();
   mapWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
 
   _couplingScheme->initializeData();
 
   if (_couplingScheme->hasDataBeenReceived()) {
+    if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
+      initializeReadWaveforms();
+    }
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
@@ -388,6 +393,7 @@ double SolverInterfaceImpl::advance(
                 "initializeData() needs to be called before advance if data has to be initialized.");
   PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
   PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
+
   _numberAdvanceCalls++;
 
 #ifndef NDEBUG
@@ -413,6 +419,9 @@ double SolverInterfaceImpl::advance(
   time                   = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
+    if (not _hasInitializedWrittenWaveforms) { // necessary, if SolverInterfaceImpl::initializeData() was not called
+      initializeWrittenWaveforms();
+    }
     performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
@@ -422,6 +431,9 @@ double SolverInterfaceImpl::advance(
   _couplingScheme->advance();
 
   if (_couplingScheme->hasDataBeenReceived()) {
+    if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
+      initializeReadWaveforms();
+    }
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
@@ -1574,10 +1586,12 @@ void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, const
                       mappingType, context.getDataName(), context.getMeshName());
         context.resetToData();
         PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
-        // TODO we have to iterate over all the samples in the _fromWaveform, put them into _fromData
-        // mapping then maps from _fromData to _toData
-        context.mappingContext().mapping->map(inDataID, outDataID);
-        // TODO we have to store _toData at the right place into the _toWaveform
+        // iterate over all the samples in the _fromWaveform
+        for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
+          context.moveWaveformSampleToData(sampleID);                 // put samples from _fromWaveform into _fromData
+          context.mappingContext().mapping->map(inDataID, outDataID); // map from _fromData to _toData
+          context.moveDataToWaveformSample(sampleID);                 // store _toData at the right place into the _toWaveform
+        }
       }
     }
   }
@@ -1595,6 +1609,36 @@ void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contex
     }
     context.hasMappedData = false;
   }
+}
+
+void SolverInterfaceImpl::initializeWrittenWaveforms()
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(not _hasInitializedWrittenWaveforms);
+  for (impl::DataContext &context : _accessor->writeDataContexts()) {
+    if (context.hasMapping()) {
+      context.initializeFromWaveform();
+      context.initializeToWaveform();
+    } else {
+      context.initializeProvidedWaveform();
+    }
+  }
+  _hasInitializedWrittenWaveforms = true;
+}
+
+void SolverInterfaceImpl::initializeReadWaveforms()
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(not _hasInitializedReadWaveforms);
+  for (impl::DataContext &context : _accessor->readDataContexts()) {
+    if (context.hasMapping()) {
+      context.initializeFromWaveform();
+      context.initializeToWaveform();
+    } else {
+      context.initializeProvidedWaveform();
+    }
+  }
+  _hasInitializedReadWaveforms = true;
 }
 
 void SolverInterfaceImpl::mapWrittenData()

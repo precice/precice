@@ -14,6 +14,7 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
   _providedWaveform = ptrWaveform;
   _providedWaveform->store(data->values());
   _providedData = data;
+  PRECICE_ASSERT(_providedWaveform->numberOfData() == _providedData->values().size());
   PRECICE_ASSERT(mesh);
   _mesh = mesh;
 }
@@ -96,6 +97,7 @@ void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromDa
   PRECICE_ASSERT(fromWaveform == _providedWaveform || toWaveform == _providedWaveform, "Either fromWaveform or toWaveform has to equal provided waveform.");
   _fromWaveform = fromWaveform;
   _toWaveform   = toWaveform;
+  PRECICE_ASSERT(_fromWaveform->numberOfData() == _toWaveform->numberOfData());
   PRECICE_ASSERT(_toWaveform != _fromWaveform);
 }
 
@@ -138,6 +140,60 @@ const MappingContext DataContext::mappingContext() const
 {
   PRECICE_ASSERT(hasMapping());
   return _mappingContext;
+}
+
+void DataContext::initializeWaveform(mesh::PtrData initializingData, time::PtrWaveform initializedWaveform)
+{
+  int numberOfSamples = numberOfSamplesInWaveform();
+  int numberOfData    = initializingData->values().size();
+  // PRECICE_ASSERT(numberOfData > 0, numberOfData);  // @todo assertion breaks, but seems like calling advance on empty write data is ok?
+  initializedWaveform->resizeData(numberOfData);
+  for (int sampleID = 0; sampleID < numberOfSamples; ++sampleID) {
+    initializedWaveform->storeAt(initializingData->values(), sampleID);
+  }
+  PRECICE_ASSERT(initializedWaveform->numberOfData() == numberOfData);
+}
+
+void DataContext::initializeProvidedWaveform()
+{
+  PRECICE_ASSERT(not hasMapping());
+  initializeWaveform(_providedData, _providedWaveform);
+}
+
+void DataContext::initializeFromWaveform()
+{
+  PRECICE_ASSERT(hasMapping());
+  initializeWaveform(_fromData, _fromWaveform);
+}
+
+void DataContext::initializeToWaveform()
+{
+  PRECICE_ASSERT(hasMapping());
+  initializeWaveform(_toData, _toWaveform);
+}
+
+void DataContext::moveWaveformSampleToData(int sampleID)
+{
+  PRECICE_ASSERT(_fromWaveform->numberOfData() == _fromData->values().size(),
+                 _fromWaveform->numberOfData(), _fromData->values().size());
+  _fromData->values() = _fromWaveform->lastTimeWindows().col(sampleID);
+}
+
+void DataContext::moveDataToWaveformSample(int sampleID)
+{
+  PRECICE_ASSERT(_toWaveform->numberOfData() == _toData->values().size(),
+                 _toWaveform->numberOfData(), _toData->values().size());
+  _toWaveform->storeAt(_toData->values(), sampleID);
+}
+
+int DataContext::numberOfSamplesInWaveform()
+{
+  if (hasMapping()) {
+    PRECICE_ASSERT(_fromWaveform->numberOfSamples() == _toWaveform->numberOfSamples());
+    return _fromWaveform->numberOfSamples();
+  } else {
+    return _providedWaveform->numberOfSamples();
+  }
 }
 
 } // namespace impl
