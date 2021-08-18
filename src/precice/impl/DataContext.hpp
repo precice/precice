@@ -67,6 +67,8 @@ public:
 
   int numberOfSamplesInWaveform();
 
+  void sampleAt(double dt);
+
 private:
   mesh::PtrMesh _mesh;
 

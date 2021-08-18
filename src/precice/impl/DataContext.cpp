@@ -196,5 +196,10 @@ int DataContext::numberOfSamplesInWaveform()
   }
 }
 
+void DataContext::sampleAt(double dt)
+{
+  _providedData->values() = _providedWaveform->sample(dt, 0);
+}
+
 } // namespace impl
 } // namespace precice
