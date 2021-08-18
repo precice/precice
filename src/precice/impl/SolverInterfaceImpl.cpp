@@ -1174,6 +1174,20 @@ void SolverInterfaceImpl::readBlockVectorData(
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
+  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  return readBlockVectorData(dataID, size, valueIndices, dt, values);
+}
+
+void SolverInterfaceImpl::readBlockVectorData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     dt,
+    double *   values) const
+{
+  PRECICE_TRACE(dataID, size);
+  PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
+  PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockVectorData() was called with valueIndices == nullptr");
@@ -1209,6 +1223,19 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
+  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  return readVectorData(dataID, valueIndex, dt, value);
+}
+
+void SolverInterfaceImpl::readVectorData(
+    int     dataID,
+    int     valueIndex,
+    double  dt,
+    double *value) const
+{
+  PRECICE_TRACE(dataID, valueIndex);
+  PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
+  PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
@@ -1236,6 +1263,20 @@ void SolverInterfaceImpl::readBlockScalarData(
     int        dataID,
     int        size,
     const int *valueIndices,
+    double *   values) const
+{
+  PRECICE_TRACE(dataID, size);
+  PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
+  PRECICE_REQUIRE_DATA_READ(dataID);
+  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  return readBlockScalarData(dataID, size, valueIndices, dt, values);
+}
+
+void SolverInterfaceImpl::readBlockScalarData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     dt,
     double *   values) const
 {
   PRECICE_TRACE(dataID, size);

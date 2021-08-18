@@ -421,10 +421,12 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param toDataID [IN] ID of the data to be read.
-   * @param size [IN] Number of indices, and number of values * dimensions.
-   * @param valueIndices [IN] Indices (from setReadPosition()) of data values.
-   * @param values [IN] Values of the data to be read.
+   * @brief Reads scalar data values given as block from the interface mesh at the end of the time window.
+   *
+   * @param[in] toDataID     ID of the data to be written.
+   * @param[in] size         Number of valueIndices, and number of values.
+   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
+   * @param[out] values      Read data value.
    */
   void readBlockVectorData(
       int        toDataID,
@@ -433,11 +435,32 @@ public:
       double *   values) const;
 
   /**
-   * @brief Reads vector data from the coupling mesh.
+   * @brief Reads scalar data values given as block from the interface mesh at beginning of time step + dt.
    *
-   * @param[in] toDataID ID of the data to be read, e.g. 1 = forces
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be read
-   * @param[out] dataValue Read data value
+   * The block contains the vector values in the following form:
+   * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
+   * the number of vector values. In 2D, the z-components are removed.
+   *
+   *
+   * @param[in] toDataID     ID of the data to be written.
+   * @param[in] size         Number of valueIndices, and number of values.
+   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
+   * @param[in] dt           Point in time where data is sampled.
+   * @param[out] values      Read data value.
+   */
+  void readBlockVectorData(
+      int        toDataID,
+      int        size,
+      const int *valueIndices,
+      double     dt,
+      double *   values) const;
+
+  /**
+   * @brief Read vector data from the interface mesh at the end of the time window.
+   *
+   * @param[in] toDataID   ID of the data to be read, e.g. 1 = forces
+   * @param[in] valueIndex Index (from setReadPosition()) of data value.
+   * @param[out] value     Read data value
    */
   void readVectorData(
       int     toDataID,
@@ -445,11 +468,26 @@ public:
       double *value) const;
 
   /**
-   * @brief Reads scalar data values given as block.
+   * @brief Read vector data from the interface mesh at beginning of time step + dt.
    *
-   * @param[in] toDataID ID of the data to be written.
-   * @param[in] size Number of valueIndices, and number of values.
-   * @param[in] values Values of the data to be written.
+   * @param[in] toDataID   ID of the data to be read, e.g. 1 = forces
+   * @param[in] valueIndex Index (from setReadPosition()) of data value.
+   * @param[in] dt         Point in time where data is sampled.
+   * @param[out] value     Read data value
+   */
+  void readVectorData(
+      int     toDataID,
+      int     valueIndex,
+      double  dt,
+      double *value) const;
+
+  /**
+   * @brief Reads scalar data values given as block from the interface mesh at the end of the time window.
+   *
+   * @param[in] toDataID     ID of the data to be written.
+   * @param[in] size         Number of valueIndices, and number of values.
+   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
+   * @param[out] values      Read data value.
    */
   void readBlockScalarData(
       int        toDataID,
@@ -458,13 +496,27 @@ public:
       double *   values) const;
 
   /**
-   * @brief Read scalar data from the interface mesh at the end of the time window
+   * @brief Reads scalar data values given as block from the interface mesh at beginning of time step + dt.
    *
-   * The exact mapping and communication must be specified in XYZ.
+   * @param[in] toDataID     ID of the data to be written.
+   * @param[in] size         Number of valueIndices, and number of values.
+   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
+   * @param[in] dt           Point in time where data is sampled.
+   * @param[out] values      Read data value.
+   */
+  void readBlockScalarData(
+      int        toDataID,
+      int        size,
+      const int *valueIndices,
+      double     dt,
+      double *   values) const;
+
+  /**
+   * @brief Read scalar data from the interface mesh at the end of the time window.
    *
    * @param[in] toDataID     ID of the data to be read, e.g. 2 = temperatures
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be read
-   * @param[in] dataValue    Read data value
+   * @param[in] valueIndex   Index (from setReadPosition()) of data value.
+   * @param[out] value       Read data value
    */
   void readScalarData(
       int     toDataID,
@@ -474,12 +526,10 @@ public:
   /**
    * @brief Read scalar data from the interface mesh at beginning of time step + dt.
    *
-   * The exact mapping and communication must be specified in XYZ.
-   *
    * @param[in] toDataID     ID of the data to be read, e.g. 2 = temperatures
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be read
+   * @param[in] valueIndex   Index (from setReadPosition()) of data value.
    * @param[in] dt           Point in time where data is sampled
-   * @param[in] dataValue    Read data value
+   * @param[out] value       Read data value
    */
   void readScalarData(
       int     toDataID,
