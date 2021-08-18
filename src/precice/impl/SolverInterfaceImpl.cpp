@@ -984,20 +984,28 @@ void SolverInterfaceImpl::mapWriteDataFrom(
   double time = _couplingScheme->getTime();
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0, 0, 0);
 
+  // @todo add check here to avoid initializing again and again.
+  _hasInitializedWrittenWaveforms = false; // @todo remove this! Trigger should only be set once.
+  initializeWrittenWaveforms();            // @todo should only initialize waveform for the fromMeshID
+
   for (impl::MappingContext &mappingContext : context.fromMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
     for (impl::DataContext &context : _accessor->writeDataContexts()) {
-
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
       context.resetToData();
       PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
+      // iterate over all the samples in the _fromWaveform
+      for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
+        context.moveWaveformSampleToData(sampleID);                                            // put samples from _fromWaveform into _fromData
+        context.mappingContext().mapping->map(context.getFromDataID(), context.getToDataID()); // map from _fromData to _toData
+        context.moveDataToWaveformSample(sampleID);                                            // store _toData at the right place into the _toWaveform
+      }
     }
     mappingContext.hasMappedData = true;
   }
@@ -1018,6 +1026,10 @@ void SolverInterfaceImpl::mapReadDataTo(
   double time = _couplingScheme->getTime();
   performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0, 0, 0);
 
+  // @todo add check here to avoid initializing again and again.
+  _hasInitializedReadWaveforms = false; // @todo remove this! Trigger should only be set once.
+  initializeReadWaveforms();            // @todo should only initialize waveform for the toMeshID
+
   for (impl::MappingContext &mappingContext : context.toMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
@@ -1030,7 +1042,12 @@ void SolverInterfaceImpl::mapReadDataTo(
       context.resetToData();
       PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
+      // iterate over all the samples in the _fromWaveform
+      for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
+        context.moveWaveformSampleToData(sampleID);                                            // put samples from _fromWaveform into _fromData
+        context.mappingContext().mapping->map(context.getFromDataID(), context.getToDataID()); // map from _fromData to _toData
+        context.moveDataToWaveformSample(sampleID);                                            // store _toData at the right place into the _toWaveform
+      }
     }
     mappingContext.hasMappedData = true;
   }
@@ -1637,6 +1654,10 @@ void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, const
           context.mappingContext().mapping->map(inDataID, outDataID); // map from _fromData to _toData
           context.moveDataToWaveformSample(sampleID);                 // store _toData at the right place into the _toWaveform
         }
+      }
+    } else {
+      for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
+        context.moveProvidedDataToProvidedWaveformSample(sampleID); // store _providedData at the right place into the _providedWaveform
       }
     }
   }

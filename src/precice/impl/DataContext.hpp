@@ -65,6 +65,9 @@ public:
 
   void moveDataToWaveformSample(int sampleID);
 
+  // for copying read data into waveform
+  void moveProvidedDataToProvidedWaveformSample(int sampleID);
+
   int numberOfSamplesInWaveform();
 
   void sampleAt(double dt);

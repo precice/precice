@@ -186,6 +186,14 @@ void DataContext::moveDataToWaveformSample(int sampleID)
   _toWaveform->storeAt(_toData->values(), sampleID);
 }
 
+void DataContext::moveProvidedDataToProvidedWaveformSample(int sampleID)
+{
+  PRECICE_ASSERT(not hasMapping());
+  PRECICE_ASSERT(_providedWaveform->numberOfData() == _providedData->values().size(),
+                 _providedWaveform->numberOfData(), _providedData->values().size());
+  _providedWaveform->storeAt(_providedData->values(), sampleID);
+}
+
 int DataContext::numberOfSamplesInWaveform()
 {
   if (hasMapping()) {

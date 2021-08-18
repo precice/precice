@@ -26,7 +26,6 @@ Waveform::Waveform(
 
 void Waveform::resizeData(int newNumberOfData)
 {
-  PRECICE_ASSERT(numberOfData() == 0); // this function should only be called for uninitialized waveforms. Use-case might change later.
   _timeWindows = Eigen::MatrixXd::Zero(newNumberOfData, numberOfSamples());
   PRECICE_ASSERT(numberOfData() == newNumberOfData);
 }
