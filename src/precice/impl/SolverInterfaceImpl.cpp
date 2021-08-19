@@ -427,18 +427,17 @@ double SolverInterfaceImpl::advance(
     performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    prepareExchangedWriteData();
   }
-
-  prepareExchangedWriteData();
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
 
-  getExchangedReadData(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
-
   if (_couplingScheme->hasDataBeenReceived()) {
     if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
       initializeReadWaveforms();
+    } else {
+      getExchangedReadData(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
     }
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapReadData();

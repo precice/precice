@@ -195,7 +195,6 @@ void DataContext::storeDataInWaveform(mesh::PtrData sourceData, time::PtrWavefor
                  targetWaveform->numberOfData(), sourceData->values().size());
   int sampleID = 0; // store at last sample = end of window
   targetWaveform->storeAt(sourceData->values(), sampleID);
-  std::cout << "read data: " << sourceData->values()[0] << std::endl;
 }
 
 void DataContext::storeProvidedDataInWaveform()
