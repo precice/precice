@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization)
     int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
     cplInterface.writeScalarData(dataBID, 0, 2.0);
-    //sagen dass daten jetzt geschrieben
+    //tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
     Vector3d valueDataA;
