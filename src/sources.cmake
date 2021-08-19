@@ -5,6 +5,7 @@
 target_sources(precice
     PRIVATE
     ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
+    ${CMAKE_BINARY_DIR}/src/precice/impl/versions.hpp
     src/acceleration/Acceleration.cpp
     src/acceleration/Acceleration.hpp
     src/acceleration/AitkenAcceleration.cpp
@@ -238,7 +239,6 @@ target_sources(precice
     src/precice/impl/WatchIntegral.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
-    src/precice/impl/versions.hpp
     src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp
