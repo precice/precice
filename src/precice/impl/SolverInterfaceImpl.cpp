@@ -1217,7 +1217,7 @@ void SolverInterfaceImpl::readBlockVectorData(
   PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
-  context.sampleAt(dt);
+  //context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == _dimensions,
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
@@ -1262,7 +1262,7 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
-  context.sampleAt(dt);
+  //context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading vector data. Value index must be >= 0. "
@@ -1313,7 +1313,7 @@ void SolverInterfaceImpl::readBlockScalarData(
   PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
-  context.sampleAt(dt);
+  //context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == 1,
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
@@ -1357,7 +1357,7 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
-  context.sampleAt(dt);
+  //context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading scalar data. Value index must be >= 0. "
