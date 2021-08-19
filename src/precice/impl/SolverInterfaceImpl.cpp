@@ -1646,10 +1646,10 @@ void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, const
         int outDataID = context.getToDataID();
         PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
                       mappingType, context.getDataName(), context.getMeshName());
-        context.resetToData();
         PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
         // iterate over all the samples in the _fromWaveform
         for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
+          context.resetToData();
           context.moveWaveformSampleToData(sampleID);                 // put samples from _fromWaveform into _fromData
           context.mappingContext().mapping->map(inDataID, outDataID); // map from _fromData to _toData
           context.moveDataToWaveformSample(sampleID);                 // store _toData at the right place into the _toWaveform
