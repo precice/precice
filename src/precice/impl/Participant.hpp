@@ -127,16 +127,6 @@ public:
    */
   DataContext &dataContext(DataID dataID);
 
-  /** Provides access to \ref DataContext
-   * @remarks does not contain nullptr.
-   */
-  const utils::ptr_vector<DataContext> &dataContexts() const;
-
-  /** Provides access to \ref DataContext
-   * @remarks does not contain nullptr.
-   */
-  utils::ptr_vector<DataContext> &dataContexts();
-
   /** Provides access to write \ref DataContext
    * @remarks does not contain nullptr.
    */
@@ -319,8 +309,6 @@ private:
   std::vector<MeshContext *> _usedMeshContexts;
 
   std::vector<DataContext *> _dataContexts;
-
-  utils::ptr_vector<DataContext> _dataContextPtr;
 
   utils::ptr_vector<DataContext> _writeDataContexts;
 
