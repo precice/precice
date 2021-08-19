@@ -25,12 +25,6 @@
         to="MeshOne"
         constraint="conservative"
         timing="initial" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshOne"
-        to="MeshTwo"
-        constraint="consistent"
-        timing="initial" />
       <write-data name="Data" mesh="MeshTwo" />
     </participant>
 
