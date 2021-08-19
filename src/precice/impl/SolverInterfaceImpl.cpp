@@ -419,28 +419,29 @@ double SolverInterfaceImpl::advance(
   time                   = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
+    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     if (not _hasInitializedWrittenWaveforms) { // necessary, if SolverInterfaceImpl::initializeData() was not called
       initializeWrittenWaveforms();
     } else {
-      storeProvidedDataInWrittenWaveform(); // otherwise the new data provided via write is just ignored.
+      storeWriteDataInWrittenWaveform(); // otherwise the new data provided via write is just ignored.
     }
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     prepareExchangedWriteData();
+    performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
 
   if (_couplingScheme->hasDataBeenReceived()) {
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
       initializeReadWaveforms();
     } else {
-      getExchangedReadData(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
+      storeReadDataInReadWaveform(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
     }
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapReadData();
+    prepareExchangedReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
@@ -1697,12 +1698,21 @@ void SolverInterfaceImpl::initializeWrittenWaveforms()
   _hasInitializedWrittenWaveforms = true;
 }
 
-void SolverInterfaceImpl::storeProvidedDataInWrittenWaveform()
+void SolverInterfaceImpl::storeWriteDataInWrittenWaveform()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_hasInitializedWrittenWaveforms);
   for (impl::DataContext &context : _accessor->writeDataContexts()) {
-    context.storeProvidedDataInWaveform();
+    context.storeFromDataInWaveform();
+  }
+}
+
+void SolverInterfaceImpl::storeReadDataInReadWaveform()
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
+  for (impl::DataContext &context : _accessor->readDataContexts()) {
+    context.storeFromDataInWaveform();
   }
 }
 
@@ -1711,7 +1721,16 @@ void SolverInterfaceImpl::prepareExchangedWriteData()
   PRECICE_TRACE();
   PRECICE_ASSERT(_hasInitializedWrittenWaveforms);
   for (impl::DataContext &context : _accessor->writeDataContexts()) {
-    context.sampleWaveformInCommunicatedData();
+    context.sampleWaveformInToData();
+  }
+}
+
+void SolverInterfaceImpl::prepareExchangedReadData()
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_hasInitializedWrittenWaveforms);
+  for (impl::DataContext &context : _accessor->readDataContexts()) {
+    context.sampleWaveformInToData();
   }
 }
 
@@ -1728,15 +1747,6 @@ void SolverInterfaceImpl::initializeReadWaveforms()
     }
   }
   _hasInitializedReadWaveforms = true;
-}
-
-void SolverInterfaceImpl::getExchangedReadData()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(_hasInitializedReadWaveforms);
-  for (impl::DataContext &context : _accessor->readDataContexts()) {
-    context.storeCommunicatedDataInWaveform();
-  }
 }
 
 void SolverInterfaceImpl::mapWrittenData()

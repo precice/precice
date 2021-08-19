@@ -29,6 +29,9 @@ Participant::Participant(
       _meshContexts(meshConfig->meshes().size(), nullptr),
       _dataContexts(meshConfig->getDataConfiguration()->data().size() * meshConfig->meshes().size(), nullptr)
 {
+  for (precice::impl::DataContext *dataContext : _dataContexts) {
+    _dataContextPtr.push_back(dataContext);
+  }
 }
 
 Participant::~Participant()
@@ -151,6 +154,16 @@ DataContext &Participant::dataContext(DataID dataID)
   PRECICE_ASSERT((dataID >= 0) && (dataID < (int) _dataContexts.size()));
   PRECICE_ASSERT(_dataContexts[dataID] != nullptr);
   return *_dataContexts[dataID];
+}
+
+const utils::ptr_vector<DataContext> &Participant::dataContexts() const
+{
+  return _dataContextPtr;
+}
+
+utils::ptr_vector<DataContext> &Participant::dataContexts()
+{
+  return _dataContextPtr;
 }
 
 const utils::ptr_vector<DataContext> &Participant::writeDataContexts() const
