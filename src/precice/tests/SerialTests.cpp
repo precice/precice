@@ -508,7 +508,8 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
 /**
  * @brief helper function for a simple test with data initialization
  */
-void testDataInitialization(precice::testing::TestContext context, std::string config){
+void testDataInitialization(precice::testing::TestContext context, std::string config)
+{
   using Eigen::Vector3d;
 
   SolverInterface cplInterface(context.name, config, 0, 1);
@@ -517,7 +518,7 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     Vector3d pos       = Vector3d::Zero();
     cplInterface.setMeshVertex(meshOneID, pos.data());
     double maxDt      = cplInterface.initialize();
-    int    dataID    = cplInterface.getDataID("Data", meshOneID);
+    int    dataID     = cplInterface.getDataID("Data", meshOneID);
     double valueDataB = 0.0;
     cplInterface.initializeData();
     cplInterface.readScalarData(dataID, 0, valueDataB);
@@ -528,7 +529,7 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     int      meshTwoID = cplInterface.getMeshID("MeshTwo");
     Vector3d pos       = Vector3d::Zero();
     cplInterface.setMeshVertex(meshTwoID, pos.data());
-    double maxDt   = cplInterface.initialize();
+    double maxDt  = cplInterface.initialize();
     int    dataID = cplInterface.getDataID("Data", meshTwoID);
     cplInterface.writeScalarData(dataID, 0, 2.0);
     //tell preCICE that data has been written and call initializeData
@@ -557,7 +558,6 @@ BOOST_AUTO_TEST_CASE(testDataInitializationReadMapping)
 
   testDataInitialization(context, _pathToTests + "oneway-data-init-read-mapping.xml");
 }
-
 
 /**
  * @brief The second solver initializes the data of the first.

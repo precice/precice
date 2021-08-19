@@ -743,8 +743,17 @@ private:
   /// Initializes waveforms of write data contexts before mapping.
   void initializeWrittenWaveforms();
 
+  /// Prepare for write mapping
+  void storeProvidedDataInWrittenWaveform();
+
+  /// Prepares exchange of write data by sampling waveform and storing sample in mesh::Data
+  void prepareExchangedWriteData();
+
   /// Initializes waveforms of read data contexts before mapping.
   void initializeReadWaveforms();
+
+  /// Completes exchange of read data by storing the mesh::Data at the correct place in the waveform
+  void getExchangedReadData();
 
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();

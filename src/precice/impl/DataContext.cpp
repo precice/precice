@@ -172,6 +172,55 @@ void DataContext::initializeToWaveform()
   initializeWaveform(_toData, _toWaveform);
 }
 
+void DataContext::sampleWaveformIntoData(mesh::PtrData targetData, time::PtrWaveform sourceWaveform)
+{
+  PRECICE_ASSERT(sourceWaveform->numberOfData() == targetData->values().size(),
+                 sourceWaveform->numberOfData(), targetData->values().size());
+  int sampleID         = 0; // get last sample = end of window
+  targetData->values() = sourceWaveform->lastTimeWindows().col(sampleID);
+}
+
+void DataContext::sampleWaveformInCommunicatedData()
+{
+  if (hasMapping()) {
+    sampleWaveformIntoData(_toData, _toWaveform);
+  } else {
+    sampleWaveformIntoData(_providedData, _providedWaveform);
+  }
+}
+
+void DataContext::storeDataInWaveform(mesh::PtrData sourceData, time::PtrWaveform targetWaveform)
+{
+  PRECICE_ASSERT(targetWaveform->numberOfData() == sourceData->values().size(),
+                 targetWaveform->numberOfData(), sourceData->values().size());
+  int sampleID = 0; // store at last sample = end of window
+  targetWaveform->storeAt(sourceData->values(), sampleID);
+  std::cout << "read data: " << sourceData->values()[0] << std::endl;
+}
+
+void DataContext::storeProvidedDataInWaveform()
+{
+  /**
+   * function is identical to storeCommunicatedDataInWaveform, but used in different context:
+   *     storeProvidedDataInWaveform is used to move providedData from write function into providedWaveform before WRITE mapping
+   *     storeCommunicatedDataInWaveform is used to move fromData from communication function into fromWaveform before READ mapping
+   */
+  if (hasMapping()) {
+    storeDataInWaveform(_fromData, _fromWaveform);
+  } else {
+    storeDataInWaveform(_providedData, _providedWaveform);
+  }
+}
+
+void DataContext::storeCommunicatedDataInWaveform()
+{
+  if (hasMapping()) {
+    storeDataInWaveform(_fromData, _fromWaveform);
+  } else {
+    storeDataInWaveform(_providedData, _providedWaveform);
+  }
+}
+
 void DataContext::moveWaveformSampleToData(int sampleID)
 {
   PRECICE_ASSERT(_fromWaveform->numberOfData() == _fromData->values().size(),

@@ -65,6 +65,13 @@ public:
 
   void moveDataToWaveformSample(int sampleID);
 
+  // for communication
+  void sampleWaveformInCommunicatedData();
+
+  void storeProvidedDataInWaveform();
+
+  void storeCommunicatedDataInWaveform();
+
   // for copying read data into waveform
   void moveProvidedDataToProvidedWaveformSample(int sampleID);
 
@@ -92,6 +99,11 @@ private:
 
   // helper function for initializing waveforms from given data
   void initializeWaveform(mesh::PtrData initializingData, time::PtrWaveform initializedWaveform);
+
+  // helper functions for communication
+  void sampleWaveformIntoData(mesh::PtrData targetData, time::PtrWaveform sourceWaveform);
+
+  void storeDataInWaveform(mesh::PtrData sourceData, time::PtrWaveform targetWaveform);
 
   // helper function for creating read and write mappings
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData, time::PtrWaveform fromWaveform, time::PtrWaveform toWaveform);
