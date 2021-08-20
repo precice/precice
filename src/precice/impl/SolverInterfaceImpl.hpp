@@ -765,9 +765,9 @@ private:
   void mapReadData();
 
   // bundles functionality needed by initialize, initializeData and advance
-  void doReadMappingAndActions(double time, double computedTimestepLength, double timeWindowComputedPart, double timeWindowSize);
+  void doDataTransferAndReadMapping();
 
-  void doWriteMappingAndActions(double time, double computedTimestepLength, double timeWindowComputedPart, double timeWindowSize);
+  void doDataTransferAndWriteMapping();
 
   /**
    * @brief Performs all data actions with given timing.

@@ -301,8 +301,14 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
   PRECICE_ASSERT(_couplingScheme->isInitialized());
 
+  if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
+    initializeReadWaveforms();
+  }
+
   if (_couplingScheme->hasDataBeenReceived()) {
-    doReadMappingAndActions(0, 0, 0, dt);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0, 0, 0, dt);
+    doDataTransferAndReadMapping();
+    performDataActions({action::Action::READ_MAPPING_POST}, 0, 0, 0, dt);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -336,13 +342,18 @@ void SolverInterfaceImpl::initializeData()
   PRECICE_DEBUG("Initialize data");
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
-  doWriteMappingAndActions(0, 0, 0, dt);
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0, 0, 0, dt);
+  doDataTransferAndWriteMapping();
+  performDataActions({action::Action::WRITE_MAPPING_POST}, 0, 0, 0, dt);
 
   _couplingScheme->initializeData();
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    doReadMappingAndActions(0, 0, 0, dt);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0, 0, 0, dt);
+    doDataTransferAndReadMapping();
+    performDataActions({action::Action::READ_MAPPING_POST}, 0, 0, 0, dt);
   }
+
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   for (const io::ExportContext &context : _accessor->exportContexts()) {
@@ -406,14 +417,18 @@ double SolverInterfaceImpl::advance(
   time                   = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
-    doWriteMappingAndActions(time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    doDataTransferAndWriteMapping();
+    performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    doReadMappingAndActions(time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    doDataTransferAndReadMapping();
+    performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
   if (_couplingScheme->isTimeWindowComplete()) {
@@ -1188,7 +1203,8 @@ void SolverInterfaceImpl::readBlockVectorData(
   PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
-  //context.sampleAt(dt);
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
+  context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == _dimensions,
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
@@ -1233,7 +1249,8 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
-  //context.sampleAt(dt);
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
+  context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading vector data. Value index must be >= 0. "
@@ -1284,7 +1301,8 @@ void SolverInterfaceImpl::readBlockScalarData(
   PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
-  //context.sampleAt(dt);
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
+  context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == 1,
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
@@ -1328,7 +1346,8 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
-  //context.sampleAt(dt);
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
+  context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading scalar data. Value index must be >= 0. "
@@ -1879,9 +1898,8 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
   return *_accessor->usedMeshContext(meshName).mesh;
 }
 
-void SolverInterfaceImpl::doWriteMappingAndActions(double time, double computedTimestepLength, double timeWindowComputedPart, double timeWindowSize)
+void SolverInterfaceImpl::doDataTransferAndWriteMapping()
 {
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   if (not _hasInitializedWrittenWaveforms) { // necessary, if SolverInterfaceImpl::initializeData() was not called
     initializeWrittenWaveforms();
   } else {
@@ -1889,20 +1907,13 @@ void SolverInterfaceImpl::doWriteMappingAndActions(double time, double computedT
   }
   mapWrittenData();
   prepareExchangedWriteData();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 }
 
-void SolverInterfaceImpl::doReadMappingAndActions(double time, double computedTimestepLength, double timeWindowComputedPart, double timeWindowSize)
+void SolverInterfaceImpl::doDataTransferAndReadMapping()
 {
-  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
-  if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
-    initializeReadWaveforms();
-  } else {
-    storeReadDataInReadWaveform(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
-  }
+  storeReadDataInReadWaveform(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
   mapReadData();
   prepareExchangedReadData();
-  performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 }
 
 } // namespace impl
