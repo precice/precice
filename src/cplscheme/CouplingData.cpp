@@ -1,4 +1,7 @@
 #include "cplscheme/CouplingData.hpp"
+
+#include <utility>
+
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -9,8 +12,8 @@ CouplingData::CouplingData(
     mesh::PtrMesh mesh,
     bool          requiresInitialization)
     : requiresInitialization(requiresInitialization),
-      _data(data),
-      _mesh(mesh)
+      _data(std::move(data)),
+      _mesh(std::move(mesh))
 {
   PRECICE_ASSERT(_data != nullptr);
   PRECICE_ASSERT(_mesh != nullptr);

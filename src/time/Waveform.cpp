@@ -7,7 +7,7 @@ namespace precice {
 namespace time {
 
 Waveform::Waveform(
-    int numberOfData,
+    int initializedNumberOfData,
     int extrapolationOrder,
     int interpolationOrder)
 {
@@ -18,13 +18,18 @@ Waveform::Waveform(
      * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
      * extrapolation.
      */
-  int numberOfSamples = std::max({2, extrapolationOrder + 1, interpolationOrder + 1});
-  _timeWindows        = Eigen::MatrixXd::Zero(numberOfData, numberOfSamples);
+  int initializedNumberOfSamples = std::max({2, extrapolationOrder + 1, interpolationOrder + 1});
+  _timeWindows                   = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
+  PRECICE_ASSERT(numberOfSamples() == initializedNumberOfSamples);
+  PRECICE_ASSERT(numberOfData() == initializedNumberOfData);
 }
 
-void Waveform::store(Eigen::VectorXd data)
+void Waveform::store(const Eigen::VectorXd &data)
 {
-  this->_timeWindows.col(0) = data;
+  int columnID = 0;
+  PRECICE_ASSERT(_timeWindows.cols() > columnID, numberOfSamples(), columnID);
+  PRECICE_ASSERT(data.size() == numberOfData(), data.size(), numberOfData());
+  this->_timeWindows.col(columnID) = data;
 }
 
 Eigen::VectorXd Waveform::sample(double dt, int timeWindows, int order)
@@ -47,20 +52,30 @@ const Eigen::MatrixXd &Waveform::lastTimeWindows()
   return _timeWindows;
 }
 
+int Waveform::numberOfSamples()
+{
+  return _timeWindows.cols();
+}
+
+int Waveform::numberOfData()
+{
+  return _timeWindows.rows();
+}
+
 Eigen::VectorXd Waveform::extrapolateData(int order, int timeWindows)
 {
   Eigen::VectorXd extrapolatedValue;
   if ((order == 0) || (timeWindows < 2 && order > 0)) {
-    PRECICE_ASSERT(this->_timeWindows.cols() > 0);
+    PRECICE_ASSERT(this->numberOfSamples() > 0);
     extrapolatedValue = this->_timeWindows.col(0);
   } else if ((order == 1) || (timeWindows < 3 && order > 1)) { //timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
-    PRECICE_ASSERT(this->_timeWindows.cols() > 1);
+    PRECICE_ASSERT(this->numberOfSamples() > 1);
     extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
     extrapolatedValue -= this->_timeWindows.col(1);      // = 2*x^t - x^(t-1)
   } else if (order == 2) {
     PRECICE_DEBUG("Performing second order extrapolation");
-    PRECICE_ASSERT(this->_timeWindows.cols() > 2);
+    PRECICE_ASSERT(this->numberOfSamples() > 2);
     extrapolatedValue = this->_timeWindows.col(0) * 2.5;  // = 2.5*x^t
     extrapolatedValue -= this->_timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
     extrapolatedValue += this->_timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
@@ -75,16 +90,16 @@ Eigen::VectorXd Waveform::interpolateData(int order, int timeWindows, double dt)
   Eigen::VectorXd interpolatedValue;
   if (order == 0) {
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
-    PRECICE_ASSERT(this->_timeWindows.cols() > 0);
+    PRECICE_ASSERT(this->numberOfSamples() > 0);
     interpolatedValue = this->_timeWindows.col(0);
   } else if ((order == 1) || (timeWindows < 2 && order > 1)) {
     // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
-    PRECICE_ASSERT(this->_timeWindows.cols() > 1);
+    PRECICE_ASSERT(this->numberOfSamples() > 1);
     interpolatedValue = this->_timeWindows.col(0) * dt;        // = dt * x^t
     interpolatedValue += this->_timeWindows.col(1) * (1 - dt); // = dt * x^t + (1-dt) * x^(t-1)
   } else if (order == 2) {
     // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
-    PRECICE_ASSERT(this->_timeWindows.cols() > 2);
+    PRECICE_ASSERT(this->numberOfSamples() > 2);
     interpolatedValue = this->_timeWindows.col(0) * (dt + 1) * dt * 0.5;
     interpolatedValue += this->_timeWindows.col(1) * (1 - dt * dt);
     interpolatedValue += this->_timeWindows.col(2) * (dt - 1) * dt * 0.5;

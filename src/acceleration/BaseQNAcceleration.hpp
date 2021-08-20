@@ -266,7 +266,7 @@ protected:
   virtual void removeMatrixColumn(int columnIndex);
 
   /// Wwrites info to the _infostream (also in parallel)
-  void writeInfo(std::string s, bool allProcs = false);
+  void writeInfo(const std::string &s, bool allProcs = false);
 
   int its = 0, tWindows = 0;
 

@@ -69,7 +69,7 @@ public:
    *
    * @return Pointer to composition of coupling schemes.
    */
-  void addCouplingScheme(PtrCouplingScheme scheme);
+  void addCouplingScheme(const PtrCouplingScheme &scheme);
 
   /**
    * @brief Initializes the coupling scheme and establishes a communication

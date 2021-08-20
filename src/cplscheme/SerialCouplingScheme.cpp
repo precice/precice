@@ -2,6 +2,8 @@
 #include <cmath>
 #include <memory>
 #include <ostream>
+#include <utility>
+
 #include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
@@ -29,7 +31,7 @@ SerialCouplingScheme::SerialCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod)
+                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {

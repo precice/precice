@@ -10,11 +10,11 @@ class Waveform {
 public:
   /**
    * @brief Waveform object which stores data of current and past time windows for performing extrapolation.
-   * @param numberOfData defines how many pieces of data one sample in time consists of
+   * @param initializedNumberOfData defines how many pieces of data one sample in time consists of
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    * @param interpolationOrder defines the maximum interpolation order supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(int numberOfData,
+  Waveform(int initializedNumberOfData,
            int extrapolationOrder = 0,
            int interpolationOrder = 0);
 
@@ -22,7 +22,7 @@ public:
    * @brief Updates entry in _timeWindows corresponding to this window with given data
    * @param data new sample for this time window
    */
-  void store(Eigen::VectorXd data);
+  void store(const Eigen::VectorXd &data);
 
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
@@ -43,6 +43,16 @@ public:
    * being the current time window.
    */
   const Eigen::MatrixXd &lastTimeWindows();
+
+  /**
+   * @brief returns number of samples in time stored by this waveform
+   */
+  int numberOfSamples();
+
+  /**
+   * @brief returns number of data per sample in time stored by this waveform
+   */
+  int numberOfData();
 
 private:
   /// Data values of time windows.

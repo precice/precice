@@ -198,8 +198,8 @@ EventRegistry &EventRegistry::instance()
 
 void EventRegistry::initialize(std::string applicationName, std::string runName, MPI_Comm comm)
 {
-  this->applicationName = applicationName;
-  this->runName         = runName;
+  this->applicationName = std::move(applicationName);
+  this->runName         = std::move(runName);
   this->comm            = comm;
 
   localRankData.initialize();
