@@ -83,6 +83,8 @@ public:
   void sampleAt(double dt);
 
 private:
+  mutable logging::Logger _log{"impl::DataContext"};
+
   mesh::PtrMesh _mesh;
 
   // data this participant will write to and read from

@@ -9,6 +9,7 @@ namespace impl {
 
 DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(data);
   time::PtrWaveform ptrWaveform(new time::Waveform(data->values().size()));
   _providedWaveform = ptrWaveform;
@@ -21,24 +22,28 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 
 mesh::PtrData DataContext::providedData()
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(_providedData);
   return _providedData;
 }
 
 std::string DataContext::getDataName() const
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(_providedData);
   return _providedData->getName();
 }
 
 int DataContext::getProvidedDataID() const
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(_providedData);
   return _providedData->getID();
 }
 
 int DataContext::getFromDataID() const
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   PRECICE_ASSERT(_fromData);
   PRECICE_ASSERT(_fromWaveform);
@@ -47,6 +52,7 @@ int DataContext::getFromDataID() const
 
 void DataContext::resetProvidedData()
 {
+  PRECICE_TRACE();
   _providedData->toZero();
   // TODO: consistently reset waveform
   // _providedWaveform->toZero();
@@ -54,6 +60,7 @@ void DataContext::resetProvidedData()
 
 void DataContext::resetToData()
 {
+  PRECICE_TRACE();
   _toData->toZero();
   // TODO: consistently reset waveform
   // _toWaveform->toZero();
@@ -61,6 +68,7 @@ void DataContext::resetToData()
 
 int DataContext::getToDataID() const
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   PRECICE_ASSERT(_toData);
   PRECICE_ASSERT(_toWaveform);
@@ -69,18 +77,21 @@ int DataContext::getToDataID() const
 
 std::string DataContext::getMeshName() const
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(_mesh);
   return _mesh->getName();
 }
 
 int DataContext::getMeshID() const
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(_mesh);
   return _mesh->getID();
 }
 
 void DataContext::configureForReadMapping(MappingContext mappingContext, MeshContext meshContext)
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData fromData = meshContext.mesh->data(getDataName());
   PRECICE_ASSERT(fromData != _providedData);
@@ -91,6 +102,7 @@ void DataContext::configureForReadMapping(MappingContext mappingContext, MeshCon
 
 void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshContext meshContext)
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData toData = meshContext.mesh->data(getDataName());
   PRECICE_ASSERT(toData != _providedData);
@@ -101,45 +113,53 @@ void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshCo
 
 bool DataContext::hasMapping() const
 {
+  PRECICE_TRACE();
   return hasReadMapping() || hasWriteMapping();
 }
 
 bool DataContext::hasReadMapping() const
 {
+  PRECICE_TRACE();
   return _toData == _providedData;
 }
 
 bool DataContext::hasWriteMapping() const
 {
+  PRECICE_TRACE();
   return _fromData == _providedData;
 }
 
 const MappingContext DataContext::mappingContext() const
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   return _mappingContext;
 }
 
 void DataContext::initializeProvidedWaveform()
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(not hasMapping());
   initializeWaveform(_providedData, _providedWaveform);
 }
 
 void DataContext::initializeFromWaveform()
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   initializeWaveform(_fromData, _fromWaveform);
 }
 
 void DataContext::initializeToWaveform()
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   initializeWaveform(_toData, _toWaveform);
 }
 
 void DataContext::sampleWaveformInToData()
 {
+  PRECICE_TRACE();
   if (hasMapping()) {
     sampleWaveformIntoData(_toData, _toWaveform);
   } else {
@@ -149,6 +169,7 @@ void DataContext::sampleWaveformInToData()
 
 void DataContext::storeFromDataInWaveform()
 {
+  PRECICE_TRACE();
   if (hasMapping()) {
     storeDataInWaveform(_fromData, _fromWaveform);
   } else {
@@ -158,22 +179,26 @@ void DataContext::storeFromDataInWaveform()
 
 void DataContext::moveWaveformSampleToData(int sampleID)
 {
+  PRECICE_TRACE();
   sampleWaveformIntoData(_fromData, _fromWaveform, sampleID);
 }
 
 void DataContext::moveDataToWaveformSample(int sampleID)
 {
+  PRECICE_TRACE();
   storeDataInWaveform(_toData, _toWaveform, sampleID);
 }
 
 void DataContext::moveProvidedDataToProvidedWaveformSample(int sampleID)
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(not hasMapping());
   storeDataInWaveform(_providedData, _providedWaveform, sampleID);
 }
 
 int DataContext::numberOfSamplesInWaveform()
 {
+  PRECICE_TRACE();
   if (hasMapping()) {
     PRECICE_ASSERT(_fromWaveform->numberOfSamples() == _toWaveform->numberOfSamples());
     return _fromWaveform->numberOfSamples();
@@ -184,11 +209,15 @@ int DataContext::numberOfSamplesInWaveform()
 
 void DataContext::sampleAt(double dt)
 {
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_providedWaveform->numberOfData() == _providedData->values().size(),
+                 _providedWaveform->numberOfData(), _providedData->values().size());
   _providedData->values() = _providedWaveform->sample(dt, 0);
 }
 
 void DataContext::initializeWaveform(mesh::PtrData initializingData, time::PtrWaveform initializedWaveform)
 {
+  PRECICE_TRACE();
   int numberOfSamples = numberOfSamplesInWaveform();
   int numberOfData    = initializingData->values().size();
   // PRECICE_ASSERT(numberOfData > 0, numberOfData);  // @todo assertion breaks, but seems like calling advance on empty write data is ok?
@@ -201,6 +230,7 @@ void DataContext::initializeWaveform(mesh::PtrData initializingData, time::PtrWa
 
 void DataContext::sampleWaveformIntoData(mesh::PtrData targetData, time::PtrWaveform sourceWaveform, int sampleID)
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(sourceWaveform->numberOfData() == targetData->values().size(),
                  sourceWaveform->numberOfData(), targetData->values().size());
   targetData->values() = sourceWaveform->lastTimeWindows().col(sampleID);
@@ -215,6 +245,7 @@ void DataContext::storeDataInWaveform(mesh::PtrData sourceData, time::PtrWavefor
 
 void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData, time::PtrWaveform fromWaveform, time::PtrWaveform toWaveform)
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(!hasMapping());
   PRECICE_ASSERT(fromData);
   PRECICE_ASSERT(toData);
