@@ -764,6 +764,11 @@ private:
   /// Computes, performs, and resets all suitable read mappings.
   void mapReadData();
 
+  // bundles functionality needed by initialize, initializeData and advance
+  void doReadMappingAndActions(double time, double computedTimestepLength, double timeWindowComputedPart, double timeWindowSize);
+
+  void doWriteMappingAndActions(double time, double computedTimestepLength, double timeWindowComputedPart, double timeWindowSize);
+
   /**
    * @brief Performs all data actions with given timing.
    *

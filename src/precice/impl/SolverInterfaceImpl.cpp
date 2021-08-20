@@ -296,18 +296,13 @@ double SolverInterfaceImpl::initialize()
   int    timeWindow = 1;
 
   PRECICE_DEBUG("Initialize coupling schemes");
+  double dt = _couplingScheme->getNextTimestepMaxLength();
+
   _couplingScheme->initialize(time, timeWindow);
   PRECICE_ASSERT(_couplingScheme->isInitialized());
 
-  double dt = 0.0;
-
-  dt = _couplingScheme->getNextTimestepMaxLength();
-
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
-    initializeReadWaveforms();
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+    doReadMappingAndActions(0, 0, 0, dt);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -341,20 +336,12 @@ void SolverInterfaceImpl::initializeData()
   PRECICE_DEBUG("Initialize data");
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
-  initializeWrittenWaveforms();
-  mapWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+  doWriteMappingAndActions(0, 0, 0, dt);
 
   _couplingScheme->initializeData();
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
-      initializeReadWaveforms();
-    }
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
+    doReadMappingAndActions(0, 0, 0, dt);
   }
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
@@ -419,30 +406,14 @@ double SolverInterfaceImpl::advance(
   time                   = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
-    if (not _hasInitializedWrittenWaveforms) { // necessary, if SolverInterfaceImpl::initializeData() was not called
-      initializeWrittenWaveforms();
-    } else {
-      storeWriteDataInWrittenWaveform(); // otherwise the new data provided via write is just ignored.
-    }
-    mapWrittenData();
-    prepareExchangedWriteData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    doWriteMappingAndActions(time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
-    if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
-      initializeReadWaveforms();
-    } else {
-      storeReadDataInReadWaveform(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
-    }
-    mapReadData();
-    prepareExchangedReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+    doReadMappingAndActions(time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
   if (_couplingScheme->isTimeWindowComplete()) {
@@ -1728,7 +1699,7 @@ void SolverInterfaceImpl::prepareExchangedWriteData()
 void SolverInterfaceImpl::prepareExchangedReadData()
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_hasInitializedWrittenWaveforms);
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   for (impl::DataContext &context : _accessor->readDataContexts()) {
     context.sampleWaveformInToData();
   }
@@ -1906,6 +1877,32 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
   return *_accessor->usedMeshContext(meshName).mesh;
+}
+
+void SolverInterfaceImpl::doWriteMappingAndActions(double time, double computedTimestepLength, double timeWindowComputedPart, double timeWindowSize)
+{
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+  if (not _hasInitializedWrittenWaveforms) { // necessary, if SolverInterfaceImpl::initializeData() was not called
+    initializeWrittenWaveforms();
+  } else {
+    storeWriteDataInWrittenWaveform(); // otherwise the new data provided via write is just ignored.
+  }
+  mapWrittenData();
+  prepareExchangedWriteData();
+  performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+}
+
+void SolverInterfaceImpl::doReadMappingAndActions(double time, double computedTimestepLength, double timeWindowComputedPart, double timeWindowSize)
+{
+  if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
+    initializeReadWaveforms();
+  } else {
+    storeReadDataInReadWaveform(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
+  }
+  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
+  mapReadData();
+  prepareExchangedReadData();
+  performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
 }
 
 } // namespace impl
