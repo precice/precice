@@ -18,9 +18,9 @@ Waveform::Waveform(
      * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
      * extrapolation.
      */
-  int initializednumberOfSamples = std::max({2, extrapolationOrder + 1, interpolationOrder + 1});
-  _timeWindows                   = Eigen::MatrixXd::Zero(initializedNumberOfData, initializednumberOfSamples);
-  PRECICE_ASSERT(numberOfSamples() == initializednumberOfSamples);
+  int initializedNumberOfSamples = std::max({2, extrapolationOrder + 1, interpolationOrder + 1});
+  _timeWindows                   = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
+  PRECICE_ASSERT(numberOfSamples() == initializedNumberOfSamples);
   PRECICE_ASSERT(numberOfData() == initializedNumberOfData);
 }
 
@@ -30,12 +30,12 @@ void Waveform::resizeData(int newNumberOfData)
   PRECICE_ASSERT(numberOfData() == newNumberOfData);
 }
 
-void Waveform::store(Eigen::VectorXd data)
+void Waveform::store(const Eigen::VectorXd &data)
 {
   this->storeAt(data, 0);
 }
 
-void Waveform::storeAt(Eigen::VectorXd data, int columnID)
+void Waveform::storeAt(const Eigen::VectorXd data, int columnID)
 {
   PRECICE_ASSERT(_timeWindows.cols() > columnID, numberOfSamples(), columnID);
   PRECICE_ASSERT(data.size() == numberOfData(), data.size(), numberOfData());
@@ -50,6 +50,13 @@ Eigen::VectorXd Waveform::sample(double dt, int timeWindows, int order)
   return this->interpolateData(order, timeWindows, dt);
 }
 
+void Waveform::moveToNextWindow(int timeWindows, int order)
+{
+  // @ todo: Add more logic here? Set order in constructor; keep track of time windows inside class. See https://github.com/precice/precice/pull/1004/files?file-filters%5B%5D=.cmake&file-filters%5B%5D=.hpp#r642223767.
+  auto initialGuess = extrapolateData(order, timeWindows);
+  utils::shiftSetFirst(this->_timeWindows, initialGuess);
+}
+
 int Waveform::numberOfSamples()
 {
   return _timeWindows.cols();
@@ -58,13 +65,6 @@ int Waveform::numberOfSamples()
 int Waveform::numberOfData()
 {
   return _timeWindows.rows();
-}
-
-void Waveform::moveToNextWindow(int timeWindows, int order)
-{
-  // @ todo: Add more logic here? Set order in constructor; keep track of time windows inside class. See https://github.com/precice/precice/pull/1004/files?file-filters%5B%5D=.cmake&file-filters%5B%5D=.hpp#r642223767.
-  auto initialGuess = extrapolateData(order, timeWindows);
-  utils::shiftSetFirst(this->_timeWindows, initialGuess);
 }
 
 const Eigen::MatrixXd &Waveform::lastTimeWindows()

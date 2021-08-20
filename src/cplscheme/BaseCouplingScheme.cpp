@@ -69,7 +69,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
-void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
+void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
   std::vector<int> sentDataIDs;
@@ -85,13 +85,13 @@ void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
   PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
-void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   PRECICE_TRACE();
   std::vector<int> receivedDataIDs;
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
-  for (DataMap::value_type &pair : receiveData) {
+  for (const DataMap::value_type &pair : receiveData) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
@@ -439,7 +439,7 @@ void BaseCouplingScheme::setupDataMatrices()
 }
 
 void BaseCouplingScheme::setAcceleration(
-    acceleration::PtrAcceleration acceleration)
+    const acceleration::PtrAcceleration &acceleration)
 {
   PRECICE_ASSERT(acceleration.get() != nullptr);
   _acceleration = acceleration;
@@ -642,7 +642,7 @@ void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContex
   convergenceMeasure->couplingData = &(*(iter->second));
 }
 
-void BaseCouplingScheme::sendConvergence(m2n::PtrM2N m2n, bool convergence)
+void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n, bool convergence)
 {
   PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
   m2n->send(convergence);

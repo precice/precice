@@ -49,14 +49,14 @@ BiCouplingScheme::BiCouplingScheme(
 }
 
 void BiCouplingScheme::addDataToSend(
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          requiresInitialization)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _sendData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(data, mesh, requiresInitialization));
+    PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     PRECICE_ASSERT(_sendData.count(pair.first) == 0, "Key already exists!");
     _sendData.insert(pair);
@@ -68,14 +68,14 @@ void BiCouplingScheme::addDataToSend(
 }
 
 void BiCouplingScheme::addDataToReceive(
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          requiresInitialization)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _receiveData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(data, mesh, requiresInitialization));
+    PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     PRECICE_ASSERT(_receiveData.count(pair.first) == 0, "Key already exists!");
     _receiveData.insert(pair);
