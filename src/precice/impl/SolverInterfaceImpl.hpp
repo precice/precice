@@ -660,6 +660,9 @@ private:
   // SolverInterface.initializeReadWaveforms() triggers transition from false to true.
   bool _hasInitializedReadWaveforms = false;
 
+  // SolverInterface.resetMesh() triggers transition from false to true.
+  bool _hasResetMesh = false;
+
   // setMeshAccessRegion may only be called once
   mutable bool _accessRegionDefined = false;
 

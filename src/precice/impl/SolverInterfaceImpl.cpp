@@ -415,6 +415,7 @@ double SolverInterfaceImpl::advance(
   time                   = _couplingScheme->getTime();
 
   if (not _hasInitializedWrittenWaveforms) { // necessary, if initializeData was not called or if mesh was reset.
+    PRECICE_ASSERT(not _hasInitializedData || _hasResetMesh);
     initializeWrittenWaveforms();
   }
 
@@ -428,6 +429,7 @@ double SolverInterfaceImpl::advance(
   _couplingScheme->advance();
 
   if (not _hasInitializedReadWaveforms) { // necessary, if mesh was reset.
+    PRECICE_ASSERT(_hasResetMesh);
     initializeReadWaveforms();
   }
 
@@ -450,6 +452,11 @@ double SolverInterfaceImpl::advance(
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
+
+  // after advance was called we can call resetMesh again
+  // this condition is not a must, but increases security and resetMesh is a barely used feature. Feel free to remove this restriction, if you have a good reason.
+  _hasResetMesh = false;
+
   return _couplingScheme->getNextTimestepMaxLength();
 }
 
@@ -662,6 +669,7 @@ void SolverInterfaceImpl::resetMesh(
 
   _hasInitializedReadWaveforms = false;
   _hasInitializedReadWaveforms = false;
+  _hasResetMesh                = true;
 }
 
 int SolverInterfaceImpl::setMeshVertex(
