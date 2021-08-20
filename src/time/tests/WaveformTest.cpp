@@ -138,15 +138,15 @@ BOOST_AUTO_TEST_CASE(testInterpolateData)
   BOOST_TEST(testing::equals(waveform1.lastTimeWindows()(0, 0), 1.0));
   BOOST_TEST(testing::equals(waveform1.lastTimeWindows()(0, 1), 0.0));
 
-  BOOST_TEST(testing::equals(waveform1.sample(0.0, timeWindowCounter, interpolationOrder)(0, 0), 0.0));
-  BOOST_TEST(testing::equals(waveform1.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 0.5));
+  BOOST_TEST(testing::equals(waveform1.sample(0.0, timeWindowCounter, interpolationOrder)(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform1.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 1.0));
   BOOST_TEST(testing::equals(waveform1.sample(1.0, timeWindowCounter, interpolationOrder)(0, 0), 1.0));
 
   value(0) = 2.0;
   waveform1.store(value);
 
-  BOOST_TEST(testing::equals(waveform1.sample(0.0, timeWindowCounter, interpolationOrder)(0, 0), 0.0));
-  BOOST_TEST(testing::equals(waveform1.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform1.sample(0.0, timeWindowCounter, interpolationOrder)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform1.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 2.0));
   BOOST_TEST(testing::equals(waveform1.sample(1.0, timeWindowCounter, interpolationOrder)(0, 0), 2.0));
 
   timeWindowCounter++;
@@ -185,8 +185,8 @@ BOOST_AUTO_TEST_CASE(testInterpolateData)
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 0.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform2.sample(0.0, timeWindowCounter, interpolationOrder)(0, 0), 0.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 0.5));
+  BOOST_TEST(testing::equals(waveform2.sample(0.0, timeWindowCounter, interpolationOrder)(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform2.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 1.0));
   BOOST_TEST(testing::equals(waveform2.sample(1.0, timeWindowCounter, interpolationOrder)(0, 0), 1.0));
 
   value(0) = 2.0;
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(testInterpolateData)
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 0.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform2.sample(0.0, timeWindowCounter, interpolationOrder)(0, 0), 0.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform2.sample(0.0, timeWindowCounter, interpolationOrder)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform2.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 2.0));
   BOOST_TEST(testing::equals(waveform2.sample(1.0, timeWindowCounter, interpolationOrder)(0, 0), 2.0));
 
   timeWindowCounter++;
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateData)
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
 
   BOOST_TEST(testing::equals(waveform2.sample(0.0, timeWindowCounter, interpolationOrder)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 2.25));
+  BOOST_TEST(testing::equals(waveform2.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 2.0));
   BOOST_TEST(testing::equals(waveform2.sample(1.0, timeWindowCounter, interpolationOrder)(0, 0), 2.0));
 
   value(0) = 8.0;
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateData)
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
 
   BOOST_TEST(testing::equals(waveform2.sample(0.0, timeWindowCounter, interpolationOrder)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 4.5));
+  BOOST_TEST(testing::equals(waveform2.sample(0.5, timeWindowCounter, interpolationOrder)(0, 0), 5.0));
   BOOST_TEST(testing::equals(waveform2.sample(1.0, timeWindowCounter, interpolationOrder)(0, 0), 8.0));
 
   value(0) = 4.0;

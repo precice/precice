@@ -207,12 +207,13 @@ int DataContext::numberOfSamplesInWaveform()
   }
 }
 
-void DataContext::sampleAt(double dt)
+Eigen::VectorXd DataContext::sampleAt(double dt, int timeWindows)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_providedWaveform->numberOfData() == _providedData->values().size(),
                  _providedWaveform->numberOfData(), _providedData->values().size());
-  _providedData->values() = _providedWaveform->sample(dt, 0);
+  int order = 1;
+  return _providedWaveform->sample(dt, timeWindows, order);
 }
 
 void DataContext::initializeWaveform(mesh::PtrData initializingData, time::PtrWaveform initializedWaveform)
@@ -264,6 +265,11 @@ void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromDa
   _toWaveform   = toWaveform;
   PRECICE_ASSERT(_fromWaveform->numberOfData() == _toWaveform->numberOfData());
   PRECICE_ASSERT(_toWaveform != _fromWaveform);
+}
+
+void DataContext::moveProvidedWaveform()
+{
+  _providedWaveform->moveToNextWindow(1);
 }
 
 } // namespace impl

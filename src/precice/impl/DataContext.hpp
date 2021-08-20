@@ -78,9 +78,12 @@ public:
   // for copying read data into waveform
   void moveProvidedDataToProvidedWaveformSample(int sampleID);
 
+  // shift data in time
+  void moveProvidedWaveform();
+
   int numberOfSamplesInWaveform();
 
-  void sampleAt(double dt);
+  Eigen::VectorXd sampleAt(double dt, int timeWindows);
 
 private:
   mutable logging::Logger _log{"impl::DataContext"};

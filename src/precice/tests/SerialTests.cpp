@@ -388,9 +388,12 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
       for (int i = 0; i < n_vertices; i++) {
         precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
         BOOST_TEST(readData[i] == readFunction(readTime, i));
-        // @TODO This should work as soon as waveform relaxation is properly implemented.
-        // precice.readScalarData(readDataID, vertexIDs[i], currentDt/2 ,readData[i]);
-        // BOOST_TEST(readData[i] == readFunction(readTime - currentDt/2, i));
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt / 2, readData[i]);
+        if (timestep == 0) { // in the first window, we only have one sample of data. Therefore constant interpolation
+          BOOST_TEST(readData[i] == readFunction(readTime, i));
+        } else { // in the following windows we have two samples of data. Therefore linear interpolation
+          BOOST_TEST(readData[i] == readFunction(readTime - currentDt / 2, i));
+        }
       }
     }
 
@@ -1081,7 +1084,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
 
     couplingInterface.getMeshVerticesAndIDs(otherMeshID, meshSize, otherIDs.data(), solverTwoMesh.data());
     // Some dummy writeData
-    std::array<double, 3> writeData({1, 2, 3});
+    std::vector<double> writeData{1, 2, 3};
 
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = {0.0, 0.0, 0.2, 0.3, 0.1, 0.1};
@@ -1104,10 +1107,14 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
       }
 
       // Expected data according to the writeData
-      std::vector<double> expectedData({10, 11, 12, 13});
-      BOOST_TEST(expectedData == readData);
+      std::vector<double> expectedData{10, 11, 12, 13};
+      BOOST_TEST(expectedData[0] == readData[0]);
+      BOOST_TEST(expectedData[1] == readData[1]);
+      BOOST_TEST(expectedData[2] == readData[2]);
+      BOOST_TEST(expectedData[3] == readData[3]);
+      BOOST_TEST(expectedData.size() == readData.size());
+      BOOST_TEST(expectedData.size() == 4);
     }
-
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     std::vector<double>         positions = {0.0, 0.0, 0.2, 0.3, 0.1, 0.1};
@@ -1136,7 +1143,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
 
     couplingInterface.getMeshVerticesAndIDs(otherMeshID, meshSize, otherIDs.data(), solverOneMesh.data());
     // Some dummy writeData
-    std::array<double, 4> writeData({10, 11, 12, 13});
+    std::vector<double> writeData{10, 11, 12, 13};
 
     // Allocate data to read
     std::vector<double> readData(ownIDs.size(), -10);
@@ -1158,7 +1165,11 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
 
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3});
-      BOOST_TEST(expectedData == readData);
+      BOOST_TEST(expectedData[0] == readData[0]);
+      BOOST_TEST(expectedData[1] == readData[1]);
+      BOOST_TEST(expectedData[2] == readData[2]);
+      BOOST_TEST(expectedData.size() == readData.size());
+      BOOST_TEST(expectedData.size() == 3);
     }
   }
 }

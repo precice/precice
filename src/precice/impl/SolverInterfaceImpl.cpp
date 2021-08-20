@@ -432,6 +432,10 @@ double SolverInterfaceImpl::advance(
     initializeReadWaveforms();
   }
 
+  if (_couplingScheme->isTimeWindowComplete()) {
+    moveReadWaveform();
+  }
+
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     doDataTransferAndReadMapping();
@@ -1220,13 +1224,12 @@ void SolverInterfaceImpl::readBlockVectorData(
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
-  context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == _dimensions,
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
-  auto &     valuesInternal = data.values();
+  const auto valuesInternal = context.sampleAt(dt, _couplingScheme->getTimeWindows());
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1266,7 +1269,6 @@ void SolverInterfaceImpl::readVectorData(
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
-  context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading vector data. Value index must be >= 0. "
@@ -1275,7 +1277,7 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_CHECK(data.getDimensions() == _dimensions,
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
-  auto &     values      = data.values();
+  const auto values      = context.sampleAt(dt, _couplingScheme->getTimeWindows());
   const auto vertexCount = values.size() / data.getDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
@@ -1318,13 +1320,12 @@ void SolverInterfaceImpl::readBlockScalarData(
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
-  context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == 1,
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 data.getName());
-  auto &     valuesInternal = data.values();
+  const auto valuesInternal = context.sampleAt(dt, _couplingScheme->getTimeWindows());
   const auto vertexCount    = valuesInternal.size();
 
   for (int i = 0; i < size; i++) {
@@ -1358,12 +1359,10 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(dt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
-  PRECICE_ASSERT(dt == _couplingScheme->getThisTimeWindowRemainder()); // @todo only sampling at end of window currently works.
   PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
-  context.sampleAt(dt);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading scalar data. Value index must be >= 0. "
@@ -1373,7 +1372,7 @@ void SolverInterfaceImpl::readScalarData(
                 "You cannot call readScalarData on the vector data type \"{}\". "
                 "Use readVectorData or change the data type for \"{}\" to scalar.",
                 data.getName());
-  auto &     values      = data.values();
+  const auto values      = context.sampleAt(dt, _couplingScheme->getTimeWindows());
   const auto vertexCount = values.size();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
@@ -1647,6 +1646,7 @@ void SolverInterfaceImpl::mapData(const utils::ptr_vector<DataContext> &contexts
   PRECICE_TRACE();
   using namespace mapping;
   MappingConfiguration::Timing timing;
+  int                          sampleID = 0;
   for (impl::DataContext &context : contexts) {
     if (context.hasMapping()) {
       timing         = context.mappingContext().timing;
@@ -1659,18 +1659,13 @@ void SolverInterfaceImpl::mapData(const utils::ptr_vector<DataContext> &contexts
         PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
                       mappingType, context.getDataName(), context.getMeshName());
         PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
-        // iterate over all the samples in the _fromWaveform
-        for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
-          context.resetToData();
-          context.moveWaveformSampleToData(sampleID);                 // put samples from _fromWaveform into _fromData
-          context.mappingContext().mapping->map(inDataID, outDataID); // map from _fromData to _toData
-          context.moveDataToWaveformSample(sampleID);                 // store _toData at the right place into the _toWaveform
-        }
+        context.resetToData();
+        context.moveWaveformSampleToData(sampleID);                 // put samples from _fromWaveform into _fromData
+        context.mappingContext().mapping->map(inDataID, outDataID); // map from _fromData to _toData
+        context.moveDataToWaveformSample(sampleID);                 // store _toData at the right place into the _toWaveform
       }
     } else {
-      for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
-        context.moveProvidedDataToProvidedWaveformSample(sampleID); // store _providedData at the right place into the _providedWaveform
-      }
+      context.moveProvidedDataToProvidedWaveformSample(0); // store _providedData at the right place into the _providedWaveform
     }
   }
 }
@@ -1926,6 +1921,13 @@ void SolverInterfaceImpl::doDataTransferAndReadMapping()
   storeReadDataInReadWaveform(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
   mapReadData();
   prepareExchangedReadData();
+}
+
+void SolverInterfaceImpl::moveReadWaveform()
+{
+  for (impl::DataContext &context : _accessor->readDataContexts()) {
+    context.moveProvidedWaveform();
+  }
 }
 
 } // namespace impl

@@ -98,11 +98,11 @@ Eigen::VectorXd Waveform::extrapolateData(int order, int timeWindows)
 Eigen::VectorXd Waveform::interpolateData(int order, int timeWindows, double dt)
 {
   Eigen::VectorXd interpolatedValue;
-  if (order == 0) {
+  if ((order == 0) || (timeWindows < 2 && order > 0)) {
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
     PRECICE_ASSERT(this->numberOfSamples() > 0);
     interpolatedValue = this->_timeWindows.col(0);
-  } else if ((order == 1) || (timeWindows < 2 && order > 1)) {
+  } else if ((order == 1) || (timeWindows < 3 && order > 1)) {
     // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
     PRECICE_ASSERT(this->numberOfSamples() > 1);
     interpolatedValue = this->_timeWindows.col(0) * dt;        // = dt * x^t
