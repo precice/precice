@@ -303,9 +303,9 @@ double SolverInterfaceImpl::initialize()
 
   initializeReadWaveforms();
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0, 0, 0, dt);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     doDataTransferAndReadMapping();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0, 0, 0, dt);
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -340,16 +340,16 @@ void SolverInterfaceImpl::initializeData()
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
   initializeWrittenWaveforms();
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0, 0, 0, dt);
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
   doDataTransferAndWriteMapping();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, 0, 0, 0, dt);
+  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
 
   _couplingScheme->initializeData();
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0, 0, 0, dt);
+    performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     doDataTransferAndReadMapping();
-    performDataActions({action::Action::READ_MAPPING_POST}, 0, 0, 0, dt);
+    performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
 
   resetWrittenData();
@@ -389,7 +389,6 @@ double SolverInterfaceImpl::advance(
                 "initializeData() needs to be called before advance if data has to be initialized.");
   PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
   PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
-
   _numberAdvanceCalls++;
 
 #ifndef NDEBUG
@@ -991,7 +990,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
                 context.mesh->getName());
 
   double time = _couplingScheme->getTime();
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0, 0, 0);
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
   // @todo add check here to avoid initializing again and again.
   _hasInitializedWrittenWaveforms = false; // @todo remove this! Trigger should only be set once.
@@ -1018,7 +1017,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
     }
     mappingContext.hasMappedData = true;
   }
-  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0, 0, 0);
+  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0.0, 0.0, 0.0);
 }
 
 void SolverInterfaceImpl::mapReadDataTo(
@@ -1033,7 +1032,7 @@ void SolverInterfaceImpl::mapReadDataTo(
                 context.mesh->getName());
 
   double time = _couplingScheme->getTime();
-  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0, 0, 0);
+  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
   // @todo add check here to avoid initializing again and again.
   _hasInitializedReadWaveforms = false; // @todo remove this! Trigger should only be set once.
@@ -1060,7 +1059,7 @@ void SolverInterfaceImpl::mapReadDataTo(
     }
     mappingContext.hasMappedData = true;
   }
-  performDataActions({action::Action::READ_MAPPING_POST}, time, 0, 0, 0);
+  performDataActions({action::Action::READ_MAPPING_POST}, time, 0.0, 0.0, 0.0);
 }
 
 void SolverInterfaceImpl::writeBlockVectorData(
