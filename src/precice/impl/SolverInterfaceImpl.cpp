@@ -301,10 +301,7 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
   PRECICE_ASSERT(_couplingScheme->isInitialized());
 
-  if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
-    initializeReadWaveforms();
-  }
-
+  initializeReadWaveforms();
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0, 0, 0, dt);
     doDataTransferAndReadMapping();
@@ -342,6 +339,7 @@ void SolverInterfaceImpl::initializeData()
   PRECICE_DEBUG("Initialize data");
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
+  initializeWrittenWaveforms();
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0, 0, 0, dt);
   doDataTransferAndWriteMapping();
   performDataActions({action::Action::WRITE_MAPPING_POST}, 0, 0, 0, dt);
@@ -416,6 +414,10 @@ double SolverInterfaceImpl::advance(
   timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
   time                   = _couplingScheme->getTime();
 
+  if (not _hasInitializedWrittenWaveforms) { // necessary, if initializeData was not called or if mesh was reset.
+    initializeWrittenWaveforms();
+  }
+
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     doDataTransferAndWriteMapping();
@@ -424,6 +426,10 @@ double SolverInterfaceImpl::advance(
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
+
+  if (not _hasInitializedReadWaveforms) { // necessary, if mesh was reset.
+    initializeReadWaveforms();
+  }
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
@@ -653,6 +659,9 @@ void SolverInterfaceImpl::resetMesh(
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());
   _meshLock.unlock(meshID);
   context.mesh->clear();
+
+  _hasInitializedReadWaveforms = false;
+  _hasInitializedReadWaveforms = false;
 }
 
 int SolverInterfaceImpl::setMeshVertex(
@@ -1900,11 +1909,7 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
 
 void SolverInterfaceImpl::doDataTransferAndWriteMapping()
 {
-  if (not _hasInitializedWrittenWaveforms) { // necessary, if SolverInterfaceImpl::initializeData() was not called
-    initializeWrittenWaveforms();
-  } else {
-    storeWriteDataInWrittenWaveform(); // otherwise the new data provided via write is just ignored.
-  }
+  storeWriteDataInWrittenWaveform();
   mapWrittenData();
   prepareExchangedWriteData();
 }
