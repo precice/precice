@@ -757,24 +757,32 @@ void precicef_get_version_information_(
 ///@{
 
 /**
- * @brief See precice::SolverInterface::setMeshAccessRegion().
  * Fortran syntax:
  * precicef_setMeshAccessRegion(
  *   INTEGER          meshID,
  *   DOUBLE PRECISION bounding_box(dim*2))
+ *
+ * IN:  meshID, bounding_box
+ * OUT: -
+ *
+ * @copydoc precice::SolverInterface::setMeshAccessRegion()
  */
 void precicef_setMeshAccessRegion(
     const int     meshID,
     const double *boundingBox);
 
 /**
- * @brief See precice::SolverInterface::getMeshVerticesAndIDs().
  * Fortran syntax:
  * precicef_getMeshVerticesAndIDs(
  *   INTEGER          meshID,
  *   INTEGER          size,
  *   INTEGER          ids(size),
  *   DOUBLE PRECISION coordinates(dim*size))
+ *
+ * IN:  meshID, size
+ * OUT: ids, coordinates
+ *
+ * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
  */
 void precicef_getMeshVerticesAndIDs(
     const int meshID,
