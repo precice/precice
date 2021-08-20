@@ -1894,12 +1894,12 @@ void SolverInterfaceImpl::doWriteMappingAndActions(double time, double computedT
 
 void SolverInterfaceImpl::doReadMappingAndActions(double time, double computedTimestepLength, double timeWindowComputedPart, double timeWindowSize)
 {
+  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   if (not _hasInitializedReadWaveforms) { // necessary, if no read data was available in SolverInterfaceImpl::initialize()
     initializeReadWaveforms();
   } else {
     storeReadDataInReadWaveform(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
   }
-  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   mapReadData();
   prepareExchangedReadData();
   performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
