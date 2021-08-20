@@ -34,6 +34,16 @@ public:
    */
   const Eigen::MatrixXd &lastTimeWindows();
 
+  /**
+   * @brief returns number of samples in time stored by this waveform
+   */
+  int numberOfSamples();
+
+  /**
+   * @brief returns number of data per sample in time stored by this waveform
+   */
+  int numberOfData();
+
 private:
   /// Data values of time windows.
   Eigen::MatrixXd _timeWindows;
