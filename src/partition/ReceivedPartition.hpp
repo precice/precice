@@ -37,7 +37,7 @@ public:
   };
 
   /// Constructor
-  ReceivedPartition(mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor, bool allowDirectAccess = false);
+  ReceivedPartition(const mesh::PtrMesh &mesh, GeometricFilter geometricFilter, double safetyFactor, bool allowDirectAccess = false);
 
   virtual ~ReceivedPartition() {}
 

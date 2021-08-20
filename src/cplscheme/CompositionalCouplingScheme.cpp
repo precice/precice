@@ -13,7 +13,7 @@ namespace precice {
 namespace cplscheme {
 
 void CompositionalCouplingScheme::addCouplingScheme(
-    PtrCouplingScheme couplingScheme)
+    const PtrCouplingScheme &couplingScheme)
 {
   PRECICE_TRACE();
   _couplingSchemes.emplace_back(couplingScheme);

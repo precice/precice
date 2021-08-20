@@ -107,7 +107,7 @@ void WatchIntegral::exportIntegralData(
   }
 }
 
-Eigen::VectorXd WatchIntegral::calculateIntegral(mesh::PtrData data) const
+Eigen::VectorXd WatchIntegral::calculateIntegral(const mesh::PtrData &data) const
 {
   int                    dim    = data->getDimensions();
   const Eigen::VectorXd &values = data->values();

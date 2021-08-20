@@ -21,7 +21,7 @@ Waveform::Waveform(
   _timeWindows        = Eigen::MatrixXd::Zero(numberOfData, numberOfSamples);
 }
 
-void Waveform::store(Eigen::VectorXd data)
+void Waveform::store(const Eigen::VectorXd &data)
 {
   this->_timeWindows.col(0) = data;
 }

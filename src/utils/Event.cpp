@@ -5,14 +5,14 @@
 namespace precice {
 namespace utils {
 
-Event::Event(std::string eventName, Clock::duration initialDuration)
+Event::Event(const std::string &eventName, Clock::duration initialDuration)
     : name(EventRegistry::instance().prefix + eventName),
       duration(initialDuration)
 {
   EventRegistry::instance().put(*this);
 }
 
-Event::Event(std::string eventName, bool barrier, bool autostart)
+Event::Event(const std::string &eventName, bool barrier, bool autostart)
     : name(eventName),
       _barrier(barrier)
 {
@@ -79,7 +79,7 @@ Event::Clock::duration Event::getDuration() const
   return duration;
 }
 
-void Event::addData(std::string key, int value)
+void Event::addData(const std::string &key, int value)
 {
   data[key].push_back(value);
 }

@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <deque>
 #include <memory>
+#include <utility>
+
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
@@ -33,7 +35,7 @@ IQNILSAcceleration::IQNILSAcceleration(
     std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, dataIDs, preconditioner)
+                         filter, singularityLimit, std::move(dataIDs), std::move(preconditioner))
 {
 }
 

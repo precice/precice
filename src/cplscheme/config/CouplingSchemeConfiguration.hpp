@@ -75,7 +75,7 @@ public:
   virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /// Adds a manually configured coupling scheme for a participant.
-  void addCouplingScheme(PtrCouplingScheme cplScheme, const std::string &participantName);
+  void addCouplingScheme(const PtrCouplingScheme &cplScheme, const std::string &participantName);
 
 private:
   mutable logging::Logger _log{"cplscheme::CouplingSchemeConfiguration"};
@@ -266,18 +266,18 @@ private:
       DataID dataID, const std::string &first, const std::string &second) const;
 
   void addConvergenceMeasures(
-      BaseCouplingScheme *                           scheme,
-      const std::string                              participant,
-      const std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions) const;
+      BaseCouplingScheme *                            scheme,
+      const std::string &                             participant,
+      const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const;
 
   void setSerialAcceleration(
       BaseCouplingScheme *scheme,
-      const std::string   first,
-      const std::string   second) const;
+      const std::string & first,
+      const std::string & second) const;
 
   void setParallelAcceleration(
       BaseCouplingScheme *scheme,
-      const std::string   participant) const;
+      const std::string & participant) const;
 
   friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;   // For whitebox tests

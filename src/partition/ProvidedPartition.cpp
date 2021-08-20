@@ -31,7 +31,7 @@ namespace partition {
 
 ProvidedPartition::ProvidedPartition(
     mesh::PtrMesh mesh)
-    : Partition(mesh)
+    : Partition(std::move(mesh))
 {
 }
 
