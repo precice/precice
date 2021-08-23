@@ -83,6 +83,17 @@ boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
 }
 
 /// equals to be used in tests. Prints both operatorans on failure
+template <class DerivedA, class DerivedB>
+boost::test_tools::predicate_result equals(std::vector<DerivedA> &A,
+                                           std::vector<DerivedB> &B,
+                                           double                 tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+{
+  Eigen::Map<Eigen::MatrixXd> MatrixA(A.data(), A.size(), 1);
+  Eigen::Map<Eigen::MatrixXd> MatrixB(B.data(), B.size(), 1);
+  return equals(MatrixA, MatrixB, tolerance);
+}
+
+/// equals to be used in tests. Prints both operatorans on failure
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::predicate_result>::type equals(const Scalar a, const Scalar b, const Scalar tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
