@@ -908,7 +908,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshExplicit)
 
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = positions;
-    BOOST_TEST(solverTwoMesh == expectedData);
+    BOOST_TEST(testing::equals(solverTwoMesh, expectedData));
 
     while (couplingInterface.isCouplingOngoing()) {
       // Write data
@@ -937,7 +937,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshExplicit)
                                             ids.data(), readData.data());
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4});
-      BOOST_TEST(expectedData == readData);
+      BOOST_TEST(testing::equals(expectedData, readData));
     }
   }
 }
@@ -1029,7 +1029,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
                                     ids.data(), readData.data());
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4, 5});
-      BOOST_TEST(expectedData == readData);
+      BOOST_TEST(testing::equals(expectedData, readData));
     }
   }
 }
