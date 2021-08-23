@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
   typedef double (*DataFunction)(double, int);
 
   DataFunction dataOneFunction = [](double t, int idx) -> double {
-    return (double) (t + idx);
+    return (double) (2 + t + idx);
   };
   DataFunction dataTwoFunction = [](double t, int idx) -> double {
     return (double) (10 + t + idx);
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSubcycling)
   typedef double (*DataFunction)(double, int);
 
   DataFunction dataOneFunction = [](double t, int idx) -> double {
-    return (double) (t + idx);
+    return (double) (2 + t + idx);
   };
   DataFunction dataTwoFunction = [](double t, int idx) -> double {
     return (double) (10 + t + idx);
