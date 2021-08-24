@@ -61,7 +61,7 @@ struct WhiteboxAccessor {
   }
 };
 
-/// equals to be used in tests. Prints both operatorans on failure
+/// equals to be used in tests. Compares two matrices using a given tolerance. Prints both operands on failure.
 template <class DerivedA, class DerivedB>
 boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
                                            const Eigen::MatrixBase<DerivedB> &B,
@@ -82,24 +82,21 @@ boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
   return true;
 }
 
-/// equals to be used in tests. Prints both operatorans on failure
-template <typename TA, typename TB>
-boost::test_tools::predicate_result equals(const std::vector<TA> &A,
-                                           const std::vector<TB> &B,
-                                           double                 tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+/// equals to be used in tests. Compares two std::vectors using a given tolerance. Prints both operands on failure
+template <typename NumberType>
+boost::test_tools::predicate_result equals(const std::vector<NumberType> &VectorA,
+                                           const std::vector<NumberType> &VectorB,
+                                           double                         tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
-  Eigen::MatrixXd MatrixA(A.size(), 1);
-  for (int i = 0; i < A.size(); ++i) {
-    MatrixA(i, 0) = A[i];
-  }
-  Eigen::MatrixXd MatrixB(B.size(), 1);
-  for (int i = 0; i < B.size(); ++i) {
-    MatrixB(i, 0) = B[i];
-  }
+  PRECICE_ASSERT(VectorA.size() == VectorB.size());
+  Eigen::MatrixXd MatrixA(VectorA.size(), 1);
+  std::copy(VectorA.begin(), VectorA.end(), MatrixA.data());
+  Eigen::MatrixXd MatrixB(VectorB.size(), 1);
+  std::copy(VectorB.begin(), VectorB.end(), MatrixB.data());
   return equals(MatrixA, MatrixB, tolerance);
 }
 
-/// equals to be used in tests. Prints both operatorans on failure
+/// equals to be used in tests. Compares two scalar numbers using a given tolerance. Prints both operands on failure
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::predicate_result>::type equals(const Scalar a, const Scalar b, const Scalar tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
