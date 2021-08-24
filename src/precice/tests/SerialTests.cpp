@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
   typedef double (*DataFunction)(double, int);
 
   DataFunction dataOneFunction = [](double t, int idx) -> double {
-    return (double) (t + idx);
+    return (double) (2 + t + idx);
   };
   DataFunction dataTwoFunction = [](double t, int idx) -> double {
     return (double) (10 + t + idx);
@@ -479,7 +479,9 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
   vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
   vertexIDs[1] = precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
 
+  int    nWindows  = 5; // perform 5 windows.
   double maxDt     = precice.initialize();
+  double windowDt  = maxDt;
   int    timestep  = 0;
   double dt        = maxDt; // Timestep length desired by solver
   double currentDt = dt;    // Timestep length used by solver
@@ -516,9 +518,9 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
     if (precice.isReadDataAvailable()) {
       double readTime;
       if (context.isNamed("SolverOne")) {
-        readTime = time;
+        readTime = time; // solver one lags one window behind solver two.
       } else {
-        readTime = time + currentDt;
+        readTime = time + windowDt;
       }
       BOOST_TEST(readData.size() == n_vertices);
       for (int i = 0; i < n_vertices; i++) {
@@ -547,7 +549,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
   }
 
   precice.finalize();
-  BOOST_TEST(timestep == 5);
+  BOOST_TEST(timestep == nWindows);
 }
 
 /// One solver uses incremental position set, read/write methods.
