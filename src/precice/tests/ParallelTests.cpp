@@ -865,7 +865,7 @@ void runTestAccessReceivedMesh(const std::string         configName,
 
     // Check the received vertex coordinates
     std::vector<double> expectedPositions = context.isMaster() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : expectedPositionSlave;
-    BOOST_TEST(expectedPositions == coordinates);
+    BOOST_TEST(testing::equals(expectedPositions, coordinates));
 
     // Check the received vertex IDs (IDs are local?!)
     std::vector<int> expectedIDs;
@@ -915,7 +915,7 @@ void runTestAccessReceivedMesh(const std::string         configName,
       std::vector<double> ownCoordinates(ownMeshSize * dim);
       interface.getMeshVerticesAndIDs(meshID, ownMeshSize, ownIDs.data(), ownCoordinates.data());
       BOOST_TEST(ownIDs == ids);
-      BOOST_TEST(ownCoordinates == ownCoordinates);
+      BOOST_TEST(testing::equals(ownCoordinates, ownCoordinates)); // @todo looks wrong
     }
 
     // Initialize the solverinterface
@@ -1095,7 +1095,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
       // Expected data according to the writeData
       // Values are summed up
       std::vector<double> expectedData = context.isMaster() ? std::vector<double>({0, 1, 0}) : std::vector<double>({1, 2, 2});
-      BOOST_TEST(expectedData == readData);
+      BOOST_TEST(testing::equals(expectedData, readData));
     }
 
   } else {
@@ -1130,7 +1130,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
       // Expected data according to the writeData
       // Values are summed up
       std::vector<double> expectedData = context.isMaster() ? std::vector<double>({15, 16}) : std::vector<double>({22, 6, 7});
-      BOOST_TEST(expectedData == readData);
+      BOOST_TEST(testing::equals(expectedData, readData));
     }
   }
 }
