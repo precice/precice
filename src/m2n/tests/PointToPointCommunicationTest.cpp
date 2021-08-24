@@ -108,12 +108,12 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
     c.send(data);
     c.receive(data);
 
-    BOOST_TEST(data == expectedData);
+    BOOST_TEST(testing::equals(data, expectedData));
   } else {
     c.acceptConnection("B", "A");
 
     c.receive(data);
-    BOOST_TEST(data == expectedData);
+    BOOST_TEST(testing::equals(data, expectedData));
     process(data);
     c.send(data);
   }
@@ -183,12 +183,12 @@ void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
 
     c.send(data);
     c.receive(data);
-    BOOST_TEST(data == expectedData);
+    BOOST_TEST(testing::equals(data, expectedData));
   } else {
     c.acceptConnection("B", "A");
 
     c.receive(data);
-    BOOST_TEST(data == expectedData);
+    BOOST_TEST(testing::equals(data, expectedData));
     process(data);
     c.send(data);
   }

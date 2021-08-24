@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization)
     int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
     cplInterface.writeScalarData(dataBID, 0, 2.0);
-    //sagen dass daten jetzt geschrieben
+    //tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
     Vector3d valueDataA;
@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshExplicit)
 
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = positions;
-    BOOST_TEST(solverTwoMesh == expectedData);
+    BOOST_TEST(testing::equals(solverTwoMesh, expectedData));
 
     while (couplingInterface.isCouplingOngoing()) {
       // Write data
@@ -754,7 +754,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshExplicit)
                                             ids.data(), readData.data());
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4});
-      BOOST_TEST(expectedData == readData);
+      BOOST_TEST(testing::equals(expectedData, readData));
     }
   }
 }
@@ -846,7 +846,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
                                     ids.data(), readData.data());
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4, 5});
-      BOOST_TEST(expectedData == readData);
+      BOOST_TEST(testing::equals(expectedData, readData));
     }
   }
 }
@@ -925,9 +925,8 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
 
       // Expected data according to the writeData
       std::vector<double> expectedData({10, 11, 12, 13});
-      BOOST_TEST(expectedData == readData);
+      BOOST_TEST(testing::equals(expectedData, readData));
     }
-
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     std::vector<double>         positions = {0.0, 0.0, 0.2, 0.3, 0.1, 0.1};
@@ -978,7 +977,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
 
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3});
-      BOOST_TEST(expectedData == readData);
+      BOOST_TEST(testing::equals(expectedData, readData));
     }
   }
 }
