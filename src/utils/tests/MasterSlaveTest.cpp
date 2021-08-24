@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(ParallelReduceSum)
       std::vector<double> in{4, 5, 6}, out{-1, -1, -1};
       auto                expected = out;
       utils::MasterSlave::reduceSum(in, out);
-      BOOST_TEST(out == expected, boost::test_tools::per_element());
+      BOOST_TEST(testing::equals(out, expected), boost::test_tools::per_element());
     }
     {
       int in = 3, out = -1;
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(ParallelReduceSum)
       std::vector<double> in{7, 8, 9}, out{-1, -1, -1};
       auto                expected = out;
       utils::MasterSlave::reduceSum(in, out);
-      BOOST_TEST(out == expected, boost::test_tools::per_element());
+      BOOST_TEST(testing::equals(out, expected), boost::test_tools::per_element());
     }
     {
       int in = 5, out = -1;
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(SerialReduceSum)
   {
     std::vector<double> in{1, 2, 3}, out{-1, -1, -1};
     utils::MasterSlave::reduceSum(in, out);
-    BOOST_TEST(out == in, boost::test_tools::per_element());
+    BOOST_TEST(testing::equals(out, in), boost::test_tools::per_element());
   }
   {
     int in = 1, out = -1;
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(SerialAllReduceSum)
   {
     std::vector<double> in{1, 2, 3}, out{-1, -1, -1};
     utils::MasterSlave::allreduceSum(in, out);
-    BOOST_TEST(out == in, boost::test_tools::per_element());
+    BOOST_TEST(testing::equals(out, in), boost::test_tools::per_element());
   }
   {
     int in = 1, out = -1;
