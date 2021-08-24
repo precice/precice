@@ -1372,7 +1372,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
 
     couplingInterface.getMeshVerticesAndIDs(otherMeshID, meshSize, otherIDs.data(), solverTwoMesh.data());
     // Some dummy writeData
-    std::array<double, 3> writeData{1, 2, 3};
+    std::array<double, 3> writeData({1, 2, 3});
 
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = {0.0, 0.0, 0.2, 0.3, 0.1, 0.1};
@@ -1426,7 +1426,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
 
     couplingInterface.getMeshVerticesAndIDs(otherMeshID, meshSize, otherIDs.data(), solverOneMesh.data());
     // Some dummy writeData
-    std::array<double, 4> writeData{10, 11, 12, 13};
+    std::array<double, 4> writeData({10, 11, 12, 13});
 
     // Allocate data to read
     std::vector<double> readData(ownIDs.size(), -10);
