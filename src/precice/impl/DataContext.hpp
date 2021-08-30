@@ -22,6 +22,8 @@ public:
 
   mesh::PtrData providedData();
 
+  mesh::PtrData toData();
+
   std::string getDataName() const;
 
   int getProvidedDataID() const;

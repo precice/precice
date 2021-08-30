@@ -1019,6 +1019,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
+      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
     }
     mappingContext.hasMappedData = true;
   }
@@ -1560,6 +1561,7 @@ void SolverInterfaceImpl::mapData(utils::ptr_vector<DataContext> contexts, const
         context.resetToData();
         PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
         context.mappingContext().mapping->map(inDataID, outDataID);
+        PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
       }
     }
   }
