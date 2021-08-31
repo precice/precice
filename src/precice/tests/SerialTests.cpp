@@ -341,10 +341,9 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
   double windowDt   = maxDt;
   int    timestep   = 0;
   int    timewindow = 0;
-  double dt         = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 4 steps  with size 1/4
-  dt += windowDt / nSubsteps / nSubsteps;   // increase timestep such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
-  double currentDt = dt;                    // Timestep length used by solver
-  double time      = timestep * dt;
+  double dt         = windowDt / (nSubsteps - 0.5); // Timestep length desired by solver. E.g. 4 steps with size 2/7. Fourth step will be restricted to 1/7 via preCICE steering to fit into the window.
+  double currentDt  = dt;                           // Timestep length used by solver
+  double time       = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     for (int i = 0; i < n_vertices; i++) {
