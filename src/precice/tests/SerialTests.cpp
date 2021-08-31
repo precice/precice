@@ -335,15 +335,16 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
 
   vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
-  int    nSubsteps  = 4; // perform subcycling on solvers. 4 steps happen in each window.
-  int    nWindows   = 5; // perform 5 windows.
-  double maxDt      = precice.initialize();
-  double windowDt   = maxDt;
-  int    timestep   = 0;
-  int    timewindow = 0;
-  double dt         = windowDt / (nSubsteps - 0.5); // Timestep length desired by solver. E.g. 4 steps with size 2/7. Fourth step will be restricted to 1/7 via preCICE steering to fit into the window.
-  double currentDt  = dt;                           // Timestep length used by solver
-  double time       = timestep * dt;
+  int    nSubsteps     = 4; // perform subcycling on solvers. 4 steps happen in each window.
+  int    nWindows      = 5; // perform 5 windows.
+  double maxDt         = precice.initialize();
+  double windowDt      = maxDt;
+  int    timestep      = 0;
+  int    timewindow    = 0;
+  double dt            = windowDt / (nSubsteps - 0.5); // Timestep length desired by solver. E.g. 4 steps with size 2/7. Fourth step will be restricted to 1/7 via preCICE steering to fit into the window.
+  double expectedDts[] = {2.0 / 7.0, 2.0 / 7.0, 2.0 / 7.0, 1.0 / 7.0};
+  double currentDt     = dt; // Timestep length used by solver
+  double time          = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     for (int i = 0; i < n_vertices; i++) {
@@ -376,6 +377,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
+    BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
 
     BOOST_TEST(writeData.size() == n_vertices);
