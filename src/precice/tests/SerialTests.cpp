@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, _pathToTests + "explicit-scalar-data-init.xml", 0, 1);
+  SolverInterface precice(context.name, _pathToTests + "explicit-scalar-data-init.xml", 0, 1); // serial coupling, SolverOne first
 
   MeshID meshID;
   DataID writeDataID;
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
   while (precice.isCouplingOngoing()) {
     double readTime;
     if (context.isNamed("SolverOne")) {
-      readTime = timewindow * windowDt; // solver one lags one window behind solver two.
+      readTime = timewindow * windowDt; // SolverOne lags one window behind SolverTwo for serial-explicit coupling.
     } else {
       readTime = (timewindow + 1) * windowDt;
     }
