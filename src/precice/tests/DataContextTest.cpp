@@ -63,8 +63,11 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
   BOOST_TEST(dataContext.hasWriteMapping());
   BOOST_TEST(!dataContext.hasReadMapping());
-  //BOOST_TEST(dataContext.mappingContext() == mappingContext);  // @todo fix this call
-  // call functions to make sure they work
+  BOOST_TEST(dataContext.mappingContext().fromMeshID == mappingContext.fromMeshID);
+  BOOST_TEST(dataContext.mappingContext().toMeshID == mappingContext.toMeshID);
+  BOOST_TEST(dataContext.mappingContext().hasMappedData == mappingContext.hasMappedData);
+  BOOST_TEST(dataContext.mappingContext().mapping == mappingContext.mapping);
+  BOOST_TEST(dataContext.mappingContext().timing == mappingContext.timing);
   dataContext.resetProvidedData();
   dataContext.resetToData();
 }
@@ -118,8 +121,11 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   BOOST_TEST(dataContext.getMeshID() != ptrFromMesh->getID());
   BOOST_TEST(!dataContext.hasWriteMapping());
   BOOST_TEST(dataContext.hasReadMapping());
-  //BOOST_TEST(dataContext.mappingContext() == mappingContext);  // @todo fix this call
-  // call functions to make sure they work
+  BOOST_TEST(dataContext.mappingContext().fromMeshID == mappingContext.fromMeshID);
+  BOOST_TEST(dataContext.mappingContext().toMeshID == mappingContext.toMeshID);
+  BOOST_TEST(dataContext.mappingContext().hasMappedData == mappingContext.hasMappedData);
+  BOOST_TEST(dataContext.mappingContext().mapping == mappingContext.mapping);
+  BOOST_TEST(dataContext.mappingContext().timing == mappingContext.timing);
   dataContext.resetProvidedData();
   dataContext.resetToData();
 }
