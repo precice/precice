@@ -18,16 +18,55 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
 {
   PRECICE_TEST(1_rank);
 
-  // Create mesh object
-  int           dimensions = 3;
-  mesh::PtrMesh ptrMesh    = std::make_shared<mesh::Mesh>("MyMesh", dimensions, testing::nextMeshID());
-  mesh::PtrData ptrData    = ptrMesh->createData("MyData", dimensions);
+  // Create mesh object for from mesh
+  int           dimensions  = 3;
+  mesh::PtrMesh ptrFromMesh = std::make_shared<mesh::Mesh>("ParticipantMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData ptrFromData = ptrFromMesh->createData("MappedData", dimensions);
 
-  auto &v1 = ptrMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-  auto &v2 = ptrMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
-  auto &v3 = ptrMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+  ptrFromMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  ptrFromMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  ptrFromMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
 
-  DataContext dataContext(ptrData, ptrMesh);
+  // Create mesh object for from mesh
+  mesh::PtrMesh ptrToMesh = std::make_shared<mesh::Mesh>("OtherMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData ptrToData = ptrToMesh->createData("MappedData", dimensions);
+
+  ptrToMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 0.0));
+  ptrToMesh->createVertex(Eigen::Vector3d(1.0, 0.1, 0.0));
+  ptrToMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 1.0));
+
+  MeshContext toMeshContext(dimensions);
+  toMeshContext.mesh = ptrToMesh;
+
+  DataContext dataContext(ptrFromData, ptrFromMesh);
+
+  MappingContext mappingContext;
+  mappingContext.fromMeshID = ptrFromMesh->getID();
+  mappingContext.toMeshID   = ptrToMesh->getID();
+
+  BOOST_TEST(ptrToData->getID() != ptrFromData->getID());
+  BOOST_TEST(ptrToMesh->getID() != ptrFromMesh->getID());
+
+  BOOST_TEST(!dataContext.hasMapping());
+  BOOST_TEST(dataContext.getProvidedDataID() == ptrFromData->getID());
+  BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
+
+  dataContext.configureForWriteMapping(mappingContext, toMeshContext);
+
+  // mapping is configured. Write mapping, therefore _providedData == _fromData
+  BOOST_TEST(dataContext.hasMapping());
+  BOOST_TEST(dataContext.getFromDataID() == ptrFromData->getID());
+  BOOST_TEST(dataContext.getToDataID() == ptrToData->getID());
+  BOOST_TEST(dataContext.getProvidedDataID() != ptrToData->getID());
+  BOOST_TEST(dataContext.getProvidedDataID() == ptrFromData->getID());
+  BOOST_TEST(dataContext.getMeshID() != ptrToMesh->getID());
+  BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
+  BOOST_TEST(dataContext.hasWriteMapping());
+  BOOST_TEST(!dataContext.hasReadMapping());
+  //BOOST_TEST(dataContext.mappingContext() == mappingContext);  // @todo fix this call
+  // call functions to make sure they work
+  dataContext.resetProvidedData();
+  dataContext.resetToData();
 }
 
 BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
@@ -36,14 +75,53 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
 
   // Create mesh object
   int           dimensions = 3;
-  mesh::PtrMesh ptrMesh    = std::make_shared<mesh::Mesh>("MyMesh", dimensions, testing::nextMeshID());
-  mesh::PtrData ptrData    = ptrMesh->createData("MyData", dimensions);
+  mesh::PtrMesh ptrToMesh  = std::make_shared<mesh::Mesh>("ParticipantMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData ptrToData  = ptrToMesh->createData("MappedData", dimensions);
 
-  auto &v1 = ptrMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
-  auto &v2 = ptrMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
-  auto &v3 = ptrMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+  ptrToMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  ptrToMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  ptrToMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
 
-  DataContext dataContext(ptrData, ptrMesh);
+  // Create mesh object for from mesh
+  mesh::PtrMesh ptrFromMesh = std::make_shared<mesh::Mesh>("OtherMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData ptrFromData = ptrFromMesh->createData("MappedData", dimensions);
+
+  ptrFromMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 0.0));
+  ptrFromMesh->createVertex(Eigen::Vector3d(1.0, 0.1, 0.0));
+  ptrFromMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 1.0));
+
+  MeshContext fromMeshContext(dimensions);
+  fromMeshContext.mesh = ptrFromMesh;
+
+  DataContext dataContext(ptrToData, ptrToMesh);
+
+  MappingContext mappingContext;
+  mappingContext.fromMeshID = ptrFromMesh->getID();
+  mappingContext.toMeshID   = ptrToMesh->getID();
+
+  BOOST_TEST(ptrToData->getID() != ptrFromData->getID());
+  BOOST_TEST(ptrToMesh->getID() != ptrFromMesh->getID());
+
+  BOOST_TEST(!dataContext.hasMapping());
+  BOOST_TEST(dataContext.getProvidedDataID() == ptrToData->getID());
+  BOOST_TEST(dataContext.getMeshID() == ptrToMesh->getID());
+
+  dataContext.configureForReadMapping(mappingContext, fromMeshContext);
+
+  // mapping is configured. Write mapping, therefore _providedData == _toData
+  BOOST_TEST(dataContext.hasMapping());
+  BOOST_TEST(dataContext.getFromDataID() == ptrFromData->getID());
+  BOOST_TEST(dataContext.getToDataID() == ptrToData->getID());
+  BOOST_TEST(dataContext.getProvidedDataID() == ptrToData->getID());
+  BOOST_TEST(dataContext.getProvidedDataID() != ptrFromData->getID());
+  BOOST_TEST(dataContext.getMeshID() == ptrToMesh->getID());
+  BOOST_TEST(dataContext.getMeshID() != ptrFromMesh->getID());
+  BOOST_TEST(!dataContext.hasWriteMapping());
+  BOOST_TEST(dataContext.hasReadMapping());
+  //BOOST_TEST(dataContext.mappingContext() == mappingContext);  // @todo fix this call
+  // call functions to make sure they work
+  dataContext.resetProvidedData();
+  dataContext.resetToData();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
