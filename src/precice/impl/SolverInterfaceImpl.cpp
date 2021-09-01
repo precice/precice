@@ -1674,9 +1674,9 @@ void SolverInterfaceImpl::mapData(const utils::ptr_vector<DataContext> &contexts
                       mappingType, context.getDataName(), context.getMeshName());
         PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
         context.resetToData();
-        context.moveWaveformSampleToData(sampleID);                 // put samples from _fromWaveform into _fromData
-        context.mappingContext().mapping->map(inDataID, outDataID); // map from _fromData to _toData
-        context.moveDataToWaveformSample(sampleID);                 // store _toData at the right place into the _toWaveform
+        context.moveWaveformSampleToData(sampleID);                                              // put samples from _fromWaveform into _fromData
+        context.mappingContext().mapping->map(inDataID, outDataID);                              // map from _fromData to _toData
+        context.moveDataToWaveformSample(sampleID);                                              // store _toData at the right place into the _toWaveform
         PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
       }
     } else {

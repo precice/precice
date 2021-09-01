@@ -428,6 +428,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
     readDataID    = precice.getDataID("DataTwo", meshID);
     readFunction  = dataTwoFunction;
   } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
     meshID        = precice.getMeshID("MeshTwo");
     writeDataID   = precice.getDataID("DataTwo", meshID);
     writeFunction = dataTwoFunction;
@@ -538,28 +539,19 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSubcycling)
   DataFunction readFunction;
 
   if (context.isNamed("SolverOne")) {
-    meshID = precice.getMeshID("MeshOne");
-    BOOST_TEST(meshID == 0);
+    meshID        = precice.getMeshID("MeshOne");
     writeDataID   = precice.getDataID("DataOne", meshID);
     writeFunction = dataOneFunction;
-    BOOST_TEST(writeDataID == 0);
-    readDataID   = precice.getDataID("DataTwo", meshID);
-    readFunction = dataTwoFunction;
-    BOOST_TEST(readDataID == 1);
+    readDataID    = precice.getDataID("DataTwo", meshID);
+    readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID = precice.getMeshID("MeshTwo");
-    BOOST_TEST(meshID == 1);
+    meshID        = precice.getMeshID("MeshTwo");
     writeDataID   = precice.getDataID("DataTwo", meshID);
     writeFunction = dataTwoFunction;
-    BOOST_TEST(writeDataID == 3);
-    readDataID   = precice.getDataID("DataOne", meshID);
-    readFunction = dataOneFunction;
-    BOOST_TEST(readDataID == 2);
+    readDataID    = precice.getDataID("DataOne", meshID);
+    readFunction  = dataOneFunction;
   }
-
-  writeFunction(1, 1);
-  readFunction(1, 1);
 
   int n_vertices = 1;
 
@@ -578,23 +570,6 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSubcycling)
   dt += windowDt / nSubsteps / nSubsteps;  // increase timestep such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
   double currentDt = dt;                   // Timestep length used by solver
   double time      = timestep * dt;
-
-  if (context.isNamed("SolverOne")) {
-    meshID = precice.getMeshID("MeshOne");
-    BOOST_TEST(meshID == 0);
-    writeDataID = precice.getDataID("DataOne", meshID);
-    BOOST_TEST(writeDataID == 0);
-    readDataID = precice.getDataID("DataTwo", meshID);
-    BOOST_TEST(readDataID == 1);
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID = precice.getMeshID("MeshTwo");
-    BOOST_TEST(meshID == 1);
-    writeDataID = precice.getDataID("DataTwo", meshID);
-    BOOST_TEST(writeDataID == 3);
-    readDataID = precice.getDataID("DataOne", meshID);
-    BOOST_TEST(readDataID == 2);
-  }
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     for (int i = 0; i < n_vertices; i++) {
