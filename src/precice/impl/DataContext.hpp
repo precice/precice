@@ -18,7 +18,7 @@ namespace impl {
 class DataContext {
 
 public:
-  DataContext(mesh::PtrData data, mesh::PtrMesh mesh); // @ todo use mesh context for constructor? Would be more consistent with configureForReadMapping and configureForWriteMapping
+  DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
   mesh::PtrData providedData();
 
