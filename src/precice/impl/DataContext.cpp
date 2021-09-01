@@ -20,6 +20,12 @@ mesh::PtrData DataContext::providedData()
   return _providedData;
 }
 
+mesh::PtrData DataContext::toData()
+{
+  PRECICE_ASSERT(_toData);
+  return _toData;
+}
+
 std::string DataContext::getDataName() const
 {
   PRECICE_ASSERT(_providedData);
@@ -82,19 +88,19 @@ void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromDa
   PRECICE_ASSERT(_toData != _fromData);
 }
 
-void DataContext::configureForReadMapping(MappingContext mappingContext, MeshContext meshContext)
+void DataContext::configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext)
 {
-  PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData fromData = meshContext.mesh->data(getDataName());
+  PRECICE_ASSERT(fromMeshContext.mesh->hasDataName(getDataName()));
+  mesh::PtrData fromData = fromMeshContext.mesh->data(getDataName());
   PRECICE_ASSERT(fromData != _providedData);
   this->setMapping(mappingContext, fromData, _providedData);
   PRECICE_ASSERT(hasReadMapping());
 }
 
-void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshContext meshContext)
+void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext)
 {
-  PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData toData = meshContext.mesh->data(getDataName());
+  PRECICE_ASSERT(toMeshContext.mesh->hasDataName(getDataName()));
+  mesh::PtrData toData = toMeshContext.mesh->data(getDataName());
   PRECICE_ASSERT(toData != _providedData);
   this->setMapping(mappingContext, _providedData, toData);
   PRECICE_ASSERT(hasWriteMapping());

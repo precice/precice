@@ -22,6 +22,8 @@ public:
 
   mesh::PtrData providedData();
 
+  mesh::PtrData toData();
+
   std::string getDataName() const;
 
   int getProvidedDataID() const;
@@ -38,11 +40,21 @@ public:
 
   int getMeshID() const;
 
-  // links a read mapping to this data context
-  void configureForReadMapping(MappingContext mappingContext, MeshContext meshContext);
+  /**
+   * @brief links a read mapping and the mesh context the read mapping requires to this data context
+   *
+   * @param[in] mappingContext provides context of read mapping
+   * @param[in] fromMeshContext provides context of mesh this read mapping is mapping to (_toData)
+   */
+  void configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext);
 
-  // links a write mapping to this data context
-  void configureForWriteMapping(MappingContext mappingContext, MeshContext meshContext);
+  /**
+   * @brief links a write mapping and the mesh context the write mapping requires to this data context
+   *
+   * @param[in] mappingContext provides context of write mapping
+   * @param[in] fromMeshContext provides context of mesh this write mapping is mapping from (_fromData)
+   */
+  void configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext);
 
   bool hasMapping() const;
 

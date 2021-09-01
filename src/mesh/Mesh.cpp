@@ -218,7 +218,7 @@ void Mesh::allocateDataValues()
     // Enlarge Buffer
     if (expectedSize > actualSize) {
       const auto leftToAllocate = expectedSize - actualSize;
-      utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
+      utils::append(data->values(), Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
     }
     PRECICE_DEBUG("Data {} now has {} values", data->getName(), data->values().size());
   }
