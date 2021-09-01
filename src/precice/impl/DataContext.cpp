@@ -27,6 +27,13 @@ mesh::PtrData DataContext::providedData()
   return _providedData;
 }
 
+mesh::PtrData DataContext::toData()
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_toData);
+  return _toData;
+}
+
 std::string DataContext::getDataName() const
 {
   PRECICE_TRACE();
@@ -89,22 +96,45 @@ int DataContext::getMeshID() const
   return _mesh->getID();
 }
 
-void DataContext::configureForReadMapping(MappingContext mappingContext, MeshContext meshContext)
+void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData, time::PtrWaveform fromWaveform, time::PtrWaveform toWaveform)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData fromData = meshContext.mesh->data(getDataName());
+  PRECICE_ASSERT(!hasMapping());
+  PRECICE_ASSERT(fromData);
+  PRECICE_ASSERT(toData);
+  _mappingContext = mappingContext;
+  PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal provided data.");
+  PRECICE_ASSERT(fromData->getName() == getDataName());
+  _fromData = fromData;
+  PRECICE_ASSERT(toData->getName() == getDataName());
+  _toData = toData;
+  PRECICE_ASSERT(_toData != _fromData);
+
+  PRECICE_ASSERT(fromWaveform);
+  PRECICE_ASSERT(toWaveform);
+  PRECICE_ASSERT(fromWaveform == _providedWaveform || toWaveform == _providedWaveform, "Either fromWaveform or toWaveform has to equal provided waveform.");
+  _fromWaveform = fromWaveform;
+  _toWaveform   = toWaveform;
+  PRECICE_ASSERT(_fromWaveform->numberOfData() == _toWaveform->numberOfData());
+  PRECICE_ASSERT(_toWaveform != _fromWaveform);
+}
+
+void DataContext::configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext)
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(fromMeshContext.mesh->hasDataName(getDataName()));
+  mesh::PtrData fromData = fromMeshContext.mesh->data(getDataName());
   PRECICE_ASSERT(fromData != _providedData);
   time::PtrWaveform ptrFromWaveform(new time::Waveform(fromData->values().size()));
   this->setMapping(mappingContext, fromData, _providedData, ptrFromWaveform, _providedWaveform);
   PRECICE_ASSERT(hasReadMapping());
 }
 
-void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshContext meshContext)
+void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData toData = meshContext.mesh->data(getDataName());
+  PRECICE_ASSERT(toMeshContext.mesh->hasDataName(getDataName()));
+  mesh::PtrData toData = toMeshContext.mesh->data(getDataName());
   PRECICE_ASSERT(toData != _providedData);
   time::PtrWaveform ptrToWaveform(new time::Waveform(toData->values().size()));
   this->setMapping(mappingContext, _providedData, toData, _providedWaveform, ptrToWaveform);
@@ -242,29 +272,6 @@ void DataContext::storeDataInWaveform(mesh::PtrData sourceData, time::PtrWavefor
   PRECICE_ASSERT(targetWaveform->numberOfData() == sourceData->values().size(),
                  targetWaveform->numberOfData(), sourceData->values().size());
   targetWaveform->storeAt(sourceData->values(), sampleID);
-}
-
-void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData, time::PtrWaveform fromWaveform, time::PtrWaveform toWaveform)
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(!hasMapping());
-  PRECICE_ASSERT(fromData);
-  PRECICE_ASSERT(toData);
-  _mappingContext = mappingContext;
-  PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal provided data.");
-  PRECICE_ASSERT(fromData->getName() == getDataName());
-  _fromData = fromData;
-  PRECICE_ASSERT(toData->getName() == getDataName());
-  _toData = toData;
-  PRECICE_ASSERT(_toData != _fromData);
-
-  PRECICE_ASSERT(fromWaveform);
-  PRECICE_ASSERT(toWaveform);
-  PRECICE_ASSERT(fromWaveform == _providedWaveform || toWaveform == _providedWaveform, "Either fromWaveform or toWaveform has to equal provided waveform.");
-  _fromWaveform = fromWaveform;
-  _toWaveform   = toWaveform;
-  PRECICE_ASSERT(_fromWaveform->numberOfData() == _toWaveform->numberOfData());
-  PRECICE_ASSERT(_toWaveform != _fromWaveform);
 }
 
 void DataContext::moveProvidedWaveform()

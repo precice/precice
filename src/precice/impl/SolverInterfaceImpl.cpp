@@ -1006,6 +1006,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       mappingContext.mapping->computeMapping();
     }
     for (impl::DataContext &context : _accessor->writeDataContexts()) {
+
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
@@ -1014,9 +1015,10 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       // iterate over all the samples in the _fromWaveform
       for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
-        context.moveWaveformSampleToData(sampleID);                                            // put samples from _fromWaveform into _fromData
-        context.mappingContext().mapping->map(context.getFromDataID(), context.getToDataID()); // map from _fromData to _toData
-        context.moveDataToWaveformSample(sampleID);                                            // store _toData at the right place into the _toWaveform
+        context.moveWaveformSampleToData(sampleID);                                              // put samples from _fromWaveform into _fromData
+        context.mappingContext().mapping->map(context.getFromDataID(), context.getToDataID());   // map from _fromData to _toData
+        context.moveDataToWaveformSample(sampleID);                                              // store _toData at the right place into the _toWaveform
+        PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
       }
     }
     mappingContext.hasMappedData = true;
@@ -1056,9 +1058,10 @@ void SolverInterfaceImpl::mapReadDataTo(
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       // iterate over all the samples in the _fromWaveform
       for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
-        context.moveWaveformSampleToData(sampleID);                                            // put samples from _fromWaveform into _fromData
-        context.mappingContext().mapping->map(context.getFromDataID(), context.getToDataID()); // map from _fromData to _toData
-        context.moveDataToWaveformSample(sampleID);                                            // store _toData at the right place into the _toWaveform
+        context.moveWaveformSampleToData(sampleID);                                              // put samples from _fromWaveform into _fromData
+        context.mappingContext().mapping->map(context.getFromDataID(), context.getToDataID());   // map from _fromData to _toData
+        context.moveDataToWaveformSample(sampleID);                                              // store _toData at the right place into the _toWaveform
+        PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
       }
     }
     mappingContext.hasMappedData = true;
@@ -1674,6 +1677,7 @@ void SolverInterfaceImpl::mapData(const utils::ptr_vector<DataContext> &contexts
         context.moveWaveformSampleToData(sampleID);                 // put samples from _fromWaveform into _fromData
         context.mappingContext().mapping->map(inDataID, outDataID); // map from _fromData to _toData
         context.moveDataToWaveformSample(sampleID);                 // store _toData at the right place into the _toWaveform
+        PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
       }
     } else {
       context.moveProvidedDataToProvidedWaveformSample(0); // store _providedData at the right place into the _providedWaveform

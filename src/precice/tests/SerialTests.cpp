@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, _pathToTests + "explicit-scalar-data-init.xml", 0, 1);
+  SolverInterface precice(context.name, _pathToTests + "explicit-scalar-data-init.xml", 0, 1); // serial coupling, SolverOne first
 
   MeshID meshID;
   DataID writeDataID;
@@ -312,28 +312,19 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
   DataFunction readFunction;
 
   if (context.isNamed("SolverOne")) {
-    meshID = precice.getMeshID("MeshOne");
-    BOOST_TEST(meshID == 0);
+    meshID        = precice.getMeshID("MeshOne");
     writeDataID   = precice.getDataID("DataOne", meshID);
     writeFunction = dataOneFunction;
-    BOOST_TEST(writeDataID == 0);
-    readDataID   = precice.getDataID("DataTwo", meshID);
-    readFunction = dataTwoFunction;
-    BOOST_TEST(readDataID == 1);
+    readDataID    = precice.getDataID("DataTwo", meshID);
+    readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID = precice.getMeshID("MeshTwo");
-    BOOST_TEST(meshID == 1);
+    meshID        = precice.getMeshID("MeshTwo");
     writeDataID   = precice.getDataID("DataTwo", meshID);
     writeFunction = dataTwoFunction;
-    BOOST_TEST(writeDataID == 3);
-    readDataID   = precice.getDataID("DataOne", meshID);
-    readFunction = dataOneFunction;
-    BOOST_TEST(readDataID == 2);
+    readDataID    = precice.getDataID("DataOne", meshID);
+    readFunction  = dataOneFunction;
   }
-
-  writeFunction(1, 1);
-  readFunction(1, 1);
 
   int n_vertices = 1;
 
@@ -344,33 +335,16 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
 
   vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
-  int    nSubsteps  = 4; // perform subcycling on solvers. 4 steps happen in each window.
-  int    nWindows   = 5; // perform 5 windows.
-  double maxDt      = precice.initialize();
-  double windowDt   = maxDt;
-  int    timestep   = 0;
-  int    timewindow = 0;
-  double dt         = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 4 steps  with size 1/4
-  dt += windowDt / nSubsteps / nSubsteps;   // increase timestep such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
-  double currentDt = dt;                    // Timestep length used by solver
-  double time      = timestep * dt;
-
-  if (context.isNamed("SolverOne")) {
-    meshID = precice.getMeshID("MeshOne");
-    BOOST_TEST(meshID == 0);
-    writeDataID = precice.getDataID("DataOne", meshID);
-    BOOST_TEST(writeDataID == 0);
-    readDataID = precice.getDataID("DataTwo", meshID);
-    BOOST_TEST(readDataID == 1);
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID = precice.getMeshID("MeshTwo");
-    BOOST_TEST(meshID == 1);
-    writeDataID = precice.getDataID("DataTwo", meshID);
-    BOOST_TEST(writeDataID == 3);
-    readDataID = precice.getDataID("DataOne", meshID);
-    BOOST_TEST(readDataID == 2);
-  }
+  int    nSubsteps     = 4; // perform subcycling on solvers. 4 steps happen in each window.
+  int    nWindows      = 5; // perform 5 windows.
+  double maxDt         = precice.initialize();
+  double windowDt      = maxDt;
+  int    timestep      = 0;
+  int    timewindow    = 0;
+  double dt            = windowDt / (nSubsteps - 0.5); // Timestep length desired by solver. E.g. 4 steps with size 2/7. Fourth step will be restricted to 1/7 via preCICE steering to fit into the window.
+  double expectedDts[] = {2.0 / 7.0, 2.0 / 7.0, 2.0 / 7.0, 1.0 / 7.0};
+  double currentDt     = dt; // Timestep length used by solver
+  double time          = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     for (int i = 0; i < n_vertices; i++) {
@@ -385,7 +359,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
   while (precice.isCouplingOngoing()) {
     double readTime;
     if (context.isNamed("SolverOne")) {
-      readTime = timewindow * windowDt; // solver one lags one window behind solver two.
+      readTime = timewindow * windowDt; // SolverOne lags one window behind SolverTwo for serial-explicit coupling.
     } else {
       readTime = (timewindow + 1) * windowDt;
     }
@@ -403,6 +377,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
+    BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
 
     BOOST_TEST(writeData.size() == n_vertices);
@@ -447,28 +422,18 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
   DataFunction readFunction;
 
   if (context.isNamed("SolverOne")) {
-    meshID = precice.getMeshID("MeshOne");
-    BOOST_TEST(meshID == 0);
+    meshID        = precice.getMeshID("MeshOne");
     writeDataID   = precice.getDataID("DataOne", meshID);
     writeFunction = dataOneFunction;
-    BOOST_TEST(writeDataID == 0);
-    readDataID   = precice.getDataID("DataTwo", meshID);
-    readFunction = dataTwoFunction;
-    BOOST_TEST(readDataID == 1);
+    readDataID    = precice.getDataID("DataTwo", meshID);
+    readFunction  = dataTwoFunction;
   } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID = precice.getMeshID("MeshTwo");
-    BOOST_TEST(meshID == 1);
+    meshID        = precice.getMeshID("MeshTwo");
     writeDataID   = precice.getDataID("DataTwo", meshID);
     writeFunction = dataTwoFunction;
-    BOOST_TEST(writeDataID == 3);
-    readDataID   = precice.getDataID("DataOne", meshID);
-    readFunction = dataOneFunction;
-    BOOST_TEST(readDataID == 2);
+    readDataID    = precice.getDataID("DataOne", meshID);
+    readFunction  = dataOneFunction;
   }
-
-  writeFunction(1, 1);
-  readFunction(1, 1);
 
   int n_vertices = 2;
 
@@ -486,23 +451,6 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
   double dt        = maxDt; // Timestep length desired by solver
   double currentDt = dt;    // Timestep length used by solver
   double time      = timestep * dt;
-
-  if (context.isNamed("SolverOne")) {
-    meshID = precice.getMeshID("MeshOne");
-    BOOST_TEST(meshID == 0);
-    writeDataID = precice.getDataID("DataOne", meshID);
-    BOOST_TEST(writeDataID == 0);
-    readDataID = precice.getDataID("DataTwo", meshID);
-    BOOST_TEST(readDataID == 1);
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID = precice.getMeshID("MeshTwo");
-    BOOST_TEST(meshID == 1);
-    writeDataID = precice.getDataID("DataTwo", meshID);
-    BOOST_TEST(writeDataID == 3);
-    readDataID = precice.getDataID("DataOne", meshID);
-    BOOST_TEST(readDataID == 2);
-  }
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     for (int i = 0; i < n_vertices; i++) {

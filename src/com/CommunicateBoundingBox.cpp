@@ -42,7 +42,7 @@ void CommunicateBoundingBox::sendBoundingBoxMap(
 {
 
   PRECICE_TRACE(rankReceiver);
-  _communication->send((int) bbm.size(), rankReceiver);
+  _communication->send(static_cast<int>(bbm.size()), rankReceiver);
 
   for (const auto &bb : bbm) {
     sendBoundingBox(bb.second, rankReceiver);
@@ -69,7 +69,7 @@ void CommunicateBoundingBox::sendConnectionMap(
     int                                    rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
-  _communication->send((int) fbm.size(), rankReceiver);
+  _communication->send(static_cast<int>(fbm.size()), rankReceiver);
 
   for (const auto &vect : fbm) {
     _communication->send(vect.first, rankReceiver);
@@ -130,7 +130,7 @@ void CommunicateBoundingBox::broadcastSendConnectionMap(
     std::map<int, std::vector<int>> const &fbm)
 {
   PRECICE_TRACE();
-  _communication->broadcast((int) fbm.size());
+  _communication->broadcast(static_cast<int>(fbm.size()));
 
   for (auto &rank : fbm) {
     _communication->broadcast(rank.second);
