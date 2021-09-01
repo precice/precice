@@ -108,11 +108,7 @@ void Participant::addWriteData(
 {
   checkDuplicatedData(data);
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size());
-  auto context      = new DataContext();
-  context->fromData = data;
-  context->mesh     = mesh;
-  // will be overwritten later if a mapping exists
-  context->toData              = context->fromData;
+  auto context                 = new DataContext(data, mesh);
   _dataContexts[data->getID()] = context;
   _writeDataContexts.push_back(context);
 }
@@ -123,11 +119,7 @@ void Participant::addReadData(
 {
   checkDuplicatedData(data);
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size());
-  auto context    = new DataContext();
-  context->toData = data;
-  context->mesh   = mesh;
-  // will be overwritten later if a mapping exists
-  context->fromData            = context->toData;
+  auto context                 = new DataContext(data, mesh);
   _dataContexts[data->getID()] = context;
   _readDataContexts.push_back(context);
 }
@@ -212,14 +204,14 @@ bool Participant::isDataUsed(DataID dataID) const
 bool Participant::isDataRead(DataID dataID) const
 {
   return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](const DataContext &context) {
-    return context.toData->getID() == dataID;
+    return context.getProvidedDataID() == dataID;
   });
 }
 
 bool Participant::isDataWrite(DataID dataID) const
 {
   return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](const DataContext &context) {
-    return context.fromData->getID() == dataID;
+    return context.getProvidedDataID() == dataID;
   });
 }
 

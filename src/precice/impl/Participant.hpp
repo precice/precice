@@ -16,6 +16,7 @@
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "precice/impl/DataContext.hpp"
 #include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
