@@ -168,7 +168,6 @@ void precicef_has_to_evaluate_surrogate_model_(int *hasToEvaluate);
  */
 void precicef_has_to_evaluate_fine_model_(int *hasToEvaluate);
 
-
 /**
  * Fortran syntax:
  * precicef_is_action_required(
