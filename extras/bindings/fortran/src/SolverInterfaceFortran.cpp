@@ -92,12 +92,6 @@ void precicef_get_dims_(
   *dimensions = impl->getDimensions();
 }
 
-void precicef_ongoing_(
-    int *isOngoing)
-{
-  precicef_is_coupling_ongoing_(isOngoing);
-}
-
 void precicef_is_coupling_ongoing_(
     int *isOngoing)
 {
@@ -107,13 +101,6 @@ void precicef_is_coupling_ongoing_(
   } else {
     *isOngoing = 0;
   }
-}
-
-void precicef_write_data_required_(
-    const double *computedTimestepLength,
-    int *         isRequired)
-{
-  precicef_is_write_data_required_(computedTimestepLength, isRequired);
 }
 
 void precicef_is_write_data_required_(
@@ -126,12 +113,6 @@ void precicef_is_write_data_required_(
   } else {
     *isRequired = 0;
   }
-}
-
-void precicef_read_data_available_(
-    int *isAvailable)
-{
-  precicef_is_read_data_available_(isAvailable);
 }
 
 void precicef_is_read_data_available_(
@@ -176,14 +157,6 @@ void precicef_has_to_evaluate_fine_model_(
   } else {
     *hasToEvaluate = 0;
   }
-}
-
-void precicef_action_required_(
-    const char *action,
-    int *       isRequired,
-    int         lengthAction)
-{
-  precicef_is_action_required_(action, isRequired, lengthAction);
 }
 
 void precicef_is_action_required_(
