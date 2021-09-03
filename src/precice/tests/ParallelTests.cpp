@@ -915,7 +915,7 @@ void runTestAccessReceivedMesh(const std::string         configName,
       std::vector<double> ownCoordinates(ownMeshSize * dim);
       interface.getMeshVerticesAndIDs(meshID, ownMeshSize, ownIDs.data(), ownCoordinates.data());
       BOOST_TEST(ownIDs == ids);
-      BOOST_TEST(testing::equals(ownCoordinates, ownCoordinates)); // @todo looks wrong
+      BOOST_TEST(testing::equals(positions, ownCoordinates));
     }
 
     // Initialize the solverinterface
