@@ -18,7 +18,11 @@ class Triangle;
 namespace precice {
 namespace io {
 
-/// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
+/** Exporter for XML VTK files
+ *
+ * Each rank writes the meshes to .vtu files.
+ * The master rank additionally writes a .pvtu file.
+ */
 class ExportVTK : public Export {
 public:
   /// Returns the VTK type ID.
