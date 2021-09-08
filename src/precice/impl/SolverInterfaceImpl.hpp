@@ -472,27 +472,13 @@ public:
       double &value) const;
 
   /**
-   * @brief setMeshAccessRegion Define a region of interest in order to filter a
-   *        received mesh for a certain mesh region
-   *
-   * @param[in] meshID ID of the mesh you want to access through the bounding box
-   * @param[in] boundingBox Axis aligned bounding boxes which has in 3D the format
-   *            [x_min, x_max, y_min, y_max, z_min, z_max]
+   * @copydoc precice::SolverInterface::setMeshAccessRegion()
    */
   void setMeshAccessRegion(const int     meshID,
                            const double *boundingBox) const;
 
   /**
-   * @brief getMeshVerticesWithIDs Iterates over the region of
-   *        interest defined by bounding boxes and reads the corresponding
-   *        coordinates omitting the mapping.
-   *
-   * @param[in]  meshID corresponding mesh ID
-   * @param[in]  size return value of getMeshSize
-   * @param[out] ids ids corresponding to the coordinates
-   * @param[out] coordinates associated to the values (dim * @p getMeshVertexSize)
-   *
-   * @pre IDs and coordinates need to have the correct size, which can be requested by getMeshVertexSize)
+   * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
    */
   void getMeshVerticesAndIDs(
       const int meshID,
