@@ -38,11 +38,15 @@ void ScaleByAreaAction::performAction(
   PRECICE_ASSERT(targetValues.size() / valueDimensions == areas.size());
 
   if (meshDimensions == 2) {
+    PRECICE_CHECK(getMesh()->edges().size() != 0,
+                  "The multiply/divide-by-area actions require meshes with connectivity information. In 2D, please ensure that the mesh {} contains edges.", getMesh()->getName());
     for (mesh::Edge &edge : getMesh()->edges()) {
       areas[edge.vertex(0).getID()] += edge.getEnclosingRadius();
       areas[edge.vertex(1).getID()] += edge.getEnclosingRadius();
     }
   } else {
+    PRECICE_CHECK(getMesh()->triangles().size() != 0,
+                  "The multiply/divide-by-area actions require meshes with connectivity information. In 3D, please ensure that the mesh {} contains triangles.", getMesh()->getName());
     for (mesh::Triangle &face : getMesh()->triangles()) {
       areas[face.vertex(0).getID()] += face.getArea() / 3.0;
       areas[face.vertex(1).getID()] += face.getArea() / 3.0;
