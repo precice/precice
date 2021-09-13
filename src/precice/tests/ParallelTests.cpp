@@ -855,7 +855,8 @@ void runTestAccessReceivedMesh(const std::string         configName,
     const int meshSize = interface.getMeshVertexSize(dataID);
 
     // According to the bounding boxes and vertices: the master rank receives 3 vertices, the slave rank 2
-    const bool expectedSize = (context.isMaster() && meshSize == 3) || (!context.isMaster() && meshSize == expectedPositionSlave.size() / dim);
+    const bool expectedSize = (context.isMaster() && meshSize == 3) ||
+                              (!context.isMaster() && meshSize == static_cast<int>(expectedPositionSlave.size() / dim));
     BOOST_TEST(expectedSize);
 
     // Allocate memory
@@ -1079,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
     // Some dummy writeData
     std::vector<double> writeData;
-    for (size_t i = 0; i < otherMeshSize; ++i)
+    for (int i = 0; i < otherMeshSize; ++i)
       writeData.emplace_back(i + 5 + (10 * context.isMaster()));
 
     std::vector<double> readData(ownIDs.size(), 0);
@@ -1115,7 +1116,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     // Allocate data to read
     std::vector<double> readData(ids.size(), 0);
     std::vector<double> writeData;
-    for (int i = 0; i < ids.size(); ++i)
+    for (unsigned int i = 0; i < ids.size(); ++i)
       writeData.emplace_back(i);
 
     // Initialize
