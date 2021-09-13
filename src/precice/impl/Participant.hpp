@@ -24,7 +24,7 @@
 
 namespace precice {
 namespace impl {
-struct DataContext;
+class DataContext;
 struct MeshContext;
 struct MappingContext;
 } // namespace impl
