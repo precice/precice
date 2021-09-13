@@ -167,6 +167,19 @@ ParticipantConfiguration::ParticipantConfiguration(
                            .setDefaultValue(VALUE_FILTER_ON_SLAVES);
   tagUseMesh.addAttribute(attrGeoFilter);
 
+  auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
+                              .setDocumentation(
+                                  "If a mesh is received from another partipant (see tag <from>), it needs to be"
+                                  "decomposed at the receiving participant. In case a mapping is defined, the "
+                                  "mesh is decomposed according to the local provided mesh associated to the mapping. "
+                                  "In case no mapping has been defined (you want to access "
+                                  "the mesh and related data direct), there is no obvious way on how to decompose the "
+                                  "mesh, since no mesh needs to be provided by the participant. For this purpose, bounding "
+                                  "boxes can be defined (see API function \"setMeshAccessRegion\") and used by selecting "
+                                  "the option direct-access=\"true\".");
+
+  tagUseMesh.addAttribute(attrDirectAccess);
+
   auto attrProvide = makeXMLAttribute(ATTR_PROVIDE, false)
                          .setDocumentation(
                              "If this attribute is set to \"on\", the "
@@ -261,13 +274,20 @@ void ParticipantConfiguration::xmlTagCallback(
     Eigen::VectorXd offset(_dimensions);
     /// @todo offset currently not supported
     //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
-    const std::string &                           from         = tag.getStringAttributeValue(ATTR_FROM);
-    double                                        safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
-    partition::ReceivedPartition::GeometricFilter geoFilter    = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
+    std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
+    double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
+    partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
+    const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
+
+    if (allowDirectAccess) {
+      PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
+    }
+
     PRECICE_CHECK(safetyFactor >= 0,
                   "Participant \"{}\" uses mesh \"{}\" with safety-factor=\"{}\". "
                   "Please use a positive or zero safety-factor instead.",
                   context.name, name, safetyFactor);
+
     bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
     if (_participants.back()->getName() == from) {
       PRECICE_CHECK(provide,
@@ -286,7 +306,15 @@ void ParticipantConfiguration::xmlTagCallback(
           "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />",
           _participants.back()->getName(), name, name);
     }
-    _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter);
+
+    PRECICE_CHECK(!(allowDirectAccess && from.empty()),
+                  "Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a direct access defined. "
+                  "This combination of options is not allowed. "
+                  "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />"
+                  " or remove the direct access option.",
+                  _participants.back()->getName(), name, name);
+
+    _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter, allowDirectAccess);
   } else if (tag.getName() == TAG_WRITE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
@@ -471,7 +499,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // Set participant data for data contexts
   for (impl::DataContext &dataContext : participant->writeDataContexts()) {
     int fromMeshID = dataContext.mesh->getID();
-    PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
+
+    PRECICE_CHECK(participant->isMeshProvided(fromMeshID) || participant->isDirectAccessAllowed(fromMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
                   "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
                   participant->getName(), dataContext.mesh->getName(), dataContext.mesh->getName());

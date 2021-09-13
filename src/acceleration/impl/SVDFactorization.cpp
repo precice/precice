@@ -295,7 +295,7 @@ int SVDFactorization::rows()
   return _rows;
 }
 
-int SVDFactorization::rank()
+Rank SVDFactorization::rank()
 {
   return _cols;
 }

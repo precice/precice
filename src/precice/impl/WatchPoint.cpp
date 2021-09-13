@@ -1,10 +1,11 @@
-#include "WatchPoint.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <limits>
 #include <memory>
 #include <ostream>
 #include <utility>
+
+#include "WatchPoint.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
@@ -14,6 +15,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "precice/types.hpp"
 #include "query/Index.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -57,12 +59,10 @@ void WatchPoint::initialize()
 {
   PRECICE_TRACE();
 
-  query::Index indexTree(_mesh);
-
   if (_mesh->vertices().size() > 0) {
-    auto projection   = indexTree.findNearestProjection(_point, 4);
-    _interpolation    = std::make_unique<mapping::Polation>(projection.first);
-    _shortestDistance = projection.second;
+    auto match        = query::Index{_mesh}.findNearestProjection(_point, 4);
+    _interpolation    = std::make_unique<mapping::Polation>(match.polation);
+    _shortestDistance = match.distance;
   }
 
   if (utils::MasterSlave::isSlave()) {
@@ -74,7 +74,7 @@ void WatchPoint::initialize()
     int    closestRank           = 0;
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal  = std::numeric_limits<double>::max();
-    for (int rankSlave : utils::MasterSlave::allSlaves()) {
+    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->receive(closestDistanceLocal, rankSlave);
       if (closestDistanceLocal < closestDistanceGlobal) {
         closestDistanceGlobal = closestDistanceLocal;
@@ -82,7 +82,7 @@ void WatchPoint::initialize()
       }
     }
     _isClosest = closestRank == 0;
-    for (int rankSlave : utils::MasterSlave::allSlaves()) {
+    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       utils::MasterSlave::_communication->send(closestRank == rankSlave, rankSlave);
     }
   }

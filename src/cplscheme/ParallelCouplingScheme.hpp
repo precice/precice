@@ -9,6 +9,12 @@
 #include "utils/assertion.hpp"
 
 namespace precice {
+
+namespace testing {
+// Forward declaration to friend the boost test struct
+struct ParallelCouplingSchemeFixture;
+} // namespace testing
+
 namespace cplscheme {
 
 /**
@@ -18,6 +24,7 @@ namespace cplscheme {
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class ParallelCouplingScheme : public BiCouplingScheme {
+  friend struct testing::ParallelCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
    * @brief Constructor.

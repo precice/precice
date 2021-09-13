@@ -59,6 +59,10 @@ target_sources(testprecice
     src/precice/tests/WatchPointTest.cpp
     src/query/tests/RTreeAdapterTests.cpp
     src/query/tests/RTreeTests.cpp
+    src/testing/ParallelCouplingSchemeFixture.cpp
+    src/testing/ParallelCouplingSchemeFixture.hpp
+    src/testing/SerialCouplingSchemeFixture.cpp
+    src/testing/SerialCouplingSchemeFixture.hpp
     src/testing/TestContext.cpp
     src/testing/TestContext.hpp
     src/testing/Testing.cpp
@@ -70,6 +74,7 @@ target_sources(testprecice
     src/utils/tests/DimensionsTest.cpp
     src/utils/tests/EigenHelperFunctionsTest.cpp
     src/utils/tests/ManageUniqueIDsTest.cpp
+    src/utils/tests/MasterSlaveTest.cpp
     src/utils/tests/MultiLockTest.cpp
     src/utils/tests/ParallelTest.cpp
     src/utils/tests/PointerVectorTest.cpp

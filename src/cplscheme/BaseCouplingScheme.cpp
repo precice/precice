@@ -1,10 +1,11 @@
-#include "BaseCouplingScheme.hpp"
 #include <Eigen/Core>
 #include <cmath>
 #include <cstddef>
 #include <limits>
 #include <sstream>
 #include <utility>
+
+#include "BaseCouplingScheme.hpp"
 #include "acceleration/Acceleration.hpp"
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingData.hpp"
@@ -16,6 +17,7 @@
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "precice/types.hpp"
 #include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -75,10 +77,8 @@ void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const DataMap::value_type &pair : sendData) {
-    int size = pair.second->values().size();
-
     // Data is actually only send if size>0, which is checked in the derived classes implementaiton
-    m2n->send(pair.second->values().data(), size, pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     sentDataIDs.push_back(pair.first);
   }
@@ -92,10 +92,8 @@ void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
   for (DataMap::value_type &pair : receiveData) {
-    int size = pair.second->values().size();
-
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
-    m2n->receive(pair.second->values().data(), size, pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     receivedDataIDs.push_back(pair.first);
   }
@@ -131,7 +129,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
                     "an implicit coupling scheme.");
       // setup convergence measures
       for (ConvergenceMeasureContext &convergenceMeasure : _convergenceMeasures) {
-        int dataID = convergenceMeasure.couplingData->getDataID();
+        DataID dataID = convergenceMeasure.couplingData->getDataID();
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
       // reserve memory and initialize data with zero
@@ -640,7 +638,7 @@ bool BaseCouplingScheme::doImplicitStep()
   return convergence;
 }
 
-void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, int dataID)
+void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, DataID dataID)
 {
   PRECICE_TRACE(dataID);
   DataMap::iterator iter = _allData.find(dataID);
