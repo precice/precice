@@ -590,6 +590,152 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization)
   }
 }
 
+/**
+ * @brief Tests the reading and writing of data multiple times within one timestep.
+ *
+ * The first solver performs multiple consistent readings of data sent by the second solver.
+ * The second solver performs multiple sendings, of which the last is expected by the first solver.
+ */
+BOOST_AUTO_TEST_CASE(testExplicitWithDataMultipleReadWrite)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  using Eigen::Vector3d;
+
+  SolverInterface cplInterface(context.name, _pathToTests + "explicit-data-multiple-read-write.xml", 0, 1);
+  if (context.isNamed("SolverOne")) {
+    int             meshOneID = cplInterface.getMeshID("MeshOne");
+    int             size      = 1;
+    Eigen::VectorXi vertexIDs(size);
+    Eigen::VectorXd readDataA(size * 3);
+    Eigen::VectorXd readDataB(size);
+    Eigen::VectorXd readPositions(size * 3);
+    vertexIDs[0] = cplInterface.setMeshVertex(meshOneID, readPositions.data());
+
+    double maxDt   = cplInterface.initialize();
+    int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
+    int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
+    cplInterface.initializeData();
+
+    // Scalar Data
+    cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), readDataB.data());
+    // expected data value received
+    BOOST_TEST(3.0 == readDataB[0]);
+    // change value at read destination
+    readDataB[0] = -0.2;
+    BOOST_TEST(-0.2 == readDataB[0]);
+    cplInterface.readScalarData(dataBID, vertexIDs[0], readDataB[0]);
+    // expected data value received
+    BOOST_TEST(3.0 == readDataB[0]);
+
+    // Vector Data
+    cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), readDataA.data());
+    // expected data value received
+    BOOST_TEST(Vector3d(3.1, 3.2, 3.3) == readDataA);
+    // change value at read destination
+    readDataA[0] = -0.2;
+    readDataA[1] = -0.2;
+    readDataA[2] = -0.2;
+    BOOST_TEST(Vector3d(-0.2, -0.2, -0.2) == readDataA);
+    cplInterface.readVectorData(dataAID, vertexIDs[0], readDataA.data());
+    // expected data value received
+    BOOST_TEST(Vector3d(3.1, 3.2, 3.3) == readDataA);
+
+    while (cplInterface.isCouplingOngoing()) {
+      maxDt = cplInterface.advance(maxDt);
+
+      // Scalar Data
+      cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), readDataB.data());
+      // expected data value received
+      BOOST_TEST(5.0 == readDataB[0]);
+      // change value at read destination
+      readDataB[0] = -0.4;
+      BOOST_TEST(-0.4 == readDataB[0]);
+      cplInterface.readScalarData(dataBID, 0, readDataB[0]);
+      // expected data value received
+      BOOST_TEST(5.0 == readDataB[0]);
+
+      // Vector Data
+      cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), readDataA.data());
+      // expected data value received
+      BOOST_TEST(Vector3d(5.1, 5.2, 5.3) == readDataA);
+      // change value at read destination
+      readDataA[0] = -0.4;
+      readDataA[1] = -0.4;
+      readDataA[2] = -0.4;
+      BOOST_TEST(Vector3d(-0.4, -0.4, -0.4) == readDataA);
+      cplInterface.readVectorData(dataAID, vertexIDs[0], readDataA.data());
+      // expected data value received
+      BOOST_TEST(Vector3d(5.1, 5.2, 5.3) == readDataA);
+    }
+    cplInterface.finalize();
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    int             meshTwoID = cplInterface.getMeshID("MeshTwo");
+    int             size      = 1;
+    Eigen::VectorXi vertexIDs(size);
+    Eigen::VectorXd writeDataA(size * 3);
+    Eigen::VectorXd writeDataB(size);
+    Eigen::VectorXd writePositions(size * 3);
+    vertexIDs[0] = cplInterface.setMeshVertex(meshTwoID, writePositions.data());
+
+    double maxDt   = cplInterface.initialize();
+    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
+    int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+
+    // Scalar Data
+    writeDataB[0] = -0.1;
+    BOOST_TEST(-0.1 == writeDataB[0]);
+    cplInterface.writeBlockScalarData(dataBID, 1, vertexIDs.data(), writeDataB.data());
+    // expected data value sent, overwriting previous one
+    writeDataB[0] = 3.0;
+    BOOST_TEST(3.0 == writeDataB[0]);
+    cplInterface.writeScalarData(dataBID, vertexIDs[0], writeDataB[0]);
+
+    // Vector Data
+    writeDataA[0] = -0.1;
+    writeDataA[1] = -0.1;
+    writeDataA[2] = -0.1;
+    BOOST_TEST(Vector3d(-0.1, -0.1, -0.1) == writeDataA);
+    cplInterface.writeBlockVectorData(dataAID, 1, vertexIDs.data(), writeDataA.data());
+    // expected data value sent, overwriting previous one
+    writeDataA[0] = 3.1;
+    writeDataA[1] = 3.2;
+    writeDataA[2] = 3.3;
+    BOOST_TEST(Vector3d(3.1, 3.2, 3.3) == writeDataA);
+    cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
+
+    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
+    cplInterface.initializeData();
+    while (cplInterface.isCouplingOngoing()) {
+      // Scalar Data
+      writeDataB[0] = -0.7;
+      BOOST_TEST(-0.7 == writeDataB[0]);
+      cplInterface.writeBlockScalarData(dataBID, 1, vertexIDs.data(), writeDataB.data());
+      // expected data value sent, overwriting previous one
+      writeDataB[0] = 5.0;
+      BOOST_TEST(5.0 == writeDataB[0]);
+      cplInterface.writeScalarData(dataBID, vertexIDs[0], writeDataB[0]);
+
+      // Vector Data
+      writeDataA[0] = -0.7;
+      writeDataA[1] = -0.7;
+      writeDataA[2] = -0.7;
+      BOOST_TEST(Vector3d(-0.7, -0.7, -0.7) == writeDataA);
+      cplInterface.writeBlockVectorData(dataAID, 1, vertexIDs.data(), writeDataA.data());
+      // expected data value sent, overwriting previous one
+      writeDataA[0] = 5.1;
+      writeDataA[1] = 5.2;
+      writeDataA[2] = 5.3;
+      BOOST_TEST(Vector3d(5.1, 5.2, 5.3) == writeDataA);
+      cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
+
+      maxDt = cplInterface.advance(maxDt);
+    }
+    cplInterface.finalize();
+  }
+}
+
 /// One solver uses block set/get/read/write methods.
 /// @todo This test uses resetmesh. How did this ever work?
 #if 0
