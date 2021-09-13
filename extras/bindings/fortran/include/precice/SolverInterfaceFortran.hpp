@@ -345,6 +345,21 @@ void precicef_get_data_id_(
 
 /**
  * Fortran syntax:
+ * precicef_has_data(
+ *   INTEGER   meshID
+ *   INTEGER   required)
+ *
+ * IN:  meshID
+ * OUT: required(1:true, 0:false)
+ *
+ * @copydoc precice::SolverInterface::isMeshConnectivityRequired()
+ */
+void precicef_isMeshConnectivityRequired(
+    const int *meshID,
+    int *      required);
+
+/**
+ * Fortran syntax:
  * precicef_set_vertex(
  *   INTEGER          meshID,
  *   DOUBLE PRECISION position(dim),

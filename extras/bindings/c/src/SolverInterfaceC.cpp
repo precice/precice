@@ -189,6 +189,12 @@ int precicec_getDataID(const char *dataName, int meshID)
   return impl->getDataID(stringDataName, meshID);
 }
 
+int precicec_isMeshConnectivityRequired(int meshID)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  return impl->isMeshConnectivityRequired(meshID);
+}
+
 int precicec_setMeshVertex(
     int           meshID,
     const double *position)

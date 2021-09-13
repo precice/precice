@@ -274,6 +274,14 @@ void precicef_get_data_id_(
   *dataID = impl->getDataID(stringDataName, *meshID);
 }
 
+void precicef_isMeshConnectivityRequired(
+    const int *meshID,
+    int *      required)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  *required = impl->isMeshConnectivityRequired(*meshID);
+}
+
 void precicef_set_vertex_(
     const int *   meshID,
     const double *position,
