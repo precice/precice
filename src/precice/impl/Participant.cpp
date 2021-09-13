@@ -225,7 +225,7 @@ int Participant::getUsedDataID(const std::string &dataName, MeshID meshID) const
 std::string Participant::getDataName(DataID dataID) const
 {
   for (const MeshContext *mcptr : _meshContexts) {
-    if (mcptr) {
+    if (!mcptr) {
       continue;
     }
     for (const auto &dptr : mcptr->mesh->data()) {
