@@ -102,6 +102,11 @@ std::set<int> SolverInterface::getMeshIDs() const
   return _impl->getMeshIDs();
 }
 
+bool SolverInterface::isMeshConnectivityRequired(int meshID) const
+{
+  return _impl->isMeshConnectivityRequired(meshID);
+}
+
 bool SolverInterface::hasData(
     const std::string &dataName, int meshID) const
 {
