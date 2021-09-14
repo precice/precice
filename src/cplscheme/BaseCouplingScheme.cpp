@@ -509,7 +509,7 @@ bool BaseCouplingScheme::measureConvergence()
       oneSuffices = true;
     }
 
-    PRECICE_INFO(convMeasure.measure->printState());
+    PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
   }
 
   if (allConverged) {
