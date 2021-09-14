@@ -32,12 +32,12 @@ void Waveform::store(const Eigen::VectorXd &data)
   this->_timeWindows.col(columnID) = data;
 }
 
-Eigen::VectorXd Waveform::sample(double dt, int timeWindows, int order)
+Eigen::VectorXd Waveform::sample(double normalizedDt, int timeWindows, int order)
 {
-  PRECICE_ASSERT(dt >= 0, "Sampling outside of valid range!");
-  PRECICE_ASSERT(dt <= 1, "Sampling outside of valid range!");
+  PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
+  PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
   // @ todo: Add more logic here? Set order in constructor; keep track of time windows inside class. See https://github.com/precice/precice/pull/1004/files?file-filters%5B%5D=.cmake&file-filters%5B%5D=.hpp#r642223767.
-  return this->interpolateData(order, timeWindows, dt);
+  return this->interpolateData(order, timeWindows, normalizedDt);
 }
 
 void Waveform::moveToNextWindow(int timeWindows, int order)
@@ -85,8 +85,10 @@ Eigen::VectorXd Waveform::extrapolateData(int order, int timeWindows)
   return extrapolatedValue;
 }
 
-Eigen::VectorXd Waveform::interpolateData(int order, int timeWindows, double dt)
+Eigen::VectorXd Waveform::interpolateData(int order, int timeWindows, double normalizedDt)
 {
+  PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
+  PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
   Eigen::VectorXd interpolatedValue;
   if (order == 0) {
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
@@ -95,14 +97,14 @@ Eigen::VectorXd Waveform::interpolateData(int order, int timeWindows, double dt)
   } else if ((order == 1) || (timeWindows < 2 && order > 1)) {
     // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
     PRECICE_ASSERT(this->numberOfSamples() > 1);
-    interpolatedValue = this->_timeWindows.col(0) * dt;        // = dt * x^t
-    interpolatedValue += this->_timeWindows.col(1) * (1 - dt); // = dt * x^t + (1-dt) * x^(t-1)
+    interpolatedValue = this->_timeWindows.col(0) * normalizedDt;        // = dt * x^t
+    interpolatedValue += this->_timeWindows.col(1) * (1 - normalizedDt); // = dt * x^t + (1-dt) * x^(t-1)
   } else if (order == 2) {
     // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
     PRECICE_ASSERT(this->numberOfSamples() > 2);
-    interpolatedValue = this->_timeWindows.col(0) * (dt + 1) * dt * 0.5;
-    interpolatedValue += this->_timeWindows.col(1) * (1 - dt * dt);
-    interpolatedValue += this->_timeWindows.col(2) * (dt - 1) * dt * 0.5;
+    interpolatedValue = this->_timeWindows.col(0) * (normalizedDt + 1) * normalizedDt * 0.5;
+    interpolatedValue += this->_timeWindows.col(1) * (1 - normalizedDt * normalizedDt);
+    interpolatedValue += this->_timeWindows.col(2) * (normalizedDt - 1) * normalizedDt * 0.5;
   } else {
     PRECICE_ASSERT(false, "Interpolation order is invalid.");
   }

@@ -445,14 +445,14 @@ public:
    * @param[in] toDataID     ID of the data to be written.
    * @param[in] size         Number of valueIndices, and number of values.
    * @param[in] valueIndices Indices (from setReadPosition()) of data values.
-   * @param[in] dt           Point in time where data is sampled.
+   * @param[in] timeStepDt   Point in time where data is sampled relative to the beginning of the current time step
    * @param[out] values      Read data value.
    */
   void readBlockVectorData(
       int        toDataID,
       int        size,
       const int *valueIndices,
-      double     dt,
+      double     timeStepDt,
       double *   values) const;
 
   /**
@@ -472,13 +472,13 @@ public:
    *
    * @param[in] toDataID   ID of the data to be read, e.g. 1 = forces
    * @param[in] valueIndex Index (from setReadPosition()) of data value.
-   * @param[in] dt         Point in time where data is sampled.
+   * @param[in] timeStepDt Point in time where data is sampled relative to the beginning of the current time step
    * @param[out] value     Read data value
    */
   void readVectorData(
       int     toDataID,
       int     valueIndex,
-      double  dt,
+      double  timeStepDt,
       double *value) const;
 
   /**
@@ -501,14 +501,14 @@ public:
    * @param[in] toDataID     ID of the data to be written.
    * @param[in] size         Number of valueIndices, and number of values.
    * @param[in] valueIndices Indices (from setReadPosition()) of data values.
-   * @param[in] dt           Point in time where data is sampled.
+   * @param[in] timeStepDt   Point in time where data is sampled relative to the beginning of the current time step
    * @param[out] values      Read data value.
    */
   void readBlockScalarData(
       int        toDataID,
       int        size,
       const int *valueIndices,
-      double     dt,
+      double     timeStepDt,
       double *   values) const;
 
   /**
@@ -528,13 +528,13 @@ public:
    *
    * @param[in] toDataID     ID of the data to be read, e.g. 2 = temperatures
    * @param[in] valueIndex   Index (from setReadPosition()) of data value.
-   * @param[in] dt           Point in time where data is sampled
+   * @param[in] timeStepDt   Point in time where data is sampled relative to the beginning of the current time step
    * @param[out] value       Read data value
    */
   void readScalarData(
       int     toDataID,
       int     valueIndex,
-      double  dt,
+      double  timeStepDt,
       double &value) const;
 
   /**

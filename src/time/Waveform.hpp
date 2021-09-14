@@ -32,11 +32,11 @@ public:
 
   /**
    * @brief sample Waveform
-   * @param dt time where the sampling inside the window happens. dt = 0 refers to the beginning of the window and dt = 1 to the end.
+   * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
    * @param timeWindows number of past samples that are valid and may be used for interpolation. Usually number of past time windows.
    * @param order interpolation order being used.
    */
-  Eigen::VectorXd sample(double dt, int timeWindows, int order = 0);
+  Eigen::VectorXd sample(double normalizedDt, int timeWindows, int order = 0);
 
   /**
    * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)

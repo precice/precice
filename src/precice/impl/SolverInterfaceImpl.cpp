@@ -1163,19 +1163,22 @@ void SolverInterfaceImpl::readBlockVectorData(
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
-  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
-  return readBlockVectorData(dataID, size, valueIndices, dt, values);
+  double timeStepDt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  return readBlockVectorData(dataID, size, valueIndices, timeStepDt, values);
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double     dt,
+    double     timeStepDt,
     double *   values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockVectorData(...) cannot sample data outside of current time window.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
@@ -1212,18 +1215,21 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
-  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
-  return readVectorData(dataID, valueIndex, dt, value);
+  double timeStepDt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  return readVectorData(dataID, valueIndex, timeStepDt, value);
 }
 
 void SolverInterfaceImpl::readVectorData(
     int     dataID,
     int     valueIndex,
-    double  dt,
+    double  timeStepDt,
     double *value) const
 {
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readVectorData(...) cannot sample data outside of current time window.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
@@ -1257,19 +1263,22 @@ void SolverInterfaceImpl::readBlockScalarData(
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
-  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
-  return readBlockScalarData(dataID, size, valueIndices, dt, values);
+  double timeStepDt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  return readBlockScalarData(dataID, size, valueIndices, timeStepDt, values);
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double     dt,
+    double     timeStepDt,
     double *   values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
+  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockScalarData(...) cannot sample data outside of current time window.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
@@ -1303,20 +1312,21 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
-  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
-  return readScalarData(dataID, valueIndex, dt, value);
+  double timeStepDt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  return readScalarData(dataID, valueIndex, timeStepDt, value);
 }
 
 void SolverInterfaceImpl::readScalarData(
     int     dataID,
     int     valueIndex,
-    double  dt,
+    double  timeStepDt,
     double &value) const
 {
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
-  PRECICE_CHECK(dt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
-  PRECICE_ASSERT(dt == _couplingScheme->getThisTimeWindowRemainder()); // @todo only sampling at end of window currently works.
+  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
