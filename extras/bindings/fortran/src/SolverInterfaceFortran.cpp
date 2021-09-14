@@ -279,7 +279,11 @@ void precicef_is_mesh_connectivity_required_(
     int *      required)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  *required = impl->isMeshConnectivityRequired(*meshID);
+  if (impl->isMeshConnectivityRequired(*meshID)) {
+    *required = 1;
+  } else {
+    *required = 0;
+  }
 }
 
 void precicef_set_vertex_(
