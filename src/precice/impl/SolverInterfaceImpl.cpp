@@ -1236,7 +1236,7 @@ void SolverInterfaceImpl::readBlockVectorData(
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
   const auto normalizedDt   = timeWindowDt / _couplingScheme->getTimeWindowSize();               //@todo might be moved into coupling scheme
-  const auto valuesInternal = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows()); //@todo buggy for time window size != 1
+  const auto valuesInternal = context.sampleAt(normalizedDt, _couplingScheme->getTimeWindows());
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1288,7 +1288,7 @@ void SolverInterfaceImpl::readVectorData(
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
   const auto normalizedDt = timeWindowDt / _couplingScheme->getTimeWindowSize();               //@todo might be moved into coupling scheme
-  const auto values       = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows()); //@todo buggy for time window size != 1
+  const auto values       = context.sampleAt(normalizedDt, _couplingScheme->getTimeWindows());
   const auto vertexCount  = values.size() / data.getDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
@@ -1340,7 +1340,7 @@ void SolverInterfaceImpl::readBlockScalarData(
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 data.getName());
   const auto normalizedDt   = timeWindowDt / _couplingScheme->getTimeWindowSize();               //@todo might be moved into coupling scheme
-  const auto valuesInternal = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows()); //@todo buggy for time window size != 1
+  const auto valuesInternal = context.sampleAt(normalizedDt, _couplingScheme->getTimeWindows());
   const auto vertexCount    = valuesInternal.size();
 
   for (int i = 0; i < size; i++) {
@@ -1390,7 +1390,7 @@ void SolverInterfaceImpl::readScalarData(
                 "Use readVectorData or change the data type for \"{}\" to scalar.",
                 data.getName());
   const auto normalizedDt = timeWindowDt / _couplingScheme->getTimeWindowSize();               //@todo might be moved into coupling scheme
-  const auto values       = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows()); //@todo buggy for time window size != 1
+  const auto values       = context.sampleAt(normalizedDt, _couplingScheme->getTimeWindows());
   const auto vertexCount  = values.size();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
