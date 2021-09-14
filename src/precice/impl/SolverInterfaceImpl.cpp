@@ -1206,22 +1206,22 @@ void SolverInterfaceImpl::readBlockVectorData(
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
-  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
-  return readBlockVectorData(dataID, size, valueIndices, dt, values);
+  double timeStepDt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  return readBlockVectorData(dataID, size, valueIndices, timeStepDt, values);
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double     dt,
+    double     timeStepDt,
     double *   values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
-  PRECICE_CHECK(dt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
   double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double timeWindowDt  = timeStepStart + dt;
+  double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
@@ -1235,7 +1235,8 @@ void SolverInterfaceImpl::readBlockVectorData(
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
-  const auto valuesInternal = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows());
+  const auto normalizedDt   = timeWindowDt / _couplingScheme->getTimeWindowSize();               //@todo might be moved into coupling scheme
+  const auto valuesInternal = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows()); //@todo buggy for time window size != 1
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1259,21 +1260,21 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
-  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
-  return readVectorData(dataID, valueIndex, dt, value);
+  double timeStepDt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  return readVectorData(dataID, valueIndex, timeStepDt, value);
 }
 
 void SolverInterfaceImpl::readVectorData(
     int     dataID,
     int     valueIndex,
-    double  dt,
+    double  timeStepDt,
     double *value) const
 {
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
-  PRECICE_CHECK(dt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
   double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double timeWindowDt  = timeStepStart + dt;
+  double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
   DataContext &context = _accessor->dataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
@@ -1286,8 +1287,9 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_CHECK(data.getDimensions() == _dimensions,
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
-  const auto values      = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows());
-  const auto vertexCount = values.size() / data.getDimensions();
+  const auto normalizedDt = timeWindowDt / _couplingScheme->getTimeWindowSize();               //@todo might be moved into coupling scheme
+  const auto values       = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows()); //@todo buggy for time window size != 1
+  const auto vertexCount  = values.size() / data.getDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1308,22 +1310,22 @@ void SolverInterfaceImpl::readBlockScalarData(
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
-  double dt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
-  return readBlockScalarData(dataID, size, valueIndices, dt, values);
+  double timeStepDt = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  return readBlockScalarData(dataID, size, valueIndices, timeStepDt, values);
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double     dt,
+    double     timeStepDt,
     double *   values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
-  PRECICE_CHECK(dt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
   double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
-  double timeWindowDt  = timeStepStart + dt;
+  double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
@@ -1337,7 +1339,8 @@ void SolverInterfaceImpl::readBlockScalarData(
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 data.getName());
-  const auto valuesInternal = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows());
+  const auto normalizedDt   = timeWindowDt / _couplingScheme->getTimeWindowSize();               //@todo might be moved into coupling scheme
+  const auto valuesInternal = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows()); //@todo buggy for time window size != 1
   const auto vertexCount    = valuesInternal.size();
 
   for (int i = 0; i < size; i++) {
@@ -1386,8 +1389,9 @@ void SolverInterfaceImpl::readScalarData(
                 "You cannot call readScalarData on the vector data type \"{}\". "
                 "Use readVectorData or change the data type for \"{}\" to scalar.",
                 data.getName());
-  const auto values      = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows());
-  const auto vertexCount = values.size();
+  const auto normalizedDt = timeWindowDt / _couplingScheme->getTimeWindowSize();               //@todo might be moved into coupling scheme
+  const auto values       = context.sampleAt(timeWindowDt, _couplingScheme->getTimeWindows()); //@todo buggy for time window size != 1
+  const auto vertexCount  = values.size();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
