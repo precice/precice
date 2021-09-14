@@ -19,6 +19,7 @@ Waveform::Waveform(
      */
   int initializedNumberOfSamples = std::max({2, extrapolationOrder + 1});
   _timeWindows                   = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
+  _numberOfValidSamples          = 1; // we assume that upon creation the first sample is always valid.
   PRECICE_ASSERT(numberOfSamples() == initializedNumberOfSamples);
   PRECICE_ASSERT(numberOfData() == initializedNumberOfData);
 }
@@ -31,15 +32,13 @@ void Waveform::store(const Eigen::VectorXd &data)
   this->_timeWindows.col(columnID) = data;
 }
 
-void Waveform::moveToNextWindow(int timeWindows, int order)
+void Waveform::moveToNextWindow(int order)
 {
-  auto initialGuess = extrapolateData(order, timeWindows);
+  if (_numberOfValidSamples < numberOfSamples()) {
+    _numberOfValidSamples++;
+  }
+  auto initialGuess = extrapolateData(order);
   utils::shiftSetFirst(this->_timeWindows, initialGuess);
-}
-
-const Eigen::MatrixXd &Waveform::lastTimeWindows()
-{
-  return _timeWindows;
 }
 
 int Waveform::numberOfSamples()
@@ -47,18 +46,28 @@ int Waveform::numberOfSamples()
   return _timeWindows.cols();
 }
 
+int Waveform::numberOfValidSamples()
+{
+  return _numberOfValidSamples;
+}
+
 int Waveform::numberOfData()
 {
   return _timeWindows.rows();
 }
 
-Eigen::VectorXd Waveform::extrapolateData(int order, int timeWindows)
+const Eigen::MatrixXd &Waveform::lastTimeWindows()
+{
+  return _timeWindows;
+}
+
+Eigen::VectorXd Waveform::extrapolateData(int order)
 {
   Eigen::VectorXd extrapolatedValue;
-  if ((order == 0) || (timeWindows < 2 && order > 0)) {
+  if ((order == 0) || (_numberOfValidSamples < 2 && order > 0)) {
     PRECICE_ASSERT(this->numberOfSamples() > 0);
     extrapolatedValue = this->_timeWindows.col(0);
-  } else if ((order == 1) || (timeWindows < 3 && order > 1)) { //timesteps is increased before extrapolate is called
+  } else if ((order == 1) || (_numberOfValidSamples < 3 && order > 1)) { //timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
     PRECICE_ASSERT(this->numberOfSamples() > 1);
     extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
