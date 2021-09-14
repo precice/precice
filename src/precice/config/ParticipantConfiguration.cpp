@@ -515,7 +515,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   for (impl::DataContext &dataContext : participant->readDataContexts()) {
     int toMeshID = dataContext.getMeshID();
-    PRECICE_CHECK(participant->isMeshProvided(toMeshID),
+    PRECICE_CHECK(participant->isMeshProvided(toMeshID) || participant->isDirectAccessAllowed(toMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
                   "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
                   participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
