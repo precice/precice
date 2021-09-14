@@ -1219,7 +1219,7 @@ void SolverInterfaceImpl::readBlockVectorData(
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
-  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockVectorData(...) cannot sample data outside of current time window.");
   double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
   double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
@@ -1272,7 +1272,7 @@ void SolverInterfaceImpl::readVectorData(
 {
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
-  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readVectorData(...) cannot sample data outside of current time window.");
   double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
   double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
@@ -1323,7 +1323,7 @@ void SolverInterfaceImpl::readBlockScalarData(
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
-  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(timeStepDt <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockScalarData(...) cannot sample data outside of current time window.");
   double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
   double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
