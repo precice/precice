@@ -195,7 +195,7 @@ int precicec_isMeshConnectivityRequired(int meshID)
   if (impl->isMeshConnectivityRequired(meshID)) {
     return 1;
   }
-  return 0;  
+  return 0;
 }
 
 int precicec_setMeshVertex(
