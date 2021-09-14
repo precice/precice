@@ -435,11 +435,11 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
     readFunction  = dataOneFunction;
   }
 
-  int n_vertices = 2;
+  int nVertices = 2;
 
-  std::vector<VertexID> vertexIDs(n_vertices, 0);
-  std::vector<double>   writeData(n_vertices, 0);
-  std::vector<double>   readData(n_vertices, 0);
+  std::vector<VertexID> vertexIDs(nVertices, 0);
+  std::vector<double>   writeData(nVertices, 0);
+  std::vector<double>   readData(nVertices, 0);
 
   vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
   vertexIDs[1] = precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
@@ -453,7 +453,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
   double time      = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
-    for (int i = 0; i < n_vertices; i++) {
+    for (int i = 0; i < nVertices; i++) {
       writeData[i] = writeFunction(time, i);
       precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
     }
@@ -470,8 +470,8 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
       } else {
         readTime = time + windowDt;
       }
-      BOOST_TEST(readData.size() == n_vertices);
-      for (int i = 0; i < n_vertices; i++) {
+      BOOST_TEST(readData.size() == nVertices);
+      for (int i = 0; i < nVertices; i++) {
         precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
         BOOST_TEST(readData[i] == readFunction(readTime, i));
         // @TODO This should work as soon as waveform relaxation is properly implemented.
@@ -482,12 +482,12 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
-    for (int i = 0; i < n_vertices; i++) {
+    for (int i = 0; i < nVertices; i++) {
       writeData[i] = writeFunction(time, i);
     }
 
-    BOOST_TEST(writeData.size() == n_vertices);
-    for (int i = 0; i < n_vertices; i++) {
+    BOOST_TEST(writeData.size() == nVertices);
+    for (int i = 0; i < nVertices; i++) {
       writeData[i] = writeFunction(time, i);
       precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
     }
