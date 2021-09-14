@@ -45,8 +45,8 @@ void Waveform::moveToNextWindow(int order)
 {
   // @ todo: Add more logic here? Set order in constructor; keep track of time windows inside class. See https://github.com/precice/precice/pull/1004/files?file-filters%5B%5D=.cmake&file-filters%5B%5D=.hpp#r642223767.
   auto initialGuess = extrapolateData(order);
-  utils::shiftSetFirst(this->_timeWindows, initialGuess);  // archive old samples and store initial guess
-  if (_numberOfValidSamples < numberOfSamples()) {  // together with the initial guess the number of valid samples increases
+  utils::shiftSetFirst(this->_timeWindows, initialGuess); // archive old samples and store initial guess
+  if (_numberOfValidSamples < numberOfSamples()) {        // together with the initial guess the number of valid samples increases
     _numberOfValidSamples++;
   }
 }
