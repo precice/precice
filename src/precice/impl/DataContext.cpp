@@ -237,7 +237,7 @@ int DataContext::numberOfSamplesInWaveform()
   }
 }
 
-Eigen::VectorXd DataContext::sampleAt(double normalizedDt, int timeWindows)
+Eigen::VectorXd DataContext::sampleAt(double normalizedDt)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_providedWaveform->numberOfData() == _providedData->values().size(),
@@ -246,7 +246,7 @@ Eigen::VectorXd DataContext::sampleAt(double normalizedDt, int timeWindows)
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
   int order = 1;
-  return _providedWaveform->sample(normalizedDt, timeWindows, order);
+  return _providedWaveform->sample(normalizedDt, order);
 }
 
 void DataContext::initializeWaveform(mesh::PtrData initializingData, time::PtrWaveform initializedWaveform)

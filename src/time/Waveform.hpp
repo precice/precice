@@ -39,17 +39,15 @@ public:
 
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
-   * @param timeWindows number of samples that are valid and may be used for extrapolation. Usually number of past time windows.
    */
-  void moveToNextWindow(int timeWindows, int order = 0);
+  void moveToNextWindow(int order = 0);
 
   /**
    * @brief sample Waveform
    * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
-   * @param timeWindows number of past samples that are valid and may be used for interpolation. Usually number of past time windows.
    * @param order interpolation order being used.
    */
-  Eigen::VectorXd sample(double normalizedDt, int timeWindows, int order = 0);
+  Eigen::VectorXd sample(double normalizedDt, int order = 0);
 
   /**
    * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)
@@ -63,6 +61,11 @@ public:
   int numberOfSamples();
 
   /**
+   * @brief returns number of valid samples in time stored by this waveform
+   */
+  int numberOfValidSamples();
+
+  /**
    * @brief returns number of data per sample in time stored by this waveform
    */
   int numberOfData();
@@ -70,6 +73,9 @@ public:
 private:
   /// Data values of time windows.
   Eigen::MatrixXd _timeWindows;
+
+  /// number of valid samples in _timeWindows
+  int _numberOfValidSamples;
 
   mutable logging::Logger _log{"time::Waveform"};
 
@@ -80,18 +86,16 @@ private:
    * If order two is required, but only two samples are available, the extrapolation order is automatically reduced to one.
    * 
    * @param order Order of the extrapolation scheme to be used.
-   * @param timeWindows number of valid samples.
    */
-  Eigen::VectorXd extrapolateData(int order, int timeWindows);
+  Eigen::VectorXd extrapolateData(int order);
 
   /**
    * @brief Interpolates data inside current time time window using an interpolation scheme of given order.
    *
    * @param order Order of the interpolation scheme to be used.
-   * @param timeWindows number of valid samples.
-   * @param dt time where the sampling inside the window happens. dt = 0 refers to the beginning of the window and dt = 1 to the end.
+   * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
    */
-  Eigen::VectorXd interpolateData(int order, int timeWindows, double dt);
+  Eigen::VectorXd interpolateData(int order, double normalizedDt);
 };
 
 } // namespace time

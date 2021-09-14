@@ -20,6 +20,7 @@ Waveform::Waveform(
      */
   int initializedNumberOfSamples = std::max({2, extrapolationOrder + 1, interpolationOrder + 1});
   _timeWindows                   = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
+  _numberOfValidSamples          = 1; // we assume that upon creation the first sample is always valid.
   PRECICE_ASSERT(numberOfSamples() == initializedNumberOfSamples);
   PRECICE_ASSERT(numberOfData() == initializedNumberOfData);
 }
@@ -42,24 +43,32 @@ void Waveform::storeAt(const Eigen::VectorXd data, int columnID)
   this->_timeWindows.col(columnID) = data;
 }
 
-Eigen::VectorXd Waveform::sample(double normalizedDt, int timeWindows, int order)
+Eigen::VectorXd Waveform::sample(double normalizedDt, int order)
 {
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
   // @ todo: Add more logic here? Set order in constructor; keep track of time windows inside class. See https://github.com/precice/precice/pull/1004/files?file-filters%5B%5D=.cmake&file-filters%5B%5D=.hpp#r642223767.
-  return this->interpolateData(order, timeWindows, normalizedDt);
+  return this->interpolateData(order, normalizedDt);
 }
 
-void Waveform::moveToNextWindow(int timeWindows, int order)
+void Waveform::moveToNextWindow(int order)
 {
   // @ todo: Add more logic here? Set order in constructor; keep track of time windows inside class. See https://github.com/precice/precice/pull/1004/files?file-filters%5B%5D=.cmake&file-filters%5B%5D=.hpp#r642223767.
-  auto initialGuess = extrapolateData(order, timeWindows);
+  if (_numberOfValidSamples < numberOfSamples()) {
+    _numberOfValidSamples++;
+  }
+  auto initialGuess = extrapolateData(order);
   utils::shiftSetFirst(this->_timeWindows, initialGuess);
 }
 
 int Waveform::numberOfSamples()
 {
   return _timeWindows.cols();
+}
+
+int Waveform::numberOfValidSamples()
+{
+  return _numberOfValidSamples;
 }
 
 int Waveform::numberOfData()
@@ -72,13 +81,13 @@ const Eigen::MatrixXd &Waveform::lastTimeWindows()
   return _timeWindows;
 }
 
-Eigen::VectorXd Waveform::extrapolateData(int order, int timeWindows)
+Eigen::VectorXd Waveform::extrapolateData(int order)
 {
   Eigen::VectorXd extrapolatedValue;
-  if ((order == 0) || (timeWindows < 2 && order > 0)) {
+  if ((order == 0) || (_numberOfValidSamples < 2 && order > 0)) {
     PRECICE_ASSERT(this->numberOfSamples() > 0);
     extrapolatedValue = this->_timeWindows.col(0);
-  } else if ((order == 1) || (timeWindows < 3 && order > 1)) { //timesteps is increased before extrapolate is called
+  } else if ((order == 1) || (_numberOfValidSamples < 3 && order > 1)) { //timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
     PRECICE_ASSERT(this->numberOfSamples() > 1);
     extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
@@ -95,16 +104,16 @@ Eigen::VectorXd Waveform::extrapolateData(int order, int timeWindows)
   return extrapolatedValue;
 }
 
-Eigen::VectorXd Waveform::interpolateData(int order, int timeWindows, double normalizedDt)
+Eigen::VectorXd Waveform::interpolateData(int order, double normalizedDt)
 {
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
   Eigen::VectorXd interpolatedValue;
-  if ((order == 0) || (timeWindows < 2 && order > 0)) {
+  if ((order == 0) || (_numberOfValidSamples < 2 && order > 0)) {
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
     PRECICE_ASSERT(this->numberOfSamples() > 0);
     interpolatedValue = this->_timeWindows.col(0);
-  } else if ((order == 1) || (timeWindows < 3 && order > 1)) {
+  } else if ((order == 1) || (_numberOfValidSamples < 3 && order > 1)) {
     // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
     PRECICE_ASSERT(this->numberOfSamples() > 1);
     interpolatedValue = this->_timeWindows.col(0) * normalizedDt;        // = dt * x^t
