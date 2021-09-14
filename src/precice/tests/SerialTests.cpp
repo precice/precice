@@ -1044,7 +1044,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     // Allocate data to read
     std::vector<double> readData(ids.size(), -10);
     std::vector<double> writeData;
-    for (int i = 0; i < ids.size(); ++i)
+    for (unsigned int i = 0; i < ids.size(); ++i)
       writeData.emplace_back(i);
 
     // Initialize
@@ -1071,13 +1071,6 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-
-  double state              = 0.0;
-  double checkpoint         = 0.0;
-  int    iterationCount     = 0;
-  double initialStateChange = 5.0;
-  double stateChange        = initialStateChange;
-  int    computedTimesteps  = 0;
 
   // Set up Solverinterface
   SolverInterface couplingInterface(context.name, _pathToTests + "implicit-direct-access.xml", 0, 1);

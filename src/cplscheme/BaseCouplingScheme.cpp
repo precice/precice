@@ -168,6 +168,10 @@ void BaseCouplingScheme::initializeData()
 
   _hasDataBeenReceived = false;
 
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
+  }
+
   exchangeInitialData();
 }
 

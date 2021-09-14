@@ -16,6 +16,7 @@ CouplingData::CouplingData(
       _mesh(std::move(mesh))
 {
   PRECICE_ASSERT(_data != nullptr);
+  _previousIteration = Eigen::VectorXd::Zero(_data->values().size());
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
 }
