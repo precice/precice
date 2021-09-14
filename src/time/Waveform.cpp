@@ -34,10 +34,10 @@ void Waveform::store(const Eigen::VectorXd &data)
 
 void Waveform::moveToNextWindow(int order)
 {
+  auto initialGuess = extrapolateData(order);
   if (_numberOfValidSamples < numberOfSamples()) {
     _numberOfValidSamples++;
   }
-  auto initialGuess = extrapolateData(order);
   utils::shiftSetFirst(this->_timeWindows, initialGuess);
 }
 
