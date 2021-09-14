@@ -54,11 +54,12 @@ public:
   }
 
   /// Adds current convergence information to output stream.
-  virtual std::string printState()
+  virtual std::string printState(const std::string &dataName)
   {
     std::ostringstream os;
     os << "absolute convergence measure: ";
-    os << "two-norm diff = " << _normDiff;
+    os << "two-norm diff of data \"";
+    os << dataName << "\" = " << _normDiff;
     os << ", limit = " << _convergenceLimit;
     os << ", conv = ";
     if (_isConvergence)

@@ -35,10 +35,10 @@ public:
     return _isConvergence;
   }
 
-  virtual std::string printState()
+  virtual std::string printState(const std::string &dataName)
   {
     std::ostringstream os;
-    os << "min iteration convergence measure: ";
+    os << "min iteration convergence measure of data \"" << dataName << "\": ";
     os << "#it = " << _currentIteration << " of " << _minimumIterationCount;
     os << ", conv = ";
     if (_isConvergence)
