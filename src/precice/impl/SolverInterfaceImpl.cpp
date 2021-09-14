@@ -1333,6 +1333,9 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
 
   PRECICE_CHECK(ids != nullptr, "getMeshVerticesAndIDs() was called with ids == nullptr");
   PRECICE_CHECK(coordinates != nullptr, "getMeshVerticesAndIDs() was called with coordinates == nullptr");
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing "
+                                                                                     " the received mesh \"{}\" on participant \"{}\".",
+                _accessor->getMeshName(meshID), _accessor->getName());
 
   const auto &vertices = mesh->vertices();
   PRECICE_CHECK(static_cast<unsigned int>(size) <= vertices.size(), "The queried size exceeds the number of available points.");

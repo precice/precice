@@ -851,6 +851,11 @@ public:
    *             corresponding data values (dim * \p size)
    *
    * @pre IDs and coordinates need to have the correct size, which can be queried by @p getMeshVertexSize()
+   *
+   * @note This function can be called on received meshes as well as provided
+   * meshes. However, you need to call this function after @p initialize(),
+   * if the meshID corresponds to a received mesh, since the relevant mesh data
+   * is exchanged during the @p initialize() call.
    */
   void getMeshVerticesAndIDs(
       const int meshID,
