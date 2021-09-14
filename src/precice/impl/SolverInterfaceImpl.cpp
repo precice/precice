@@ -627,6 +627,12 @@ int SolverInterfaceImpl::getMeshVertexSize(
 {
   PRECICE_TRACE(meshID);
   PRECICE_REQUIRE_MESH_USE(meshID);
+  // In case we access received mesh data: check, if the requested mesh data has already been received.
+  // Otherwise, the function call doesn't make any sense
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing "
+                                                                                     " data of the received mesh \"{}\" on participant \"{}\".",
+                _accessor->getMeshName(meshID), _accessor->getName());
+
   MeshContext &context = _accessor->usedMeshContext(meshID);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
   return context.mesh->vertices().size();
@@ -1325,6 +1331,12 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_USE(meshID);
   PRECICE_DEBUG("Get {} mesh vertices with IDs", size);
+
+  // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing "
+                                                                                     " data of the received mesh \"{}\" on participant \"{}\".",
+                _accessor->getMeshName(meshID), _accessor->getName());
+
   if (size == 0)
     return;
 
@@ -1333,9 +1345,6 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
 
   PRECICE_CHECK(ids != nullptr, "getMeshVerticesAndIDs() was called with ids == nullptr");
   PRECICE_CHECK(coordinates != nullptr, "getMeshVerticesAndIDs() was called with coordinates == nullptr");
-  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID), "initialize() has to be called before accessing "
-                                                                                     " the received mesh \"{}\" on participant \"{}\".",
-                _accessor->getMeshName(meshID), _accessor->getName());
 
   const auto &vertices = mesh->vertices();
   PRECICE_CHECK(static_cast<unsigned int>(size) <= vertices.size(), "The queried size exceeds the number of available points.");
