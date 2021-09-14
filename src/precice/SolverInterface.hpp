@@ -855,7 +855,7 @@ public:
    * @param[in] boundingBox Axis aligned bounding boxes which has in 3D the format
    *            [x_min, x_max, y_min, y_max, z_min, z_max]
    *
-   * @pre 'initialize' has not yet been called.
+   * @pre @p initialize() has not yet been called.
    */
   void setMeshAccessRegion(
       const int     meshID,
@@ -867,11 +867,12 @@ public:
    *        coordinates omitting the mapping.
    *
    * @param[in]  meshID corresponding mesh ID
-   * @param[in]  size return value of getMeshSize
+   * @param[in]  size return value of @p getMeshVertexSize()
    * @param[out] ids ids corresponding to the coordinates
-   * @param[out] coordinates associated to the values (dim * @p getMeshVertexSize)
+   * @param[out] coordinates the coordinates associated to the \p ids and
+   *             corresponding data values (dim * \p size)
    *
-   * @pre IDs and coordinates need to have the correct size, which can be queried by getMeshVertexSize
+   * @pre IDs and coordinates need to have the correct size, which can be queried by @p getMeshVertexSize()
    */
   void getMeshVerticesAndIDs(
       const int meshID,

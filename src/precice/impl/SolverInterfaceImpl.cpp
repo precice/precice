@@ -1448,16 +1448,16 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   const MeshContext & context = _accessor->meshContext(meshID);
   const mesh::PtrMesh mesh(context.mesh);
 
-  PRECICE_CHECK(ids != nullptr, "getMeshVerticesWithIDs() was called with ids == nullptr");
-  PRECICE_CHECK(coordinates != nullptr, "getMeshVerticesWithIDs() was called with coordinates == nullptr");
+  PRECICE_CHECK(ids != nullptr, "getMeshVerticesAndIDs() was called with ids == nullptr");
+  PRECICE_CHECK(coordinates != nullptr, "getMeshVerticesAndIDs() was called with coordinates == nullptr");
 
   const auto &vertices = mesh->vertices();
-  PRECICE_CHECK(size <= vertices.size(), "The queried size exceeds the number of available points.");
+  PRECICE_CHECK(static_cast<unsigned int>(size) <= vertices.size(), "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
       coordinates, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
 
-  for (size_t i = 0; i < size; i++) {
+  for (size_t i = 0; i < static_cast<size_t>(size); i++) {
     PRECICE_ASSERT(i < vertices.size(), i, vertices.size());
     ids[i]           = vertices[i].getID();
     posMatrix.col(i) = vertices[i].getCoords();

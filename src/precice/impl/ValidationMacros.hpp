@@ -109,7 +109,7 @@
   PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                             \
   PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataRead(id)),                                                       \
                 "This participant does not use Data \"{0}\", but attempted to read it. "                                        \
-                "Please extend the configuarion of partiticipant \"{1}\" by defining <read-data mesh=\"{0}\" name=\"{2}\" />.", \
+                "Please extend the configuarion of partiticipant \"{1}\" by defining <read-data mesh=\"{2}\" name=\"{0}\" />.", \
                 _accessor->getDataName(id), _accessorName, _accessor->getMeshNameFromData(id));
 
 /** Implementation of PRECICE_REQUIRE_DATA_WRITE()
@@ -120,7 +120,7 @@
   PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                              \
   PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataWrite(id)),                                                       \
                 "This participant does not use Data \"{0}\", but attempted to write it. "                                        \
-                "Please extend the configuarion of partiticipant \"{1}\" by defining <write-data mesh=\"{0}\" name=\"{2}\" />.", \
+                "Please extend the configuarion of partiticipant \"{1}\" by defining <write-data mesh=\"{2}\" name=\"{0}\" />.", \
                 _accessor->getDataName(id), _accessorName, _accessor->getMeshNameFromData(id));
 
 /** Validates a given dataID

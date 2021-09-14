@@ -43,7 +43,7 @@ if args.compile:
     else:
         os.makedirs(args.build_dir, exist_ok=True)
 
-    CONFIGURE_CMD = 'cmake -DPRECICE_MPICommunication=ON -DPRECICE_PETScMapping=ON -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON {src}'.format(src=args.source_dir)
+    CONFIGURE_CMD = 'cmake -DPRECICE_MPICommunication=ON -DPRECICE_PETScMapping=ON -DCMAKE_BUILD_TYPE=Debug {src}'.format(src=args.source_dir)
     if subprocess.call(CONFIGURE_CMD, shell = True, cwd=args.build_dir) != 0:
         sys.exit(125) # Cannot compile, 125 means to skip that revision
 
