@@ -274,7 +274,7 @@ void precicef_get_data_id_(
   *dataID = impl->getDataID(stringDataName, *meshID);
 }
 
-void precicef_isMeshConnectivityRequired(
+void precicef_is_mesh_connectivity_required_(
     const int *meshID,
     int *      required)
 {

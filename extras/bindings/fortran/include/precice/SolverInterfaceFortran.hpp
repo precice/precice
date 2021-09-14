@@ -354,7 +354,7 @@ void precicef_get_data_id_(
  *
  * @copydoc precice::SolverInterface::isMeshConnectivityRequired()
  */
-void precicef_isMeshConnectivityRequired(
+void precicef_is_mesh_connectivity_required_(
     const int *meshID,
     int *      required);
 
