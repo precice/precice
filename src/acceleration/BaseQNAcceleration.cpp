@@ -230,7 +230,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
       double residualMagnitude = utils::MasterSlave::l2norm(deltaR);
 
-      if (utils::MasterSlave::l2norm(_values) < 1e-14) {
+      if (not math::equals(utils::MasterSlave::l2norm(_values), 0.0)) {
         residualMagnitude /= utils::MasterSlave::l2norm(_values);
       }
 
