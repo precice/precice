@@ -235,10 +235,10 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       }
 
       PRECICE_CHECK(not math::equals(residualMagnitude, 0.0),
-                      "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
-                      "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
-                      "Maybe you always write the same (or only incremented) data or you call advance without "
-                      "providing  new data first.");
+                    "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
+                    "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
+                    "Maybe you always write the same (or only incremented) data or you call advance without "
+                    "providing  new data first.");
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
