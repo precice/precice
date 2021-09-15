@@ -42,7 +42,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _maxIterations(maxIterations),
       _iterations(1),
       _totalIterations(1),
-      _validDigits(validDigits),
       _localParticipant(std::move(localParticipant)),
       _eps(std::pow(10.0, -1 * validDigits))
 {
@@ -52,7 +51,7 @@ BaseCouplingScheme::BaseCouplingScheme(
                  "Maximum number of time windows has to be larger than zero.");
   PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
                  "Time window size has to be larger than zero.");
-  PRECICE_ASSERT((_validDigits >= 1) && (_validDigits < 17),
+  PRECICE_ASSERT((validDigits >= 1) && (validDigits < 17),
                  "Valid digits of time window size has to be between 1 and 16.");
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
     PRECICE_ASSERT(hasTimeWindowSize(),
@@ -510,7 +509,7 @@ bool BaseCouplingScheme::measureConvergence()
       oneSuffices = true;
     }
 
-    PRECICE_INFO(convMeasure.measure->printState());
+    PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
   }
 
   if (allConverged) {

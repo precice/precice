@@ -73,6 +73,7 @@ Eigen::VectorXd Waveform::extrapolateData(int order)
     extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
     extrapolatedValue -= this->_timeWindows.col(1);      // = 2*x^t - x^(t-1)
   } else if (order == 2) {
+    // uses formula given in https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1
     PRECICE_DEBUG("Performing second order extrapolation");
     PRECICE_ASSERT(this->numberOfSamples() > 2);
     extrapolatedValue = this->_timeWindows.col(0) * 2.5;  // = 2.5*x^t

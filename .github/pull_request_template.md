@@ -21,4 +21,5 @@ Short rational why preCICE needs this change. If this is already described in an
 
 * [ ] Does the changelog entry make sense? Is it formatted correctly?
 * [ ] Do you understand the code changes?
-* [ ] (more questions/tasks)
+
+<!-- add more questions/tasks if necessary -->

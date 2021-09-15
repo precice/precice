@@ -344,10 +344,22 @@ public:
    *
    * @deprecated Unclear use case and difficult to port to other languages.
    *             Prefer calling getMeshID for specific mesh names.
-   * 
+   *
    * @returns the set of ids.
    */
   [[deprecated("Use getMeshID() for specific mesh names instead.")]] std::set<int> getMeshIDs() const;
+
+  /**
+   * @brief Checks if the given mesh requires connectivity.
+   *
+   * preCICE may require connectivity information from the solver and
+   * ignores any API calls regarding connectivity if it is not required.
+   * Use this function to conditionally generate this connectivity.
+   *
+   * @param[in] meshID the id of the mesh
+   * @returns whether connectivity is required
+   */
+  bool isMeshConnectivityRequired(int meshID) const;
 
   /**
    * @brief Creates a mesh vertex
@@ -370,6 +382,11 @@ public:
    *
    * @param[in] meshID the id of the mesh
    * @returns the amount of the vertices of the mesh
+   *
+   * @pre This function can be called on received meshes as well as provided
+   * meshes. However, you need to call this function after @p initialize(),
+   * if the \p meshID corresponds to a received mesh, since the relevant mesh data
+   * is exchanged during the @p initialize() call.
    */
   int getMeshVertexSize(int meshID) const;
 
@@ -500,9 +517,9 @@ public:
    * @param[in] secondEdgeID ID of the second edge of the Quad
    * @param[in] thirdEdgeID ID of the third edge of the Quad
    * @param[in] fourthEdgeID ID of the forth edge of the Quad
-   * 
+   *
    * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID and fourthEdgeID were added to the mesh with the ID meshID.
-   * 
+   *
    */
   void setMeshQuad(
       int meshID,
@@ -851,6 +868,11 @@ public:
    *             corresponding data values (dim * \p size)
    *
    * @pre IDs and coordinates need to have the correct size, which can be queried by @p getMeshVertexSize()
+   *
+   * @pre This function can be called on received meshes as well as provided
+   * meshes. However, you need to call this function after @p initialize(),
+   * if the \p meshID corresponds to a received mesh, since the relevant mesh data
+   * is exchanged during the @p initialize() call.
    */
   void getMeshVerticesAndIDs(
       const int meshID,

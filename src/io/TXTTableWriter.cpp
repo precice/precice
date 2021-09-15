@@ -43,6 +43,11 @@ void TXTTableWriter::addData(
       _outputStream << name << i << "  ";
     }
   }
+  // Print out everyting apart from INT consistently in scientific
+  // notation using a fixed precision
+  if (type == DOUBLE || type == VECTOR2D || VECTOR3D) {
+    _outputStream << std::scientific << std::setprecision(8);
+  }
   _writeIterator = _data.end();
 }
 
@@ -58,7 +63,7 @@ void TXTTableWriter::writeData(
   }
   PRECICE_ASSERT(_writeIterator->name == name, _writeIterator->name, name);
   PRECICE_ASSERT(_writeIterator->type == INT, _writeIterator->type);
-  _outputStream << value << "  ";
+  _outputStream << std::setw(6) << value << "  ";
   _writeIterator++;
   if (_writeIterator == _data.end()) {
     _outputStream.flush();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <iomanip>
 #include <limits>
 #include <ostream>
 #include <string>
@@ -63,11 +64,12 @@ public:
   }
 
   /// Adds current convergence information to output stream.
-  virtual std::string printState()
+  virtual std::string printState(const std::string &dataName)
   {
     std::ostringstream os;
     os << "residual relative convergence measure: ";
-    os << "relative two-norm diff = " << getNormResidual();
+    os << "relative two-norm diff of data \"" << dataName << "\" = ";
+    os << std::scientific << std::setprecision(2) << getNormResidual();
     os << ", limit = " << _convergenceLimitPercent;
     os << ", normalization = " << _normFirstResidual;
     os << ", conv = ";

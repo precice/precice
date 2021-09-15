@@ -41,7 +41,7 @@ public:
   virtual bool isConvergence() const = 0;
 
   /// Adds current convergence information to output stream.
-  virtual std::string printState() = 0;
+  virtual std::string printState(const std::string &dataName) = 0;
 
   /// Returns the l2-norm of the coupling residuum
   virtual double getNormResidual()
