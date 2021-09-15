@@ -84,8 +84,7 @@ public:
   {
     std::ostringstream os;
     os << "relative convergence measure: ";
-    os << "relative two-norm diff of data ";
-    os << std::setw(14) << std::string("\"" + dataName + "\"") << " = ";
+    os << "relative two-norm diff of data \"" << dataName << "\" = ";
     os << std::scientific << std::setprecision(2) << getNormResidual();
     os << ", limit = " << _convergenceLimitPercent;
     os << ", normalization = " << _norm;
