@@ -228,45 +228,49 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
-      if (not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0)) {
-        
-        bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
-        bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
-        if (not columnLimitReached && overdetermined) {
+      double residualMagnitude = utils::MasterSlave::l2norm(deltaR);
 
-          utils::appendFront(_matrixV, deltaR);
-          utils::appendFront(_matrixW, deltaXTilde);
+      if (utils::MasterSlave::l2norm(_values) < 1e-14) {
+        residualMagnitude /= utils::MasterSlave::l2norm(_values);
+      }
 
-          // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
-          // QR decomposition and update decomposition
-
-          //apply scaling here
-          _preconditioner->apply(deltaR);
-          _qrV.pushFront(deltaR);
-
-          _matrixCols.front()++;
-        } else {
-          utils::shiftSetFirst(_matrixV, deltaR);
-          utils::shiftSetFirst(_matrixW, deltaXTilde);
-
-          // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
-          // the QR decomposition of V is updated
-          _preconditioner->apply(deltaR);
-          _qrV.pushFront(deltaR);
-          _qrV.popBack();
-
-          _matrixCols.front()++;
-          _matrixCols.back()--;
-          if (_matrixCols.back() == 0) {
-            _matrixCols.pop_back();
-          }
-          _nbDropCols++;
-        }
-      } else {
-        PRECICE_WARN("Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
+      PRECICE_CHECK((residualMagnitude, 0.0),
+                      "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
                       "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
                       "Maybe you always write the same (or only incremented) data or you call advance without "
                       "providing  new data first.");
+
+      bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
+      bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
+      if (not columnLimitReached && overdetermined) {
+
+        utils::appendFront(_matrixV, deltaR);
+        utils::appendFront(_matrixW, deltaXTilde);
+
+        // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
+        // QR decomposition and update decomposition
+
+        //apply scaling here
+        _preconditioner->apply(deltaR);
+        _qrV.pushFront(deltaR);
+
+        _matrixCols.front()++;
+      } else {
+        utils::shiftSetFirst(_matrixV, deltaR);
+        utils::shiftSetFirst(_matrixW, deltaXTilde);
+
+        // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
+        // the QR decomposition of V is updated
+        _preconditioner->apply(deltaR);
+        _qrV.pushFront(deltaR);
+        _qrV.popBack();
+
+        _matrixCols.front()++;
+        _matrixCols.back()--;
+        if (_matrixCols.back() == 0) {
+          _matrixCols.pop_back();
+        }
+        _nbDropCols++;
       }
     }
     _oldResiduals = _residuals; // Store residuals
