@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <iomanip>
 #include <limits>
 #include <ostream>
 #include <string>
@@ -67,8 +68,8 @@ public:
   {
     std::ostringstream os;
     os << "residual relative convergence measure: ";
-    os << "relative two-norm diff of data \"";
-    os << dataName << "\" = " << getNormResidual();
+    os << "relative two-norm diff of data \"" << dataName << "\" = ";
+    os << std::scientific << std::setprecision(2) << getNormResidual();
     os << ", limit = " << _convergenceLimitPercent;
     os << ", normalization = " << _normFirstResidual;
     os << ", conv = ";

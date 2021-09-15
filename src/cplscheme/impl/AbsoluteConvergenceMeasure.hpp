@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <iomanip>
 #include <ostream>
 #include <string>
 #include "ConvergenceMeasure.hpp"
@@ -58,8 +59,8 @@ public:
   {
     std::ostringstream os;
     os << "absolute convergence measure: ";
-    os << "two-norm diff of data \"";
-    os << dataName << "\" = " << _normDiff;
+    os << "two-norm diff of data \"" << dataName << "\" = ";
+    os << std::scientific << std::setprecision(2) << _normDiff;
     os << ", limit = " << _convergenceLimit;
     os << ", conv = ";
     if (_isConvergence)
