@@ -622,6 +622,13 @@ int SolverInterfaceImpl::getDataID(
   return _accessor->getUsedDataID(dataName, meshID);
 }
 
+bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
+{
+  PRECICE_VALIDATE_MESH_ID(meshID);
+  MeshContext &context = _accessor->usedMeshContext(meshID);
+  return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
+}
+
 int SolverInterfaceImpl::getMeshVertexSize(
     MeshID meshID) const
 {

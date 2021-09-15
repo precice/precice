@@ -110,6 +110,46 @@ BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
   BOOST_TEST(comsol->_usedMeshContexts.size() == 1);
 }
 
+BOOST_AUTO_TEST_SUITE(MeshRequirements)
+
+BOOST_AUTO_TEST_CASE(NN_A)
+{
+  PRECICE_TEST(1_rank);
+  std::string     filename = _pathToTests + "meshrequirements-nn.xml";
+  SolverInterface interface("A", filename, 0, 1);
+  auto            meshID = interface.getMeshID("MeshA");
+  BOOST_TEST(!interface.isMeshConnectivityRequired(meshID));
+}
+
+BOOST_AUTO_TEST_CASE(NN_B)
+{
+  PRECICE_TEST(1_rank);
+  std::string     filename = _pathToTests + "meshrequirements-nn.xml";
+  SolverInterface interface("B", filename, 0, 1);
+  auto            meshID = interface.getMeshID("MeshB");
+  BOOST_TEST(!interface.isMeshConnectivityRequired(meshID));
+}
+
+BOOST_AUTO_TEST_CASE(NP2D_A)
+{
+  PRECICE_TEST(1_rank);
+  std::string     filename = _pathToTests + "meshrequirements-np.xml";
+  SolverInterface interface("A", filename, 0, 1);
+  auto            meshID = interface.getMeshID("MeshA");
+  BOOST_TEST(interface.isMeshConnectivityRequired(meshID));
+}
+
+BOOST_AUTO_TEST_CASE(NP2D_B)
+{
+  PRECICE_TEST(1_rank);
+  std::string     filename = _pathToTests + "meshrequirements-np.xml";
+  SolverInterface interface("B", filename, 0, 1);
+  auto            meshID = interface.getMeshID("MeshB");
+  BOOST_TEST(!interface.isMeshConnectivityRequired(meshID));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 
 // Test representing the full explicit lifecycle of a SolverInterface
