@@ -63,7 +63,7 @@ void TXTTableWriter::writeData(
   }
   PRECICE_ASSERT(_writeIterator->name == name, _writeIterator->name, name);
   PRECICE_ASSERT(_writeIterator->type == INT, _writeIterator->type);
-  _outputStream << value << "  ";
+  _outputStream << std::setw(6) << value << "  ";
   _writeIterator++;
   if (_writeIterator == _data.end()) {
     _outputStream.flush();
