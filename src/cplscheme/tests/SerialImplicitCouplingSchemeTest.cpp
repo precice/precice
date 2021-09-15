@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
   int                   maxIterations = 1;
 
-  // Test first order extrapolation
+  // Test first order extrapolation (with initialization)
   SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
                               accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE,
                               BaseCouplingScheme::Implicit, maxIterations);
@@ -462,28 +462,42 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->previousIteration().size() == 1);
-  BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 0.0));            // initialized as zero
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0)); // initial value of first window: 0
 
-  cplData->values()(0) = 1.0;
+  cplData->values()(0) = 1.0; // store new value for first window, overwrite 0 -> 1
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
   scheme.storeDataInWaveforms();
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
-  scheme.moveToNextWindow();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-
   scheme.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 2.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
+  scheme.moveToNextWindow();                              // final value of first window: 1
+  BOOST_TEST(testing::equals(cplData->values()(0), 1.0)); // only a single value is available, so 1.0 is constantly extrapolated
+  scheme.storeIteration();                                // initial value of second window: 1
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
 
-  cplData->values()(0) = 4.0;
+  cplData->values()(0) = 4.0; // store new value for second window, overwrite 1 -> 4
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
   scheme.storeDataInWaveforms();
-  scheme.moveToNextWindow();
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
   scheme.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 7.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 4.0));
+  scheme.moveToNextWindow();                              // final value of second window: 4
+  BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // two values are available, linear extrapolation - 1.0 + 2 * 4.0 = 7.0
+  scheme.storeIteration();                                // initial value of third window: 7
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
+
+  cplData->values()(0) = 8.0; // store new value for third window, overwrite 7 -> 8
+  scheme.setTimeWindows(scheme.getTimeWindows() + 1);
+  scheme.storeDataInWaveforms();
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
+  scheme.storeIteration();
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
+  scheme.moveToNextWindow();                               // final value for third window: 8
+  BOOST_TEST(testing::equals(cplData->values()(0), 12.0)); // three values are available, linear extrapolation - 4.0 + 2 * 8.0 = 12.0 (1.0 is ignored)
+  scheme.storeIteration();                                 // initial value for fourth window: 12
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 12.0));
 
   // Test second order extrapolation
   cplData->values() = Eigen::VectorXd::Zero(cplData->values().size());
@@ -497,26 +511,59 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->previousIteration().size() == 1);
-  BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 0.0));            // initialized as zero
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0)); // initial value of first window: 0
 
-  cplData->values()(0) = 1.0;
+  cplData->values()(0) = 1.0; // store new value for first window, overwrite 0 -> 1
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.storeDataInWaveforms();
-  scheme2.moveToNextWindow();
+  BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
   scheme2.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 2.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
+  scheme2.moveToNextWindow();                             // final value of first window: 1
+  BOOST_TEST(testing::equals(cplData->values()(0), 1.0)); // only a single value is available, so 1.0 is constantly extrapolated
+  scheme2.storeIteration();                               // initial value of second window: 1
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
 
-  cplData->values()(0) = 4.0;
+  cplData->values()(0) = 4.0; // store new value for second window, overwrite 1 -> 4
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.storeDataInWaveforms();
-  scheme2.moveToNextWindow();
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
   scheme2.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 8.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 4.0));
+  scheme2.moveToNextWindow();                             // final value of second window: 4
+  BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // two values are available, linear extrapolation - 1.0 + 2 * 4.0 = 7.0
+  scheme2.storeIteration();                               // initial value of third window: 7
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
+
+  cplData->values()(0) = 9.0; // store new value for third window, overwrite 7 -> 9
+  scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
+  scheme2.storeDataInWaveforms();
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
+  scheme2.storeIteration();
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 9.0));
+  scheme2.moveToNextWindow(); // final value for third window: 9
+  //failing. See https://github.com/precice/precice/issues/1089
+  //BOOST_TEST(testing::equals(cplData->values()(0), 16.0));  // three values are available, quadratic extrapolation - 4.0 + 2 * 8.0 = 16.0
+  scheme2.storeIteration(); // initial value for fourth window: 16.0
+  //failing. See https://github.com/precice/precice/issues/1089
+  //BOOST_TEST(testing::equals(cplData->previousIteration()(0), 16.0));
+
+  cplData->values()(0) = 4.0; // store new value for fourth window, overwrite 16 -> 4
+  scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
+  scheme2.storeDataInWaveforms();
+  //failing. See https://github.com/precice/precice/issues/1089
+  //BOOST_TEST(testing::equals(cplData->previousIteration()(0), 16.0));
+  scheme2.storeIteration();
+  //failing. See https://github.com/precice/precice/issues/1089
+  //BOOST_TEST(testing::equals(cplData->previousIteration()(0), 4.0));
+  scheme2.moveToNextWindow(); // final value for fourth window: 4
+  //failing. See https://github.com/precice/precice/issues/1089
+  //BOOST_TEST(testing::equals(cplData->values()(0), 16.0));  // three values are available, quadratic extrapolation - 4.0 + 2 * 8.0 = 1.0
+  scheme2.storeIteration(); // initial value for fourth window: 1.0
+  //failing. See https://github.com/precice/precice/issues/1089
+  //BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
 }
 
 /// Test that cplScheme gives correct results when applying extrapolation.
@@ -673,8 +720,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
+        // extrapolated data: 2 = 2 * 1 - 0 (first order extrapolation)
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2);
       } else if (i == 1) {
         // accelerated data from second participant: 0.5 * 2 + 0.5 * 3 = 2.5
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5);
@@ -711,7 +758,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
   }
 
   if (context.isNamed(first)) {
-    // extrapolated data
+    // extrapolated data: 4 = 2 * 3 - 2 (first order extrapolation)
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // extrapolated data: 2, 3, 4
   } else if (context.isNamed(second)) {
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5
@@ -876,8 +923,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
+        // extrapolated data: 2 (constant extrapolation)
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2);
       } else if (i == 1) {
         // accelerated data from second participant: 0.5 * 2 + 0.5 * 3 = 2.5
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5);
@@ -919,8 +966,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data: 0, 2, 3 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 3.5
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.5);
+        // extrapolated data: 4 = 2 * 3 - 2 (first order extrapolation)
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
       } else if (i == 1) {
         // accelerated data from second participant: 0.5 * 3 + 0.5 * 5 = 4
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
@@ -958,7 +1005,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
 
   if (context.isNamed(first)) {
     // extrapolated data
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7.5); // extrapolated data: 2, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7.5
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7.5); // extrapolated data: 2, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7.5  (second order extrapolation)
   } else if (context.isNamed(second)) {
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7
   }
