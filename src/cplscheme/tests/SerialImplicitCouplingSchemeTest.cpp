@@ -515,8 +515,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme2.moveToNextWindow();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   scheme2.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 8.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 9.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 9.0));
 }
 
 /// Test that cplScheme gives correct results when applying extrapolation.
@@ -919,8 +919,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data: 0, 2, 3 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 3.5
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.5);
+        // extrapolated data: 0, 2, 3 -> 3*x^t - 3*x^(t-1) + x^(t-2) = 3
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
       } else if (i == 1) {
         // accelerated data from second participant: 0.5 * 3 + 0.5 * 5 = 4
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
@@ -958,7 +958,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
 
   if (context.isNamed(first)) {
     // extrapolated data
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7.5); // extrapolated data: 2, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7.5
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 8); // extrapolated data: 2, 3, 5 -> 3*x^t - 3*x^(t-1) + x^(t-2) = 8
   } else if (context.isNamed(second)) {
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7
   }
