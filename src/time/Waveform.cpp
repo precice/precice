@@ -63,12 +63,14 @@ Eigen::VectorXd Waveform::extrapolateData(int order, int timeWindows)
     PRECICE_ASSERT(this->numberOfSamples() > 1);
     extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
     extrapolatedValue -= this->_timeWindows.col(1);      // = 2*x^t - x^(t-1)
+    // see https://github.com/precice/precice/issues/1089 for derivation.
   } else if (order == 2) {
     PRECICE_DEBUG("Performing second order extrapolation");
     PRECICE_ASSERT(this->numberOfSamples() > 2);
-    extrapolatedValue = this->_timeWindows.col(0) * 2.5;  // = 2.5*x^t
-    extrapolatedValue -= this->_timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-    extrapolatedValue += this->_timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
+    extrapolatedValue = this->_timeWindows.col(0) * 3;  // = 3*x^t
+    extrapolatedValue -= this->_timeWindows.col(1) * 3; // = 3*x^t - 3*x^(t-1)
+    extrapolatedValue += this->_timeWindows.col(2);     // = 3*x^t - 3*x^(t-1) + x^(t-2)
+    // see https://github.com/precice/precice/issues/1089 for derivation.
   } else {
     PRECICE_ASSERT(false, "Extrapolation order is invalid.");
   }

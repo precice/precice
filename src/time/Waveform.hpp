@@ -56,6 +56,12 @@ private:
    * If the order condition cannot be satisfied, since there are not enough samples available, the order is automatically reduced.
    * If order two is required, but only two samples are available, the extrapolation order is automatically reduced to one.
    * 
+   * For linear extrapolation two equally spaced samples x^t and x^(t-1) are used to compute x^(t+1) using a linear function
+   * x^(t+1) = a (t+1) + b. The parameters a and b are computed from the known data.
+   *
+   * For quadratic extrapolation three equally spaced samples x^t, x^(t-1), x^(t-2) are used to compute x^(t+1) using a quadratic function
+   * x^(t+1) = a (t+1)^2 + b (t+1) + c. The parameters a, b and c are computed from the known data.
+   * 
    * @param order Order of the extrapolation scheme to be used.
    * @param timeWindows number of valid samples.
    */
