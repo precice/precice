@@ -720,8 +720,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
+        // extrapolated data: 2 = 2 * 1 - 0 (first order extrapolation)
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2);
       } else if (i == 1) {
         // accelerated data from second participant: 0.5 * 2 + 0.5 * 3 = 2.5
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5);
@@ -758,7 +758,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
   }
 
   if (context.isNamed(first)) {
-    // extrapolated data
+    // extrapolated data: 4 = 2 * 3 - 2 (first order extrapolation)
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // extrapolated data: 2, 3, 4
   } else if (context.isNamed(second)) {
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5
@@ -923,8 +923,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
+        // extrapolated data: 2 (constant extrapolation)
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2);
       } else if (i == 1) {
         // accelerated data from second participant: 0.5 * 2 + 0.5 * 3 = 2.5
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5);
@@ -966,8 +966,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data: 0, 2, 3 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 3.5
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.5);
+        // extrapolated data: 4 = 2 * 3 - 2 (first order extrapolation)
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
       } else if (i == 1) {
         // accelerated data from second participant: 0.5 * 3 + 0.5 * 5 = 4
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
@@ -1005,7 +1005,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
 
   if (context.isNamed(first)) {
     // extrapolated data
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7.5); // extrapolated data: 2, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7.5
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7.5); // extrapolated data: 2, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7.5  (second order extrapolation)
   } else if (context.isNamed(second)) {
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7
   }
