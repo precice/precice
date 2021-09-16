@@ -11,6 +11,8 @@ namespace testing {
  */
 class WaveformFixture {
 public:
+  int numberOfValidSamples(time::Waveform &waveform);
+
   int numberOfSamples(time::Waveform &waveform);
 
   int numberOfData(time::Waveform &waveform);

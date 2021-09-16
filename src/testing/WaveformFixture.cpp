@@ -3,6 +3,11 @@
 namespace precice {
 namespace testing {
 
+int WaveformFixture::numberOfValidSamples(time::Waveform &waveform)
+{
+  return waveform.numberOfValidSamples();
+}
+
 int WaveformFixture::numberOfSamples(time::Waveform &waveform)
 {
   return waveform.numberOfSamples();
