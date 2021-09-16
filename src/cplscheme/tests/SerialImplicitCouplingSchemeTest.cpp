@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme.storeDataInWaveforms();
 
   // go to third window
-  scheme.moveToNextWindow(); // uses first order extrapolation (maximum allowd) at end of second window
+  scheme.moveToNextWindow(); // uses first order extrapolation (maximum allowed) at end of second window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
   scheme.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0));
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme.storeDataInWaveforms();
 
   // go to fourth window
-  scheme.moveToNextWindow(); // uses first order extrapolation (maximum allowd) at end of third window
+  scheme.moveToNextWindow(); // uses first order extrapolation (maximum allowed) at end of third window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
   scheme.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 16.0)); // = 2*10 - 4
