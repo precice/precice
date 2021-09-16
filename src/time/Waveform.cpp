@@ -33,8 +33,9 @@ void Waveform::store(const Eigen::VectorXd &data)
 
 void Waveform::moveToNextWindow(int timeWindows, int order)
 {
-  auto initialGuess = extrapolateData(order, timeWindows);
-  utils::shiftSetFirst(this->_timeWindows, initialGuess);
+  utils::shiftSetFirst(this->_timeWindows, this->_timeWindows.col(0));
+  auto initialGuess         = extrapolateData(order, timeWindows);
+  this->_timeWindows.col(0) = initialGuess;
 }
 
 const Eigen::MatrixXd &Waveform::lastTimeWindows()
