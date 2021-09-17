@@ -475,20 +475,20 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
 
   // go to second window
-  scheme.moveToNextWindow(); // uses zeroth order extrapolation at end of first window
+  scheme.moveToNextWindow();                                         // uses zeroth order extrapolation at end of first window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0)); // only a single value is available, so 1.0 is constantly extrapolated
-  scheme.storeIteration();// initial value of second window: 1
+  scheme.storeIteration();                                           // initial value of second window: 1
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
   cplData->values()(0) = 4.0; // store new value for second window, overwrite 1 -> 4
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
   scheme.storeDataInWaveforms();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
-  scheme.storeIteration();// initial value of second window: 4
+  scheme.storeIteration(); // initial value of second window: 4
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 4.0));
 
   // go to third window
-  scheme.moveToNextWindow(); // uses first order extrapolation (maximum allowed) at end of second window
+  scheme.moveToNextWindow();                              // uses first order extrapolation (maximum allowed) at end of second window
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // two values are available, linear extrapolation - 1.0 + 2 * 4.0 = 7.0
   scheme.storeIteration();                                // initial value of third window: 7
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0));
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
 
   // go to fourth window
-  scheme.moveToNextWindow(); // uses first order extrapolation (maximum allowed) at end of third window
+  scheme.moveToNextWindow();                               // uses first order extrapolation (maximum allowed) at end of third window
   BOOST_TEST(testing::equals(cplData->values()(0), 12.0)); // three values are available, linear extrapolation - 4.0 + 2 * 8.0 = 12.0 (1.0 is ignored)
   scheme.storeIteration();                                 // initial value for fourth window: 12
   BOOST_TEST(testing::equals(cplData->values()(0), 12.0));
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(cplData->previousIteration().size() == 1);
 
   // initialized as zero
-  BOOST_TEST(testing::equals(cplData->values()(0), 0.0));           // initialized as zero
+  BOOST_TEST(testing::equals(cplData->values()(0), 0.0));            // initialized as zero
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0)); // initial value of first window: 0
 
   // start first window
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   // go to second window
   scheme2.moveToNextWindow(); // uses zeroth order extrapolation at end of first window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-    scheme2.storeIteration();                               // initial value of second window: 1
+  scheme2.storeIteration();                               // initial value of second window: 1
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // only a single value is available, so 1.0 is constantly extrapolated
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   cplData->values()(0) = 4.0; // store new value for second window, overwrite 1 -> 4
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.storeDataInWaveforms();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 6.0));
-  scheme2.storeIteration();                               
+  scheme2.storeIteration();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
 
   // go to fourth window
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.storeDataInWaveforms();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 13.0));
-  scheme2.storeIteration();                               
+  scheme2.storeIteration();
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 4.0));
 
   // go to fifth window
