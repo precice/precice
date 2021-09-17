@@ -63,25 +63,46 @@ const Eigen::MatrixXd &Waveform::lastTimeWindows()
 
 Eigen::VectorXd Waveform::extrapolateData(int order)
 {
-  Eigen::VectorXd extrapolatedValue;
-  if ((order == 0) || (_numberOfValidSamples < 2 && order > 0)) {
+  int usedOrder = 0;
+
+  if (order == 0) {
+    usedOrder = 0;
+  } else if (order == 1) {
+    if (_numberOfValidSamples < 2) {
+      usedOrder = 0;
+    } else {
+      usedOrder = 1;
+    }
+  } else if (order == 2) {
+    if (_numberOfValidSamples < 2) {
+      usedOrder = 0;
+    } else if (_numberOfValidSamples < 3) {
+      usedOrder = 1;
+    } else {
+      usedOrder = 2;
+    }
+  } else {
+    PRECICE_ASSERT(false);
+  }
+  if (usedOrder == 0) {
     PRECICE_ASSERT(this->numberOfSamples() > 0);
-    extrapolatedValue = this->_timeWindows.col(0);
-  } else if ((order == 1) || (_numberOfValidSamples < 3 && order > 1)) { //timesteps is increased before extrapolate is called
+    return this->_timeWindows.col(0);
+  }
+  Eigen::VectorXd extrapolatedValue;
+  if (usedOrder == 1) { //timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
     PRECICE_ASSERT(this->numberOfSamples() > 1);
     extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
     extrapolatedValue -= this->_timeWindows.col(1);      // = 2*x^t - x^(t-1)
-  } else if (order == 2) {
-    // uses formula given in https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1
-    PRECICE_DEBUG("Performing second order extrapolation");
-    PRECICE_ASSERT(this->numberOfSamples() > 2);
-    extrapolatedValue = this->_timeWindows.col(0) * 2.5;  // = 2.5*x^t
-    extrapolatedValue -= this->_timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-    extrapolatedValue += this->_timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
-  } else {
-    PRECICE_ASSERT(false, "Extrapolation order is invalid.");
+    return extrapolatedValue;
   }
+  PRECICE_ASSERT(usedOrder == 2);
+  // uses formula given in https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1
+  PRECICE_DEBUG("Performing second order extrapolation");
+  PRECICE_ASSERT(this->numberOfSamples() > 2);
+  extrapolatedValue = this->_timeWindows.col(0) * 2.5;  // = 2.5*x^t
+  extrapolatedValue -= this->_timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
+  extrapolatedValue += this->_timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
   return extrapolatedValue;
 }
 
