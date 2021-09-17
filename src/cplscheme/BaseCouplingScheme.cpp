@@ -627,12 +627,12 @@ bool BaseCouplingScheme::doImplicitStep()
     }
   }
 
-  // Store data for conv. measurement, acceleration
-  storeIteration();
-
   if (convergence) {
     moveToNextWindow();
   }
+
+  // Store data for conv. measurement, acceleration
+  storeIteration();
 
   return convergence;
 }
