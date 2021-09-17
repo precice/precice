@@ -54,26 +54,48 @@ int Waveform::numberOfData()
 
 Eigen::VectorXd Waveform::extrapolateData(int order, int timeWindows)
 {
-  Eigen::VectorXd extrapolatedValue;
-  if ((order == 0) || (timeWindows < 2 && order > 0)) {
+  int usedOrder = 0;
+
+  if (order == 0) {
+    usedOrder = 0;
+  } else if (order == 1) {
+    if (timeWindows < 3) {
+      usedOrder = 0;
+    } else {
+      usedOrder = 1;
+    }
+  } else if (order == 2) {
+    if (timeWindows < 3) {
+      usedOrder = 0;
+    } else if (timeWindows < 4) {
+      usedOrder = 1;
+    } else {
+      usedOrder = 2;
+    }
+  } else {
+    PRECICE_ASSERT(false);
+  }
+
+  if (usedOrder == 0) {
     PRECICE_ASSERT(this->numberOfSamples() > 0);
-    extrapolatedValue = this->_timeWindows.col(0);
-  } else if ((order == 1) || (timeWindows < 3 && order > 1)) { //timesteps is increased before extrapolate is called
+    return this->_timeWindows.col(0);
+  }
+  Eigen::VectorXd extrapolatedValue;
+  if (usedOrder == 1) { //timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
     PRECICE_ASSERT(this->numberOfSamples() > 1);
     extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
     extrapolatedValue -= this->_timeWindows.col(1);      // = 2*x^t - x^(t-1)
     // see https://github.com/precice/precice/issues/1089 for derivation.
-  } else if (order == 2) {
-    PRECICE_DEBUG("Performing second order extrapolation");
-    PRECICE_ASSERT(this->numberOfSamples() > 2);
-    extrapolatedValue = this->_timeWindows.col(0) * 3;  // = 3*x^t
-    extrapolatedValue -= this->_timeWindows.col(1) * 3; // = 3*x^t - 3*x^(t-1)
-    extrapolatedValue += this->_timeWindows.col(2);     // = 3*x^t - 3*x^(t-1) + x^(t-2)
-    // see https://github.com/precice/precice/issues/1089 for derivation.
-  } else {
-    PRECICE_ASSERT(false, "Extrapolation order is invalid.");
+    return extrapolatedValue;
   }
+  PRECICE_ASSERT(usedOrder == 2);
+  PRECICE_DEBUG("Performing second order extrapolation");
+  PRECICE_ASSERT(this->numberOfSamples() > 2);
+  extrapolatedValue = this->_timeWindows.col(0) * 3;  // = 3*x^t
+  extrapolatedValue -= this->_timeWindows.col(1) * 3; // = 3*x^t - 3*x^(t-1)
+  extrapolatedValue += this->_timeWindows.col(2);     // = 3*x^t - 3*x^(t-1) + x^(t-2)
+  // see https://github.com/precice/precice/issues/1089 for derivation.
   return extrapolatedValue;
 }
 

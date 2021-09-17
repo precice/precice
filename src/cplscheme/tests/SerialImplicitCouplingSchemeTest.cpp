@@ -465,25 +465,38 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
 
-  cplData->values()(0) = 1.0;
+  // start first window
+  cplData->values()(0) = 1.0; // data provided at end of first window
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
   scheme.storeDataInWaveforms();
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
-  scheme.moveToNextWindow();
+
+  // go to second window
+  scheme.moveToNextWindow(); // uses zeroth order extrapolation at end of first window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-
   scheme.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 2.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-
-  cplData->values()(0) = 4.0;
+  BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
+  cplData->values()(0) = 4.0; // data provided at end of second window
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
   scheme.storeDataInWaveforms();
-  scheme.moveToNextWindow();
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
+
+  // go to third window
+  scheme.moveToNextWindow(); // uses first order extrapolation (maximum allowed) at end of second window
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
   scheme.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
+  cplData->values()(0) = 10.0; // data provided at end of third window
+  scheme.setTimeWindows(scheme.getTimeWindows() + 1);
+  scheme.storeDataInWaveforms();
+
+  // go to fourth window
+  scheme.moveToNextWindow(); // uses first order extrapolation (maximum allowed) at end of third window
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
+  scheme.storeIteration();
+  BOOST_TEST(testing::equals(cplData->values()(0), 16.0)); // = 2*10 - 4
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 16.0));
 
   // Test second order extrapolation
   cplData->values() = Eigen::VectorXd::Zero(cplData->values().size());
@@ -497,26 +510,42 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->previousIteration().size() == 1);
+
+  // initialized as zero
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
 
-  cplData->values()(0) = 1.0;
+  // start first window
+  cplData->values()(0) = 1.0; // data provided at end of first window
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.storeDataInWaveforms();
-  scheme2.moveToNextWindow();
+
+  // go to second window
+  scheme2.moveToNextWindow(); // uses zeroth order extrapolation at end of first window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
   scheme2.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 2.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-
-  cplData->values()(0) = 4.0;
+  BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
+  cplData->values()(0) = 4.0; // data provided at end of second window
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.storeDataInWaveforms();
-  scheme2.moveToNextWindow();
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
+
+  //go to third window
+  scheme2.moveToNextWindow(); // uses first order extrapolation at end of second window
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
   scheme2.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 9.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 9.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // = 2*4.0 - 1.0
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
+  cplData->values()(0) = 10.0; // data provided at end of third window
+  scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
+  scheme2.storeDataInWaveforms();
+
+  // go to fourth window
+  scheme2.moveToNextWindow(); // uses second order extrapolation at end of third window
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
+  scheme2.storeIteration();
+  BOOST_TEST(testing::equals(cplData->values()(0), 19.0)); // = 3.0*10 - 3.0*4 + 1.0*1
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 19.0));
 }
 
 /// Test that cplScheme gives correct results when applying extrapolation.
@@ -673,8 +702,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
+        // extrapolated data, constant extrapolation from first window
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2);
       } else if (i == 1) {
         // accelerated data from second participant: 0.5 * 2 + 0.5 * 3 = 2.5
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5);
@@ -710,8 +739,9 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
     }
   }
 
+  // third window
   if (context.isNamed(first)) {
-    // extrapolated data
+    // extrapolated data, linear extrapolation from first and second window
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // extrapolated data: 2, 3, 4
   } else if (context.isNamed(second)) {
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5
@@ -876,8 +906,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
+        // extrapolated data, constant extrapolation from first window
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2);
       } else if (i == 1) {
         // accelerated data from second participant: 0.5 * 2 + 0.5 * 3 = 2.5
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5);
@@ -919,14 +949,14 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data: 0, 2, 3 -> 3*x^t - 3*x^(t-1) + x^(t-2) = 3
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
-      } else if (i == 1) {
-        // accelerated data from second participant: 0.5 * 3 + 0.5 * 5 = 4
+        // extrapolated data, linear extrapolation from first window and second
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
-      } else if (i == 2) {
-        // accelerated data from second participant: 0.5 * 4 + 0.5 * 5 = 4.5
+      } else if (i == 1) {
+        // accelerated data from second participant: 0.5 * 3 + 0.5 * 4 = 4.5
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.5);
+      } else if (i == 2) {
+        // accelerated data from second participant: 0.5 * 4.5 + 0.5 * 5 = 4.75
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.75);
       }
     } else if (context.isNamed(second)) {
       BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // extrapolation only applied to accelerated data. So data written by first participant.
@@ -956,9 +986,10 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     }
   }
 
+  // fourth window
   if (context.isNamed(first)) {
-    // extrapolated data
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 8); // extrapolated data: 2, 3, 5 -> 3*x^t - 3*x^(t-1) + x^(t-2) = 8
+    // extrapolated data: 2, 3, 5 -> 3.0*x^t - 3.0*x^(t-1) + 1.0*x^(t-2) = 8
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 8);
   } else if (context.isNamed(second)) {
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7
   }
