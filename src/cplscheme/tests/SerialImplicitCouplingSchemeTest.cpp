@@ -952,11 +952,11 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
         // extrapolated data, linear extrapolation from first window and second
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
       } else if (i == 1) {
-        // accelerated data from second participant: 0.5 * 3 + 0.5 * 5 = 4
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
-      } else if (i == 2) {
-        // accelerated data from second participant: 0.5 * 4 + 0.5 * 5 = 4.5
+        // accelerated data from second participant: 0.5 * 3 + 0.5 * 4 = 4.5
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.5);
+      } else if (i == 2) {
+        // accelerated data from second participant: 0.5 * 4.5 + 0.5 * 5 = 4.75
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.75);
       }
     } else if (context.isNamed(second)) {
       BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // extrapolation only applied to accelerated data. So data written by first participant.
