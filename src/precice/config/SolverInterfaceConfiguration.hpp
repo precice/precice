@@ -46,7 +46,7 @@ public:
   int getDimensions() const;
 
   /// @brief Returns whether experimental features are allowed or not
-  int allowsExperimental() const
+  bool allowsExperimental() const
   {
     return _experimental;
   }
