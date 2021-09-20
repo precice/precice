@@ -576,6 +576,10 @@ private:
 
   // SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
+
+  /// Are experimental API calls allowed?
+  bool _allowsExperimental = false;
+
   // setMeshAccessRegion may only be called once
   mutable bool _accessRegionDefined = false;
 

@@ -45,6 +45,12 @@ public:
    */
   int getDimensions() const;
 
+  /// @brief Returns whether experimental features are allowed or not
+  int allowsExperimental() const
+  {
+    return _experimental;
+  }
+
   const mesh::PtrDataConfiguration getDataConfiguration() const
   {
     return _dataConfiguration;
@@ -97,6 +103,9 @@ private:
 
   /// Spatial dimension of problem to be solved. Either 2 or 3.
   int _dimensions = -1;
+
+  /// Allow the use of experimental features
+  bool _experimental = false;
 
   // @brief Participating solvers in the coupled simulation.
   //std::vector<impl::PtrParticipant> _participants;

@@ -164,3 +164,9 @@
   PRECICE_CHECK(std::all_of(data, data + size, [](double val) { return std::isfinite(val); }), "One of the given data values is either plus or minus infinity or NaN.");
 
 #endif
+
+#define PRECICE_EXPERIMENTAL_API()                                                                                                                 \
+  PRECICE_CHECK(_allowsExperimental, "You called the API function \"{}\", which is part of the experimental API. "                                 \
+                                     "You may unlock the full API by specifying <solver-interface experimental=\"true\" /> in the configuration. " \
+                                     "Please be aware that experimental features may change at any time.",                                         \
+                __func__)

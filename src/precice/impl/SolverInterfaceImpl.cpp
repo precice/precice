@@ -189,8 +189,9 @@ void SolverInterfaceImpl::configure(
   mesh::Data::resetDataCount();
   _meshLock.clear();
 
-  _dimensions = config.getDimensions();
-  _accessor   = determineAccessingParticipant(config);
+  _dimensions         = config.getDimensions();
+  _allowsExperimental = config.allowsExperimental();
+  _accessor           = determineAccessingParticipant(config);
   _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useMaster(),
@@ -649,6 +650,7 @@ int SolverInterfaceImpl::getMeshVertexSize(
 void SolverInterfaceImpl::resetMesh(
     MeshID meshID)
 {
+  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshID);
   PRECICE_VALIDATE_MESH_ID(meshID);
   impl::MeshContext &context = _accessor->usedMeshContext(meshID);
@@ -1300,6 +1302,7 @@ void SolverInterfaceImpl::setMeshAccessRegion(
     const int     meshID,
     const double *boundingBox) const
 {
+  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshID);
   PRECICE_REQUIRE_MESH_USE(meshID);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().")
@@ -1335,6 +1338,7 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
     int *     ids,
     double *  coordinates) const
 {
+  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_USE(meshID);
   PRECICE_DEBUG("Get {} mesh vertices with IDs", size);
