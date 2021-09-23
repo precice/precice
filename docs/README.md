@@ -16,6 +16,9 @@
 <a style="text-decoration: none" href="https://www.precice.org/" target="_blank">
     <img src="https://img.shields.io/website-up-down-green-red/https/precice.org.svg?label=website" alt="preCICE website status">
 </a>
+<a style="text-decoration: none" href="https://doi.org/10.18419/darus-2125" target="_blank">
+    <img src="https://img.shields.io/badge/doi-10.18419%2Fdarus--2125-d45815.svg" alt="preCICE distribution">
+</a>
 
 **Project Status**  
 <a style="text-decoration: none" href="https://github.com/precice/precice/releases/latest" target="_blank">
