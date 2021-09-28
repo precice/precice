@@ -475,17 +475,17 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme.moveToNextWindow(); // uses zeroth order extrapolation at end of first window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
   scheme.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 2.0));  // = 2*1 - 0
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   cplData->values()(0) = 4.0; // data provided at end of second window
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
   scheme.storeDataInWaveforms();
 
   // go to third window
   scheme.moveToNextWindow(); // uses first order extrapolation (maximum allowed) at end of second window
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   scheme.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 7.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 7.0));  // = 2*4 - 1
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
   cplData->values()(0) = 10.0; // data provided at end of third window
   scheme.setTimeWindows(scheme.getTimeWindows() + 1);
@@ -521,31 +521,31 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme2.storeDataInWaveforms();
 
   // go to second window
-  scheme2.moveToNextWindow(); // uses zeroth order extrapolation at end of first window
+  scheme2.moveToNextWindow(); // uses first order extrapolation at end of first window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
   scheme2.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
+  BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   cplData->values()(0) = 4.0; // data provided at end of second window
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.storeDataInWaveforms();
 
   //go to third window
-  scheme2.moveToNextWindow(); // uses first order extrapolation at end of second window
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 1.0));
+  scheme2.moveToNextWindow(); // uses second order extrapolation at end of second window
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   scheme2.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // = 2*4.0 - 1.0
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
-  cplData->values()(0) = 10.0; // data provided at end of third window
+  BOOST_TEST(testing::equals(cplData->values()(0), 8.0)); // = 2.5*4 - 2*1 + 0.5*0
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
+  cplData->values()(0) = 4.0; // data provided at end of third window
   scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
   scheme2.storeDataInWaveforms();
 
   // go to fourth window
   scheme2.moveToNextWindow(); // uses second order extrapolation at end of third window
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
   scheme2.storeIteration();
-  BOOST_TEST(testing::equals(cplData->values()(0), 17.5)); // = 2.5*10 - 2*4 + 0.5*1
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 17.5));
+  BOOST_TEST(testing::equals(cplData->values()(0), 2.5)); // = 2.5*4 - 2*4 + 0.5*1
+  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.5));
 }
 
 /// Test that cplScheme gives correct results when applying extrapolation.
@@ -702,17 +702,18 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data, constant extrapolation from first window
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2);
+        // first order extrapolation
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*2 - 0
       } else if (i == 1) {
-        // accelerated data from second participant: 0.5 * 2 + 0.5 * 3 = 2.5
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5);
+        // accelerated data from second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.5);  // = 0.5 * 4 + 0.5 * 3 = 2.5
       } else if (i == 2) {
-        // accelerated data from second participant: 0.5 * 2.5 + 0.5 * 3 = 2.75
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.75);
+        // accelerated data from second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.25);  // = 0.5 * 3.5 + 0.5 * 3 = 2.75
       }
     } else if (context.isNamed(second)) {
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3); // extrapolation only applied to accelerated data. Second participant receives data from first without acceleration.
+      // extrapolation only applied to accelerated data. So data written by first participant.
+      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
     }
 
     if (i == 0) {
@@ -741,10 +742,11 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
 
   // third window
   if (context.isNamed(first)) {
-    // extrapolated data, linear extrapolation from first and second window
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // extrapolated data: 2, 3, 4
+    // first order extrapolation
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5
+    // extrapolation only applied to accelerated data. So data written by first participant.
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
   }
 
   // reached end of simulation, ready to finalize
@@ -867,7 +869,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
         BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1.5);
       }
     } else if (context.isNamed(second)) {
-      // data from first participant
+      // extrapolation only applied to accelerated data. So data written by first participant.
       BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
     }
 
@@ -906,17 +908,18 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data, constant extrapolation from first window
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2);
+        // first order extrapolation
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*2 - 0
       } else if (i == 1) {
-        // accelerated data from second participant: 0.5 * 2 + 0.5 * 3 = 2.5
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5);
+        // accelerated data from second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.5); // = 0.5 * 4 + 0.5 * 3
       } else if (i == 2) {
-        // accelerated data from second participant: 0.5 * 2.5 + 0.5 * 3 = 2.75
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.75);
+        // accelerated data from second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.25); // = 0.5 * 3.5 + 0.5 * 3 = 3.25
       }
     } else if (context.isNamed(second)) {
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3); // extrapolation only applied to accelerated data. So data written by first participant.
+      // extrapolation only applied to accelerated data. So data written by first participant.
+      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
     }
 
     if (i == 0) {
@@ -949,17 +952,18 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     BOOST_TEST(cplScheme.isCouplingOngoing());
     if (context.isNamed(first)) {
       if (i == 0) {
-        // extrapolated data, linear extrapolation from first window and second
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
+        // second order extrapolation
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.5); // = 2.5*3 - 2*2 + 0.5 * 0
       } else if (i == 1) {
-        // accelerated data from second participant: 0.5 * 3 + 0.5 * 4 = 4.5
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.5);
+        // accelerated data from second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.25); // = 0.5 * 3.5 + 0.5 * 5
       } else if (i == 2) {
-        // accelerated data from second participant: 0.5 * 4.5 + 0.5 * 5 = 4.75
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.75);
+        // accelerated data from second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.625); // = 0.5 * 4.25 + 0.5 * 5
       }
     } else if (context.isNamed(second)) {
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // extrapolation only applied to accelerated data. So data written by first participant.
+      // extrapolation only applied to accelerated data. So data written by first participant.
+      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5);
     }
 
     if (i == 0) {
@@ -988,10 +992,11 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
 
   // fourth window
   if (context.isNamed(first)) {
-    // extrapolated data: 2, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7.5
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7.5);
+    // second order extrapolation
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7.5); // = 2.5*5 - 2*3 + 0.5*2
   } else if (context.isNamed(second)) {
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7); // this is now actually an extrapolated value, since it's not overwritten by the first participant: 1, 3, 5 -> 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2) = 7
+    // extrapolation only applied to accelerated data. So data written by first participant.
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5);
   }
 
   // reached end of simulation, ready to finalize

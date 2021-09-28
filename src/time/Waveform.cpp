@@ -59,15 +59,15 @@ Eigen::VectorXd Waveform::extrapolateData(int order, int timeWindows)
   if (order == 0) {
     usedOrder = 0;
   } else if (order == 1) {
-    if (timeWindows < 3) {
+    if (timeWindows < 2) {
       usedOrder = 0;
     } else {
       usedOrder = 1;
     }
   } else if (order == 2) {
-    if (timeWindows < 3) {
+    if (timeWindows < 2) {
       usedOrder = 0;
-    } else if (timeWindows < 4) {
+    } else if (timeWindows < 3) {
       usedOrder = 1;
     } else {
       usedOrder = 2;
