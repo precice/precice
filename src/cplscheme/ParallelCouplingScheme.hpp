@@ -69,7 +69,8 @@ private:
    */
   DataMap &getAccelerationData() override
   {
-    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
+    //generally useful, but currently all participants need this due to BaseCouplingScheme::storeDataInWaveforms()
+    //PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
     return _allData;
   }
 

@@ -745,8 +745,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
     // first order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    // first order extrapolation
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // = 2*3 - 1
+    // extrapolation only applied to accelerated data. So data written by first participant.
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
   }
 
   // reached end of simulation, ready to finalize
@@ -980,8 +980,8 @@ BOOST_AUTO_TEST_CASE(testLinearExtrapolationInit)
     // first order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
   } else if (context.isNamed(second)) {
-    // first order extrapolation
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5); // = 2*3 - 1
+    // extrapolation only applied to accelerated data. So data written by first participant.
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
   }
 
   // reached end of simulation, ready to finalize
@@ -1230,8 +1230,8 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
     // second order extrapolation
     BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7.5); // = 2.5*5 - 2*3 + 0.5*2
   } else if (context.isNamed(second)) {
-    // second order extrapolation
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7); // = 2.5*5 - 2*3 + 0.5*1
+    // extrapolation only applied to accelerated data. So data written by first participant.
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5);
   }
 
   // reached end of simulation, ready to finalize
@@ -1554,7 +1554,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(receiveCouplingData->values().size() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(receiveCouplingData->previousIteration().size() == 3);
-    BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(1.0, 2.0, 3.0)));
+    BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     // ensure that write data is still uninitialized
     BOOST_TEST(sendCouplingData->values().size() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
@@ -1593,7 +1593,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(receiveCouplingData->values().size() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
     BOOST_TEST(receiveCouplingData->previousIteration().size() == 1);
-    BOOST_TEST(testing::equals(receiveCouplingData->previousIteration()(0), 4.0));
+    BOOST_TEST(testing::equals(receiveCouplingData->previousIteration()(0), 0.0));
     BOOST_TEST(sendCouplingData->values().size() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(sendCouplingData->previousIteration().size() == 3);
