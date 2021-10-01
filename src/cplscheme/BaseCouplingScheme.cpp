@@ -131,8 +131,14 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
         DataID dataID = convergenceMeasure.couplingData->getDataID();
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
-      // reserve memory and initialize data with zero
-      setupDataMatrices();
+    }
+  }
+
+  // reserve memory and initialize data with zero
+  setupDataMatrices();
+
+  if (isImplicitCouplingScheme()) {
+    if (not doesFirstStep()) {
       if (_acceleration) {
         _acceleration->initialize(getAccelerationData()); // Reserve memory, initialize
       }
@@ -172,6 +178,11 @@ void BaseCouplingScheme::initializeData()
   }
 
   exchangeInitialData();
+
+  if (isImplicitCouplingScheme()) {
+    storeDataInWaveforms();
+    moveToNextWindow();
+  }
 }
 
 void BaseCouplingScheme::advance()
@@ -248,7 +259,7 @@ void BaseCouplingScheme::storeDataInWaveforms()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : getAccelerationData()) {
+  for (DataMap::value_type &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     _waveforms[pair.first]->moveToNextWindow(getTimeWindows(), _extrapolationOrder);
     pair.second->values() = _waveforms[pair.first]->lastTimeWindows().col(0);
