@@ -8,8 +8,13 @@
 #include "m2n/SharedPointer.hpp"
 
 namespace precice {
-namespace cplscheme {
 
+namespace testing {
+// Forward declaration to friend the boost test struct
+struct SerialCouplingSchemeFixture;
+} // namespace testing
+
+namespace cplscheme {
 /**
  * @brief Coupling scheme for serial coupling, i.e. staggered execution of two coupled participants
  *
@@ -17,6 +22,7 @@ namespace cplscheme {
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class SerialCouplingScheme : public BiCouplingScheme {
+  friend struct testing::SerialCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
  * @brief Constructor.

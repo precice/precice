@@ -69,14 +69,14 @@ void Participant::addWatchIntegral(
   _watchIntegrals.push_back(watchIntegral);
 }
 
-void Participant::useMesh(
-    const mesh::PtrMesh &                         mesh,
-    const Eigen::VectorXd &                       localOffset,
-    bool                                          remote,
-    const std::string &                           fromParticipant,
-    double                                        safetyFactor,
-    bool                                          provideMesh,
-    partition::ReceivedPartition::GeometricFilter geoFilter)
+void Participant::useMesh(const mesh::PtrMesh &                         mesh,
+                          const Eigen::VectorXd &                       localOffset,
+                          bool                                          remote,
+                          const std::string &                           fromParticipant,
+                          double                                        safetyFactor,
+                          bool                                          provideMesh,
+                          partition::ReceivedPartition::GeometricFilter geoFilter,
+                          const bool                                    allowDirectAccess)
 {
   PRECICE_TRACE(_name, mesh->getName(), mesh->getID());
   checkDuplicatedUse(mesh);
@@ -86,10 +86,11 @@ void Participant::useMesh(
   context->localOffset = localOffset;
   PRECICE_ASSERT(mesh->getDimensions() == context->localOffset.size(),
                  mesh->getDimensions(), context->localOffset.size());
-  context->receiveMeshFrom = fromParticipant;
-  context->safetyFactor    = safetyFactor;
-  context->provideMesh     = provideMesh;
-  context->geoFilter       = geoFilter;
+  context->receiveMeshFrom   = fromParticipant;
+  context->safetyFactor      = safetyFactor;
+  context->provideMesh       = provideMesh;
+  context->geoFilter         = geoFilter;
+  context->allowDirectAccess = allowDirectAccess;
 
   _meshContexts[mesh->getID()] = context;
 
@@ -107,11 +108,7 @@ void Participant::addWriteData(
 {
   checkDuplicatedData(data);
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size());
-  auto context      = new DataContext();
-  context->fromData = data;
-  context->mesh     = mesh;
-  // will be overwritten later if a mapping exists
-  context->toData              = context->fromData;
+  auto context                 = new DataContext(data, mesh);
   _dataContexts[data->getID()] = context;
   _writeDataContexts.push_back(context);
 }
@@ -122,11 +119,7 @@ void Participant::addReadData(
 {
   checkDuplicatedData(data);
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size());
-  auto context    = new DataContext();
-  context->toData = data;
-  context->mesh   = mesh;
-  // will be overwritten later if a mapping exists
-  context->fromData            = context->toData;
+  auto context                 = new DataContext(data, mesh);
   _dataContexts[data->getID()] = context;
   _readDataContexts.push_back(context);
 }
@@ -211,14 +204,14 @@ bool Participant::isDataUsed(DataID dataID) const
 bool Participant::isDataRead(DataID dataID) const
 {
   return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](const DataContext &context) {
-    return context.toData->getID() == dataID;
+    return context.getProvidedDataID() == dataID;
   });
 }
 
 bool Participant::isDataWrite(DataID dataID) const
 {
   return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](const DataContext &context) {
-    return context.fromData->getID() == dataID;
+    return context.getProvidedDataID() == dataID;
   });
 }
 
@@ -232,7 +225,7 @@ int Participant::getUsedDataID(const std::string &dataName, MeshID meshID) const
 std::string Participant::getDataName(DataID dataID) const
 {
   for (const MeshContext *mcptr : _meshContexts) {
-    if (mcptr) {
+    if (!mcptr) {
       continue;
     }
     for (const auto &dptr : mcptr->mesh->data()) {
@@ -354,6 +347,13 @@ bool Participant::isMeshProvided(MeshID meshID) const
 int Participant::getUsedMeshID(const std::string &meshName) const
 {
   return usedMeshContext(meshName).mesh->getID();
+}
+
+bool Participant::isDirectAccessAllowed(const int meshID) const
+{
+  PRECICE_ASSERT((meshID >= 0) && (meshID < (int) _meshContexts.size()));
+  auto context = _meshContexts[meshID];
+  return context->allowDirectAccess;
 }
 
 std::string Participant::getMeshName(MeshID meshID) const

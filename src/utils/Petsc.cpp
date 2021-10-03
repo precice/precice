@@ -166,7 +166,7 @@ MPI_Comm getCommunicator(T obj)
 }
 
 template <class T>
-void setName(T obj, std::string name)
+void setName(T obj, const std::string &name)
 {
   PetscErrorCode ierr = 0;
   ierr                = PetscObjectSetName(reinterpret_cast<PetscObject>(obj), name.c_str());
@@ -385,7 +385,7 @@ std::pair<PetscInt, PetscInt> Vector::ownerRange() const
   return std::make_pair(range_start, range_end);
 }
 
-void Vector::write(std::string filename, VIEWERFORMAT format) const
+void Vector::write(const std::string &filename, VIEWERFORMAT format) const
 {
   Viewer viewer{filename, format, getCommunicator(vector)};
   VecView(vector, viewer.viewer);
@@ -398,7 +398,7 @@ double Vector::l2norm() const
   return val;
 }
 
-void Vector::read(std::string filename, VIEWERFORMAT format)
+void Vector::read(const std::string &filename, VIEWERFORMAT format)
 {
   Viewer viewer{filename, format, getCommunicator(vector)};
   VecLoad(vector, viewer.viewer);
@@ -423,7 +423,7 @@ Matrix::Matrix(std::string name)
   PetscErrorCode ierr = 0;
   ierr                = MatCreate(utils::Parallel::current()->comm, &matrix);
   CHKERRV(ierr);
-  setName(matrix, name);
+  setName(matrix, std::move(name));
 }
 
 Matrix::~Matrix()
@@ -567,7 +567,7 @@ PetscInt Matrix::blockSize() const
   return bs;
 }
 
-void Matrix::write(std::string filename, VIEWERFORMAT format) const
+void Matrix::write(const std::string &filename, VIEWERFORMAT format) const
 {
   PetscErrorCode ierr = 0;
   Viewer         viewer{filename, format, getCommunicator(matrix)};
@@ -575,7 +575,7 @@ void Matrix::write(std::string filename, VIEWERFORMAT format) const
   CHKERRV(ierr);
 }
 
-void Matrix::read(std::string filename)
+void Matrix::read(const std::string &filename)
 {
   PetscErrorCode ierr = 0;
   Viewer         viewer{filename, BINARY, getCommunicator(matrix)};
@@ -614,7 +614,7 @@ KSPSolver::KSPSolver(std::string name)
   PetscErrorCode ierr = 0;
   ierr                = KSPCreate(utils::Parallel::current()->comm, &ksp);
   CHKERRV(ierr);
-  setName(ksp, name);
+  setName(ksp, std::move(name));
 }
 
 KSPSolver::~KSPSolver()

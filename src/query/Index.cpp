@@ -82,7 +82,7 @@ std::vector<TriangleMatch> Index::getClosestTriangles(const Eigen::VectorXd &sou
   return matches;
 }
 
-std::vector<size_t> Index::getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius)
+std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius)
 {
   PRECICE_TRACE();
   // Add tree to the local cache
@@ -95,13 +95,13 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::Vertex &centerVertex
   auto coords    = centerVertex.getCoords();
   auto searchBox = query::makeBox(coords.array() - radius, coords.array() + radius);
 
-  std::vector<size_t> matches;
+  std::vector<VertexID> matches;
   _pimpl->indices.vertexRTree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
                                      std::back_inserter(matches));
   return matches;
 }
 
-std::vector<size_t> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
+std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
 {
   PRECICE_TRACE();
   // Add tree to the local cache
@@ -109,12 +109,12 @@ std::vector<size_t> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
     precice::utils::Event e("query.index.getVertexIndexTree." + _mesh->getName());
     _pimpl->indices.vertexRTree = impl::Indexer::instance()->getVertexRTree(_mesh);
   }
-  std::vector<size_t> matches;
+  std::vector<VertexID> matches;
   _pimpl->indices.vertexRTree->query(bgi::intersects(query::makeBox(bb.minCorner(), bb.maxCorner())), std::back_inserter(matches));
   return matches;
 }
 
-std::pair<mapping::Polation, double> Index::findNearestProjection(const Eigen::VectorXd &location, int n)
+ProjectionMatch Index::findNearestProjection(const Eigen::VectorXd &location, int n)
 {
   if (_mesh->getDimensions() == 2) {
     return findEdgeProjection(location, n);
@@ -123,32 +123,32 @@ std::pair<mapping::Polation, double> Index::findNearestProjection(const Eigen::V
   }
 }
 
-std::pair<mapping::Polation, double> Index::findVertexProjection(const Eigen::VectorXd &location)
+ProjectionMatch Index::findVertexProjection(const Eigen::VectorXd &location)
 {
   auto match = getClosestVertex(location);
-  return std::pair<mapping::Polation, double>(mapping::Polation(_mesh->vertices()[match.index]), match.distance);
+  return {mapping::Polation{_mesh->vertices()[match.index]}, match.distance};
 }
 
-std::pair<mapping::Polation, double> Index::findEdgeProjection(const Eigen::VectorXd &location, int n)
+ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n)
 {
   auto matchedEdges = getClosestEdges(location, n);
   for (const auto &match : matchedEdges) {
     auto polation = mapping::Polation(location, _mesh->edges()[match.index]);
     if (polation.isInterpolation()) {
-      return std::pair<mapping::Polation, double>(polation, match.distance);
+      return {polation, match.distance};
     }
   }
   // Could not find edge projection element, fall back to vertex projection
   return findVertexProjection(location);
 }
 
-std::pair<mapping::Polation, double> Index::findTriangleProjection(const Eigen::VectorXd &location, int n)
+ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, int n)
 {
   auto matchedTriangles = getClosestTriangles(location, n);
   for (const auto &match : matchedTriangles) {
     auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
     if (polation.isInterpolation()) {
-      return std::pair<mapping::Polation, double>(polation, match.distance);
+      return {polation, match.distance};
     }
   }
 

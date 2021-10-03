@@ -235,7 +235,7 @@ public:
       bool                        doesLogging);
 
   /// Set an acceleration technique.
-  void setAcceleration(acceleration::PtrAcceleration acceleration);
+  void setAcceleration(const acceleration::PtrAcceleration &acceleration);
 
   /**
    * @brief Getter for _doesFirstStep
@@ -259,10 +259,10 @@ protected:
   DataMap _allData;
 
   /// Sends data sendDataIDs given in mapCouplingData with communication.
-  void sendData(m2n::PtrM2N m2n, DataMap sendData);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
   /// Receives data receiveDataIDs given in mapCouplingData with communication.
-  void receiveData(m2n::PtrM2N m2n, DataMap receiveData);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -336,7 +336,7 @@ protected:
    * @param m2n used for sending
    * @param convergence bool that is being sent
    */
-  void sendConvergence(m2n::PtrM2N m2n, bool convergence);
+  void sendConvergence(const m2n::PtrM2N &m2n, bool convergence);
 
   /**
    * @brief receives convergence from other participant via m2n
@@ -421,9 +421,6 @@ private:
 
   /// Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder = 0;
-
-  /// valid digits for computation of the remainder of a time window
-  int _validDigits;
 
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;

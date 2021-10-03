@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <deque>
 #include <memory>
+#include <utility>
+
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
@@ -33,7 +35,7 @@ IQNILSAcceleration::IQNILSAcceleration(
     std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, dataIDs, preconditioner)
+                         filter, singularityLimit, std::move(dataIDs), std::move(preconditioner))
 {
 }
 
@@ -47,7 +49,7 @@ void IQNILSAcceleration::initialize(
   for (DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _dataIDs)) {
       int secondaryEntries = pair.second->values().size();
-      utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
+      utils::append(_secondaryOldXTildes[pair.first], Eigen::VectorXd(Eigen::VectorXd::Zero(secondaryEntries)));
     }
   }
 }
@@ -158,7 +160,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
 
   PRECICE_ASSERT(c.size() == 0, c.size());
   // reserve memory for c
-  utils::append(c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
+  utils::append(c, Eigen::VectorXd(Eigen::VectorXd::Zero(_local_b.size())));
 
   // compute rhs Q^T*res in parallel
   if (!utils::MasterSlave::isParallel()) {
@@ -176,10 +178,10 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     if (utils::MasterSlave::isMaster()) {
       PRECICE_ASSERT(_global_b.size() == 0, _global_b.size());
     }
-    utils::append(_global_b, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
+    utils::append(_global_b, Eigen::VectorXd(Eigen::VectorXd::Zero(_local_b.size())));
 
     // do a reduce operation to sum up all the _local_b vectors
-    utils::MasterSlave::reduceSum(_local_b.data(), _global_b.data(), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
+    utils::MasterSlave::reduceSum(_local_b, _global_b);
 
     // back substitution R*c = b only in master node
     if (utils::MasterSlave::isMaster()) {
@@ -187,7 +189,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     }
 
     // broadcast coefficients c to all slaves
-    utils::MasterSlave::broadcast(c.data(), c.size());
+    utils::MasterSlave::broadcast(c);
   }
 
   PRECICE_DEBUG("   Apply Newton factors");
@@ -252,7 +254,7 @@ void IQNILSAcceleration::specializedIterationsConverged(
        * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _timeWindowsReused) {
+  } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
     int toRemove = _matrixCols.back();
     for (int id : _secondaryDataIDs) {
       Eigen::MatrixXd &secW = _secondaryMatricesW[id];

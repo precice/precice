@@ -6,6 +6,7 @@
 #include "Request.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace com {
@@ -38,28 +39,30 @@ void Communication::connectMasterSlaves(std::string const &participantName,
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size)
+void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive)
 {
-  PRECICE_TRACE(size);
+  PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
+  PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
-  std::copy(itemsToSend, itemsToSend + size, itemsToReceive);
+  std::copy(itemsToSend.begin(), itemsToSend.end(), itemsToReceive.begin());
 
-  std::vector<double> received(size);
+  std::vector<double> received(itemsToReceive.size());
   // receive local results from slaves
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aReceive(received.data(), size, rank + _rankOffset);
+  for (Rank rank : remoteCommunicatorRanks()) {
+    auto request = aReceive(received, rank + _rankOffset);
     request->wait();
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < itemsToReceive.size(); i++) {
       itemsToReceive[i] += received[i];
     }
   }
 }
 
-void Communication::reduceSum(double const *itemsToSend, double *itemsToReceive, int size, Rank rankMaster)
+void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster)
 {
-  PRECICE_TRACE(size);
+  PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
+  PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
-  auto request = aSend(itemsToSend, size, rankMaster);
+  auto request = aSend(itemsToSend, rankMaster);
   request->wait();
 }
 
@@ -70,7 +73,7 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive)
   itemToReceive = itemToSend;
 
   // receive local results from slaves
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+  for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
     itemToReceive += itemToSend;
@@ -81,34 +84,25 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive, Rank rankMaste
 {
   PRECICE_TRACE();
 
-  auto request = aSend(&itemToSend, 1, rankMaster);
+  auto request = aSend(itemToSend, rankMaster);
   request->wait();
 }
 
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size)
+void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive)
 {
-  PRECICE_TRACE(size);
+  PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
+  PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
-  std::copy(itemsToSend, itemsToSend + size, itemsToReceive);
-
-  std::vector<double> received(size);
-  // receive local results from slaves
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aReceive(received.data(), size, rank + _rankOffset);
-    request->wait();
-    for (int i = 0; i < size; i++) {
-      itemsToReceive[i] += received[i];
-    }
-  }
+  reduceSum(itemsToSend, itemsToReceive);
 
   // send reduced result to all slaves
-  std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request   = aSend(itemsToReceive, size, rank + _rankOffset);
-    requests[rank] = request;
+  std::vector<PtrRequest> requests;
+  requests.reserve(getRemoteCommunicatorSize());
+  for (Rank rank : remoteCommunicatorRanks()) {
+    requests.push_back(aSend(itemsToReceive, rank + _rankOffset));
   }
   Request::wait(requests);
 }
@@ -116,14 +110,14 @@ void Communication::allreduceSum(double const *itemsToSend, double *itemsToRecei
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::allreduceSum(double const *itemsToSend, double *itemsToReceive, int size, Rank rankMaster)
+void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster)
 {
-  PRECICE_TRACE(size);
+  PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
+  PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
-  auto request = aSend(itemsToSend, size, rankMaster);
-  request->wait();
+  reduceSum(itemsToSend, itemsToReceive, rankMaster);
   // receive reduced data from master
-  receive(itemsToReceive, size, rankMaster + _rankOffset);
+  receive(itemsToReceive, rankMaster + _rankOffset);
 }
 
 void Communication::allreduceSum(double itemToSend, double &itemToReceive)
@@ -133,16 +127,16 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
   itemToReceive = itemToSend;
 
   // receive local results from slaves
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request = aReceive(&itemToSend, 1, rank + _rankOffset);
+  for (Rank rank : remoteCommunicatorRanks()) {
+    auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
     itemToReceive += itemToSend;
   }
 
   // send reduced result to all slaves
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request   = aSend(&itemToReceive, 1, rank + _rankOffset);
+  for (Rank rank : remoteCommunicatorRanks()) {
+    auto request   = aSend(itemToReceive, rank + _rankOffset);
     requests[rank] = request;
   }
   Request::wait(requests);
@@ -152,10 +146,10 @@ void Communication::allreduceSum(double itemToSend, double &itemsToReceive, Rank
 {
   PRECICE_TRACE();
 
-  auto request = aSend(&itemToSend, 1, rankMaster);
+  auto request = aSend(itemToSend, rankMaster);
   request->wait();
   // receive reduced data from master
-  receive(&itemsToReceive, 1, rankMaster + _rankOffset);
+  receive(itemsToReceive, rankMaster + _rankOffset);
 }
 
 void Communication::allreduceSum(int itemToSend, int &itemToReceive)
@@ -165,7 +159,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
   itemToReceive = itemToSend;
 
   // receive local results from slaves
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+  for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
     itemToReceive += itemToSend;
@@ -173,8 +167,8 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
 
   // send reduced result to all slaves
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request   = aSend(&itemToReceive, 1, rank + _rankOffset);
+  for (Rank rank : remoteCommunicatorRanks()) {
+    auto request   = aSend(itemToReceive, rank + _rankOffset);
     requests[rank] = request;
   }
   Request::wait(requests);
@@ -184,31 +178,31 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive, Rank rankMa
 {
   PRECICE_TRACE();
 
-  auto request = aSend(&itemToSend, 1, rankMaster);
+  auto request = aSend(itemToSend, rankMaster);
   request->wait();
   // receive reduced data from master
-  receive(&itemToReceive, 1, rankMaster + _rankOffset);
+  receive(itemToReceive, rankMaster + _rankOffset);
 }
 
-void Communication::broadcast(const int *itemsToSend, int size)
+void Communication::broadcast(precice::span<const int> itemsToSend)
 {
-  PRECICE_TRACE(size);
+  PRECICE_TRACE(itemsToSend.size());
 
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request   = aSend(itemsToSend, size, rank + _rankOffset);
+  for (Rank rank : remoteCommunicatorRanks()) {
+    auto request   = aSend(itemsToSend, rank + _rankOffset);
     requests[rank] = request;
   }
 
   Request::wait(requests);
 }
 
-void Communication::broadcast(int *itemsToReceive, int size, Rank rankBroadcaster)
+void Communication::broadcast(precice::span<int> itemsToReceive, Rank rankBroadcaster)
 {
-  PRECICE_TRACE(size);
+  PRECICE_TRACE(itemsToReceive.size());
 
-  receive(itemsToReceive, size, rankBroadcaster + _rankOffset);
+  receive(itemsToReceive, rankBroadcaster + _rankOffset);
 }
 
 void Communication::broadcast(int itemToSend)
@@ -217,7 +211,7 @@ void Communication::broadcast(int itemToSend)
 
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+  for (Rank rank : remoteCommunicatorRanks()) {
     auto request   = aSend(itemToSend, rank + _rankOffset);
     requests[rank] = request;
   }
@@ -231,26 +225,25 @@ void Communication::broadcast(int &itemToReceive, Rank rankBroadcaster)
   receive(itemToReceive, rankBroadcaster + _rankOffset);
 }
 
-void Communication::broadcast(const double *itemsToSend, int size)
+void Communication::broadcast(precice::span<const double> itemsToSend)
 {
-  PRECICE_TRACE(size);
+  PRECICE_TRACE(itemsToSend.size());
 
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
-    auto request   = aSend(itemsToSend, size, rank + _rankOffset);
+  for (Rank rank : remoteCommunicatorRanks()) {
+    auto request   = aSend(itemsToSend, rank + _rankOffset);
     requests[rank] = request;
   }
 
   Request::wait(requests);
 }
 
-void Communication::broadcast(double *itemsToReceive,
-                              int     size,
-                              int     rankBroadcaster)
+void Communication::broadcast(precice::span<double> itemsToReceive,
+                              int                   rankBroadcaster)
 {
-  PRECICE_TRACE(size);
-  receive(itemsToReceive, size, rankBroadcaster + _rankOffset);
+  PRECICE_TRACE(itemsToReceive.size());
+  receive(itemsToReceive, rankBroadcaster + _rankOffset);
 }
 
 void Communication::broadcast(double itemToSend)
@@ -259,7 +252,7 @@ void Communication::broadcast(double itemToSend)
 
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
-  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+  for (Rank rank : remoteCommunicatorRanks()) {
     auto request   = aSend(itemToSend, rank + _rankOffset);
     requests[rank] = request;
   }
@@ -291,31 +284,33 @@ void Communication::broadcast(bool &itemToReceive, Rank rankBroadcaster)
 void Communication::broadcast(std::vector<int> const &v)
 {
   broadcast(static_cast<int>(v.size()));
-  broadcast(const_cast<int *>(v.data()), v.size()); // make it send vector
+  broadcast(precice::span<const int>{v});
 }
 
 void Communication::broadcast(std::vector<int> &v, Rank rankBroadcaster)
 {
-  v.clear();
   int size = 0;
   broadcast(size, rankBroadcaster);
+
+  v.clear();
   v.resize(size);
-  broadcast(v.data(), size, rankBroadcaster);
+  broadcast(precice::span<int>{v}, rankBroadcaster);
 }
 
 void Communication::broadcast(std::vector<double> const &v)
 {
   broadcast(static_cast<int>(v.size()));
-  broadcast(v.data(), v.size()); // make it send vector
+  broadcast(precice::span<const double>{v});
 }
 
 void Communication::broadcast(std::vector<double> &v, Rank rankBroadcaster)
 {
-  v.clear();
   int size = 0;
   broadcast(size, rankBroadcaster);
+
+  v.clear();
   v.resize(size);
-  broadcast(v.data(), size, rankBroadcaster);
+  broadcast(precice::span<double>{v}, rankBroadcaster);
 }
 
 int Communication::adjustRank(Rank rank) const

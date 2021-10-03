@@ -144,10 +144,10 @@ public:
   std::pair<PetscInt, PetscInt> ownerRange() const;
 
   /// Writes the vector to file.
-  void write(std::string filename, VIEWERFORMAT format = ASCII) const;
+  void write(const std::string &filename, VIEWERFORMAT format = ASCII) const;
 
   /// Reads the vector from file.
-  void read(std::string filename, VIEWERFORMAT format = ASCII);
+  void read(const std::string &filename, VIEWERFORMAT format = ASCII);
 
   /// Prints the vector
   void view() const;
@@ -220,10 +220,10 @@ public:
   PetscInt blockSize() const;
 
   /// Writes the matrix to file.
-  void write(std::string filename, VIEWERFORMAT format = ASCII) const;
+  void write(const std::string &filename, VIEWERFORMAT format = ASCII) const;
 
   /// Reads the matrix from file, stored in PETSc binary format
-  void read(std::string filename);
+  void read(const std::string &filename);
 
   /// Prints the matrix
   void view() const;

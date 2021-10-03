@@ -138,14 +138,14 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
 }
 
 void MultiCouplingScheme::addDataToSend(
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          initialize,
-    std::string   to)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 initialize,
+    const std::string &  to)
 {
   int id = data->getID();
   PRECICE_DEBUG("Configuring send data to {}", to);
-  PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
+  PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize));
   DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
   _sendDataVector[to].insert(dataPair);
   if (!utils::contained(id, _allData)) {
@@ -154,14 +154,14 @@ void MultiCouplingScheme::addDataToSend(
 }
 
 void MultiCouplingScheme::addDataToReceive(
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          initialize,
-    std::string   from)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 initialize,
+    const std::string &  from)
 {
   int id = data->getID();
   PRECICE_DEBUG("Configuring receive data from {}", from);
-  PtrCouplingData     ptrCplData(new CouplingData(data, mesh, initialize));
+  PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize));
   DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
   _receiveDataVector[from].insert(dataPair);
   if (!utils::contained(id, _allData)) {

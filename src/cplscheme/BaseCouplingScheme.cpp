@@ -42,7 +42,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _maxIterations(maxIterations),
       _iterations(1),
       _totalIterations(1),
-      _validDigits(validDigits),
       _localParticipant(std::move(localParticipant)),
       _eps(std::pow(10.0, -1 * validDigits))
 {
@@ -52,7 +51,7 @@ BaseCouplingScheme::BaseCouplingScheme(
                  "Maximum number of time windows has to be larger than zero.");
   PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
                  "Time window size has to be larger than zero.");
-  PRECICE_ASSERT((_validDigits >= 1) && (_validDigits < 17),
+  PRECICE_ASSERT((validDigits >= 1) && (validDigits < 17),
                  "Valid digits of time window size has to be between 1 and 16.");
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
     PRECICE_ASSERT(hasTimeWindowSize(),
@@ -69,7 +68,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
-void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
+void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
   std::vector<int> sentDataIDs;
@@ -77,27 +76,23 @@ void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const DataMap::value_type &pair : sendData) {
-    int size = pair.second->values().size();
-
     // Data is actually only send if size>0, which is checked in the derived classes implementaiton
-    m2n->send(pair.second->values().data(), size, pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     sentDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
-void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   PRECICE_TRACE();
   std::vector<int> receivedDataIDs;
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
-  for (DataMap::value_type &pair : receiveData) {
-    int size = pair.second->values().size();
-
+  for (const DataMap::value_type &pair : receiveData) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
-    m2n->receive(pair.second->values().data(), size, pair.second->getMeshID(), pair.second->getDimensions());
+    m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     receivedDataIDs.push_back(pair.first);
   }
@@ -171,6 +166,10 @@ void BaseCouplingScheme::initializeData()
   PRECICE_DEBUG("Initializing Data ...");
 
   _hasDataBeenReceived = false;
+
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
+  }
 
   exchangeInitialData();
 }
@@ -443,7 +442,7 @@ void BaseCouplingScheme::setupDataMatrices()
 }
 
 void BaseCouplingScheme::setAcceleration(
-    acceleration::PtrAcceleration acceleration)
+    const acceleration::PtrAcceleration &acceleration)
 {
   PRECICE_ASSERT(acceleration.get() != nullptr);
   _acceleration = acceleration;
@@ -510,7 +509,7 @@ bool BaseCouplingScheme::measureConvergence()
       oneSuffices = true;
     }
 
-    PRECICE_INFO(convMeasure.measure->printState());
+    PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
   }
 
   if (allConverged) {
@@ -646,7 +645,7 @@ void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContex
   convergenceMeasure->couplingData = &(*(iter->second));
 }
 
-void BaseCouplingScheme::sendConvergence(m2n::PtrM2N m2n, bool convergence)
+void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n, bool convergence)
 {
   PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
   m2n->send(convergence);

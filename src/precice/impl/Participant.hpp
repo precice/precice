@@ -16,6 +16,7 @@
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "precice/impl/DataContext.hpp"
 #include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
@@ -23,7 +24,7 @@
 
 namespace precice {
 namespace impl {
-struct DataContext;
+class DataContext;
 struct MeshContext;
 struct MappingContext;
 } // namespace impl
@@ -104,14 +105,14 @@ public:
   void addExportContext(const io::ExportContext &context);
 
   /// Adds a mesh to be used by the participant.
-  void useMesh(
-      const mesh::PtrMesh &                         mesh,
-      const Eigen::VectorXd &                       localOffset,
-      bool                                          remote,
-      const std::string &                           fromParticipant,
-      double                                        safetyFactor,
-      bool                                          provideMesh,
-      partition::ReceivedPartition::GeometricFilter geoFilter);
+  void useMesh(const mesh::PtrMesh &                         mesh,
+               const Eigen::VectorXd &                       localOffset,
+               bool                                          remote,
+               const std::string &                           fromParticipant,
+               double                                        safetyFactor,
+               bool                                          provideMesh,
+               partition::ReceivedPartition::GeometricFilter geoFilter,
+               const bool                                    allowDirectAccess);
   /// @}
 
   /// @name Data queries
@@ -240,6 +241,10 @@ public:
   /// Get the used mesh id of a mesh with this name.
   int getUsedMeshID(const std::string &meshName) const;
 
+  /// Returns whether we are allowed to access a received mesh direct
+  /// which requires the config tag <use-mesh ... direct-access="true"
+  bool isDirectAccessAllowed(const int meshID) const;
+
   /// Get the name of a mesh given by its id.
   std::string getMeshName(MeshID meshID) const;
 
@@ -308,8 +313,6 @@ private:
   utils::ptr_vector<DataContext> _writeDataContexts;
 
   utils::ptr_vector<DataContext> _readDataContexts;
-
-  //io::ExportContext _exportContext;
 
   bool _useMaster = false;
 

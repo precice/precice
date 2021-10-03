@@ -21,10 +21,10 @@ public:
 	 * 
 	 */
   SummationAction(
-      Timing               timing,
-      std::vector<int>     sourceDataIDs,
-      int                  targetDataID,
-      const mesh::PtrMesh &mesh);
+      Timing                  timing,
+      const std::vector<int> &sourceDataIDs,
+      int                     targetDataID,
+      const mesh::PtrMesh &   mesh);
 
   virtual ~SummationAction() {}
 

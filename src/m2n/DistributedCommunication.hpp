@@ -4,6 +4,7 @@
 #include <vector>
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "utils/span.hpp"
 
 namespace precice {
 namespace m2n {
@@ -105,16 +106,10 @@ public:
   virtual void closeConnection() = 0;
 
   /// Sends an array of double values from all slaves (different for each slave).
-  virtual void send(
-      double const *itemsToSend,
-      size_t        size,
-      int           valueDimension) = 0;
+  virtual void send(precice::span<double const> itemsToSend, int valueDimension) = 0;
 
   /// All slaves receive an array of doubles (different for each slave).
-  virtual void receive(
-      double *itemsToReceive,
-      size_t  size,
-      int     valueDimension) = 0;
+  virtual void receive(precice::span<double> itemsToReceive, int valueDimension) = 0;
 
   /*
    * A mapping from remote local ranks to the IDs that must be communicated

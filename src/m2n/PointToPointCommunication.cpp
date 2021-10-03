@@ -31,7 +31,7 @@ namespace m2n {
 
 void send(mesh::Mesh::VertexDistribution const &m,
           int                                   rankReceiver,
-          com::PtrCommunication                 communication)
+          const com::PtrCommunication &         communication)
 {
   communication->send(static_cast<int>(m.size()), rankReceiver);
 
@@ -45,7 +45,7 @@ void send(mesh::Mesh::VertexDistribution const &m,
 
 void receive(mesh::Mesh::VertexDistribution &m,
              int                             rankSender,
-             com::PtrCommunication           communication)
+             const com::PtrCommunication &   communication)
 {
   m.clear();
   int size = 0;
@@ -59,7 +59,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
 }
 
 void broadcastSend(mesh::Mesh::VertexDistribution const &m,
-                   com::PtrCommunication                 communication = utils::MasterSlave::_communication)
+                   const com::PtrCommunication &         communication = utils::MasterSlave::_communication)
 {
   communication->broadcast(static_cast<int>(m.size()));
 
@@ -73,7 +73,7 @@ void broadcastSend(mesh::Mesh::VertexDistribution const &m,
 
 void broadcastReceive(mesh::Mesh::VertexDistribution &m,
                       int                             rankBroadcaster,
-                      com::PtrCommunication           communication = utils::MasterSlave::_communication)
+                      const com::PtrCommunication &   communication = utils::MasterSlave::_communication)
 {
   m.clear();
   int size = 0;
@@ -287,7 +287,7 @@ std::map<int, std::vector<int>> buildCommunicationMap(
 PointToPointCommunication::PointToPointCommunication(
     com::PtrCommunicationFactory communicationFactory,
     mesh::PtrMesh                mesh)
-    : DistributedCommunication(mesh),
+    : DistributedCommunication(std::move(mesh)),
       _communicationFactory(std::move(communicationFactory))
 {
 }
@@ -579,12 +579,10 @@ void PointToPointCommunication::closeConnection()
   _isConnected = false;
 }
 
-void PointToPointCommunication::send(double const *itemsToSend,
-                                     size_t        size,
-                                     int           valueDimension)
+void PointToPointCommunication::send(precice::span<double const> itemsToSend, int valueDimension)
 {
 
-  if (_mappings.empty() || size == 0) {
+  if (_mappings.empty() || itemsToSend.empty()) {
     return;
   }
 
@@ -602,19 +600,15 @@ void PointToPointCommunication::send(double const *itemsToSend,
   checkBufferedRequests(false);
 }
 
-void PointToPointCommunication::receive(double *itemsToReceive,
-                                        size_t  size,
-                                        int     valueDimension)
+void PointToPointCommunication::receive(precice::span<double> itemsToReceive, int valueDimension)
 {
-  if (_mappings.empty() || size == 0) {
+  if (_mappings.empty() || itemsToReceive.empty()) {
     return;
   }
 
-  std::fill(itemsToReceive, itemsToReceive + size, 0);
+  std::fill(itemsToReceive.begin(), itemsToReceive.end(), 0.0);
 
   for (auto &mapping : _mappings) {
-    // if (not utils::MasterSlave::isMaster())
-    //   std::cout<< "indices " << mapping.indices << std::endl;
     mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);
     mapping.request = _communication->aReceive(mapping.recvBuffer, mapping.remoteRank);
   }

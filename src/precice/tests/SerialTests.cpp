@@ -110,6 +110,46 @@ BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
   BOOST_TEST(comsol->_usedMeshContexts.size() == 1);
 }
 
+BOOST_AUTO_TEST_SUITE(MeshRequirements)
+
+BOOST_AUTO_TEST_CASE(NN_A)
+{
+  PRECICE_TEST(1_rank);
+  std::string     filename = _pathToTests + "meshrequirements-nn.xml";
+  SolverInterface interface("A", filename, 0, 1);
+  auto            meshID = interface.getMeshID("MeshA");
+  BOOST_TEST(!interface.isMeshConnectivityRequired(meshID));
+}
+
+BOOST_AUTO_TEST_CASE(NN_B)
+{
+  PRECICE_TEST(1_rank);
+  std::string     filename = _pathToTests + "meshrequirements-nn.xml";
+  SolverInterface interface("B", filename, 0, 1);
+  auto            meshID = interface.getMeshID("MeshB");
+  BOOST_TEST(!interface.isMeshConnectivityRequired(meshID));
+}
+
+BOOST_AUTO_TEST_CASE(NP2D_A)
+{
+  PRECICE_TEST(1_rank);
+  std::string     filename = _pathToTests + "meshrequirements-np.xml";
+  SolverInterface interface("A", filename, 0, 1);
+  auto            meshID = interface.getMeshID("MeshA");
+  BOOST_TEST(interface.isMeshConnectivityRequired(meshID));
+}
+
+BOOST_AUTO_TEST_CASE(NP2D_B)
+{
+  PRECICE_TEST(1_rank);
+  std::string     filename = _pathToTests + "meshrequirements-np.xml";
+  SolverInterface interface("B", filename, 0, 1);
+  auto            meshID = interface.getMeshID("MeshB");
+  BOOST_TEST(!interface.isMeshConnectivityRequired(meshID));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 
 // Test representing the full explicit lifecycle of a SolverInterface
@@ -288,7 +328,120 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling)
   }
 }
 
+/// Test to run a simple coupling with subcycling.
+/// Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.
+BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  SolverInterface precice(context.name, _pathToTests + "explicit-scalar-data-init.xml", 0, 1); // serial coupling, SolverOne first
+
+  MeshID meshID;
+  DataID writeDataID;
+  DataID readDataID;
+
+  typedef double (*DataFunction)(double, int);
+
+  DataFunction dataOneFunction = [](double t, int idx) -> double {
+    return (double) (2 + t + idx);
+  };
+  DataFunction dataTwoFunction = [](double t, int idx) -> double {
+    return (double) (10 + t + idx);
+  };
+  DataFunction writeFunction;
+  DataFunction readFunction;
+
+  if (context.isNamed("SolverOne")) {
+    meshID        = precice.getMeshID("MeshOne");
+    writeDataID   = precice.getDataID("DataOne", meshID);
+    writeFunction = dataOneFunction;
+    readDataID    = precice.getDataID("DataTwo", meshID);
+    readFunction  = dataTwoFunction;
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    meshID        = precice.getMeshID("MeshTwo");
+    writeDataID   = precice.getDataID("DataTwo", meshID);
+    writeFunction = dataTwoFunction;
+    readDataID    = precice.getDataID("DataOne", meshID);
+    readFunction  = dataOneFunction;
+  }
+
+  int n_vertices = 1;
+
+  std::vector<VertexID> vertexIDs(n_vertices, 0);
+  std::vector<double>   writeData(n_vertices, 0);
+  std::vector<double>   readData(n_vertices, 0);
+  double                oldWriteData, oldReadData;
+
+  vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+
+  int    nSubsteps     = 4; // perform subcycling on solvers. 4 steps happen in each window.
+  int    nWindows      = 5; // perform 5 windows.
+  double maxDt         = precice.initialize();
+  double windowDt      = maxDt;
+  int    timestep      = 0;
+  int    timewindow    = 0;
+  double dt            = windowDt / (nSubsteps - 0.5); // Timestep length desired by solver. E.g. 4 steps with size 2/7. Fourth step will be restricted to 1/7 via preCICE steering to fit into the window.
+  double expectedDts[] = {2.0 / 7.0, 2.0 / 7.0, 2.0 / 7.0, 1.0 / 7.0};
+  double currentDt     = dt; // Timestep length used by solver
+  double time          = timestep * dt;
+
+  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
+    for (int i = 0; i < n_vertices; i++) {
+      writeData[i] = writeFunction(time, i);
+      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+    }
+    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
+  }
+
+  precice.initializeData();
+
+  while (precice.isCouplingOngoing()) {
+    double readTime;
+    if (context.isNamed("SolverOne")) {
+      readTime = timewindow * windowDt; // SolverOne lags one window behind SolverTwo for serial-explicit coupling.
+    } else {
+      readTime = (timewindow + 1) * windowDt;
+    }
+    BOOST_TEST(readData.size() == n_vertices);
+    for (int i = 0; i < n_vertices; i++) {
+      oldReadData = readData[i];
+      precice.readScalarData(readDataID, vertexIDs[i], readData[i]);
+      if (precice.isTimeWindowComplete() ||
+          (timestep == 0)) {                      // exception: First timestep will also have different data, even though formally no time window is completed.
+        BOOST_TEST((readData[i] != oldReadData)); // ensure that read data changes from one step to the next, if a new window is entered
+      } else {
+        BOOST_TEST((readData[i] == oldReadData)); // ensure that read data stays the same from one step to the next, if not a new window is entered
+      }
+      BOOST_TEST(readData[i] == readFunction(readTime, i));
+    }
+
+    // solve usually goes here. Dummy solve: Just sampling the writeFunction.
+    BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
+    time += currentDt;
+
+    BOOST_TEST(writeData.size() == n_vertices);
+    for (int i = 0; i < n_vertices; i++) {
+      oldWriteData = writeData[i];
+      writeData[i] = writeFunction(time, i);
+      BOOST_TEST(writeData[i] != oldWriteData); // ensure that write data differs from one step to the next
+      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+    }
+    maxDt     = precice.advance(currentDt);
+    currentDt = dt > maxDt ? maxDt : dt;
+    timestep++;
+    if (precice.isTimeWindowComplete()) {
+      timewindow++;
+    }
+  }
+
+  precice.finalize();
+  BOOST_TEST(timestep == nWindows * nSubsteps);
+}
+
 /// One solver uses incremental position set, read/write methods.
+/// @todo This test uses resetmesh. How did this ever work?
+#if 0
 BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
@@ -378,6 +531,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
     cplInterface.finalize();
   }
 }
+#endif
 
 /**
  * @brief The second solver initializes the data of the first.
@@ -419,7 +573,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization)
     int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
     cplInterface.writeScalarData(dataBID, 0, 2.0);
-    //sagen dass daten jetzt geschrieben
+    //tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
     Vector3d valueDataA;
@@ -437,6 +591,8 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization)
 }
 
 /// One solver uses block set/get/read/write methods.
+/// @todo This test uses resetmesh. How did this ever work?
+#if 0
 BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
@@ -570,6 +726,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange)
     cplInterface.finalize();
   }
 }
+#endif
 
 /**
   * @brief Runs a coupled simulation where one solver supplies a geometry.
@@ -682,6 +839,372 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling)
       dt = cplInterface.advance(dt);
     }
     cplInterface.finalize();
+  }
+}
+
+// Test case for a direct mesh access on one participant to a mesh defined
+// by another participant. The region of interest is defined thorugh a
+// boundingBox. The test case here is the most basic variant in order
+// use such a feature. SolverTwo defines the mesh whereas SolverOne writes
+// directly on this mesh.
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshExplicit)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  // Set up Solverinterface
+  SolverInterface couplingInterface(context.name, _pathToTests + "explicit-direct-access.xml", 0, 1);
+  BOOST_TEST(couplingInterface.getDimensions() == 2);
+
+  std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
+  std::vector<int>    ids(4, 0);
+
+  constexpr int               dim         = 2;
+  std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
+
+  if (context.isNamed("SolverOne")) {
+    const int otherMeshID = couplingInterface.getMeshID("MeshTwo");
+    const int dataID      = couplingInterface.getDataID("Velocities", otherMeshID);
+
+    // Define region of interest, where we could obtain direct write access
+    couplingInterface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+
+    double dt = couplingInterface.initialize();
+    // Get the size of the filtered mesh within the bounding box
+    // (provided by the coupling participant)
+    const int meshSize = couplingInterface.getMeshVertexSize(otherMeshID);
+    BOOST_TEST(meshSize == (ids.size()));
+
+    // Allocate a vector containing the vertices
+    std::vector<double> solverTwoMesh(meshSize * dim);
+    couplingInterface.getMeshVerticesAndIDs(otherMeshID, meshSize, ids.data(), solverTwoMesh.data());
+    // Some dummy writeData
+    std::array<double, 4> writeData({1, 2, 3, 4});
+
+    // Expected data = positions of the other participant's mesh
+    const std::vector<double> expectedData = positions;
+    BOOST_TEST(testing::equals(solverTwoMesh, expectedData));
+
+    while (couplingInterface.isCouplingOngoing()) {
+      // Write data
+      couplingInterface.writeBlockScalarData(dataID, meshSize,
+                                             ids.data(), writeData.data());
+      dt = couplingInterface.advance(dt);
+    }
+
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    // Query IDs
+    const int meshID = couplingInterface.getMeshID("MeshTwo");
+    const int dataID = couplingInterface.getDataID("Velocities", meshID);
+
+    // Define the mesh
+    couplingInterface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
+    // Allocate data to read
+    std::vector<double> readData(4, std::numeric_limits<double>::max());
+
+    // Initialize
+    double dt = couplingInterface.initialize();
+    while (couplingInterface.isCouplingOngoing()) {
+
+      dt = couplingInterface.advance(dt);
+      couplingInterface.readBlockScalarData(dataID, ids.size(),
+                                            ids.data(), readData.data());
+      // Expected data according to the writeData
+      std::vector<double> expectedData({1, 2, 3, 4});
+      BOOST_TEST(testing::equals(expectedData, readData));
+    }
+  }
+}
+
+// Test case for a direct mesh access on one participant to a mesh defined
+// by another participant. The region of interest is defined thorugh a
+// boundingBox. The test case here is the most basic variant in order
+// use such a feature. SolverTwo defines the mesh whereas SolverOne reads
+// directly from this mesh.
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshExplicitRead)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  // Set up Solverinterface
+  SolverInterface couplingInterface(context.name, _pathToTests + "explicit-direct-access-read.xml", 0, 1);
+  BOOST_TEST(couplingInterface.getDimensions() == 2);
+
+  std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
+  std::vector<int>    ids(4, 0);
+
+  constexpr int               dim         = 2;
+  std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
+
+  if (context.isNamed("SolverOne")) {
+    const int otherMeshID = couplingInterface.getMeshID("MeshTwo");
+    const int dataID      = couplingInterface.getDataID("Velocities", otherMeshID);
+
+    // Define region of interest, where we could obtain direct write access
+    couplingInterface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+
+    double dt = couplingInterface.initialize();
+    // Get the size of the filtered mesh within the bounding box
+    // (provided by the coupling participant)
+    const int meshSize = couplingInterface.getMeshVertexSize(otherMeshID);
+    BOOST_TEST(meshSize == (ids.size()));
+
+    // Allocate a vector containing the vertices
+    std::vector<double> solverTwoMesh(meshSize * dim);
+    couplingInterface.getMeshVerticesAndIDs(otherMeshID, meshSize, ids.data(), solverTwoMesh.data());
+
+    // Allocate data to read
+    std::vector<double> readData(4, std::numeric_limits<double>::max());
+
+    // Expected data = positions of the other participant's mesh
+    const std::vector<double> expectedData = positions;
+    BOOST_TEST(testing::equals(solverTwoMesh, expectedData));
+
+    while (couplingInterface.isCouplingOngoing()) {
+
+      dt = couplingInterface.advance(dt);
+      // Write data
+      couplingInterface.readBlockScalarData(dataID, meshSize,
+                                            ids.data(), readData.data());
+      // Expected data according to the writeData
+      std::vector<double> expectedData({1, 2, 3, 4});
+      BOOST_TEST(testing::equals(expectedData, readData));
+    }
+
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    // Query IDs
+    const int meshID = couplingInterface.getMeshID("MeshTwo");
+    const int dataID = couplingInterface.getDataID("Velocities", meshID);
+
+    // Define the mesh
+    couplingInterface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
+    // Some dummy readData
+    std::array<double, 4> writeData({1, 2, 3, 4});
+
+    // Initialize
+    double dt = couplingInterface.initialize();
+    while (couplingInterface.isCouplingOngoing()) {
+
+      couplingInterface.writeBlockScalarData(dataID, ids.size(),
+                                             ids.data(), writeData.data());
+      dt = couplingInterface.advance(dt);
+    }
+  }
+}
+
+// Test case for a direct mesh access on one participant to a mesh defined
+// by another participant (see above). In addition to the direct mesh access
+// and data writing in one direction, an additional mapping (NN) is defined
+// in the other direction.
+// TODO: This test would fail if we choose the bounding box smaller than
+// the owned mesh(?) due to the current implementation of
+// 'prepareBoundingBoxes' during the partitioning step in preCICE.
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  // Set up Solverinterface
+  SolverInterface interface(context.name, _pathToTests + "explicit-direct-access-mapping.xml", 0, 1);
+  BOOST_TEST(interface.getDimensions() == 2);
+  constexpr int dim = 2;
+
+  if (context.isNamed("SolverOne")) {
+    const int ownMeshID   = interface.getMeshID("MeshOne");
+    const int otherMeshID = interface.getMeshID("MeshTwo");
+    const int readDataID  = interface.getDataID("Forces", ownMeshID);
+    const int writeDataID = interface.getDataID("Velocities", otherMeshID);
+
+    std::vector<double> positions = {0.2, 0.2, 0.1, 0.6, 0.1, 0.0, 0.1, 0.0};
+    std::vector<int>    ownIDs(4, 0);
+    interface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
+
+    std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
+    // Define region of interest, where we could obtain direct write access
+    interface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+
+    double dt = interface.initialize();
+    // Get the size of the filtered mesh within the bounding box
+    // (provided by the coupling participant)
+    const int otherMeshSize = interface.getMeshVertexSize(otherMeshID);
+    BOOST_TEST(otherMeshSize == 5);
+
+    // Allocate a vector containing the vertices
+    std::vector<double> solverTwoMesh(otherMeshSize * dim);
+    std::vector<int>    otherIDs(otherMeshSize, 0);
+    interface.getMeshVerticesAndIDs(otherMeshID, otherMeshSize, otherIDs.data(), solverTwoMesh.data());
+    // Some dummy writeData
+    std::array<double, 5> writeData({1, 2, 3, 4, 5});
+
+    std::vector<double> readData(ownIDs.size(), 0);
+    // Expected data = positions of the other participant's mesh
+    const std::vector<double> expectedData = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0, 0.5, 0.5};
+    BOOST_TEST(solverTwoMesh == expectedData);
+
+    while (interface.isCouplingOngoing()) {
+      // Write data
+      interface.writeBlockScalarData(writeDataID, otherMeshSize,
+                                     otherIDs.data(), writeData.data());
+      dt = interface.advance(dt);
+      interface.readBlockScalarData(readDataID, ownIDs.size(),
+                                    ownIDs.data(), readData.data());
+      BOOST_TEST(readData == (std::vector<double>{2, 4, 3, 3}));
+    }
+
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0, 0.5, 0.5};
+    std::vector<int>    ids(positions.size() / dim, 0);
+
+    // Query IDs
+    const int meshID      = interface.getMeshID("MeshTwo");
+    const int writeDataID = interface.getDataID("Forces", meshID);
+    const int readDataID  = interface.getDataID("Velocities", meshID);
+
+    // Define the mesh
+    interface.setMeshVertices(meshID, ids.size(), positions.data(), ids.data());
+    // Allocate data to read
+    std::vector<double> readData(ids.size(), -10);
+    std::vector<double> writeData;
+    for (unsigned int i = 0; i < ids.size(); ++i)
+      writeData.emplace_back(i);
+
+    // Initialize
+    double dt = interface.initialize();
+    while (interface.isCouplingOngoing()) {
+
+      interface.writeBlockScalarData(writeDataID, ids.size(),
+                                     ids.data(), writeData.data());
+      dt = interface.advance(dt);
+      interface.readBlockScalarData(readDataID, ids.size(),
+                                    ids.data(), readData.data());
+      // Expected data according to the writeData
+      std::vector<double> expectedData({1, 2, 3, 4, 5});
+      BOOST_TEST(testing::equals(expectedData, readData));
+    }
+  }
+}
+
+// Test case for a direct mesh access on one participant to a mesh defined
+// by another participant. The region of interest is defined thorugh a
+// boundingBox. As opposed to the 'boundingBoxExplicit' test case, this
+// test case uses the same feature in an implicit setup.
+
+BOOST_AUTO_TEST_CASE(AccessReceivedMeshImplicit)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  // Set up Solverinterface
+  SolverInterface couplingInterface(context.name, _pathToTests + "implicit-direct-access.xml", 0, 1);
+  BOOST_TEST(couplingInterface.getDimensions() == 2);
+  constexpr int dim = 2;
+
+  if (context.isNamed("SolverOne")) {
+    std::vector<double>         positions   = {0.1, 0.1, 0.2, 0.05, 0.1, 0.0, 0.3, 0.9};
+    std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
+    std::vector<int>            ownIDs(4, 0);
+
+    const int ownMeshID   = couplingInterface.getMeshID("MeshOne");
+    const int otherMeshID = couplingInterface.getMeshID("MeshTwo");
+    const int ownDataID   = couplingInterface.getDataID("Forces", ownMeshID);
+    const int otherDataID = couplingInterface.getDataID("Velocities", otherMeshID);
+
+    // Define the own mesh
+    couplingInterface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
+    // TODO: Implement something in order to derive the bounding box from the mesh
+
+    // Define region of interest, where we could obtain direct write access
+    couplingInterface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+
+    double dt = couplingInterface.initialize();
+    // Get the size of the filtered mesh within the bounding box
+    // (provided by the coupling participant)
+    const int meshSize = couplingInterface.getMeshVertexSize(otherMeshID);
+    BOOST_TEST(meshSize == 3);
+
+    // Allocate a vector containing the vertices
+    std::vector<double> solverTwoMesh(meshSize * dim);
+    std::vector<int>    otherIDs(meshSize);
+
+    couplingInterface.getMeshVerticesAndIDs(otherMeshID, meshSize, otherIDs.data(), solverTwoMesh.data());
+    // Some dummy writeData
+    std::array<double, 3> writeData({1, 2, 3});
+
+    // Expected data = positions of the other participant's mesh
+    const std::vector<double> expectedData = {0.0, 0.0, 0.2, 0.3, 0.1, 0.1};
+    BOOST_TEST(solverTwoMesh == expectedData);
+
+    std::vector<double> readData(ownIDs.size(), -10);
+    while (couplingInterface.isCouplingOngoing()) {
+      if (couplingInterface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+        couplingInterface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+      }
+
+      // Write data
+      couplingInterface.writeBlockScalarData(otherDataID, meshSize,
+                                             otherIDs.data(), writeData.data());
+      dt = couplingInterface.advance(dt);
+      couplingInterface.readBlockScalarData(ownDataID, ownIDs.size(),
+                                            ownIDs.data(), readData.data());
+      if (couplingInterface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
+        couplingInterface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+      }
+
+      // Expected data according to the writeData
+      std::vector<double> expectedData({10, 11, 12, 13});
+      BOOST_TEST(testing::equals(expectedData, readData));
+    }
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    std::vector<double>         positions = {0.0, 0.0, 0.2, 0.3, 0.1, 0.1};
+    std::vector<int>            ownIDs(3, 0);
+    std::array<double, dim * 2> boundingBox = {0.0, 2.0, 0.0, 2.0};
+
+    // Query IDs
+    const int ownMeshID   = couplingInterface.getMeshID("MeshTwo");
+    const int otherMeshID = couplingInterface.getMeshID("MeshOne");
+    const int ownDataID   = couplingInterface.getDataID("Velocities", ownMeshID);
+    const int otherDataID = couplingInterface.getDataID("Forces", otherMeshID);
+
+    // Define the mesh
+    couplingInterface.setMeshVertices(ownMeshID, ownIDs.size(), positions.data(), ownIDs.data());
+    // Define region of interest, where we could obtain direct write access
+    couplingInterface.setMeshAccessRegion(otherMeshID, boundingBox.data());
+    // Initialize
+    double dt = couplingInterface.initialize();
+
+    const int meshSize = couplingInterface.getMeshVertexSize(otherMeshID);
+    BOOST_TEST(meshSize == 4);
+
+    // Allocate a vector containing the vertices
+    std::vector<double> solverOneMesh(meshSize * dim);
+    std::vector<int>    otherIDs(meshSize);
+
+    couplingInterface.getMeshVerticesAndIDs(otherMeshID, meshSize, otherIDs.data(), solverOneMesh.data());
+    // Some dummy writeData
+    std::array<double, 4> writeData({10, 11, 12, 13});
+
+    // Allocate data to read
+    std::vector<double> readData(ownIDs.size(), -10);
+
+    while (couplingInterface.isCouplingOngoing()) {
+      if (couplingInterface.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+        couplingInterface.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+      }
+
+      // Write data
+      couplingInterface.writeBlockScalarData(otherDataID, meshSize,
+                                             otherIDs.data(), writeData.data());
+      dt = couplingInterface.advance(dt);
+      couplingInterface.readBlockScalarData(ownDataID, ownIDs.size(),
+                                            ownIDs.data(), readData.data());
+      if (couplingInterface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
+        couplingInterface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+      }
+
+      // Expected data according to the writeData
+      std::vector<double> expectedData({1, 2, 3});
+      BOOST_TEST(testing::equals(expectedData, readData));
+    }
   }
 }
 

@@ -228,7 +228,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
-      PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0),
+      double residualMagnitude = utils::MasterSlave::l2norm(deltaR);
+
+      if (not math::equals(utils::MasterSlave::l2norm(_values), 0.0)) {
+        residualMagnitude /= utils::MasterSlave::l2norm(_values);
+      }
+
+      PRECICE_CHECK(not math::equals(residualMagnitude, 0.0),
                     "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
                     "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
                     "Maybe you always write the same (or only incremented) data or you call advance without "
@@ -558,7 +564,7 @@ void BaseQNAcceleration::iterationsConverged(
        * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _timeWindowsReused) {
+  } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
     int toRemove = _matrixCols.back();
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
@@ -657,7 +663,7 @@ int BaseQNAcceleration::getLSSystemRows()
 }
 
 void BaseQNAcceleration::writeInfo(
-    std::string s, bool allProcs)
+    const std::string &s, bool allProcs)
 {
   if (not utils::MasterSlave::isParallel()) {
     // serial acceleration mode

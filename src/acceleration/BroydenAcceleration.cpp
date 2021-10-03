@@ -5,6 +5,8 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <utility>
+
 #include "acceleration/impl/QRFactorization.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
@@ -26,7 +28,7 @@ BroydenAcceleration::BroydenAcceleration(
     std::vector<int>        dataIDs,
     impl::PtrPreconditioner preconditioner)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, dataIDs, preconditioner),
+                         filter, singularityLimit, std::move(dataIDs), std::move(preconditioner)),
       _maxColumns(maxIterationsUsed)
 {
 }

@@ -149,6 +149,14 @@ const Mesh::DataContainer &Mesh::data() const
   return _data;
 }
 
+bool Mesh::hasDataID(DataID dataID) const
+{
+  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) {
+    return dptr->getID() == dataID;
+  });
+  return iter != _data.end(); // if id was not found in mesh, iter == _data.end()
+}
+
 const PtrData &Mesh::data(DataID dataID) const
 {
   auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) {
@@ -156,6 +164,14 @@ const PtrData &Mesh::data(DataID dataID) const
   });
   PRECICE_ASSERT(iter != _data.end(), "Data with id not found in mesh.", dataID, _name);
   return *iter;
+}
+
+bool Mesh::hasDataName(const std::string &dataName) const
+{
+  auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
+    return dptr->getName() == dataName;
+  });
+  return iter != _data.end(); // if name was not found in mesh, iter == _data.end()
 }
 
 const PtrData &Mesh::data(const std::string &dataName) const
@@ -202,7 +218,7 @@ void Mesh::allocateDataValues()
     // Enlarge Buffer
     if (expectedSize > actualSize) {
       const auto leftToAllocate = expectedSize - actualSize;
-      utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
+      utils::append(data->values(), Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
     }
     PRECICE_DEBUG("Data {} now has {} values", data->getName(), data->values().size());
   }
@@ -211,7 +227,10 @@ void Mesh::allocateDataValues()
 void Mesh::computeBoundingBox()
 {
   PRECICE_TRACE(_name);
-  BoundingBox bb(_dimensions);
+
+  // Keep the bounding box if set via the API function.
+  BoundingBox bb = _boundingBox.empty() ? BoundingBox(_dimensions) : BoundingBox(_boundingBox);
+
   for (const Vertex &vertex : _vertices) {
     bb.expandBy(vertex);
   }
@@ -230,6 +249,16 @@ void Mesh::clear()
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
   }
+}
+
+/// @todo this should be handled by the Parition
+void Mesh::clearPartitioning()
+{
+  _connectedRanks.clear();
+  _communicationMap.clear();
+  _vertexDistribution.clear();
+  _vertexOffsets.clear();
+  _globalNumberOfVertices = 0;
 }
 
 Mesh::VertexDistribution &Mesh::getVertexDistribution()
@@ -345,6 +374,11 @@ void Mesh::addMesh(
 const BoundingBox &Mesh::getBoundingBox() const
 {
   return _boundingBox;
+}
+
+void Mesh::expandBoundingBox(const BoundingBox &boundingBox)
+{
+  _boundingBox.expandBy(boundingBox);
 }
 
 bool Mesh::operator==(const Mesh &other) const

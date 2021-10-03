@@ -243,6 +243,9 @@ public:
   /// Returns all mesh IDs (besides sub-ids).
   std::set<int> getMeshIDs() const;
 
+  /// @copydoc SolverInterface::isMeshConnectivityRequired()
+  bool isMeshConnectivityRequired(int meshID) const;
+
   /// Returns true, if the data with given name is used in the given mesh.
   bool hasData(const std::string &dataName, MeshID meshID) const;
 
@@ -472,6 +475,21 @@ public:
       double &value) const;
 
   /**
+   * @copydoc precice::SolverInterface::setMeshAccessRegion()
+   */
+  void setMeshAccessRegion(const int     meshID,
+                           const double *boundingBox) const;
+
+  /**
+   * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
+   */
+  void getMeshVerticesAndIDs(
+      const int meshID,
+      const int size,
+      int *     ids,
+      double *  coordinates) const;
+
+  /**
    * @brief Sets the location for all output of preCICE.
    *
    * If done after configuration, this overwrites the output location specified
@@ -559,6 +577,12 @@ private:
   // SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
 
+  /// Are experimental API calls allowed?
+  bool _allowsExperimental = false;
+
+  // setMeshAccessRegion may only be called once
+  mutable bool _accessRegionDefined = false;
+
   /// The current State of the solverinterface
   State _state{State::Constructed};
 
@@ -628,10 +652,10 @@ private:
   void computePartitions();
 
   /// Helper for mapWrittenData and mapReadData
-  void computeMappings(utils::ptr_vector<MappingContext> contexts, const std::string &mappingType);
+  void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
-  void mapData(utils::ptr_vector<DataContext> contexts, const std::string &mappingType);
+  void mapData(const utils::ptr_vector<DataContext> &contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
@@ -679,6 +703,15 @@ private:
 
   /// Syncs the timestep between slaves and master (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
+
+  /// Which channels to close in closeCommunicationChannels()
+  enum class CloseChannels : bool {
+    All         = false,
+    Distributed = true
+  };
+
+  /// Syncs the masters of all connected participants
+  void closeCommunicationChannels(CloseChannels cc);
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfigurationPeano;
