@@ -132,12 +132,10 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
     }
-  }
 
-  // reserve memory and initialize data with zero
-  setupDataMatrices();
+    // reserve memory and initialize data with zero
+    setupDataMatrices();
 
-  if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
       if (_acceleration) {
         _acceleration->initialize(getAccelerationData()); // Reserve memory, initialize
