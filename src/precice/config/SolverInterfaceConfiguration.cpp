@@ -30,6 +30,9 @@ SolverInterfaceConfiguration::SolverInterfaceConfiguration(xml::XMLTag &parent)
                             .setDocumentation("Determines the spatial dimensionality of the configuration")
                             .setOptions({2, 3});
   tag.addAttribute(attrDimensions);
+  auto attrExperimental = makeXMLAttribute("experimental", false)
+                              .setDocumentation("Enable experimental features.");
+  tag.addAttribute(attrExperimental);
 
   _dataConfiguration = std::make_shared<mesh::DataConfiguration>(
       tag);
@@ -56,6 +59,7 @@ void SolverInterfaceConfiguration::xmlTagCallback(
     _dataConfiguration->setDimensions(_dimensions);
     _meshConfiguration->setDimensions(_dimensions);
     _participantConfiguration->setDimensions(_dimensions);
+    _experimental = tag.getBooleanAttributeValue("experimental");
   } else {
     PRECICE_UNREACHABLE("Received callback from unknown tag '{}'.", tag.getName());
   }
