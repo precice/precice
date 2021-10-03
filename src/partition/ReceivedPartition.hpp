@@ -24,7 +24,7 @@ namespace partition {
  */
 class ReceivedPartition : public Partition {
   /// Make the fixture friend of this class
-  friend struct receivedPartitionFixture;
+  friend struct ReceivedPartitionFixture;
 
 public:
   /// Defines the typ of geometric filter used

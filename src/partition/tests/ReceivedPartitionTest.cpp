@@ -1100,7 +1100,7 @@ void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
 
   mesh->computeBoundingBox();
 
-  using Access = receivedPartitionFixture;
+  using Access = ReceivedPartitionFixture;
   Access::prepareBoundingBox(part);
   Access::tagMeshFirstRound(part);
   Access::createOwnerInformation(part);

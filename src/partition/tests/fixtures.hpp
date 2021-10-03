@@ -8,7 +8,7 @@ namespace partition {
  *
  * The fixture can be used to call private functions for individual testing. 
  */
-struct receivedPartitionFixture {
+struct ReceivedPartitionFixture {
   static void createOwnerInformation(ReceivedPartition &part)
   {
     part.createOwnerInformation();
