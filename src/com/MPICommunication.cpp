@@ -164,6 +164,23 @@ PtrRequest MPICommunication::aSend(const int &itemToSend, Rank rankReceiver)
   return aSend(precice::refToSpan<const int>(itemToSend), rankReceiver);
 }
 
+PtrRequest MPICommunication::aSend(std::vector<int> const &itemsToSend, Rank rankReceiver)
+{
+  PRECICE_TRACE(rankReceiver, itemsToSend.size(), itemsToSend);
+  rankReceiver = adjustRank(rankReceiver);
+
+  MPI_Request request;
+  MPI_Isend(const_cast<int *>(itemsToSend.data()),
+            itemsToSend.size(),
+            MPI_INT,
+            rank(rankReceiver),
+            0,
+            communicator(rankReceiver),
+            &request);
+
+  return PtrRequest(new MPIRequest(request));
+}
+
 void MPICommunication::send(bool itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);

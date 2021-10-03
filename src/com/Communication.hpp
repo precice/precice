@@ -289,6 +289,9 @@ public:
   /// Sends an int to process with given rank.
   virtual void send(int itemToSend, Rank rankReceiver) = 0;
 
+  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
+  virtual PtrRequest aSend(std::vector<int> const &itemsToSend, int rankReceiver) = 0;
+
   /// Asynchronously sends an int to process with given rank.
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
   virtual PtrRequest aSend(const int &itemToSend, Rank rankReceiver) = 0;
