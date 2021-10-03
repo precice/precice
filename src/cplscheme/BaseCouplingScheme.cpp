@@ -258,15 +258,9 @@ void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
   int usedOrder;
-  for (DataMap::value_type &pair : _allData) {
+  for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    // see https://github.com/precice/precice/issues/1104
-    if (getAccelerationData().count(pair.first) == 1) { // element is in acceleration data
-      usedOrder = _extrapolationOrder;                  // only extrapolate acceleration data
-    } else {                                            // element is not in acceleration data
-      usedOrder = 0;                                    // no extrapolation == extrapolation order 0
-    }
-    _waveforms[pair.first]->moveToNextWindow(getTimeWindows(), usedOrder);
+    _waveforms[pair.first]->moveToNextWindow(getTimeWindows(), _extrapolationOrder);
     pair.second->values() = _waveforms[pair.first]->lastTimeWindows().col(0);
   }
 }
