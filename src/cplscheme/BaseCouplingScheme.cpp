@@ -131,12 +131,10 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
         DataID dataID = convergenceMeasure.couplingData->getDataID();
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
-    }
 
-    // reserve memory and initialize data with zero
-    setupDataMatrices();
+      // reserve memory and initialize data with zero
+      setupDataMatrices();
 
-    if (not doesFirstStep()) {
       if (_acceleration) {
         _acceleration->initialize(getAccelerationData()); // Reserve memory, initialize
       }
@@ -178,8 +176,10 @@ void BaseCouplingScheme::initializeData()
   exchangeInitialData();
 
   if (isImplicitCouplingScheme()) {
-    storeDataInWaveforms();
-    moveToNextWindow();
+    if (not doesFirstStep()) {
+      storeDataInWaveforms();
+      moveToNextWindow();
+    }
   }
 }
 
