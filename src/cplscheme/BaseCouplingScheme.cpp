@@ -257,7 +257,6 @@ void BaseCouplingScheme::storeDataInWaveforms()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  int usedOrder;
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     _waveforms[pair.first]->moveToNextWindow(getTimeWindows(), _extrapolationOrder);
