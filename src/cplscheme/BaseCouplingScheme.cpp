@@ -131,10 +131,8 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
         DataID dataID = convergenceMeasure.couplingData->getDataID();
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
-
       // reserve memory and initialize data with zero
       setupDataMatrices();
-
       if (_acceleration) {
         _acceleration->initialize(getAccelerationData()); // Reserve memory, initialize
       }
