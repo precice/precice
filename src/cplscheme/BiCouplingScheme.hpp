@@ -11,11 +11,13 @@
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
+// @todo: Use fixture!
 // Forward declaration to friend the boost test struct
 namespace CplSchemeTests {
 namespace SerialImplicitCouplingSchemeTests {
-struct testExtrapolateData;
-}
+struct testFirstOrderExtrapolateData;
+struct testSecondOrderExtrapolateData;
+} // namespace SerialImplicitCouplingSchemeTests
 } // namespace CplSchemeTests
 
 namespace precice {
@@ -46,7 +48,8 @@ public:
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
 
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
+  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testFirstOrderExtrapolateData;  // For whitebox tests
+  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testSecondOrderExtrapolateData; // For whitebox tests
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(

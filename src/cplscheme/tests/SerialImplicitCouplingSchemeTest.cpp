@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get()); // no nullptr
 }
 
-BOOST_AUTO_TEST_CASE(testExtrapolateData)
+BOOST_AUTO_TEST_CASE(testFirstOrderExtrapolateData)
 {
   PRECICE_TEST(1_rank);
   using namespace mesh;
@@ -462,6 +462,10 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->previousIteration().size() == 1);
+
+  scheme.moveToNextWindow();
+
+  // data is uninitialized
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
 
@@ -472,7 +476,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
 
   // go to second window
-  scheme.moveToNextWindow(); // uses zeroth order extrapolation at end of first window
+  scheme.moveToNextWindow(); // uses first order extrapolation at end of first window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
   scheme.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
@@ -497,53 +501,76 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   scheme.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 16.0)); // = 2*10 - 4
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 16.0));
+}
+
+BOOST_AUTO_TEST_CASE(testSecondOrderExtrapolateData)
+{
+  PRECICE_TEST(1_rank);
+  using namespace mesh;
+
+  PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
+  PtrData data   = mesh->createData("MyData", 1);
+  int     dataID = data->getID();
+  mesh->createVertex(Eigen::Vector3d::Zero());
+  mesh->allocateDataValues();
+  BOOST_TEST(data->values().size() == 1);
+
+  double                maxTime      = CouplingScheme::UNDEFINED_TIME;
+  int                   maxTimesteps = 1;
+  double                dt           = 1.0;
+  std::string           first        = "First";
+  std::string           second       = "Second";
+  std::string           accessor     = second;
+  com::PtrCommunication com(new com::MPIDirectCommunication());
+  m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
+  int                   maxIterations = 1;
 
   // Test second order extrapolation
-  cplData->values() = Eigen::VectorXd::Zero(cplData->values().size());
-  cplData->storeIteration();
-  SerialCouplingScheme scheme2(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations);
+  SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations);
 
-  scheme2.addDataToSend(data, mesh, false);
-  scheme2.setExtrapolationOrder(2);
-  scheme2.setupDataMatrices();
-  cplData = scheme2.getSendData(dataID);
+  scheme.addDataToSend(data, mesh, true);
+  scheme.setExtrapolationOrder(2);
+  scheme.setupDataMatrices();
+  CouplingData *cplData = scheme.getSendData(dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->previousIteration().size() == 1);
 
-  // initialized as zero
+  scheme.moveToNextWindow();
+
+  // data is uninitialized
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
 
   // start first window
   cplData->values()(0) = 1.0; // data provided at end of first window
-  scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
-  scheme2.storeDataInWaveforms();
+  scheme.setTimeWindows(scheme.getTimeWindows() + 1);
+  scheme.storeDataInWaveforms();
 
   // go to second window
-  scheme2.moveToNextWindow(); // uses first order extrapolation at end of first window
+  scheme.moveToNextWindow(); // uses first order extrapolation at end of first window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-  scheme2.storeIteration();
+  scheme.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   cplData->values()(0) = 4.0; // data provided at end of second window
-  scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
-  scheme2.storeDataInWaveforms();
+  scheme.setTimeWindows(scheme.getTimeWindows() + 1);
+  scheme.storeDataInWaveforms();
 
   //go to third window
-  scheme2.moveToNextWindow(); // uses second order extrapolation at end of second window
+  scheme.moveToNextWindow(); // uses second order extrapolation at end of second window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  scheme2.storeIteration();
+  scheme.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 8.0)); // = 2.5*4 - 2*1 + 0.5*0
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
   cplData->values()(0) = 4.0; // data provided at end of third window
-  scheme2.setTimeWindows(scheme2.getTimeWindows() + 1);
-  scheme2.storeDataInWaveforms();
+  scheme.setTimeWindows(scheme.getTimeWindows() + 1);
+  scheme.storeDataInWaveforms();
 
   // go to fourth window
-  scheme2.moveToNextWindow(); // uses second order extrapolation at end of third window
+  scheme.moveToNextWindow(); // uses second order extrapolation at end of third window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
-  scheme2.storeIteration();
+  scheme.storeIteration();
   BOOST_TEST(testing::equals(cplData->values()(0), 2.5)); // = 2.5*4 - 2*4 + 0.5*1
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.5));
 }
