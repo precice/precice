@@ -143,8 +143,17 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   initializeImplementation();
 
-  if (sendsInitializedData()) {
+  if (_sendsInitializedData) {
     requireAction(constants::actionWriteInitialData());
+  }
+
+  if (not _sendsInitializedData && not _receivesInitializedData) {
+    if (isImplicitCouplingScheme()) {
+      if (not doesFirstStep()) {
+        storeDataInWaveforms();
+        moveToNextWindow();
+      }
+    }
   }
 
   _isInitialized = true;
