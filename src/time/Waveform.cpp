@@ -73,50 +73,94 @@ const Eigen::MatrixXd &Waveform::lastTimeWindows()
 
 Eigen::VectorXd Waveform::extrapolateData(int order)
 {
-  Eigen::VectorXd extrapolatedValue;
-  if ((order == 0) || (_numberOfValidSamples < 2 && order > 0)) {
+  int usedOrder = 0;
+
+  if (order == 0) {
+    usedOrder = 0;
+  } else if (order == 1) {
+    if (_numberOfValidSamples < 2) {
+      usedOrder = 0;
+    } else {
+      usedOrder = 1;
+    }
+  } else if (order == 2) {
+    if (_numberOfValidSamples < 2) {
+      usedOrder = 0;
+    } else if (_numberOfValidSamples < 3) {
+      usedOrder = 1;
+    } else {
+      usedOrder = 2;
+    }
+  } else {
+    PRECICE_ASSERT(false);
+  }
+
+  if (usedOrder == 0) {
     PRECICE_ASSERT(this->numberOfSamples() > 0);
-    extrapolatedValue = this->_timeWindows.col(0);
-  } else if ((order == 1) || (_numberOfValidSamples < 3 && order > 1)) { //timesteps is increased before extrapolate is called
+    return this->_timeWindows.col(0);
+  }
+  Eigen::VectorXd extrapolatedValue;
+  if (usedOrder == 1) { //timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
     PRECICE_ASSERT(this->numberOfSamples() > 1);
     extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
     extrapolatedValue -= this->_timeWindows.col(1);      // = 2*x^t - x^(t-1)
-  } else if (order == 2) {
-    PRECICE_DEBUG("Performing second order extrapolation");
-    PRECICE_ASSERT(this->numberOfSamples() > 2);
-    extrapolatedValue = this->_timeWindows.col(0) * 2.5;  // = 2.5*x^t
-    extrapolatedValue -= this->_timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-    extrapolatedValue += this->_timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
-  } else {
-    PRECICE_ASSERT(false, "Extrapolation order is invalid.");
+    return extrapolatedValue;
   }
+  PRECICE_ASSERT(usedOrder == 2);
+  // uses formula given in https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1
+  PRECICE_DEBUG("Performing second order extrapolation");
+  PRECICE_ASSERT(this->numberOfSamples() > 2);
+  extrapolatedValue = this->_timeWindows.col(0) * 2.5;  // = 2.5*x^t
+  extrapolatedValue -= this->_timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
+  extrapolatedValue += this->_timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
   return extrapolatedValue;
 }
 
 Eigen::VectorXd Waveform::interpolateData(int order, double normalizedDt)
 {
+  int usedOrder = 0;
+
+  if (order == 0) {
+    usedOrder = 0;
+  } else if (order == 1) {
+    if (_numberOfValidSamples < 2) {
+      usedOrder = 0;
+    } else {
+      usedOrder = 1;
+    }
+  } else if (order == 2) {
+    if (_numberOfValidSamples < 2) {
+      usedOrder = 0;
+    } else if (_numberOfValidSamples < 3) {
+      usedOrder = 1;
+    } else {
+      usedOrder = 2;
+    }
+  } else {
+    PRECICE_ASSERT(false);
+  }
+
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
-  Eigen::VectorXd interpolatedValue;
-  if ((order == 0) || (_numberOfValidSamples < 2 && order > 0)) {
+  if (usedOrder == 0) {
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
     PRECICE_ASSERT(this->numberOfSamples() > 0);
-    interpolatedValue = this->_timeWindows.col(0);
-  } else if ((order == 1) || (_numberOfValidSamples < 3 && order > 1)) {
+    return this->_timeWindows.col(0);
+  }
+  Eigen::VectorXd interpolatedValue;
+  if (usedOrder == 1) {
     // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
     PRECICE_ASSERT(this->numberOfSamples() > 1);
     interpolatedValue = this->_timeWindows.col(0) * normalizedDt;        // = dt * x^t
     interpolatedValue += this->_timeWindows.col(1) * (1 - normalizedDt); // = dt * x^t + (1-dt) * x^(t-1)
-  } else if (order == 2) {
-    // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
-    PRECICE_ASSERT(this->numberOfSamples() > 2);
-    interpolatedValue = this->_timeWindows.col(0) * (normalizedDt + 1) * normalizedDt * 0.5;
-    interpolatedValue += this->_timeWindows.col(1) * (1 - normalizedDt * normalizedDt);
-    interpolatedValue += this->_timeWindows.col(2) * (normalizedDt - 1) * normalizedDt * 0.5;
-  } else {
-    PRECICE_ASSERT(false, "Interpolation order is invalid.");
+    return interpolatedValue;
   }
+  PRECICE_ASSERT(usedOrder == 2);
+  // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
+  interpolatedValue = this->_timeWindows.col(0) * (normalizedDt + 1) * normalizedDt * 0.5;
+  interpolatedValue += this->_timeWindows.col(1) * (1 - normalizedDt * normalizedDt);
+  interpolatedValue += this->_timeWindows.col(2) * (normalizedDt - 1) * normalizedDt * 0.5;
   return interpolatedValue;
 }
 
