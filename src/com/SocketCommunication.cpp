@@ -516,6 +516,25 @@ PtrRequest SocketCommunication::aSend(const int &itemToSend, Rank rankReceiver)
   return aSend(precice::refToSpan<const int>(itemToSend), rankReceiver);
 }
 
+PtrRequest SocketCommunication::aSend(std::vector<int> const &itemsToSend, Rank rankReceiver)
+{
+  PRECICE_TRACE(rankReceiver);
+
+  rankReceiver = adjustRank(rankReceiver);
+
+  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
+  PRECICE_ASSERT(isConnected());
+
+  PtrRequest request(new SocketRequest);
+
+  _queue.dispatch(_sockets[rankReceiver],
+                  asio::buffer(itemsToSend),
+                  [request] {
+                    std::static_pointer_cast<SocketRequest>(request)->complete();
+                  });
+  return request;
+}
+
 void SocketCommunication::send(bool itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);

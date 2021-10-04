@@ -440,6 +440,8 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
 }
 
 /// One solver uses incremental position set, read/write methods.
+/// @todo This test uses resetmesh. How did this ever work?
+#if 0
 BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
@@ -529,6 +531,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
     cplInterface.finalize();
   }
 }
+#endif
 
 /**
  * @brief The second solver initializes the data of the first.
@@ -588,6 +591,8 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization)
 }
 
 /// One solver uses block set/get/read/write methods.
+/// @todo This test uses resetmesh. How did this ever work?
+#if 0
 BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
@@ -721,6 +726,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange)
     cplInterface.finalize();
   }
 }
+#endif
 
 /**
   * @brief Runs a coupled simulation where one solver supplies a geometry.
@@ -3249,7 +3255,6 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
   }
 }
 
-// @todo this test causes problems, if run locally via make test_base
 BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers1)
 {
   PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank));
@@ -3257,7 +3262,6 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers1)
   multiCouplingThreeSolvers(configFile, context);
 }
 
-// @todo this test causes problems, if run locally via make test_base
 BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers2)
 {
   PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank));
@@ -3265,7 +3269,6 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers2)
   multiCouplingThreeSolvers(configFile, context);
 }
 
-// @todo this test causes problems, if run locally via make test_base
 BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers3)
 {
   PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank));
@@ -3399,7 +3402,6 @@ void multiCouplingFourSolvers(const std::string configFile, const TestContext &c
   }
 }
 
-// @todo this test causes problems, if run locally via make test_base
 BOOST_AUTO_TEST_CASE(MultiCouplingFourSolvers1)
 {
   PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank), "SolverD"_on(1_rank));
@@ -3407,7 +3409,6 @@ BOOST_AUTO_TEST_CASE(MultiCouplingFourSolvers1)
   multiCouplingFourSolvers(configFile, context);
 }
 
-// @todo this test causes problems, if run locally via make test_base
 BOOST_AUTO_TEST_CASE(MultiCouplingFourSolvers2)
 {
   PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank), "SolverD"_on(1_rank));
