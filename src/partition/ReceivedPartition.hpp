@@ -23,6 +23,9 @@ namespace partition {
  * Afterwards necessary distribution data structures are set up.
  */
 class ReceivedPartition : public Partition {
+  /// Make the fixture friend of this class
+  friend struct ReceivedPartitionFixture;
+
 public:
   /// Defines the typ of geometric filter used
   enum GeometricFilter {

@@ -172,6 +172,13 @@ void BaseCouplingScheme::initializeData()
   }
 
   exchangeInitialData();
+
+  if (isImplicitCouplingScheme()) {
+    if (not doesFirstStep()) {
+      storeDataInWaveforms();
+      moveToNextWindow();
+    }
+  }
 }
 
 void BaseCouplingScheme::advance()
@@ -248,7 +255,7 @@ void BaseCouplingScheme::storeDataInWaveforms()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : _allData) {
+  for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     _waveforms[pair.first]->moveToNextWindow(_extrapolationOrder);
     pair.second->values() = _waveforms[pair.first]->lastTimeWindows().col(0);
