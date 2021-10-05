@@ -266,7 +266,7 @@ void BaseCouplingScheme::moveToNextWindow()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->moveToNextWindow(_extrapolationOrder);
+    _waveforms[pair.first]->moveToNextWindow();
     pair.second->values() = _waveforms[pair.first]->lastTimeWindows().col(0);
   }
 }
