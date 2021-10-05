@@ -8,14 +8,39 @@ bool SerialCouplingSchemeFixture::isImplicitCouplingScheme(cplscheme::SerialCoup
   return cplscheme.isImplicitCouplingScheme();
 }
 
-cplscheme::CouplingData *SerialCouplingSchemeFixture::getReceiveData(cplscheme::SerialCouplingScheme &cplscheme, int dataID)
+cplscheme::CouplingData *SerialCouplingSchemeFixture::getReceiveData(cplscheme::SerialCouplingScheme &cplscheme, DataID dataID)
 {
   return cplscheme.getReceiveData(dataID);
 }
 
-cplscheme::CouplingData *SerialCouplingSchemeFixture::getSendData(cplscheme::SerialCouplingScheme &cplscheme, int dataID)
+cplscheme::CouplingData *SerialCouplingSchemeFixture::getSendData(cplscheme::SerialCouplingScheme &cplscheme, DataID dataID)
 {
   return cplscheme.getSendData(dataID);
+}
+
+void SerialCouplingSchemeFixture::setTimeWindows(cplscheme::SerialCouplingScheme &cplscheme, int timeWindows)
+{
+  cplscheme.setTimeWindows(timeWindows);
+}
+
+void SerialCouplingSchemeFixture::storeIteration(cplscheme::SerialCouplingScheme &cplscheme)
+{
+  cplscheme.storeIteration();
+}
+
+void SerialCouplingSchemeFixture::setupDataMatrices(cplscheme::SerialCouplingScheme &cplscheme)
+{
+  cplscheme.setupDataMatrices();
+}
+
+void SerialCouplingSchemeFixture::storeDataInWaveforms(cplscheme::SerialCouplingScheme &cplscheme)
+{
+  cplscheme.storeDataInWaveforms();
+}
+
+void SerialCouplingSchemeFixture::moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme)
+{
+  cplscheme.moveToNextWindow();
 }
 } // namespace testing
 } // namespace precice
