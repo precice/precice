@@ -44,7 +44,8 @@ public:
       m2n::PtrM2N                   m2n,
       int                           maxIterations,
       CouplingMode                  cplMode,
-      constants::TimesteppingMethod dtMethod);
+      constants::TimesteppingMethod dtMethod,
+      int                           extrapolationOrder);
 
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
 

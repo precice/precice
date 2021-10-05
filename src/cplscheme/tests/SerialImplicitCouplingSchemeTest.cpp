@@ -448,15 +448,15 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   std::string           accessor     = second;
   com::PtrCommunication com(new com::MPIDirectCommunication());
   m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
-  int                   maxIterations = 1;
+  int                   maxIterations      = 1;
+  int                   extrapolationOrder = 1;
 
   // Test first order extrapolation
   SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
                               accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE,
-                              BaseCouplingScheme::Implicit, maxIterations);
+                              BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
 
   scheme.addDataToSend(data, mesh, true);
-  scheme.setExtrapolationOrder(1);
   scheme.setupDataMatrices();
   CouplingData *cplData = scheme.getSendData(dataID);
   BOOST_CHECK(cplData); // no nullptr
@@ -499,12 +499,12 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 16.0));
 
   // Test second order extrapolation
-  cplData->values() = Eigen::VectorXd::Zero(cplData->values().size());
+  extrapolationOrder = 2;
+  cplData->values()  = Eigen::VectorXd::Zero(cplData->values().size());
   cplData->storeIteration();
-  SerialCouplingScheme scheme2(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations);
 
+  SerialCouplingScheme scheme2(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
   scheme2.addDataToSend(data, mesh, false);
-  scheme2.setExtrapolationOrder(2);
   scheme2.setupDataMatrices();
   cplData = scheme2.getSendData(dataID);
   BOOST_CHECK(cplData); // no nullptr
@@ -594,11 +594,12 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime        = CouplingScheme::UNDEFINED_TIME;
-  const int    maxTimeWindows = 2;
-  const double timeWindowSize = 0.1;
-  const int    maxIterations  = 3;
-  double       timestepLength = timeWindowSize;
+  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
+  const int    maxTimeWindows     = 2;
+  const double timeWindowSize     = 0.1;
+  const int    maxIterations      = 3;
+  const int    extrapolationOrder = 1;
+  double       timestepLength     = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -622,8 +623,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, maxIterations);
-  cplScheme.setExtrapolationOrder(1);
+      BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
@@ -793,11 +793,12 @@ BOOST_AUTO_TEST_CASE(testLinearExtrapolationInit)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime        = CouplingScheme::UNDEFINED_TIME;
-  const int    maxTimeWindows = 2;
-  const double timeWindowSize = 0.1;
-  const int    maxIterations  = 3;
-  double       timestepLength = timeWindowSize;
+  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
+  const int    maxTimeWindows     = 2;
+  const double timeWindowSize     = 0.1;
+  const int    maxIterations      = 3;
+  const int    extrapolationOrder = 1;
+  double       timestepLength     = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -821,8 +822,7 @@ BOOST_AUTO_TEST_CASE(testLinearExtrapolationInit)
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, maxIterations);
-  cplScheme.setExtrapolationOrder(1);
+      BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second));
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first));
 
@@ -1035,11 +1035,12 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime        = CouplingScheme::UNDEFINED_TIME;
-  const int    maxTimeWindows = 3;
-  const double timeWindowSize = 0.1;
-  const int    maxIterations  = 3;
-  double       timestepLength = timeWindowSize;
+  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
+  const int    maxTimeWindows     = 3;
+  const double timeWindowSize     = 0.1;
+  const int    maxIterations      = 3;
+  const int    extrapolationOrder = 2;
+  double       timestepLength     = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -1063,8 +1064,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, maxIterations);
-  cplScheme.setExtrapolationOrder(2);
+      BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
@@ -1289,7 +1289,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100);
+      BaseCouplingScheme::Implicit, 100, 0);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
@@ -1389,7 +1389,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100);
+      BaseCouplingScheme::Implicit, 100, 0);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
@@ -1453,7 +1453,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100);
+      BaseCouplingScheme::Implicit, 100, 0);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
@@ -1516,7 +1516,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   cplscheme::SerialCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100);
+      BaseCouplingScheme::Implicit, 100, 0);
   testing::SerialCouplingSchemeFixture fixture;
 
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
