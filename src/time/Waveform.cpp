@@ -94,7 +94,6 @@ Eigen::VectorXd Waveform::extrapolateData(int order)
   } else {
     PRECICE_ASSERT(false);
   }
-
   if (usedOrder == 0) {
     PRECICE_ASSERT(this->numberOfSamples() > 0);
     return this->_timeWindows.col(0);
