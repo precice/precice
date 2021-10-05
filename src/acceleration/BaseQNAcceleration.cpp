@@ -228,7 +228,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
-      PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0),
+      double residualMagnitude = utils::MasterSlave::l2norm(deltaR);
+
+      if (not math::equals(utils::MasterSlave::l2norm(_values), 0.0)) {
+        residualMagnitude /= utils::MasterSlave::l2norm(_values);
+      }
+
+      PRECICE_CHECK(not math::equals(residualMagnitude, 0.0),
                     "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
                     "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
                     "Maybe you always write the same (or only incremented) data or you call advance without "

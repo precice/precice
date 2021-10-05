@@ -9,8 +9,7 @@ namespace testing {
  *
  * The fixture can be used to call private functions for individual testing. 
  */
-class ParallelCouplingSchemeFixture {
-public:
+struct ParallelCouplingSchemeFixture {
   bool isImplicitCouplingScheme(cplscheme::ParallelCouplingScheme &cplscheme);
 
   cplscheme::CouplingData *getReceiveData(cplscheme::ParallelCouplingScheme &cplscheme, int dataID);

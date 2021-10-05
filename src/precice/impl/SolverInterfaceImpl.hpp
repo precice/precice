@@ -243,6 +243,9 @@ public:
   /// Returns all mesh IDs (besides sub-ids).
   std::set<int> getMeshIDs() const;
 
+  /// @copydoc SolverInterface::isMeshConnectivityRequired()
+  bool isMeshConnectivityRequired(int meshID) const;
+
   /// Returns true, if the data with given name is used in the given mesh.
   bool hasData(const std::string &dataName, MeshID meshID) const;
 
@@ -648,6 +651,9 @@ private:
 
   // SolverInterface.resetMesh() triggers transition from false to true.
   bool _hasResetMesh = false;
+
+  /// Are experimental API calls allowed?
+  bool _allowsExperimental = false;
 
   // setMeshAccessRegion may only be called once
   mutable bool _accessRegionDefined = false;

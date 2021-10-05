@@ -9,13 +9,22 @@ namespace testing {
  *
  * The fixture can be used to call private functions for individual testing. 
  */
-class SerialCouplingSchemeFixture {
-public:
+struct SerialCouplingSchemeFixture {
   bool isImplicitCouplingScheme(cplscheme::SerialCouplingScheme &cplscheme);
 
-  cplscheme::CouplingData *getReceiveData(cplscheme::SerialCouplingScheme &cplscheme, int dataID);
+  cplscheme::CouplingData *getReceiveData(cplscheme::SerialCouplingScheme &cplscheme, DataID dataID);
 
-  cplscheme::CouplingData *getSendData(cplscheme::SerialCouplingScheme &cplscheme, int dataID);
+  cplscheme::CouplingData *getSendData(cplscheme::SerialCouplingScheme &cplscheme, DataID dataID);
+
+  void setTimeWindows(cplscheme::SerialCouplingScheme &cplscheme, int timeWindows);
+
+  void storeIteration(cplscheme::SerialCouplingScheme &cplscheme);
+
+  void setupDataMatrices(cplscheme::SerialCouplingScheme &cplscheme);
+
+  void storeDataInWaveforms(cplscheme::SerialCouplingScheme &cplscheme);
+
+  void moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme);
 };
 
 } // namespace testing

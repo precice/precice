@@ -42,7 +42,6 @@ BaseCouplingScheme::BaseCouplingScheme(
       _maxIterations(maxIterations),
       _iterations(1),
       _totalIterations(1),
-      _validDigits(validDigits),
       _localParticipant(std::move(localParticipant)),
       _eps(std::pow(10.0, -1 * validDigits))
 {
@@ -52,7 +51,7 @@ BaseCouplingScheme::BaseCouplingScheme(
                  "Maximum number of time windows has to be larger than zero.");
   PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
                  "Time window size has to be larger than zero.");
-  PRECICE_ASSERT((_validDigits >= 1) && (_validDigits < 17),
+  PRECICE_ASSERT((validDigits >= 1) && (validDigits < 17),
                  "Valid digits of time window size has to be between 1 and 16.");
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
     PRECICE_ASSERT(hasTimeWindowSize(),
@@ -144,8 +143,17 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   initializeImplementation();
 
-  if (sendsInitializedData()) {
+  if (_sendsInitializedData) {
     requireAction(constants::actionWriteInitialData());
+  }
+
+  if (not _sendsInitializedData && not _receivesInitializedData) {
+    if (isImplicitCouplingScheme()) {
+      if (not doesFirstStep()) {
+        storeDataInWaveforms();
+        moveToNextWindow();
+      }
+    }
   }
 
   _isInitialized = true;
@@ -173,6 +181,13 @@ void BaseCouplingScheme::initializeData()
   }
 
   exchangeInitialData();
+
+  if (isImplicitCouplingScheme()) {
+    if (not doesFirstStep()) {
+      storeDataInWaveforms();
+      moveToNextWindow();
+    }
+  }
 }
 
 void BaseCouplingScheme::advance()
@@ -249,7 +264,7 @@ void BaseCouplingScheme::storeDataInWaveforms()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : _allData) {
+  for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     _waveforms[pair.first]->moveToNextWindow(_extrapolationOrder);
     pair.second->values() = _waveforms[pair.first]->lastTimeWindows().col(0);
@@ -510,7 +525,7 @@ bool BaseCouplingScheme::measureConvergence()
       oneSuffices = true;
     }
 
-    PRECICE_INFO(convMeasure.measure->printState());
+    PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
   }
 
   if (allConverged) {
@@ -628,12 +643,12 @@ bool BaseCouplingScheme::doImplicitStep()
     }
   }
 
-  // Store data for conv. measurement, acceleration
-  storeIteration();
-
   if (convergence) {
     moveToNextWindow();
   }
+
+  // Store data for conv. measurement, acceleration
+  storeIteration();
 
   return convergence;
 }

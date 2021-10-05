@@ -163,6 +163,9 @@ int precicec_hasMesh(const char *meshName);
  */
 int precicec_getMeshID(const char *meshName);
 
+/// @copydoc precice::SolverInterface::isMeshConnectivityRequired()
+int precicec_isMeshConnectivityRequired(int meshID);
+
 /**
  * @brief Creates a mesh vertex
  *

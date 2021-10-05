@@ -970,7 +970,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
 
   const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
-  PRECICE_INFO("Mapping {} {} from {} (ID {}) to {} (ID {}) for dimension {} with polynomial set to {}",
+  PRECICE_INFO("Mapping \"{}\" {} from \"{}\" (ID {}) to \"{}\" (ID {}) for dimension {} with polynomial set to {}",
                input()->data(inputDataID)->getName(), constraintName,
                input()->getName(), input()->getID(),
                output()->getName(), output()->getID(),

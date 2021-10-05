@@ -4,9 +4,16 @@
 #include "logging/Logger.hpp"
 
 namespace precice {
+
+namespace testing {
+// Forward declaration to friend the boost test struct
+struct WaveformFixture;
+} // namespace testing
+
 namespace time {
 
 class Waveform {
+  friend struct testing::WaveformFixture; // Make the fixture friend of this class
 public:
   /**
    * @brief Waveform object which stores data of current and past time windows for performing extrapolation.
@@ -55,6 +62,13 @@ public:
    */
   const Eigen::MatrixXd &lastTimeWindows();
 
+private:
+  /// Data values of time windows.
+  Eigen::MatrixXd _timeWindows;
+
+  /// number of valid samples in _timeWindows
+  int _numberOfValidSamples;
+
   /**
    * @brief returns number of samples in time stored by this waveform
    */
@@ -69,13 +83,6 @@ public:
    * @brief returns number of data per sample in time stored by this waveform
    */
   int numberOfData();
-
-private:
-  /// Data values of time windows.
-  Eigen::MatrixXd _timeWindows;
-
-  /// number of valid samples in _timeWindows
-  int _numberOfValidSamples;
 
   mutable logging::Logger _log{"time::Waveform"};
 
