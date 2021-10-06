@@ -72,8 +72,6 @@ private:
    * 
    * If the order condition cannot be satisfied, since there are not enough samples available, the order is automatically reduced.
    * If order two is required, but only two samples are available, the extrapolation order is automatically reduced to one.
-   * 
-   * @param order Order of the extrapolation scheme to be used.
    */
   Eigen::VectorXd extrapolateData();
 };
