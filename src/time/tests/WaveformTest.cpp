@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   // Test first order extrapolation
   int      extrapolationOrder = 1;
-  Waveform waveform(1, extrapolationOrder);
+  Waveform waveform(1, extrapolationOrder, Waveform::UNDEFINED_INTERPOLATION_ORDER);
   BOOST_TEST(fixture.numberOfSamples(waveform) == 2);
   BOOST_TEST(fixture.numberOfValidSamples(waveform) == 1);
   BOOST_TEST(fixture.numberOfData(waveform) == 1);
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 
   // Test second order extrapolation
   extrapolationOrder = 2;
-  Waveform waveform2(1, extrapolationOrder);
+  Waveform waveform2(1, extrapolationOrder, Waveform::UNDEFINED_INTERPOLATION_ORDER);
   BOOST_TEST(fixture.numberOfSamples(waveform2) == 3);
   BOOST_TEST(fixture.numberOfValidSamples(waveform2) == 1);
   BOOST_TEST(fixture.numberOfData(waveform2) == 1);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateData)
   // Test zeroth order interpolation
   int      extrapolationOrder = 0;
   int      interpolationOrder = 0;
-  Waveform waveform0(1);
+  Waveform waveform0(1, extrapolationOrder, interpolationOrder);
 
   BOOST_TEST(waveform0.lastTimeWindows().cols() == 2);
   BOOST_TEST(waveform0.lastTimeWindows().rows() == 1);

@@ -6,10 +6,12 @@
 namespace precice {
 namespace time {
 
+const int Waveform::UNDEFINED_INTERPOLATION_ORDER = -1;
+
 Waveform::Waveform(
     const int initializedNumberOfData,
     const int extrapolationOrder,
-    int interpolationOrder)
+    const int interpolationOrder)
     : _extrapolationOrder(extrapolationOrder)
 {
   /**
@@ -19,7 +21,9 @@ Waveform::Waveform(
      * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
      * extrapolation.
      */
-  int initializedNumberOfSamples = std::max({2, _extrapolationOrder + 1, interpolationOrder + 1});
+  PRECICE_ASSERT(extrapolationOrder >= 0);
+  PRECICE_ASSERT(interpolationOrder >= 0 || interpolationOrder == UNDEFINED_INTERPOLATION_ORDER);
+  const int initializedNumberOfSamples = std::max({2, _extrapolationOrder + 1, interpolationOrder + 1});
   _timeWindows                   = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
   _numberOfValidSamples          = 1; // we assume that upon creation the first sample is always valid.
   PRECICE_ASSERT(numberOfSamples() == initializedNumberOfSamples);

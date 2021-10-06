@@ -15,6 +15,9 @@ namespace time {
 class Waveform {
   friend struct testing::WaveformFixture; // Make the fixture friend of this class
 public:
+  /// To be used, when the interpolation order is not defined for this Waveform.
+  static const int UNDEFINED_INTERPOLATION_ORDER;
+
   /**
    * @brief Waveform object which stores data of current and past time windows for performing extrapolation.
    * @param initializedNumberOfData defines how many pieces of data one sample in time consists of
@@ -22,8 +25,8 @@ public:
    * @param interpolationOrder defines the maximum interpolation order supported by this Waveform and reserves storage correspondingly
    */
   Waveform(const int initializedNumberOfData,
-           const int extrapolationOrder = 0,
-           int interpolationOrder = 0);
+           const int extrapolationOrder,
+           const int interpolationOrder);
 
   /**
    * @brief Updates entry in _timeWindows corresponding to this window with given data
@@ -41,7 +44,7 @@ public:
    * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
    * @param order interpolation order being used.
    */
-  Eigen::VectorXd sample(double normalizedDt, int order = 0);
+  Eigen::VectorXd sample(const double normalizedDt, const int order = 0);
 
   /**
    * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)

@@ -453,7 +453,7 @@ void BaseCouplingScheme::setupDataMatrices()
   PRECICE_TRACE();
   // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
-    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder));
+    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
     WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
     _waveforms.insert(waveformPair);
     pair.second->storeIteration();
