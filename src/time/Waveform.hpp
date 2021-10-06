@@ -34,7 +34,7 @@ public:
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
    */
-  void moveToNextWindow(int order = 0);
+  void moveToNextWindow();
 
   /**
    * @brief sample Waveform
@@ -53,6 +53,9 @@ private:
   /// Data values of time windows.
   Eigen::MatrixXd _timeWindows;
 
+  /// extrapolation order for this waveform
+  const int _extrapolationOrder;
+
   /// number of valid samples in _timeWindows
   int _numberOfValidSamples;
 
@@ -69,9 +72,20 @@ private:
   /**
    * @brief returns number of data per sample in time stored by this waveform
    */
-  int numberOfData();
+  int numberOfData(); // @todo bad naming, consider renaming. See https://github.com/precice/precice/pull/1094#pullrequestreview-771715472
 
   mutable logging::Logger _log{"time::Waveform"};
+
+  /**
+   * @brief Computes which order may be used for extrapolation or interpolation.
+   * 
+   * Order of extrapolation or interpolation is determined by number of valid samples and maximum order defined by the user.
+   * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
+   *
+   * @param order Order demanded by the user.
+   * @return Order that may be used.
+   */
+  int computeUsedOrder(int order);
 
   /**
    * @brief Extrapolates data _timeWindows using an extrapolation scheme of given order. 
@@ -81,7 +95,7 @@ private:
    * 
    * @param order Order of the extrapolation scheme to be used.
    */
-  Eigen::VectorXd extrapolateData(int order);
+  Eigen::VectorXd extrapolateData();
 
   /**
    * @brief Interpolates data inside current time time window using an interpolation scheme of given order.
