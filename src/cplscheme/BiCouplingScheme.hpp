@@ -37,7 +37,8 @@ public:
       m2n::PtrM2N                   m2n,
       int                           maxIterations,
       CouplingMode                  cplMode,
-      constants::TimesteppingMethod dtMethod);
+      constants::TimesteppingMethod dtMethod,
+      int                           extrapolationOrder);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
