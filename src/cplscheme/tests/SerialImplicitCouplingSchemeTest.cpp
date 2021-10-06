@@ -440,16 +440,16 @@ BOOST_AUTO_TEST_CASE(testFirstOrderExtrapolateData)
   mesh->allocateDataValues();
   BOOST_TEST(data->values().size() == 1);
 
-  double                maxTime      = CouplingScheme::UNDEFINED_TIME;
-  int                   maxTimesteps = 1;
-  double                dt           = 1.0;
+  const double          maxTime      = CouplingScheme::UNDEFINED_TIME;
+  const int             maxTimesteps = 1;
+  const double          dt           = 1.0;
   std::string           first        = "First";
   std::string           second       = "Second";
   std::string           accessor     = second;
   com::PtrCommunication com(new com::MPIDirectCommunication());
   m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
-  int                   maxIterations      = 1;
-  int                   extrapolationOrder = 1;
+  const int             maxIterations      = 1;
+  const int             extrapolationOrder = 1;
 
   // Test first order extrapolation
   SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
@@ -517,19 +517,20 @@ BOOST_AUTO_TEST_CASE(testSecondOrderExtrapolateData)
   mesh->allocateDataValues();
   BOOST_TEST(data->values().size() == 1);
 
-  double                maxTime      = CouplingScheme::UNDEFINED_TIME;
-  int                   maxTimesteps = 1;
-  double                dt           = 1.0;
+  const double          maxTime      = CouplingScheme::UNDEFINED_TIME;
+  const int             maxTimesteps = 1;
+  const double          dt           = 1.0;
   std::string           first        = "First";
   std::string           second       = "Second";
   std::string           accessor     = second;
   com::PtrCommunication com(new com::MPIDirectCommunication());
   m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
-  int                   maxIterations = 1;
-  int                   extrapolationOrder = 2;
+  const int             maxIterations      = 1;
+  const int             extrapolationOrder = 2;
 
   // Test second order extrapolation
   SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
+
 
   testing::SerialCouplingSchemeFixture fixture;
 
@@ -630,7 +631,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 1;
-  double       timestepLength     = timeWindowSize;
+  const double timestepLength     = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -829,7 +830,7 @@ BOOST_AUTO_TEST_CASE(testLinearExtrapolationInit)
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 1;
-  double       timestepLength     = timeWindowSize;
+  const double timestepLength     = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
@@ -1071,7 +1072,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
   const double timeWindowSize     = 0.1;
   const int    maxIterations      = 3;
   const int    extrapolationOrder = 2;
-  double       timestepLength     = timeWindowSize;
+  const double timestepLength     = timeWindowSize;
   std::string  first("Participant0");
   std::string  second("Participant1");
   int          sendDataIndex        = -1;
