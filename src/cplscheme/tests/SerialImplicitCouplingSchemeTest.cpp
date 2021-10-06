@@ -553,15 +553,15 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
 {
   /**
    * Perform linear extrapolation and constant relaxation acceleration
-   * 
+   *
    * Do two time windows with three iterations each. 
-   * 
+   *
    * Each participant writes dummy data to other participant, received data is checked.
-   * 
+   *
    * Make sure that the following happens, if NOT converged (first two iterations):
    * 1. acceleration is performed
    * 2. participants receive correct (accelerated) data
-   * 
+   *
    * Make sure that the following happens, if converged (end of third iteration):
    * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
    * 2. we move to the next window
@@ -823,6 +823,241 @@ BOOST_AUTO_TEST_CASE(testLinearExtrapolationInit)
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second));
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first));
+
+  // Add acceleration
+  acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
+  cplScheme.setAcceleration(ptrAcceleration);
+
+  // Add convergence measures
+  const int                              minIterations = maxIterations;
+  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
+      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
+  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
+  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
+
+  cplScheme.initialize(0.0, 1);
+
+  Eigen::VectorXd v(1); // buffer for data
+
+  // ensure that data is uninitialized
+  BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
+  BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 0.0));
+  BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
+  BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 0.0));
+
+  if (context.isNamed(first)) {
+    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteInitialData()));
+  } else {
+    BOOST_TEST(context.isNamed(second));
+    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    v << 4.0;
+    mesh->data(sendDataIndex)->values() = v;
+    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
+    BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
+    BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
+  }
+
+  cplScheme.initializeData();
+
+  if (context.isNamed(first)) {
+    // first participant receives initial data = 4 (see above)
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
+    BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 4.0));
+    // first participant does not send any data here
+    BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
+    BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 0.0));
+  } else {
+    // second participant receives initial data written by first participant in it's first window = 1 (see below)
+    BOOST_TEST(context.isNamed(second));
+    BOOST_TEST(cplScheme.hasDataBeenReceived());
+    BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
+    BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 1.0));
+    // second participant has send data above (should remain untouched)
+    BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
+    BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
+  }
+
+  // first window
+  for (int i = 0; i < maxIterations; i++) {
+    // first, second and third iteration
+    BOOST_TEST(cplScheme.isCouplingOngoing());
+
+    if (context.isNamed(first)) {
+      if (i == 0) {
+        // data is uninitialized for first participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
+      } else if (i == 1) {
+        // accelerated data from second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3); // = 0.5 * 4 + 0.5 * 2
+      } else if (i == 2) {
+        // accelerated data from second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5); // = 0.5 * 3 + 0.5 * 2
+      }
+    } else if (context.isNamed(second)) {
+      // data from first participant
+      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
+    }
+
+    if (i == 0) {
+      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
+      cplScheme.markActionFulfilled(writeIterationCheckpoint);
+      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
+    } else {
+      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
+      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
+      cplScheme.markActionFulfilled(readIterationCheckpoint);
+    }
+
+    // write data to mesh
+    if (context.isNamed(first)) {
+      v << 1.0;
+    } else if (context.isNamed(second)) {
+      v << 2.0;
+    }
+    mesh->data(sendDataIndex)->values() = v;
+    cplScheme.addComputedTime(timestepLength);
+
+    cplScheme.advance();
+
+    if (i < maxIterations - 1) {
+      BOOST_TEST(not cplScheme.isTimeWindowComplete());
+    } else {
+      // window complete since max iterations reached
+      BOOST_TEST(cplScheme.isTimeWindowComplete());
+    }
+  }
+
+  // second window
+  for (int i = 0; i < maxIterations; i++) {
+    // first, second and third iteration
+    BOOST_TEST(cplScheme.isCouplingOngoing());
+    if (context.isNamed(first)) {
+      if (i == 0) {
+        // first order extrapolation uses initial data and final value from last window.
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0); // = 2*2 - 4
+      } else if (i == 1) {
+        // accelerated data from second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1.5); // = 0.5 * 0 + 0.5 * 3
+      } else if (i == 2) {
+        // accelerated data from second participant
+        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.25); // = 0.5 * 1.5 + 0.5 * 3
+      }
+    } else if (context.isNamed(second)) {
+      // extrapolation only applied to accelerated data. So data written by first participant.
+      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+    }
+
+    if (i == 0) {
+      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
+      cplScheme.markActionFulfilled(writeIterationCheckpoint);
+      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
+    } else {
+      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
+      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
+      cplScheme.markActionFulfilled(readIterationCheckpoint);
+    }
+
+    v << 3.0;
+    mesh->data(sendDataIndex)->values() = v;
+    cplScheme.addComputedTime(timestepLength);
+
+    cplScheme.advance();
+
+    if (i < maxIterations - 1) {
+      BOOST_TEST(not cplScheme.isTimeWindowComplete());
+    } else {
+      // window complete since max iterations reached
+      BOOST_TEST(cplScheme.isTimeWindowComplete());
+    }
+  }
+
+  // third window
+  if (context.isNamed(first)) {
+    // first order extrapolation
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
+  } else if (context.isNamed(second)) {
+    // extrapolation only applied to accelerated data. So data written by first participant.
+    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
+  }
+
+  // reached end of simulation, ready to finalize
+  BOOST_TEST(not cplScheme.isCouplingOngoing());
+
+  cplScheme.finalize();
+}
+
+/// Test that cplScheme gives correct results when applying extrapolation using non-zero initial data.
+BOOST_AUTO_TEST_CASE(testLinearExtrapolationInit)
+{
+  /**
+   * Perform linear extrapolation and use initialization
+   *
+   * Do two time windows with three iterations each.
+   *
+   * Each participant writes dummy data to other participant, received data is checked.
+   *
+   **/
+
+  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = true;
+  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+
+  xml::XMLTag root = xml::getRootTag();
+
+  // Create a data configuration, to simplify configuration of data
+
+  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
+  const int                  geometrical_dimensions = 3; // 3d problem
+  const int                  data_dimensions        = 1; // only one sample in data
+  dataConfig->setDimensions(geometrical_dimensions);
+  dataConfig->addData("Data0", data_dimensions);
+  dataConfig->addData("Data1", data_dimensions);
+
+  mesh::MeshConfiguration meshConfig(root, dataConfig);
+  meshConfig.setDimensions(3);
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
+  const auto    dataID0 = mesh->createData("Data0", data_dimensions)->getID();
+  const auto    dataID1 = mesh->createData("Data1", data_dimensions)->getID();
+  mesh->createVertex(Eigen::Vector3d::Zero());
+  mesh->allocateDataValues();
+  meshConfig.addMesh(mesh);
+
+  // Create all parameters necessary to create an ImplicitCouplingScheme object
+  const double maxTime        = CouplingScheme::UNDEFINED_TIME;
+  const int    maxTimeWindows = 2;
+  const double timeWindowSize = 0.1;
+  const int    maxIterations  = 3;
+  double       timestepLength = timeWindowSize;
+  std::string  first("Participant0");
+  std::string  second("Participant1");
+  int          sendDataIndex        = -1;
+  int          receiveDataIndex     = -1;
+  int          convergenceDataIndex = -1;
+
+  BOOST_TEST(dataID0 == 0);
+  BOOST_TEST(dataID1 == 1);
+
+  if (context.isNamed(first)) {
+    sendDataIndex        = dataID0;
+    receiveDataIndex     = dataID1;
+    convergenceDataIndex = receiveDataIndex;
+  } else {
+    sendDataIndex        = dataID1;
+    receiveDataIndex     = dataID0;
+    convergenceDataIndex = sendDataIndex;
+  }
+
+  // Create the coupling scheme object
+  cplscheme::SerialCouplingScheme cplScheme(
+      maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
+      BaseCouplingScheme::Implicit, maxIterations);
+  cplScheme.setExtrapolationOrder(1);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second));
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first));
 
