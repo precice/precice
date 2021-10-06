@@ -247,87 +247,87 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   // Test second order interpolation
   const int extrapolationOrder = 0;
   const int interpolationOrder = 2;
-  Waveform  waveform2(1, extrapolationOrder, interpolationOrder);
-  BOOST_TEST(waveform2.lastTimeWindows().cols() == 3);
-  BOOST_TEST(waveform2.lastTimeWindows().rows() == 1);
-  BOOST_TEST(fixture.numberOfValidSamples(waveform2) == 1);
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 0.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 0.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
+  Waveform  waveform(1, extrapolationOrder, interpolationOrder);
+  BOOST_TEST(waveform.lastTimeWindows().cols() == 3);
+  BOOST_TEST(waveform.lastTimeWindows().rows() == 1);
+  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 1);
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 0.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 0.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 2), 0.0));
 
   Eigen::VectorXd value(1);
   value(0) = 1.0;
-  waveform2.store(value);
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 1.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 0.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
+  waveform.store(value);
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 0.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform2.sample(0.0)(0, 0), 1.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5)(0, 0), 1.0));
-  BOOST_TEST(testing::equals(waveform2.sample(1.0)(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 1.0));
 
   value(0) = 2.0;
-  waveform2.store(value);
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 0.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
+  waveform.store(value);
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 0.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform2.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform2.sample(1.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
 
-  waveform2.moveToNextWindow();
-  BOOST_TEST(fixture.numberOfValidSamples(waveform2) == 2);
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 2.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
+  waveform.moveToNextWindow();
+  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 2.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform2.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform2.sample(1.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
 
   value(0) = 8.0;
-  waveform2.store(value);
+  waveform.store(value);
 
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 8.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 2.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 8.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 2.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform2.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5)(0, 0), 5.0));
-  BOOST_TEST(testing::equals(waveform2.sample(1.0)(0, 0), 8.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 5.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 8.0));
 
   value(0) = 4.0;
-  waveform2.store(value);
+  waveform.store(value);
 
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 4.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 2.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 4.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 2.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform2.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5)(0, 0), 3.0));
-  BOOST_TEST(testing::equals(waveform2.sample(1.0)(0, 0), 4.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 3.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 4.0));
 
-  waveform2.moveToNextWindow();
-  BOOST_TEST(fixture.numberOfValidSamples(waveform2) == 3);
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 4.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 4.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 2.0));
+  waveform.moveToNextWindow();
+  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 3);
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 4.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 4.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 2), 2.0));
 
-  BOOST_TEST(testing::equals(waveform2.sample(0.0)(0, 0), 4.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5)(0, 0), 4.25));
-  BOOST_TEST(testing::equals(waveform2.sample(1.0)(0, 0), 4.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 4.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 4.25));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 4.0));
 
   value(0) = 8.0;
-  waveform2.store(value);
+  waveform.store(value);
 
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 8.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 4.0));
-  BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 2.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 8.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 4.0));
+  BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 2), 2.0));
 
-  BOOST_TEST(testing::equals(waveform2.sample(0.0)(0, 0), 4.0));
-  BOOST_TEST(testing::equals(waveform2.sample(0.5)(0, 0), 5.75));
-  BOOST_TEST(testing::equals(waveform2.sample(1.0)(0, 0), 8.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 4.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 5.75));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 8.0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
