@@ -112,11 +112,12 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   ParallelCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100, 0);
-  testing::ParallelCouplingSchemeFixture fixture;
+
+  using Fixture = testing::ParallelCouplingSchemeFixture;
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
-  CouplingData *sendCouplingData = fixture.getSendData(cplScheme, sendDataIndex);
+  CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization);
-  CouplingData *receiveCouplingData = fixture.getReceiveData(cplScheme, receiveDataIndex);
+  CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -139,7 +140,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
     BOOST_TEST(sendCouplingData->values().size() == 1);
     BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
-    BOOST_TEST(fixture.isImplicitCouplingScheme(cplScheme));
+    BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     sendCouplingData->values() = Eigen::VectorXd::Constant(1, 4.0);
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());

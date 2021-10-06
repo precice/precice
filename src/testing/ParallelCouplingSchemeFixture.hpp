@@ -10,11 +10,11 @@ namespace testing {
  * The fixture can be used to call private functions for individual testing. 
  */
 struct ParallelCouplingSchemeFixture {
-  bool isImplicitCouplingScheme(cplscheme::ParallelCouplingScheme &cplscheme);
+  static bool isImplicitCouplingScheme(cplscheme::ParallelCouplingScheme &cplscheme);
 
-  cplscheme::CouplingData *getReceiveData(cplscheme::ParallelCouplingScheme &cplscheme, int dataID);
+  static cplscheme::CouplingData *getReceiveData(cplscheme::ParallelCouplingScheme &cplscheme, int dataID);
 
-  cplscheme::CouplingData *getSendData(cplscheme::ParallelCouplingScheme &cplscheme, int dataID);
+  static cplscheme::CouplingData *getSendData(cplscheme::ParallelCouplingScheme &cplscheme, int dataID);
 };
 } // namespace testing
 } // namespace precice
