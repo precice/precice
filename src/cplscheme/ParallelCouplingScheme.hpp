@@ -53,8 +53,8 @@ public:
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
-      int                           maxIterations      = -1,
-      int                           extrapolationOrder = -1);
+      int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
+      int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};

@@ -60,18 +60,18 @@ BaseCouplingScheme::BaseCouplingScheme(
                    "Time window size has to be given when the fixed time window size method is used.");
   }
 
-  PRECICE_ASSERT((maxIterations > 0) || (maxIterations == -1),
+  PRECICE_ASSERT((maxIterations > 0) || (maxIterations == UNDEFINED_MAX_ITERATIONS),
                  "Maximal iteration limit has to be larger than zero.");
 
   if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(maxIterations == -1);
+    PRECICE_ASSERT(maxIterations == UNDEFINED_MAX_ITERATIONS);
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_ASSERT(maxIterations >= 1);
   }
 
   if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(_extrapolationOrder == -1, "Extrapolation is not allowed for explicit coupling");
+    PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1) || (_extrapolationOrder == 2),
