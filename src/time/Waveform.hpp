@@ -20,8 +20,8 @@ public:
    * @param numberOfData defines how many pieces of data one sample in time consists of
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(int numberOfData,
-           int extrapolationOrder);
+  Waveform(const int numberOfData,
+           const int extrapolationOrder);
 
   /**
    * @brief Updates entry in _timeWindows corresponding to this window with given data

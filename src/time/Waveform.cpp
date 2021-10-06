@@ -7,8 +7,8 @@ namespace precice {
 namespace time {
 
 Waveform::Waveform(
-    int initializedNumberOfData,
-    int extrapolationOrder)
+    const int initializedNumberOfData,
+    const int extrapolationOrder)
     : _extrapolationOrder(extrapolationOrder)
 {
   /**
