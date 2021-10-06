@@ -213,8 +213,6 @@ void BaseCouplingScheme::advance()
 
   if (reachedEndOfTimeWindow()) {
 
-    _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
-
     bool convergence = exchangeDataAndAccelerate();
 
     if (isImplicitCouplingScheme()) { // check convergence
@@ -226,11 +224,11 @@ void BaseCouplingScheme::advance()
         // coupling iteration.
         PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
         _time = _time - _computedTimeWindowPart;
-        _timeWindows -= 1;
       } else { // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
+        _timeWindows += 1;
         _isTimeWindowComplete = true;
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
@@ -246,6 +244,7 @@ void BaseCouplingScheme::advance()
       }
     } else {
       PRECICE_INFO("Time window completed");
+      _timeWindows += 1;
       _isTimeWindowComplete = true;
     }
     if (isCouplingOngoing()) {
@@ -502,7 +501,7 @@ bool BaseCouplingScheme::measureConvergence()
   bool oneStrict    = false; //at least one convergence measure is strict and did not converge
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::MasterSlave::isSlave()) {
-    _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
+    _convergenceWriter->writeData("TimeWindow", _timeWindows);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
   for (const auto &convMeasure : _convergenceMeasures) {
@@ -579,7 +578,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 {
   if (not utils::MasterSlave::isSlave()) {
 
-    _iterationsWriter->writeData("TimeWindow", _timeWindows - 1);
+    _iterationsWriter->writeData("TimeWindow", _timeWindows);
     _iterationsWriter->writeData("TotalIterations", _totalIterations);
     _iterationsWriter->writeData("Iterations", _iterations);
     int converged = _iterations < _maxIterations ? 1 : 0;
