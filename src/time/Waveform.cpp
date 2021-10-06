@@ -62,21 +62,31 @@ const Eigen::MatrixXd &Waveform::lastTimeWindows()
   return _timeWindows;
 }
 
-int Waveform::computeUsedOrder(int order)
+/**
+ * @brief Computes which order may be used for extrapolation or interpolation.
+ * 
+ * Order of extrapolation or interpolation is determined by number of valid samples and maximum order defined by the user.
+ * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
+ *
+ * @param requestedOrder Order requested by the user.
+ * @param numberOfAvailableSamples Samples available for extrapolation or interpolation.
+ * @return Order that may be used.
+ */
+static int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
 {
   int usedOrder = -1;
-  if (_extrapolationOrder == 0) {
+  if (requestedOrder == 0) {
     usedOrder = 0;
-  } else if (_extrapolationOrder == 1) {
-    if (_numberOfValidSamples < 2) {
+  } else if (requestedOrder == 1) {
+    if (numberOfAvailableSamples < 2) {
       usedOrder = 0;
     } else {
       usedOrder = 1;
     }
-  } else if (_extrapolationOrder == 2) {
-    if (_numberOfValidSamples < 2) {
+  } else if (requestedOrder == 2) {
+    if (numberOfAvailableSamples < 2) {
       usedOrder = 0;
-    } else if (_numberOfValidSamples < 3) {
+    } else if (numberOfAvailableSamples < 3) {
       usedOrder = 1;
     } else {
       usedOrder = 2;
@@ -89,7 +99,7 @@ int Waveform::computeUsedOrder(int order)
 
 Eigen::VectorXd Waveform::extrapolateData()
 {
-  int usedOrder = computeUsedOrder(_extrapolationOrder);
+  int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfValidSamples);
 
   if (usedOrder == 0) {
     PRECICE_ASSERT(this->numberOfSamples() > 0);
