@@ -21,8 +21,8 @@ public:
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    * @param interpolationOrder defines the maximum interpolation order supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(int initializedNumberOfData,
-           int extrapolationOrder = 0,
+  Waveform(const int initializedNumberOfData,
+           const int extrapolationOrder = 0,
            int interpolationOrder = 0);
 
   /**
