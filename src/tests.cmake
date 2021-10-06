@@ -69,6 +69,8 @@ target_sources(testprecice
     src/testing/Testing.cpp
     src/testing/Testing.hpp
     src/testing/main.cpp
+    src/testing/WaveformFixture.cpp
+    src/testing/WaveformFixture.hpp
     src/testing/tests/ExampleTests.cpp
     src/time/tests/WaveformTest.cpp
     src/utils/tests/AlgorithmTest.cpp
