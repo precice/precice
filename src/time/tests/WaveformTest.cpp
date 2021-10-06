@@ -1,6 +1,7 @@
 #include <Eigen/Core>
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "testing/WaveformFixture.hpp"
 #include "time/Waveform.hpp"
 
 using namespace precice;
@@ -14,12 +15,14 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
 {
   PRECICE_TEST(1_rank);
 
+  testing::WaveformFixture fixture;
+
   // Test first order extrapolation
   int      extrapolationOrder = 1;
   int      timeWindowCounter  = 1;
   Waveform waveform(1, extrapolationOrder);
-  BOOST_TEST(waveform.numberOfSamples() == 2);
-  BOOST_TEST(waveform.numberOfData() == 1);
+  BOOST_TEST(fixture.numberOfSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfData(waveform) == 1);
   BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 0), 0.0));
   BOOST_TEST(testing::equals(waveform.lastTimeWindows()(0, 1), 0.0));
 
@@ -46,8 +49,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateData)
   extrapolationOrder = 2;
   timeWindowCounter  = 1;
   Waveform waveform2(1, extrapolationOrder);
-  BOOST_TEST(waveform2.numberOfSamples() == 3);
-  BOOST_TEST(waveform2.numberOfData() == 1);
+  BOOST_TEST(fixture.numberOfSamples(waveform2) == 3);
+  BOOST_TEST(fixture.numberOfData(waveform2) == 1);
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 0), 0.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 1), 0.0));
   BOOST_TEST(testing::equals(waveform2.lastTimeWindows()(0, 2), 0.0));
