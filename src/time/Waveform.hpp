@@ -53,7 +53,7 @@ private:
   /**
    * @brief returns number of data per sample in time stored by this waveform
    */
-  int numberOfData();
+  int numberOfData(); // @todo bad naming, consider renaming. See https://github.com/precice/precice/pull/1094#pullrequestreview-771715472
 
   mutable logging::Logger _log{"time::Waveform"};
 
