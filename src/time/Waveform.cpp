@@ -134,27 +134,7 @@ Eigen::VectorXd Waveform::extrapolateData()
 
 Eigen::VectorXd Waveform::interpolateData(int order, double normalizedDt)
 {
-  int usedOrder = 0;
-
-  if (order == 0) {
-    usedOrder = 0;
-  } else if (order == 1) {
-    if (_numberOfValidSamples < 2) {
-      usedOrder = 0;
-    } else {
-      usedOrder = 1;
-    }
-  } else if (order == 2) {
-    if (_numberOfValidSamples < 2) {
-      usedOrder = 0;
-    } else if (_numberOfValidSamples < 3) {
-      usedOrder = 1;
-    } else {
-      usedOrder = 2;
-    }
-  } else {
-    PRECICE_ASSERT(false);
-  }
+  const int usedOrder = computeUsedOrder(order, _numberOfValidSamples);
 
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
