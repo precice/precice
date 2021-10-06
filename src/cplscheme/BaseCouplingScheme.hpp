@@ -72,7 +72,8 @@ public:
       std::string                   localParticipant,
       int                           maxIterations,
       CouplingMode                  cplMode,
-      constants::TimesteppingMethod dtMethod);
+      constants::TimesteppingMethod dtMethod,
+      int                           extrapolationOrder);
 
   /**
    * @brief getter for _isInitialized
@@ -211,20 +212,6 @@ public:
    * @brief Advances the coupling scheme.
    */
   void advance() override final;
-
-  /**
-   * @brief Sets order of predictor of interface values for first participant.
-   *
-   * The first participant in the implicit coupling scheme has to take some
-   * initial guess for the interface values computed by the second participant.
-   * In order to improve this initial guess, an extrapolation from previous
-   * time windows can be performed.
-   *
-   * The standard predictor is of order zero, i.e., simply the converged values
-   * of the last time windows are taken as initial guess for the coupling iterations.
-   * Currently, an order 1 predictor is implement besides that.
-   */
-  void setExtrapolationOrder(int order);
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
@@ -419,8 +406,21 @@ private:
   /// Number of total iterations performed.
   int _totalIterations = -1;
 
-  /// Extrapolation order of coupling data for first iteration of every dt.
-  int _extrapolationOrder = 0;
+  /**
+   * Order of predictor of interface values for first participant.
+   *
+   * The first participant in the implicit coupling scheme has to take some
+   * initial guess for the interface values computed by the second participant.
+   * In order to improve this initial guess, an extrapolation from previous
+   * time windows can be performed.
+   *
+   * The standard predictor is of order zero, i.e., simply the converged values
+   * of the last time windows are taken as initial guess for the coupling iterations.
+   * Currently, an order 1 predictor (linear extrapolation) and order 2 predictor
+   * (see https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1 )
+   * is implement besides that.
+   */
+  const int _extrapolationOrder;
 
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;

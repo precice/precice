@@ -33,7 +33,8 @@ BaseCouplingScheme::BaseCouplingScheme(
     std::string                   localParticipant,
     int                           maxIterations,
     CouplingMode                  cplMode,
-    constants::TimesteppingMethod dtMethod)
+    constants::TimesteppingMethod dtMethod,
+    int                           extrapolationOrder)
     : _couplingMode(cplMode),
       _maxTime(maxTime),
       _maxTimeWindows(maxTimeWindows),
@@ -43,7 +44,8 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterations(1),
       _localParticipant(std::move(localParticipant)),
-      _eps(std::pow(10.0, -1 * validDigits))
+      _eps(std::pow(10.0, -1 * validDigits)),
+      _extrapolationOrder(extrapolationOrder)
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
                  "Maximum time has to be larger than zero.");
@@ -58,13 +60,22 @@ BaseCouplingScheme::BaseCouplingScheme(
                    "Time window size has to be given when the fixed time window size method is used.");
   }
 
-  PRECICE_ASSERT((maxIterations > 0) || (maxIterations == -1),
+  PRECICE_ASSERT((maxIterations > 0) || (maxIterations == UNDEFINED_MAX_ITERATIONS),
                  "Maximal iteration limit has to be larger than zero.");
 
   if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(maxIterations == -1);
+    PRECICE_ASSERT(maxIterations == UNDEFINED_MAX_ITERATIONS);
   } else {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_ASSERT(maxIterations >= 1);
+  }
+
+  if (isExplicitCouplingScheme()) {
+    PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
+  } else {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+    PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1) || (_extrapolationOrder == 2),
+                  "Extrapolation order has to be  0, 1, or 2.");
   }
 }
 
@@ -244,14 +255,6 @@ void BaseCouplingScheme::advance()
   }
 }
 
-void BaseCouplingScheme::setExtrapolationOrder(
-    int order)
-{
-  PRECICE_CHECK((order == 0) || (order == 1) || (order == 2),
-                "Extrapolation order has to be  0, 1, or 2.");
-  _extrapolationOrder = order;
-}
-
 void BaseCouplingScheme::storeDataInWaveforms()
 {
   PRECICE_TRACE(_timeWindows);
@@ -266,7 +269,7 @@ void BaseCouplingScheme::moveToNextWindow()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->moveToNextWindow(_extrapolationOrder);
+    _waveforms[pair.first]->moveToNextWindow();
     pair.second->values() = _waveforms[pair.first]->lastTimeWindows().col(0);
   }
 }
@@ -450,7 +453,7 @@ void BaseCouplingScheme::setupDataMatrices()
   PRECICE_TRACE();
   // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
-    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder));
+    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
     WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
     _waveforms.insert(waveformPair);
     pair.second->storeIteration();
