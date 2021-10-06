@@ -64,6 +64,18 @@ public:
    */
   const Eigen::MatrixXd &lastTimeWindows();
 
+  /// @todo try to make this private!
+  /**
+   * @brief returns number of data per sample in time stored by this waveform
+   */
+  int numberOfData(); // @todo bad naming, consider renaming. See https://github.com/precice/precice/pull/1094#pullrequestreview-771715472
+
+  /// @todo try to make this private!
+  /**
+   * @brief returns number of samples in time stored by this waveform
+   */
+  int numberOfSamples();
+
 private:
   /// Data values of time windows.
   Eigen::MatrixXd _timeWindows;
@@ -78,19 +90,9 @@ private:
   int _numberOfValidSamples;
 
   /**
-   * @brief returns number of samples in time stored by this waveform
-   */
-  int numberOfSamples();
-
-  /**
    * @brief returns number of valid samples in time stored by this waveform
    */
   int numberOfValidSamples();
-
-  /**
-   * @brief returns number of data per sample in time stored by this waveform
-   */
-  int numberOfData(); // @todo bad naming, consider renaming. See https://github.com/precice/precice/pull/1094#pullrequestreview-771715472
 
   mutable logging::Logger _log{"time::Waveform"};
 

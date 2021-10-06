@@ -11,7 +11,7 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(data);
-  time::PtrWaveform ptrWaveform(new time::Waveform(data->values().size()));
+  time::PtrWaveform ptrWaveform(new time::Waveform(data->values().size(), DataContext::EXTRAPOLATION_ORDER, DataContext::INTERPOLATION_ORDER));
   _providedWaveform = ptrWaveform;
   _providedWaveform->store(data->values());
   _providedData = data;
@@ -125,7 +125,7 @@ void DataContext::configureForReadMapping(MappingContext mappingContext, MeshCon
   PRECICE_ASSERT(fromMeshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData fromData = fromMeshContext.mesh->data(getDataName());
   PRECICE_ASSERT(fromData != _providedData);
-  time::PtrWaveform ptrFromWaveform(new time::Waveform(fromData->values().size()));
+  time::PtrWaveform ptrFromWaveform(new time::Waveform(fromData->values().size(), DataContext::EXTRAPOLATION_ORDER, DataContext::INTERPOLATION_ORDER));
   this->setMapping(mappingContext, fromData, _providedData, ptrFromWaveform, _providedWaveform);
   PRECICE_ASSERT(hasReadMapping());
 }
@@ -136,7 +136,7 @@ void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshCo
   PRECICE_ASSERT(toMeshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData toData = toMeshContext.mesh->data(getDataName());
   PRECICE_ASSERT(toData != _providedData);
-  time::PtrWaveform ptrToWaveform(new time::Waveform(toData->values().size()));
+  time::PtrWaveform ptrToWaveform(new time::Waveform(toData->values().size(), DataContext::EXTRAPOLATION_ORDER, DataContext::INTERPOLATION_ORDER));
   this->setMapping(mappingContext, _providedData, toData, _providedWaveform, ptrToWaveform);
   PRECICE_ASSERT(hasWriteMapping());
 }
@@ -245,8 +245,7 @@ Eigen::VectorXd DataContext::sampleAt(double normalizedDt)
 
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
-  int order = 1;
-  return _providedWaveform->sample(normalizedDt, order);
+  return _providedWaveform->sample(normalizedDt);
 }
 
 void DataContext::initializeWaveform(mesh::PtrData initializingData, time::PtrWaveform initializedWaveform)
@@ -279,7 +278,7 @@ void DataContext::storeDataInWaveform(mesh::PtrData sourceData, time::PtrWavefor
 
 void DataContext::moveProvidedWaveform()
 {
-  _providedWaveform->moveToNextWindow(1);
+  _providedWaveform->moveToNextWindow();
 }
 
 } // namespace impl
