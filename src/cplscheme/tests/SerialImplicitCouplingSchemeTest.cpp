@@ -428,7 +428,8 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get()); // no nullptr
 }
 
-BOOST_AUTO_TEST_CASE(testFirstOrderExtrapolateData)
+BOOST_AUTO_TEST_SUITE(Extrapolation)
+BOOST_AUTO_TEST_CASE(FirstOrder)
 {
   PRECICE_TEST(1_rank);
   using namespace mesh;
@@ -456,16 +457,16 @@ BOOST_AUTO_TEST_CASE(testFirstOrderExtrapolateData)
                               accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE,
                               BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
 
-  testing::SerialCouplingSchemeFixture fixture;
+  using Fixture = testing::SerialCouplingSchemeFixture;
 
   scheme.addDataToSend(data, mesh, true);
-  fixture.setupDataMatrices(scheme);
-  CouplingData *cplData = fixture.getSendData(scheme, dataID);
+  Fixture::setupDataMatrices(scheme);
+  CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->previousIteration().size() == 1);
 
-  fixture.moveToNextWindow(scheme);
+  Fixture::moveToNextWindow(scheme);
 
   // data is uninitialized
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
@@ -473,39 +474,39 @@ BOOST_AUTO_TEST_CASE(testFirstOrderExtrapolateData)
 
   // start first window
   cplData->values()(0) = 1.0; // data provided at end of first window
-  fixture.setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  fixture.storeDataInWaveforms(scheme);
+  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
+  Fixture::storeDataInWaveforms(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
 
   // go to second window
-  fixture.moveToNextWindow(scheme); // uses first order extrapolation at end of first window
+  Fixture::moveToNextWindow(scheme); // uses first order extrapolation at end of first window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-  fixture.storeIteration(scheme);
+  Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   cplData->values()(0) = 4.0; // data provided at end of second window
-  fixture.setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  fixture.storeDataInWaveforms(scheme);
+  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
+  Fixture::storeDataInWaveforms(scheme);
 
   // go to third window
-  fixture.moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of second window
+  Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of second window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  fixture.storeIteration(scheme);
+  Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // = 2*4 - 1
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
   cplData->values()(0) = 10.0; // data provided at end of third window
-  fixture.setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  fixture.storeDataInWaveforms(scheme);
+  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
+  Fixture::storeDataInWaveforms(scheme);
 
   // go to fourth window
-  fixture.moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of third window
+  Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of third window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
-  fixture.storeIteration(scheme);
+  Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 16.0)); // = 2*10 - 4
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 16.0));
 }
 
-BOOST_AUTO_TEST_CASE(testSecondOrderExtrapolateData)
+BOOST_AUTO_TEST_CASE(SecondOrder)
 {
   PRECICE_TEST(1_rank);
   using namespace mesh;
@@ -531,16 +532,16 @@ BOOST_AUTO_TEST_CASE(testSecondOrderExtrapolateData)
   // Test second order extrapolation
   SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
 
-  testing::SerialCouplingSchemeFixture fixture;
+  using Fixture = testing::SerialCouplingSchemeFixture;
 
   scheme.addDataToSend(data, mesh, true);
-  fixture.setupDataMatrices(scheme);
-  CouplingData *cplData = fixture.getSendData(scheme, dataID);
+  Fixture::setupDataMatrices(scheme);
+  CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);
   BOOST_TEST(cplData->previousIteration().size() == 1);
 
-  fixture.moveToNextWindow(scheme);
+  Fixture::moveToNextWindow(scheme);
 
   // data is uninitialized
   BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
@@ -548,42 +549,42 @@ BOOST_AUTO_TEST_CASE(testSecondOrderExtrapolateData)
 
   // start first window
   cplData->values()(0) = 1.0; // data provided at end of first window
-  fixture.setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  fixture.storeDataInWaveforms(scheme);
+  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
+  Fixture::storeDataInWaveforms(scheme);
 
   // go to second window
-  fixture.moveToNextWindow(scheme); // uses first order extrapolation at end of first window
+  Fixture::moveToNextWindow(scheme); // uses first order extrapolation at end of first window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-  fixture.storeIteration(scheme);
+  Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   cplData->values()(0) = 4.0; // data provided at end of second window
-  fixture.setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  fixture.storeDataInWaveforms(scheme);
+  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
+  Fixture::storeDataInWaveforms(scheme);
 
   //go to third window
-  fixture.moveToNextWindow(scheme); // uses second order extrapolation at end of second window
+  Fixture::moveToNextWindow(scheme); // uses second order extrapolation at end of second window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  fixture.storeIteration(scheme);
+  Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 8.0)); // = 2.5*4 - 2*1 + 0.5*0
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
   cplData->values()(0) = 4.0; // data provided at end of third window
-  fixture.setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  fixture.storeDataInWaveforms(scheme);
+  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
+  Fixture::storeDataInWaveforms(scheme);
 
   // go to fourth window
-  fixture.moveToNextWindow(scheme); // uses second order extrapolation at end of third window
+  Fixture::moveToNextWindow(scheme); // uses second order extrapolation at end of third window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
-  fixture.storeIteration(scheme);
+  Fixture::storeIteration(scheme);
   BOOST_TEST(testing::equals(cplData->values()(0), 2.5)); // = 2.5*4 - 2*4 + 0.5*1
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.5));
 }
 
 /// Test that cplScheme gives correct results when applying extrapolation.
-BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
+BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 {
   /**
-   * Perform linear extrapolation and constant relaxation acceleration
+   * Perform first order and constant relaxation acceleration
    * 
    * Do two time windows with three iterations each. 
    * 
@@ -787,10 +788,10 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
 }
 
 /// Test that cplScheme gives correct results when applying extrapolation using non-zero initial data.
-BOOST_AUTO_TEST_CASE(testLinearExtrapolationInit)
+BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 {
   /**
-   * Perform linear extrapolation and use initialization
+   * Perform first order extrapolation and use initialization
    * 
    * Do two time windows with three iterations each. 
    * 
@@ -1021,10 +1022,10 @@ BOOST_AUTO_TEST_CASE(testLinearExtrapolationInit)
   cplScheme.finalize();
 }
 
-BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
+BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
 {
   /**
-   * Perform quadratic extrapolation and constant relaxation acceleration
+   * Perform second order extrapolation and constant relaxation acceleration
    * 
    * Do three time windows with three iterations each. 
    * 
@@ -1270,6 +1271,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
 
   cplScheme.finalize();
 }
+BOOST_AUTO_TEST_SUITE_END()
 
 /// Test that runs on 2 processors.
 BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
@@ -1548,12 +1550,12 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, 0);
-  testing::SerialCouplingSchemeFixture fixture;
+  using Fixture = testing::SerialCouplingSchemeFixture;
 
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
-  CouplingData *sendCouplingData = fixture.getSendData(cplScheme, sendDataIndex);
+  CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization);
-  CouplingData *receiveCouplingData = fixture.getReceiveData(cplScheme, receiveDataIndex);
+  CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1578,7 +1580,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
 
-    BOOST_TEST(fixture.isImplicitCouplingScheme(cplScheme));
+    BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     cplScheme.initializeData();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
