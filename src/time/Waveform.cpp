@@ -108,7 +108,7 @@ static int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
 
 Eigen::VectorXd Waveform::extrapolateData()
 {
-  int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfValidSamples);
+  const int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfValidSamples);
 
   if (usedOrder == 0) {
     PRECICE_ASSERT(this->numberOfSamples() > 0);
