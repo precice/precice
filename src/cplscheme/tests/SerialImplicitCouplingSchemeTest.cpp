@@ -531,7 +531,6 @@ BOOST_AUTO_TEST_CASE(testSecondOrderExtrapolateData)
   // Test second order extrapolation
   SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
 
-
   testing::SerialCouplingSchemeFixture fixture;
 
   scheme.addDataToSend(data, mesh, true);
