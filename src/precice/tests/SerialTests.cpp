@@ -516,23 +516,11 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
         precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
         BOOST_TEST(readData[i] == readFunction(readTime, i));
         precice.readScalarData(readDataID, vertexIDs[i], currentDt / 4, readData[i]);
-        if (timestep == 0) { // in the first window, we only have one sample of data. Therefore constant interpolation
-          BOOST_TEST(readData[i] == readFunction(readTime, i));
-        } else { // in the following windows we have two samples of data. Therefore linear interpolation
-          BOOST_TEST(readData[i] == readFunction(readTime - currentDt * 3 / 4, i));
-        }
+        BOOST_TEST(readData[i] == readFunction(readTime - currentDt * 3 / 4, i));
         precice.readScalarData(readDataID, vertexIDs[i], currentDt / 2, readData[i]);
-        if (timestep == 0) { // in the first window, we only have one sample of data. Therefore constant interpolation
-          BOOST_TEST(readData[i] == readFunction(readTime, i));
-        } else { // in the following windows we have two samples of data. Therefore linear interpolation
-          BOOST_TEST(readData[i] == readFunction(readTime - currentDt / 2, i));
-        }
+        BOOST_TEST(readData[i] == readFunction(readTime - currentDt / 2, i));
         precice.readScalarData(readDataID, vertexIDs[i], currentDt * 3 / 4, readData[i]);
-        if (timestep == 0) { // in the first window, we only have one sample of data. Therefore constant interpolation
-          BOOST_TEST(readData[i] == readFunction(readTime, i));
-        } else { // in the following windows we have two samples of data. Therefore linear interpolation
-          BOOST_TEST(readData[i] == readFunction(readTime - currentDt / 4, i));
-        }
+        BOOST_TEST(readData[i] == readFunction(readTime - currentDt / 4, i));
       }
     }
 
@@ -624,17 +612,9 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSubcycling)
   while (precice.isCouplingOngoing()) {
     double readTime;
     if (context.isNamed("SolverOne")) {
-      if (timestep < nSubsteps) { // in the first window, we only have one sample of data. Therefore constant interpolation
-        readTime = 0;
-      } else {
-        readTime = time - windowDt + currentDt; // solver one lags one window behind solver two.
-      }
+      readTime = time - windowDt + currentDt; // solver one lags one window behind solver two.
     } else {
-      if (timestep < nSubsteps) { // in the first window, we only have one sample of data. Therefore constant interpolation
-        readTime = 0 + windowDt;
-      } else {
-        readTime = time + currentDt;
-      }
+      readTime = time + currentDt;
     }
     BOOST_TEST(readData.size() == n_vertices);
     for (int i = 0; i < n_vertices; i++) {
