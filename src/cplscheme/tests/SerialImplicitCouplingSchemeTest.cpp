@@ -428,7 +428,8 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get()); // no nullptr
 }
 
-BOOST_AUTO_TEST_CASE(testFirstOrderExtrapolateData)
+BOOST_AUTO_TEST_SUITE(Extrapolation)
+BOOST_AUTO_TEST_CASE(FirstOrder)
 {
   PRECICE_TEST(1_rank);
   using namespace mesh;
@@ -505,7 +506,7 @@ BOOST_AUTO_TEST_CASE(testFirstOrderExtrapolateData)
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 16.0));
 }
 
-BOOST_AUTO_TEST_CASE(testSecondOrderExtrapolateData)
+BOOST_AUTO_TEST_CASE(SecondOrder)
 {
   PRECICE_TEST(1_rank);
   using namespace mesh;
@@ -580,10 +581,10 @@ BOOST_AUTO_TEST_CASE(testSecondOrderExtrapolateData)
 }
 
 /// Test that cplScheme gives correct results when applying extrapolation.
-BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
+BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 {
   /**
-   * Perform linear extrapolation and constant relaxation acceleration
+   * Perform first order and constant relaxation acceleration
    * 
    * Do two time windows with three iterations each. 
    * 
@@ -787,10 +788,10 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithLinearExtrapolation)
 }
 
 /// Test that cplScheme gives correct results when applying extrapolation using non-zero initial data.
-BOOST_AUTO_TEST_CASE(testLinearExtrapolationInit)
+BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 {
   /**
-   * Perform linear extrapolation and use initialization
+   * Perform first order extrapolation and use initialization
    * 
    * Do two time windows with three iterations each. 
    * 
@@ -1021,10 +1022,10 @@ BOOST_AUTO_TEST_CASE(testLinearExtrapolationInit)
   cplScheme.finalize();
 }
 
-BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
+BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
 {
   /**
-   * Perform quadratic extrapolation and constant relaxation acceleration
+   * Perform second order extrapolation and constant relaxation acceleration
    * 
    * Do three time windows with three iterations each. 
    * 
@@ -1270,6 +1271,7 @@ BOOST_AUTO_TEST_CASE(testAccelerationWithQuadraticExtrapolation)
 
   cplScheme.finalize();
 }
+BOOST_AUTO_TEST_SUITE_END()
 
 /// Test that runs on 2 processors.
 BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
