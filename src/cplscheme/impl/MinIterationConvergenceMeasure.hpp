@@ -27,7 +27,7 @@ public:
     PRECICE_TRACE();
     _currentIteration++;
     _isConvergence = (_minimumIterationCount <= _currentIteration);
-    PRECICE_DEBUG("Iteration number = " << _currentIteration << ", convergence = " << _isConvergence);
+    PRECICE_DEBUG("Iteration number = {}, convergence = {}", _currentIteration, _isConvergence);
   }
 
   virtual bool isConvergence() const
@@ -35,7 +35,7 @@ public:
     return _isConvergence;
   }
 
-  virtual std::string printState()
+  virtual std::string printState(const std::string &dataName)
   {
     std::ostringstream os;
     os << "min iteration convergence measure: ";

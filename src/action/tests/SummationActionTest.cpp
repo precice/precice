@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
 {
   PRECICE_TEST(1_rank);
   using namespace mesh;
-  PtrMesh          mesh(new Mesh("Mesh", 3, true, testing::nextMeshID()));
+  PtrMesh          mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
   int              dimension   = 1;
   PtrData          sourceData1 = mesh->createData("SourceData1", dimension);
   PtrData          sourceData2 = mesh->createData("SourceData2", dimension);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
   PRECICE_TEST(1_rank);
   using namespace mesh;
   int              dimension = 3;
-  PtrMesh          mesh(new Mesh("Mesh", dimension, true, testing::nextMeshID()));
+  PtrMesh          mesh(new Mesh("Mesh", dimension, testing::nextMeshID()));
   PtrData          sourceData1 = mesh->createData("SourceData1", dimension);
   PtrData          sourceData2 = mesh->createData("SourceData2", dimension);
   PtrData          targetData  = mesh->createData("TargetData", dimension);
@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(Configuration)
   action::ActionConfiguration config(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, filename);
   BOOST_TEST(config.actions().size() == 1);
-  action::PtrAction action = config.actions().front();
-  BOOST_TEST(action);
+  auto &action = config.actions().front();
+  BOOST_TEST(static_cast<bool>(action));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Summation

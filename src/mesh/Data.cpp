@@ -1,5 +1,8 @@
 #include "Data.hpp"
 #include <algorithm>
+#include <utility>
+
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -16,11 +19,11 @@ Data::Data()
 }
 
 Data::Data(
-    const std::string &name,
-    int                id,
-    int                dimensions)
+    std::string name,
+    DataID      id,
+    int         dimensions)
     : _values(),
-      _name(name),
+      _name(std::move(name)),
       _id(id),
       _dimensions(dimensions)
 {
@@ -48,7 +51,7 @@ const std::string &Data::getName() const
   return _name;
 }
 
-int Data::getID() const
+DataID Data::getID() const
 {
   return _id;
 }

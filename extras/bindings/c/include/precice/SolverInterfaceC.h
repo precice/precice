@@ -163,6 +163,9 @@ int precicec_hasMesh(const char *meshName);
  */
 int precicec_getMeshID(const char *meshName);
 
+/// @copydoc precice::SolverInterface::isMeshConnectivityRequired()
+int precicec_isMeshConnectivityRequired(int meshID);
+
 /**
  * @brief Creates a mesh vertex
  *
@@ -449,6 +452,31 @@ const char *precicec_actionWriteIterationCheckpoint();
 
 // @brief Name of action for reading iteration checkpoint.
 const char *precicec_actionReadIterationCheckpoint();
+
+///@}
+
+/** @name Experimental Data Access
+ * These API functions are \b experimental and may change in future versions.
+ */
+///@{
+
+/**
+ * @brief See precice::SolverInterface::setMeshAccessRegion().
+ */
+void precicec_setMeshAccessRegion(
+    const int     meshID,
+    const double *boundingBox);
+
+/**
+ * @brief See precice::SolverInterface::getMeshVerticesAndIDs().
+ */
+void precicec_getMeshVerticesAndIDs(
+    const int meshID,
+    const int size,
+    int *     ids,
+    double *  coordinates);
+
+///@}
 
 #ifdef __cplusplus
 }

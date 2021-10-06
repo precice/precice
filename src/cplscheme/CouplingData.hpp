@@ -2,67 +2,69 @@
 
 #include <Eigen/Core>
 #include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
 
-struct CouplingData { // @todo: should be a class from a design standpoint. See https://github.com/precice/precice/pull/865#discussion_r495825098
-  using DataMatrix = Eigen::MatrixXd;
+class CouplingData {
+public:
+  CouplingData(
+      mesh::PtrData data,
+      mesh::PtrMesh mesh,
+      bool          requiresInitialization);
+
+  int getDimensions() const;
 
   /// Returns a reference to the data values.
-  Eigen::VectorXd &values()
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->values();
-  }
+  Eigen::VectorXd &values();
 
   /// Returns a const reference to the data values.
-  const Eigen::VectorXd &values() const
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->values();
-  }
+  const Eigen::VectorXd &values() const;
 
-  /// Data values of previous iteration (1st col) and previous time windows.
-  DataMatrix oldValues;
+  /// store _data->values() in read-only variable _previousIteration for convergence checks etc.
+  void storeIteration();
 
-  mesh::PtrData data;
+  /// returns data value from previous iteration
+  const Eigen::VectorXd previousIteration() const;
 
-  mesh::PtrMesh mesh;
+  /// get ID of this CouplingData's mesh. See Mesh::getID().
+  int getMeshID();
 
-  ///  True, if the data values if this CouplingData requires to be initialized by a participant.
-  bool requiresInitialization;
+  /// get ID of this CouplingData's data. See Data::getID().
+  int getDataID();
 
-  int getDimensions()
-  {
-    PRECICE_ASSERT(data != nullptr);
-    return data->getDimensions();
-  }
+  /// get name of this CouplingData's data. See Data::getName().
+  std::string getDataName();
 
+  /// get vertex offsets of this CouplingData's mesh. See Mesh::getVertexOffsets().
+  std::vector<int> getVertexOffsets();
+
+  ///  True, if the data values of this CouplingData require to be initialized by this participant.
+  const bool requiresInitialization;
+
+private:
   /**
    * @brief Default constructor, not to be used!
    *
    * Necessary when compiler creates template code for std::map::operator[].
    */
   CouplingData()
+      : requiresInitialization(false)
   {
     PRECICE_ASSERT(false);
   }
 
-  CouplingData(
-      mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      bool          requiresInitialization)
-      : data(data),
-        mesh(mesh),
-        requiresInitialization(requiresInitialization)
-  {
-    PRECICE_ASSERT(data != nullptr);
-    PRECICE_ASSERT(mesh != nullptr);
-    PRECICE_ASSERT(mesh.use_count() > 0);
-  }
+  /// Data values of previous iteration.
+  Eigen::VectorXd _previousIteration;
+
+  /// Data associated with this CouplingData
+  mesh::PtrData _data;
+
+  /// Mesh associated with this CouplingData
+  mesh::PtrMesh _mesh;
 };
 
 } // namespace cplscheme

@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
@@ -16,6 +17,7 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "precice/types.hpp"
 #include "utils/MultiLock.hpp"
 
 namespace precice {
@@ -241,14 +243,17 @@ public:
   /// Returns all mesh IDs (besides sub-ids).
   std::set<int> getMeshIDs() const;
 
+  /// @copydoc SolverInterface::isMeshConnectivityRequired()
+  bool isMeshConnectivityRequired(int meshID) const;
+
   /// Returns true, if the data with given name is used in the given mesh.
-  bool hasData(const std::string &dataName, int meshID) const;
+  bool hasData(const std::string &dataName, MeshID meshID) const;
 
   /// Returns data id corresponding to the given name (from configuration) and mesh.
-  int getDataID(const std::string &dataName, int meshID) const;
+  int getDataID(const std::string &dataName, MeshID meshID) const;
 
   /// Returns the number of nodes of a mesh.
-  int getMeshVertexSize(int meshID) const;
+  int getMeshVertexSize(MeshID meshID) const;
 
   /**
    * @brief Resets mesh with given ID.
@@ -257,7 +262,7 @@ public:
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  void resetMesh(int meshID);
+  void resetMesh(MeshID meshID);
 
   /**
    * @brief Set the position of a solver mesh vertex.
@@ -310,39 +315,39 @@ public:
    * @return Index of the edge to be used when setting a triangle.
    */
   int setMeshEdge(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID);
 
   /// Set a triangle of a solver mesh.
   void setMeshTriangle(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID);
+      MeshID meshID,
+      int    firstEdgeID,
+      int    secondEdgeID,
+      int    thirdEdgeID);
 
   /// Sets a triangle and creates/sets edges automatically of a solver mesh.
   void setMeshTriangleWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID);
 
   /// Set a quadrangle of a solver mesh.
   void setMeshQuad(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID,
-      int fourthEdgeID);
+      MeshID meshID,
+      int    firstEdgeID,
+      int    secondEdgeID,
+      int    thirdEdgeID,
+      int    fourthEdgeID);
 
   /// Sets a quadrangle and creates/sets edges automatically of a solver mesh.
   void setMeshQuadWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID,
-      int fourthVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID,
+      int    fourthVertexID);
 
   /**
    * @brief Computes and maps all write data mapped from mesh with given ID.
@@ -470,6 +475,21 @@ public:
       double &value) const;
 
   /**
+   * @copydoc precice::SolverInterface::setMeshAccessRegion()
+   */
+  void setMeshAccessRegion(const int     meshID,
+                           const double *boundingBox) const;
+
+  /**
+   * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
+   */
+  void getMeshVerticesAndIDs(
+      const int meshID,
+      const int size,
+      int *     ids,
+      double *  coordinates) const;
+
+  /**
    * @brief Sets the location for all output of preCICE.
    *
    * If done after configuration, this overwrites the output location specified
@@ -540,9 +560,6 @@ private:
   /// mesh name to mesh ID mapping.
   std::map<std::string, int> _meshIDs;
 
-  /// dataIDs referenced by meshID and data name
-  std::map<int, std::map<std::string, int>> _dataIDs;
-
   std::map<std::string, m2n::BoundM2N> _m2ns;
 
   /// Holds information about solvers participating in the coupled simulation.
@@ -559,6 +576,12 @@ private:
 
   // SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
+
+  /// Are experimental API calls allowed?
+  bool _allowsExperimental = false;
+
+  // setMeshAccessRegion may only be called once
+  mutable bool _accessRegionDefined = false;
 
   /// The current State of the solverinterface
   State _state{State::Constructed};
@@ -628,6 +651,15 @@ private:
   /// Communicate meshes and create partitions
   void computePartitions();
 
+  /// Helper for mapWrittenData and mapReadData
+  void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
+
+  /// Helper for mapWrittenData and mapReadData
+  void mapData(const utils::ptr_vector<DataContext> &contexts, const std::string &mappingType);
+
+  /// Helper for mapWrittenData and mapReadData
+  void clearMappings(utils::ptr_vector<MappingContext> contexts);
+
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();
 
@@ -637,16 +669,18 @@ private:
   /**
    * @brief Performs all data actions with given timing.
    *
-   * @param[in] dt Last timestep length computed by solver.
-   * @param[in] partFullDt Part of current full timestep computed by solver.
-   * @param[out] fullDt Length of current full timestep.
+   * @param[in] timings the timings of the action.
+   * @param[in] time the current total simulation time.
+   * @param[in] timeStepSize Length of last time step computed.
+   * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
+   * @param[in] timeWindowSize Current time window size.
    */
   void performDataActions(
       const std::set<action::Action::Timing> &timings,
       double                                  time,
-      double                                  dt,
-      double                                  partFullDt,
-      double                                  fullDt);
+      double                                  timeStepSize,
+      double                                  computedTimeWindowPart,
+      double                                  timeWindowSize);
 
   /// Resets written data, displacements and mesh neighbors to export.
   void resetWrittenData();
@@ -669,6 +703,15 @@ private:
 
   /// Syncs the timestep between slaves and master (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
+
+  /// Which channels to close in closeCommunicationChannels()
+  enum class CloseChannels : bool {
+    All         = false,
+    Distributed = true
+  };
+
+  /// Syncs the masters of all connected participants
+  void closeCommunicationChannels(CloseChannels cc);
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfigurationPeano;

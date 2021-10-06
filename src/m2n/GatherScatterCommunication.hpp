@@ -82,16 +82,10 @@ public:
   void closeConnection() override;
 
   /// Sends an array of double values from all slaves (different for each slave).
-  void send(
-      double const *itemsToSend,
-      size_t        size,
-      int           valueDimension) override;
+  void send(precice::span<double const> itemsToSend, int valueDimension) override;
 
   /// All slaves receive an array of doubles (different for each slave).
-  void receive(
-      double *itemsToReceive,
-      size_t  size,
-      int     valueDimension) override;
+  void receive(precice::span<double> itemsToReceive, int valueDimension) override;
 
   /// Broadcasts an int to connected ranks on remote participant. Not available for GatherScatterCommunication.
   void broadcastSend(const int &itemToSend) override;

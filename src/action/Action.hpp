@@ -17,7 +17,7 @@ class Action {
 public:
   /// Defines the time and place of application of the action.
   enum Timing {
-    ON_TIME_WINDOW_COMPLETE_POST, // On advancing to next dt, after adv. cpl scheme
+    ON_TIME_WINDOW_COMPLETE_POST, // On advancing to next time window, after adv. cpl scheme
     WRITE_MAPPING_PRIOR,          // Everytime, before write mapping
     WRITE_MAPPING_POST,           // Everytime, after write mapping and before advancing cpl scheme
     READ_MAPPING_PRIOR,           // Everytime, after advancing cpl scheme and before read mapping
@@ -51,15 +51,15 @@ public:
     * @brief Performs the action, to be overwritten by subclasses.
     *
     * @param[in] time the current total simulation time.
-    * @param[in] dt Length of last local timestep computed.
-    * @param[in] computedPartFullDt Sum of all local timesteps of current global timestep.
-    * @param fullDt[in] Current global timestep length.
+    * @param[in] timeStepSize Length of last time step computed.
+    * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
+    * @param[in] timeWindowSize Current time window size.
     */
   virtual void performAction(
       double time,
-      double dt,
-      double computedPartFullDt,
-      double fullDt) = 0;
+      double timeStepSize,
+      double computedTimeWindowPart,
+      double timeWindowSize) = 0;
 
   /// Returns the timing of the action.
   Timing getTiming() const

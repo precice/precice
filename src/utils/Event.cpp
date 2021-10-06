@@ -5,14 +5,14 @@
 namespace precice {
 namespace utils {
 
-Event::Event(std::string eventName, Clock::duration initialDuration)
+Event::Event(const std::string &eventName, Clock::duration initialDuration)
     : name(EventRegistry::instance().prefix + eventName),
       duration(initialDuration)
 {
   EventRegistry::instance().put(*this);
 }
 
-Event::Event(std::string eventName, bool barrier, bool autostart)
+Event::Event(const std::string &eventName, bool barrier, bool autostart)
     : name(eventName),
       _barrier(barrier)
 {
@@ -37,7 +37,7 @@ void Event::start(bool barrier)
   state = State::STARTED;
   stateChanges.push_back(std::make_pair(State::STARTED, Clock::now()));
   starttime = Clock::now();
-  PRECICE_DEBUG("Started event " << name);
+  PRECICE_DEBUG("Started event {}", name);
 }
 
 void Event::stop(bool barrier)
@@ -56,7 +56,7 @@ void Event::stop(bool barrier)
     data.clear();
     stateChanges.clear();
     duration = Clock::duration::zero();
-    PRECICE_DEBUG("Stopped event " << name);
+    PRECICE_DEBUG("Stopped event {}", name);
   }
 }
 
@@ -70,7 +70,7 @@ void Event::pause(bool barrier)
     stateChanges.emplace_back(State::PAUSED, Clock::now());
     state = State::PAUSED;
     duration += Clock::duration(stoptime - starttime);
-    PRECICE_DEBUG("Paused event " << name);
+    PRECICE_DEBUG("Paused event {}", name);
   }
 }
 
@@ -79,7 +79,7 @@ Event::Clock::duration Event::getDuration() const
   return duration;
 }
 
-void Event::addData(std::string key, int value)
+void Event::addData(const std::string &key, int value)
 {
   data[key].push_back(value);
 }

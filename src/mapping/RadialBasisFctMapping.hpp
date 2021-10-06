@@ -1,23 +1,15 @@
 #pragma once
 
-#include "Mapping.hpp"
-
 #include <Eigen/Core>
 #include <Eigen/QR>
-
-#include <boost/version.hpp>
-#if BOOST_VERSION < 106600
-#include <boost/function_output_iterator.hpp>
-#else
-#include <boost/iterator/function_output_iterator.hpp>
-#endif
 
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "impl/BasisFunctions.hpp"
+#include "mapping/Mapping.hpp"
 #include "mesh/Filter.hpp"
-#include "mesh/RTree.hpp"
-#include "mesh/impl/BBUtils.hpp"
+#include "precice/types.hpp"
+#include "query/Index.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
@@ -124,8 +116,13 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     : Mapping(constraint, dimensions),
       _basisFunction(function)
 {
-  setInputRequirement(Mapping::MeshRequirement::VERTEX);
-  setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  if (constraint == SCALEDCONSISTENT) {
+    setInputRequirement(Mapping::MeshRequirement::FULL);
+    setOutputRequirement(Mapping::MeshRequirement::FULL);
+  } else {
+    setInputRequirement(Mapping::MeshRequirement::VERTEX);
+    setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+  }
   setDeadAxis(xDead, yDead, zDead);
 }
 
@@ -144,10 +141,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
 
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     inMesh  = output();
     outMesh = input();
-  } else { // Consistent
+  } else { // Consistent or scaled consistent
     inMesh  = input();
     outMesh = output();
   }
@@ -155,7 +152,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   if (utils::MasterSlave::isSlave()) {
 
     // Input mesh may have overlaps
-    mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
     mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
 
     // Send the mesh
@@ -164,25 +161,25 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   } else { // Parallel Master or Serial
 
-    mesh::Mesh globalInMesh("globalInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
-    mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::Mesh globalInMesh("globalInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
 
     if (utils::MasterSlave::isMaster()) {
       {
         // Input mesh may have overlaps
-        mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+        mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
         globalInMesh.addMesh(filteredInMesh);
         globalOutMesh.addMesh(*outMesh);
       }
 
       // Receive mesh
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); ++rankSlave) {
-        mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), inMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+      for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
+        mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveInMesh, rankSlave);
         globalInMesh.addMesh(slaveInMesh);
 
-        mesh::Mesh slaveOutMesh(outMesh->getName(), outMesh->getDimensions(), outMesh->isFlipNormals(), mesh::Mesh::MESH_ID_UNDEFINED);
+        mesh::Mesh slaveOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(slaveOutMesh, rankSlave);
         globalOutMesh.addMesh(slaveOutMesh);
       }
@@ -195,16 +192,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     _matrixA = buildMatrixA(_basisFunction, globalInMesh, globalOutMesh, _deadAxis);
     _qr      = buildMatrixCLU(_basisFunction, globalInMesh, _deadAxis).colPivHouseholderQr();
 
-    if (not _qr.isInvertible()) {
-      PRECICE_ERROR("The interpolation matrix of the RBF mapping from mesh " << input()->getName() << " to mesh "
-                                                                             << output()->getName() << " is not invertable. This means that the mapping problem is not well-posed. "
-                                                                             << "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
-                                                                             << "by marking perpendicular axes as dead?");
-    }
+    PRECICE_CHECK(_qr.isInvertible(),
+                  "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
+                  "This means that the mapping problem is not well-posed. "
+                  "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
+                  "by marking perpendicular axes as dead?",
+                  input()->getName(), output()->getName());
   }
   _hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
-}
+} // namespace mapping
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 bool RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::hasComputedMapping() const
@@ -247,9 +244,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
   }
   int polyparams = 1 + getDimensions() - deadDimensions;
 
-  if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     mapConservative(inputDataID, outputDataID, polyparams);
-  } else if (getConstraint() == CONSISTENT) {
+  } else {
     mapConsistent(inputDataID, outputDataID, polyparams);
   }
 }
@@ -274,7 +271,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
     localOutputSize *= output()->data(outputDataID)->getDimensions();
 
-    utils::MasterSlave::_communication->send(localInData.data(), localInData.size(), 0);
+    utils::MasterSlave::_communication->send(localInData, 0);
     utils::MasterSlave::_communication->send(localOutputSize, 0);
 
   } else { // Parallel Master or Serial case
@@ -300,7 +297,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     {
       std::vector<double> slaveBuffer;
       int                 slaveOutputValueSize;
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      for (Rank rank : utils::MasterSlave::allSlaves()) {
         utils::MasterSlave::_communication->receive(slaveBuffer, rank);
         globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
 
@@ -350,8 +347,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
       // Data scattering to slaves
       int beginPoint = outputValueSizes.at(0);
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
-        utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outputValueSizes.at(rank), rank);
+      for (Rank rank : utils::MasterSlave::allSlaves()) {
+        precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outputValueSizes.at(rank))};
+        utils::MasterSlave::_communication->send(toSend, rank);
         beginPoint += outputValueSizes.at(rank);
       }
     } else { // Serial
@@ -389,7 +387,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     int  localOutputSize     = output()->data(outputDataID)->values().size();
 
     // Send data and output size
-    utils::MasterSlave::_communication->send(localInDataFiltered.data(), localInDataFiltered.size(), 0);
+    utils::MasterSlave::_communication->send(localInDataFiltered, 0);
     utils::MasterSlave::_communication->send(localOutputSize, 0);
 
   } else { // Master or Serial case
@@ -411,7 +409,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 
       std::vector<double> slaveBuffer;
 
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+      for (Rank rank : utils::MasterSlave::allSlaves()) {
         utils::MasterSlave::_communication->receive(slaveBuffer, rank);
         std::copy(slaveBuffer.begin(), slaveBuffer.end(), globalInValues.begin() + inputSizeCounter);
         inputSizeCounter += slaveBuffer.size();
@@ -459,8 +457,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     int beginPoint = outValuesSize.at(0);
 
     if (utils::MasterSlave::isMaster()) {
-      for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
-        utils::MasterSlave::_communication->send(outputValues.data() + beginPoint, outValuesSize.at(rank), rank);
+      for (Rank rank : utils::MasterSlave::allSlaves()) {
+        precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outValuesSize.at(rank))};
+        utils::MasterSlave::_communication->send(toSend, rank);
         beginPoint += outValuesSize.at(rank);
       }
     }
@@ -470,6 +469,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     utils::MasterSlave::_communication->receive(receivedValues, 0);
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
+  if (hasConstraint(SCALEDCONSISTENT)) {
+    scaleConsistentMapping(inputDataID, outputDataID);
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -477,12 +479,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
   PRECICE_TRACE();
   mesh::PtrMesh filterMesh, otherMesh;
-  if (getConstraint() == CONSISTENT) {
-    filterMesh = input();  // remote
-    otherMesh  = output(); // local
-  } else if (getConstraint() == CONSERVATIVE) {
+  if (hasConstraint(CONSERVATIVE)) {
     filterMesh = output(); // remote
     otherMesh  = input();  // local
+  } else {
+    filterMesh = input();  // remote
+    otherMesh  = output(); // local
   }
 
   if (otherMesh->vertices().empty())
@@ -491,16 +493,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
 
   if (_basisFunction.hasCompactSupport()) {
-
-    auto rtree    = mesh::rtree::getVertexRTree(filterMesh);
-    namespace bgi = boost::geometry::index;
-    auto bb       = otherMesh->getBoundingBox();
-    // Enlarge by support radius
+    auto bb = otherMesh->getBoundingBox();
     bb.expandBy(_basisFunction.getSupportRadius());
-    rtree->query(bgi::intersects(toRTreeBox(bb)),
-                 boost::make_function_output_iterator([&filterMesh](size_t idx) {
-                   filterMesh->vertices()[idx].tag();
-                 }));
+
+    query::Index indexTree(filterMesh);
+    auto         vertices = indexTree.getVerticesInsideBox(bb);
+    std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertices()[v].tag(); });
   } else {
     filterMesh->tagAll();
   }
@@ -510,17 +508,17 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 {
   PRECICE_TRACE();
-  namespace bgi = boost::geometry::index;
 
   if (not _basisFunction.hasCompactSupport())
     return; // Tags should not be changed
 
   mesh::PtrMesh mesh; // The mesh we want to filter
 
-  if (getConstraint() == CONSISTENT)
-    mesh = input();
-  else if (getConstraint() == CONSERVATIVE)
+  if (hasConstraint(CONSERVATIVE)) {
     mesh = output();
+  } else {
+    mesh = input();
+  }
 
   mesh::BoundingBox bb(mesh->getDimensions());
 
@@ -533,12 +531,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   }
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
-  auto rtree = mesh::rtree::getVertexRTree(mesh);
-
-  rtree->query(bgi::intersects(toRTreeBox(bb)),
-               boost::make_function_output_iterator([&mesh](size_t idx) {
-                 mesh->vertices()[idx].tag();
-               }));
+  query::Index indexTree(mesh);
+  auto         vertices = indexTree.getVerticesInsideBox(bb);
+  std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertices()[v].tag(); });
 }
 
 // ------- Non-Member Functions ---------

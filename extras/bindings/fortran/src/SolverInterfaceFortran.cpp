@@ -274,6 +274,18 @@ void precicef_get_data_id_(
   *dataID = impl->getDataID(stringDataName, *meshID);
 }
 
+void precicef_is_mesh_connectivity_required_(
+    const int *meshID,
+    int *      required)
+{
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  if (impl->isMeshConnectivityRequired(*meshID)) {
+    *required = 1;
+  } else {
+    *required = 0;
+  }
+}
+
 void precicef_set_vertex_(
     const int *   meshID,
     const double *position,
@@ -516,6 +528,22 @@ void precicef_get_version_information_(
   for (size_t i = 0; i < versionInformation.size(); i++) {
     versionInfo[i] = versionInformation[i];
   }
+}
+
+void precicef_setMeshAccessRegion(
+    const int     meshID,
+    const double *boundingBox)
+{
+  impl->setMeshAccessRegion(meshID, boundingBox);
+}
+
+void precicef_getMeshVerticesAndIDs(
+    const int meshID,
+    const int size,
+    int *     ids,
+    double *  coordinates)
+{
+  impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }
 
 #ifdef __GNUC__

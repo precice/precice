@@ -39,13 +39,12 @@ std::string nameOtherSolver ( "OtherSolverName" );
 // Create one data
 std::string dataName ( "MyData" );
 Data::DataTypeConstants dataType ( Data::TYPE_VECTOR );
-int dataID ( 1 );
+DataID dataID ( 1 );
 Data data ( dataName, dataType, dataID );
 
 // Create a mesh (in a real example, it has to be filled with Vertices, ...)
 std::string meshName ( "MyMesh" );
-bool flipNormals = false;
-Mesh mesh ( meshName, flipNormals );
+Mesh mesh ( meshName );
 mesh.setVertexData ( data );
 
 // Create explicit coupling scheme object

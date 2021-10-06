@@ -1,17 +1,19 @@
 #ifndef PRECICE_NO_MPI
 
-#include "MPIPortsCommunication.hpp"
 #include <boost/filesystem.hpp>
 #include <ostream>
 #include <utility>
+
 #include "ConnectionInfoPublisher.hpp"
+#include "MPIPortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
 namespace com {
-MPIPortsCommunication::MPIPortsCommunication(std::string const &addressDirectory)
-    : _addressDirectory(addressDirectory)
+MPIPortsCommunication::MPIPortsCommunication(std::string addressDirectory)
+    : _addressDirectory(std::move(addressDirectory))
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
@@ -48,7 +50,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
 
   ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
   conInfo.write(_portName);
-  PRECICE_DEBUG("Accept connection at " << _portName);
+  PRECICE_DEBUG("Accept connection at {}", _portName);
 
   int peerCount   = -1; // The total count of peers (initialized in the first iteration)
   int peerCurrent = 0;  // Current peer to connect to
@@ -56,7 +58,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
     // Connection
     MPI_Comm communicator;
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-    PRECICE_DEBUG("Accepted connection at " << _portName << " for peer " << peerCurrent);
+    PRECICE_DEBUG("Accepted connection at {} for peer {}", _portName, peerCurrent);
 
     // Which rank is requesting a connection?
     int requesterRank = -1;
@@ -73,11 +75,11 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
     }
 
     PRECICE_ASSERT(requesterCommunicatorSize > 0,
-                   "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
+                   "Requester communicator size is {} which is invalid.", requesterCommunicatorSize);
     PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
-                   "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize << " but should be " << peerCount);
+                   "Current requester size from rank {} is {} but should be {}", requesterRank, requesterCommunicatorSize, peerCount);
     PRECICE_ASSERT(_communicators.count(requesterRank) == 0,
-                   "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
+                   "Rank {} has already been connected. Duplicate requests are not allowed.", requesterRank);
 
     _communicators.emplace(requesterRank, communicator);
 
@@ -107,12 +109,12 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
 
   ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
   conInfo.write(_portName);
-  PRECICE_DEBUG("Accept connection at " << _portName);
+  PRECICE_DEBUG("Accept connection at {}", _portName);
 
   for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
     MPI_Comm communicator;
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-    PRECICE_DEBUG("Accepted connection at " << _portName);
+    PRECICE_DEBUG("Accepted connection at {}", _portName);
 
     // Receive the rank of requester
     int requesterRank = -1;
@@ -144,11 +146,11 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   ConnectionInfoReader conInfo(acceptorName, requesterName, tag, _addressDirectory);
   _portName = conInfo.read();
 
-  PRECICE_DEBUG("Request connection to " << _portName);
+  PRECICE_DEBUG("Request connection to {}", _portName);
 
   MPI_Comm communicator;
   MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-  PRECICE_DEBUG("Requested connection to " << _portName);
+  PRECICE_DEBUG("Requested connection to {}", _portName);
 
   _isConnected = true;
 
@@ -183,11 +185,11 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string const &  accep
   for (int acceptorRank : acceptorRanks) {
     ConnectionInfoReader conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
     _portName = conInfo.read();
-    PRECICE_DEBUG("Request connection to " << _portName);
+    PRECICE_DEBUG("Request connection to {}", _portName);
 
     MPI_Comm communicator;
     MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-    PRECICE_DEBUG("Requested connection to " << _portName);
+    PRECICE_DEBUG("Requested connection to {}", _portName);
 
     // Rank 0 is always the peer, because we connected on COMM_SELF
     MPI_Send(&requesterRank, 1, MPI_INT, 0, 42, communicator);
@@ -220,11 +222,11 @@ void MPIPortsCommunication::prepareEstablishment(std::string const &acceptorName
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Creating connection exchange directory " << dir);
+  PRECICE_DEBUG("Creating connection exchange directory {}", dir);
   try {
     create_directories(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
-    PRECICE_WARN("Creating directory for connection info failed with: " << e.what());
+    PRECICE_WARN("Creating directory for connection info failed with: {}", e.what());
   }
 }
 
@@ -233,22 +235,22 @@ void MPIPortsCommunication::cleanupEstablishment(std::string const &acceptorName
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Removing connection exchange directory " << dir);
+  PRECICE_DEBUG("Removing connection exchange directory {}", dir);
   try {
     remove_all(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
-    PRECICE_WARN("Cleaning up connection info failed with: " << e.what());
+    PRECICE_WARN("Cleaning up connection info failed with: {}", e.what());
   }
 }
 
-MPI_Comm &MPIPortsCommunication::communicator(int rank)
+MPI_Comm &MPIPortsCommunication::communicator(Rank rank)
 {
-  PRECICE_TRACE(rank, _communicators, _isAcceptor);
+  PRECICE_TRACE(rank, _communicators.size(), _isAcceptor);
   // Use bounds checking here, because a std::map otherwise creates element
   return _communicators.at(rank);
 }
 
-int MPIPortsCommunication::rank(int rank)
+int MPIPortsCommunication::rank(Rank rank)
 {
   return 0;
 }

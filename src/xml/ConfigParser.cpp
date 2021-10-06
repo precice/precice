@@ -112,7 +112,7 @@ ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationConte
   try {
     connectTags(context, DefTags, SubTags);
   } catch (const std::exception &e) {
-    PRECICE_ERROR("An unexpected exception occurred during configuration: " << e.what() << '.');
+    PRECICE_ERROR("An unexpected exception occurred during configuration: {}.", e.what());
   }
 }
 
@@ -149,7 +149,7 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   SAXHandler.serror         = OnStructuredErrorFunc;
 
   std::ifstream ifs(filePath);
-  PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"" << filePath << '"');
+  PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"{}\"", filePath);
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
@@ -177,7 +177,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
         });
 
     if (tagPosition == DefTags.end()) {
-      PRECICE_ERROR("The configuration contains an unknown tag <" + expectedName + ">.");
+      PRECICE_ERROR("The configuration contains an unknown tag <{}>.", expectedName);
     }
 
     auto pDefSubTag = *tagPosition;
@@ -185,7 +185,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 
     if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
       if (usedTags.count(pDefSubTag->_fullName)) {
-        PRECICE_ERROR("Tag <" + pDefSubTag->_fullName + "> is not allowed to occur multiple times.");
+        PRECICE_ERROR("Tag <{}> is not allowed to occur multiple times.", pDefSubTag->_fullName);
       }
       usedTags.emplace(pDefSubTag->_fullName);
     }

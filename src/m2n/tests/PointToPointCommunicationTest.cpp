@@ -47,7 +47,7 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
 
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, testing::nextMeshID()));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
@@ -105,17 +105,17 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
   if (context.isNamed("A")) {
     c.requestConnection("B", "A");
 
-    c.send(data.data(), data.size());
-    c.receive(data.data(), data.size());
+    c.send(data);
+    c.receive(data);
 
-    BOOST_TEST(data == expectedData);
+    BOOST_TEST(testing::equals(data, expectedData));
   } else {
     c.acceptConnection("B", "A");
 
-    c.receive(data.data(), data.size());
-    BOOST_TEST(data == expectedData);
+    c.receive(data);
+    BOOST_TEST(testing::equals(data, expectedData));
     process(data);
-    c.send(data.data(), data.size());
+    c.send(data);
   }
 }
 
@@ -123,7 +123,7 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
 void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
 {
   BOOST_TEST(context.hasSize(2));
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, testing::nextMeshID()));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
@@ -181,16 +181,16 @@ void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
   if (context.isNamed("A")) {
     c.requestConnection("B", "A");
 
-    c.send(data.data(), data.size());
-    c.receive(data.data(), data.size());
-    BOOST_TEST(data == expectedData);
+    c.send(data);
+    c.receive(data);
+    BOOST_TEST(testing::equals(data, expectedData));
   } else {
     c.acceptConnection("B", "A");
 
-    c.receive(data.data(), data.size());
-    BOOST_TEST(data == expectedData);
+    c.receive(data);
+    BOOST_TEST(testing::equals(data, expectedData));
     process(data);
-    c.send(data.data(), data.size());
+    c.send(data);
   }
 }
 
@@ -199,9 +199,8 @@ void runSameConnectionTest(const TestContext &context, com::PtrCommunicationFact
 
   BOOST_TEST(context.hasSize(2));
 
-  int           dimensions  = 2;
-  bool          flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
+  int           dimensions = 2;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
 
   if (context.isNamed("A")) {
     if (context.isMaster()) {
@@ -256,9 +255,8 @@ void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFac
 
   BOOST_TEST(context.hasSize(2));
 
-  int           dimensions  = 2;
-  bool          flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
+  int           dimensions = 2;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
 
   if (context.isNamed("A")) {
     if (context.isMaster()) {
@@ -312,9 +310,8 @@ void runEmptyConnectionTest(const TestContext &context, com::PtrCommunicationFac
 {
   BOOST_TEST(context.hasSize(2));
 
-  int           dimensions  = 2;
-  bool          flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
+  int           dimensions = 2;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
 
   if (context.isNamed("A")) {
     if (context.isMaster()) {
@@ -357,9 +354,8 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
 {
   BOOST_TEST(context.hasSize(2));
 
-  int           dimensions  = 2;
-  bool          flipNormals = false;
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
+  int           dimensions = 2;
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
 
   if (context.isNamed("A")) {
     if (context.isMaster()) {
@@ -425,9 +421,8 @@ void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrComm
 {
   BOOST_TEST(context.hasSize(2));
 
-  int                             dimensions  = 2;
-  bool                            flipNormals = false;
-  mesh::PtrMesh                   mesh(new mesh::Mesh("Mesh", dimensions, flipNormals, testing::nextMeshID()));
+  int                             dimensions = 2;
+  mesh::PtrMesh                   mesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
   const auto                      expectedId = mesh->getID();
   std::map<int, std::vector<int>> localCommunicationMap;
 

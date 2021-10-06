@@ -5,8 +5,10 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
+#include "precice/types.hpp"
 #include "utils/Parallel.hpp"
 
 namespace precice {
@@ -156,7 +158,7 @@ public:
   std::string name;
 
   /// the rank of the current participant
-  int rank = 0;
+  Rank rank = 0;
 
   /// the size of the Communicator of the current participant
   int size = 1;
@@ -232,7 +234,7 @@ public:
   bool isNamed(const std::string &name) const;
 
   /// Check wheater this context has a given rank inside the Partiticipant
-  bool isRank(int rank) const;
+  bool isRank(Rank rank) const;
 
   /** Check wheater this context is the master of a Participants
    * @note This is equivalent to `isRank(0)`
@@ -294,7 +296,7 @@ private:
   /** set the context from a Participants and a given rank
    * Both uniquely identify a context.
    */
-  void setContextFrom(const Participant &p, int rank);
+  void setContextFrom(const Participant &p, Rank rank);
 
   /// @{
   /// @name Initialization

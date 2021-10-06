@@ -1,10 +1,11 @@
-#include "BaseCouplingScheme.hpp"
 #include <Eigen/Core>
+#include <cmath>
+#include <cstddef>
 #include <limits>
-#include <math.h>
 #include <sstream>
-#include <stddef.h>
 #include <utility>
+
+#include "BaseCouplingScheme.hpp"
 #include "acceleration/Acceleration.hpp"
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingData.hpp"
@@ -16,6 +17,8 @@
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "precice/types.hpp"
+#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -27,7 +30,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     int                           maxTimeWindows,
     double                        timeWindowSize,
     int                           validDigits,
-    const std::string &           localParticipant,
+    std::string                   localParticipant,
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
@@ -39,8 +42,7 @@ BaseCouplingScheme::BaseCouplingScheme(
       _maxIterations(maxIterations),
       _iterations(1),
       _totalIterations(1),
-      _validDigits(validDigits),
-      _localParticipant(localParticipant),
+      _localParticipant(std::move(localParticipant)),
       _eps(std::pow(10.0, -1 * validDigits))
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -49,7 +51,7 @@ BaseCouplingScheme::BaseCouplingScheme(
                  "Maximum number of time windows has to be larger than zero.");
   PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
                  "Time window size has to be larger than zero.");
-  PRECICE_ASSERT((_validDigits >= 1) && (_validDigits < 17),
+  PRECICE_ASSERT((validDigits >= 1) && (validDigits < 17),
                  "Valid digits of time window size has to be between 1 and 16.");
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
     PRECICE_ASSERT(hasTimeWindowSize(),
@@ -66,7 +68,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 }
 
-void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
+void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendData)
 {
   PRECICE_TRACE();
   std::vector<int> sentDataIDs;
@@ -74,34 +76,27 @@ void BaseCouplingScheme::sendData(m2n::PtrM2N m2n, DataMap sendData)
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const DataMap::value_type &pair : sendData) {
-    int size = pair.second->values().size();
-    m2n->send(pair.second->values().data(), size, pair.second->mesh->getID(), pair.second->getDimensions());
+    // Data is actually only send if size>0, which is checked in the derived classes implementaiton
+    m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
+
     sentDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of sent data sets = " << sentDataIDs.size());
+  PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
 }
 
-void BaseCouplingScheme::receiveData(m2n::PtrM2N m2n, DataMap receiveData)
+void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   PRECICE_TRACE();
   std::vector<int> receivedDataIDs;
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
-  for (DataMap::value_type &pair : receiveData) {
-    int size = pair.second->values().size();
-    m2n->receive(pair.second->values().data(), size, pair.second->mesh->getID(), pair.second->getDimensions());
+  for (const DataMap::value_type &pair : receiveData) {
+    // Data is only received on ranks with size>0, which is checked in the derived class implementation
+    m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
+
     receivedDataIDs.push_back(pair.first);
   }
-  PRECICE_DEBUG("Number of received data sets = " << receivedDataIDs.size());
-}
-
-void BaseCouplingScheme::store(DataMap data)
-{
-  for (DataMap::value_type &pair : data) {
-    if (pair.second->oldValues.size() > 0) {
-      pair.second->oldValues.col(0) = pair.second->values();
-    }
-  }
+  PRECICE_DEBUG("Number of received data sets = {}", receivedDataIDs.size());
 }
 
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
@@ -130,18 +125,16 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     if (not doesFirstStep()) {
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
-                        << "an implicit coupling scheme.");
-      // merge send and receive data for all pp calls
-      mergeData();
+                    "an implicit coupling scheme.");
       // setup convergence measures
       for (ConvergenceMeasureContext &convergenceMeasure : _convergenceMeasures) {
-        int dataID = convergenceMeasure.data->getID();
+        DataID dataID = convergenceMeasure.couplingData->getDataID();
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
       // reserve memory and initialize data with zero
-      setupDataMatrices(getAccelerationData());
-      if (getAcceleration()) {
-        getAcceleration()->initialize(getAccelerationData()); // Reserve memory, initialize
+      setupDataMatrices();
+      if (_acceleration) {
+        _acceleration->initialize(getAccelerationData()); // Reserve memory, initialize
       }
     }
     requireAction(constants::actionWriteIterationCheckpoint());
@@ -174,7 +167,18 @@ void BaseCouplingScheme::initializeData()
 
   _hasDataBeenReceived = false;
 
+  if (isImplicitCouplingScheme()) {
+    storeIteration();
+  }
+
   exchangeInitialData();
+
+  if (isImplicitCouplingScheme()) {
+    if (not doesFirstStep()) {
+      storeDataInWaveforms();
+      moveToNextWindow();
+    }
+  }
 }
 
 void BaseCouplingScheme::advance()
@@ -239,47 +243,22 @@ void BaseCouplingScheme::setExtrapolationOrder(
   _extrapolationOrder = order;
 }
 
-void BaseCouplingScheme::updateOldValues(DataMap &dataMap)
+void BaseCouplingScheme::storeDataInWaveforms()
 {
-  if (isImplicitCouplingScheme()) {
-    for (DataMap::value_type &pair : dataMap) {
-      if (pair.second->oldValues.cols() == 0)
-        break;
-      pair.second->oldValues.col(0) = pair.second->values();
-      // For extrapolation, treat the initial value as old time windows value
-      utils::shiftSetFirst(pair.second->oldValues, pair.second->values());
-    }
+  PRECICE_TRACE(_timeWindows);
+  for (DataMap::value_type &pair : _allData) {
+    PRECICE_DEBUG("Store data: {}", pair.first);
+    _waveforms[pair.first]->store(pair.second->values());
   }
 }
 
-void BaseCouplingScheme::extrapolateData(DataMap &data)
+void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  if ((_extrapolationOrder == 1) || getTimeWindows() == 2) { //timesteps is increased before extrapolate is called
-    PRECICE_INFO("Performing first order extrapolation");
-    for (DataMap::value_type &pair : data) {
-      PRECICE_DEBUG("Extrapolate data: " << pair.first);
-      PRECICE_ASSERT(pair.second->oldValues.cols() > 1);
-      Eigen::VectorXd &values = pair.second->values();
-      values *= 2.0;                           // = 2*x^t
-      values -= pair.second->oldValues.col(1); // = 2*x^t - x^(t-1)
-      utils::shiftSetFirst(pair.second->oldValues, values);
-    }
-  } else if (_extrapolationOrder == 2) {
-    PRECICE_INFO("Performing second order extrapolation");
-    for (DataMap::value_type &pair : data) {
-      PRECICE_ASSERT(pair.second->oldValues.cols() > 2);
-      Eigen::VectorXd &values     = pair.second->values();
-      auto             valuesOld1 = pair.second->oldValues.col(1);
-      auto             valuesOld2 = pair.second->oldValues.col(2);
-
-      values *= 2.5;              // = 2.5 x^t
-      values -= valuesOld1 * 2.0; // = 2.5x^t - 2x^(t-1)
-      values += valuesOld2 * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
-      utils::shiftSetFirst(pair.second->oldValues, values);
-    }
-  } else {
-    PRECICE_ASSERT(false, "Extrapolation order is invalid.");
+  for (DataMap::value_type &pair : getAccelerationData()) {
+    PRECICE_DEBUG("Store data: {}", pair.first);
+    _waveforms[pair.first]->moveToNextWindow(getTimeWindows(), _extrapolationOrder);
+    pair.second->values() = _waveforms[pair.first]->lastTimeWindows().col(0);
   }
 }
 
@@ -306,11 +285,12 @@ void BaseCouplingScheme::addComputedTime(
 
   // Check validness
   bool valid = math::greaterEquals(getThisTimeWindowRemainder(), 0.0, _eps);
-  PRECICE_CHECK(valid, "The timestep "
-                       "length given to preCICE in \"advance\" "
-                           << timeToAdd << " exceeds the maximum allowed timestep length " << _timeWindowSize - _computedTimeWindowPart + timeToAdd
-                           << " in the remaining of this time window. Did you restrict your timestep length, \"dt = min(precice_dt, dt)\" ?"
-                           << " For more information, consult the adapter example in the preCICE documentation.");
+  PRECICE_CHECK(valid,
+                "The timestep length given to preCICE in \"advance\" {} exceeds the maximum allowed timestep length {} "
+                "in the remaining of this time window. "
+                "Did you restrict your timestep length, \"dt = min(precice_dt, dt)\"? "
+                "For more information, consult the adapter example in the preCICE documentation.",
+                timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(
@@ -349,7 +329,7 @@ double BaseCouplingScheme::getThisTimeWindowRemainder() const
   if (not math::equals(_timeWindowSize, UNDEFINED_TIME_WINDOW_SIZE)) {
     remainder = getNextTimestepMaxLength();
   }
-  PRECICE_DEBUG("return " << remainder);
+  PRECICE_DEBUG("return {}", remainder);
   return remainder;
 }
 
@@ -452,37 +432,24 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
       }
       stream << action;
     }
-    PRECICE_ERROR("The required actions " << stream.str() << " are not fulfilled. Did you forget to call \"markActionFulfilled\"?");
+    PRECICE_ERROR("The required actions {} are not fulfilled. Did you forget to call \"markActionFulfilled\"?", stream.str());
   }
 }
 
-void BaseCouplingScheme::setupDataMatrices(DataMap &data)
+void BaseCouplingScheme::setupDataMatrices()
 {
   PRECICE_TRACE();
-  PRECICE_DEBUG("Data size: " << data.size());
-  // Reserve storage for convergence measurement of send and receive data values
-  for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
-    PRECICE_ASSERT(convMeasure.couplingData != nullptr);
-    if (convMeasure.couplingData->oldValues.cols() < 1) {
-      utils::append(convMeasure.couplingData->oldValues,
-                    (Eigen::MatrixXd) Eigen::MatrixXd::Zero(convMeasure.couplingData->values().size(), 1));
-    }
+  // Reserve storage for all data
+  for (DataMap::value_type &pair : _allData) {
+    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder));
+    WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
+    _waveforms.insert(waveformPair);
+    pair.second->storeIteration();
   }
-  // Reserve storage for extrapolation of data values
-  if (_extrapolationOrder > 0) {
-    for (DataMap::value_type &pair : data) {
-      int cols = pair.second->oldValues.cols();
-      PRECICE_DEBUG("Add cols: " << pair.first << ", cols: " << cols);
-      PRECICE_ASSERT(cols <= 1, cols);
-      utils::append(pair.second->oldValues,
-                    (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values().size(), _extrapolationOrder + 1 - cols));
-    }
-  }
-  // Storage reservation for acceleration methods happens in Acceleration::initialize
 }
 
 void BaseCouplingScheme::setAcceleration(
-    acceleration::PtrAcceleration acceleration)
+    const acceleration::PtrAcceleration &acceleration)
 {
   PRECICE_ASSERT(acceleration.get() != nullptr);
   _acceleration = acceleration;
@@ -498,15 +465,15 @@ void BaseCouplingScheme::newConvergenceMeasurements()
 }
 
 void BaseCouplingScheme::addConvergenceMeasure(
-    mesh::PtrData               data,
+    int                         dataID,
     bool                        suffices,
     bool                        strict,
     impl::PtrConvergenceMeasure measure,
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  convMeasure.data         = std::move(data);
-  convMeasure.couplingData = nullptr;
+  PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = &(*_allData[dataID]);
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
@@ -526,14 +493,11 @@ bool BaseCouplingScheme::measureConvergence()
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
-  for (size_t i = 0; i < _convergenceMeasures.size(); i++) {
-    ConvergenceMeasureContext &convMeasure = _convergenceMeasures[i];
-
+  for (const auto &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
-    const auto &oldValues = convMeasure.couplingData->oldValues.col(0);
 
-    convMeasure.measure->measure(oldValues, convMeasure.couplingData->values());
+    convMeasure.measure->measure(convMeasure.couplingData->previousIteration(), convMeasure.couplingData->values());
 
     if (not utils::MasterSlave::isSlave() && convMeasure.doesLogging) {
       _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());
@@ -544,7 +508,7 @@ bool BaseCouplingScheme::measureConvergence()
       if (convMeasure.strict) {
         oneStrict = true;
         PRECICE_CHECK(_iterations < _maxIterations,
-                      "The strict convergence measure for data \"" + convMeasure.data->getName() +
+                      "The strict convergence measure for data \"" + convMeasure.couplingData->getDataName() +
                           "\" did not converge within the maximum allowed iterations, which terminates the simulation. "
                           "To avoid this forced termination do not mark the convergence measure as strict.")
       }
@@ -552,7 +516,7 @@ bool BaseCouplingScheme::measureConvergence()
       oneSuffices = true;
     }
 
-    PRECICE_INFO(convMeasure.measure->printState());
+    PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
   }
 
   if (allConverged) {
@@ -590,7 +554,7 @@ void BaseCouplingScheme::initializeTXTWriters()
           _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
         }
       }
-      if (getAcceleration()) {
+      if (_acceleration) {
         _iterationsWriter->addData("QNColumns", io::TXTTableWriter::INT);
         _iterationsWriter->addData("DeletedQNColumns", io::TXTTableWriter::INT);
         _iterationsWriter->addData("DroppedQNColumns", io::TXTTableWriter::INT);
@@ -609,10 +573,10 @@ void BaseCouplingScheme::advanceTXTWriters()
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
 
-    if (not doesFirstStep() && getAcceleration()) {
-      _iterationsWriter->writeData("QNColumns", getAcceleration()->getLSSystemCols());
-      _iterationsWriter->writeData("DeletedQNColumns", getAcceleration()->getDeletedColumns());
-      _iterationsWriter->writeData("DroppedQNColumns", getAcceleration()->getDroppedColumns());
+    if (not doesFirstStep() && _acceleration) {
+      _iterationsWriter->writeData("QNColumns", _acceleration->getLSSystemCols());
+      _iterationsWriter->writeData("DeletedQNColumns", _acceleration->getDeletedColumns());
+      _iterationsWriter->writeData("DroppedQNColumns", _acceleration->getDroppedColumns());
     }
   }
 }
@@ -620,11 +584,6 @@ void BaseCouplingScheme::advanceTXTWriters()
 bool BaseCouplingScheme::reachedEndOfTimeWindow()
 {
   return math::equals(getThisTimeWindowRemainder(), 0.0, _eps);
-}
-
-bool BaseCouplingScheme::maxIterationsReached()
-{
-  return _iterations == _maxIterations;
 }
 
 void BaseCouplingScheme::determineInitialSend(BaseCouplingScheme::DataMap &sendData)
@@ -652,34 +611,60 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
   return false;
 }
 
-bool BaseCouplingScheme::accelerate()
+bool BaseCouplingScheme::doImplicitStep()
 {
+  storeDataInWaveforms();
+
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   bool convergence = measureConvergence();
   // Stop, when maximal iteration count (given in config) is reached
-  if (maxIterationsReached())
+  if (_iterations == _maxIterations)
     convergence = true;
 
   // coupling iteration converged for current time window. Advance in time.
   if (convergence) {
-    if (getAcceleration()) {
-      getAcceleration()->iterationsConverged(getAccelerationData());
+    if (_acceleration) {
+      _acceleration->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
+  } else {
     // no convergence achieved for the coupling iteration within the current time window
-  } else if (getAcceleration()) {
-    getAcceleration()->performAcceleration(getAccelerationData());
+    if (_acceleration) {
+      _acceleration->performAcceleration(getAccelerationData());
+    }
   }
 
-  // Store data for conv. measurement, acceleration, or extrapolation
-  storeData();
-
-  // extrapolate new input data for the solver evaluation in time.
-  if (convergence && (_extrapolationOrder > 0)) {
-    extrapolateData(getAccelerationData());
+  if (convergence) {
+    moveToNextWindow();
   }
+
+  // Store data for conv. measurement, acceleration
+  storeIteration();
 
   return convergence;
 }
+
+void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, DataID dataID)
+{
+  PRECICE_TRACE(dataID);
+  DataMap::iterator iter = _allData.find(dataID);
+  PRECICE_ASSERT(iter != _allData.end(), "Given data ID does not exist in _allData!");
+  convergenceMeasure->couplingData = &(*(iter->second));
+}
+
+void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n, bool convergence)
+{
+  PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
+  m2n->send(convergence);
+}
+
+bool BaseCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
+{
+  PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
+  bool convergence;
+  m2n->receive(convergence);
+  return convergence;
+}
+
 } // namespace cplscheme
 } // namespace precice

@@ -18,8 +18,8 @@ namespace action {
 class ActionConfiguration : public xml::XMLTag::Listener {
 public:
   ActionConfiguration(
-      xml::XMLTag &                     parent,
-      const mesh::PtrMeshConfiguration &meshConfig);
+      xml::XMLTag &              parent,
+      mesh::PtrMeshConfiguration meshConfig);
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -48,9 +48,14 @@ public:
     return _actions;
   }
 
-  void resetActions()
+  /**
+   * @brief Extracts the configured action.
+   *
+   * @post The configured actions are empty
+   */
+  std::list<PtrAction> extractActions()
   {
-    _actions.clear();
+    return std::exchange(_actions, std::list<PtrAction>{});
   }
 
 private:
@@ -75,9 +80,9 @@ private:
 
   const std::string NAME_DIVIDE_BY_AREA;
   const std::string NAME_MULTIPLY_BY_AREA;
-  const std::string NAME_SCALE_BY_COMPUTED_DT_RATIO;
-  const std::string NAME_SCALE_BY_COMPUTED_DT_PART_RATIO;
-  const std::string NAME_SCALE_BY_DT;
+  const std::string NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO;
+  const std::string NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO;
+  const std::string NAME_SCALING_BY_TIME_WINDOW_SIZE;
   const std::string NAME_SUMMATION;
   const std::string NAME_COMPUTE_CURVATURE;
   const std::string NAME_PYTHON;

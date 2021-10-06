@@ -1,4 +1,3 @@
-#include "SocketCommunication.hpp"
 #include <algorithm>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -6,25 +5,29 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+
 #include "ConnectionInfoPublisher.hpp"
+#include "SocketCommunication.hpp"
 #include "SocketRequest.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
+#include "utils/span_tools.hpp"
 
 namespace precice {
 namespace com {
 
 namespace asio = boost::asio;
 
-SocketCommunication::SocketCommunication(unsigned short     portNumber,
-                                         bool               reuseAddress,
-                                         std::string const &networkName,
-                                         std::string const &addressDirectory)
+SocketCommunication::SocketCommunication(unsigned short portNumber,
+                                         bool           reuseAddress,
+                                         std::string    networkName,
+                                         std::string    addressDirectory)
     : _portNumber(portNumber),
       _reuseAddress(reuseAddress),
-      _networkName(networkName),
-      _addressDirectory(addressDirectory),
+      _networkName(std::move(networkName)),
+      _addressDirectory(std::move(addressDirectory)),
       _ioService(new IOService)
 {
   if (_addressDirectory.empty()) {
@@ -66,7 +69,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
   try {
     std::string ipAddress = getIpAddress();
-    PRECICE_CHECK(not ipAddress.empty(), "Network \"" << _networkName << "\" not found for socket connection!");
+    PRECICE_CHECK(not ipAddress.empty(), "Network \"{}\" not found for socket connection!", _networkName);
 
     using asio::ip::tcp;
 
@@ -82,7 +85,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     address     = ipAddress + ":" + std::to_string(_portNumber);
     ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
     conInfo.write(address);
-    PRECICE_DEBUG("Accept connection at " << address);
+    PRECICE_DEBUG("Accept connection at {}", address);
 
     int peerCurrent               = 0;  // Current peer to connect to
     int peerCount                 = -1; // The total count of peers (initialized in the first iteration)
@@ -92,7 +95,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       auto socket = std::make_shared<Socket>(*_ioService);
 
       acceptor.accept(*socket);
-      PRECICE_DEBUG("Accepted connection at " << address);
+      PRECICE_DEBUG("Accepted connection at {}", address);
       _isConnected = true;
 
       int requesterRank = -1;
@@ -100,7 +103,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
 
       PRECICE_ASSERT(_sockets.count(requesterRank) == 0,
-                     "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
+                     "Rank {} has already been connected. Duplicate requests are not allowed.", requesterRank);
 
       _sockets[requesterRank] = socket;
       // send and receive expect a rank from the acceptor perspective.
@@ -116,14 +119,14 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       }
 
       PRECICE_ASSERT(requesterCommunicatorSize > 0,
-                     "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
+                     "Requester communicator size is {} which is invalid.", requesterCommunicatorSize);
       PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
-                     "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize << " but should be " << peerCount);
+                     "Current requester size from rank {} is {} but should be {}", requesterRank, requesterCommunicatorSize, peerCount);
     } while (++peerCurrent < requesterCommunicatorSize);
 
     acceptor.close();
   } catch (std::exception &e) {
-    PRECICE_ERROR("Accepting a socket connection at " << address << " failed with the system error: " << e.what());
+    PRECICE_ERROR("Accepting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
   // NOTE:
@@ -152,7 +155,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
   try {
     std::string ipAddress = getIpAddress();
-    PRECICE_ASSERT(not ipAddress.empty(), "Network \"" << _networkName << "\" not found for socket connection!");
+    PRECICE_ASSERT(not ipAddress.empty(), "Network \"{}\" not found for socket connection!", _networkName);
 
     using asio::ip::tcp;
 
@@ -172,12 +175,12 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
     conInfo.write(address);
 
-    PRECICE_DEBUG("Accepting connection at " << address);
+    PRECICE_DEBUG("Accepting connection at {}", address);
 
     for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
       auto socket = std::make_shared<Socket>(*_ioService);
       acceptor.accept(*socket);
-      PRECICE_DEBUG("Accepted connection at " << address);
+      PRECICE_DEBUG("Accepted connection at {}", address);
       _isConnected = true;
 
       int requesterRank;
@@ -187,7 +190,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
     acceptor.close();
   } catch (std::exception &e) {
-    PRECICE_ERROR("Accepting a socket connection at " << address << " failed with the system error: " << e.what());
+    PRECICE_ERROR("Accepting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
   // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
@@ -206,7 +209,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
   ConnectionInfoReader conInfo(acceptorName, requesterName, tag, _addressDirectory);
   std::string const    address = conInfo.read();
-  PRECICE_DEBUG("Request connection to " << address);
+  PRECICE_DEBUG("Request connection to {}", address);
   auto const        sepidx     = address.find(':');
   std::string const ipAddress  = address.substr(0, sepidx);
   std::string const portNumber = address.substr(sepidx + 1);
@@ -217,7 +220,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
     using asio::ip::tcp;
 
-    tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::canonical_name);
+    tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::numeric_host);
 
     while (not isConnected()) {
       tcp::resolver                resolver(*_ioService);
@@ -235,7 +238,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
       }
     }
 
-    PRECICE_DEBUG("Requested connection to " << address);
+    PRECICE_DEBUG("Requested connection to {}", address);
 
     asio::write(*socket, asio::buffer(&requesterRank, sizeof(int)));
 
@@ -246,7 +249,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
     send(requesterCommunicatorSize, 0);
 
   } catch (std::exception &e) {
-    PRECICE_ERROR("Requesting a socket connection at " << address << " failed with the system error: " << e.what());
+    PRECICE_ERROR("Requesting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
   // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
@@ -278,9 +281,9 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
 
       using asio::ip::tcp;
 
-      PRECICE_DEBUG("Requesting connection to " << ipAddress << ", port " << portNumber);
+      PRECICE_DEBUG("Requesting connection to {}, port {}", ipAddress, portNumber);
 
-      tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
+      tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::numeric_host);
 
       while (not isConnected()) {
         tcp::resolver             resolver(*_ioService);
@@ -298,12 +301,12 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
         }
       }
 
-      PRECICE_DEBUG("Requested connection to " << address << ", rank = " << acceptorRank);
+      PRECICE_DEBUG("Requested connection to {}, rank = {}", address, acceptorRank);
       _sockets[acceptorRank] = socket;
       send(requesterRank, acceptorRank); // send my rank
 
     } catch (std::exception &e) {
-      PRECICE_ERROR("Requesting a socket connection at " << address << " failed with the system error: " << e.what());
+      PRECICE_ERROR("Requesting a socket connection at {} failed with the system error: {}", address, e.what());
     }
   }
   // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
@@ -330,7 +333,7 @@ void SocketCommunication::closeConnection()
     try {
       socket.second->shutdown(Socket::shutdown_send);
     } catch (std::exception &e) {
-      PRECICE_WARN("Socket shutdown failed with system error: " << e.what());
+      PRECICE_WARN("Socket shutdown failed with system error: {}", e.what());
     }
     socket.second->close();
   }
@@ -338,7 +341,7 @@ void SocketCommunication::closeConnection()
   _isConnected = false;
 }
 
-void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
+void SocketCommunication::send(std::string const &itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
@@ -352,13 +355,13 @@ void SocketCommunication::send(std::string const &itemToSend, int rankReceiver)
     asio::write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)));
     asio::write(*_sockets[rankReceiver], asio::buffer(itemToSend.c_str(), size));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
   }
 }
 
-void SocketCommunication::send(const int *itemsToSend, int size, int rankReceiver)
+void SocketCommunication::send(precice::span<const int> itemsToSend, Rank rankReceiver)
 {
-  PRECICE_TRACE(size, rankReceiver);
+  PRECICE_TRACE(itemsToSend.size(), rankReceiver);
 
   rankReceiver = adjustRank(rankReceiver);
 
@@ -366,9 +369,9 @@ void SocketCommunication::send(const int *itemsToSend, int size, int rankReceive
   PRECICE_ASSERT(isConnected());
 
   try {
-    asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend, size * sizeof(int)));
+    asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(int)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
   }
 }
 
@@ -377,11 +380,11 @@ void SocketCommunication::prepareEstablishment(std::string const &acceptorName,
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Creating connection exchange directory " << dir);
+  PRECICE_DEBUG("Creating connection exchange directory {}", dir);
   try {
     create_directories(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
-    PRECICE_WARN("Creating directory for connection info failed with filesystem error: " << e.what());
+    PRECICE_WARN("Creating directory for connection info failed with filesystem error: {}", e.what());
   }
 }
 
@@ -390,17 +393,17 @@ void SocketCommunication::cleanupEstablishment(std::string const &acceptorName,
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Removing connection exchange directory " << dir);
+  PRECICE_DEBUG("Removing connection exchange directory {}", dir);
   try {
     remove_all(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
-    PRECICE_WARN("Cleaning up connection info failed with filesystem error " << e.what());
+    PRECICE_WARN("Cleaning up connection info failed with filesystem error {}", e.what());
   }
 }
 
-PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, int rankReceiver)
+PtrRequest SocketCommunication::aSend(precice::span<const int> itemsToSend, Rank rankReceiver)
 {
-  PRECICE_TRACE(size, rankReceiver);
+  PRECICE_TRACE(itemsToSend.size(), rankReceiver);
 
   rankReceiver = adjustRank(rankReceiver);
 
@@ -410,16 +413,16 @@ PtrRequest SocketCommunication::aSend(const int *itemsToSend, int size, int rank
   PtrRequest request(new SocketRequest);
 
   _queue.dispatch(_sockets[rankReceiver],
-                  asio::buffer(itemsToSend, size * sizeof(int)),
+                  asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(int)),
                   [request] {
                     std::static_pointer_cast<SocketRequest>(request)->complete();
                   });
   return request;
 }
 
-void SocketCommunication::send(const double *itemsToSend, int size, int rankReceiver)
+void SocketCommunication::send(precice::span<const double> itemsToSend, Rank rankReceiver)
 {
-  PRECICE_TRACE(size, rankReceiver);
+  PRECICE_TRACE(itemsToSend.size(), rankReceiver);
 
   rankReceiver = adjustRank(rankReceiver);
 
@@ -427,15 +430,15 @@ void SocketCommunication::send(const double *itemsToSend, int size, int rankRece
   PRECICE_ASSERT(isConnected());
 
   try {
-    asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend, size * sizeof(double)));
+    asio::write(*_sockets[rankReceiver], asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(double)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
   }
 }
 
-PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int rankReceiver)
+PtrRequest SocketCommunication::aSend(precice::span<const double> itemsToSend, Rank rankReceiver)
 {
-  PRECICE_TRACE(size, rankReceiver);
+  PRECICE_TRACE(itemsToSend.size(), rankReceiver);
 
   rankReceiver = adjustRank(rankReceiver);
 
@@ -445,14 +448,14 @@ PtrRequest SocketCommunication::aSend(const double *itemsToSend, int size, int r
   PtrRequest request(new SocketRequest);
 
   _queue.dispatch(_sockets[rankReceiver],
-                  asio::buffer(itemsToSend, size * sizeof(double)),
+                  asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(double)),
                   [request] {
                     std::static_pointer_cast<SocketRequest>(request)->complete();
                   });
   return request;
 }
 
-PtrRequest SocketCommunication::aSend(std::vector<double> const &itemsToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(std::vector<double> const &itemsToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -471,7 +474,7 @@ PtrRequest SocketCommunication::aSend(std::vector<double> const &itemsToSend, in
   return request;
 }
 
-void SocketCommunication::send(double itemToSend, int rankReceiver)
+void SocketCommunication::send(double itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
@@ -483,16 +486,16 @@ void SocketCommunication::send(double itemToSend, int rankReceiver)
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(double)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
   }
 }
 
-PtrRequest SocketCommunication::aSend(const double &itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const double &itemToSend, Rank rankReceiver)
 {
-  return aSend(&itemToSend, 1, rankReceiver);
+  return aSend(precice::refToSpan<const double>(itemToSend), rankReceiver);
 }
 
-void SocketCommunication::send(int itemToSend, int rankReceiver)
+void SocketCommunication::send(int itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
@@ -504,16 +507,16 @@ void SocketCommunication::send(int itemToSend, int rankReceiver)
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(int)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
   }
 }
 
-PtrRequest SocketCommunication::aSend(const int &itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const int &itemToSend, Rank rankReceiver)
 {
-  return aSend(&itemToSend, 1, rankReceiver);
+  return aSend(precice::refToSpan<const int>(itemToSend), rankReceiver);
 }
 
-void SocketCommunication::send(bool itemToSend, int rankReceiver)
+void SocketCommunication::send(bool itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(itemToSend, rankReceiver);
 
@@ -525,11 +528,11 @@ void SocketCommunication::send(bool itemToSend, int rankReceiver)
   try {
     asio::write(*_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(bool)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
   }
 }
 
-PtrRequest SocketCommunication::aSend(const bool &itemToSend, int rankReceiver)
+PtrRequest SocketCommunication::aSend(const bool &itemToSend, Rank rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -548,7 +551,7 @@ PtrRequest SocketCommunication::aSend(const bool &itemToSend, int rankReceiver)
   return request;
 }
 
-void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
+void SocketCommunication::receive(std::string &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -565,13 +568,13 @@ void SocketCommunication::receive(std::string &itemToReceive, int rankSender)
     asio::read(*_sockets[rankSender], asio::buffer(msg.data(), size));
     itemToReceive = msg.data();
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
 }
 
-void SocketCommunication::receive(int *itemsToReceive, int size, int rankSender)
+void SocketCommunication::receive(precice::span<int> itemsToReceive, Rank rankSender)
 {
-  PRECICE_TRACE(size, rankSender);
+  PRECICE_TRACE(itemsToReceive.size(), rankSender);
 
   rankSender = adjustRank(rankSender);
 
@@ -579,15 +582,15 @@ void SocketCommunication::receive(int *itemsToReceive, int size, int rankSender)
   PRECICE_ASSERT(isConnected());
 
   try {
-    asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive, size * sizeof(int)));
+    asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(int)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
 }
 
-void SocketCommunication::receive(double *itemsToReceive, int size, int rankSender)
+void SocketCommunication::receive(precice::span<double> itemsToReceive, Rank rankSender)
 {
-  PRECICE_TRACE(size, rankSender);
+  PRECICE_TRACE(itemsToReceive.size(), rankSender);
 
   rankSender = adjustRank(rankSender);
 
@@ -595,17 +598,16 @@ void SocketCommunication::receive(double *itemsToReceive, int size, int rankSend
   PRECICE_ASSERT(isConnected());
 
   try {
-    asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive, size * sizeof(double)));
+    asio::read(*_sockets[rankSender], asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(double)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
 }
 
-PtrRequest SocketCommunication::aReceive(double *itemsToReceive,
-                                         int     size,
-                                         int     rankSender)
+PtrRequest SocketCommunication::aReceive(precice::span<double> itemsToReceive,
+                                         int                   rankSender)
 {
-  PRECICE_TRACE(size, rankSender);
+  PRECICE_TRACE(itemsToReceive.size(), rankSender);
 
   rankSender = adjustRank(rankSender);
 
@@ -616,18 +618,18 @@ PtrRequest SocketCommunication::aReceive(double *itemsToReceive,
 
   try {
     asio::async_read(*_sockets[rankSender],
-                     asio::buffer(itemsToReceive, size * sizeof(double)),
+                     asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(double)),
                      [request](boost::system::error_code const &, std::size_t) {
                        std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
 
   return request;
 }
 
-PtrRequest SocketCommunication::aReceive(std::vector<double> &itemsToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(std::vector<double> &itemsToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -645,13 +647,13 @@ PtrRequest SocketCommunication::aReceive(std::vector<double> &itemsToReceive, in
                        std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
 
   return request;
 }
 
-void SocketCommunication::receive(double &itemToReceive, int rankSender)
+void SocketCommunication::receive(double &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -663,16 +665,16 @@ void SocketCommunication::receive(double &itemToReceive, int rankSender)
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(double)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
 }
 
-PtrRequest SocketCommunication::aReceive(double &itemToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(double &itemToReceive, Rank rankSender)
 {
-  return aReceive(&itemToReceive, 1, rankSender);
+  return aReceive(precice::refToSpan<double>(itemToReceive), rankSender);
 }
 
-void SocketCommunication::receive(int &itemToReceive, int rankSender)
+void SocketCommunication::receive(int &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -684,11 +686,11 @@ void SocketCommunication::receive(int &itemToReceive, int rankSender)
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(int)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
 }
 
-PtrRequest SocketCommunication::aReceive(int &itemToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(int &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -707,13 +709,13 @@ PtrRequest SocketCommunication::aReceive(int &itemToReceive, int rankSender)
                        std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
 
   return request;
 }
 
-void SocketCommunication::receive(bool &itemToReceive, int rankSender)
+void SocketCommunication::receive(bool &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -725,11 +727,11 @@ void SocketCommunication::receive(bool &itemToReceive, int rankSender)
   try {
     asio::read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(bool)));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
 }
 
-PtrRequest SocketCommunication::aReceive(bool &itemToReceive, int rankSender)
+PtrRequest SocketCommunication::aReceive(bool &itemToReceive, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -747,13 +749,13 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, int rankSender)
                        std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
   } catch (std::exception &e) {
-    PRECICE_ERROR("Receive using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
 
   return request;
 }
 
-void SocketCommunication::send(std::vector<int> const &v, int rankReceiver)
+void SocketCommunication::send(std::vector<int> const &v, Rank rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -767,11 +769,11 @@ void SocketCommunication::send(std::vector<int> const &v, int rankReceiver)
     asio::write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)));
     asio::write(*_sockets[rankReceiver], asio::buffer(v));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
   }
 }
 
-void SocketCommunication::receive(std::vector<int> &v, int rankSender)
+void SocketCommunication::receive(std::vector<int> &v, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -787,11 +789,11 @@ void SocketCommunication::receive(std::vector<int> &v, int rankSender)
     v.resize(size);
     asio::read(*_sockets[rankSender], asio::buffer(v));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Recieve using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Recieve using sockets failed with system error: {}", e.what());
   }
 }
 
-void SocketCommunication::send(std::vector<double> const &v, int rankReceiver)
+void SocketCommunication::send(std::vector<double> const &v, Rank rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
 
@@ -805,11 +807,11 @@ void SocketCommunication::send(std::vector<double> const &v, int rankReceiver)
     asio::write(*_sockets[rankReceiver], asio::buffer(&size, sizeof(size_t)));
     asio::write(*_sockets[rankReceiver], asio::buffer(v));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Send using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Send using sockets failed with system error: {}", e.what());
   }
 }
 
-void SocketCommunication::receive(std::vector<double> &v, int rankSender)
+void SocketCommunication::receive(std::vector<double> &v, Rank rankSender)
 {
   PRECICE_TRACE(rankSender);
 
@@ -825,7 +827,7 @@ void SocketCommunication::receive(std::vector<double> &v, int rankSender)
     v.resize(size);
     asio::read(*_sockets[rankSender], asio::buffer(v));
   } catch (std::exception &e) {
-    PRECICE_ERROR("Recieve using sockets failed with system error: " << e.what());
+    PRECICE_ERROR("Recieve using sockets failed with system error: {}", e.what());
   }
 }
 
@@ -865,7 +867,7 @@ std::vector<Interface> detectInterfaces()
       continue;
     }
 
-    const char *addr = inet_ntoa(((struct sockaddr_in *) &request.ifr_addr)->sin_addr);
+    const char *addr = inet_ntoa((reinterpret_cast<struct sockaddr_in *>(&request.ifr_addr))->sin_addr);
     if (!addr) {
       continue;
     }
@@ -885,7 +887,7 @@ std::string SocketCommunication::getIpAddress()
   return "127.0.0.1";
 #else
 
-  PRECICE_DEBUG("Looking for IP address of network \"" << _networkName << "\"");
+  PRECICE_DEBUG("Looking for IP address of network \"{}\"", _networkName);
 
   auto interfaces = detectInterfaces();
 
@@ -903,9 +905,9 @@ std::string SocketCommunication::getIpAddress()
   }
 
   // Unconnected interfaces don't have an IP address.
-  PRECICE_CHECK(not pos->address.empty(), "The interface \"" << _networkName << "\" does not have an IP address. Please select another interface.");
+  PRECICE_CHECK(not pos->address.empty(), "The interface \"{}\" does not have an IP address. Please select another interface.", _networkName);
 
-  PRECICE_DEBUG("Detected network IP address of interface \"" << _networkName << "\":  " << pos->address << '.');
+  PRECICE_DEBUG("Detected network IP address of interface \"{}\": {}.", _networkName, pos->address);
   return pos->address;
 #endif
 }

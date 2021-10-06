@@ -12,6 +12,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -19,6 +20,7 @@
 using namespace precice;
 using namespace precice::mesh;
 using namespace precice::mapping;
+using namespace precice::testing;
 using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(MappingTests)
@@ -28,6 +30,16 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
 {
   for (mesh::Vertex &v : mesh->vertices()) {
     v.setGlobalIndex(v.getID() + offset);
+  }
+}
+
+void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, mesh::PtrData inData, mesh::PtrData outData)
+{
+  auto inputIntegral  = mesh::integrate(inMesh, inData);
+  auto outputIntegral = mesh::integrate(outMesh, outData);
+
+  for (int dim = 0; dim < inputIntegral.size(); ++dim) {
+    BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
   }
 }
 
@@ -108,13 +120,13 @@ void testDistributed(const TestContext &    context,
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
 
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", valueDimension);
   int           inDataID = inData->getID();
 
   getDistributedMesh(context, inMeshSpec, inMesh, inData, inGlobalIndexOffset);
 
-  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", valueDimension);
   int           outDataID = outData->getID();
 
@@ -994,11 +1006,11 @@ void testTagging(const TestContext &context,
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
 
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
   mesh::PtrData inData = inMesh->createData("InData", valueDimension);
   getDistributedMesh(context, inMeshSpec, inMesh, inData);
 
-  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
 
@@ -1087,7 +1099,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
   using Eigen::Vector2d;
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", 1);
   int           inDataID = inData->getID();
   inMesh->createVertex(Vector2d(0.0, 0.0));
@@ -1101,7 +1113,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
   values << 1.0, 2.0, 2.0, 1.0;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", 1);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
@@ -1182,7 +1194,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   using Eigen::Vector2d;
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", 2);
   int           inDataID = inData->getID();
   inMesh->createVertex(Vector2d(0.0, 0.0));
@@ -1196,7 +1208,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   values << 1.0, 4.0, 2.0, 5.0, 2.0, 5.0, 1.0, 4.0;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", 2);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
@@ -1294,7 +1306,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
   int dimensions = 3;
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", 1);
   int           inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -1312,7 +1324,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
   values << 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", 1);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Eigen::Vector3d::Zero());
@@ -1422,6 +1434,110 @@ void perform3DTestConsistentMapping(Mapping &mapping)
   BOOST_TEST(value == 1.5);
 }
 
+void perform2DTestScaledConsistentMapping(Mapping &mapping)
+{
+  int dimensions = 2;
+  using Eigen::Vector2d;
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
+  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  int           inDataID = inData->getID();
+  auto &        inV1     = inMesh->createVertex(Vector2d(0.0, 0.0));
+  auto &        inV2     = inMesh->createVertex(Vector2d(1.0, 0.0));
+  auto &        inV3     = inMesh->createVertex(Vector2d(1.0, 1.0));
+  auto &        inV4     = inMesh->createVertex(Vector2d(0.0, 1.0));
+
+  inMesh->createEdge(inV1, inV2);
+  inMesh->createEdge(inV2, inV3);
+  inMesh->createEdge(inV3, inV4);
+  inMesh->createEdge(inV1, inV4);
+
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+
+  auto &inValues = inData->values();
+  inValues << 1.0, 2.0, 2.0, 1.0;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  int           outDataID = outData->getID();
+  auto &        outV1     = outMesh->createVertex(Vector2d(0.0, 0.0));
+  auto &        outV2     = outMesh->createVertex(Vector2d(0.0, 1.0));
+  auto &        outV3     = outMesh->createVertex(Vector2d(1.1, 1.1));
+  auto &        outV4     = outMesh->createVertex(Vector2d(0.1, 1.1));
+  outMesh->createEdge(outV1, outV2);
+  outMesh->createEdge(outV2, outV3);
+  outMesh->createEdge(outV3, outV4);
+  outMesh->createEdge(outV1, outV4);
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+
+  testSerialScaledConsistent(inMesh, outMesh, inData, outData);
+}
+
+void perform3DTestScaledConsistentMapping(Mapping &mapping)
+{
+  int dimensions = 3;
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
+  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  int           inDataID = inData->getID();
+  auto &        inV1     = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &        inV2     = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  auto &        inV3     = inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.5));
+  auto &        inV4     = inMesh->createVertex(Eigen::Vector3d(2.0, 0.0, 0.0));
+  auto &        inV5     = inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 0.0));
+  auto &        inV6     = inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 1.0));
+  auto &        inE1     = inMesh->createEdge(inV1, inV2);
+  auto &        inE2     = inMesh->createEdge(inV2, inV3);
+  auto &        inE3     = inMesh->createEdge(inV1, inV3);
+  auto &        inE4     = inMesh->createEdge(inV4, inV5);
+  auto &        inE5     = inMesh->createEdge(inV5, inV6);
+  auto &        inE6     = inMesh->createEdge(inV4, inV6);
+  inMesh->createTriangle(inE1, inE2, inE3);
+  inMesh->createTriangle(inE4, inE5, inE6);
+
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+
+  auto &inValues = inData->values();
+  inValues << 1.0, 2.0, 4.0, 6.0, 8.0, 9.0;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  int           outDataID = outData->getID();
+  auto &        outV1     = outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &        outV2     = outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  auto &        outV3     = outMesh->createVertex(Eigen::Vector3d(0.0, 1.1, 0.6));
+  auto &        outE1     = outMesh->createEdge(outV1, outV2);
+  auto &        outE2     = outMesh->createEdge(outV2, outV3);
+  auto &        outE3     = outMesh->createEdge(outV1, outV3);
+  outMesh->createTriangle(outE1, outE2, outE3);
+
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  mapping.map(inDataID, outDataID);
+
+  testSerialScaledConsistent(inMesh, outMesh, inData, outData);
+}
+
 void perform2DTestConservativeMapping(Mapping &mapping)
 {
   const int    dimensions = 2;
@@ -1429,7 +1545,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   using Eigen::Vector2d;
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", 1);
   int           inDataID = inData->getID();
   mesh::Vertex &vertex0  = inMesh->createVertex(Vector2d(0, 0));
@@ -1439,7 +1555,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   addGlobalIndex(inMesh);
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", 1);
   int           outDataID = outData->getID();
   outMesh->createVertex(Vector2d(0.0, 0.0));
@@ -1497,7 +1613,7 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
   using Eigen::Vector2d;
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", 2);
   int           inDataID = inData->getID();
   mesh::Vertex &vertex0  = inMesh->createVertex(Vector2d(0, 0));
@@ -1507,7 +1623,7 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
   addGlobalIndex(inMesh);
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", 2);
   int           outDataID = outData->getID();
   outMesh->createVertex(Vector2d(0.0, 0.0));
@@ -1569,7 +1685,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
   int dimensions = 3;
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", 1);
   int           inDataID = inData->getID();
   mesh::Vertex &vertex0  = inMesh->createVertex(Vector3d(0, 0, 0));
@@ -1579,7 +1695,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
   addGlobalIndex(inMesh);
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", 1);
   int           outDataID = outData->getID();
   outMesh->createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -1620,6 +1736,10 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
   perform2DTestConsistentMappingVector(consistentMap2DVector);
   RadialBasisFctMapping<ThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  RadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  RadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<ThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   RadialBasisFctMapping<ThinPlateSplines> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
@@ -1639,6 +1759,10 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
   perform2DTestConsistentMapping(consistentMap2D);
   RadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  RadialBasisFctMapping<Multiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  RadialBasisFctMapping<Multiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   RadialBasisFctMapping<Multiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -1656,6 +1780,10 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
   perform2DTestConsistentMapping(consistentMap2D);
   RadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   RadialBasisFctMapping<InverseMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -1673,6 +1801,10 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines)
   perform2DTestConsistentMapping(consistentMap2D);
   RadialBasisFctMapping<VolumeSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  RadialBasisFctMapping<VolumeSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  RadialBasisFctMapping<VolumeSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<VolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   RadialBasisFctMapping<VolumeSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -1690,6 +1822,10 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
   perform2DTestConsistentMapping(consistentMap2D);
   RadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  RadialBasisFctMapping<Gaussian> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  RadialBasisFctMapping<Gaussian> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   RadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -1709,6 +1845,10 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -1728,6 +1868,10 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -1747,6 +1891,10 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
   Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
@@ -1768,7 +1916,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
                                                   xDead, yDead, zDead);
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", 1);
   int           inDataID = inData->getID();
   inMesh->createVertex(Vector2d(0.0, 1.0));
@@ -1782,7 +1930,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   values << 1.0, 2.0, 2.0, 1.0;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", 1);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
@@ -1816,7 +1964,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   Mapping mapping(Mapping::CONSISTENT, dimensions, fct, xDead, yDead, zDead);
 
   // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", 1);
   int           inDataID = inData->getID();
   inMesh->createVertex(Vector3d(0.0, 3.0, 0.0));
@@ -1830,7 +1978,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   values << 1.0, 2.0, 3.0, 4.0;
 
   // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", 1);
   int           outDataID = outData->getID();
   outMesh->createVertex(Vector3d(0.0, 2.9, 0.0));

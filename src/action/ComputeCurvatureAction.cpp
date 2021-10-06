@@ -24,9 +24,9 @@ ComputeCurvatureAction::ComputeCurvatureAction(
 
 void ComputeCurvatureAction::performAction(
     double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double timeStepSize,
+    double computedTimeWindowPart,
+    double timeWindowSize)
 {
   PRECICE_TRACE();
   auto &dataValues = _data->values();
@@ -55,7 +55,7 @@ void ComputeCurvatureAction::performAction(
     Eigen::Vector3d contribution;
 
     for (mesh::Triangle &tri : getMesh()->triangles()) {
-      normal = tri.getNormal();
+      normal = tri.computeNormal();
       for (int i = 0; i < 3; i++) {
         mesh::Vertex &v0 = tri.vertex(i);
         mesh::Vertex &v1 = tri.vertex((i + 1) % 3);

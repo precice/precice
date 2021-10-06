@@ -1,4 +1,7 @@
 #include "ParallelCouplingScheme.hpp"
+
+#include <utility>
+
 #include "cplscheme/BiCouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 
@@ -18,7 +21,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
+                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod) {}
 
 void ParallelCouplingScheme::initializeImplementation()
 {
@@ -41,11 +44,8 @@ void ParallelCouplingScheme::exchangeInitialData()
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
       checkDataHasBeenReceived();
-      // second participant has to save values for extrapolation
-      updateOldValues(getReceiveData());
     }
     if (sendsInitializedData()) {
-      updateOldValues(getSendData());
       sendData(getM2N(), getSendData());
     }
   }
@@ -60,7 +60,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     sendData(getM2N(), getSendData());
     PRECICE_DEBUG("Receiving data...");
     if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence();
+      convergence = receiveConvergence(getM2N());
     }
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
@@ -70,7 +70,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     checkDataHasBeenReceived();
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
-      convergence = accelerate();
+      convergence = doImplicitStep();
       sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");
@@ -78,15 +78,6 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
   }
 
   return convergence;
-}
-
-void ParallelCouplingScheme::mergeData()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-  PRECICE_ASSERT(_allData.empty(), "This function should only be called once.");
-  _allData.insert(getSendData().begin(), getSendData().end());
-  _allData.insert(getReceiveData().begin(), getReceiveData().end());
 }
 
 } // namespace cplscheme

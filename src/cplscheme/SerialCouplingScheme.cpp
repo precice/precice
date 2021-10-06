@@ -1,7 +1,9 @@
 #include "SerialCouplingScheme.hpp"
-#include <math.h>
+#include <cmath>
 #include <memory>
 #include <ostream>
+#include <utility>
+
 #include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
@@ -29,7 +31,7 @@ SerialCouplingScheme::SerialCouplingScheme(
     CouplingMode                  cplMode,
     int                           maxIterations)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod)
+                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
@@ -47,7 +49,7 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
   if (_participantReceivesTimeWindowSize) {
     double dt = UNDEFINED_TIME_WINDOW_SIZE;
     getM2N()->receive(dt);
-    PRECICE_DEBUG("Received time window size of " << dt << ".");
+    PRECICE_DEBUG("Received time window size of {}.", dt);
     PRECICE_ASSERT(not math::equals(dt, UNDEFINED_TIME_WINDOW_SIZE));
     PRECICE_ASSERT(not doesFirstStep(), "Only second participant can receive time window size.");
     setTimeWindowSize(dt);
@@ -81,7 +83,6 @@ void SerialCouplingScheme::exchangeInitialData()
   } else { // second participant
     PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
     if (sendsInitializedData()) {
-      updateOldValues(getSendData());
       // The second participant sends the initialized data to the first participant
       // here, which receives the data on call of initialize().
       sendData(getM2N(), getSendData());
@@ -100,12 +101,12 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     if (_participantSetsTimeWindowSize) {
-      PRECICE_DEBUG("sending time window size of " << getComputedTimeWindowPart());
+      PRECICE_DEBUG("sending time window size of {}", getComputedTimeWindowPart());
       getM2N()->send(getComputedTimeWindowPart());
     }
     sendData(getM2N(), getSendData());
     if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence();
+      convergence = receiveConvergence(getM2N());
     }
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
@@ -113,7 +114,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
-      convergence = accelerate();
+      convergence = doImplicitStep();
       sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");

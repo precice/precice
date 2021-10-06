@@ -21,19 +21,19 @@ public:
 	 * 
 	 */
   SummationAction(
-      Timing               timing,
-      std::vector<int>     sourceDataIDs,
-      int                  targetDataID,
-      const mesh::PtrMesh &mesh);
+      Timing                  timing,
+      const std::vector<int> &sourceDataIDs,
+      int                     targetDataID,
+      const mesh::PtrMesh &   mesh);
 
   virtual ~SummationAction() {}
 
   /// Adding data and applying them to target
   virtual void performAction(
       double time,
-      double dt,
-      double computedPartFullDt,
-      double fullDt);
+      double timeStepSize,
+      double computedTimeWindowPart,
+      double timeWindowSize);
 
 private:
   logging::Logger _log{"action::SummationAction"};

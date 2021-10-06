@@ -1,21 +1,23 @@
 #ifndef PRECICE_NO_MPI
 
-#include "MPISinglePortsCommunication.hpp"
 #include <boost/filesystem.hpp>
 #include <memory>
 #include <mpi.h>
 #include <ostream>
 #include <utility>
+
 #include "ConnectionInfoPublisher.hpp"
+#include "MPISinglePortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
 namespace com {
-MPISinglePortsCommunication::MPISinglePortsCommunication(std::string const &addressDirectory)
-    : _addressDirectory(addressDirectory)
+MPISinglePortsCommunication::MPISinglePortsCommunication(std::string addressDirectory)
+    : _addressDirectory(std::move(addressDirectory))
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
@@ -65,7 +67,7 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
     // Connection
     MPI_Comm communicator;
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-    PRECICE_DEBUG("Accepted connection at " << _portName << " for peer " << peerCurrent);
+    PRECICE_DEBUG("Accepted connection at {} for peer {}", _portName, peerCurrent);
 
     // Exchange information to which rank I am connected and which communicator size on the other side
     int requesterRank = -1;
@@ -80,11 +82,11 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
     }
 
     PRECICE_ASSERT(requesterCommunicatorSize > 0,
-                   "Requester communicator size is " << requesterCommunicatorSize << " which is invalid.");
+                   "Requester communicator size is {} which is invalid.", requesterCommunicatorSize);
     PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
-                   "Current requester size from rank " << requesterRank << " is " << requesterCommunicatorSize << " but should be " << peerCount);
+                   "Current requester size from rank {} is {} but should be {}", requesterRank, requesterCommunicatorSize, peerCount);
     PRECICE_ASSERT(_direct.count(requesterRank) == 0,
-                   "Rank " << requesterRank << " has already been connected. Duplicate requests are not allowed.");
+                   "Rank {} has already been connected. Duplicate requests are not allowed.", requesterRank);
 
     _direct.emplace(requesterRank, communicator);
 
@@ -107,7 +109,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
 
   _isAcceptor = true;
 
-  const int rank = utils::Parallel::current()->rank();
+  const Rank rank = utils::Parallel::current()->rank();
 
   if (rank == 0) { // only master opens a port
     ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
@@ -116,10 +118,10 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
 
     conInfo.write(_portName);
-    PRECICE_DEBUG("Accept connection at " << _portName);
+    PRECICE_DEBUG("Accept connection at {}", _portName);
 
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);
-    PRECICE_DEBUG("Accepted connection at " << _portName);
+    PRECICE_DEBUG("Accepted connection at {}", _portName);
 
   } else { // Slaves call simply call accept
 
@@ -143,11 +145,11 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
 
   ConnectionInfoReader conInfo(acceptorName, requesterName, tag, _addressDirectory);
   _portName = conInfo.read();
-  PRECICE_DEBUG("Request connection to " << _portName);
+  PRECICE_DEBUG("Request connection to {}", _portName);
 
   MPI_Comm communicator;
   MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-  PRECICE_DEBUG("Requested connection to " << _portName);
+  PRECICE_DEBUG("Requested connection to {}", _portName);
 
   // Send the rank of this requester
   MPI_Send(&requesterRank, 1, MPI_INT, 0, 42, communicator);
@@ -177,11 +179,11 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string const & 
 
   ConnectionInfoReader conInfo(acceptorName, requesterName, tag, _addressDirectory);
   _portName = conInfo.read();
-  PRECICE_DEBUG("Request connection to " << _portName);
+  PRECICE_DEBUG("Request connection to {}", _portName);
 
   MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
                    utils::Parallel::current()->comm, &_global);
-  PRECICE_DEBUG("Requested connection to " << _portName);
+  PRECICE_DEBUG("Requested connection to {}", _portName);
 
   _isConnected = true;
 }
@@ -213,7 +215,7 @@ void MPISinglePortsCommunication::closeConnection()
   _isConnected     = false;
 }
 
-MPI_Comm &MPISinglePortsCommunication::communicator(int rank)
+MPI_Comm &MPISinglePortsCommunication::communicator(Rank rank)
 {
   if (_global != MPI_COMM_NULL) {
     // Always prefer the global communicator
@@ -224,7 +226,7 @@ MPI_Comm &MPISinglePortsCommunication::communicator(int rank)
   }
 }
 
-int MPISinglePortsCommunication::rank(int rank)
+int MPISinglePortsCommunication::rank(Rank rank)
 {
   if (_global != MPI_COMM_NULL) {
     // Always prefer the global communicator
@@ -241,11 +243,11 @@ void MPISinglePortsCommunication::prepareEstablishment(std::string const &accept
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Creating connection exchange directory " << dir);
+  PRECICE_DEBUG("Creating connection exchange directory {}", dir);
   try {
     create_directories(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
-    PRECICE_WARN("Creating directory for connection info failed with: " << e.what());
+    PRECICE_WARN("Creating directory for connection info failed with: {}", e.what());
   }
 }
 
@@ -254,11 +256,11 @@ void MPISinglePortsCommunication::cleanupEstablishment(std::string const &accept
 {
   using namespace boost::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
-  PRECICE_DEBUG("Removing connection exchange directory " << dir);
+  PRECICE_DEBUG("Removing connection exchange directory {}", dir);
   try {
     remove_all(dir);
   } catch (const boost::filesystem::filesystem_error &e) {
-    PRECICE_WARN("Cleaning up connection info failed with: " << e.what());
+    PRECICE_WARN("Cleaning up connection info failed with: {}", e.what());
   }
 }
 

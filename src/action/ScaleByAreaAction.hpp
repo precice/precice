@@ -40,15 +40,12 @@ public:
 
   /**
    * @brief Scales data on mesh nodes according to selected scaling type.
-   *
-   * At the moment, only a division of a property value by the associated area
-   * of the neighboring edges (2D) is possible.
    */
   virtual void performAction(
       double time,
-      double dt,
-      double computedPartFullDt,
-      double fullDt);
+      double timeStepSize,
+      double computedTimeWindowPart,
+      double timeWindowSize);
 
 private:
   logging::Logger _log{"action::ScaleByAreaAction"};

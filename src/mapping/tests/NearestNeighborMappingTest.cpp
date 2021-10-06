@@ -8,6 +8,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -25,7 +26,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   using testing::equals;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inDataScalar   = inMesh->createData("InDataScalar", 1);
   PtrData inDataVector   = inMesh->createData("InDataVector", 2);
   int     inDataScalarID = inDataScalar->getID();
@@ -39,7 +40,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   inValuesVector << 1.0, 2.0, 3.0, 4.0;
 
   // Create mesh to map to
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outDataScalar   = outMesh->createData("OutDataScalar", 1);
   PtrData outDataVector   = outMesh->createData("OutDataVector", 2);
   int     outDataScalarID = outDataScalar->getID();
@@ -105,7 +106,7 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   int dimensions = 2;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   PtrData inData    = inMesh->createData("InData", 1);
   int     inDataID  = inData->getID();
   Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
@@ -116,7 +117,7 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   inValues(1)               = 2.0;
 
   // Create mesh to map to
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, false, testing::nextMeshID()));
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData    = outMesh->createData("OutData", 1);
   int     outDataID  = outData->getID();
   Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector2d::Constant(0.0));
@@ -164,6 +165,74 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(outValues(0) == inValues(0) + inValues(1));
   BOOST_TEST(outValues(1) == 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
+{
+  PRECICE_TEST(1_rank);
+  int dimensions = 2;
+
+  // Create mesh to map from
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  PtrData inData    = inMesh->createData("InData", 1);
+  int     inDataID  = inData->getID();
+  Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector2d{1.0, 0.0});
+  Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector2d{3.0, 0.0});
+  Vertex &inVertex3 = inMesh->createVertex(Eigen::Vector2d{6.0, 0.0});
+
+  inMesh->createEdge(inVertex0, inVertex1);
+  inMesh->createEdge(inVertex1, inVertex2);
+  inMesh->createEdge(inVertex2, inVertex3);
+
+  inMesh->allocateDataValues();
+  Eigen::VectorXd &inValues = inData->values();
+  inValues(0)               = 1.0;
+  inValues(1)               = 2.0;
+  inValues(2)               = 3.0;
+  inValues(3)               = 4.0;
+
+  // Create mesh to map to
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  PtrData outData    = outMesh->createData("OutData", 1);
+  int     outDataID  = outData->getID();
+  Vertex &outVertex0 = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  Vertex &outVertex1 = outMesh->createVertex(Eigen::Vector2d(0.8, 0.0));
+  Vertex &outVertex2 = outMesh->createVertex(Eigen::Vector2d(3.0, 0.0));
+  Vertex &outVertex3 = outMesh->createVertex(Eigen::Vector2d(6.2, 0.0));
+
+  outMesh->createEdge(outVertex0, outVertex1);
+  outMesh->createEdge(outVertex1, outVertex2);
+  outMesh->createEdge(outVertex2, outVertex3);
+
+  outMesh->allocateDataValues();
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::SCALEDCONSISTENT, dimensions);
+
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  mapping.computeMapping();
+  mapping.map(inDataID, outDataID);
+
+  Eigen::VectorXd &outValues = outData->values();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  auto inputIntegral  = mesh::integrate(inMesh, inData);
+  auto outputIntegral = mesh::integrate(outMesh, outData);
+
+  for (int dim = 0; dim < inputIntegral.size(); ++dim) {
+    BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
+  }
+
+  double scaleFactor = outValues(0) / inValues(0);
+  BOOST_TEST(scaleFactor != 1.0);
+
+  BOOST_TEST(inValues(0) * scaleFactor == outValues(0));
+  BOOST_TEST(inValues(1) * scaleFactor == outValues(1));
+  BOOST_TEST(inValues(2) * scaleFactor == outValues(2));
+  BOOST_TEST(inValues(3) * scaleFactor == outValues(3));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

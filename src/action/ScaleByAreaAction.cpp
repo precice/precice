@@ -26,31 +26,44 @@ ScaleByAreaAction::ScaleByAreaAction(
 
 void ScaleByAreaAction::performAction(
     double time,
-    double dt,
-    double computedPartFullDt,
-    double fullDt)
+    double timeStepSize,
+    double computedTimeWindowPart,
+    double timeWindowSize)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(getMesh()->getDimensions() == 2, "The ScaleByAreaAction requires a mesh of dimensionality 2.");
-  auto &          targetValues = _targetData->values();
-  Eigen::VectorXd areas        = Eigen::VectorXd::Zero(getMesh()->vertices().size());
-  for (mesh::Edge &edge : getMesh()->edges()) {
-    areas[edge.vertex(0).getID()] += edge.getEnclosingRadius();
-    areas[edge.vertex(1).getID()] += edge.getEnclosingRadius();
+  const int       meshDimensions  = getMesh()->getDimensions();
+  auto &          targetValues    = _targetData->values();
+  const int       valueDimensions = _targetData->getDimensions();
+  Eigen::VectorXd areas           = Eigen::VectorXd::Zero(getMesh()->vertices().size());
+  PRECICE_ASSERT(targetValues.size() / valueDimensions == areas.size());
+
+  if (meshDimensions == 2) {
+    PRECICE_CHECK(getMesh()->edges().size() != 0,
+                  "The multiply/divide-by-area actions require meshes with connectivity information. In 2D, please ensure that the mesh {} contains edges.", getMesh()->getName());
+    for (mesh::Edge &edge : getMesh()->edges()) {
+      areas[edge.vertex(0).getID()] += edge.getEnclosingRadius();
+      areas[edge.vertex(1).getID()] += edge.getEnclosingRadius();
+    }
+  } else {
+    PRECICE_CHECK(getMesh()->triangles().size() != 0,
+                  "The multiply/divide-by-area actions require meshes with connectivity information. In 3D, please ensure that the mesh {} contains triangles.", getMesh()->getName());
+    for (mesh::Triangle &face : getMesh()->triangles()) {
+      areas[face.vertex(0).getID()] += face.getArea() / 3.0;
+      areas[face.vertex(1).getID()] += face.getArea() / 3.0;
+      areas[face.vertex(2).getID()] += face.getArea() / 3.0;
+    }
   }
-  int dimensions = _targetData->getDimensions();
-  PRECICE_ASSERT(targetValues.size() / dimensions == areas.size());
   if (_scaling == SCALING_DIVIDE_BY_AREA) {
     for (int i = 0; i < areas.size(); i++) {
-      for (int dim = 0; dim < dimensions; dim++) {
-        int valueIndex = i * dimensions + dim;
+      for (int dim = 0; dim < valueDimensions; dim++) {
+        int valueIndex = i * valueDimensions + dim;
         targetValues[valueIndex] /= areas[i];
       }
     }
   } else if (_scaling == SCALING_MULTIPLY_BY_AREA) {
     for (int i = 0; i < areas.size(); i++) {
-      for (int dim = 0; dim < dimensions; dim++) {
-        int valueIndex = i * dimensions + dim;
+      for (int dim = 0; dim < valueDimensions; dim++) {
+        int valueIndex = i * valueDimensions + dim;
         targetValues[valueIndex] *= areas[i];
       }
     }

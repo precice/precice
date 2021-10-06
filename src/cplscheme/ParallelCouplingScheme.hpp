@@ -9,6 +9,12 @@
 #include "utils/assertion.hpp"
 
 namespace precice {
+
+namespace testing {
+// Forward declaration to friend the boost test struct
+struct ParallelCouplingSchemeFixture;
+} // namespace testing
+
 namespace cplscheme {
 
 /**
@@ -18,6 +24,7 @@ namespace cplscheme {
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class ParallelCouplingScheme : public BiCouplingScheme {
+  friend struct testing::ParallelCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
    * @brief Constructor.
@@ -50,9 +57,6 @@ public:
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
-  /// Map from data ID -> all data (receive and send) with that ID
-  DataMap _allData;
-
   /**
    * @brief Exchanges all data between the participants of the ParallelCouplingScheme and applies acceleration.
    * @returns true, if iteration converged
@@ -73,11 +77,6 @@ private:
    * @brief determine whether data has to be sent/received
    */
   void initializeImplementation() override;
-
-  /**
-   * @brief merges send and receive data into one map (for parallel acceleration)
-   */
-  void mergeData() override;
 
   /**
    * @brief Exchanges data, if it has to be initialized.

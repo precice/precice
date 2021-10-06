@@ -9,6 +9,6 @@ RUN export TZ=$TIMEZONE && echo $TZ > /etc/timezone && ln -snf /usr/share/zonein
 ARG version
 RUN echo "$version" | grep "v[0-9]\+\.[0-9]\+\.[0-9]\+" > /dev/null # The version must follow the format vX.Y.Z
 RUN wget -q -O libprecice.deb https://github.com/precice/precice/releases/download/${version}/libprecice`echo ${version} | sed 's/v\([0-9]\+\)\.\([0-9]\+\.[0-9]\+\)/\1_\1.\2/'`_focal.deb && \
-    ( dpkg -i libprecice.deb || apt-get install -fyy ) && \
-    rm libprecice.deb && \
+    apt-get update && apt-get -yy install ./libprecice.deb && \
+    rm libprecice.deb && rm -rf /var/lib/apt/lists/* && \
     binprecice xml > /dev/null # Make sure the installation is functional

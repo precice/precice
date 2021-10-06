@@ -39,8 +39,8 @@ void runSimpleExplicitCoupling(
   BOOST_TEST(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_TEST(mesh->data().size() == 2);
-  auto &dataValues0 = mesh->data().at(0)->values();
-  auto &dataValues1 = mesh->data().at(1)->values();
+  auto &dataValues0 = mesh->data(0)->values();
+  auto &dataValues1 = mesh->data(1)->values();
   BOOST_TEST(mesh->vertices().size() > 0);
   mesh::Vertex &  vertex     = mesh->vertices().at(0);
   double          valueData0 = 1.0;
@@ -144,8 +144,8 @@ void runExplicitCouplingWithSubcycling(
   mesh::Vertex &  vertex      = mesh->vertices().at(0);
   double          valueData0  = 1.0;
   Eigen::VectorXd valueData1  = Eigen::VectorXd::Constant(3, 1.0);
-  auto &          dataValues0 = mesh->data().at(0)->values();
-  auto &          dataValues1 = mesh->data().at(1)->values();
+  auto &          dataValues0 = mesh->data(0)->values();
+  auto &          dataValues1 = mesh->data(1)->values();
 
   double      computedTime      = 0.0;
   int         computedTimesteps = 0;
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
   dataConfig->addData("Data0", 1);
   dataConfig->addData("Data1", 3);
   mesh::MeshConfiguration meshConfig(root, dataConfig);
-  mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("Data0", 1);
   mesh->createData("Data1", 3);
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -313,8 +313,8 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
 }
 
@@ -470,9 +470,9 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
   BOOST_TEST(meshConfig->meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig->meshes().at(0);
   BOOST_TEST(mesh->data().size() == 3);
-  auto &dataValues0 = mesh->data().at(0)->values();
-  auto &dataValues1 = mesh->data().at(1)->values();
-  auto &dataValues2 = mesh->data().at(2)->values();
+  auto &dataValues0 = mesh->data(0)->values();
+  auto &dataValues1 = mesh->data(1)->values();
+  auto &dataValues2 = mesh->data(2)->values();
 
   if (context.isNamed(nameParticipant0)) {
     cplScheme.initialize(0.0, 1);
@@ -538,9 +538,9 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   BOOST_TEST(meshConfig->meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig->meshes().at(0);
   BOOST_TEST(mesh->data().size() == 3);
-  auto &dataValues0 = mesh->data().at(0)->values();
-  auto &dataValues1 = mesh->data().at(1)->values();
-  auto &dataValues2 = mesh->data().at(2)->values();
+  auto &dataValues0 = mesh->data(0)->values();
+  auto &dataValues1 = mesh->data(1)->values();
+  auto &dataValues2 = mesh->data(2)->values();
 
   if (context.isNamed(nameParticipant0)) {
     cplScheme.initialize(0.0, 1);
@@ -591,7 +591,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
   dataConfig->addData("Data1", 3);
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false, testing::nextMeshID()));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("Data0", 1);
   mesh->createData("Data1", 3);
   mesh->createVertex(Eigen::Vector3d::Zero());
@@ -616,8 +616,8 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data().at(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data().at(receiveDataIndex), mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
 }
 

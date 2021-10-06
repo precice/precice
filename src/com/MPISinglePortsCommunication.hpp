@@ -6,8 +6,10 @@
 #include <set>
 #include <stddef.h>
 #include <string>
+
 #include "MPICommunication.hpp"
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 
 namespace precice {
 namespace com {
@@ -33,7 +35,7 @@ namespace com {
 **/
 class MPISinglePortsCommunication : public MPICommunication {
 public:
-  explicit MPISinglePortsCommunication(std::string const &addressDirectory = ".");
+  explicit MPISinglePortsCommunication(std::string addressDirectory = ".");
 
   virtual ~MPISinglePortsCommunication();
 
@@ -72,9 +74,9 @@ public:
   virtual void closeConnection() override;
 
 private:
-  virtual MPI_Comm &communicator(int rank) override;
+  virtual MPI_Comm &communicator(Rank rank) override;
 
-  virtual int rank(int rank) override;
+  virtual Rank rank(int rank) override;
 
   logging::Logger _log{"com::MPISinglePortsCommunication"};
 

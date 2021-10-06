@@ -102,6 +102,11 @@ std::set<int> SolverInterface::getMeshIDs() const
   return _impl->getMeshIDs();
 }
 
+bool SolverInterface::isMeshConnectivityRequired(int meshID) const
+{
+  return _impl->isMeshConnectivityRequired(meshID);
+}
+
 bool SolverInterface::hasData(
     const std::string &dataName, int meshID) const
 {
@@ -296,6 +301,20 @@ void SolverInterface::readScalarData(
     double &value) const
 {
   return _impl->readScalarData(dataID, valueIndex, value);
+}
+
+void SolverInterface::setMeshAccessRegion(const int     meshID,
+                                          const double *boundingBox) const
+{
+  _impl->setMeshAccessRegion(meshID, boundingBox);
+}
+
+void SolverInterface::getMeshVerticesAndIDs(const int meshID,
+                                            const int size,
+                                            int *     ids,
+                                            double *  coordinates) const
+{
+  _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }
 
 std::string getVersionInformation()

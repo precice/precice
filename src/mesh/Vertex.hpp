@@ -1,9 +1,12 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <array>
 #include <iostream>
 #include <utility>
+
 #include "math/differences.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -12,11 +15,14 @@ namespace mesh {
 /// Vertex of a mesh.
 class Vertex {
 public:
+  //( Used as the raw representation of the coordinates
+  using RawCoords = std::array<double, 3>;
+
   /// Constructor for vertex
   template <typename VECTOR_T>
   Vertex(
       const VECTOR_T &coordinates,
-      int             id);
+      VertexID        id);
 
   /// Returns spatial dimensionality of vertex.
   int getDimensions() const;
@@ -25,26 +31,14 @@ public:
   template <typename VECTOR_T>
   void setCoords(const VECTOR_T &coordinates);
 
-  /// Sets the coordinates of the vertex, rvalue variant
-  template <typename VECTOR_T>
-  void setCoords(VECTOR_T &&coordinates);
-
-  /// Sets the normal of the vertex.
-  template <typename VECTOR_T>
-  void setNormal(const VECTOR_T &normal);
-
-  /// Sets the normal of the vertex, rvalue variant
-  template <typename VECTOR_T>
-  void setNormal(VECTOR_T &&normal);
-
   /// Returns the unique (among vertices of one mesh on one processor) ID of the vertex.
-  int getID() const;
+  VertexID getID() const;
 
   /// Returns the coordinates of the vertex.
-  const Eigen::VectorXd &getCoords() const;
+  Eigen::VectorXd getCoords() const;
 
-  /// Returns the normal of the vertex.
-  const Eigen::VectorXd &getNormal() const;
+  /// Direct access to the coordinates
+  const RawCoords &rawCoords() const;
 
   /// Globally unique index
   int getGlobalIndex() const;
@@ -64,14 +58,14 @@ public:
   inline bool operator!=(const Vertex &rhs) const;
 
 private:
+  /// Coordinates of the vertex
+  std::array<double, 3> _coords;
+
+  /// Dimension of the coordinates. 3D or 2D
+  short _dim;
+
   /// Unique (among vertices in one mesh) ID of the vertex.
-  int _id;
-
-  /// Coordinates of the vertex.
-  Eigen::VectorXd _coords;
-
-  /// Normal of the vertex.
-  Eigen::VectorXd _normal;
+  VertexID _id;
 
   /// global (unique) index for parallel simulations
   int _globalIndex = -1;
@@ -89,57 +83,45 @@ template <typename VECTOR_T>
 Vertex::Vertex(
     const VECTOR_T &coordinates,
     int             id)
-    : _id(id),
-      _coords(coordinates),
-      _normal(Eigen::VectorXd::Constant(_coords.size(), 0.0))
+    : _dim(coordinates.size()),
+      _id(id)
 {
+  PRECICE_ASSERT(_dim == 2 || _dim == 3, _dim);
+  _coords[0] = coordinates[0];
+  _coords[1] = coordinates[1];
+  _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
 }
 
 template <typename VECTOR_T>
 void Vertex::setCoords(
     const VECTOR_T &coordinates)
 {
-  PRECICE_ASSERT(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
-  _coords = coordinates;
+  PRECICE_ASSERT(coordinates.size() == _dim, coordinates.size(), _dim);
+  _coords[0] = coordinates[0];
+  _coords[1] = coordinates[1];
+  _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
 }
 
-template <typename VECTOR_T>
-void Vertex::setCoords(
-    VECTOR_T &&coordinates)
-{
-  PRECICE_ASSERT(coordinates.size() == _coords.size(), coordinates.size(), _coords.size());
-  _coords = std::forward<VECTOR_T>(coordinates);
-}
-
-template <typename VECTOR_T>
-void Vertex::setNormal(
-    const VECTOR_T &normal)
-{
-  PRECICE_ASSERT(normal.size() == _normal.size(), normal.size(), _normal.size());
-  _normal = normal;
-}
-
-template <typename VECTOR_T>
-void Vertex::setNormal(
-    VECTOR_T &&normal)
-{
-  PRECICE_ASSERT(normal.size() == _normal.size(), normal.size(), _normal.size());
-  _normal = std::forward<VECTOR_T>(normal);
-}
-
-inline int Vertex::getID() const
+inline VertexID Vertex::getID() const
 {
   return _id;
 }
 
-inline const Eigen::VectorXd &Vertex::getCoords() const
+inline Eigen::VectorXd Vertex::getCoords() const
+{
+  Eigen::VectorXd v(_dim);
+  std::copy_n(_coords.data(), _dim, v.data());
+  return v;
+}
+
+inline const Vertex::RawCoords &Vertex::rawCoords() const
 {
   return _coords;
 }
 
 inline bool Vertex::operator==(const Vertex &rhs) const
 {
-  return math::equals(_coords, rhs._coords);
+  return math::equals(getCoords(), rhs.getCoords());
 }
 
 inline bool Vertex::operator!=(const Vertex &rhs) const

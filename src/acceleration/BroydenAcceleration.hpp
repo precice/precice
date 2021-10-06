@@ -17,7 +17,7 @@ namespace acceleration {
  *
  * Performs a multi vector quasi-Newton to accelerate the convergence of implicit coupling
  * iterations. A multi Broyden update, together with the reuse of the approximate inverse 
- * Jacobian from the old time step are used to approximate the inverse Jacobian. After every
+ * Jacobian from the old time window are used to approximate the inverse Jacobian. After every
  * coupling iteration, the data values used are enhanced by the new coupling iterates.
  *
  * If more coupling data is present than used to compute the MVQN acceleration,
@@ -34,7 +34,7 @@ public:
       double                  initialRelaxation,
       bool                    forceInitialRelaxation,
       int                     maxIterationsUsed,
-      int                     timestepsReused,
+      int                     pastTimeWindowsReused,
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
@@ -64,7 +64,7 @@ private:
   std::fstream f;
   //----------------------------------------
 
-  // @brief stores the approximation of the inverse Jacobian of the system at current time step.
+  // @brief stores the approximation of the inverse Jacobian of the system at current time window.
   Eigen::MatrixXd _invJacobian;
   Eigen::MatrixXd _oldInvJacobian;
 

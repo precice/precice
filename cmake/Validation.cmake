@@ -37,7 +37,7 @@ function(precice_validate_lib ARG_CODE)
   file(WRITE ${_wdir}/${_filename} "${ARG_CODE}")
 
   if(${_cache_success} AND NOT PRECICE_ALWAYS_VALIDATE_LIBS)
-    message(STATUS "Validating Prettyprint - success [cached]")
+    message(STATUS "Validating ${ARG_NAME} - success [cached]")
   else()
     unset(VAL_SUCCESS)
     unset(VAL_OUT)
@@ -71,7 +71,7 @@ endmacro()
 # Validation for NumPy
 macro(precice_validate_numpy)
   precice_validate_lib(
-    "#include <Python.h>\n#include <numpy/arrayobject.h>\nint main() { return 0; } "
+    "#include <Python.h>\n#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n#include <numpy/arrayobject.h>\n int main() { import_array1(0); return 0; } "
     NAME NumPy
     COMPILE_DEFINITIONS "-I ${PYTHON_INCLUDE_DIRS}"
     LINK_LIBRARIES NumPy::NumPy ${PYTHON_LIBRARIES}
@@ -106,10 +106,10 @@ macro(precice_validate_json)
     LINK_LIBRARIES JSON)
 endmacro()
 
-# Validation for prettyprint
-macro(precice_validate_prettyprint)
+# Validation for fmtlib
+macro(precice_validate_fmtlib)
   precice_validate_lib(
-    "#include <prettyprint/prettyprint.hpp>\nint main() { return 0; } "
-    NAME Prettyprint
-    LINK_LIBRARIES prettyprint)
+    "#include <fmt/format.h>\nint main() { return 0; } "
+    NAME fmtlib
+    LINK_LIBRARIES fmt-header-only)
 endmacro()

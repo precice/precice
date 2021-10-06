@@ -21,13 +21,6 @@ namespace io {
 /// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
 class ExportVTKXML : public Export {
 public:
-  /**
-   * @brief Standard constructor
-   *
-   * @param[in] writeNormals write normals to file?
-   */
-  ExportVTKXML(bool writeNormals);
-
   /// Returns the VTK type ID.
   virtual int getType() const;
 
@@ -56,12 +49,6 @@ public:
 
 private:
   logging::Logger _log{"io::ExportVTKXML"};
-
-  /// By default set true: plot vertex normals, false: no normals plotting
-  bool _writeNormals;
-
-  /// dimensions of mesh
-  int _meshDimensions;
 
   /// List of names of all scalar data on mesh
   std::vector<std::string> _scalarDataNames;

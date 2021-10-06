@@ -172,7 +172,7 @@ void Parallel::pushState(CommStatePtr newState)
   PRECICE_ASSERT(newState != nullptr, "pushState cannot to be called with nullptr!");
   PRECICE_ASSERT(newState->parent == nullptr, "The parent of the given state must be empty!");
 #ifndef NDEBUG
-  PRECICE_DEBUG("Update comm state from " << *current() << " to " << *newState);
+  PRECICE_DEBUG("Update comm state from {} to {}", *current(), *newState);
 #endif
   newState->parent = _currentState;
   _currentState    = std::move(newState);
@@ -341,7 +341,7 @@ void Parallel::splitCommunicator(const std::string &groupName)
   // Step 4 split into groups
   PRECICE_DEBUG("Split groups");
   auto thisGroup = std::find_if(accessorGroups.begin(), accessorGroups.end(), [groupName](const AccessorGroup &group) { return group.name == groupName; });
-  PRECICE_ASSERT(thisGroup != accessorGroups.end(), "This requested groupName \"" << groupName << "\" is not in accessorGroups!");
+  PRECICE_ASSERT(thisGroup != accessorGroups.end(), "This requested groupName is not in accessorGroups!", groupName);
 
   CommStatePtr newState;
   const bool   restrictToSelf = std::all_of(accessorGroups.begin(), accessorGroups.end(), [](const AccessorGroup &group) { return group.size == 1; });
@@ -358,11 +358,10 @@ void Parallel::splitCommunicator(const std::string &groupName)
   }
 
 #ifndef NDEBUG
-  PRECICE_DEBUG("Detected " << accessorGroups.size() << " groups");
+  PRECICE_DEBUG("Detected {} groups", accessorGroups.size());
   for (const AccessorGroup &group : accessorGroups) {
-    PRECICE_DEBUG("Group " << group.id << ": name = " << group.name
-                           << ", leaderRank = " << group.leaderRank
-                           << ", size = " << group.size);
+    PRECICE_DEBUG("Group {}: name = {}, leaderRank = {}, size = {}",
+                  group.id, group.name, group.leaderRank, group.size);
   }
 #endif // NDEBUG
 

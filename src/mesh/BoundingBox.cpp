@@ -16,7 +16,7 @@ logging::Logger BoundingBox::_log{"mesh::BoundingBox"};
 
 BoundingBox::BoundingBox(std::vector<double> bounds)
 {
-  PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3. Given dimension is: " << bounds.size() / 2);
+  PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6, "Dimension of a bounding box can only be 2 or 3.", bounds.size() / 2);
   _bounds     = std::move(bounds);
   _dimensions = _bounds.size() / 2;
 }
@@ -24,7 +24,7 @@ BoundingBox::BoundingBox(std::vector<double> bounds)
 BoundingBox::BoundingBox(int dimension)
     : _dimensions(dimension)
 {
-  PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box can only be 2 or 3. Given dimension is: " << dimension);
+  PRECICE_ASSERT(dimension == 2 || dimension == 3, "Dimension of a bounding box can only be 2 or 3.", dimension);
   for (int i = 0; i < _dimensions; ++i) {
     _bounds.push_back(std::numeric_limits<double>::max());
     _bounds.push_back(std::numeric_limits<double>::lowest());
@@ -33,7 +33,7 @@ BoundingBox::BoundingBox(int dimension)
 
 bool BoundingBox::operator==(const BoundingBox &otherBB) const
 {
-  PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes with different dimensions cannot be compared. Dimensions: " << _dimensions << " and " << otherBB._dimensions);
+  PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes with different dimensions cannot be compared.", _dimensions, otherBB._dimensions);
   for (int i = 0; i < _dimensions; ++i) {
     if (_bounds.at(i) != otherBB._bounds.at(i)) {
       return false;
@@ -55,8 +55,9 @@ bool BoundingBox::empty() const
 bool BoundingBox::contains(const mesh::Vertex &vertex) const
 {
   PRECICE_ASSERT(_dimensions == vertex.getDimensions(), "Vertex with different dimensions than bounding box cannot be checked.");
+  const auto &coords = vertex.rawCoords();
   for (int d = 0; d < _dimensions; d++) {
-    if (vertex.getCoords()[d] < _bounds.at(2 * d) || vertex.getCoords()[d] > _bounds.at(2 * d + 1)) {
+    if (coords[d] < _bounds.at(2 * d) || coords[d] > _bounds.at(2 * d + 1)) {
       return false;
     }
   }
@@ -122,9 +123,10 @@ void BoundingBox::expandBy(const BoundingBox &otherBB)
 void BoundingBox::expandBy(const Vertex &vertices)
 {
   PRECICE_ASSERT(_dimensions == vertices.getDimensions(), "Vertex with different dimensions than bounding box cannot be used to expand bounding box");
+  const auto coords = vertices.rawCoords();
   for (int d = 0; d < _dimensions; ++d) {
-    _bounds.at(2 * d)     = std::min(vertices.getCoords()[d], _bounds.at(2 * d));
-    _bounds.at(2 * d + 1) = std::max(vertices.getCoords()[d], _bounds.at(2 * d + 1));
+    _bounds.at(2 * d)     = std::min(coords[d], _bounds.at(2 * d));
+    _bounds.at(2 * d + 1) = std::max(coords[d], _bounds.at(2 * d + 1));
   }
 }
 
@@ -150,7 +152,7 @@ void BoundingBox::scaleBy(double safetyFactor)
   for (int d = 0; d < _dimensions; d++) {
     _bounds.at(2 * d + 1) += safetyFactor * maxSideLength;
     _bounds.at(2 * d) -= safetyFactor * maxSideLength;
-    PRECICE_DEBUG("Merged BoundingBox" << *this);
+    PRECICE_DEBUG("Merged BoundingBox {}", *this);
   }
 }
 

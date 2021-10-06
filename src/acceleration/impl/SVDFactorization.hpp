@@ -13,12 +13,14 @@
 #include <fstream>
 #include <memory>
 #include <string>
+
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 // ------- CLASS DEFINITION
@@ -170,7 +172,7 @@ public:
     _psi.conservativeResize(_rows, _cols);
     _phi.conservativeResize(_rows, _cols);
     _sigma.conservativeResize(_cols);
-    PRECICE_DEBUG("SVD factorization of Jacobian is truncated to " << _cols << " DOFs. Cut off " << waste << " DOFs");
+    PRECICE_DEBUG("SVD factorization of Jacobian is truncated to {} DOFs. Cut off {} DOFs", _cols, waste);
 
     _initialSVD = true;
   }
@@ -208,7 +210,7 @@ public:
   int rows();
 
   /// @brief: returns the rank of the truncated SVD factorization
-  int rank();
+  Rank rank();
 
   /// @brief: returns the total number of truncated modes since last call to this method
   int getWaste();

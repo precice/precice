@@ -24,8 +24,8 @@ namespace config {
 class ParticipantConfiguration : public xml::XMLTag::Listener {
 public:
   ParticipantConfiguration(
-      xml::XMLTag &                     parent,
-      const mesh::PtrMeshConfiguration &meshConfiguration);
+      xml::XMLTag &              parent,
+      mesh::PtrMeshConfiguration meshConfiguration);
 
   void setDimensions(int dimensions);
 
@@ -83,6 +83,7 @@ private:
   const std::string ATTR_FROM               = "from";
   const std::string ATTR_SAFETY_FACTOR      = "safety-factor";
   const std::string ATTR_GEOMETRIC_FILTER   = "geometric-filter";
+  const std::string ATTR_DIRECT_ACCESS      = "direct-access";
   const std::string ATTR_PROVIDE            = "provide";
   const std::string ATTR_MESH               = "mesh";
   const std::string ATTR_COORDINATE         = "coordinate";

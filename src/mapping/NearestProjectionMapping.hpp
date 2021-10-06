@@ -3,9 +3,9 @@
 #include <list>
 #include <string>
 #include <vector>
-#include "Mapping.hpp"
 #include "logging/Logger.hpp"
-#include "query/FindClosest.hpp"
+#include "mapping/Mapping.hpp"
+#include "mapping/Polation.hpp"
 
 namespace precice {
 namespace mapping {
@@ -49,8 +49,7 @@ public:
 private:
   logging::Logger _log{"mapping::NearestProjectionMapping"};
 
-  using InterpolationElements = std::vector<query::InterpolationElement>;
-  std::vector<InterpolationElements> _weights;
+  std::vector<Polation> _interpolations;
 
   bool _hasComputedMapping = false;
 };

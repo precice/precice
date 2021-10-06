@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 #include <vector>
+
 #include "logging/Logger.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
@@ -15,6 +16,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
@@ -42,10 +44,10 @@ public:
   using BoundingBoxMap    = std::map<int, BoundingBox>;
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
-  using VertexDistribution = std::map<int, std::vector<int>>;
+  using VertexDistribution = std::map<Rank, std::vector<VertexID>>;
 
   /// A mapping from remote local ranks to the IDs that must be communicated
-  using CommunicationMap = std::map<int, std::vector<int>>;
+  using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
 
   /// Signal is emitted when the mesh is changed
   boost::signals2::signal<void(Mesh &)> meshChanged;
@@ -54,21 +56,19 @@ public:
   boost::signals2::signal<void(Mesh &)> meshDestroyed;
 
   /// Use if the id of the mesh is not necessary
-  static constexpr int MESH_ID_UNDEFINED{-1};
+  static constexpr MeshID MESH_ID_UNDEFINED{-1};
 
   /**
    * @brief Constructor.
    *
    * @param[in] name Unique name of the mesh.
    * @param[in] dimensions Dimensionalty of the mesh.
-   * @param[in] flipNormals Inverts the standard direction of normals.
    * @param[in] id The id of this mesh
    */
   Mesh(
-      const std::string &name,
-      int                dimensions,
-      bool               flipNormals,
-      int                id);
+      std::string name,
+      int         dimensions,
+      MeshID      id);
 
   /// Destructor, deletes created objects.
   ~Mesh();
@@ -93,13 +93,8 @@ public:
 
   int getDimensions() const;
 
-  template <typename VECTOR_T>
-  Vertex &createVertex(const VECTOR_T &coords)
-  {
-    PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
-    _vertices.emplace_back(coords, _manageVertexIDs.getFreeID());
-    return _vertices.back();
-  }
+  /// Creates and initializes a Vertex object.
+  Vertex &createVertex(const Eigen::VectorXd &coords);
 
   /**
    * @brief Creates and initializes an Edge object.
@@ -133,43 +128,38 @@ public:
       Edge &edgeTwo,
       Edge &edgeThree);
 
-  PtrData &createData(
-      const std::string &name,
-      int                dimension);
+  PtrData &createData(const std::string &name,
+                      int                dimension);
 
+  /// Allows access to all data
   const DataContainer &data() const;
 
-  const PtrData &data(int dataID) const;
+  /// Returns whether Mesh has Data with the matchingID
+  bool hasDataID(DataID dataID) const;
+
+  /// Returns the data with the matching ID
+  const PtrData &data(DataID dataID) const;
+
+  /// Returns whether Mesh has Data with the dataName
+  bool hasDataName(const std::string &dataName) const;
+
+  /// Returns the data with the matching name
+  const PtrData &data(const std::string &dataName) const;
 
   /// Returns the name of the mesh, as set in the config file.
   const std::string &getName() const;
 
-  bool isFlipNormals() const;
-
-  void setFlipNormals(bool flipNormals);
-
   /// Returns the base ID of the mesh.
-  int getID() const;
+  MeshID getID() const;
 
   /// Returns true if the given vertexID is valid
-  bool isValidVertexID(int vertexID) const;
+  bool isValidVertexID(VertexID vertexID) const;
 
   /// Returns true if the given edgeID is valid
-  bool isValidEdgeID(int edgeID) const;
+  bool isValidEdgeID(EdgeID edgeID) const;
 
   /// Allocates memory for the vertex data values.
   void allocateDataValues();
-
-  /**
-   * @brief Necessary before any geom. operations can be performed on the mesh.
-   *
-   * If no edges (in 2d) or triangles(in 3d) are
-   * given, no normals are computed in order to avoid dividing by zero on
-   * normalization of the vertex normals.
-   *
-   * Circumcircles of edges and triangles are computed.
-   */
-  void computeState();
 
   /// Computes the boundingBox for the vertices.
   void computeBoundingBox();
@@ -183,6 +173,9 @@ public:
    * - triangle
    */
   void clear();
+
+  /// Clears the partitioning information
+  void clearPartitioning();
 
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
   VertexDistribution &getVertexDistribution();
@@ -201,13 +194,13 @@ public:
   void setGlobalNumberOfVertices(int num);
 
   // Get the data of owned vertices for given data ID
-  Eigen::VectorXd getOwnedVertexData(int dataID);
+  Eigen::VectorXd getOwnedVertexData(DataID dataID);
 
   // Tag all the vertices
   void tagAll();
 
   /// Returns a vector of connected ranks
-  std::vector<int> &getConnectedRanks()
+  std::vector<Rank> &getConnectedRanks()
   {
     return _connectedRanks;
   }
@@ -224,9 +217,10 @@ public:
    * @brief Returns the bounding box of the mesh.
    *
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
-   * computeState() has to be called after setting the mesh.
    */
   const BoundingBox &getBoundingBox() const;
+
+  void expandBoundingBox(const BoundingBox &bounding_box);
 
   bool operator==(const Mesh &other) const;
 
@@ -241,11 +235,8 @@ private:
   /// Dimension of mesh.
   int _dimensions;
 
-  /// Flag for flipping normals direction.
-  bool _flipNormals;
-
   /// The ID of this mesh.
-  int _id;
+  MeshID _id;
 
   /// Holds vertices, edges, and triangles.
   VertexContainer   _vertices;
@@ -254,12 +245,6 @@ private:
 
   /// Data hold by the vertices of the mesh.
   DataContainer _data;
-
-  utils::ManageUniqueIDs _manageVertexIDs;
-
-  utils::ManageUniqueIDs _manageEdgeIDs;
-
-  utils::ManageUniqueIDs _manageTriangleIDs;
 
   /**
    * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
@@ -286,7 +271,7 @@ private:
    * @brief each rank stores list of connected remote ranks.
    * In the m2n package, this is used to create the initial communication channels.
    */
-  std::vector<int> _connectedRanks;
+  std::vector<Rank> _connectedRanks;
 
   /**
    * @brief each rank stores list of connected ranks and corresponding vertex IDs here.

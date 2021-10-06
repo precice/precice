@@ -11,6 +11,9 @@ on:
       - 'src/**'
       - 'thirdparty/**'
       - 'CMakeLists.txt'
+      - 'extras/bindings/**'
+      - '.github/workflows/build-and-test.yml'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -71,6 +74,14 @@ jobs:
             CONFIG: MPIPETSc
             CXX: 'clang++'
             TYPE: Release
+          - IMAGE: 'fedora-34'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
+          - IMAGE: 'fedora-34'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Release
     env:
       CCACHE_DIR: "$GITHUB_WORKSPACE/ccache"
       OMPI_MCA_rmaps_base_oversubscribe: 1
@@ -92,7 +103,7 @@ jobs:
           PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
         run: |
           cmake --version
-          cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug -DPRECICE_MPICommunication=${{ env.MPI }} -DPRECICE_PETScMapping=${{ env.PETSc }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_MPICommunication=${{ env.MPI }} -DPRECICE_PETScMapping=${{ env.PETSc }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
       - uses: actions/upload-artifact@v2
         if: failure()
         with:
@@ -117,6 +128,7 @@ jobs:
       - name: Tests
         env:
           CTEST_OUTPUT_ON_FAILURE: 1
+          BOOST_TEST_LOG_LEVEL: all
         working-directory: build
         run: su -c "ctest" $PRECICE_USER
       - name: Coverage Report

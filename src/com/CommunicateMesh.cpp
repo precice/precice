@@ -1,26 +1,29 @@
-#include "CommunicateMesh.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <boost/container/flat_map.hpp>
+#include <cstddef>
 #include <functional>
 #include <map>
 #include <memory>
 #include <ostream>
-#include <stddef.h>
+#include <utility>
 #include <vector>
+
+#include "CommunicateMesh.hpp"
 #include "Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
 namespace com {
 CommunicateMesh::CommunicateMesh(
     com::PtrCommunication communication)
-    : _communication(communication)
+    : _communication(std::move(communication))
 {
 }
 
@@ -29,31 +32,30 @@ void CommunicateMesh::sendMesh(
     int               rankReceiver)
 {
   PRECICE_TRACE(mesh.getName(), rankReceiver);
-  int dim = mesh.getDimensions();
+  const int dim = mesh.getDimensions();
 
-  int numberOfVertices = mesh.vertices().size();
+  const auto &meshVertices     = mesh.vertices();
+  const int   numberOfVertices = meshVertices.size();
   _communication->send(numberOfVertices, rankReceiver);
   if (not mesh.vertices().empty()) {
     std::vector<double> coords(static_cast<size_t>(numberOfVertices) * dim);
     std::vector<int>    globalIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
-      for (int d = 0; d < dim; d++) {
-        coords[i * dim + d] = mesh.vertices()[i].getCoords()[d];
-      }
-      globalIDs[i] = mesh.vertices()[i].getGlobalIndex();
+      std::copy_n(meshVertices[i].rawCoords().begin(), dim, &coords[i * dim]);
+      globalIDs[i] = meshVertices[i].getGlobalIndex();
     }
     _communication->send(coords, rankReceiver);
     _communication->send(globalIDs, rankReceiver);
   }
 
-  int numberOfEdges = mesh.edges().size();
+  const int numberOfEdges = mesh.edges().size();
   _communication->send(numberOfEdges, rankReceiver);
   if (not mesh.edges().empty()) {
     //we need to send the vertexIDs first such that the right edges can be created later
     //contrary to the normal sendMesh, this variant must also work for adding delta meshes
     std::vector<int> vertexIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
-      vertexIDs[i] = mesh.vertices()[i].getID();
+      vertexIDs[i] = meshVertices[i].getID();
     }
     _communication->send(vertexIDs, rankReceiver);
 
@@ -97,7 +99,7 @@ void CommunicateMesh::receiveMesh(
 
   int numberOfVertices = 0;
   _communication->receive(numberOfVertices, rankSender);
-  PRECICE_DEBUG("Number of vertices to receive: " << numberOfVertices);
+  PRECICE_DEBUG("Number of vertices to receive: {}", numberOfVertices);
 
   std::vector<mesh::Vertex *> vertices;
   vertices.reserve(numberOfVertices);
@@ -106,8 +108,8 @@ void CommunicateMesh::receiveMesh(
     std::vector<int>    globalIDs;
     _communication->receive(vertexCoords, rankSender);
     _communication->receive(globalIDs, rankSender);
+    Eigen::VectorXd coords(dim);
     for (int i = 0; i < numberOfVertices; i++) {
-      Eigen::VectorXd coords(dim);
       for (int d = 0; d < dim; d++) {
         coords[d] = vertexCoords[i * dim + d];
       }
@@ -120,7 +122,7 @@ void CommunicateMesh::receiveMesh(
 
   int numberOfEdges = 0;
   _communication->receive(numberOfEdges, rankSender);
-  PRECICE_DEBUG("Number of edges to receive: " << numberOfEdges);
+  PRECICE_DEBUG("Number of edges to receive: {}", numberOfEdges);
 
   boost::container::flat_map<int, mesh::Vertex *> vertexMap;
   vertexMap.reserve(numberOfVertices);
@@ -146,8 +148,8 @@ void CommunicateMesh::receiveMesh(
   if (dim == 3) {
     int numberOfTriangles = 0;
     _communication->receive(numberOfTriangles, rankSender);
-    PRECICE_DEBUG("Number of Triangles to receive: " << numberOfTriangles);
-    PRECICE_DEBUG("Number of Edges: " << edges.size());
+    PRECICE_DEBUG("Number of Triangles to receive: {}", numberOfTriangles);
+    PRECICE_DEBUG("Number of Edges: {}", edges.size());
     if (numberOfTriangles > 0) {
       PRECICE_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
       std::vector<int> edgeIDs;
@@ -179,16 +181,15 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
   PRECICE_TRACE(mesh.getName());
   int dim = mesh.getDimensions();
 
-  int numberOfVertices = mesh.vertices().size();
+  const auto &meshVertices     = mesh.vertices();
+  const int   numberOfVertices = meshVertices.size();
   _communication->broadcast(numberOfVertices);
   if (numberOfVertices > 0) {
     std::vector<double> coords(static_cast<size_t>(numberOfVertices) * dim);
     std::vector<int>    globalIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
-      for (int d = 0; d < dim; d++) {
-        coords[i * dim + d] = mesh.vertices()[i].getCoords()[d];
-      }
-      globalIDs[i] = mesh.vertices()[i].getGlobalIndex();
+      std::copy_n(meshVertices[i].rawCoords().begin(), dim, &coords[i * dim]);
+      globalIDs[i] = meshVertices[i].getGlobalIndex();
     }
     _communication->broadcast(coords);
     _communication->broadcast(globalIDs);
@@ -201,14 +202,15 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     //contrary to the normal sendMesh, this variant must also work for adding delta meshes
     std::vector<int> vertexIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
-      vertexIDs[i] = mesh.vertices()[i].getID();
+      vertexIDs[i] = meshVertices[i].getID();
     }
     _communication->broadcast(vertexIDs);
 
     std::vector<int> edgeIDs(numberOfEdges * 2);
+    const auto &     meshEdges = mesh.edges();
     for (int i = 0; i < numberOfEdges; i++) {
-      edgeIDs[i * 2]     = mesh.edges()[i].vertex(0).getID();
-      edgeIDs[i * 2 + 1] = mesh.edges()[i].vertex(1).getID();
+      edgeIDs[i * 2]     = meshEdges[i].vertex(0).getID();
+      edgeIDs[i * 2 + 1] = meshEdges[i].vertex(1).getID();
     }
     _communication->broadcast(edgeIDs);
   }
@@ -226,10 +228,11 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
       _communication->broadcast(edgeIDs);
 
       std::vector<int> triangleIDs(numberOfTriangles * 3);
+      const auto &     meshTriangles = mesh.triangles();
       for (int i = 0; i < numberOfTriangles; i++) {
-        triangleIDs[i * 3]     = mesh.triangles()[i].edge(0).getID();
-        triangleIDs[i * 3 + 1] = mesh.triangles()[i].edge(1).getID();
-        triangleIDs[i * 3 + 2] = mesh.triangles()[i].edge(2).getID();
+        triangleIDs[i * 3]     = meshTriangles[i].edge(0).getID();
+        triangleIDs[i * 3 + 1] = meshTriangles[i].edge(1).getID();
+        triangleIDs[i * 3 + 2] = meshTriangles[i].edge(2).getID();
       }
       _communication->broadcast(triangleIDs);
     }
@@ -240,12 +243,12 @@ void CommunicateMesh::broadcastReceiveMesh(
     mesh::Mesh &mesh)
 {
   PRECICE_TRACE(mesh.getName());
-  int dim             = mesh.getDimensions();
-  int rankBroadcaster = 0;
+  int  dim             = mesh.getDimensions();
+  Rank rankBroadcaster = 0;
 
-  std::vector<mesh::Vertex *>   vertices;
-  std::map<int, mesh::Vertex *> vertexMap;
-  int                           numberOfVertices = 0;
+  std::vector<mesh::Vertex *>        vertices;
+  std::map<VertexID, mesh::Vertex *> vertexMap;
+  int                                numberOfVertices = 0;
   _communication->broadcast(numberOfVertices, rankBroadcaster);
 
   if (numberOfVertices > 0) {
@@ -253,8 +256,8 @@ void CommunicateMesh::broadcastReceiveMesh(
     std::vector<int>    globalIDs;
     _communication->broadcast(vertexCoords, rankBroadcaster);
     _communication->broadcast(globalIDs, rankBroadcaster);
+    Eigen::VectorXd coords(dim);
     for (int i = 0; i < numberOfVertices; i++) {
-      Eigen::VectorXd coords(dim);
       for (int d = 0; d < dim; d++) {
         coords[d] = vertexCoords[i * dim + d];
       }

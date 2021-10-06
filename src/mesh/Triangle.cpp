@@ -6,6 +6,7 @@
 #include <boost/concept/assert.hpp>
 #include <boost/range/concepts.hpp>
 #include "math/differences.hpp"
+#include "math/geometry.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenIO.hpp"
@@ -24,8 +25,7 @@ Triangle::Triangle(
     Edge &edgeThree,
     int   id)
     : _edges({&edgeOne, &edgeTwo, &edgeThree}),
-      _id(id),
-      _normal(Eigen::VectorXd::Zero(edgeOne.getDimensions()))
+      _id(id)
 {
   PRECICE_ASSERT(edgeOne.getDimensions() == edgeTwo.getDimensions(),
                  edgeOne.getDimensions(), edgeTwo.getDimensions());
@@ -38,33 +38,33 @@ Triangle::Triangle(
   Vertex &v1 = edge(0).vertex(1);
 
   if (&edge(1).vertex(0) == &v0) {
-    _vertexMap[0] = 1;
-    _vertexMap[1] = 0;
+    _vertexMap[0] = true;
+    _vertexMap[1] = false;
   } else if (&edge(1).vertex(1) == &v0) {
-    _vertexMap[0] = 1;
-    _vertexMap[1] = 1;
+    _vertexMap[0] = true;
+    _vertexMap[1] = true;
   } else if (&edge(1).vertex(0) == &v1) {
-    _vertexMap[0] = 0;
-    _vertexMap[1] = 0;
+    _vertexMap[0] = false;
+    _vertexMap[1] = false;
   } else {
     PRECICE_ASSERT(&edge(1).vertex(1) == &v1);
-    _vertexMap[0] = 0;
-    _vertexMap[1] = 1;
+    _vertexMap[0] = false;
+    _vertexMap[1] = true;
   }
 
   if (_vertexMap[1] == 0) {
     if (&edge(2).vertex(0) == &edge(1).vertex(1)) {
-      _vertexMap[2] = 0;
+      _vertexMap[2] = false;
     } else {
       PRECICE_ASSERT(&edge(2).vertex(1) == &edge(1).vertex(1));
-      _vertexMap[2] = 1;
+      _vertexMap[2] = true;
     }
   } else if (_vertexMap[1] == 1) {
     if (&edge(2).vertex(0) == &edge(1).vertex(0)) {
-      _vertexMap[2] = 0;
+      _vertexMap[2] = false;
     } else {
       PRECICE_ASSERT(&edge(2).vertex(1) == &edge(1).vertex(0));
-      _vertexMap[2] = 1;
+      _vertexMap[2] = true;
     }
   }
 
@@ -77,34 +77,20 @@ Triangle::Triangle(
 
 double Triangle::getArea() const
 {
-  Eigen::Vector3d vectorA = edge(1).vertex(1).getCoords() - edge(1).vertex(0).getCoords();
-  Eigen::Vector3d vectorB = edge(0).vertex(1).getCoords() - edge(0).vertex(0).getCoords();
-  // Compute cross-product of vector A and vector B
-  auto normal = vectorA.cross(vectorB);
-  return (0.5 * normal.norm());
+  return math::geometry::triangleArea(vertex(0).getCoords(), vertex(1).getCoords(), vertex(2).getCoords());
 }
 
-const Eigen::VectorXd Triangle::computeNormal(bool flip)
+Eigen::VectorXd Triangle::computeNormal() const
 {
   Eigen::Vector3d vectorA = edge(1).getCenter() - edge(0).getCenter();
   Eigen::Vector3d vectorB = edge(2).getCenter() - edge(0).getCenter();
   // Compute cross-product of vector A and vector B
-  auto normal = vectorA.cross(vectorB);
-  if (flip) {
-    normal *= -1.0; // Invert direction if counterclockwise
-  }
-  _normal = normal.normalized();
-  return normal;
+  return vectorA.cross(vectorB).normalized();
 }
 
 int Triangle::getDimensions() const
 {
   return _edges[0]->getDimensions();
-}
-
-const Eigen::VectorXd &Triangle::getNormal() const
-{
-  return _normal;
 }
 
 const Eigen::VectorXd Triangle::getCenter() const
@@ -122,8 +108,7 @@ double Triangle::getEnclosingRadius() const
 
 bool Triangle::operator==(const Triangle &other) const
 {
-  return math::equals(_normal, other._normal) &&
-         std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(),
+  return std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(),
                              [](const Edge *e1, const Edge *e2) { return *e1 == *e2; });
 }
 

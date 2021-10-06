@@ -4,9 +4,11 @@
 #include <algorithm>
 #include <array>
 #include <iostream>
+
 #include "math/differences.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/RangeAccessor.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -29,20 +31,20 @@ public:
    * The returned value is the forwarded result of Vertex::getCoords.
    * It is thus a read-only random-access iterator.
    */
-  using const_iterator = IndexRangeIterator<const Triangle, const Eigen::VectorXd>;
+  using const_iterator = IndexRangeIterator<const Triangle, const Vertex::RawCoords>;
 
   /// Type of the read-only random access vertex iterator
   using iterator = const_iterator;
 
   /// Fix for the Boost.Test versions 1.65.1 - 1.67
-  using value_type = Eigen::VectorXd;
+  using value_type = Vertex::RawCoords;
 
   /// Constructor, the order of edges defines the outer normal direction.
   Triangle(
-      Edge &edgeOne,
-      Edge &edgeTwo,
-      Edge &edgeThree,
-      int   id);
+      Edge &     edgeOne,
+      Edge &     edgeTwo,
+      Edge &     edgeThree,
+      TriangleID id);
 
   /// Returns dimensionalty of space the triangle is embedded in.
   int getDimensions() const;
@@ -94,25 +96,14 @@ public:
 
   ///@}
 
-  /// Sets the outer normal of the triangle.
-  template <typename VECTOR_T>
-  void setNormal(const VECTOR_T &normal);
-
-  /// Computes and sets the normal of the triangle, returns the area-weighted normal.
-  const Eigen::VectorXd computeNormal(bool flip = false);
+  /// Computes the normal of the triangle.
+  Eigen::VectorXd computeNormal() const;
 
   /// Returns a among triangles globally unique ID.
-  int getID() const;
+  TriangleID getID() const;
 
   /// Returns the surface area of the triangle
   double getArea() const;
-
-  /**
-   * @brief Returns the outer normal of the triangle.
-   *
-   * @pre The normal has to be computed and set from outside before.
-   */
-  const Eigen::VectorXd &getNormal() const;
 
   /// Returns the barycenter of the triangle.
   const Eigen::VectorXd getCenter() const;
@@ -138,11 +129,8 @@ private:
   /// Decider for choosing unique vertices from _edges.
   std::array<bool, 3> _vertexMap;
 
-  /// ID of the edge.
-  int _id;
-
-  /// Normal vector of the triangle.
-  Eigen::VectorXd _normal;
+  /// ID of the triangle.
+  TriangleID _id;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
@@ -199,15 +187,7 @@ inline Triangle::const_iterator Triangle::cend() const
   return end();
 }
 
-template <typename VECTOR_T>
-void Triangle::setNormal(
-    const VECTOR_T &normal)
-{
-  PRECICE_ASSERT(normal.size() == getDimensions(), normal.size(), getDimensions());
-  _normal = normal;
-}
-
-inline int Triangle::getID() const
+inline TriangleID Triangle::getID() const
 {
   return _id;
 }
