@@ -40,11 +40,10 @@ public:
   void moveToNextWindow();
 
   /**
-   * @brief sample Waveform
+   * @brief sample Waveform. Uses interpolation with Waveform's interpolation order, if necessary
    * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
-   * @param order interpolation order being used.
    */
-  Eigen::VectorXd sample(const double normalizedDt, const int order = 0);
+  Eigen::VectorXd sample(const double normalizedDt);
 
   /**
    * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)
@@ -58,6 +57,9 @@ private:
 
   /// extrapolation order for this waveform
   const int _extrapolationOrder;
+
+  /// interpolation order for this waveform
+  const int _interpolationOrder;
 
   /// number of valid samples in _timeWindows
   int _numberOfValidSamples;
@@ -88,12 +90,11 @@ private:
   Eigen::VectorXd extrapolateData();
 
   /**
-   * @brief Interpolates data inside current time time window using an interpolation scheme of given order.
+   * @brief Interpolates data inside current time window using an interpolation scheme of the order of this Waveform.
    *
-   * @param order Order of the interpolation scheme to be used.
    * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
    */
-  Eigen::VectorXd interpolateData(const int order, const double normalizedDt);
+  Eigen::VectorXd interpolateData(const double normalizedDt);
 };
 
 } // namespace time

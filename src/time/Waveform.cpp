@@ -12,7 +12,7 @@ Waveform::Waveform(
     const int initializedNumberOfData,
     const int extrapolationOrder,
     const int interpolationOrder)
-    : _extrapolationOrder(extrapolationOrder)
+    : _extrapolationOrder(extrapolationOrder), _interpolationOrder(interpolationOrder)
 {
   /**
      * Reserve storage depending on required extrapolation order. Extrapolation happens in-place. Therefore, for zeroth
@@ -21,8 +21,8 @@ Waveform::Waveform(
      * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
      * extrapolation.
      */
-  PRECICE_ASSERT(extrapolationOrder >= 0);
-  PRECICE_ASSERT(interpolationOrder >= 0 || interpolationOrder == UNDEFINED_INTERPOLATION_ORDER);
+  PRECICE_ASSERT(_extrapolationOrder >= 0);
+  PRECICE_ASSERT(_interpolationOrder >= 0 || _interpolationOrder == UNDEFINED_INTERPOLATION_ORDER);
   const int initializedNumberOfSamples = std::max({2, _extrapolationOrder + 1, interpolationOrder + 1});
   _timeWindows                         = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
   _numberOfValidSamples                = 1; // we assume that upon creation the first sample is always valid.
@@ -38,12 +38,12 @@ void Waveform::store(const Eigen::VectorXd &data)
   this->_timeWindows.col(columnID) = data;
 }
 
-Eigen::VectorXd Waveform::sample(double normalizedDt, int order)
+Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
-  // @ todo: Add more logic here? Set order in constructor; keep track of time windows inside class. See https://github.com/precice/precice/pull/1004/files?file-filters%5B%5D=.cmake&file-filters%5B%5D=.hpp#r642223767.
-  return this->interpolateData(order, normalizedDt);
+  PRECICE_ASSERT(_interpolationOrder != UNDEFINED_INTERPOLATION_ORDER, "Sampling is only allowed, if Waveform is configured correspondingly");
+  return this->interpolateData(normalizedDt);
 }
 
 void Waveform::moveToNextWindow()
@@ -136,9 +136,9 @@ Eigen::VectorXd Waveform::extrapolateData()
   return extrapolatedValue;
 }
 
-Eigen::VectorXd Waveform::interpolateData(const int order, const double normalizedDt)
+Eigen::VectorXd Waveform::interpolateData(const double normalizedDt)
 {
-  const int usedOrder = computeUsedOrder(order, _numberOfValidSamples);
+  const int usedOrder = computeUsedOrder(_interpolationOrder, _numberOfValidSamples);
 
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
