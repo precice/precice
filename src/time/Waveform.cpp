@@ -24,8 +24,8 @@ Waveform::Waveform(
   PRECICE_ASSERT(extrapolationOrder >= 0);
   PRECICE_ASSERT(interpolationOrder >= 0 || interpolationOrder == UNDEFINED_INTERPOLATION_ORDER);
   const int initializedNumberOfSamples = std::max({2, _extrapolationOrder + 1, interpolationOrder + 1});
-  _timeWindows                   = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
-  _numberOfValidSamples          = 1; // we assume that upon creation the first sample is always valid.
+  _timeWindows                         = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
+  _numberOfValidSamples                = 1; // we assume that upon creation the first sample is always valid.
   PRECICE_ASSERT(numberOfSamples() == initializedNumberOfSamples);
   PRECICE_ASSERT(numberOfData() == initializedNumberOfData);
 }

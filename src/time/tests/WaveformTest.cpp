@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
   // Test zeroth order interpolation
   const int extrapolationOrder = 0;
   const int interpolationOrder = 0;
-  Waveform waveform(1, extrapolationOrder, interpolationOrder);
+  Waveform  waveform(1, extrapolationOrder, interpolationOrder);
 
   BOOST_TEST(waveform.lastTimeWindows().cols() == 2);
   BOOST_TEST(waveform.lastTimeWindows().rows() == 1);
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
   // Test first order interpolation
   const int extrapolationOrder = 0;
   const int interpolationOrder = 1;
-  Waveform waveform(1, extrapolationOrder, interpolationOrder);
+  Waveform  waveform(1, extrapolationOrder, interpolationOrder);
   BOOST_TEST(waveform.lastTimeWindows().cols() == 2);
   BOOST_TEST(waveform.lastTimeWindows().rows() == 1);
   BOOST_TEST(fixture.numberOfValidSamples(waveform) == 1);
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   // Test second order interpolation
   const int extrapolationOrder = 0;
   const int interpolationOrder = 2;
-  Waveform waveform2(1, extrapolationOrder, interpolationOrder);
+  Waveform  waveform2(1, extrapolationOrder, interpolationOrder);
   BOOST_TEST(waveform2.lastTimeWindows().cols() == 3);
   BOOST_TEST(waveform2.lastTimeWindows().rows() == 1);
   BOOST_TEST(fixture.numberOfValidSamples(waveform2) == 1);
