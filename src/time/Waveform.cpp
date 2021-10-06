@@ -132,7 +132,7 @@ Eigen::VectorXd Waveform::extrapolateData()
   return extrapolatedValue;
 }
 
-Eigen::VectorXd Waveform::interpolateData(int order, double normalizedDt)
+Eigen::VectorXd Waveform::interpolateData(const int order, const double normalizedDt)
 {
   const int usedOrder = computeUsedOrder(order, _numberOfValidSamples);
 

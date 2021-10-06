@@ -92,7 +92,7 @@ private:
    * @param order Order of the interpolation scheme to be used.
    * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
    */
-  Eigen::VectorXd interpolateData(int order, double normalizedDt);
+  Eigen::VectorXd interpolateData(const int order, const double normalizedDt);
 };
 
 } // namespace time
