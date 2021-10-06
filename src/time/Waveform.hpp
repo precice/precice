@@ -77,17 +77,6 @@ private:
   mutable logging::Logger _log{"time::Waveform"};
 
   /**
-   * @brief Computes which order may be used for extrapolation or interpolation.
-   * 
-   * Order of extrapolation or interpolation is determined by number of valid samples and maximum order defined by the user.
-   * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
-   *
-   * @param order Order demanded by the user.
-   * @return Order that may be used.
-   */
-  int computeUsedOrder(int order);
-
-  /**
    * @brief Extrapolates data _timeWindows using an extrapolation scheme of given order. 
    * 
    * If the order condition cannot be satisfied, since there are not enough samples available, the order is automatically reduced.
