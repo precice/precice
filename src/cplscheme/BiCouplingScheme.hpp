@@ -11,13 +11,6 @@
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
-// Forward declaration to friend the boost test struct
-namespace CplSchemeTests {
-namespace SerialImplicitCouplingSchemeTests {
-struct testExtrapolateData;
-}
-} // namespace CplSchemeTests
-
 namespace precice {
 namespace cplscheme {
 class CouplingData;
@@ -46,8 +39,6 @@ public:
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod,
       int                           extrapolationOrder);
-
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
