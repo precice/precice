@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 2.3.0
+
+- Added `isMeshConnectivityRequired(meshID)` to the SolverInterface API. This is useful to generate connectivity information only if required by preCICE.
+- Added a configuration option to enable experiemental API functions.
+- Added bindings to doxygen.
+- Added check of user-written data to be finite.
+- Added convergence information for linear solvers of PETSc-based RBF mappings. Reports of converged solvers are logged as DEBUG, stopped solvers as WARNING and diverged solvers as ERROR messages.
+- Added experimental support for direct mesh access of meshes.
+- Added fmtlib for more readable and maintainable message formatting.
+- Added support for 3D meshes in `ScaleByAreaAction`.
+- Added the `Rank` of partitions in VTK exports.
+- Added the associated data name when printing convergence information.
+- Added the constraint `scaled-consistent` to mapping methods, which scales a consistent mapping such that the surface integral is equal on both sides of the interface.
+- Added the experimental API functions `setMeshAccessRegion` and `getMeshVerticesAndIDs`.
+- Added the xml configuration option '<use-mesh ... direct-access=true />' for this feature.
+- Adopted the Contributor Covenant code of conduct (see `CODE_OF_CONDUCT.md`).
+- Change `m2n:mpi` to use the more efficient single-ports implementation. To use the old implementation, use `m2n:mpi-mulitple-ports`.
+- Changed edge and triangle normals to be computed on-demand.
+- Changed formatting scripts to use `git ls-files`. This simplifies handling of edge cases.
+- Changed linear solvers of PETSc-based RBF mappings now issue a warning when they reach the maximum iterations. This used to result in an ERROR.
+- Changed the convergence measures INFO print to a fixed width scientific format. (issue #975)
+- Changed the default build type of the library from `static` to `shared`.
+- Changed the precice log files to print a fixed width scientific notation using 8 digits after the comma for floating point numbers and a fixed width for integer values. (issue #975)
+- Changed the watch-point calculation algorithm to use already built index trees.
+- Deprecated the `flip-normals` attribute of meshes. This is not functional anymore.
+- Deprecated vertex normals in the `vertexCallback()` of the python actions. preCICE will pass `None` if the normal parameter is defined.
+- Fixed FindNumPy using fallback of `find_path`.
+- Fixed FindPETSc to also find PETSc if the include directory is in CPATH, which occured with some versions of `pkg-config`.
+- Fixed socket communication to fail without a network connection.
+- Fixed wrong error in tightly converging QN coupling. (Issue #976)
+- Implement a simplified interface to query index trees of meshes.
+- Improved memory consumption and data locality of vertices.
+- Improved mesh memory usage of vertices by ~41% and of connectivity by ~55%.
+- Improved usabilty and readability of logging macros and assertions.
+- Introduced package `time` and moved functionality related to extrapolation there.
+- Migrated `PRECICE_XXX` macros to fmtlib.
+- Modifying release PR templates according to restructured tutorials.
+- Removed limitation of multi-coupling scheme for coupling topologies without a central participant. A non-centric controlling participant still needs to run in serial.
+- Removed obsolete `query` package functionality. Interpolation is refactored into `mapping` package.
+- Removed the FASTEST fortran bindings.
+- Removed vertex normals from the vtk exporters.
+- Replaced `prettyprint` with `fmtlib`.
+
 ## 2.2.1
 
 - Fixed a bug leading to a freeze when using `sync-mode` with lazy indexing.
