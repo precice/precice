@@ -228,34 +228,33 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
   precice.initializeData();
 
   while (precice.isCouplingOngoing()) {
-    if (precice.isReadDataAvailable()) {
-      double readTime;
-      if (context.isNamed("SolverOne")) {
-        readTime = time; // solver one lags one window behind solver two.
+    BOOST_TEST(precice.isReadDataAvailable());
+    double readTime;
+    if (context.isNamed("SolverOne")) {
+      readTime = time; // solver one lags one window behind solver two.
+    } else {
+      readTime = time + windowDt;
+    }
+    BOOST_TEST(readData.size() == nVertices);
+    for (int i = 0; i < nVertices; i++) {
+      if (timestep == 0) { // @todo should also work in first time window, not 100% clear for explicit coupling.
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
+        BOOST_TEST(readData[i] == readFunction(readTime, i));
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt / 4, readData[i]);
+        BOOST_TEST(readData[i] == readFunction(readTime, i));
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt / 2, readData[i]);
+        BOOST_TEST(readData[i] == readFunction(readTime, i));
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt * 3 / 4, readData[i]);
+        BOOST_TEST(readData[i] == readFunction(readTime, i));
       } else {
-        readTime = time + windowDt;
-      }
-      BOOST_TEST(readData.size() == nVertices);
-      for (int i = 0; i < nVertices; i++) {
-        if (timestep == 0) { // @todo should also work in first time window, not 100% clear for explicit coupling.
-          precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
-          BOOST_TEST(readData[i] == readFunction(readTime, i));
-          precice.readScalarData(readDataID, vertexIDs[i], currentDt / 4, readData[i]);
-          BOOST_TEST(readData[i] == readFunction(readTime, i));
-          precice.readScalarData(readDataID, vertexIDs[i], currentDt / 2, readData[i]);
-          BOOST_TEST(readData[i] == readFunction(readTime, i));
-          precice.readScalarData(readDataID, vertexIDs[i], currentDt * 3 / 4, readData[i]);
-          BOOST_TEST(readData[i] == readFunction(readTime, i));
-        } else {
-          precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
-          BOOST_TEST(readData[i] == readFunction(readTime, i));
-          precice.readScalarData(readDataID, vertexIDs[i], currentDt / 4, readData[i]);
-          BOOST_TEST(readData[i] == readFunction(readTime - currentDt * 3 / 4, i));
-          precice.readScalarData(readDataID, vertexIDs[i], currentDt / 2, readData[i]);
-          BOOST_TEST(readData[i] == readFunction(readTime - currentDt / 2, i));
-          precice.readScalarData(readDataID, vertexIDs[i], currentDt * 3 / 4, readData[i]);
-          BOOST_TEST(readData[i] == readFunction(readTime - currentDt / 4, i));
-        }
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
+        BOOST_TEST(readData[i] == readFunction(readTime, i));
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt / 4, readData[i]);
+        BOOST_TEST(readData[i] == readFunction(readTime - currentDt * 3 / 4, i));
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt / 2, readData[i]);
+        BOOST_TEST(readData[i] == readFunction(readTime - currentDt / 2, i));
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt * 3 / 4, readData[i]);
+        BOOST_TEST(readData[i] == readFunction(readTime - currentDt / 4, i));
       }
     }
 
@@ -316,11 +315,11 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSubcycling)
     readFunction  = dataOneFunction;
   }
 
-  int n_vertices = 1;
+  int nVertices = 1;
 
-  std::vector<VertexID> vertexIDs(n_vertices, 0);
-  std::vector<double>   writeData(n_vertices, 0);
-  std::vector<double>   readData(n_vertices, 0);
+  std::vector<VertexID> vertexIDs(nVertices, 0);
+  std::vector<double>   writeData(nVertices, 0);
+  std::vector<double>   readData(nVertices, 0);
 
   vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
@@ -335,7 +334,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSubcycling)
   double time      = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
-    for (int i = 0; i < n_vertices; i++) {
+    for (int i = 0; i < nVertices; i++) {
       writeData[i] = writeFunction(time, i);
       precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
     }
@@ -352,8 +351,8 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSubcycling)
       readTime = time + currentDt;
     }
 
-    BOOST_TEST(readData.size() == n_vertices);
-    for (int i = 0; i < n_vertices; i++) {
+    BOOST_TEST(readData.size() == nVertices);
+    for (int i = 0; i < nVertices; i++) {
       precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
       if (timestep < nSubsteps) { // in the first window, we only have one sample of data. Therefore constant interpolation
         if (context.isNamed("SolverOne")) {
@@ -378,12 +377,12 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSubcycling)
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     time += currentDt;
-    for (int i = 0; i < n_vertices; i++) {
+    for (int i = 0; i < nVertices; i++) {
       writeData[i] = writeFunction(time, i);
     }
 
-    BOOST_TEST(writeData.size() == n_vertices);
-    for (int i = 0; i < n_vertices; i++) {
+    BOOST_TEST(writeData.size() == nVertices);
+    for (int i = 0; i < nVertices; i++) {
       writeData[i] = writeFunction(time, i);
       precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
     }
