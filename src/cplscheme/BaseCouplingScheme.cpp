@@ -158,6 +158,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
     requireAction(constants::actionWriteInitialData());
   }
 
+  // @todo duplicate code also in BaseCouplingScheme::initializeData(), but difficult to factor out. See https://github.com/precice/precice/pull/1083#discussion_r723138210
   if (not _sendsInitializedData && not _receivesInitializedData) {
     if (isImplicitCouplingScheme()) {
       if (not doesFirstStep()) {
@@ -193,6 +194,7 @@ void BaseCouplingScheme::initializeData()
 
   exchangeInitialData();
 
+  // @todo duplicate code also in BaseCouplingScheme::initializeData(), but difficult to factor out. See https://github.com/precice/precice/pull/1083#discussion_r723138210
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
       storeDataInWaveforms();
