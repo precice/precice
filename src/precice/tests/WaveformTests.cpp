@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(testImplicitReadWriteScalarDataWithSubcycling)
     for (int i = 0; i < n_vertices; i++) {
       oldWriteData = writeData[i];
       writeData[i] = writeFunction(time, i);
-      std::cout << context.name << " at time " << time << " writes " << writeData[i] << " for time window = " << timewindow << ", time step " << timestep << ", it = " << iterations << std::endl;
+      //std::cout << context.name << " at time " << time << " writes " << writeData[i] << " for time window = " << timewindow << ", time step " << timestep << ", it = " << iterations << std::endl;
       BOOST_TEST(writeData[i] != oldWriteData); // ensure that write data differs from one step to the next
       precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
     }
