@@ -58,6 +58,7 @@ target_sources(testprecice
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
     src/precice/tests/WatchPointTest.cpp
+    src/precice/tests/WaveformTests.cpp    
     src/query/tests/RTreeAdapterTests.cpp
     src/query/tests/RTreeTests.cpp
     src/testing/ParallelCouplingSchemeFixture.cpp
