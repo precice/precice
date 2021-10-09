@@ -617,56 +617,121 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataMultipleReadWrite)
     int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
     cplInterface.initializeData();
 
-    // Scalar Data
+    // multiple readBlockScalarData
     cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), readDataB.data());
     // expected data value received
     BOOST_TEST(3.0 == readDataB[0]);
     // change value at read destination
-    readDataB[0] = -0.2;
-    BOOST_TEST(-0.2 == readDataB[0]);
+    readDataB[0] = -1.11;
+    BOOST_TEST(-1.11 == readDataB[0]);
+    cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), readDataB.data());
+    // expected data value received
+    BOOST_TEST(3.0 == readDataB[0]);
+    // change value at read destination
+    readDataB[0] = -1.12;
+    BOOST_TEST(-1.12 == readDataB[0]);
+
+    // multiple readScalarData
+    cplInterface.readScalarData(dataBID, vertexIDs[0], readDataB[0]);
+    // expected data value received
+    BOOST_TEST(3.0 == readDataB[0]);
+    // change value at read destination
+    readDataB[0] = -1.21;
+    BOOST_TEST(-1.21 == readDataB[0]);
     cplInterface.readScalarData(dataBID, vertexIDs[0], readDataB[0]);
     // expected data value received
     BOOST_TEST(3.0 == readDataB[0]);
 
-    // Vector Data
+    // multiple readBlockVectorData
     cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), readDataA.data());
     // expected data value received
-    BOOST_TEST(Vector3d(3.1, 3.2, 3.3) == readDataA);
+    BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == readDataA);
     // change value at read destination
-    readDataA[0] = -0.2;
-    readDataA[1] = -0.2;
-    readDataA[2] = -0.2;
-    BOOST_TEST(Vector3d(-0.2, -0.2, -0.2) == readDataA);
+    readDataA[0] = -1.31;
+    readDataA[1] = -1.31;
+    readDataA[2] = -1.31;
+    BOOST_TEST(Vector3d(-1.31, -1.31, -1.31) == readDataA);
+    cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), readDataA.data());
+    // expected data value received
+    BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == readDataA);
+    // change value at read destination
+    readDataA[0] = -1.32;
+    readDataA[1] = -1.32;
+    readDataA[2] = -1.32;
+    BOOST_TEST(Vector3d(-1.32, -1.32, -1.32) == readDataA);
+
+    // multiple readVectorData
     cplInterface.readVectorData(dataAID, vertexIDs[0], readDataA.data());
     // expected data value received
-    BOOST_TEST(Vector3d(3.1, 3.2, 3.3) == readDataA);
+    BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == readDataA);
+    // change value at read destination
+    readDataA[0] = -1.41;
+    readDataA[1] = -1.41;
+    readDataA[2] = -1.41;
+    BOOST_TEST(Vector3d(-1.41, -1.41, -1.41) == readDataA);
+    // multiple readVectorData
+    cplInterface.readVectorData(dataAID, vertexIDs[0], readDataA.data());
+    // expected data value received
+    BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == readDataA);
 
     while (cplInterface.isCouplingOngoing()) {
       maxDt = cplInterface.advance(maxDt);
 
-      // Scalar Data
+      // multiple readBlockScalarData
       cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), readDataB.data());
       // expected data value received
       BOOST_TEST(5.0 == readDataB[0]);
       // change value at read destination
-      readDataB[0] = -0.4;
-      BOOST_TEST(-0.4 == readDataB[0]);
+      readDataB[0] = -1.51;
+      BOOST_TEST(-1.51 == readDataB[0]);
+      cplInterface.readBlockScalarData(dataBID, 1, vertexIDs.data(), readDataB.data());
+      // expected data value received
+      BOOST_TEST(5.0 == readDataB[0]);
+      // change value at read destination
+      readDataB[0] = -1.52;
+      BOOST_TEST(-1.52 == readDataB[0]);
+
+      // multiple readScalarData
+      cplInterface.readScalarData(dataBID, 0, readDataB[0]);
+      // expected data value received
+      BOOST_TEST(5.0 == readDataB[0]);
+      // change value at read destination
+      readDataB[0] = -1.61;
+      BOOST_TEST(-1.61 == readDataB[0]);
       cplInterface.readScalarData(dataBID, 0, readDataB[0]);
       // expected data value received
       BOOST_TEST(5.0 == readDataB[0]);
 
-      // Vector Data
+      // multiple readBlockVectorData
       cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), readDataA.data());
       // expected data value received
-      BOOST_TEST(Vector3d(5.1, 5.2, 5.3) == readDataA);
+      BOOST_TEST(Vector3d(9.0, 9.0, 9.0) == readDataA);
       // change value at read destination
-      readDataA[0] = -0.4;
-      readDataA[1] = -0.4;
-      readDataA[2] = -0.4;
-      BOOST_TEST(Vector3d(-0.4, -0.4, -0.4) == readDataA);
+      readDataA[0] = -1.71;
+      readDataA[1] = -1.71;
+      readDataA[2] = -1.71;
+      BOOST_TEST(Vector3d(-1.71, -1.71, -1.71) == readDataA);
+      cplInterface.readBlockVectorData(dataAID, 1, vertexIDs.data(), readDataA.data());
+      // expected data value received
+      BOOST_TEST(Vector3d(9.0, 9.0, 9.0) == readDataA);
+      // change value at read destination
+      readDataA[0] = -1.72;
+      readDataA[1] = -1.72;
+      readDataA[2] = -1.72;
+      BOOST_TEST(Vector3d(-1.72, -1.72, -1.72) == readDataA);
+
+      // multiple readVectorData
       cplInterface.readVectorData(dataAID, vertexIDs[0], readDataA.data());
       // expected data value received
-      BOOST_TEST(Vector3d(5.1, 5.2, 5.3) == readDataA);
+      BOOST_TEST(Vector3d(9.0, 9.0, 9.0) == readDataA);
+      // change value at read destination
+      readDataA[0] = -1.81;
+      readDataA[1] = -1.81;
+      readDataA[2] = -1.81;
+      BOOST_TEST(Vector3d(-1.81, -1.81, -1.81) == readDataA);
+      cplInterface.readVectorData(dataAID, vertexIDs[0], readDataA.data());
+      // expected data value received
+      BOOST_TEST(Vector3d(9.0, 9.0, 9.0) == readDataA);
     }
     cplInterface.finalize();
   } else {
@@ -683,51 +748,99 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataMultipleReadWrite)
     int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
-    // Scalar Data
-    writeDataB[0] = -0.1;
-    BOOST_TEST(-0.1 == writeDataB[0]);
+    // multiple writeBlockScalarData
+    writeDataB[0] = -2.11;
+    BOOST_TEST(-2.11 == writeDataB[0]);
     cplInterface.writeBlockScalarData(dataBID, 1, vertexIDs.data(), writeDataB.data());
-    // expected data value sent, overwriting previous one
+    // changed data value sent, overwriting previous one
+    writeDataB[0] = -2.12;
+    BOOST_TEST(-2.12 == writeDataB[0]);
+    cplInterface.writeBlockScalarData(dataBID, 1, vertexIDs.data(), writeDataB.data());
+    // changed data value sent, overwriting previous one
+    writeDataB[0] = -2.13;
+    BOOST_TEST(-2.13 == writeDataB[0]);
+
+    // multiple writeScalarData
+    cplInterface.writeScalarData(dataBID, vertexIDs[0], writeDataB[0]);
+    // expected data value sent, overwriting previous ones
     writeDataB[0] = 3.0;
     BOOST_TEST(3.0 == writeDataB[0]);
     cplInterface.writeScalarData(dataBID, vertexIDs[0], writeDataB[0]);
 
-    // Vector Data
-    writeDataA[0] = -0.1;
-    writeDataA[1] = -0.1;
-    writeDataA[2] = -0.1;
-    BOOST_TEST(Vector3d(-0.1, -0.1, -0.1) == writeDataA);
+    // multiple writeBlockVectorData
+    writeDataA[0] = -2.31;
+    writeDataA[1] = -2.31;
+    writeDataA[2] = -2.31;
+    BOOST_TEST(Vector3d(-2.31, -2.31, -2.31) == writeDataA);
     cplInterface.writeBlockVectorData(dataAID, 1, vertexIDs.data(), writeDataA.data());
+    // changed data value sent, overwriting previous one
+    writeDataA[0] = -2.32;
+    writeDataA[1] = -2.32;
+    writeDataA[2] = -2.32;
+    BOOST_TEST(Vector3d(-2.32, -2.32, -2.32) == writeDataA);
+    cplInterface.writeBlockVectorData(dataAID, 1, vertexIDs.data(), writeDataA.data());
+    // changed data value sent, overwriting previous one
+    writeDataA[0] = -2.33;
+    writeDataA[1] = -2.33;
+    writeDataA[2] = -2.33;
+    BOOST_TEST(Vector3d(-2.33, -2.33, -2.33) == writeDataA);
+
+    // multiple writeVectorData
+    cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
     // expected data value sent, overwriting previous one
-    writeDataA[0] = 3.1;
-    writeDataA[1] = 3.2;
-    writeDataA[2] = 3.3;
-    BOOST_TEST(Vector3d(3.1, 3.2, 3.3) == writeDataA);
+    writeDataA[0] = 7.0;
+    writeDataA[1] = 7.0;
+    writeDataA[2] = 7.0;
+    BOOST_TEST(Vector3d(7.0, 7.0, 7.0) == writeDataA);
     cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
 
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
     while (cplInterface.isCouplingOngoing()) {
-      // Scalar Data
-      writeDataB[0] = -0.7;
-      BOOST_TEST(-0.7 == writeDataB[0]);
+      // multiple writeBlockScalarData
+      writeDataB[0] = -2.51;
+      BOOST_TEST(-2.51 == writeDataB[0]);
       cplInterface.writeBlockScalarData(dataBID, 1, vertexIDs.data(), writeDataB.data());
+      // changed data value sent, overwriting previous one
+      writeDataB[0] = -2.52;
+      BOOST_TEST(-2.52 == writeDataB[0]);
+      cplInterface.writeBlockScalarData(dataBID, 1, vertexIDs.data(), writeDataB.data());
+      // changed data value sent, overwriting previous one
+      writeDataB[0] = -2.53;
+      BOOST_TEST(-2.53 == writeDataB[0]);
+
+      // multiple writeScalarData
+      cplInterface.writeScalarData(dataBID, vertexIDs[0], writeDataB[0]);
       // expected data value sent, overwriting previous one
       writeDataB[0] = 5.0;
       BOOST_TEST(5.0 == writeDataB[0]);
       cplInterface.writeScalarData(dataBID, vertexIDs[0], writeDataB[0]);
 
-      // Vector Data
-      writeDataA[0] = -0.7;
-      writeDataA[1] = -0.7;
-      writeDataA[2] = -0.7;
-      BOOST_TEST(Vector3d(-0.7, -0.7, -0.7) == writeDataA);
+      // multiple writeBlockVectorData
+      writeDataA[0] = -2.71;
+      writeDataA[1] = -2.71;
+      writeDataA[2] = -2.71;
+      BOOST_TEST(Vector3d(-2.71, -2.71, -2.71) == writeDataA);
       cplInterface.writeBlockVectorData(dataAID, 1, vertexIDs.data(), writeDataA.data());
+      // changed data value sent, overwriting previous one
+      writeDataA[0] = -2.72;
+      writeDataA[1] = -2.72;
+      writeDataA[2] = -2.72;
+      BOOST_TEST(Vector3d(-2.72, -2.72, -2.72) == writeDataA);
+      cplInterface.writeBlockVectorData(dataAID, 1, vertexIDs.data(), writeDataA.data());
+      // changed data value sent, overwriting previous one
+      writeDataA[0] = -2.73;
+      writeDataA[1] = -2.73;
+      writeDataA[2] = -2.73;
+      BOOST_TEST(Vector3d(-2.73, -2.73, -2.73) == writeDataA);
+
+      // multiple writeVectorData
+      cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
       // expected data value sent, overwriting previous one
-      writeDataA[0] = 5.1;
-      writeDataA[1] = 5.2;
-      writeDataA[2] = 5.3;
-      BOOST_TEST(Vector3d(5.1, 5.2, 5.3) == writeDataA);
+      writeDataA[0] = 9.0;
+      writeDataA[1] = 9.0;
+      writeDataA[2] = 9.0;
+      BOOST_TEST(Vector3d(9.0, 9.0, 9.0) == writeDataA);
       cplInterface.writeVectorData(dataAID, vertexIDs[0], writeDataA.data());
 
       maxDt = cplInterface.advance(maxDt);
