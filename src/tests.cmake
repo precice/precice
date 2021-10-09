@@ -53,12 +53,13 @@ target_sources(testprecice
     src/partition/tests/ProvidedPartitionTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
     src/precice/tests/DataContextTest.cpp
+    src/precice/tests/InitializeDataTest.cpp
     src/precice/tests/ParallelTests.cpp
     src/precice/tests/SerialTests.cpp
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
     src/precice/tests/WatchPointTest.cpp
-    src/precice/tests/WaveformTests.cpp    
+    src/precice/tests/WaveformTests.cpp
     src/query/tests/RTreeAdapterTests.cpp
     src/query/tests/RTreeTests.cpp
     src/testing/ParallelCouplingSchemeFixture.cpp
