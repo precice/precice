@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
         BOOST_TEST((readData[i] != oldReadData)); // ensure that read data changes from one step to the next, if a new window is entered
       } else if (not precice.isTimeWindowComplete()) {
         BOOST_TEST((readData[i] == oldReadData)); // ensure that read data stays the same from one step to the next, if not a new window is entered
-      } else {                                                                                     // we should not enter this branch, because this would skip all tests.
+      } else {                                    // we should not enter this branch, because this would skip all tests.
         BOOST_TEST(false);
       }
       BOOST_TEST(readData[i] == readFunction(readTime, i));
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(testImplicitReadWriteScalarDataWithSubcycling)
     for (int i = 0; i < n_vertices; i++) {
       oldReadData = readData[i];
       precice.readScalarData(readDataID, vertexIDs[i], readData[i]);
-      std::cout << context.name << " at time " << time << " reads " << readData[i] << " for time window = " << timewindow << ", time step "<< timestep << ", it = " << iterations << std::endl;
+      std::cout << context.name << " at time " << time << " reads " << readData[i] << " for time window = " << timewindow << ", time step " << timestep << ", it = " << iterations << std::endl;
       if (iterations == 0 && timestep == 0 && context.isNamed("SolverOne")) {                      // special situation: SolverOne in its very first time window, first iteration, first time step
         BOOST_TEST(readData[i] != oldReadData);                                                    // update from uninitialized to initial data.
         BOOST_TEST(readData[i] == readFunction(startTime, i));                                     // use initial data only.
