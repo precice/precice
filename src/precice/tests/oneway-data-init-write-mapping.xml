@@ -1,23 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
   <solver-interface dimensions="3">
-    <data:scalar name="DataOne" />
-    <data:scalar name="DataTwo" />
+    <data:scalar name="Data" />
 
     <mesh name="MeshOne">
-      <use-data name="DataOne" />
-      <use-data name="DataTwo" />
+      <use-data name="Data" />
     </mesh>
 
     <mesh name="MeshTwo">
-      <use-data name="DataOne" />
-      <use-data name="DataTwo" />
+      <use-data name="Data" />
     </mesh>
 
     <participant name="SolverOne">
       <use-mesh name="MeshOne" provide="on" />
-      <write-data name="DataOne" mesh="MeshOne" />
-      <read-data name="DataTwo" mesh="MeshOne" />
+      <read-data name="Data" mesh="MeshOne" />
     </participant>
 
     <participant name="SolverTwo">
@@ -27,14 +23,9 @@
         direction="write"
         from="MeshTwo"
         to="MeshOne"
-        constraint="conservative" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="MeshOne"
-        to="MeshTwo"
-        constraint="consistent" />
-      <write-data name="DataTwo" mesh="MeshTwo" />
-      <read-data name="DataOne" mesh="MeshTwo" />
+        constraint="conservative"
+        timing="initial" />
+      <write-data name="Data" mesh="MeshTwo" />
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />
@@ -42,9 +33,8 @@
     <coupling-scheme:serial-explicit>
       <participants first="SolverOne" second="SolverTwo" />
       <max-time-windows value="5" />
-      <time-window-size value="2" />
-      <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-      <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
+      <time-window-size value="1.0" />
+      <exchange data="Data" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
     </coupling-scheme:serial-explicit>
   </solver-interface>
 </precice-configuration>
