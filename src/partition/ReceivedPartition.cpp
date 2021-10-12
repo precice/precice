@@ -380,6 +380,8 @@ void ReceivedPartition::compareBoundingBoxes()
   _mesh->clear();
   _mesh->clearPartitioning();
   _boundingBoxPrepared = false;
+  _remoteMinGlobalVertexIDs.clear();
+  _remoteMaxGlobalVertexIDs.clear();
 
   // @todo handle coupling mode (i.e. serial participant)
   // @todo treatment of multiple m2ns
