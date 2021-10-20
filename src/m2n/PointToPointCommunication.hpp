@@ -93,15 +93,13 @@ public:
    * @brief Sends a subset of local double values corresponding to local indices
    *        deduced from the current and remote vertex distributions.
    */
-  void send(double const *itemsToSend, size_t size, int valueDimension = 1) override;
+  void send(precice::span<double const> itemsToSend, int valueDimension = 1) override;
 
   /**
    * @brief Receives a subset of local double values corresponding to local
    *        indices deduced from the current and remote vertex distributions.
    */
-  void receive(double *itemsToReceive,
-               size_t  size,
-               int     valueDimension = 1) override;
+  void receive(precice::span<double> itemsToReceive, int valueDimension = 1) override;
 
   /// Broadcasts an int to connected ranks on remote participant
   void broadcastSend(const int &itemToSend) override;

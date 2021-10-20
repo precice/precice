@@ -1,9 +1,11 @@
-#include "m2n/BoundM2N.hpp"
 #include <memory>
+
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
+#include "m2n/BoundM2N.hpp"
 #include "m2n/M2N.hpp"
+#include "precice/types.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -80,7 +82,7 @@ void BoundM2N::cleanupEstablishment()
 void BoundM2N::waitForSlaves()
 {
   if (utils::MasterSlave::isMaster()) {
-    for (int rank = 1; rank < utils::MasterSlave::getSize(); ++rank) {
+    for (Rank rank : utils::MasterSlave::allSlaves()) {
       int item = 0;
       utils::MasterSlave::_communication->receive(item, rank);
       PRECICE_ASSERT(item > 0);

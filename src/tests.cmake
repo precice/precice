@@ -52,6 +52,7 @@ target_sources(testprecice
     src/mesh/tests/VertexTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
+    src/precice/tests/DataContextTest.cpp
     src/precice/tests/ParallelTests.cpp
     src/precice/tests/SerialTests.cpp
     src/precice/tests/VersioningTests.cpp
@@ -59,16 +60,24 @@ target_sources(testprecice
     src/precice/tests/WatchPointTest.cpp
     src/query/tests/RTreeAdapterTests.cpp
     src/query/tests/RTreeTests.cpp
+    src/testing/ParallelCouplingSchemeFixture.cpp
+    src/testing/ParallelCouplingSchemeFixture.hpp
+    src/testing/SerialCouplingSchemeFixture.cpp
+    src/testing/SerialCouplingSchemeFixture.hpp
     src/testing/TestContext.cpp
     src/testing/TestContext.hpp
     src/testing/Testing.cpp
     src/testing/Testing.hpp
     src/testing/main.cpp
+    src/testing/WaveformFixture.cpp
+    src/testing/WaveformFixture.hpp
     src/testing/tests/ExampleTests.cpp
+    src/time/tests/WaveformTest.cpp
     src/utils/tests/AlgorithmTest.cpp
     src/utils/tests/DimensionsTest.cpp
     src/utils/tests/EigenHelperFunctionsTest.cpp
     src/utils/tests/ManageUniqueIDsTest.cpp
+    src/utils/tests/MasterSlaveTest.cpp
     src/utils/tests/MultiLockTest.cpp
     src/utils/tests/ParallelTest.cpp
     src/utils/tests/PointerVectorTest.cpp

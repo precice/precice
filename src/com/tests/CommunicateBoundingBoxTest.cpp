@@ -2,11 +2,13 @@
 #include <map>
 #include <memory>
 #include <vector>
+
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Mesh.hpp"
+#include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/MasterSlave.hpp"
@@ -53,7 +55,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh::BoundingBoxMap bbm;
 
-    for (int rank = 0; rank < 3; rank++) {
+    for (Rank rank = 0; rank < 3; rank++) {
       std::vector<double> bounds;
       for (int i = 0; i < dim; i++) {
         bounds.push_back(rank * i);
@@ -78,7 +80,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 
       comBB.receiveBoundingBoxMap(bbmCompare, 0);
 
-      for (int rank = 0; rank < 3; rank++) {
+      for (Rank rank = 0; rank < 3; rank++) {
         BOOST_TEST(bbm.at(rank) == bbmCompare.at(rank));
       }
     }
@@ -92,7 +94,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
   // Build BB/BBMap to communicate
   int                        dimension = 3;
   mesh::Mesh::BoundingBoxMap bbm;
-  for (int rank = 0; rank < 3; rank++) {
+  for (Rank rank = 0; rank < 3; rank++) {
     std::vector<double> bounds;
     for (int i = 0; i < dimension; i++) {
       bounds.push_back(rank * i);
@@ -115,7 +117,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
     }
     comBB.broadcastReceiveBoundingBoxMap(bbmCompare);
     BOOST_TEST((int) bbmCompare.size() == 3);
-    for (int rank = 0; rank < 3; rank++) {
+    for (Rank rank = 0; rank < 3; rank++) {
       BOOST_TEST(bbm.at(rank) == bbmCompare.at(rank));
     }
   }
@@ -129,7 +131,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
   std::vector<int>                fb;
   std::map<int, std::vector<int>> fbm;
 
-  for (int rank = 0; rank < 3; rank++) {
+  for (Rank rank = 0; rank < 3; rank++) {
 
     for (int i = 0; i < 3; i++) {
       fb.push_back(i + 1);
@@ -148,7 +150,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
     std::vector<int>                fbCompare;
     std::map<int, std::vector<int>> fbmCompare;
 
-    for (int rank = 0; rank < 3; rank++) {
+    for (Rank rank = 0; rank < 3; rank++) {
 
       for (int i = 0; i < 3; i++) {
         fbCompare.push_back(-1);
@@ -160,7 +162,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
 
     comBB.receiveConnectionMap(fbmCompare, 0);
 
-    for (int rank = 0; rank < 3; rank++) {
+    for (Rank rank = 0; rank < 3; rank++) {
 
       BOOST_TEST(fbm.at(rank) == fbmCompare.at(rank));
     }
@@ -174,7 +176,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
   std::vector<int>                fb;
   std::map<int, std::vector<int>> fbm;
 
-  for (int rank = 0; rank < 3; rank++) {
+  for (Rank rank = 0; rank < 3; rank++) {
 
     for (int i = 0; i < 3; i++) {
       fb.push_back(i + 1);
@@ -193,7 +195,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
     std::vector<int>                fbCompare;
     std::map<int, std::vector<int>> fbmCompare;
 
-    for (int rank = 0; rank < 3; rank++) {
+    for (Rank rank = 0; rank < 3; rank++) {
       for (int i = 0; i < 3; i++) {
         fbCompare.push_back(-1);
       }
@@ -203,7 +205,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
 
     comBB.broadcastReceiveConnectionMap(fbmCompare);
 
-    for (int rank = 0; rank < 3; rank++) {
+    for (Rank rank = 0; rank < 3; rank++) {
 
       BOOST_TEST(fbm.at(rank) == fbmCompare.at(rank));
     }

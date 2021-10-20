@@ -21,10 +21,10 @@ public:
   /** Creates a Boost logger for the said module.
    * @param[in] module the name of the module.
    */
-  explicit LoggerImpl(std::string module);
+  explicit LoggerImpl(const std::string &module);
 };
 
-Logger::LoggerImpl::LoggerImpl(std::string module)
+Logger::LoggerImpl::LoggerImpl(const std::string &module)
 {
   add_attribute("Module", boost::log::attributes::constant<std::string>(module));
 

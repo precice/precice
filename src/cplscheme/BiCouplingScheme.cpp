@@ -1,10 +1,11 @@
-#include "BiCouplingScheme.hpp"
 #include <algorithm>
 #include <map>
 #include <memory>
 #include <ostream>
 #include <type_traits>
 #include <utility>
+
+#include "BiCouplingScheme.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
@@ -12,6 +13,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
+#include "precice/types.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice {
@@ -28,8 +30,9 @@ BiCouplingScheme::BiCouplingScheme(
     m2n::PtrM2N                   m2n,
     int                           maxIterations,
     CouplingMode                  cplMode,
-    constants::TimesteppingMethod dtMethod)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod),
+    constants::TimesteppingMethod dtMethod,
+    int                           extrapolationOrder)
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod, extrapolationOrder),
       _m2n(std::move(m2n)),
       _firstParticipant(std::move(firstParticipant)),
       _secondParticipant(std::move(secondParticipant))
@@ -47,32 +50,38 @@ BiCouplingScheme::BiCouplingScheme(
 }
 
 void BiCouplingScheme::addDataToSend(
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          requiresInitialization)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _sendData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(data, mesh, requiresInitialization));
+    PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
+    PRECICE_ASSERT(_sendData.count(pair.first) == 0, "Key already exists!");
     _sendData.insert(pair);
+    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
+    _allData.insert(pair);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
 }
 
 void BiCouplingScheme::addDataToReceive(
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          requiresInitialization)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _receiveData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(data, mesh, requiresInitialization));
+    PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
+    PRECICE_ASSERT(_receiveData.count(pair.first) == 0, "Key already exists!");
     _receiveData.insert(pair);
+    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
+    _allData.insert(pair);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }
@@ -90,16 +99,8 @@ std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
-bool BiCouplingScheme::receiveConvergence()
-{
-  PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
-  bool convergence;
-  _m2n->receive(convergence);
-  return convergence;
-}
-
 CouplingData *BiCouplingScheme::getSendData(
-    int dataID)
+    DataID dataID)
 {
   PRECICE_TRACE(dataID);
   DataMap::iterator iter = _sendData.find(dataID);
@@ -110,7 +111,7 @@ CouplingData *BiCouplingScheme::getSendData(
 }
 
 CouplingData *BiCouplingScheme::getReceiveData(
-    int dataID)
+    DataID dataID)
 {
   PRECICE_TRACE(dataID);
   DataMap::iterator iter = _receiveData.find(dataID);

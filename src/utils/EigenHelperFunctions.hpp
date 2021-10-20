@@ -9,7 +9,7 @@
 namespace precice {
 namespace utils {
 
-void shiftSetFirst(Eigen::MatrixXd &A, Eigen::VectorXd &v);
+void shiftSetFirst(Eigen::MatrixXd &A, const Eigen::VectorXd &v);
 
 void appendFront(Eigen::MatrixXd &A, Eigen::VectorXd &v);
 

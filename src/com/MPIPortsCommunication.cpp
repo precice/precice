@@ -1,11 +1,13 @@
 #ifndef PRECICE_NO_MPI
 
-#include "MPIPortsCommunication.hpp"
 #include <boost/filesystem.hpp>
 #include <ostream>
 #include <utility>
+
 #include "ConnectionInfoPublisher.hpp"
+#include "MPIPortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -241,14 +243,14 @@ void MPIPortsCommunication::cleanupEstablishment(std::string const &acceptorName
   }
 }
 
-MPI_Comm &MPIPortsCommunication::communicator(int rank)
+MPI_Comm &MPIPortsCommunication::communicator(Rank rank)
 {
   PRECICE_TRACE(rank, _communicators.size(), _isAcceptor);
   // Use bounds checking here, because a std::map otherwise creates element
   return _communicators.at(rank);
 }
 
-int MPIPortsCommunication::rank(int rank)
+int MPIPortsCommunication::rank(Rank rank)
 {
   return 0;
 }

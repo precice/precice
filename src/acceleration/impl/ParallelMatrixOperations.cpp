@@ -11,7 +11,7 @@ void ParallelMatrixOperations::initialize(const bool needCyclicComm)
 {
   PRECICE_TRACE();
 
-  if (needCyclicComm && (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave())) {
+  if (needCyclicComm && utils::MasterSlave::isParallel()) {
     _needCyclicComm = true;
     establishCircularCommunication();
   } else {

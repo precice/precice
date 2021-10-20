@@ -6,9 +6,14 @@
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "com/CommunicateBoundingBox.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
+#include "com/SocketCommunication.hpp"
+#include "com/SocketCommunicationFactory.hpp"
+#include "fixtures.hpp"
+#include "m2n/DistributedComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
@@ -26,6 +31,7 @@
 #include "partition/ProvidedPartition.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/versions.hpp"
+#include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
@@ -99,7 +105,7 @@ void createSolidzMesh2DSmall(mesh::PtrMesh pSolidzMesh)
   pSolidzMesh->computeBoundingBox();
 }
 
-void createNastinMesh2D(mesh::PtrMesh pNastinMesh, int rank)
+void createNastinMesh2D(mesh::PtrMesh pNastinMesh, Rank rank)
 {
   int dimensions = 2;
   BOOST_TEST(pNastinMesh);
@@ -123,7 +129,7 @@ void createNastinMesh2D(mesh::PtrMesh pNastinMesh, int rank)
   pNastinMesh->computeBoundingBox();
 }
 
-void createNastinMesh2D2(mesh::PtrMesh pNastinMesh, int rank)
+void createNastinMesh2D2(mesh::PtrMesh pNastinMesh, Rank rank)
 {
   int dimensions = 2;
   PRECICE_ASSERT(pNastinMesh.use_count() > 0);
@@ -181,7 +187,7 @@ void createSolidzMesh3D(mesh::PtrMesh pSolidzMesh)
   pSolidzMesh->computeBoundingBox();
 }
 
-void createNastinMesh3D(mesh::PtrMesh pNastinMesh, int rank)
+void createNastinMesh3D(mesh::PtrMesh pNastinMesh, Rank rank)
 {
   int dimensions = 3;
   BOOST_TEST(pNastinMesh);
@@ -205,7 +211,7 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, int rank)
   pNastinMesh->computeBoundingBox();
 }
 
-void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, int rank)
+void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, Rank rank)
 {
   int dimensions = 3;
   PRECICE_ASSERT(pNastinMesh.use_count() > 0);
@@ -1150,6 +1156,414 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
     part.compareBoundingBoxes();
   }
   tearDownParallelEnvironment();
+}
+
+void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
+{
+  bool   flipNormals  = true;
+  double safetyFactor = 0;
+
+  testing::ConnectionOptions options;
+  options.useOnlyMasterCom = false;
+  options.useTwoLevelInit  = true;
+  options.type             = testing::ConnectionType::PointToPoint;
+
+  auto                                      participantCom = com::PtrCommunication(new com::SocketCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory;
+
+  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
+
+  mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
+  mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
+  boundingFromMapping->setMeshes(mesh, mesh);
+  boundingToMapping->setMeshes(mesh, mesh);
+
+  ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+  part.addM2N(m2n);
+
+  part.addFromMapping(boundingFromMapping);
+  part.addToMapping(boundingToMapping);
+
+  mesh->computeBoundingBox();
+
+  using Access = ReceivedPartitionFixture;
+  Access::prepareBoundingBox(part);
+  Access::tagMeshFirstRound(part);
+  Access::createOwnerInformation(part);
+}
+
+BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationVertexCount)
+{
+  /*
+    This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
+    for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
+    this vertex, but only one of them can own it. Since the rank 2, has the lowest number of vertices, 
+    this vertex must belong only to it finally.
+  */
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  //mesh creation
+  int           dimensions = 2;
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
+
+  if (context.isRank(0)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, 1.0;
+    mesh->createVertex(position);
+
+  } else if (context.isRank(1)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, 0.0;
+    mesh->createVertex(position);
+    position << -0.5, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, 1.0;
+    mesh->createVertex(position);
+  } else if (context.isRank(2)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, -0.5;
+    mesh->createVertex(position);
+  } else {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, -0.5;
+    mesh->createVertex(position);
+    position << 2.0, -0.5;
+    mesh->createVertex(position);
+    position << 0.5, -1.0;
+    mesh->createVertex(position);
+    position << 1.0, -1.0;
+    mesh->createVertex(position);
+    position << 2.0, -1.0;
+    mesh->createVertex(position);
+  }
+
+  mesh->computeBoundingBox();
+  mesh->setGlobalNumberOfVertices(mesh->vertices().size());
+
+  for (auto &vertex : mesh->vertices()) {
+    vertex.setGlobalIndex(vertex.getID() + 5 * utils::MasterSlave::getRank());
+
+    if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
+      vertex.setGlobalIndex(0);
+    }
+  }
+
+  testParallelSetOwnerInformation(mesh, dimensions);
+
+  // to check if all ranks have received the vertex at (0, 0)
+  bool includeVertex = false;
+
+  for (auto &vertex : mesh->vertices()) {
+    if (vertex.getGlobalIndex() == 0) {
+      includeVertex = true;
+      if (context.isRank(2)) {
+        BOOST_TEST(vertex.isOwner() == 1);
+      } else {
+        BOOST_TEST(vertex.isOwner() == 0);
+      }
+    }
+    BOOST_TEST(includeVertex == true);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationLowerRank)
+{
+  /*
+    This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
+    for 2LI. The provided mesh includes a vertices at point (0, 0, 0) and (0, 0, 1). Initially, all 
+    receiving ranks receive this vertex, but only one of them can own it. Since the rank 0, has the lowest 
+    rank number, this vertex must belong only to this rank.
+   */
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  //mesh creation
+  int           dimensions = 3;
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
+
+  if (context.isRank(0)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 0.0, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, 1.0, 1.0;
+    mesh->createVertex(position);
+
+  } else if (context.isRank(1)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -0.1, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -0.1, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, 1.0, 1.0;
+    mesh->createVertex(position);
+  } else if (context.isRank(2)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, -0.1, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, -0.1, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, -0.1, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, -0.1, 1.0;
+    mesh->createVertex(position);
+    position << 0.0, -1.0, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, -1.0, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, -1.0, 1.0;
+    mesh->createVertex(position);
+  } else {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, -0.1, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, -0.1, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, -0.1, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, -0.1, 1.0;
+    mesh->createVertex(position);
+    position << 0.0, -1.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, -1.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, -1.0, 1.0;
+    mesh->createVertex(position);
+  }
+
+  mesh->computeBoundingBox();
+  mesh->setGlobalNumberOfVertices(mesh->vertices().size());
+
+  for (auto &vertex : mesh->vertices()) {
+    vertex.setGlobalIndex(vertex.getID() + 10 * utils::MasterSlave::getRank());
+
+    if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
+      if (vertex.getCoords()[2] == 0) {
+        vertex.setGlobalIndex(0);
+      } else if (vertex.getCoords()[2] == 1) {
+        vertex.setGlobalIndex(6);
+      }
+    }
+  }
+
+  testParallelSetOwnerInformation(mesh, dimensions);
+
+  // to check if all ranks have received the vertex at (0, 0, 0)
+  bool includeVertex = false;
+
+  for (auto &vertex : mesh->vertices()) {
+    if (vertex.getGlobalIndex() == 0) {
+      includeVertex = true;
+      if (context.isRank(0)) {
+        BOOST_TEST(vertex.isOwner() == 1);
+      } else {
+        BOOST_TEST(vertex.isOwner() == 0);
+      }
+    }
+    BOOST_TEST(includeVertex == true);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationEmptyPartition)
+{
+  /*
+    This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
+    for 2LI. The provided mesh includes vertices at points (0, 0, 0) and (0, 0, 1). Rank 2 has an 
+    empty mesh partition. Initially, all ranks (except rank 2) receive this vertex, but only one of them 
+    can own it. Since the rank 0, has the lowest rank number, this vertex must belong only to this rank.
+   */
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  //mesh creation
+  int           dimensions = 3;
+  mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
+
+  if (context.isRank(0)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 0.0, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, 1.0, 1.0;
+    mesh->createVertex(position);
+
+  } else if (context.isRank(1)) {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << -0.1, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << -1.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << -2.0, 1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << -0.1, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << -1.0, 1.0, 1.0;
+    mesh->createVertex(position);
+    position << -2.0, 1.0, 1.0;
+    mesh->createVertex(position);
+  } else if (context.isRank(2)) {
+  } else {
+    Eigen::VectorXd position(dimensions);
+    position << 0.0, 0.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, -0.1, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, -0.1, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 1.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 2.0, -1.0, 0.0;
+    mesh->createVertex(position);
+    position << 0.0, 0.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, -0.1, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, -0.1, 1.0;
+    mesh->createVertex(position);
+    position << 0.0, -1.0, 1.0;
+    mesh->createVertex(position);
+    position << 1.0, -1.0, 1.0;
+    mesh->createVertex(position);
+    position << 2.0, -1.0, 1.0;
+    mesh->createVertex(position);
+  }
+
+  mesh->computeBoundingBox();
+  mesh->setGlobalNumberOfVertices(mesh->vertices().size());
+
+  for (auto &vertex : mesh->vertices()) {
+    vertex.setGlobalIndex(vertex.getID() + 10 * utils::MasterSlave::getRank());
+
+    if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
+      if (vertex.getCoords()[2] == 0) {
+        vertex.setGlobalIndex(0);
+      } else if (vertex.getCoords()[2] == 1) {
+        vertex.setGlobalIndex(6);
+      }
+    }
+  }
+
+  testParallelSetOwnerInformation(mesh, dimensions);
+
+  // to check if all ranks have received the vertex at (0, 0, 0)
+  bool includeVertex = false;
+
+  for (auto &vertex : mesh->vertices()) {
+    if (vertex.getGlobalIndex() == 0) {
+      includeVertex = true;
+      if (context.isRank(0)) {
+        BOOST_TEST(vertex.isOwner() == 1);
+      } else {
+        BOOST_TEST(vertex.isOwner() == 0);
+      }
+    }
+    BOOST_TEST(includeVertex == true);
+  }
 }
 
 // Test with two "from" and two "to" mappings

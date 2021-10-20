@@ -25,7 +25,7 @@ namespace logging {
 /// A custom formatter that handles the TimeStamp format string
 class timestamp_formatter_factory : public boost::log::basic_formatter_factory<char, boost::posix_time::ptime> {
 public:
-  formatter_type create_formatter(boost::log::attribute_name const &name, args_map const &args)
+  formatter_type create_formatter(boost::log::attribute_name const &name, args_map const &args) override
   {
     namespace expr              = boost::log::expressions;
     args_map::const_iterator it = args.find("format");
@@ -39,7 +39,7 @@ public:
 /// A custom formatter that handles the colorized Severity formatting
 class colorized_severity_formatter_factory : public boost::log::formatter_factory<char> {
 public:
-  formatter_type create_formatter(boost::log::attribute_name const &name, args_map const &args)
+  formatter_type create_formatter(boost::log::attribute_name const &name, args_map const &args) override
   {
     namespace expr = boost::log::expressions;
     auto severity  = expr::attr<boost::log::trivial::severity_level>("Severity");
@@ -58,7 +58,7 @@ public:
 /// A custom formatter that handles non-colorized Severity formatting
 class severity_formatter_factory : public boost::log::formatter_factory<char> {
 public:
-  formatter_type create_formatter(boost::log::attribute_name const &name, args_map const &args)
+  formatter_type create_formatter(boost::log::attribute_name const &name, args_map const &args) override
   {
     namespace expr = boost::log::expressions;
     auto severity  = expr::attr<boost::log::trivial::severity_level>("Severity");

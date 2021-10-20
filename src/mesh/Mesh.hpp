@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 #include <vector>
+
 #include "logging/Logger.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
@@ -15,6 +16,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
@@ -42,10 +44,10 @@ public:
   using BoundingBoxMap    = std::map<int, BoundingBox>;
 
   /// A mapping from rank to used (not necessarily owned) vertex IDs
-  using VertexDistribution = std::map<int, std::vector<int>>;
+  using VertexDistribution = std::map<Rank, std::vector<VertexID>>;
 
   /// A mapping from remote local ranks to the IDs that must be communicated
-  using CommunicationMap = std::map<int, std::vector<int>>;
+  using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
 
   /// Signal is emitted when the mesh is changed
   boost::signals2::signal<void(Mesh &)> meshChanged;
@@ -54,7 +56,7 @@ public:
   boost::signals2::signal<void(Mesh &)> meshDestroyed;
 
   /// Use if the id of the mesh is not necessary
-  static constexpr int MESH_ID_UNDEFINED{-1};
+  static constexpr MeshID MESH_ID_UNDEFINED{-1};
 
   /**
    * @brief Constructor.
@@ -66,7 +68,7 @@ public:
   Mesh(
       std::string name,
       int         dimensions,
-      int         id);
+      MeshID      id);
 
   /// Destructor, deletes created objects.
   ~Mesh();
@@ -126,15 +128,20 @@ public:
       Edge &edgeTwo,
       Edge &edgeThree);
 
-  PtrData &createData(
-      const std::string &name,
-      int                dimension);
+  PtrData &createData(const std::string &name,
+                      int                dimension);
 
   /// Allows access to all data
   const DataContainer &data() const;
 
+  /// Returns whether Mesh has Data with the matchingID
+  bool hasDataID(DataID dataID) const;
+
   /// Returns the data with the matching ID
-  const PtrData &data(int dataID) const;
+  const PtrData &data(DataID dataID) const;
+
+  /// Returns whether Mesh has Data with the dataName
+  bool hasDataName(const std::string &dataName) const;
 
   /// Returns the data with the matching name
   const PtrData &data(const std::string &dataName) const;
@@ -143,13 +150,13 @@ public:
   const std::string &getName() const;
 
   /// Returns the base ID of the mesh.
-  int getID() const;
+  MeshID getID() const;
 
   /// Returns true if the given vertexID is valid
-  bool isValidVertexID(int vertexID) const;
+  bool isValidVertexID(VertexID vertexID) const;
 
   /// Returns true if the given edgeID is valid
-  bool isValidEdgeID(int edgeID) const;
+  bool isValidEdgeID(EdgeID edgeID) const;
 
   /// Allocates memory for the vertex data values.
   void allocateDataValues();
@@ -166,6 +173,9 @@ public:
    * - triangle
    */
   void clear();
+
+  /// Clears the partitioning information
+  void clearPartitioning();
 
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
   VertexDistribution &getVertexDistribution();
@@ -192,13 +202,13 @@ public:
   void setGlobalNumberOfTriangles(int num);
 
   // Get the data of owned vertices for given data ID
-  Eigen::VectorXd getOwnedVertexData(int dataID);
+  Eigen::VectorXd getOwnedVertexData(DataID dataID);
 
   // Tag all the vertices
   void tagAll();
 
   /// Returns a vector of connected ranks
-  std::vector<int> &getConnectedRanks()
+  std::vector<Rank> &getConnectedRanks()
   {
     return _connectedRanks;
   }
@@ -218,6 +228,8 @@ public:
    */
   const BoundingBox &getBoundingBox() const;
 
+  void expandBoundingBox(const BoundingBox &bounding_box);
+
   bool operator==(const Mesh &other) const;
 
   bool operator!=(const Mesh &other) const;
@@ -232,7 +244,7 @@ private:
   int _dimensions;
 
   /// The ID of this mesh.
-  int _id;
+  MeshID _id;
 
   /// Holds vertices, edges, and triangles.
   VertexContainer   _vertices;
@@ -281,7 +293,7 @@ private:
    * @brief each rank stores list of connected remote ranks.
    * In the m2n package, this is used to create the initial communication channels.
    */
-  std::vector<int> _connectedRanks;
+  std::vector<Rank> _connectedRanks;
 
   /**
    * @brief each rank stores list of connected ranks and corresponding vertex IDs here.

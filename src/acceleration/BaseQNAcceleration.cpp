@@ -78,6 +78,11 @@ void BaseQNAcceleration::initialize(
     DataMap &cplData)
 {
   PRECICE_TRACE(cplData.size());
+  for (DataMap::value_type &pair : cplData) {
+    PRECICE_ASSERT(pair.second->values().size() == pair.second->previousIteration().size(), "current and previousIteration have to be initialized and of identical size.",
+                   pair.second->values().size(), pair.second->previousIteration().size());
+  }
+
   checkDataIDs(cplData);
 
   /*
@@ -124,7 +129,7 @@ void BaseQNAcceleration::initialize(
    *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
    */
   std::stringstream ss;
-  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isParallel()) {
     PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
     PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
 
@@ -171,15 +176,6 @@ void BaseQNAcceleration::initialize(
       _secondaryDataIDs.push_back(pair.first);
       int secondaryEntries            = pair.second->values().size();
       _secondaryResiduals[pair.first] = Eigen::VectorXd::Zero(secondaryEntries);
-    }
-  }
-
-  // Append old value columns, if not done outside of acceleration already
-  for (DataMap::value_type &pair : cplData) {
-    int cols = pair.second->oldValues.cols();
-    if (cols < 1) { // Add only, if not already done
-      //PRECICE_ASSERT(pair.second->values().size() > 0, pair.first);
-      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values().size()));
     }
   }
 
@@ -232,7 +228,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
-      PRECICE_CHECK(not math::equals(utils::MasterSlave::l2norm(deltaR), 0.0),
+      double residualMagnitude = utils::MasterSlave::l2norm(deltaR);
+
+      if (not math::equals(utils::MasterSlave::l2norm(_values), 0.0)) {
+        residualMagnitude /= utils::MasterSlave::l2norm(_values);
+      }
+
+      PRECICE_CHECK(not math::equals(residualMagnitude, 0.0),
                     "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
                     "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
                     "Maybe you always write the same (or only incremented) data or you call advance without "
@@ -363,7 +365,9 @@ void BaseQNAcceleration::performAcceleration(
     }
 
     // apply the configured filter to the LS system
+    utils::Event applyingFilter("ApplyFilter");
     applyFilter();
+    applyingFilter.stop();
 
     // revert scaling of V, in computeQNUpdate all data objects are unscaled.
     _preconditioner->revert(_matrixV);
@@ -465,7 +469,7 @@ void BaseQNAcceleration::concatenateCouplingData(
   for (int id : _dataIDs) {
     int         size      = cplData[id]->values().size();
     auto &      values    = cplData[id]->values();
-    const auto &oldValues = cplData[id]->oldValues.col(0);
+    const auto &oldValues = cplData[id]->previousIteration();
     for (int i = 0; i < size; i++) {
       _values(i + offset)    = values(i);
       _oldValues(i + offset) = oldValues(i);
@@ -483,11 +487,8 @@ void BaseQNAcceleration::splitCouplingData(
   for (int id : _dataIDs) {
     int   size       = cplData[id]->values().size();
     auto &valuesPart = cplData[id]->values();
-    //Eigen::VectorXd& oldValuesPart = cplData[id]->oldValues.col(0);
-    cplData[id]->oldValues.col(0) = _oldValues.segment(offset, size); /// @todo: check if this is correct
     for (int i = 0; i < size; i++) {
       valuesPart(i) = _values(i + offset);
-      //oldValuesPart(i) = _oldValues(i + offset);
     }
     offset += size;
   }
@@ -506,7 +507,7 @@ void BaseQNAcceleration::iterationsConverged(
 {
   PRECICE_TRACE();
 
-  if (utils::MasterSlave::isMaster() || (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()))
+  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel())
     _infostringstream << "# time window " << tWindows << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
 
@@ -563,7 +564,7 @@ void BaseQNAcceleration::iterationsConverged(
        * is better than doing underrelaxation as first iteration of every time window
        */
     }
-  } else if ((int) _matrixCols.size() > _timeWindowsReused) {
+  } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
     int toRemove = _matrixCols.back();
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
@@ -655,16 +656,16 @@ int BaseQNAcceleration::getLSSystemCols() const
 
 int BaseQNAcceleration::getLSSystemRows()
 {
-  if (utils::MasterSlave::isMaster() || utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isParallel()) {
     return _dimOffsets.back();
   }
   return _residuals.size();
 }
 
 void BaseQNAcceleration::writeInfo(
-    std::string s, bool allProcs)
+    const std::string &s, bool allProcs)
 {
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isParallel()) {
     // serial acceleration mode
     _infostringstream << s;
 

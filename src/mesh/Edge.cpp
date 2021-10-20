@@ -1,7 +1,9 @@
-#include "Edge.hpp"
 #include <Eigen/Core>
 #include <algorithm>
+
+#include "Edge.hpp"
 #include "math/differences.hpp"
+#include "precice/types.hpp"
 #include "utils/EigenIO.hpp"
 
 namespace precice {
@@ -10,7 +12,7 @@ namespace mesh {
 Edge::Edge(
     Vertex &vertexOne,
     Vertex &vertexTwo,
-    int     id)
+    EdgeID  id)
     : _vertices({&vertexOne, &vertexTwo}),
       _id(id)
 {
@@ -18,7 +20,7 @@ Edge::Edge(
                  vertexOne.getDimensions(), vertexTwo.getDimensions());
 }
 
-int Edge::getID() const
+EdgeID Edge::getID() const
 {
   return _id;
 }

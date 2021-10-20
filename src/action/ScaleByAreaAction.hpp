@@ -40,9 +40,6 @@ public:
 
   /**
    * @brief Scales data on mesh nodes according to selected scaling type.
-   *
-   * At the moment, only a division of a property value by the associated area
-   * of the neighboring edges (2D) is possible.
    */
   virtual void performAction(
       double time,

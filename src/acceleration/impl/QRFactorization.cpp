@@ -1,4 +1,4 @@
-#include "acceleration/impl/QRFactorization.hpp"
+
 #include <Eigen/Core>
 #include <algorithm> // std::sort
 #include <cmath>
@@ -6,12 +6,14 @@
 #include <iostream>
 #include <memory>
 #include <utility>
-
 #include <vector>
+
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/impl/QRFactorization.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
+#include "precice/types.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -318,7 +320,7 @@ int QRFactorization::orthogonalize(
 {
   PRECICE_TRACE();
 
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (!utils::MasterSlave::isParallel()) {
     PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
   }
 
@@ -434,7 +436,7 @@ int QRFactorization::orthogonalize_stable(
   PRECICE_TRACE();
 
   // serial case
-  if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+  if (!utils::MasterSlave::isParallel()) {
     PRECICE_ASSERT(_globalRows == _rows, _globalRows, _rows);
   }
 
@@ -565,7 +567,7 @@ int QRFactorization::orthogonalize_stable(
 
         if (utils::MasterSlave::isMaster()) {
           global_uk = u(k);
-          for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
+          for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
             utils::MasterSlave::_communication->receive(local_k, rankSlave);
             utils::MasterSlave::_communication->receive(local_uk, rankSlave);
             if (local_uk < global_uk) {
@@ -587,7 +589,7 @@ int QRFactorization::orthogonalize_stable(
         v = Eigen::VectorXd::Zero(_rows);
 
         // insert rho1 at position k with smallest u(i) = Q(i,:) * Q(i,:)
-        if (not utils::MasterSlave::isMaster() && not utils::MasterSlave::isSlave()) {
+        if (!utils::MasterSlave::isParallel()) {
           v(k) = rho1;
         } else {
           if (utils::MasterSlave::getRank() == rank)
