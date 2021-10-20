@@ -26,7 +26,7 @@ int ExportVTK::getType() const
 void ExportVTK::doExport(
     const std::string &name,
     const std::string &location,
-    mesh::Mesh        &mesh)
+    mesh::Mesh &       mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   PRECICE_ASSERT(name != std::string(""));
@@ -136,10 +136,10 @@ void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
 void ExportVTK::initializeWriting(
     std::ofstream &filestream)
 {
-  // size_t pos = fullFilename.rfind(".vtk");
-  // if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
-  //   fullFilename += ".vtk";
-  // }
+  //size_t pos = fullFilename.rfind(".vtk");
+  //if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
+  //  fullFilename += ".vtk";
+  //}
   filestream.setf(std::ios::showpoint);
   filestream.setf(std::ios::scientific);
   filestream << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -155,7 +155,7 @@ void ExportVTK::writeHeader(
 
 void ExportVTK::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream          &outFile)
+    std::ostream &         outFile)
 {
   if (position.size() == 2) {
     outFile << position(0) << "  " << position(1) << "  " << 0.0 << '\n';

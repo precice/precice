@@ -38,7 +38,7 @@ namespace precice {
 namespace config {
 
 ParticipantConfiguration::ParticipantConfiguration(
-    xml::XMLTag               &parent,
+    xml::XMLTag &              parent,
     mesh::PtrMeshConfiguration meshConfiguration)
     : _meshConfig(std::move(meshConfiguration))
 {
@@ -261,11 +261,11 @@ void ParticipantConfiguration::setDimensions(
 
 void ParticipantConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag                     &tag)
+    xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
-    const std::string   &name = tag.getStringAttributeValue(ATTR_NAME);
+    const std::string &  name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::Participant(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_USE_MESH) {
@@ -273,7 +273,7 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string     name = tag.getStringAttributeValue(ATTR_NAME);
     Eigen::VectorXd offset(_dimensions);
     /// @todo offset currently not supported
-    // offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
+    //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
     std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
@@ -358,7 +358,7 @@ void ParticipantConfiguration::xmlTagCallback(
 
 void ParticipantConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag                     &tag)
+    xml::XMLTag &                    tag)
 {
   if (tag.getName() == TAG) {
     finishParticipantConfiguration(context, _participants.back());
@@ -385,7 +385,7 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
 
 const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
-    const std::string   &nameData) const
+    const std::string &  nameData) const
 {
   PRECICE_CHECK(mesh->hasDataName(nameData),
                 "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
@@ -396,7 +396,7 @@ const mesh::PtrData &ParticipantConfiguration::getData(
 
 void ParticipantConfiguration::finishParticipantConfiguration(
     const xml::ConfigurationContext &context,
-    const impl::PtrParticipant      &participant)
+    const impl::PtrParticipant &     participant)
 {
   PRECICE_TRACE(participant->getName());
 
@@ -615,7 +615,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
 void ParticipantConfiguration::checkIllDefinedMappings(
     const mapping::MappingConfiguration::ConfiguredMapping &mapping,
-    const impl::PtrParticipant                             &participant)
+    const impl::PtrParticipant &                            participant)
 {
   PRECICE_TRACE();
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;

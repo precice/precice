@@ -245,7 +245,7 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
 
   SolverInterface couplingInterface(context.name, configurationFileName, 0, 1);
 
-  // was necessary to replace pre-defined geometries
+  //was necessary to replace pre-defined geometries
   if (context.isNamed("SolverOne") && couplingInterface.hasMesh("MeshOne")) {
     MeshID meshID = couplingInterface.getMeshID("MeshOne");
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization)
     int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
     cplInterface.writeScalarData(dataBID, 0, 2.0);
-    // tell preCICE that data has been written and call initializeData
+    //tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
     Vector3d valueDataA;
@@ -988,14 +988,14 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange)
 #endif
 
 /**
- * @brief Runs a coupled simulation where one solver supplies a geometry.
- *
- * SolverOne only reads the displacements of the geometry and checks whether
- * they are equals to the coordinates of SolverTwo. SolverTwo creates and
- * displaces the coordinates.
- *
- * @todo Maybe remove this test.
- */
+  * @brief Runs a coupled simulation where one solver supplies a geometry.
+  *
+  * SolverOne only reads the displacements of the geometry and checks whether
+  * they are equals to the coordinates of SolverTwo. SolverTwo creates and
+  * displaces the coordinates.
+  *
+  * @todo Maybe remove this test.
+  */
 BOOST_AUTO_TEST_CASE(testExplicitWithSolverGeometry)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
@@ -1006,7 +1006,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSolverGeometry)
   SolverInterface couplingInterface(context.name, _pathToTests + "explicit-solvergeometry.xml", 0, 1);
   BOOST_TEST(couplingInterface.getDimensions() == 3);
   if (context.isNamed("SolverOne")) {
-    // was necessary to replace pre-defined geometries
+    //was necessary to replace pre-defined geometries
     MeshID meshID = couplingInterface.getMeshID("MeshOne");
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
@@ -1589,7 +1589,7 @@ BOOST_AUTO_TEST_CASE(testImplicitWithDataInitialization)
   dt        = couplingInterface.initialize();
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
-  const std::string  &cowid = actionWriteInitialData();
+  const std::string & cowid = actionWriteInitialData();
 
   if (couplingInterface.isActionRequired(cowid)) {
     BOOST_TEST(context.isNamed("SolverTwo"));
@@ -1743,7 +1743,7 @@ void runTestStationaryMappingWithSolverMesh(std::string const &config, int dim, 
     maxDt = interface.advance(maxDt);
 
     BOOST_TEST(interface.isWriteDataRequired(maxDt));
-    BOOST_TEST(not interface.isReadDataAvailable()); // second participant has no new data after last advance
+    BOOST_TEST(not interface.isReadDataAvailable()); //second participant has no new data after last advance
     for (size_t i = 0; i < size; i++) {
       interface.readVectorData(dataForcesID, i, force.data());
     }
@@ -2904,7 +2904,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
 
     if (cplInterface.isActionRequired(actionReadIterationCheckpoint())) {
       cplInterface.markActionFulfilled(actionReadIterationCheckpoint());
-    } else { // converged
+    } else { //converged
       BOOST_TEST(numberOfIterations == expectedIterations.at(timestep));
       ++timestep;
     }
@@ -2987,7 +2987,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
   action::RecorderAction::reset();
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
-  const std::string  &cowid = actionWriteInitialData();
+  const std::string & cowid = actionWriteInitialData();
 
   if (couplingInterface.isActionRequired(cowid)) {
     BOOST_TEST(context.isNamed("SolverTwo"));
@@ -3089,7 +3089,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
   action::RecorderAction::reset();
   std::vector<double> writeData(dimensions, writeValue);
   std::vector<double> readData(dimensions, -1);
-  const std::string  &cowid = actionWriteInitialData();
+  const std::string & cowid = actionWriteInitialData();
 
   if (couplingInterface.isActionRequired(cowid)) {
     BOOST_TEST(context.isNamed("SolverTwo"));

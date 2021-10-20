@@ -11,7 +11,7 @@ Eigen::VectorXd integrate(const PtrMesh &mesh, const PtrData &data)
 {
   const int       valueDimensions = data->getDimensions();
   const int       meshDimensions  = mesh->getDimensions();
-  const auto     &values          = data->values();
+  const auto &    values          = data->values();
   Eigen::VectorXd integral        = Eigen::VectorXd::Zero(valueDimensions);
 
   if (meshDimensions == 2) {

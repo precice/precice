@@ -147,16 +147,16 @@ void PythonAction::performAction(double time,
     PyTuple_SetItem(dataArgs, 1, pythonTimeWindowSize);
     if (_sourceData) {
       npy_intp sourceDim[]  = {_sourceData->values().size()};
-      double  *sourceValues = _sourceData->values().data();
-      // PRECICE_ASSERT(_sourceValues == NULL);
+      double * sourceValues = _sourceData->values().data();
+      //PRECICE_ASSERT(_sourceValues == NULL);
       _sourceValues = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
       PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
       PyTuple_SetItem(dataArgs, 2, _sourceValues);
     }
     if (_targetData) {
       npy_intp targetDim[]  = {_targetData->values().size()};
-      double  *targetValues = _targetData->values().data();
-      // PRECICE_ASSERT(_targetValues == NULL);
+      double * targetValues = _targetData->values().data();
+      //PRECICE_ASSERT(_targetValues == NULL);
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
       PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");

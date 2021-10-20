@@ -228,7 +228,7 @@ void BaseCouplingScheme::advance()
           requireAction(constants::actionWriteIterationCheckpoint());
         }
       }
-      // update iterations
+      //update iterations
       _totalIterations++;
       if (not convergence) {
         _iterations++;
@@ -489,8 +489,8 @@ bool BaseCouplingScheme::measureConvergence()
   PRECICE_TRACE();
   PRECICE_ASSERT(not doesFirstStep());
   bool allConverged = true;
-  bool oneSuffices  = false; // at least one convergence measure suffices and did converge
-  bool oneStrict    = false; // at least one convergence measure is strict and did not converge
+  bool oneSuffices  = false; //at least one convergence measure suffices and did converge
+  bool oneStrict    = false; //at least one convergence measure is strict and did not converge
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::MasterSlave::isSlave()) {
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
@@ -524,7 +524,7 @@ bool BaseCouplingScheme::measureConvergence()
 
   if (allConverged) {
     PRECICE_INFO("All converged");
-  } else if (oneSuffices && not oneStrict) { // strict overrules suffices
+  } else if (oneSuffices && not oneStrict) { //strict overrules suffices
     PRECICE_INFO("Sufficient measures converged");
   }
 

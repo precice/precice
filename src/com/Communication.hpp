@@ -162,9 +162,9 @@ public:
    * @param[in] acceptorRanks Set of ranks that accept a connection
    * @param[in] requesterRank Rank that requests the connection, usually the caller's rank
    */
-  virtual void requestConnectionAsClient(std::string const   &acceptorName,
-                                         std::string const   &requesterName,
-                                         std::string const   &tag,
+  virtual void requestConnectionAsClient(std::string const &  acceptorName,
+                                         std::string const &  requesterName,
+                                         std::string const &  tag,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) = 0;
 
@@ -172,7 +172,7 @@ public:
    *
    * @param[in] participantName Name of the calling participant.
    * @param[in] tag Tag for establishing this connection
-   * @param[in] rank The current rank in the participant
+   * @param[in] rank The current rank in the participant 
    * @param[in] size Total size of the participant
    *
    */

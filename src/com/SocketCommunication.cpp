@@ -257,9 +257,9 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   _thread = std::thread([this] { _ioService->run(); });
 }
 
-void SocketCommunication::requestConnectionAsClient(std::string const   &acceptorName,
-                                                    std::string const   &requesterName,
-                                                    std::string const   &tag,
+void SocketCommunication::requestConnectionAsClient(std::string const &  acceptorName,
+                                                    std::string const &  requesterName,
+                                                    std::string const &  tag,
                                                     std::set<int> const &acceptorRanks,
                                                     int                  requesterRank)
 

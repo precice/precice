@@ -188,7 +188,7 @@ void Parallel::pushState(CommStatePtr newState)
 // }
 
 void Parallel::initializeManagedMPI(
-    int    *argc,
+    int *   argc,
     char ***argv)
 {
 #ifndef PRECICE_NO_MPI
@@ -210,7 +210,7 @@ void Parallel::initializeManagedMPI(
 }
 
 void Parallel::initializeMPI(
-    int    *argc,
+    int *   argc,
     char ***argv)
 {
 #ifndef PRECICE_NO_MPI

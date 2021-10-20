@@ -36,7 +36,7 @@ private:
   /** Instructs the Master wait for Slaves.
    *
    * Performs a collective operation which forces every slave to sync with the Master.
-   *
+   * 
    * @note this does nothing if the participant is running serially.
    */
   void waitForSlaves();

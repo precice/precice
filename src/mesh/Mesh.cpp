@@ -102,10 +102,10 @@ Edge &Mesh::createUniqueEdge(
   const std::array<VertexID, 2> vids{vertexOne.getID(), vertexTwo.getID()};
   const auto                    eend = edges().end();
   auto                          pos  = std::find_if(edges().begin(), eend,
-                                                    [&vids](const Edge &e) -> bool {
+                          [&vids](const Edge &e) -> bool {
                             const std::array<VertexID, 2> eids{e.vertex(0).getID(), e.vertex(1).getID()};
                             return std::is_permutation(vids.begin(), vids.end(), eids.begin());
-                                                    });
+                          });
   if (pos != eend) {
     return *pos;
   } else {

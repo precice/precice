@@ -82,7 +82,7 @@ public:
    * @param[in] xmlNamespace Defines a prefix/namespace for the tag. Tags with equal namespace or treated as group.
    */
   XMLTag(
-      Listener   &listener,
+      Listener &  listener,
       std::string name,
       Occurrence  occurrence,
       std::string xmlNamespace = "");
@@ -116,7 +116,7 @@ public:
   };
 
   /// Removes the XML subtag with given name
-  // XMLTag& removeSubtag ( const std::string& tagName );
+  //XMLTag& removeSubtag ( const std::string& tagName );
 
   /// Adds a XML attribute by making a copy of the given attribute.
   XMLTag &addAttribute(const XMLAttribute<double> &attribute);
@@ -280,7 +280,7 @@ struct NoPListener : public XMLTag::Listener {
  *
  * This is useful for tests, when the root tag to be specified in
  */
-// NoPListener& getNoPListener();
+//NoPListener& getNoPListener();
 
 /**
  * @brief Returns an empty root tag with name "configuration".
@@ -291,9 +291,9 @@ XMLTag getRootTag();
 
 /// Configures the given configuration from file configurationFilename.
 void configure(
-    XMLTag                                   &tag,
+    XMLTag &                                  tag,
     const precice::xml::ConfigurationContext &context,
-    const std::string                        &configurationFilename);
+    const std::string &                       configurationFilename);
 
 } // namespace xml
 } // namespace precice
@@ -301,6 +301,6 @@ void configure(
 /**
  * @brief Adds documentation of tag to output stream os.
  */
-// std::ostream& operator<< (
-//   std::ostream&                 os,
-//   const precice::xml::XMLTag& tag );
+//std::ostream& operator<< (
+//  std::ostream&                 os,
+//  const precice::xml::XMLTag& tag );

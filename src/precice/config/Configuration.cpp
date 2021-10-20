@@ -42,7 +42,7 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
 
 void Configuration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag                     &tag)
+    xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getName());
 }

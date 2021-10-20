@@ -120,7 +120,7 @@ public:
   }
 
   /** @brief Checks whether a lock is known.
-   *
+   * 
    * @param[in] name the name to check
    *
    * @returns whether the name is a known lock

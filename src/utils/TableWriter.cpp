@@ -48,7 +48,7 @@ void Table::printHeader()
   out << '\n';
   int         headerLength = std::accumulate(cols.begin(), cols.end(), 0, [this](int count, const Column &col) {
     return count + col.width + sepChar.size() + 2;
-          });
+  });
   std::string sepLine(headerLength, '-');
   out << sepLine << '\n';
 }

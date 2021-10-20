@@ -12,7 +12,7 @@ namespace utils {
 
 /// Function that generates an array from given elements.
 template <typename... Elements>
-auto make_array(Elements &&...elements) -> std::array<typename std::common_type<Elements...>::type, sizeof...(Elements)>
+auto make_array(Elements &&... elements) -> std::array<typename std::common_type<Elements...>::type, sizeof...(Elements)>
 {
   return {std::forward<Elements>(elements)...};
 }
@@ -47,9 +47,9 @@ bool unique_elements(const Container &c, BinaryPredicate p = {})
 }
 
 /** intersperse a the range [first, last[ with a given element.
- *
+ * 
  * This results in a range [first, elem, first+1, elem, ... , elem, last[
- *
+ * 
  * \tparam InputIter the type of the input iterators
  * \tparam ElemT the type of the element to intersperse
  */

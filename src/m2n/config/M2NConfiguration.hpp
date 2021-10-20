@@ -25,11 +25,11 @@ public:
   virtual ~M2NConfiguration() {}
 
   /**
-   * @brief Returns the communication object for the given user names.
-   *
-   * Exits with an error message, when no object is configured for the given
-   * user names.
-   */
+    * @brief Returns the communication object for the given user names.
+    *
+    * Exits with an error message, when no object is configured for the given
+    * user names.
+    */
   m2n::PtrM2N getM2N(
       const std::string &from,
       const std::string &to);

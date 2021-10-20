@@ -26,7 +26,7 @@ public:
 
   Action(
       Timing                            timing,
-      const mesh::PtrMesh              &mesh,
+      const mesh::PtrMesh &             mesh,
       mapping::Mapping::MeshRequirement requirement)
       : _timing(timing),
         _mesh(mesh),
@@ -48,13 +48,13 @@ public:
   virtual ~Action() {}
 
   /**
-   * @brief Performs the action, to be overwritten by subclasses.
-   *
-   * @param[in] time the current total simulation time.
-   * @param[in] timeStepSize Length of last time step computed.
-   * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
-   * @param[in] timeWindowSize Current time window size.
-   */
+    * @brief Performs the action, to be overwritten by subclasses.
+    *
+    * @param[in] time the current total simulation time.
+    * @param[in] timeStepSize Length of last time step computed.
+    * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
+    * @param[in] timeWindowSize Current time window size.
+    */
   virtual void performAction(
       double time,
       double timeStepSize,

@@ -43,19 +43,19 @@ using namespace precice::cplscheme;
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
 void runCoupling(
-    CouplingScheme                &cplScheme,
-    const std::string             &nameParticipant,
+    CouplingScheme &               cplScheme,
+    const std::string &            nameParticipant,
     const mesh::MeshConfiguration &meshConfig,
-    const std::vector<int>        &validIterations)
+    const std::vector<int> &       validIterations)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_TEST(mesh->data().size() == 2);
   BOOST_TEST(mesh->vertices().size() > 0);
-  mesh::Vertex   &vertex               = mesh->vertices().at(0);
+  mesh::Vertex &  vertex               = mesh->vertices().at(0);
   int             index                = vertex.getID();
-  auto           &dataValues0          = mesh->data(0)->values();
-  auto           &dataValues1          = mesh->data(1)->values();
+  auto &          dataValues0          = mesh->data(0)->values();
+  auto &          dataValues1          = mesh->data(1)->values();
   double          initialStepsizeData0 = 5.0;
   double          stepsizeData0        = 5.0;
   Eigen::VectorXd initialStepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
@@ -126,7 +126,7 @@ void runCoupling(
         stepsizeData0 -= 1.0;
       }
       // the first participant always receives new data
-      // if(cplScheme.isCouplingOngoing())
+      //if(cplScheme.isCouplingOngoing())
       BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
     cplScheme.finalize(); // Ends the coupling scheme
@@ -192,7 +192,7 @@ void runCoupling(
         BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
         // The written data value is decreased in a regular manner, in order
         // to achieve a predictable convergence.
-        // stepsizeData1 -= 1.0;
+        //stepsizeData1 -= 1.0;
         stepsizeData1 -= Eigen::Vector3d::Constant(1.0);
       }
       // only check if data is received
@@ -206,10 +206,10 @@ void runCoupling(
 }
 
 void runCouplingWithSubcycling(
-    CouplingScheme                &cplScheme,
-    const std::string             &nameParticipant,
+    CouplingScheme &               cplScheme,
+    const std::string &            nameParticipant,
     const mesh::MeshConfiguration &meshConfig,
-    const std::vector<int>        &validIterations)
+    const std::vector<int> &       validIterations)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
   Fixture::storeDataInWaveforms(scheme);
 
-  // go to third window
+  //go to third window
   Fixture::moveToNextWindow(scheme); // uses second order extrapolation at end of second window
   BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
   Fixture::storeIteration(scheme);
@@ -585,15 +585,15 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 {
   /**
    * Perform first order and constant relaxation acceleration
-   *
-   * Do two time windows with three iterations each.
-   *
+   * 
+   * Do two time windows with three iterations each. 
+   * 
    * Each participant writes dummy data to other participant, received data is checked.
-   *
+   * 
    * Make sure that the following happens, if NOT converged (first two iterations):
    * 1. acceleration is performed
    * 2. participants receive correct (accelerated) data
-   *
+   * 
    * Make sure that the following happens, if converged (end of third iteration):
    * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
    * 2. we move to the next window
@@ -792,11 +792,11 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 {
   /**
    * Perform first order extrapolation and use initialization
-   *
-   * Do two time windows with three iterations each.
-   *
+   * 
+   * Do two time windows with three iterations each. 
+   * 
    * Each participant writes dummy data to other participant, received data is checked.
-   *
+   * 
    **/
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
@@ -1026,15 +1026,15 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
 {
   /**
    * Perform second order extrapolation and constant relaxation acceleration
-   *
-   * Do three time windows with three iterations each.
-   *
+   * 
+   * Do three time windows with three iterations each. 
+   * 
    * Each participant writes dummy data to other participant, received data is checked.
-   *
+   * 
    * Make sure that the following happens, if NOT converged (first two iterations):
    * 1. acceleration is performed
    * 2. participants receive correct (accelerated) data
-   *
+   * 
    * Make sure that the following happens, if converged (end of third iteration):
    * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
    * 2. we move to the next window

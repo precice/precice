@@ -112,7 +112,7 @@ void ReceivedPartition::compute()
   PRECICE_TRACE();
 
   // handle coupling mode first (i.e. serial participant)
-  if (!utils::MasterSlave::isParallel()) { // coupling mode
+  if (!utils::MasterSlave::isParallel()) { //coupling mode
     PRECICE_DEBUG("Handle partition data structures for serial participant");
 
     if (_allowDirectAccess) {
@@ -226,8 +226,8 @@ void ReceivedPartition::compute()
         int globalVertexIndex = _mesh->vertices()[vertexIndex].getGlobalIndex();
         if (globalVertexIndex <= _remoteMaxGlobalVertexIDs[rankIndex] && globalVertexIndex >= _remoteMinGlobalVertexIDs[rankIndex]) {
           int remoteRank = _mesh->getConnectedRanks()[rankIndex];
-          remoteCommunicationMap[remoteRank].push_back(globalVertexIndex - _remoteMinGlobalVertexIDs[rankIndex]); // remote local vertex index
-          _mesh->getCommunicationMap()[remoteRank].push_back(vertexIndex);                                        // this rank's local vertex index
+          remoteCommunicationMap[remoteRank].push_back(globalVertexIndex - _remoteMinGlobalVertexIDs[rankIndex]); //remote local vertex index
+          _mesh->getCommunicationMap()[remoteRank].push_back(vertexIndex);                                        //this rank's local vertex index
         }
       }
     }
@@ -333,7 +333,7 @@ void ReceivedPartition::filterByBoundingBox()
 
   prepareBoundingBox();
 
-  if (_geometricFilter == ON_MASTER) { // filter on master and communicate reduced mesh then
+  if (_geometricFilter == ON_MASTER) { //filter on master and communicate reduced mesh then
 
     PRECICE_ASSERT(not m2n().usesTwoLevelInitialization());
     PRECICE_INFO("Pre-filter mesh {} by bounding box on master", _mesh->getName());
@@ -461,14 +461,14 @@ void ReceivedPartition::compareBoundingBoxes()
   prepareBoundingBox();
 
   if (utils::MasterSlave::isMaster()) {                 // Master
-    std::map<int, std::vector<int>> connectionMap;      // local ranks -> {remote ranks}
+    std::map<int, std::vector<int>> connectionMap;      //local ranks -> {remote ranks}
     std::vector<int>                connectedRanksList; // local ranks with any connection
 
     // connected ranks for master
     _mesh->getConnectedRanks().clear();
     for (auto &remoteBB : remoteBBMap) {
       if (_bb.overlapping(remoteBB.second)) {
-        _mesh->getConnectedRanks().push_back(remoteBB.first); // connected remote ranks for this rank
+        _mesh->getConnectedRanks().push_back(remoteBB.first); //connected remote ranks for this rank
       }
     }
     if (not _mesh->getConnectedRanks().empty()) {
@@ -576,12 +576,12 @@ void ReceivedPartition::createOwnerInformation()
   if (m2n().usesTwoLevelInitialization()) {
     /*
     This function ensures that each vertex is owned by only a single rank and
-    is not shared among ranks. Initially, the vertices are checked against the
-    bounding box of each rank. If a vertex fits into only a single bounding box,
-    the vertex is assigned to that rank. If it fits to various bbs, the rank with the
-    lowest number of vertices gets ownership to keep the load as balanced as
-    possible.
-
+    is not shared among ranks. Initially, the vertices are checked against the 
+    bounding box of each rank. If a vertex fits into only a single bounding box, 
+    the vertex is assigned to that rank. If it fits to various bbs, the rank with the 
+    lowest number of vertices gets ownership to keep the load as balanced as 
+    possible. 
+    
     Following steps are taken:
 
     1- receive local bb map from master
@@ -735,7 +735,7 @@ void ReceivedPartition::createOwnerInformation()
     // #5: Second round assignment according to the number of owned vertices
 
     /* In case that a vertex can be shared between two ranks, the rank with lower
-       vertex count will own the vertex.
+       vertex count will own the vertex. 
        If both ranks have same vertex count, the lower rank will own the vertex.
     */
 

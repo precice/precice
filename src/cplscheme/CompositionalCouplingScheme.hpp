@@ -74,9 +74,9 @@ public:
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
-   * @param[in] startTime TODO
-   * @param[in] startTimeWindow TODO
-   */
+* @param[in] startTime TODO
+* @param[in] startTimeWindow TODO
+*/
   void initialize(
       double startTime,
       int    startTimeWindow) final override;
@@ -240,12 +240,12 @@ private:
 
   typedef std::list<Scheme>           Schemes;
   typedef std::list<Scheme>::iterator SchemesIt;
-  // typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
+  //typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
 
   /// Coupling schemes to be executed in parallel.
   Schemes _couplingSchemes;
 
-  // Schemes _activeCouplingSchemes;
+  //Schemes _activeCouplingSchemes;
 
   /// Iterator to begin of coupling schemes currently active.
   SchemesIt _activeSchemesBegin = _couplingSchemes.end();

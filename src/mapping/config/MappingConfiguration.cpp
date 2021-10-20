@@ -27,7 +27,7 @@ namespace precice {
 namespace mapping {
 
 MappingConfiguration::MappingConfiguration(
-    xml::XMLTag               &parent,
+    xml::XMLTag &              parent,
     mesh::PtrMeshConfiguration meshConfiguration)
     : _meshConfig(std::move(meshConfiguration))
 {
@@ -156,7 +156,7 @@ MappingConfiguration::MappingConfiguration(
 
 void MappingConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag                     &tag)
+    xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getNamespace() == TAG) {
@@ -242,11 +242,11 @@ MappingConfiguration::mappings()
 
 MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const xml::ConfigurationContext &context,
-    const std::string               &direction,
-    const std::string               &type,
-    const std::string               &constraint,
-    const std::string               &fromMeshName,
-    const std::string               &toMeshName,
+    const std::string &              direction,
+    const std::string &              type,
+    const std::string &              constraint,
+    const std::string &              fromMeshName,
+    const std::string &              toMeshName,
     Timing                           timing,
     double                           shapeParameter,
     double                           supportRadius,

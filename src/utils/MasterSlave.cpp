@@ -65,7 +65,7 @@ double MasterSlave::l2norm(const Eigen::VectorXd &vec)
 {
   PRECICE_TRACE();
 
-  if (not _isMaster && not _isSlave) { // old case
+  if (not _isMaster && not _isSlave) { //old case
     return vec.norm();
   }
 
@@ -103,7 +103,7 @@ double MasterSlave::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2
 {
   PRECICE_TRACE();
 
-  if (not _isMaster && not _isSlave) { // old case
+  if (not _isMaster && not _isSlave) { //old case
     return vec1.dot(vec2);
   }
 

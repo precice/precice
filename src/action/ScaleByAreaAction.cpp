@@ -32,7 +32,7 @@ void ScaleByAreaAction::performAction(
 {
   PRECICE_TRACE();
   const int       meshDimensions  = getMesh()->getDimensions();
-  auto           &targetValues    = _targetData->values();
+  auto &          targetValues    = _targetData->values();
   const int       valueDimensions = _targetData->getDimensions();
   Eigen::VectorXd areas           = Eigen::VectorXd::Zero(getMesh()->vertices().size());
   PRECICE_ASSERT(targetValues.size() / valueDimensions == areas.size());

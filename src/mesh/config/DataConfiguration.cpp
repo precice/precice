@@ -52,7 +52,7 @@ DataConfiguration::ConfiguredData DataConfiguration::getRecentlyConfiguredData()
 
 void DataConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag                     &tag)
+    xml::XMLTag &                    tag)
 {
   if (tag.getNamespace() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
@@ -67,7 +67,7 @@ void DataConfiguration::xmlTagCallback(
 
 void DataConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag                     &tag)
+    xml::XMLTag &                    tag)
 {
 }
 

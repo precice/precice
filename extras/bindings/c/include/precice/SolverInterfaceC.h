@@ -27,7 +27,7 @@ void precicec_createSolverInterface_withCommunicator(
     const char *configFileName,
     int         solverProcessIndex,
     int         solverProcessSize,
-    void       *communicator);
+    void *      communicator);
 
 /**
  * @brief Creates the coupling interface and configures it.
@@ -200,7 +200,7 @@ void precicec_setMeshVertices(
     int           meshID,
     int           size,
     const double *positions,
-    int          *ids);
+    int *         ids);
 
 /**
  * @brief Get vertex positions for multiple vertex ids from a given mesh
@@ -216,7 +216,7 @@ void precicec_getMeshVertices(
     int        meshID,
     int        size,
     const int *ids,
-    double    *positions);
+    double *   positions);
 
 /**
  * @brief Gets mesh vertex IDs from positions.
@@ -232,7 +232,7 @@ void precicec_getMeshVertexIDsFromPositions(
     int           meshID,
     int           size,
     const double *positions,
-    int          *ids);
+    int *         ids);
 
 /**
  * @brief Sets mesh edge from vertex IDs, returns edge ID.
@@ -288,13 +288,13 @@ void precicec_setMeshQuad(
     int fourthEdgeID);
 
 /**
- * @brief Sets surface mesh quadrangle from vertex IDs.
- *
- * @param[in] meshID ID of the mesh to add the Quad to
- * @param[in] firstVertexID ID of the first vertex of the Quad
- * @param[in] secondVertexID ID of the second vertex of the Quad
- * @param[in] thirdVertexID ID of the third vertex of the Quad
- * @param[in] fourthVertexID ID of the fourth vertex of the Quad
+  * @brief Sets surface mesh quadrangle from vertex IDs.
+  *
+  * @param[in] meshID ID of the mesh to add the Quad to
+  * @param[in] firstVertexID ID of the first vertex of the Quad
+  * @param[in] secondVertexID ID of the second vertex of the Quad
+  * @param[in] thirdVertexID ID of the third vertex of the Quad
+  * @param[in] fourthVertexID ID of the fourth vertex of the Quad
  */
 void precicec_setMeshQuadWithEdges(
     int meshID,
@@ -346,7 +346,7 @@ void precicec_mapWriteDataFrom(int fromMeshID);
 void precicec_writeBlockVectorData(
     int           dataID,
     int           size,
-    const int    *valueIndices,
+    const int *   valueIndices,
     const double *values);
 
 /**
@@ -367,7 +367,7 @@ void precicec_writeVectorData(
 void precicec_writeBlockScalarData(
     int           dataID,
     int           size,
-    const int    *valueIndices,
+    const int *   valueIndices,
     const double *values);
 
 /**
@@ -398,7 +398,7 @@ void precicec_readBlockVectorData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double    *values);
+    double *   values);
 
 /**
  * @brief Reads vectorial foating point data from the coupling mesh.
@@ -419,7 +419,7 @@ void precicec_readBlockScalarData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double    *values);
+    double *   values);
 
 /**
  * @brief Reads scalar foating point data from the coupling mesh.
@@ -433,11 +433,11 @@ void precicec_readScalarData(
     int     valueIndex,
     double *dataValue);
 
-/**
+/** 
  * @brief Returns information on the version of preCICE.
  *
  * Returns a semicolon-separated C-string containing:
- *
+ * 
  * 1) the version of preCICE
  * 2) the revision information of preCICE
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON
@@ -473,8 +473,8 @@ void precicec_setMeshAccessRegion(
 void precicec_getMeshVerticesAndIDs(
     const int meshID,
     const int size,
-    int      *ids,
-    double   *coordinates);
+    int *     ids,
+    double *  coordinates);
 
 ///@}
 

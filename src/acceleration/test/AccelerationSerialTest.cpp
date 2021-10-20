@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(AccelerationTests)
 struct AccelerationSerialTestsFixture {
   using DataMap = std::map<int, cplscheme::PtrCouplingData>;
 
-  // AccelerationSerialTestsFixture() {}
+  //AccelerationSerialTestsFixture() {}
 };
 
 BOOST_FIXTURE_TEST_SUITE(AccelerationSerialTests, AccelerationSerialTestsFixture)
@@ -32,7 +32,7 @@ BOOST_FIXTURE_TEST_SUITE(AccelerationSerialTests, AccelerationSerialTestsFixture
 BOOST_AUTO_TEST_CASE(testMVQNPP)
 {
   PRECICE_TEST(1_rank);
-  // use two vectors and see if underrelaxation works
+  //use two vectors and see if underrelaxation works
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
   int              timestepsReused          = 6;
@@ -61,11 +61,11 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  // init displacements
+  //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
 
-  // init forces
+  //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
 
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
 BOOST_AUTO_TEST_CASE(testVIQNPP)
 {
   PRECICE_TEST(1_rank);
-  // use two vectors and see if underrelaxation works
+  //use two vectors and see if underrelaxation works
 
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
@@ -137,11 +137,11 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  // init displacements
+  //init displacements
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
 
-  // init forces
+  //init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
 

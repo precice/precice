@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {
-    mesh::Vertex   &v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
-    mesh::Vertex   &v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
+    mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
+    mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
     coords3(0)              = 1.0;
     mesh::Vertex &v3        = mesh.createVertex(coords3);
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   } else if (utils::Parallel::getProcessRank() == 1) {
 
   } else if (utils::Parallel::getProcessRank() == 2) {
-    mesh::Vertex   &v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
-    mesh::Vertex   &v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
+    mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
+    mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
     Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
     coords3(1)              = 1.0;
     mesh::Vertex &v3        = mesh.createVertex(coords3);
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
   if (utils::Parallel::getProcessRank() == 0) {
-    mesh::Vertex   &v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
-    mesh::Vertex   &v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
+    mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
+    mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
     coords3(0)              = 1.0;
     mesh::Vertex &v3        = mesh.createVertex(coords3);
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   } else if (utils::Parallel::getProcessRank() == 1) {
 
   } else if (utils::Parallel::getProcessRank() == 2) {
-    mesh::Vertex   &v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
-    mesh::Vertex   &v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
+    mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
+    mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
     Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
     coords3(1)              = 1.0;
     mesh::Vertex &v3        = mesh.createVertex(coords3);

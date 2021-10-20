@@ -39,7 +39,7 @@ std::map<std::string, GlobalEventStats> getGlobalStats(std::vector<RankData> eve
   std::map<std::string, GlobalEventStats> globalStats;
   for (size_t rank = 0; rank < events.size(); ++rank) {
     for (auto &evData : events[rank].evData) {
-      auto const       &event = evData.second;
+      auto const &      event = evData.second;
       GlobalEventStats &stats = globalStats[evData.first];
       if (event.max > stats.max) {
         stats.max     = event.max;
@@ -257,8 +257,8 @@ Event &EventRegistry::getStoredEvent(std::string const &name)
   auto previousPrefix = prefix;
   prefix              = "";
   auto insertion      = storedEvents.emplace(std::piecewise_construct,
-                                             std::forward_as_tuple(name),
-                                             std::forward_as_tuple(name, false, false));
+                                        std::forward_as_tuple(name),
+                                        std::forward_as_tuple(name, false, false));
 
   prefix = previousPrefix;
   return std::get<0>(insertion)->second;
@@ -339,7 +339,7 @@ void EventRegistry::writeSummary(std::ostream &out) const
 
       auto stats = getGlobalStats(globalRankData);
       for (auto &e : stats) {
-        auto  &ev  = e.second;
+        auto & ev  = e.second;
         double rel = 0;
         if (ev.max != stdy_clk::duration::zero()) // Guard against division by zero
           rel = static_cast<double>(ev.min.count()) / ev.max.count();
@@ -434,7 +434,7 @@ void EventRegistry::collect()
 
   // Send all events from all ranks, including rank 0, to rank 0
   for (auto const &evData : localRankData.evData) {
-    const auto   &ev = evData.second;
+    const auto &  ev = evData.second;
     MPI_EventData eventdata;
 
     // Send aggregated EventData
@@ -571,7 +571,7 @@ std::pair<sys_clk::time_point, sys_clk::time_point> EventRegistry::findFirstAndL
   auto first = std::min_element(std::begin(globalRankData), std::end(globalRankData),
                                 [](T a, T b) { return a.initializedAt < b.initializedAt; });
   auto last  = std::max_element(std::begin(globalRankData), std::end(globalRankData),
-                                [](T a, T b) { return a.finalizedAt < b.finalizedAt; });
+                               [](T a, T b) { return a.finalizedAt < b.finalizedAt; });
 
   return std::make_pair(first->initializedAt, last->finalizedAt);
 }

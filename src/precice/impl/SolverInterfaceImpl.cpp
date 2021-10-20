@@ -84,7 +84,7 @@ SolverInterfaceImpl::SolverInterfaceImpl(
     const std::string &configurationFileName,
     int                accessorProcessRank,
     int                accessorCommunicatorSize,
-    void              *communicator)
+    void *             communicator)
     : _accessorName(std::move(participantName)),
       _accessorProcessRank(accessorProcessRank),
       _accessorCommunicatorSize(accessorCommunicatorSize)
@@ -676,7 +676,7 @@ int SolverInterfaceImpl::setMeshVertex(
       Eigen::Map<const Eigen::VectorXd>{position, _dimensions}};
   PRECICE_DEBUG("Position = {}", internalPosition.format(utils::eigenio::debug()));
   int           index   = -1;
-  MeshContext  &context = _accessor->usedMeshContext(meshID);
+  MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("MeshRequirement: {}", context.meshRequirement);
   index = mesh->createVertex(internalPosition).getID();
@@ -688,11 +688,11 @@ void SolverInterfaceImpl::setMeshVertices(
     int           meshID,
     int           size,
     const double *positions,
-    int          *ids)
+    int *         ids)
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
-  MeshContext  &context = _accessor->usedMeshContext(meshID);
+  MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Set positions");
   const Eigen::Map<const Eigen::MatrixXd> posMatrix{
@@ -708,11 +708,11 @@ void SolverInterfaceImpl::getMeshVertices(
     int        meshID,
     size_t     size,
     const int *ids,
-    double    *positions) const
+    double *   positions) const
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_USE(meshID);
-  MeshContext  &context = _accessor->usedMeshContext(meshID);
+  MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Get positions");
   auto &vertices = mesh->vertices();
@@ -730,14 +730,14 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(
     int           meshID,
     size_t        size,
     const double *positions,
-    int          *ids) const
+    int *         ids) const
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_USE(meshID);
-  MeshContext  &context = _accessor->usedMeshContext(meshID);
+  MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Get IDs");
-  const auto                       &vertices = mesh->vertices();
+  const auto &                      vertices = mesh->vertices();
   Eigen::Map<const Eigen::MatrixXd> posMatrix{
       positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
   const auto vsize = vertices.size();
@@ -1044,7 +1044,7 @@ void SolverInterfaceImpl::mapReadDataTo(
 void SolverInterfaceImpl::writeBlockVectorData(
     int           dataID,
     int           size,
-    const int    *valueIndices,
+    const int *   valueIndices,
     const double *values)
 {
   PRECICE_TRACE(dataID, size);
@@ -1062,7 +1062,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
                 data.getName());
   PRECICE_VALIDATE_DATA(values, size * _dimensions);
 
-  auto      &valuesInternal = data.values();
+  auto &     valuesInternal = data.values();
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1096,7 +1096,7 @@ void SolverInterfaceImpl::writeVectorData(
                 data.getName());
   PRECICE_VALIDATE_DATA(value, _dimensions);
 
-  auto      &values      = data.values();
+  auto &     values      = data.values();
   const auto vertexCount = values.size() / data.getDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1110,7 +1110,7 @@ void SolverInterfaceImpl::writeVectorData(
 void SolverInterfaceImpl::writeBlockScalarData(
     int           dataID,
     int           size,
-    const int    *valueIndices,
+    const int *   valueIndices,
     const double *values)
 {
   PRECICE_TRACE(dataID, size);
@@ -1128,7 +1128,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
                 data.getName(), data.getName());
   PRECICE_VALIDATE_DATA(values, size);
 
-  auto      &valuesInternal = data.values();
+  auto &     valuesInternal = data.values();
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1160,7 +1160,7 @@ void SolverInterfaceImpl::writeScalarData(
                 data.getName());
   PRECICE_VALIDATE_DATA(static_cast<double *>(&value), 1);
 
-  auto      &values      = data.values();
+  auto &     values      = data.values();
   const auto vertexCount = values.size() / data.getDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). "
@@ -1173,7 +1173,7 @@ void SolverInterfaceImpl::readBlockVectorData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double    *values) const
+    double *   values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
@@ -1189,7 +1189,7 @@ void SolverInterfaceImpl::readBlockVectorData(
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
-  auto      &valuesInternal = data.values();
+  auto &     valuesInternal = data.values();
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1223,7 +1223,7 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_CHECK(data.getDimensions() == _dimensions,
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
-  auto      &values      = data.values();
+  auto &     values      = data.values();
   const auto vertexCount = values.size() / data.getDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
@@ -1240,7 +1240,7 @@ void SolverInterfaceImpl::readBlockScalarData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double    *values) const
+    double *   values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
@@ -1256,7 +1256,7 @@ void SolverInterfaceImpl::readBlockScalarData(
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 data.getName());
-  auto      &valuesInternal = data.values();
+  auto &     valuesInternal = data.values();
   const auto vertexCount    = valuesInternal.size();
 
   for (int i = 0; i < size; i++) {
@@ -1288,7 +1288,7 @@ void SolverInterfaceImpl::readScalarData(
                 "You cannot call readScalarData on the vector data type \"{}\". "
                 "Use readVectorData or change the data type for \"{}\" to scalar.",
                 data.getName());
-  auto      &values      = data.values();
+  auto &     values      = data.values();
   const auto vertexCount = values.size();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
@@ -1311,7 +1311,7 @@ void SolverInterfaceImpl::setMeshAccessRegion(
   PRECICE_CHECK(boundingBox != nullptr, "setMeshAccessRegion was called with boundingBox == nullptr.");
 
   // Get the related mesh
-  MeshContext  &context = _accessor->meshContext(meshID);
+  MeshContext & context = _accessor->meshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Define bounding box");
   // Transform bounds into a suitable format
@@ -1335,8 +1335,8 @@ void SolverInterfaceImpl::setMeshAccessRegion(
 void SolverInterfaceImpl::getMeshVerticesAndIDs(
     const int meshID,
     const int size,
-    int      *ids,
-    double   *coordinates) const
+    int *     ids,
+    double *  coordinates) const
 {
   PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshID, size);
@@ -1351,7 +1351,7 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(
   if (size == 0)
     return;
 
-  const MeshContext  &context = _accessor->meshContext(meshID);
+  const MeshContext & context = _accessor->meshContext(meshID);
   const mesh::PtrMesh mesh(context.mesh);
 
   PRECICE_CHECK(ids != nullptr, "getMeshVerticesAndIDs() was called with ids == nullptr");
@@ -1376,7 +1376,7 @@ void SolverInterfaceImpl::exportMesh(
 {
   PRECICE_TRACE(filenameSuffix, exportType);
   // Export meshes
-  // const ExportContext& context = _accessor->exportContext();
+  //const ExportContext& context = _accessor->exportContext();
   for (const io::ExportContext &context : _accessor->exportContexts()) {
     PRECICE_DEBUG("Export type = {}", exportType);
     bool exportAll  = exportType == io::constants::exportAll();
@@ -1505,9 +1505,9 @@ void SolverInterfaceImpl::compareBoundingBoxes()
 
 void SolverInterfaceImpl::computePartitions()
 {
-  // We need to do this in two loops: First, communicate the mesh and later compute the partition.
-  // Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
-  // Both loops need a different sorting
+  //We need to do this in two loops: First, communicate the mesh and later compute the partition.
+  //Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
+  //Both loops need a different sorting
 
   auto &contexts = _accessor->usedMeshContexts();
 
@@ -1640,7 +1640,7 @@ void SolverInterfaceImpl::performDataActions(
 void SolverInterfaceImpl::handleExports()
 {
   PRECICE_TRACE();
-  // timesteps was already incremented before
+  //timesteps was already incremented before
   int timesteps = _couplingScheme->getTimeWindows() - 1;
 
   for (const io::ExportContext &context : _accessor->exportContexts()) {

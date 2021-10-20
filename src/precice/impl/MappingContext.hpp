@@ -21,7 +21,7 @@ struct MappingContext {
   mapping::MappingConfiguration::Timing timing = mapping::MappingConfiguration::INITIAL;
 
   /// True, if computation and mapping is done repeatedly for single values.
-  // bool isIncremental;
+  //bool isIncremental;
 
   /// True, if data has been mapped already.
   bool hasMappedData = false;

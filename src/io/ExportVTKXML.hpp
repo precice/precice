@@ -33,19 +33,19 @@ public:
   virtual void doExport(
       const std::string &name,
       const std::string &location,
-      mesh::Mesh        &mesh);
+      mesh::Mesh &       mesh);
 
   static void writeVertex(
       const Eigen::VectorXd &position,
-      std::ofstream         &outFile);
+      std::ofstream &        outFile);
 
   static void writeLine(
       const mesh::Edge &edge,
-      std::ofstream    &outFile);
+      std::ofstream &   outFile);
 
   static void writeTriangle(
       const mesh::Triangle &triangle,
-      std::ofstream        &outFile);
+      std::ofstream &       outFile);
 
 private:
   logging::Logger _log{"io::ExportVTKXML"};
@@ -57,34 +57,34 @@ private:
   std::vector<std::string> _vectorDataNames;
 
   /**
-   * @brief Stores scalar and vector data names in string vectors
-   * Needed for writing master file and sub files
-   */
+    * @brief Stores scalar and vector data names in string vectors
+    * Needed for writing master file and sub files
+    */
   void processDataNamesAndDimensions(mesh::Mesh const &mesh);
 
   /**
-   * @brief Writes the master file (called only by the master rank)
-   */
+    * @brief Writes the master file (called only by the master rank)
+    */
   void writeMasterFile(
       const std::string &name,
       const std::string &location,
-      mesh::Mesh        &mesh);
+      mesh::Mesh &       mesh);
 
   /**
-   * @brief Writes the sub file for each rank
-   */
+    * @brief Writes the sub file for each rank
+    */
   void writeSubFile(
       const std::string &name,
       const std::string &location,
-      mesh::Mesh        &mesh);
+      mesh::Mesh &       mesh);
 
   void exportMesh(
-      std::ofstream    &outFile,
+      std::ofstream &   outFile,
       mesh::Mesh const &mesh);
 
   void exportData(
       std::ofstream &outFile,
-      mesh::Mesh    &mesh);
+      mesh::Mesh &   mesh);
 };
 
 } // namespace io

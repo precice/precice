@@ -7,7 +7,7 @@ namespace precice {
 namespace logging {
 
 Tracer::Tracer(
-    Logger     &log,
+    Logger &    log,
     LogLocation loc)
     : _log(log),
       _loc(std::move(loc))

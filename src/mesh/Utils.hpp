@@ -37,7 +37,7 @@ inline Vertex *sharedVertex(Edge &a, Edge &b)
  *
  * @param[in] e the edge
  *
- * @returns the distance between both vertices of e
+ * @returns the distance between both vertices of e 
  */
 inline double edgeLength(const Edge &e)
 {

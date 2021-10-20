@@ -86,7 +86,7 @@ void ProvidedPartition::communicate()
     } else {
 
       if (not hasMeshBeenGathered) {
-        // Gather mesh
+        //Gather mesh
         Event e("partition.gatherMesh." + _mesh->getName(), precice::syncMode);
         if (not utils::MasterSlave::isSlave()) {
           globalMesh.addMesh(*_mesh); // Add local master mesh to global mesh
@@ -373,7 +373,7 @@ void ProvidedPartition::compareBoundingBoxes()
     return;
 
   // each rank sends its bb to master
-  if (utils::MasterSlave::isSlave()) { // slave
+  if (utils::MasterSlave::isSlave()) { //slave
     PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
     com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master

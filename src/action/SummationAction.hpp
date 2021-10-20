@@ -13,18 +13,18 @@ namespace action {
 class SummationAction : public Action {
 public:
   /**
-   * @brief Constructor
-   *
-   * @param[in] Timing When to apply the action
-   * @param[in] sourceDataIDs Data indexes which are to be added
-   * @param[in] targetDataID Data in which the action will be applied
-   *
-   */
+	 * @brief Constructor
+	 * 
+	 * @param[in] Timing When to apply the action
+	 * @param[in] sourceDataIDs Data indexes which are to be added
+	 * @param[in] targetDataID Data in which the action will be applied
+	 * 
+	 */
   SummationAction(
       Timing                  timing,
       const std::vector<int> &sourceDataIDs,
       int                     targetDataID,
-      const mesh::PtrMesh    &mesh);
+      const mesh::PtrMesh &   mesh);
 
   virtual ~SummationAction() {}
 

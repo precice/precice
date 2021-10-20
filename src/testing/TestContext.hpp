@@ -286,7 +286,7 @@ private:
   }
 
   template <class NextOption, class... Rest>
-  void handleOptions(Participants &participants, NextOption &next, Rest &...rest)
+  void handleOptions(Participants &participants, NextOption &next, Rest &... rest)
   {
     handleOption(participants, next);
     handleOptions(participants, rest...);

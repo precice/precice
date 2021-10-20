@@ -195,7 +195,7 @@ template <typename VALUE_T>
 typename std::enable_if<
     std::is_same<VALUE_T, ATTRIBUTE_T>::value && not std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
 XMLAttribute<ATTRIBUTE_T>::set(
-    ATTRIBUTE_T   &toSet,
+    ATTRIBUTE_T &  toSet,
     const VALUE_T &setter)
 {
   toSet = setter;
@@ -206,14 +206,14 @@ template <typename VALUE_T>
 typename std::enable_if<
     std::is_same<VALUE_T, ATTRIBUTE_T>::value && std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
 XMLAttribute<ATTRIBUTE_T>::set(
-    ATTRIBUTE_T   &toSet,
+    ATTRIBUTE_T &  toSet,
     const VALUE_T &setter)
 {
   toSet = setter;
 }
 
 /** creates an XMLAttribute given a name and a default value.
- *
+ *  
  *  @param[in] name the name of the attribute
  *  @param[in] defaultValue the default value of the attribute
  *  @return an XMLAttribute with the above settings
@@ -224,7 +224,7 @@ inline XMLAttribute<std::string> makeXMLAttribute(std::string name, const char *
 }
 
 /** creates an XMLAttribute given a name and a default value.
- *
+ *  
  *  @param[in] name the name of the attribute
  *  @param[in] defaultValue the default value of the attribute
  *  @return an XMLAttribute with the above settings

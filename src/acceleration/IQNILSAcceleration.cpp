@@ -110,7 +110,7 @@ void IQNILSAcceleration::updateDifferenceMatrices(
 void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
     DataMap &cplData)
 {
-  // Store x_tildes for secondary data
+  //Store x_tildes for secondary data
   for (int id : _secondaryDataIDs) {
     PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values().size(),
                    _secondaryOldXTildes[id].size(), cplData[id]->values().size());
@@ -196,11 +196,11 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
   // compute x updates from W and coefficients c, i.e, xUpdate = c*W
   xUpdate = _matrixW * c;
 
-  // PRECICE_DEBUG("c = " << c);
+  //PRECICE_DEBUG("c = " << c);
 
   /**
-   *  perform QN-Update step for the secondary Data
-   */
+     *  perform QN-Update step for the secondary Data
+     */
 
   // If the previous time window converged within one single iteration, nothing was added
   // to the LS system matrices and they need to be restored from the backup at time T-2
@@ -212,7 +212,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
   // Perform QN relaxation for secondary data
   for (int id : _secondaryDataIDs) {
     PtrCouplingData data   = cplData[id];
-    auto           &values = data->values();
+    auto &          values = data->values();
     PRECICE_ASSERT(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
     values = _secondaryMatricesW[id] * c;
     PRECICE_ASSERT(values.size() == data->previousIteration().size(), values.size(), data->previousIteration().size());

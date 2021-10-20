@@ -34,10 +34,10 @@ using new_signature = PetscErrorCode(PetscOptions, const char[], const char[]);
 using old_signature = PetscErrorCode(const char[], const char[]);
 
 /**
- * @brief Fix for compatibility with PETSc < 3.7.
- *
+ * @brief Fix for compatibility with PETSc < 3.7. 
+ * 
  * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst
+ * This instantiates only the template, that specifies correct function signature, whilst 
  * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
  */
 template <typename curr_signature = decltype(PetscOptionsSetValue)>
@@ -49,10 +49,10 @@ PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[]
 }
 
 /**
- * @brief Fix for compatibility with PETSc < 3.7.
- *
+ * @brief Fix for compatibility with PETSc < 3.7. 
+ * 
  * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst
+ * This instantiates only the template, that specifies correct function signature, whilst 
  * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
  */
 template <typename curr_signature = decltype(PetscOptionsSetValue)>
@@ -71,8 +71,8 @@ logging::Logger Petsc::_log("utils::Petsc");
 bool Petsc::weInitialized = false;
 
 void Petsc::initialize(
-    int                   *argc,
-    char                ***argv,
+    int *                  argc,
+    char ***               argv,
     Parallel::Communicator comm)
 {
   PRECICE_TRACE();
@@ -324,7 +324,7 @@ void Vector::setValue(PetscInt row, PetscScalar value)
 void Vector::arange(double start, double stop)
 {
   PetscErrorCode ierr = 0;
-  PetscScalar   *a;
+  PetscScalar *  a;
   PetscInt       range_start, range_end, size;
   VecGetSize(vector, &size);
   VecGetOwnershipRange(vector, &range_start, &range_end);
@@ -358,7 +358,7 @@ void Vector::sort()
 {
   PetscErrorCode ierr = 0;
   PetscInt       size;
-  PetscReal     *a;
+  PetscReal *    a;
   ierr = VecGetArray(vector, &a);
   CHKERRV(ierr);
   ierr = VecGetSize(vector, &size);

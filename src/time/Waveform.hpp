@@ -58,11 +58,11 @@ private:
   mutable logging::Logger _log{"time::Waveform"};
 
   /**
-   * @brief Extrapolates data _timeWindows using an extrapolation scheme of given order.
-   *
+   * @brief Extrapolates data _timeWindows using an extrapolation scheme of given order. 
+   * 
    * If the order condition cannot be satisfied, since there are not enough samples available, the order is automatically reduced.
    * If order two is required, but only two samples are available, the extrapolation order is automatically reduced to one.
-   *
+   * 
    * @param order Order of the extrapolation scheme to be used.
    * @param timeWindows number of valid samples.
    */

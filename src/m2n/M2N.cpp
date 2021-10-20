@@ -258,7 +258,7 @@ void M2N::broadcastSendMesh(mesh::Mesh &mesh)
 }
 
 void M2N::scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap,
-                                     mesh::Mesh                      &mesh)
+                                     mesh::Mesh &                     mesh)
 {
   PRECICE_ASSERT(utils::MasterSlave::isParallel(),
                  "This method can only be used for parallel participants");
@@ -317,7 +317,7 @@ void M2N::receive(bool &itemToReceive)
 void M2N::receive(double &itemToReceive)
 {
   PRECICE_TRACE(utils::MasterSlave::getRank());
-  if (not utils::MasterSlave::isSlave()) { // coupling mode
+  if (not utils::MasterSlave::isSlave()) { //coupling mode
     _masterCom->receive(itemToReceive, 0);
   }
 

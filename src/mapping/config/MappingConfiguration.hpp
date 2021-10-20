@@ -67,7 +67,7 @@ public:
   };
 
   MappingConfiguration(
-      xml::XMLTag               &parent,
+      xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
 
   /**
@@ -77,7 +77,7 @@ public:
    */
   virtual void xmlTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag                     &callingTag);
+      xml::XMLTag &                    callingTag);
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -86,7 +86,7 @@ public:
    */
   virtual void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag                     &callingTag);
+      xml::XMLTag &                    callingTag);
 
   /// Returns all configured mappings.
   const std::vector<ConfiguredMapping> &mappings();
@@ -142,11 +142,11 @@ private:
 
   ConfiguredMapping createMapping(
       const xml::ConfigurationContext &context,
-      const std::string               &direction,
-      const std::string               &type,
-      const std::string               &constraint,
-      const std::string               &fromMeshName,
-      const std::string               &toMeshName,
+      const std::string &              direction,
+      const std::string &              type,
+      const std::string &              constraint,
+      const std::string &              fromMeshName,
+      const std::string &              toMeshName,
       Timing                           timing,
       double                           shapeParameter,
       double                           supportRadius,

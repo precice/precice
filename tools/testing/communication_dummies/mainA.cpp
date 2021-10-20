@@ -138,9 +138,9 @@ int main(int argc, char **argv)
   std::vector<com::PtrCommunicationFactory> cfs(
       {com::PtrCommunicationFactory(new com::SocketCommunicationFactory)});
 
-  // std::vector<com::PtrCommunicationFactory> cfs(
-  //      {com::PtrCommunicationFactory(new com::SocketCommunicationFactory),
-  //       com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory)});
+  //std::vector<com::PtrCommunicationFactory> cfs(
+  //     {com::PtrCommunicationFactory(new com::SocketCommunicationFactory),
+  //      com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory)});
 
   for (auto cf : cfs) {
     m2n::PointToPointCommunication c(cf, mesh);

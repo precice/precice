@@ -73,7 +73,7 @@ bool segmentsIntersect(
 
   // Check, whether the segments are intersecting in the real sense.
   bool isFirstSegmentBetween  = xOR(abc > -math::NUMERICAL_ZERO_DIFFERENCE,
-                                    abd > -math::NUMERICAL_ZERO_DIFFERENCE);
+                                   abd > -math::NUMERICAL_ZERO_DIFFERENCE);
   bool isSecondSegmentBetween = xOR(cda > -math::NUMERICAL_ZERO_DIFFERENCE,
                                     cdb > -math::NUMERICAL_ZERO_DIFFERENCE);
 
@@ -85,7 +85,7 @@ bool lineIntersection(
     const Eigen::Ref<const Eigen::Vector2d> &b,
     const Eigen::Ref<const Eigen::Vector2d> &c,
     const Eigen::Ref<const Eigen::Vector2d> &d,
-    Eigen::Ref<Eigen::Vector2d>             &intersectionPoint)
+    Eigen::Ref<Eigen::Vector2d> &            intersectionPoint)
 {
   // Compute denominator for solving 2x2 equation system
   double D = a(0) * (d(1) - c(1)) +
@@ -111,7 +111,7 @@ ResultConstants segmentPlaneIntersection(
     const Eigen::Vector3d &planeNormal,
     const Eigen::Vector3d &firstPointSegment,
     const Eigen::Vector3d &secondPointSegment,
-    Eigen::Vector3d       &intersectionPoint)
+    Eigen::Vector3d &      intersectionPoint)
 {
   // Methodology of "Computation Geometry in C", Joseph O'Rourke, Chapter 7.3.1
 
@@ -269,7 +269,7 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
   PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0),
                 "Non-planar quads are not supported. The vertex coordinates are: {}.", coords);
 
-  // Transform Coordinates - coord[0] is the origin
+  //Transform Coordinates - coord[0] is the origin
   for (int i = 0; i < 4; i++) {
     Eigen::Vector3d coordinateDifference = coords[i] - coordOrigin;
     coords[i][0]                         = e_1.dot(coordinateDifference);
@@ -283,7 +283,7 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
   previous most right hand point. The algorithm must find 3 other points in order to be a valid quad.
   */
 
-  // First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift wrapping algorithm
+  //First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift wrapping algorithm
   int idLowestPoint = 0;
   for (int i = 1; i < 4; i++) {
     if (coords[i][0] < coords[idLowestPoint][0]) {
@@ -320,7 +320,7 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
     validVertexIDCounter++;
   } while (currentVertex != idLowestPoint); // While we don't come to first point
 
-  // Ordering of quad is hull 0-1-2-3-0
+  //Ordering of quad is hull 0-1-2-3-0
   result.convex = (validVertexIDCounter == 4);
 
   return result;

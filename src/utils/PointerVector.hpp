@@ -42,40 +42,40 @@ public:
   }
 
   /**
-   * @brief Returns const interator to first element in vector.
-   */
+    * @brief Returns const interator to first element in vector.
+    */
   const_iterator begin() const
   {
     return const_iterator(_content.begin());
   }
 
   /**
-   * @brief Returns iterator behind last element in vector.
-   */
+    * @brief Returns iterator behind last element in vector.
+    */
   iterator end()
   {
     return iterator(_content.end());
   }
 
   /**
-   * @brief Returns const_iterator behind last element in vector.
-   */
+    * @brief Returns const_iterator behind last element in vector.
+    */
   const_iterator end() const
   {
     return const_iterator(_content.end());
   }
 
   /**
-   * @brief Returns count of elements in vector.
-   */
+    * @brief Returns count of elements in vector.
+    */
   size_t size() const
   {
     return _content.size();
   }
 
   /**
-   * @brief Returns reference to element with given index [0, count[.
-   */
+    * @brief Returns reference to element with given index [0, count[.
+    */
   CONTENT_T &operator[](size_t index)
   {
     PRECICE_ASSERT(index < _content.size());
@@ -83,8 +83,8 @@ public:
   }
 
   /**
-   * @brief Returns const reference to element with given index [0, count[.
-   */
+    * @brief Returns const reference to element with given index [0, count[.
+    */
   const CONTENT_T &operator[](size_t index) const
   {
     PRECICE_ASSERT(index < _content.size());
@@ -102,37 +102,37 @@ public:
   }
 
   /**
-   * @brief Adds element to the end of the vector.
-   */
+    * @brief Adds element to the end of the vector.
+    */
   void push_back(CONTENT_T *content)
   {
     _content.push_back(content);
   }
 
   /**
-   * @brief Inserts elements into vector.
-   *
-   * @param position [IN] Iterator at position before which the elements are
-   *        inserted.
-   * @param from [IN] Iterator at position of first element to be inserted.
-   * @param to [IN] Iterator at position behind last element to be inserted.
-   */
+    * @brief Inserts elements into vector.
+    *
+    * @param position [IN] Iterator at position before which the elements are
+    *        inserted.
+    * @param from [IN] Iterator at position of first element to be inserted.
+    * @param to [IN] Iterator at position behind last element to be inserted.
+    */
   void insert(iterator position, iterator from, iterator to)
   {
     _content.insert(position.base(), from.base(), to.base());
   }
 
   /**
-   * @brief Removes all pointers to elements from the vector (no deletetion).
-   */
+    * @brief Removes all pointers to elements from the vector (no deletetion).
+    */
   void clear()
   {
     _content.clear();
   }
 
   /**
-   * @brief Returns true, if no pointers are contained in the vector.
-   */
+    * @brief Returns true, if no pointers are contained in the vector.
+    */
   bool empty() const
   {
     return _content.empty();

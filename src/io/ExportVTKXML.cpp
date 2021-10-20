@@ -29,7 +29,7 @@ int ExportVTKXML::getType() const
 void ExportVTKXML::doExport(
     const std::string &name,
     const std::string &location,
-    mesh::Mesh        &mesh)
+    mesh::Mesh &       mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   PRECICE_ASSERT(utils::MasterSlave::isParallel());
@@ -39,7 +39,7 @@ void ExportVTKXML::doExport(
   if (utils::MasterSlave::isMaster()) {
     writeMasterFile(name, location, mesh);
   }
-  if (mesh.vertices().size() > 0) { // only procs at the coupling interface should write output (for performance reasons)
+  if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
     writeSubFile(name, location, mesh);
   }
 }
@@ -63,7 +63,7 @@ void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
 void ExportVTKXML::writeMasterFile(
     const std::string &name,
     const std::string &location,
-    mesh::Mesh        &mesh)
+    mesh::Mesh &       mesh)
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -111,7 +111,7 @@ void ExportVTKXML::writeMasterFile(
   outMasterFile << "      </PPointData>\n";
 
   for (int i = 0; i < utils::MasterSlave::getSize(); i++) {
-    if (mesh.getVertexDistribution()[i].size() > 0) { // only non-empty subfiles
+    if (mesh.getVertexDistribution()[i].size() > 0) { //only non-empty subfiles
       outMasterFile << "      <Piece Source=\"" << name << "_r" << i << ".vtu\"/>\n";
     }
   }
@@ -125,7 +125,7 @@ void ExportVTKXML::writeMasterFile(
 void ExportVTKXML::writeSubFile(
     const std::string &name,
     const std::string &location,
-    mesh::Mesh        &mesh)
+    mesh::Mesh &       mesh)
 {
   int numPoints = mesh.vertices().size(); // number of vertices
   int numCells;                           // number of cells
@@ -170,7 +170,7 @@ void ExportVTKXML::writeSubFile(
 }
 
 void ExportVTKXML::exportMesh(
-    std::ofstream    &outFile,
+    std::ofstream &   outFile,
     mesh::Mesh const &mesh)
 {
   if (mesh.getDimensions() == 2) { // write edges as cells
@@ -227,7 +227,7 @@ void ExportVTKXML::exportMesh(
 
 void ExportVTKXML::exportData(
     std::ofstream &outFile,
-    mesh::Mesh    &mesh)
+    mesh::Mesh &   mesh)
 {
   outFile << "         <PointData Scalars=\"Rank ";
   for (const auto &scalarDataName : _scalarDataNames) {
@@ -266,7 +266,7 @@ void ExportVTKXML::exportData(
           outFile << viewTemp[i] << ' ';
         }
         if (dataDimensions == 2) {
-          outFile << "0.0" << ' '; // 2D data needs to be 3D for vtk
+          outFile << "0.0" << ' '; //2D data needs to be 3D for vtk
         }
         outFile << ' ';
       }
@@ -283,21 +283,21 @@ void ExportVTKXML::exportData(
 
 void ExportVTKXML::writeVertex(
     const Eigen::VectorXd &position,
-    std::ofstream         &outFile)
+    std::ofstream &        outFile)
 {
   outFile << "               ";
   for (int i = 0; i < position.size(); i++) {
     outFile << position(i) << "  ";
   }
   if (position.size() == 2) {
-    outFile << 0.0 << "  "; // also for 2D scenario, vtk needs 3D data
+    outFile << 0.0 << "  "; //also for 2D scenario, vtk needs 3D data
   }
   outFile << '\n';
 }
 
 void ExportVTKXML::writeTriangle(
     const mesh::Triangle &triangle,
-    std::ofstream        &outFile)
+    std::ofstream &       outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
@@ -306,7 +306,7 @@ void ExportVTKXML::writeTriangle(
 
 void ExportVTKXML::writeLine(
     const mesh::Edge &edge,
-    std::ofstream    &outFile)
+    std::ofstream &   outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
   outFile << edge.vertex(1).getID() << "  ";

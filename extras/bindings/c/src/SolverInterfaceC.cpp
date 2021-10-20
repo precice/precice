@@ -30,7 +30,7 @@ void precicec_createSolverInterface_withCommunicator(
     const char *configFileName,
     int         solverProcessIndex,
     int         solverProcessSize,
-    void       *communicator)
+    void *      communicator)
 {
   std::string stringAccessorName(participantName);
   std::string stringConfigFileName(configFileName);
@@ -210,7 +210,7 @@ void precicec_getMeshVertices(
     int        meshID,
     int        size,
     const int *ids,
-    double    *positions)
+    double *   positions)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->getMeshVertices(meshID, size, ids, positions);
@@ -220,7 +220,7 @@ void precicec_setMeshVertices(
     int           meshID,
     int           size,
     const double *positions,
-    int          *ids)
+    int *         ids)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshVertices(meshID, size, positions, ids);
@@ -237,7 +237,7 @@ void precicec_getMeshVertexIDsFromPositions(
     int           meshID,
     int           size,
     const double *positions,
-    int          *ids)
+    int *         ids)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
@@ -297,7 +297,7 @@ void precicec_setMeshQuadWithEdges(
 void precicec_writeBlockVectorData(
     int           dataID,
     int           size,
-    const int    *valueIndices,
+    const int *   valueIndices,
     const double *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -316,7 +316,7 @@ void precicec_writeVectorData(
 void precicec_writeBlockScalarData(
     int           dataID,
     int           size,
-    const int    *valueIndices,
+    const int *   valueIndices,
     const double *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -336,7 +336,7 @@ void precicec_readBlockVectorData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double    *values)
+    double *   values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readBlockVectorData(dataID, size, valueIndices, values);
@@ -355,7 +355,7 @@ void precicec_readBlockScalarData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double    *values)
+    double *   values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readBlockScalarData(dataID, size, valueIndices, values);
@@ -412,8 +412,8 @@ void precicec_setMeshAccessRegion(
 void precicec_getMeshVerticesAndIDs(
     const int meshID,
     const int size,
-    int      *ids,
-    double   *coordinates)
+    int *     ids,
+    double *  coordinates)
 {
   impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }

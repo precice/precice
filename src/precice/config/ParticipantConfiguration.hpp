@@ -24,7 +24,7 @@ namespace config {
 class ParticipantConfiguration : public xml::XMLTag::Listener {
 public:
   ParticipantConfiguration(
-      xml::XMLTag               &parent,
+      xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
 
   void setDimensions(int dimensions);
@@ -36,7 +36,7 @@ public:
    */
   virtual void xmlTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag                     &callingTag);
+      xml::XMLTag &                    callingTag);
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -45,7 +45,7 @@ public:
    */
   virtual void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag                     &callingTag);
+      xml::XMLTag &                    callingTag);
 
   /// Returns all configured participants.
   const std::vector<impl::PtrParticipant> &getParticipants() const;
@@ -121,7 +121,7 @@ private:
 
   const mesh::PtrData &getData(
       const mesh::PtrMesh &mesh,
-      const std::string   &nameData) const;
+      const std::string &  nameData) const;
 
   mapping::PtrMapping getMapping(const std::string &mappingName);
 
@@ -132,12 +132,12 @@ private:
 
   void finishParticipantConfiguration(
       const xml::ConfigurationContext &context,
-      const impl::PtrParticipant      &participant);
+      const impl::PtrParticipant &     participant);
 
   /// Check whether a mapping to the same mesh and with similar data fields already exists
   void checkIllDefinedMappings(
       const mapping::MappingConfiguration::ConfiguredMapping &mapping,
-      const impl::PtrParticipant                             &participant);
+      const impl::PtrParticipant &                            participant);
 };
 
 } // namespace config

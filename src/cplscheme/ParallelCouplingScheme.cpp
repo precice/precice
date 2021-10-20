@@ -13,9 +13,9 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     int                           maxTimeWindows,
     double                        timeWindowSize,
     int                           validDigits,
-    const std::string            &firstParticipant,
-    const std::string            &secondParticipant,
-    const std::string            &localParticipant,
+    const std::string &           firstParticipant,
+    const std::string &           secondParticipant,
+    const std::string &           localParticipant,
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
@@ -56,7 +56,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
 {
   bool convergence = true;
 
-  if (doesFirstStep()) { // first participant
+  if (doesFirstStep()) { //first participant
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
     PRECICE_DEBUG("Receiving data...");
@@ -65,7 +65,7 @@ bool ParallelCouplingScheme::exchangeDataAndAccelerate()
     }
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
-  } else { // second participant
+  } else { //second participant
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
     checkDataHasBeenReceived();
