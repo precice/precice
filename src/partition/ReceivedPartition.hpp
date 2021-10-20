@@ -102,7 +102,7 @@ private:
   double _safetyFactor;
 
   int _ranksAtInterface = 0;
-  
+
   bool _allowDirectAccess;
 
   logging::Logger _log{"partition::ReceivedPartition"};
