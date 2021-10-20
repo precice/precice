@@ -64,11 +64,11 @@ public:
    * The write order is fixed by the order addData() is called.
    */
   void writeData(
-      const std::string &    name,
+      const std::string     &name,
       const Eigen::Vector2d &value);
 
   void writeData(
-      const std::string &    name,
+      const std::string     &name,
       const Eigen::Vector3d &value);
 
   /// Closes the file, is automatically called on destruction.

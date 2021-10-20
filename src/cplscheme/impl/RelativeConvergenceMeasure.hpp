@@ -41,12 +41,12 @@ namespace impl {
 class RelativeConvergenceMeasure : public ConvergenceMeasure {
 public:
   /**
-    * @brief Constructor.
-    *
-    * @param[in] convergenceLimitPercent
-    *        Limit to define convergence relative to the norm of the current
-    *        new dataset. Has to be in $] 0 ; 1 ]$.
-    */
+   * @brief Constructor.
+   *
+   * @param[in] convergenceLimitPercent
+   *        Limit to define convergence relative to the norm of the current
+   *        new dataset. Has to be in $] 0 ; 1 ]$.
+   */
   RelativeConvergenceMeasure(double convergenceLimitPercent);
 
   virtual ~RelativeConvergenceMeasure(){};
@@ -78,8 +78,8 @@ public:
   }
 
   /**
-    * @brief Adds current convergence information to output stream.
-    */
+   * @brief Adds current convergence information to output stream.
+   */
   virtual std::string printState(const std::string &dataName)
   {
     std::ostringstream os;

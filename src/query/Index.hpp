@@ -74,15 +74,15 @@ public:
   std::vector<VertexID> getVerticesInsideBox(const mesh::BoundingBox &bb);
 
   /**
-   * @brief Find the closest interpolation element to the given location. 
+   * @brief Find the closest interpolation element to the given location.
    * If exists, triangle or edge projection element is returned. If not vertex projection element, which is the nearest neighbor is returned.
-   * 
-   * param[in] sourceVertex 
+   *
+   * param[in] sourceVertex
    * param[in] n how many nearest edges/faces are going to be checked
-   * 
+   *
    * param[out] pair of interpolation and the distance to corresponding vertex/edge/triangle
    *
-  */
+   */
   ProjectionMatch findNearestProjection(const Eigen::VectorXd &location, int n);
 
 private:

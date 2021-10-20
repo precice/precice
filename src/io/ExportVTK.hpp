@@ -25,7 +25,7 @@ public:
   virtual void doExport(
       const std::string &name,
       const std::string &location,
-      mesh::Mesh &       mesh);
+      mesh::Mesh        &mesh);
 
   static void initializeWriting(
       std::ofstream &filestream);
@@ -34,7 +34,7 @@ public:
 
   static void writeVertex(
       const Eigen::VectorXd &position,
-      std::ostream &         outFile);
+      std::ostream          &outFile);
 
   static void writeLine(
       int           vertexIndices[2],
@@ -48,7 +48,7 @@ private:
   logging::Logger _log{"io::ExportVTK"};
 
   void openFile(
-      std::ofstream &    outFile,
+      std::ofstream     &outFile,
       const std::string &filename) const;
 
   void exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh);

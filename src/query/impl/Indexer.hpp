@@ -46,7 +46,7 @@ public:
 
 private:
   Indexer(){};
-  MeshIndices &              cacheEntry(MeshID meshID);
+  MeshIndices               &cacheEntry(MeshID meshID);
   std::map<int, MeshIndices> _cachedTrees;
 };
 

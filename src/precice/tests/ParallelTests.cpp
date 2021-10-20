@@ -445,7 +445,7 @@ void runTestQN(std::string const &config, TestContext const &context)
 
     if (context.isNamed("SolverOne")) {
       for (int i = 0; i < 4; i++) {
-        outValues[i] = inValues[i]; //only pushes solution through
+        outValues[i] = inValues[i]; // only pushes solution through
       }
     } else {
       outValues[0] = 2 * inValues[0] * inValues[0] - inValues[1] * inValues[2] - 8.0 + inValues[0];
@@ -465,7 +465,7 @@ void runTestQN(std::string const &config, TestContext const &context)
 
   interface.finalize();
 
-  //relative residual in config is 1e-7, so 2 orders of magnitude less strict
+  // relative residual in config is 1e-7, so 2 orders of magnitude less strict
   BOOST_TEST(outValues[0] == -2.0, boost::test_tools::tolerance(1e-5));
   BOOST_TEST(outValues[1] == 0.0, boost::test_tools::tolerance(1e-5));
   BOOST_TEST(outValues[2] == -2.0, boost::test_tools::tolerance(1e-5));
@@ -545,7 +545,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
     if (context.isNamed("SolverOne")) {
       for (int i = 0; i < 4; i++) {
-        outValues[i] = inValues[i]; //only pushes solution through
+        outValues[i] = inValues[i]; // only pushes solution through
       }
     } else {
       outValues[0] = 2 * inValues[0] * inValues[0] - inValues[1] * inValues[2] - 8.0 + inValues[0];
@@ -568,7 +568,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
   interface.finalize();
 
-  //relative residual in config is 1e-7, so 2 orders of magnitude less strict
+  // relative residual in config is 1e-7, so 2 orders of magnitude less strict
   if ((context.isNamed("SolverOne") and context.isMaster()) or
       (context.isNamed("SolverTwo") and (not context.isMaster()))) {
     BOOST_TEST(outValues[0] == -2.0, boost::test_tools::tolerance(1e-5));
@@ -634,7 +634,7 @@ BOOST_AUTO_TEST_CASE(TestQN3EmptyPartition)
 void runTestDistributedCommunication(std::string const &config, TestContext const &context)
 {
   std::string meshName;
-  int         i1 = -1, i2 = -1; //indices for data and positions
+  int         i1 = -1, i2 = -1; // indices for data and positions
 
   std::vector<Eigen::VectorXd> positions;
   std::vector<Eigen::VectorXd> data;
@@ -691,7 +691,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
 
   precice.initialize();
 
-  if (context.isNamed("Fluid")) { //Fluid
+  if (context.isNamed("Fluid")) { // Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
     }
@@ -706,7 +706,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
 
   precice.advance(1.0);
 
-  if (context.isNamed("Fluid")) { //Fluid
+  if (context.isNamed("Fluid")) { // Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.readVectorData(velocID, vertexIDs[i], data[i + i1].data());
       for (size_t d = 0; d < 3; d++) {
@@ -765,7 +765,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
     expectedData.push_back(datum);
   }
 
-  int i1 = -1, i2 = -1; //indices for data and positions
+  int i1 = -1, i2 = -1; // indices for data and positions
 
   if (context.isNamed("Fluid")) {
     if (context.isMaster()) {
@@ -1147,7 +1147,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
   Eigen::Vector3d position;
   Eigen::Vector3d datum;
 
-  int i1 = -1, i2 = -1; //indices for data and positions
+  int i1 = -1, i2 = -1; // indices for data and positions
 
   if (context.isNamed("Fluid")) {
     if (context.isMaster()) {
@@ -1399,16 +1399,16 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
     std::vector<int> edgeIDs(numberOfEdges);
 
     for (int i = 0; i < numberOfCells; i++) {
-      edgeIDs.at(4 * i)     = interface.setMeshEdge(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 1));     //left
-      edgeIDs.at(4 * i + 1) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 2));     //top
-      edgeIDs.at(4 * i + 2) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2 + 1), vertexIDs.at(i * 2 + 3)); //bottom
-      edgeIDs.at(4 * i + 3) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 3));     //diagonal
+      edgeIDs.at(4 * i)     = interface.setMeshEdge(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 1));     // left
+      edgeIDs.at(4 * i + 1) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 2));     // top
+      edgeIDs.at(4 * i + 2) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2 + 1), vertexIDs.at(i * 2 + 3)); // bottom
+      edgeIDs.at(4 * i + 3) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 3));     // diagonal
     }
-    edgeIDs.at(numberOfEdges - 1) = interface.setMeshEdge(meshID, vertexIDs.at(numberOfVertices - 2), vertexIDs.at(numberOfVertices - 1)); //very right
+    edgeIDs.at(numberOfEdges - 1) = interface.setMeshEdge(meshID, vertexIDs.at(numberOfVertices - 2), vertexIDs.at(numberOfVertices - 1)); // very right
 
     for (int i = 0; i < numberOfCells; i++) {
-      interface.setMeshTriangle(meshID, edgeIDs.at(4 * i), edgeIDs.at(4 * i + 3), edgeIDs.at(4 * i + 2));     //left-diag-bottom
-      interface.setMeshTriangle(meshID, edgeIDs.at(4 * i + 1), edgeIDs.at(4 * i + 3), edgeIDs.at(4 * i + 4)); //top-diag-right
+      interface.setMeshTriangle(meshID, edgeIDs.at(4 * i), edgeIDs.at(4 * i + 3), edgeIDs.at(4 * i + 2));     // left-diag-bottom
+      interface.setMeshTriangle(meshID, edgeIDs.at(4 * i + 1), edgeIDs.at(4 * i + 3), edgeIDs.at(4 * i + 4)); // top-diag-right
     }
 
     interface.initialize();

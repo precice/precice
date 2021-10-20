@@ -70,7 +70,7 @@ public:
       const std::string &configurationFileName,
       int                solverProcessIndex,
       int                solverProcessSize,
-      void *             communicator);
+      void              *communicator);
 
   ~SolverInterface();
 
@@ -411,7 +411,7 @@ public:
       int           meshID,
       int           size,
       const double *positions,
-      int *         ids);
+      int          *ids);
 
   /**
    * @brief Get vertex positions for multiple vertex ids from a given mesh
@@ -432,7 +432,7 @@ public:
       int        meshID,
       int        size,
       const int *ids,
-      double *   positions) const;
+      double    *positions) const;
 
   /**
    * @brief Gets mesh vertex IDs from positions.
@@ -453,7 +453,7 @@ public:
       int           meshID,
       int           size,
       const double *positions,
-      int *         ids) const;
+      int          *ids) const;
 
   /**
    * @brief Sets mesh edge from vertex IDs, returns edge ID.
@@ -621,7 +621,7 @@ public:
   void writeBlockVectorData(
       int           dataID,
       int           size,
-      const int *   valueIndices,
+      const int    *valueIndices,
       const double *values);
 
   /**
@@ -668,7 +668,7 @@ public:
   void writeBlockScalarData(
       int           dataID,
       int           size,
-      const int *   valueIndices,
+      const int    *valueIndices,
       const double *values);
 
   /**
@@ -716,7 +716,7 @@ public:
       int        dataID,
       int        size,
       const int *valueIndices,
-      double *   values) const;
+      double    *values) const;
 
   /**
    * @brief Reads vector data form a vertex
@@ -767,7 +767,7 @@ public:
       int        dataID,
       int        size,
       const int *valueIndices,
-      double *   values) const;
+      double    *values) const;
 
   /**
    * @brief Reads scalar data of a vertex.
@@ -877,8 +877,8 @@ public:
   void getMeshVerticesAndIDs(
       const int meshID,
       const int size,
-      int *     ids,
-      double *  coordinates) const;
+      int      *ids,
+      double   *coordinates) const;
 
   ///@}
 

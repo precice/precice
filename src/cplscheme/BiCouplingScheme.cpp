@@ -26,7 +26,7 @@ BiCouplingScheme::BiCouplingScheme(
     int                           validDigits,
     std::string                   firstParticipant,
     std::string                   secondParticipant,
-    const std::string &           localParticipant,
+    const std::string            &localParticipant,
     m2n::PtrM2N                   m2n,
     int                           maxIterations,
     CouplingMode                  cplMode,

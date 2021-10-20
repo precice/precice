@@ -445,7 +445,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   auto zeros = petsc::Vector::allocate(_matrixC);
   VecZeroEntries(zeros);
   zeros.assemble();
-  //MatDiagonalSet(_matrixC, zeros, INSERT_VALUES);
+  // MatDiagonalSet(_matrixC, zeros, INSERT_VALUES);
   MatDiagonalSet(_matrixC, zeros, ADD_VALUES);
 
   // Begin assembly here, all assembly is ended at the end of this function.
@@ -652,8 +652,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                  input()->getDimensions(), output()->getDimensions());
 
   PetscErrorCode ierr      = 0;
-  auto const &   inValues  = input()->data(inputDataID)->values();
-  auto &         outValues = output()->data(outputDataID)->values();
+  auto const    &inValues  = input()->data(inputDataID)->values();
+  auto          &outValues = output()->data(outputDataID)->values();
 
   int const valueDim = input()->data(inputDataID)->getDimensions();
   PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
@@ -968,7 +968,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
     constraintName = "conservative";
   }
 
-  const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
+  const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off"
+                                                                                                           : "separate";
 
   PRECICE_INFO("Mapping \"{}\" {} from \"{}\" (ID {}) to \"{}\" (ID {}) for dimension {} with polynomial set to {}",
                input()->data(inputDataID)->getName(), constraintName,

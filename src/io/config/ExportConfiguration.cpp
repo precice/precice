@@ -41,7 +41,7 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
 
 void ExportConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   if (tag.getBooleanAttributeValue(ATTR_NORMALS)) {
     PRECICE_WARN("You explicitly requrested to export the vertex normals. "

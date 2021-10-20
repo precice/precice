@@ -19,7 +19,7 @@ SolverInterface::SolverInterface(
     const std::string &configurationFileName,
     int                solverProcessIndex,
     int                solverProcessSize,
-    void *             communicator)
+    void              *communicator)
     : _impl(new impl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, communicator))
 {
 }
@@ -129,12 +129,12 @@ bool SolverInterface::hasToEvaluateFineModel() const
   return _impl->hasToEvaluateFineModel();
 }
 
-//void SolverInterface:: resetMesh
+// void SolverInterface:: resetMesh
 //(
-//  int meshID )
+//   int meshID )
 //{
-//  _impl->resetMesh(meshID);
-//}
+//   _impl->resetMesh(meshID);
+// }
 
 int SolverInterface::setMeshVertex(
     int           meshID,
@@ -153,7 +153,7 @@ void SolverInterface::setMeshVertices(
     int           meshID,
     int           size,
     const double *positions,
-    int *         ids)
+    int          *ids)
 {
   _impl->setMeshVertices(meshID, size, positions, ids);
 }
@@ -162,7 +162,7 @@ void SolverInterface::getMeshVertices(
     int        meshID,
     int        size,
     const int *ids,
-    double *   positions) const
+    double    *positions) const
 {
   _impl->getMeshVertices(meshID, size, ids, positions);
 }
@@ -171,7 +171,7 @@ void SolverInterface::getMeshVertexIDsFromPositions(
     int           meshID,
     int           size,
     const double *positions,
-    int *         ids) const
+    int          *ids) const
 {
   _impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
 }
@@ -238,7 +238,7 @@ void SolverInterface::mapWriteDataFrom(
 void SolverInterface::writeBlockVectorData(
     int           dataID,
     int           size,
-    const int *   valueIndices,
+    const int    *valueIndices,
     const double *values)
 {
   _impl->writeBlockVectorData(dataID, size, valueIndices, values);
@@ -255,7 +255,7 @@ void SolverInterface::writeVectorData(
 void SolverInterface::writeBlockScalarData(
     int           dataID,
     int           size,
-    const int *   valueIndices,
+    const int    *valueIndices,
     const double *values)
 {
   _impl->writeBlockScalarData(dataID, size, valueIndices, values);
@@ -273,7 +273,7 @@ void SolverInterface::readBlockVectorData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double *   values) const
+    double    *values) const
 {
   _impl->readBlockVectorData(dataID, size, valueIndices, values);
 }
@@ -290,7 +290,7 @@ void SolverInterface::readBlockScalarData(
     int        dataID,
     int        size,
     const int *valueIndices,
-    double *   values) const
+    double    *values) const
 {
   _impl->readBlockScalarData(dataID, size, valueIndices, values);
 }
@@ -311,8 +311,8 @@ void SolverInterface::setMeshAccessRegion(const int     meshID,
 
 void SolverInterface::getMeshVerticesAndIDs(const int meshID,
                                             const int size,
-                                            int *     ids,
-                                            double *  coordinates) const
+                                            int      *ids,
+                                            double   *coordinates) const
 {
   _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }

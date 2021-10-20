@@ -32,8 +32,8 @@ using namespace precice::cplscheme;
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
 void runSimpleExplicitCoupling(
-    CouplingScheme &               cplScheme,
-    const std::string &            participantName,
+    CouplingScheme                &cplScheme,
+    const std::string             &participantName,
     const mesh::MeshConfiguration &meshConfig)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
@@ -42,7 +42,7 @@ void runSimpleExplicitCoupling(
   auto &dataValues0 = mesh->data(0)->values();
   auto &dataValues1 = mesh->data(1)->values();
   BOOST_TEST(mesh->vertices().size() > 0);
-  mesh::Vertex &  vertex     = mesh->vertices().at(0);
+  mesh::Vertex   &vertex     = mesh->vertices().at(0);
   double          valueData0 = 1.0;
   Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0);
 
@@ -133,19 +133,19 @@ void runSimpleExplicitCoupling(
 }
 
 void runExplicitCouplingWithSubcycling(
-    CouplingScheme &               cplScheme,
-    const std::string &            participantName,
+    CouplingScheme                &cplScheme,
+    const std::string             &participantName,
     const mesh::MeshConfiguration &meshConfig)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_TEST(mesh->data().size() == 2);
   BOOST_TEST(mesh->vertices().size() > 0);
-  mesh::Vertex &  vertex      = mesh->vertices().at(0);
+  mesh::Vertex   &vertex      = mesh->vertices().at(0);
   double          valueData0  = 1.0;
   Eigen::VectorXd valueData1  = Eigen::VectorXd::Constant(3, 1.0);
-  auto &          dataValues0 = mesh->data(0)->values();
-  auto &          dataValues1 = mesh->data(1)->values();
+  auto           &dataValues0 = mesh->data(0)->values();
+  auto           &dataValues1 = mesh->data(1)->values();
 
   double      computedTime      = 0.0;
   int         computedTimesteps = 0;
@@ -257,7 +257,7 @@ struct ExplicitCouplingSchemeFixture : m2n::WhiteboxAccessor {
       const std::string &participant0,
       const std::string &participant1,
       const std::string &localParticipant,
-      m2n::PtrM2N &      communication)
+      m2n::PtrM2N       &communication)
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());

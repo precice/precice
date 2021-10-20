@@ -23,7 +23,7 @@ namespace precice {
 namespace action {
 
 ActionConfiguration::ActionConfiguration(
-    xml::XMLTag &              parent,
+    xml::XMLTag               &parent,
     mesh::PtrMeshConfiguration meshConfig)
     : NAME_DIVIDE_BY_AREA("divide-by-area"),
       NAME_MULTIPLY_BY_AREA("multiply-by-area"),
@@ -171,7 +171,7 @@ ActionConfiguration::ActionConfiguration(
 
 void ActionConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    callingTag)
+    xml::XMLTag                     &callingTag)
 {
   PRECICE_TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG) {
@@ -179,7 +179,7 @@ void ActionConfiguration::xmlTagCallback(
     _configuredAction.type   = callingTag.getName();
     _configuredAction.timing = callingTag.getStringAttributeValue(ATTR_TIMING);
     _configuredAction.mesh   = callingTag.getStringAttributeValue(ATTR_MESH);
-    //addSubtags ( callingTag, _configured.type );
+    // addSubtags ( callingTag, _configured.type );
   } else if (callingTag.getName() == TAG_SOURCE_DATA) {
     _configuredAction.sourceDataVector.push_back(callingTag.getStringAttributeValue(ATTR_NAME));
   } else if (callingTag.getName() == TAG_TARGET_DATA) {
@@ -198,7 +198,7 @@ void ActionConfiguration::xmlTagCallback(
 
 void ActionConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    callingTag)
+    xml::XMLTag                     &callingTag)
 {
   if (callingTag.getNamespace() == TAG) {
     createAction();

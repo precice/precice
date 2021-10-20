@@ -21,8 +21,8 @@ public:
    * @param[in] comm The communicator to Initialize PETSc on
    */
   static void initialize(
-      int *                         argc,
-      char ***                      argv,
+      int                          *argc,
+      char                       ***argv,
       utils::Parallel::Communicator comm);
 
   /// Finalizes Petsc environment.

@@ -88,7 +88,7 @@ void AitkenAcceleration::performAcceleration(
   double omega         = _aitkenFactor;
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type &pair : cplData) {
-    auto &      values    = pair.second->values();
+    auto       &values    = pair.second->values();
     const auto &oldValues = pair.second->previousIteration();
     values *= omega;
     for (int i = 0; i < values.size(); i++) {

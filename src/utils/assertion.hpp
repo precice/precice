@@ -42,17 +42,17 @@ static constexpr char const *ASSERT_FMT =
  * @param[in] check the expression which needs to evaluate to true for the assertion to pass
  * @param[in] args the expression which evaluates to the formatted arguments
  */
-#define PRECICE_ASSERT_IMPL(check, args)                                 \
-  if (!(check)) {                                                        \
-    std::cerr << fmt::format(precice::utils::ASSERT_FMT,                 \
-                             BOOST_CURRENT_FUNCTION, __FILE__, __LINE__, \
-                             BOOST_PP_STRINGIZE(check),                  \
-                             precice::utils::Parallel::getProcessRank(), \
-                             args,                                       \
-                             getStacktrace())                            \
-              << std::flush;                                             \
-    std::cout.flush();                                                   \
-    assert(false);                                                       \
+#define PRECICE_ASSERT_IMPL(check, args)                                                    \
+  if (!(check)) {                                                                           \
+    std::cerr << fmt::format(precice::utils::ASSERT_FMT,                                    \
+                             BOOST_CURRENT_FUNCTION, __FILE__, __LINE__,                    \
+                             BOOST_PP_STRINGIZE(check),                                     \
+                                                precice::utils::Parallel::getProcessRank(), \
+                                                args,                                       \
+                                                getStacktrace())                            \
+                             << std::flush;                                                 \
+    std::cout.flush();                                                                      \
+    assert(false);                                                                          \
   }
 
 #define PRECICE_ASSERT_IMPL_N(check, ...) \

@@ -17,7 +17,7 @@ struct LogLocation {
 class Logger {
 public:
   /** Creates a logger for a given module.
-   * @param[in] the name of the module 
+   * @param[in] the name of the module
    */
   explicit Logger(std::string module);
 

@@ -37,10 +37,10 @@ std::string decodeXML(std::string xml)
 // ------------------------- Callback functions for libxml2  -------------------------
 
 void OnStartElementNs(
-    void *          ctx,
-    const xmlChar * localname,
-    const xmlChar * prefix,
-    const xmlChar * URI,
+    void           *ctx,
+    const xmlChar  *localname,
+    const xmlChar  *prefix,
+    const xmlChar  *URI,
     int             nb_namespaces,
     const xmlChar **namespaces,
     int             nb_attributes,
@@ -67,7 +67,7 @@ void OnStartElementNs(
 }
 
 void OnEndElementNs(
-    void *         ctx,
+    void          *ctx,
     const xmlChar *localname,
     const xmlChar *prefix,
     const xmlChar *URI)
@@ -170,11 +170,11 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
   for (auto &subtag : SubTags) {
     std::string expectedName = (subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name;
     const auto  tagPosition  = std::find_if(
-        DefTags.begin(),
-        DefTags.end(),
-        [expectedName](const std::shared_ptr<XMLTag> &pTag) {
+          DefTags.begin(),
+          DefTags.end(),
+          [expectedName](const std::shared_ptr<XMLTag> &pTag) {
           return pTag->_fullName == expectedName;
-        });
+          });
 
     if (tagPosition == DefTags.end()) {
       PRECICE_ERROR("The configuration contains an unknown tag <{}>.", expectedName);

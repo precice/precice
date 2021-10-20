@@ -47,13 +47,13 @@ private:
 /// struct giving access to the impl of a befriended class or struct
 struct WhiteboxAccessor {
   /** Returns the impl of the obj by reference.
-     *
-     * Returns a reference to the object pointed to by the _impl of a class.
-     * This class needs to be friend of T.
-     *
-     * @param[in] obj The object to fetch the impl from.
-     * @returns a lvalue reference to the impl object.
-     */
+   *
+   * Returns a reference to the object pointed to by the _impl of a class.
+   * This class needs to be friend of T.
+   *
+   * @param[in] obj The object to fetch the impl from.
+   * @returns a lvalue reference to the impl object.
+   */
   template <typename T>
   static auto impl(T &obj) -> typename std::add_lvalue_reference<decltype(*(obj._impl))>::type
   {

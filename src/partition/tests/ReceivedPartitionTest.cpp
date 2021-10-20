@@ -193,15 +193,15 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, Rank rank)
   BOOST_TEST(pNastinMesh);
   BOOST_TEST(pNastinMesh->getDimensions() == dimensions);
 
-  if (rank == 0) { //Master
+  if (rank == 0) { // Master
     Eigen::VectorXd position(dimensions);
     position << -1.0, -1.0, 0.0;
     pNastinMesh->createVertex(position);
     position << -0.75, -0.75, 0.5;
     pNastinMesh->createVertex(position);
-  } else if (rank == 1) { //Slave1
+  } else if (rank == 1) { // Slave1
     // slave1 not at interface
-  } else if (rank == 2) { //Slave2
+  } else if (rank == 2) { // Slave2
     Eigen::VectorXd position(dimensions);
     position << 0.0, 0.0, -1.0;
     pNastinMesh->createVertex(position);
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
   int             dimensions = 2;
   Eigen::VectorXd offset     = Eigen::VectorXd::Zero(dimensions);
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     createSolidzMesh2D(pSolidzMesh);
     BOOST_TEST(pSolidzMesh->vertices().size() == 6);
@@ -277,13 +277,13 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
     BOOST_TEST_CONTEXT(*pSolidzMesh)
     {
       // check if the sending and filtering worked right
-      if (context.isMaster()) { //Master
+      if (context.isMaster()) { // Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 2);
         BOOST_TEST(pSolidzMesh->edges().size() == 1);
-      } else if (context.isRank(1)) { //Slave1
+      } else if (context.isRank(1)) { // Slave1
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
-      } else if (context.isRank(2)) { //Slave2
+      } else if (context.isRank(2)) { // Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 2);
         BOOST_TEST(pSolidzMesh->edges().size() == 1);
       }
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
   int             dimensions = 2;
   Eigen::VectorXd offset     = Eigen::VectorXd::Zero(dimensions);
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     createSolidzMesh2DSmall(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
@@ -331,13 +331,13 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
     part.compute();
 
     // check if the sending and filtering worked right
-    if (context.isMaster()) { //Master
+    if (context.isMaster()) { // Master
       BOOST_TEST(pSolidzMesh->vertices().size() == 2);
       BOOST_TEST(pSolidzMesh->edges().size() == 1);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { // Slave1
       BOOST_TEST(pSolidzMesh->vertices().size() == 0);
       BOOST_TEST(pSolidzMesh->edges().size() == 0);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { // Slave2
       BOOST_TEST(pSolidzMesh->vertices().size() == 2);
       BOOST_TEST(pSolidzMesh->edges().size() == 1);
     }
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
 
   int dimensions = 2;
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     createSolidzMesh2D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
@@ -383,13 +383,13 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
     BOOST_TEST_CONTEXT(*pSolidzMesh)
     {
       // check if the sending and filtering worked right
-      if (context.isMaster()) { //Master
+      if (context.isMaster()) { // Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 3);
         BOOST_TEST(pSolidzMesh->edges().size() == 2);
-      } else if (context.isRank(1)) { //Slave1
+      } else if (context.isRank(1)) { // Slave1
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
-      } else if (context.isRank(2)) { //Slave2
+      } else if (context.isRank(2)) { // Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 3);
         BOOST_TEST(pSolidzMesh->edges().size() == 2);
       }
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
 
   int dimensions = 2;
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     createSolidzMesh2D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
 
       // check if the sending and filtering worked right
-      if (context.isMaster()) { //Master
+      if (context.isMaster()) { // Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 6);
         BOOST_TEST(pSolidzMesh->edges().size() == 5);
         BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
@@ -459,10 +459,10 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
         BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
         BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 4);
         BOOST_TEST(pSolidzMesh->vertices().at(5).getGlobalIndex() == 5);
-      } else if (context.isRank(1)) { //Slave2
+      } else if (context.isRank(1)) { // Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
-      } else if (context.isRank(2)) { //Slave3
+      } else if (context.isRank(2)) { // Slave3
         BOOST_TEST(pSolidzMesh->vertices().size() == 6);
         BOOST_TEST(pSolidzMesh->edges().size() == 5);
         BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == false);
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
 
   int dimensions = 2;
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     createSolidzMesh2D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
@@ -530,7 +530,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
 
       // check if the sending and filtering worked right
-      if (context.isMaster()) { //Master
+      if (context.isMaster()) { // Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 3);
         BOOST_TEST(pSolidzMesh->edges().size() == 2);
         BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
@@ -539,10 +539,10 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
         BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
         BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
         BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
-      } else if (context.isRank(1)) { //Slave2
+      } else if (context.isRank(1)) { // Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
-      } else if (context.isRank(2)) { //Slave3
+      } else if (context.isRank(2)) { // Slave3
         BOOST_TEST(pSolidzMesh->vertices().size() == 3);
         BOOST_TEST(pSolidzMesh->edges().size() == 2);
         BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
 
   int dimensions = 2;
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     createSolidzMesh2D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
 
       // check if the sending and filtering worked right
-      if (context.isMaster()) { //Master
+      if (context.isMaster()) { // Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 4);
         BOOST_TEST(pSolidzMesh->edges().size() == 3);
         BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
@@ -615,10 +615,10 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
         BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 1);
         BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
         BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
-      } else if (context.isRank(1)) { //Slave2
+      } else if (context.isRank(1)) { // Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
-      } else if (context.isRank(2)) { //Slave3
+      } else if (context.isRank(2)) { // Slave3
         BOOST_TEST(pSolidzMesh->vertices().size() == 5);
         BOOST_TEST(pSolidzMesh->edges().size() == 4);
         BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == false);
@@ -644,7 +644,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
 
   int dimensions = 3;
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     createSolidzMesh3D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
@@ -686,7 +686,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 5);
 
       // check if the sending and filtering worked right
-      if (context.isMaster()) { //Master
+      if (context.isMaster()) { // Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 5);
         BOOST_TEST(pSolidzMesh->edges().size() == 6);
         BOOST_TEST(pSolidzMesh->triangles().size() == 2);
@@ -700,11 +700,11 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
         BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 2);
         BOOST_TEST(pSolidzMesh->vertices().at(3).getGlobalIndex() == 3);
         BOOST_TEST(pSolidzMesh->vertices().at(4).getGlobalIndex() == 4);
-      } else if (context.isRank(1)) { //Slave2
+      } else if (context.isRank(1)) { // Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
         BOOST_TEST(pSolidzMesh->triangles().size() == 0);
-      } else if (context.isRank(2)) { //Slave3
+      } else if (context.isRank(2)) { // Slave3
         BOOST_TEST(pSolidzMesh->vertices().size() == 5);
         BOOST_TEST(pSolidzMesh->edges().size() == 6);
         BOOST_TEST(pSolidzMesh->triangles().size() == 2);
@@ -731,7 +731,7 @@ BOOST_AUTO_TEST_CASE(NPPrimitiveOwnership3D)
 
   int dimensions = 3;
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     createSolidzMesh3D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
@@ -767,7 +767,7 @@ BOOST_AUTO_TEST_CASE(NPPrimitiveOwnership3D)
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 5);
 
       // check if the sending and filtering worked right
-      if (context.isMaster()) { //Master
+      if (context.isMaster()) { // Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 2);
         BOOST_TEST(pSolidzMesh->edges().size() == 1);
         BOOST_TEST(pSolidzMesh->triangles().size() == 0);
@@ -780,11 +780,11 @@ BOOST_AUTO_TEST_CASE(NPPrimitiveOwnership3D)
         BOOST_TEST(pSolidzMesh->edges().at(0).getGlobalIndex() == 1);
 
         BOOST_TEST(pSolidzMesh->triangles().size() == 0);
-      } else if (context.isRank(1)) { //Slave2
+      } else if (context.isRank(1)) { // Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
         BOOST_TEST(pSolidzMesh->triangles().size() == 0);
-      } else if (context.isRank(2)) { //Slave3
+      } else if (context.isRank(2)) { // Slave3
         BOOST_TEST(pSolidzMesh->vertices().size() == 3);
         BOOST_TEST(pSolidzMesh->edges().size() == 3);
         BOOST_TEST(pSolidzMesh->triangles().size() == 1);
@@ -819,7 +819,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
 
   int dimensions = 3;
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     createSolidzMesh3D(pSolidzMesh);
     ProvidedPartition part(pSolidzMesh);
@@ -848,15 +848,15 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
     part.compute();
 
     // check if the sending and filtering worked right
-    if (context.isMaster()) { //Master
+    if (context.isMaster()) { // Master
       BOOST_TEST(pSolidzMesh->vertices().size() == 2);
       BOOST_TEST(pSolidzMesh->edges().size() == 1);
       BOOST_TEST(pSolidzMesh->triangles().size() == 0);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { // Slave1
       BOOST_TEST(pSolidzMesh->vertices().size() == 0);
       BOOST_TEST(pSolidzMesh->edges().size() == 0);
       BOOST_TEST(pSolidzMesh->triangles().size() == 0);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { // Slave2
       BOOST_TEST(pSolidzMesh->vertices().size() == 3);
       BOOST_TEST(pSolidzMesh->edges().size() == 3);
       BOOST_TEST(pSolidzMesh->triangles().size() == 1);
@@ -872,7 +872,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
 
   int dimensions = 2;
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
     Eigen::VectorXd position(dimensions);
@@ -898,19 +898,19 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
         new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
     boundingFromMapping->setMeshes(pMesh, pOtherMesh);
 
-    if (context.isMaster()) { //Master
+    if (context.isMaster()) { // Master
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0;
       pOtherMesh->createVertex(position);
       position << 0.8, 0.0;
       pOtherMesh->createVertex(position);
-    } else if (context.isRank(1)) { //Slave2
+    } else if (context.isRank(1)) { // Slave2
       Eigen::VectorXd position(dimensions);
       position << 1.0, 0.0;
       pOtherMesh->createVertex(position);
       position << 1.2, 0.0;
       pOtherMesh->createVertex(position);
-    } else if (context.isRank(2)) { //Slave3
+    } else if (context.isRank(2)) { // Slave3
       // no vertices
     }
 
@@ -928,7 +928,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
     BOOST_TEST(pMesh->getVertexOffsets().at(1) == 3);
     BOOST_TEST(pMesh->getVertexOffsets().at(2) == 3);
 
-    if (context.isMaster()) { //Master
+    if (context.isMaster()) { // Master
       BOOST_TEST(pMesh->getVertexDistribution().at(0).size() == 2);
       BOOST_TEST(pMesh->getVertexDistribution().at(1).size() == 1);
       BOOST_TEST(pMesh->getVertexDistribution().at(2).size() == 0);
@@ -940,11 +940,11 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
       BOOST_TEST(pMesh->vertices().at(1).getGlobalIndex() == 1);
       BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
       BOOST_TEST(pMesh->vertices().at(1).isOwner() == false);
-    } else if (context.isRank(1)) { //Slave2
+    } else if (context.isRank(1)) { // Slave2
       BOOST_TEST(pMesh->vertices().size() == 1);
       BOOST_TEST(pMesh->vertices().at(0).getGlobalIndex() == 1);
       BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
-    } else if (context.isRank(2)) { //Slave3
+    } else if (context.isRank(2)) { // Slave3
       BOOST_TEST(pMesh->vertices().size() == 0);
     }
   }
@@ -1196,12 +1196,12 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationVertexCount)
 {
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
-    for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive 
-    this vertex, but only one of them can own it. Since the rank 2, has the lowest number of vertices, 
+    for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive
+    this vertex, but only one of them can own it. Since the rank 2, has the lowest number of vertices,
     this vertex must belong only to it finally.
   */
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
-  //mesh creation
+  // mesh creation
   int           dimensions = 2;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
@@ -1289,12 +1289,12 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationLowerRank)
 {
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
-    for 2LI. The provided mesh includes a vertices at point (0, 0, 0) and (0, 0, 1). Initially, all 
-    receiving ranks receive this vertex, but only one of them can own it. Since the rank 0, has the lowest 
+    for 2LI. The provided mesh includes a vertices at point (0, 0, 0) and (0, 0, 1). Initially, all
+    receiving ranks receive this vertex, but only one of them can own it. Since the rank 0, has the lowest
     rank number, this vertex must belong only to this rank.
    */
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
-  //mesh creation
+  // mesh creation
   int           dimensions = 3;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
@@ -1442,12 +1442,12 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationEmptyPartition)
 {
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
-    for 2LI. The provided mesh includes vertices at points (0, 0, 0) and (0, 0, 1). Rank 2 has an 
-    empty mesh partition. Initially, all ranks (except rank 2) receive this vertex, but only one of them 
+    for 2LI. The provided mesh includes vertices at points (0, 0, 0) and (0, 0, 1). Rank 2 has an
+    empty mesh partition. Initially, all ranks (except rank 2) receive this vertex, but only one of them
     can own it. Since the rank 0, has the lowest rank number, this vertex must belong only to this rank.
    */
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
-  //mesh creation
+  // mesh creation
   int           dimensions = 3;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
@@ -1575,7 +1575,7 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
   int             dimensions = 2;
   Eigen::VectorXd offset     = Eigen::VectorXd::Zero(dimensions);
 
-  if (context.isNamed("Solid")) { //SOLIDZ
+  if (context.isNamed("Solid")) { // SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     createSolidzMesh2D(pSolidzMesh);
     BOOST_TEST(pSolidzMesh->vertices().size() == 6);
@@ -1635,13 +1635,13 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
     BOOST_TEST_CONTEXT(*pSolidzMesh)
     {
       // check if the sending and filtering worked right
-      if (context.isMaster()) { //Master
+      if (context.isMaster()) { // Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 2);
         BOOST_TEST(pSolidzMesh->edges().size() == 1);
-      } else if (context.isRank(1)) { //Slave1
+      } else if (context.isRank(1)) { // Slave1
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
-      } else if (context.isRank(2)) { //Slave2
+      } else if (context.isRank(2)) { // Slave2
         BOOST_TEST(pSolidzMesh->vertices().size() == 2);
         BOOST_TEST(pSolidzMesh->edges().size() == 1);
       }

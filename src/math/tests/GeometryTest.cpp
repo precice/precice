@@ -164,8 +164,8 @@ BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
   // Touching second segment vertex
   secondSegmentPoint = Vector3d::Constant(0.0);
   result             = geometry::segmentPlaneIntersection(
-      pointOnPlane, planeNormal, firstSegmentPoint,
-      secondSegmentPoint, intersectionPoint);
+                  pointOnPlane, planeNormal, firstSegmentPoint,
+                  secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::TOUCHING);
   BOOST_CHECK(equals(intersectionPoint, expected));
 
@@ -173,8 +173,8 @@ BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
   firstSegmentPoint  = Vector3d::Constant(0.0);
   secondSegmentPoint = Vector3d::Constant(-1.0);
   result             = geometry::segmentPlaneIntersection(
-      pointOnPlane, planeNormal, firstSegmentPoint,
-      secondSegmentPoint, intersectionPoint);
+                  pointOnPlane, planeNormal, firstSegmentPoint,
+                  secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::TOUCHING);
   BOOST_CHECK(equals(intersectionPoint, expected));
 
@@ -183,8 +183,8 @@ BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
   intersectionPoint << 1.0, 2.0, 3.0; // should not be modified
   expected = intersectionPoint;
   result   = geometry::segmentPlaneIntersection(
-      pointOnPlane, planeNormal, firstSegmentPoint,
-      secondSegmentPoint, intersectionPoint);
+        pointOnPlane, planeNormal, firstSegmentPoint,
+        secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::NO_INTERSECTION);
   BOOST_CHECK(equals(intersectionPoint, expected));
 
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(ContainedInHyperrectangle)
   // Not contained 2D
   Eigen::Vector2d testPoint2D(2, 2);
   int             result = geometry::containedInHyperrectangle(
-      sidelengths2D, center2D, testPoint2D);
+                  sidelengths2D, center2D, testPoint2D);
   BOOST_TEST(result == geometry::NOT_CONTAINED);
 
   testPoint2D << -2.0, -2.0;

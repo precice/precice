@@ -30,8 +30,8 @@ extern "C" {
 void precicef_create_(
     const char *participantName,
     const char *configFileName,
-    const int * solverProcessIndex,
-    const int * solverProcessSize,
+    const int  *solverProcessIndex,
+    const int  *solverProcessSize,
     int         lengthAccessorName,
     int         lengthConfigFileName);
 
@@ -134,7 +134,7 @@ void precicef_is_coupling_ongoing_(int *isOngoing);
  */
 [[deprecated("Use precicef_is_write_data_required_(...) with the same arguments instead.")]] void precicef_write_data_required_(
     const double *computedTimestepLength,
-    int *         isRequired);
+    int          *isRequired);
 
 /**
  * Fortran syntax:
@@ -150,7 +150,7 @@ void precicef_is_coupling_ongoing_(int *isOngoing);
  */
 void precicef_is_write_data_required_(
     const double *computedTimestepLength,
-    int *         isRequired);
+    int          *isRequired);
 
 /**
  * @deprecated Forwards to precicef_is_read_data_available_
@@ -230,7 +230,7 @@ void precicef_has_to_evaluate_fine_model_(int *hasToEvaluate);
  */
 [[deprecated("Use precicef_is_action_required_(...) with the same arguments instead.")]] void precicef_action_required_(
     const char *action,
-    int *       isRequired,
+    int        *isRequired,
     int         lengthAction);
 
 /**
@@ -247,7 +247,7 @@ void precicef_has_to_evaluate_fine_model_(int *hasToEvaluate);
  */
 void precicef_is_action_required_(
     const char *action,
-    int *       isRequired,
+    int        *isRequired,
     int         lengthAction);
 
 /**
@@ -278,7 +278,7 @@ void precicef_mark_action_fulfilled_(
  */
 void precicef_has_mesh_(
     const char *meshName,
-    int *       hasMesh,
+    int        *hasMesh,
     int         lengthMeshName);
 
 /**
@@ -295,7 +295,7 @@ void precicef_has_mesh_(
  */
 void precicef_get_mesh_id_(
     const char *meshName,
-    int *       meshID,
+    int        *meshID,
     int         lengthMeshName);
 
 /**
@@ -314,8 +314,8 @@ void precicef_get_mesh_id_(
  */
 void precicef_has_data_(
     const char *dataName,
-    const int * meshID,
-    int *       hasData,
+    const int  *meshID,
+    int        *hasData,
     int         lengthDataName);
 
 /**
@@ -339,8 +339,8 @@ void precicef_has_data_(
  */
 void precicef_get_data_id_(
     const char *dataName,
-    const int * meshID,
-    int *       dataID,
+    const int  *meshID,
+    int        *dataID,
     int         lengthDataName);
 
 /**
@@ -356,7 +356,7 @@ void precicef_get_data_id_(
  */
 void precicef_is_mesh_connectivity_required_(
     const int *meshID,
-    int *      required);
+    int       *required);
 
 /**
  * Fortran syntax:
@@ -372,9 +372,9 @@ void precicef_is_mesh_connectivity_required_(
  *
  */
 void precicef_set_vertex_(
-    const int *   meshID,
+    const int    *meshID,
     const double *position,
-    int *         vertexID);
+    int          *vertexID);
 
 /**
  * Fortran syntax:
@@ -390,7 +390,7 @@ void precicef_set_vertex_(
  */
 void precicef_get_mesh_vertex_size_(
     const int *meshID,
-    int *      meshSize);
+    int       *meshSize);
 
 /**
  * Fortran syntax:
@@ -409,8 +409,8 @@ void precicef_get_mesh_vertex_size_(
 void precicef_set_vertices_(
     const int *meshID,
     const int *size,
-    double *   positions,
-    int *      positionIDs);
+    double    *positions,
+    int       *positionIDs);
 
 /**
  * Fortran syntax:
@@ -429,8 +429,8 @@ void precicef_set_vertices_(
 void precicef_get_vertices_(
     const int *meshID,
     const int *size,
-    int *      ids,
-    double *   positions);
+    int       *ids,
+    double    *positions);
 
 /**
  * Fortran syntax:
@@ -449,8 +449,8 @@ void precicef_get_vertices_(
 void precicef_get_vertex_ids_from_positions_(
     const int *meshID,
     const int *size,
-    double *   positions,
-    int *      ids);
+    double    *positions,
+    int       *ids);
 
 /**
  * Fortran syntax:
@@ -470,7 +470,7 @@ void precicef_set_edge_(
     const int *meshID,
     const int *firstVertexID,
     const int *secondVertexID,
-    int *      edgeID);
+    int       *edgeID);
 
 /**
  * Fortran syntax:
@@ -573,8 +573,8 @@ void precicef_set_quad_we_(
 void precicef_write_bvdata_(
     const int *dataID,
     const int *size,
-    int *      valueIndices,
-    double *   values);
+    int       *valueIndices,
+    double    *values);
 
 /**
  * Fortran syntax:
@@ -590,8 +590,8 @@ void precicef_write_bvdata_(
  *
  */
 void precicef_write_vdata_(
-    const int *   dataID,
-    const int *   valueIndex,
+    const int    *dataID,
+    const int    *valueIndex,
     const double *dataValue);
 
 /**
@@ -611,8 +611,8 @@ void precicef_write_vdata_(
 void precicef_write_bsdata_(
     const int *dataID,
     const int *size,
-    int *      valueIndices,
-    double *   values);
+    int       *valueIndices,
+    double    *values);
 
 /**
  * Fortran syntax:
@@ -628,8 +628,8 @@ void precicef_write_bsdata_(
  *
  */
 void precicef_write_sdata_(
-    const int *   dataID,
-    const int *   valueIndex,
+    const int    *dataID,
+    const int    *valueIndex,
     const double *dataValue);
 
 /**
@@ -649,8 +649,8 @@ void precicef_write_sdata_(
 void precicef_read_bvdata_(
     const int *dataID,
     const int *size,
-    int *      valueIndices,
-    double *   values);
+    int       *valueIndices,
+    double    *values);
 
 /**
  * Fortran syntax:
@@ -668,7 +668,7 @@ void precicef_read_bvdata_(
 void precicef_read_vdata_(
     const int *dataID,
     const int *valueIndex,
-    double *   dataValue);
+    double    *dataValue);
 
 /**
  * Fortran syntax:
@@ -687,8 +687,8 @@ void precicef_read_vdata_(
 void precicef_read_bsdata_(
     const int *dataID,
     const int *size,
-    int *      valueIndices,
-    double *   values);
+    int       *valueIndices,
+    double    *values);
 
 /**
  * Fortran syntax:
@@ -706,7 +706,7 @@ void precicef_read_bsdata_(
 void precicef_read_sdata_(
     const int *dataID,
     const int *valueIndex,
-    double *   dataValue);
+    double    *dataValue);
 
 /**
  * Fortran syntax:
@@ -802,8 +802,8 @@ void precicef_setMeshAccessRegion(
 void precicef_getMeshVerticesAndIDs(
     const int meshID,
     const int size,
-    int *     ids,
-    double *  coordinates);
+    int      *ids,
+    double   *coordinates);
 
 ///@}
 

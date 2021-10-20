@@ -34,7 +34,7 @@ public:
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
+      const std::vector<int>           &offsets,
       int p, int q, int r,
       bool dotProductComputation = true)
   {
@@ -75,22 +75,22 @@ public:
   }
 
   /** @brief: Method computes the matrix-matrix/matrix-vector product of a (p x q)
-    * matrix that is distributed column-wise (e.g. pseudoInverse Z), with a matrix/vector
-    * of size (q x r) with r=1/cols, that is distributed row-wise (e.g. _matrixW, _matrixV, residual).
-    *
-    * In each case mat-mat or mat-vec product, the result is of size (m x m) or (m x 1), where
-    * m is the number of cols, i.e., small such that the result is stored on each proc.
-    *
-    * @param[in] p - first dimension, i.e., overall (global) number of rows
-    * @param[in] q - inner dimension
-    * @param[in] r - second dimension, i.e., overall (global) number cols of result matrix
-    *
-    */
+   * matrix that is distributed column-wise (e.g. pseudoInverse Z), with a matrix/vector
+   * of size (q x r) with r=1/cols, that is distributed row-wise (e.g. _matrixW, _matrixV, residual).
+   *
+   * In each case mat-mat or mat-vec product, the result is of size (m x m) or (m x 1), where
+   * m is the number of cols, i.e., small such that the result is stored on each proc.
+   *
+   * @param[in] p - first dimension, i.e., overall (global) number of rows
+   * @param[in] q - inner dimension
+   * @param[in] r - second dimension, i.e., overall (global) number cols of result matrix
+   *
+   */
   template <typename Derived1, typename Derived2, typename Derived3>
   void multiply(
       const Eigen::MatrixBase<Derived1> &leftMatrix,
       const Eigen::MatrixBase<Derived2> &rightMatrix,
-      Eigen::PlainObjectBase<Derived3> & result,
+      Eigen::PlainObjectBase<Derived3>  &result,
       int p, int q, int r)
   {
     PRECICE_TRACE();
@@ -119,7 +119,7 @@ private:
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
+      const std::vector<int>           &offsets,
       int p, int q, int r)
   {
     PRECICE_TRACE();
@@ -139,10 +139,10 @@ private:
     PRECICE_ASSERT(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
     PRECICE_ASSERT(result.rows() == p, result.rows(), p);
 
-    //int nextProc = (utils::MasterSlave::getRank() + 1) % utils::MasterSlave::getSize();
+    // int nextProc = (utils::MasterSlave::getRank() + 1) % utils::MasterSlave::getSize();
     int prevProc = (utils::MasterSlave::getRank() - 1 < 0) ? utils::MasterSlave::getSize() - 1 : utils::MasterSlave::getRank() - 1;
     int rows_rcv = (prevProc > 0) ? offsets[prevProc + 1] - offsets[prevProc] : offsets[1];
-    //Eigen::MatrixXd leftMatrix_rcv = Eigen::MatrixXd::Zero(rows_rcv, q);
+    // Eigen::MatrixXd leftMatrix_rcv = Eigen::MatrixXd::Zero(rows_rcv, q);
     Eigen::MatrixXd leftMatrix_rcv(rows_rcv, q);
 
     com::PtrRequest requestSend;
@@ -167,8 +167,8 @@ private:
     result.block(off, 0, diagBlock.rows(), diagBlock.cols()) = diagBlock;
 
     /**
-		 * cyclic send-receive operation
-		 */
+     * cyclic send-receive operation
+     */
     for (int cycle = 1; cycle < utils::MasterSlave::getSize(); cycle++) {
 
       // wait until W_til from previous processor is fully received
@@ -223,7 +223,7 @@ private:
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
+      const std::vector<int>           &offsets,
       int p, int q, int r)
   {
     PRECICE_TRACE();
@@ -260,7 +260,7 @@ private:
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
+      const std::vector<int>           &offsets,
       int p, int q, int r)
   {
     PRECICE_TRACE();

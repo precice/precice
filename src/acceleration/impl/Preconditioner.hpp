@@ -82,7 +82,7 @@ public:
   void revert(Eigen::MatrixXd &M, bool transpose)
   {
     PRECICE_TRACE();
-    //PRECICE_ASSERT(_needsGlobalWeights);
+    // PRECICE_ASSERT(_needsGlobalWeights);
     if (transpose) {
       PRECICE_ASSERT(M.cols() == (int) _invWeights.size());
       for (int i = 0; i < M.cols(); i++) {

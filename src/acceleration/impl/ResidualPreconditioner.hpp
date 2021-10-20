@@ -24,10 +24,10 @@ public:
 
 private:
   /**
-    * @brief Update the scaling after every FSI iteration.
-    *
-    * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
-    */
+   * @brief Update the scaling after every FSI iteration.
+   *
+   * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
+   */
   virtual void _update_(bool                   timeWindowComplete,
                         const Eigen::VectorXd &oldValues,
                         const Eigen::VectorXd &res);

@@ -18,21 +18,21 @@ class BoundingBox {
 
 public:
   /***
-  *
-  * @brief Constructor.
-  *
-  * @param[in] dimension Dimension of the bounding box
-  *
-  */
+   *
+   * @brief Constructor.
+   *
+   * @param[in] dimension Dimension of the bounding box
+   *
+   */
   explicit BoundingBox(int dimension);
 
   /***
-  *
-  * @brief Constructor.
-  *
-  * @param[in] bounds Min-max values of the bounding box in each dimesion
-  *
-  */
+   *
+   * @brief Constructor.
+   *
+   * @param[in] bounds Min-max values of the bounding box in each dimesion
+   *
+   */
   explicit BoundingBox(std::vector<double> bounds);
 
   /// Special Members

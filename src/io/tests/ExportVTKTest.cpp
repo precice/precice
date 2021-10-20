@@ -25,8 +25,8 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   PRECICE_TEST(1_rank);
   int             dim = 2;
   mesh::Mesh      mesh("MyMesh", dim, testing::nextMeshID());
-  mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
-  mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
+  mesh::Vertex   &v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
+  mesh::Vertex   &v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
   Eigen::VectorXd coords3 = Eigen::VectorXd::Constant(dim, 0.0);
   coords3(0)              = 1.0;
   mesh::Vertex &v3        = mesh.createVertex(coords3);
@@ -46,8 +46,8 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   PRECICE_TEST(1_rank);
   int             dim = 3;
   mesh::Mesh      mesh("MyMesh", dim, testing::nextMeshID());
-  mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
-  mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
+  mesh::Vertex   &v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
+  mesh::Vertex   &v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
   Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
   coords3(0)              = 1.0;
   mesh::Vertex &v3        = mesh.createVertex(coords3);

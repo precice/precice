@@ -105,7 +105,7 @@ void BaseQNAcceleration::initialize(
   */
 
   size_t              entries = 0;
-  std::vector<size_t> subVectorSizes; //needed for preconditioner
+  std::vector<size_t> subVectorSizes; // needed for preconditioner
 
   for (auto &elem : _dataIDs) {
     entries += cplData[elem]->values().size();
@@ -144,9 +144,9 @@ void BaseQNAcceleration::initialize(
      */
     _dimOffsets.resize(utils::MasterSlave::getSize() + 1);
     _dimOffsets[0] = 0;
-    //for (auto & elem : _dataIDs) {
+    // for (auto & elem : _dataIDs) {
     //	std::cout<<" Offsets:(vertex) \n"<<cplData[elem]->mesh->getVertexOffsets()<<'\n';
-    //}
+    // }
     for (size_t i = 0; i < _dimOffsets.size() - 1; i++) {
       int accumulatedNumberOfUnknowns = 0;
       for (auto &elem : _dataIDs) {
@@ -205,7 +205,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
                  "Or you just converge much further than actually necessary.");
   }
 
-  //if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
+  // if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
   } else {
@@ -250,7 +250,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
         // QR decomposition and update decomposition
 
-        //apply scaling here
+        // apply scaling here
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
@@ -353,7 +353,7 @@ void BaseQNAcceleration::performAcceleration(
     _preconditioner->apply(_matrixV);
 
     if (_preconditioner->requireNewQR()) {
-      if (not(_filter == Acceleration::QR2FILTER)) { //for QR2 filter, there is no need to do this twice
+      if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
@@ -468,7 +468,7 @@ void BaseQNAcceleration::concatenateCouplingData(
   int offset = 0;
   for (int id : _dataIDs) {
     int         size      = cplData[id]->values().size();
-    auto &      values    = cplData[id]->values();
+    auto       &values    = cplData[id]->values();
     const auto &oldValues = cplData[id]->previousIteration();
     for (int i = 0; i < size; i++) {
       _values(i + offset)    = values(i);

@@ -29,8 +29,8 @@ static std::string errormsg = "preCICE has not been created properly. Be sure to
 namespace precice {
 namespace impl {
 /**
-     * @brief Returns length of string without trailing whitespaces.
-     */
+ * @brief Returns length of string without trailing whitespaces.
+ */
 int strippedLength(const char *string, int length);
 } // namespace impl
 } // namespace precice
@@ -38,21 +38,21 @@ int strippedLength(const char *string, int length);
 void precicef_create_(
     const char *participantName,
     const char *configFileName,
-    const int * solverProcessIndex,
-    const int * solverProcessSize,
+    const int  *solverProcessIndex,
+    const int  *solverProcessSize,
     int         lengthAccessorName,
     int         lengthConfigFileName)
 {
-  //cout << "lengthAccessorName: " << lengthAccessorName << '\n';
-  //cout << "lengthConfigFileName: " << lengthConfigFileName << '\n';
-  //cout << "solverProcessIndex: " << *solverProcessIndex << '\n';
-  //cout << "solverProcessSize: " << *solverProcessSize << '\n';
+  // cout << "lengthAccessorName: " << lengthAccessorName << '\n';
+  // cout << "lengthConfigFileName: " << lengthConfigFileName << '\n';
+  // cout << "solverProcessIndex: " << *solverProcessIndex << '\n';
+  // cout << "solverProcessSize: " << *solverProcessSize << '\n';
   int    strippedLength = precice::impl::strippedLength(participantName, lengthAccessorName);
   string stringAccessorName(participantName, strippedLength);
   strippedLength = precice::impl::strippedLength(configFileName, lengthConfigFileName);
   string stringConfigFileName(configFileName, strippedLength);
-  //cout << "Accessor: " << stringAccessorName << "!" << '\n';
-  //cout << "Config  : " << stringConfigFileName << "!" << '\n';
+  // cout << "Accessor: " << stringAccessorName << "!" << '\n';
+  // cout << "Config  : " << stringConfigFileName << "!" << '\n';
   impl.reset(new precice::SolverInterface(stringAccessorName,
                                           stringConfigFileName,
                                           *solverProcessIndex, *solverProcessSize));
@@ -111,14 +111,14 @@ void precicef_is_coupling_ongoing_(
 
 void precicef_write_data_required_(
     const double *computedTimestepLength,
-    int *         isRequired)
+    int          *isRequired)
 {
   precicef_is_write_data_required_(computedTimestepLength, isRequired);
 }
 
 void precicef_is_write_data_required_(
     const double *computedTimestepLength,
-    int *         isRequired)
+    int          *isRequired)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   if (impl->isWriteDataRequired(*computedTimestepLength)) {
@@ -180,7 +180,7 @@ void precicef_has_to_evaluate_fine_model_(
 
 void precicef_action_required_(
     const char *action,
-    int *       isRequired,
+    int        *isRequired,
     int         lengthAction)
 {
   precicef_is_action_required_(action, isRequired, lengthAction);
@@ -188,20 +188,20 @@ void precicef_action_required_(
 
 void precicef_is_action_required_(
     const char *action,
-    int *       isRequired,
+    int        *isRequired,
     int         lengthAction)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  //PRECICE_ASSERT(lengthAction > 1);
-  //std::cout << "lengthAction: " << lengthAction << '\n';
-  //std::cout << "Action:";
-  //for (int i=0; i < lengthAction; i++){
-  //  std::cout << " a[" << i << "]=\"" << action[i] << "\"";
-  //}
-  //std::cout << '\n';
+  // PRECICE_ASSERT(lengthAction > 1);
+  // std::cout << "lengthAction: " << lengthAction << '\n';
+  // std::cout << "Action:";
+  // for (int i=0; i < lengthAction; i++){
+  //   std::cout << " a[" << i << "]=\"" << action[i] << "\"";
+  // }
+  // std::cout << '\n';
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
-  //std::cout << "strippedLength: " << strippedLength << '\n';
-  //PRECICE_ASSERT(strippedLength > 1);
+  // std::cout << "strippedLength: " << strippedLength << '\n';
+  // PRECICE_ASSERT(strippedLength > 1);
   string stringAction(action, strippedLength);
   if (impl->isActionRequired(stringAction)) {
     *isRequired = 1;
@@ -222,7 +222,7 @@ void precicef_mark_action_fulfilled_(
 
 void precicef_has_mesh_(
     const char *meshName,
-    int *       hasMesh,
+    int        *hasMesh,
     int         lengthMeshName)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -237,7 +237,7 @@ void precicef_has_mesh_(
 
 void precicef_get_mesh_id_(
     const char *meshName,
-    int *       meshID,
+    int        *meshID,
     int         lengthMeshName)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -248,8 +248,8 @@ void precicef_get_mesh_id_(
 
 void precicef_has_data_(
     const char *dataName,
-    const int * meshID,
-    int *       hasData,
+    const int  *meshID,
+    int        *hasData,
     int         lengthDataName)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -264,8 +264,8 @@ void precicef_has_data_(
 
 void precicef_get_data_id_(
     const char *dataName,
-    const int * meshID,
-    int *       dataID,
+    const int  *meshID,
+    int        *dataID,
     int         lengthDataName)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -276,7 +276,7 @@ void precicef_get_data_id_(
 
 void precicef_is_mesh_connectivity_required_(
     const int *meshID,
-    int *      required)
+    int       *required)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   if (impl->isMeshConnectivityRequired(*meshID)) {
@@ -287,9 +287,9 @@ void precicef_is_mesh_connectivity_required_(
 }
 
 void precicef_set_vertex_(
-    const int *   meshID,
+    const int    *meshID,
     const double *position,
-    int *         vertexID)
+    int          *vertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   *vertexID = impl->setMeshVertex(*meshID, position);
@@ -297,7 +297,7 @@ void precicef_set_vertex_(
 
 void precicef_get_mesh_vertex_size_(
     const int *meshID,
-    int *      meshSize)
+    int       *meshSize)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   *meshSize = impl->getMeshVertexSize(*meshID);
@@ -306,8 +306,8 @@ void precicef_get_mesh_vertex_size_(
 void precicef_set_vertices_(
     const int *meshID,
     const int *size,
-    double *   positions,
-    int *      positionIDs)
+    double    *positions,
+    int       *positionIDs)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshVertices(*meshID, *size, positions, positionIDs);
@@ -316,8 +316,8 @@ void precicef_set_vertices_(
 void precicef_get_vertices_(
     const int *meshID,
     const int *size,
-    int *      ids,
-    double *   positions)
+    int       *ids,
+    double    *positions)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->getMeshVertices(*meshID, *size, ids, positions);
@@ -326,8 +326,8 @@ void precicef_get_vertices_(
 void precicef_get_vertex_ids_from_positions_(
     const int *meshID,
     const int *size,
-    double *   positions,
-    int *      ids)
+    double    *positions,
+    int       *ids)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->getMeshVertexIDsFromPositions(*meshID, *size, positions, ids);
@@ -337,7 +337,7 @@ void precicef_set_edge_(
     const int *meshID,
     const int *firstVertexID,
     const int *secondVertexID,
-    int *      edgeID)
+    int       *edgeID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   *edgeID = impl->setMeshEdge(*meshID, *firstVertexID, *secondVertexID);
@@ -388,16 +388,16 @@ void precicef_set_quad_we_(
 void precicef_write_bvdata_(
     const int *dataID,
     const int *size,
-    int *      valueIndices,
-    double *   values)
+    int       *valueIndices,
+    double    *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->writeBlockVectorData(*dataID, *size, valueIndices, values);
 }
 
 void precicef_write_vdata_(
-    const int *   dataID,
-    const int *   valueIndex,
+    const int    *dataID,
+    const int    *valueIndex,
     const double *dataValue)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -407,16 +407,16 @@ void precicef_write_vdata_(
 void precicef_write_bsdata_(
     const int *dataID,
     const int *size,
-    int *      valueIndices,
-    double *   values)
+    int       *valueIndices,
+    double    *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->writeBlockScalarData(*dataID, *size, valueIndices, values);
 }
 
 void precicef_write_sdata_(
-    const int *   dataID,
-    const int *   valueIndex,
+    const int    *dataID,
+    const int    *valueIndex,
     const double *dataValue)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -426,8 +426,8 @@ void precicef_write_sdata_(
 void precicef_read_bvdata_(
     const int *dataID,
     const int *size,
-    int *      valueIndices,
-    double *   values)
+    int       *valueIndices,
+    double    *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readBlockVectorData(*dataID, *size, valueIndices, values);
@@ -436,7 +436,7 @@ void precicef_read_bvdata_(
 void precicef_read_vdata_(
     const int *dataID,
     const int *valueIndex,
-    double *   dataValue)
+    double    *dataValue)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readVectorData(*dataID, *valueIndex, dataValue);
@@ -445,8 +445,8 @@ void precicef_read_vdata_(
 void precicef_read_bsdata_(
     const int *dataID,
     const int *size,
-    int *      valueIndices,
-    double *   values)
+    int       *valueIndices,
+    double    *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readBlockScalarData(*dataID, *size, valueIndices, values);
@@ -455,7 +455,7 @@ void precicef_read_bsdata_(
 void precicef_read_sdata_(
     const int *dataID,
     const int *valueIndex,
-    double *   dataValue)
+    double    *dataValue)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readScalarData(*dataID, *valueIndex, *dataValue);
@@ -540,8 +540,8 @@ void precicef_setMeshAccessRegion(
 void precicef_getMeshVerticesAndIDs(
     const int meshID,
     const int size,
-    int *     ids,
-    double *  coordinates)
+    int      *ids,
+    double   *coordinates)
 {
   impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }

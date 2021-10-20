@@ -91,8 +91,8 @@ public:
   }
 
   /**
-    * @brief For manual configuration in test cases.
-    */
+   * @brief For manual configuration in test cases.
+   */
   void setParticipantConfiguration(PtrParticipantConfiguration config)
   {
     _participantConfiguration = config;
@@ -108,10 +108,10 @@ private:
   bool _experimental = false;
 
   // @brief Participating solvers in the coupled simulation.
-  //std::vector<impl::PtrParticipant> _participants;
+  // std::vector<impl::PtrParticipant> _participants;
 
   // @brief Index (in _participants) of solver accessing the interface.
-  //int _indexAccessor;
+  // int _indexAccessor;
 
   mesh::PtrDataConfiguration _dataConfiguration;
 

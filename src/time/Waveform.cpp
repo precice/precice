@@ -11,12 +11,12 @@ Waveform::Waveform(
     int extrapolationOrder)
 {
   /**
-     * Reserve storage depending on required extrapolation order. Extrapolation happens in-place. Therefore, for zeroth
-     * order extrapolation we need one column (to read from and write to), for first order two, for second order three. 
-     * Note that extrapolationOrder = 0 is an exception, since we want to always work with at least two samples. One at
-     * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
-     * extrapolation.
-     */
+   * Reserve storage depending on required extrapolation order. Extrapolation happens in-place. Therefore, for zeroth
+   * order extrapolation we need one column (to read from and write to), for first order two, for second order three.
+   * Note that extrapolationOrder = 0 is an exception, since we want to always work with at least two samples. One at
+   * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
+   * extrapolation.
+   */
   int initializedNumberOfSamples = std::max({2, extrapolationOrder + 1});
   _timeWindows                   = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
   PRECICE_ASSERT(numberOfSamples() == initializedNumberOfSamples);
@@ -81,7 +81,7 @@ Eigen::VectorXd Waveform::extrapolateData(int order, int timeWindows)
     return this->_timeWindows.col(0);
   }
   Eigen::VectorXd extrapolatedValue;
-  if (usedOrder == 1) { //timesteps is increased before extrapolate is called
+  if (usedOrder == 1) { // timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
     PRECICE_ASSERT(this->numberOfSamples() > 1);
     extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t

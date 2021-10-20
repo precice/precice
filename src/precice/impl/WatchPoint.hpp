@@ -37,7 +37,7 @@ public:
   const std::string &filename() const;
 
   /** Initializes the watch point for exporting point data.
-   * 
+   *
    * This can be called repeatedly to reinitialize the WatchPoint.
    */
   void initialize();
@@ -65,10 +65,10 @@ private:
 
   void getValue(
       Eigen::VectorXd &value,
-      mesh::PtrData &  data);
+      mesh::PtrData   &data);
 
   void getValue(
-      double &       value,
+      double        &value,
       mesh::PtrData &data);
 };
 

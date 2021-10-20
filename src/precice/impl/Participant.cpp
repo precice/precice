@@ -69,10 +69,10 @@ void Participant::addWatchIntegral(
   _watchIntegrals.push_back(watchIntegral);
 }
 
-void Participant::useMesh(const mesh::PtrMesh &                         mesh,
-                          const Eigen::VectorXd &                       localOffset,
+void Participant::useMesh(const mesh::PtrMesh                          &mesh,
+                          const Eigen::VectorXd                        &localOffset,
                           bool                                          remote,
-                          const std::string &                           fromParticipant,
+                          const std::string                            &fromParticipant,
                           double                                        safetyFactor,
                           bool                                          provideMesh,
                           partition::ReceivedPartition::GeometricFilter geoFilter,

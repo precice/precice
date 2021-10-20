@@ -15,7 +15,7 @@ int main(int argc, char **argv)
   double *writeData;
   int     meshID = -1;
   int     dataID = -1;
-  int *   vertexIDs;
+  int    *vertexIDs;
   int     numberOfVertices = 3;
   int     writeDataID      = -1;
   int     readDataID       = -1;

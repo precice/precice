@@ -105,10 +105,10 @@ public:
   void addExportContext(const io::ExportContext &context);
 
   /// Adds a mesh to be used by the participant.
-  void useMesh(const mesh::PtrMesh &                         mesh,
-               const Eigen::VectorXd &                       localOffset,
+  void useMesh(const mesh::PtrMesh                          &mesh,
+               const Eigen::VectorXd                        &localOffset,
                bool                                          remote,
-               const std::string &                           fromParticipant,
+               const std::string                            &fromParticipant,
                double                                        safetyFactor,
                bool                                          provideMesh,
                partition::ReceivedPartition::GeometricFilter geoFilter,
@@ -321,7 +321,7 @@ private:
   template <typename ELEMENT_T>
   bool isDataValid(
       const std::vector<ELEMENT_T> &data,
-      const ELEMENT_T &             newElement) const;
+      const ELEMENT_T              &newElement) const;
 
   void checkDuplicatedUse(const mesh::PtrMesh &mesh);
 
@@ -337,7 +337,7 @@ private:
 template <typename ELEMENT_T>
 bool Participant::isDataValid(
     const std::vector<ELEMENT_T> &data,
-    const ELEMENT_T &             newElement) const
+    const ELEMENT_T              &newElement) const
 {
   for (size_t i = 0; i < data.size(); i++) {
     if (data[i].name == newElement.name) {

@@ -41,9 +41,9 @@ public:
 
   /// Constructor, the order of edges defines the outer normal direction.
   Triangle(
-      Edge &     edgeOne,
-      Edge &     edgeTwo,
-      Edge &     edgeThree,
+      Edge      &edgeOne,
+      Edge      &edgeTwo,
+      Edge      &edgeThree,
       TriangleID id);
 
   /// Returns dimensionalty of space the triangle is embedded in.

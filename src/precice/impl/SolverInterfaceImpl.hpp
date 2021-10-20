@@ -98,7 +98,7 @@ public:
       const std::string &configurationFileName,
       int                accessorProcessRank,
       int                accessorCommunicatorSize,
-      void *             communicator);
+      void              *communicator);
 
   /** Ensures that finalize() has been called.
    *
@@ -282,7 +282,7 @@ public:
       int           meshID,
       int           size,
       const double *positions,
-      int *         ids);
+      int          *ids);
 
   /**
    * @brief Gets spatial positions of vertices for given IDs.
@@ -294,7 +294,7 @@ public:
       int        meshID,
       size_t     size,
       const int *ids,
-      double *   positions) const;
+      double    *positions) const;
 
   /**
    * @brief Gets vertex data ids from positions.
@@ -307,7 +307,7 @@ public:
       int           meshID,
       size_t        size,
       const double *positions,
-      int *         ids) const;
+      int          *ids) const;
 
   /**
    * @brief Set an edge of a solver mesh.
@@ -373,7 +373,7 @@ public:
   void writeBlockVectorData(
       int           fromDataID,
       int           size,
-      const int *   valueIndices,
+      const int    *valueIndices,
       const double *values);
 
   /**
@@ -400,7 +400,7 @@ public:
   void writeBlockScalarData(
       int           fromDataID,
       int           size,
-      const int *   valueIndices,
+      const int    *valueIndices,
       const double *values);
 
   /**
@@ -433,7 +433,7 @@ public:
       int        toDataID,
       int        size,
       const int *valueIndices,
-      double *   values) const;
+      double    *values) const;
 
   /**
    * @brief Reads vector data from the coupling mesh.
@@ -458,7 +458,7 @@ public:
       int        toDataID,
       int        size,
       const int *valueIndices,
-      double *   values) const;
+      double    *values) const;
 
   /**
    * @brief Read scalar data from the interface mesh.
@@ -486,8 +486,8 @@ public:
   void getMeshVerticesAndIDs(
       const int meshID,
       const int size,
-      int *     ids,
-      double *  coordinates) const;
+      int      *ids,
+      double   *coordinates) const;
 
   /**
    * @brief Sets the location for all output of preCICE.

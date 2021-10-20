@@ -13,10 +13,10 @@ namespace precice {
 namespace acceleration {
 
 /**
- * @brief Multi vector quasi-Newton update scheme 
+ * @brief Multi vector quasi-Newton update scheme
  *
  * Performs a multi vector quasi-Newton to accelerate the convergence of implicit coupling
- * iterations. A multi Broyden update, together with the reuse of the approximate inverse 
+ * iterations. A multi Broyden update, together with the reuse of the approximate inverse
  * Jacobian from the old time window are used to approximate the inverse Jacobian. After every
  * coupling iteration, the data values used are enhanced by the new coupling iterates.
  *
@@ -41,21 +41,21 @@ public:
       impl::PtrPreconditioner preconditioner);
 
   /**
-    * @brief Destructor, empty.
-    */
+   * @brief Destructor, empty.
+   */
   virtual ~BroydenAcceleration() {}
 
   /**
-    * @brief Initializes the acceleration.
-    */
+   * @brief Initializes the acceleration.
+   */
   virtual void initialize(DataMap &cplData);
 
   /**
-    * @brief Marks a iteration sequence as converged.
-    *
-    * called by the iterationsConverged() method in the BaseQNAcceleration class
-    * handles the acceleration sepcific action after the convergence of one iteration
-    */
+   * @brief Marks a iteration sequence as converged.
+   *
+   * called by the iterationsConverged() method in the BaseQNAcceleration class
+   * handles the acceleration sepcific action after the convergence of one iteration
+   */
   virtual void specializedIterationsConverged(DataMap &cplData);
 
 private:
@@ -80,7 +80,7 @@ private:
 
   // @brief computes underrelaxation for the secondary data
   virtual void computeUnderrelaxationSecondaryData(DataMap &cplData);
-  //void computeNewtonFactorsQRDecomposition(DataMap& cplData, Eigen::VectorXd& update);
+  // void computeNewtonFactorsQRDecomposition(DataMap& cplData, Eigen::VectorXd& update);
 };
 } // namespace acceleration
 } // namespace precice

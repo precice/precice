@@ -51,7 +51,7 @@ void BroydenAcceleration::computeUnderrelaxationSecondaryData(
   // Perform underrelaxation with initial relaxation factor for secondary data
   for (int id : _secondaryDataIDs) {
     cplscheme::PtrCouplingData data   = cplData[id];
-    Eigen::VectorXd &          values = data->values();
+    Eigen::VectorXd           &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
     secResiduals                  = data->previousIteration();
@@ -79,7 +79,7 @@ void BroydenAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen:
   if (_currentColumns > 1) {
     PRECICE_ERROR("Truncated IMVJ is no longer supported. Please use IMVJ with restart mode instead.");
     PRECICE_DEBUG("compute update with QR-dec");
-    //computeNewtonFactorsQRDecomposition(cplData, xUpdate);
+    // computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   } else {
     PRECICE_DEBUG("compute update with Broyden");
     // ------------- update inverse Jacobian -----------

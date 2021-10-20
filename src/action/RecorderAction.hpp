@@ -11,12 +11,12 @@ namespace action {
 class RecorderAction : public Action {
 public:
   /**
-	 * @brief Constructor
-	 * 
-	 * @param[in] timing When to apply the action.
-	 * @param[in] mesh the target mesh.
-	 * 
-	 */
+   * @brief Constructor
+   *
+   * @param[in] timing When to apply the action.
+   * @param[in] mesh the target mesh.
+   *
+   */
   RecorderAction(
       Timing               timing,
       const mesh::PtrMesh &mesh);

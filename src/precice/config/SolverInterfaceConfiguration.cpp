@@ -51,7 +51,7 @@ SolverInterfaceConfiguration::SolverInterfaceConfiguration(xml::XMLTag &parent)
 
 void SolverInterfaceConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE();
   if (tag.getName() == "solver-interface") {
@@ -67,11 +67,11 @@ void SolverInterfaceConfiguration::xmlTagCallback(
 
 void SolverInterfaceConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE();
   if (tag.getName() == "solver-interface") {
-    //test if both participants do have the exchange meshes
+    // test if both participants do have the exchange meshes
     typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
     for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
       bool participantFound = false;

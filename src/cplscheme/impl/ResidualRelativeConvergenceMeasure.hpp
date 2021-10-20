@@ -29,12 +29,12 @@ namespace impl {
 class ResidualRelativeConvergenceMeasure : public ConvergenceMeasure {
 public:
   /**
-    * @brief Constructor.
-    *
-    * @param[in] convergenceLimitPercent
-    *        Limit to define convergence relative to the norm of the current
-    *        new dataset. Has to be in $] 0 ; 1 ]$.
-    */
+   * @brief Constructor.
+   *
+   * @param[in] convergenceLimitPercent
+   *        Limit to define convergence relative to the norm of the current
+   *        new dataset. Has to be in $] 0 ; 1 ]$.
+   */
   explicit ResidualRelativeConvergenceMeasure(double convergenceLimitPercent);
 
   virtual ~ResidualRelativeConvergenceMeasure(){};

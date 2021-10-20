@@ -51,8 +51,8 @@ void CommunicateMesh::sendMesh(
   const int numberOfEdges = mesh.edges().size();
   _communication->send(numberOfEdges, rankReceiver);
   if (not mesh.edges().empty()) {
-    //we need to send the vertexIDs first such that the right edges can be created later
-    //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+    // we need to send the vertexIDs first such that the right edges can be created later
+    // contrary to the normal sendMesh, this variant must also work for adding delta meshes
     std::vector<int> vertexIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       vertexIDs[i] = meshVertices[i].getID();
@@ -74,8 +74,8 @@ void CommunicateMesh::sendMesh(
     int numberOfTriangles = mesh.triangles().size();
     _communication->send(numberOfTriangles, rankReceiver);
     if (not mesh.triangles().empty()) {
-      //we need to send the edgeIDs first such that the right edges can be created later
-      //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+      // we need to send the edgeIDs first such that the right edges can be created later
+      // contrary to the normal sendMesh, this variant must also work for adding delta meshes
       std::vector<int> edgeIDs(numberOfEdges);
       for (int i = 0; i < numberOfEdges; i++) {
         edgeIDs[i] = mesh.edges()[i].getID();
@@ -209,8 +209,8 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
   int numberOfEdges = mesh.edges().size();
   _communication->broadcast(numberOfEdges);
   if (numberOfEdges > 0) {
-    //we need to send the vertexIDs first such that the right edges can be created later
-    //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+    // we need to send the vertexIDs first such that the right edges can be created later
+    // contrary to the normal sendMesh, this variant must also work for adding delta meshes
     std::vector<int> vertexIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       vertexIDs[i] = meshVertices[i].getID();
@@ -218,7 +218,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     _communication->broadcast(vertexIDs);
 
     std::vector<int> edgeIDs(numberOfEdges * 2);
-    const auto &     meshEdges = mesh.edges();
+    const auto      &meshEdges = mesh.edges();
     std::vector<int> globalEdgeIDs(numberOfEdges);
     for (int i = 0; i < numberOfEdges; i++) {
       edgeIDs[i * 2]     = meshEdges[i].vertex(0).getID();
@@ -233,8 +233,8 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     int numberOfTriangles = mesh.triangles().size();
     _communication->broadcast(numberOfTriangles);
     if (numberOfTriangles > 0) {
-      //we need to send the edgeIDs first such that the right edges can be created later
-      //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+      // we need to send the edgeIDs first such that the right edges can be created later
+      // contrary to the normal sendMesh, this variant must also work for adding delta meshes
       std::vector<int> edgeIDs(numberOfEdges);
       for (int i = 0; i < numberOfEdges; i++) {
         edgeIDs[i] = mesh.edges()[i].getID();
@@ -242,7 +242,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
       _communication->broadcast(edgeIDs);
 
       std::vector<int> triangleIDs(numberOfTriangles * 3);
-      const auto &     meshTriangles = mesh.triangles();
+      const auto      &meshTriangles = mesh.triangles();
       std::vector<int> globalTriangleIDs(numberOfTriangles);
       for (int i = 0; i < numberOfTriangles; i++) {
         triangleIDs[i * 3]     = meshTriangles[i].edge(0).getID();

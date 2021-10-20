@@ -60,7 +60,7 @@ void NearestNeighborMapping::computeMapping()
   e2.stop();
 
   const size_t verticesSize   = origins->vertices().size();
-  const auto & sourceVertices = origins->vertices();
+  const auto  &sourceVertices = origins->vertices();
 
   _vertexIndices.resize(verticesSize);
   utils::statistics::DistanceAccumulator distanceStatistics;
@@ -107,8 +107,8 @@ void NearestNeighborMapping::map(
   precice::utils::Event e("map.nn.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
-  Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
-  //assign(outputValues) = 0.0;
+  Eigen::VectorXd       &outputValues = output()->data(outputDataID)->values();
+  // assign(outputValues) = 0.0;
   int valueDimensions = input()->data(inputDataID)->getDimensions();
   PRECICE_ASSERT(valueDimensions == output()->data(outputDataID)->getDimensions(),
                  valueDimensions, output()->data(outputDataID)->getDimensions());
