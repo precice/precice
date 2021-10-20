@@ -2,7 +2,7 @@
 namespace precice {
 namespace mesh {
 
-void addVertexToMesh(const Vertex &vertex, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination)
+void addVertexToMesh(const Vertex &vertex, boost::container::flat_map<VertexID, Vertex *> &vertexMap, Mesh &destination)
 {
   Vertex &v = destination.createVertex(vertex.getCoords());
   v.setGlobalIndex(vertex.getGlobalIndex());
@@ -13,7 +13,7 @@ void addVertexToMesh(const Vertex &vertex, boost::container::flat_map<int, Verte
   vertexMap[vertex.getID()] = &v;
 }
 
-void addEdgeToMesh(const Edge &edge, boost::container::flat_map<int, Edge *> &edgeMap, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination, bool withConnection)
+void addEdgeToMesh(const Edge &edge, boost::container::flat_map<EdgeID, Edge *> &edgeMap, boost::container::flat_map<VertexID, Vertex *> &vertexMap, Mesh &destination, bool withConnection)
 {
   int vertexIndex1 = edge.vertex(0).getID();
   int vertexIndex2 = edge.vertex(1).getID();
@@ -39,7 +39,7 @@ void addEdgeToMesh(const Edge &edge, boost::container::flat_map<int, Edge *> &ed
   }
 }
 
-void addTriangleToMesh(const Triangle &triangle, boost::container::flat_map<int, Edge *> &edgeMap, boost::container::flat_map<int, Vertex *> &vertexMap, Mesh &destination, bool withConnection)
+void addTriangleToMesh(const Triangle &triangle, boost::container::flat_map<EdgeID, Edge *> &edgeMap, boost::container::flat_map<VertexID, Vertex *> &vertexMap, Mesh &destination, bool withConnection)
 {
   int edgeIndex1 = triangle.edge(0).getID();
   int edgeIndex2 = triangle.edge(1).getID();

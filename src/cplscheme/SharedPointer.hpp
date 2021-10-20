@@ -7,7 +7,7 @@ namespace cplscheme {
 
 class CouplingScheme;
 class CouplingSchemeConfiguration;
-struct CouplingData;
+class CouplingData;
 
 using PtrCouplingScheme              = std::shared_ptr<CouplingScheme>;
 using PtrCouplingSchemeConfiguration = std::shared_ptr<CouplingSchemeConfiguration>;

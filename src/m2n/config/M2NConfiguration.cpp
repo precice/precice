@@ -60,7 +60,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, "mpi", occ, TAG);
+    XMLTag tag(*this, "mpi-multiple-ports", occ, TAG);
     doc = "Communication via MPI with startup in separated communication spaces, using multiple communicators.";
     tag.setDocumentation(doc);
 
@@ -73,6 +73,20 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
   {
+    XMLTag tag(*this, "mpi", occ, TAG);
+    doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
+    tag.setDocumentation(doc);
+
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+                                     .setDocumentation(
+                                         "Directory where connection information is exchanged. By default, the "
+                                         "directory of startup is chosen, and both solvers have to be started "
+                                         "in the same directory.");
+    tag.addAttribute(attrExchangeDirectory);
+    tags.push_back(tag);
+  }
+  {
+    /// @TODO Remove in Version 3.0
     XMLTag tag(*this, "mpi-singleports", occ, TAG);
     doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
     tag.setDocumentation(doc);
@@ -123,6 +137,14 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string 
   PRECICE_ERROR("There is no m2n communication configured between participants \"" + from + "\" and \"" + to + "\". Please add an appropriate \"<m2n />\" tag.");
 }
 
+bool M2NConfiguration::isM2NConfigured(const std::string &from, const std::string &to)
+{
+  return std::any_of(std::begin(_m2ns), std::end(_m2ns),
+                     [from, to](const auto &m2nTuple) {
+                       return ((std::get<1>(m2nTuple) == from) && (std::get<2>(m2nTuple) == to)) || ((std::get<1>(m2nTuple) == to) && (std::get<2>(m2nTuple) == from));
+                     });
+}
+
 void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   if (tag.getNamespace() == TAG) {
@@ -141,7 +163,8 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
 
     com::PtrCommunicationFactory comFactory;
     com::PtrCommunication        com;
-    if (tag.getName() == "sockets") {
+    const std::string            tagName = tag.getName();
+    if (tagName == "sockets") {
       std::string network = tag.getStringAttributeValue("network");
       int         port    = tag.getIntAttributeValue("port");
 
@@ -151,26 +174,30 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
       comFactory      = std::make_shared<com::SocketCommunicationFactory>(port, false, network, dir);
       com             = comFactory->newCommunication();
-    } else if (tag.getName() == "mpi") {
+    } else if (tagName == "mpi-multiple-ports") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      PRECICE_ERROR("Communication type \"mpi\" can only be used if preCICE was compiled with MPI support enabled. "
+      PRECICE_ERROR("Communication type \"mpi-multiple-ports\" can only be used if preCICE was compiled with MPI support enabled. "
                     "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
 #ifdef OMPI_MAJOR_VERSION
-      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
+      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-multiple-ports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
 #endif
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
-    } else if (tag.getName() == "mpi-singleports") {
+    } else if (tagName == "mpi" || tagName == "mpi-singleports") {
+      if (tagName == "mpi-singleports") {
+        PRECICE_WARN("You used <m2n:mpi-singleports />, which is deprecated. Please use <m2n:mpi /> instead.");
+      }
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
-      PRECICE_ERROR("Communication type \"mpi-singleports\" can only be used if preCICE was compiled with MPI support enabled. "
-                    "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
+      PRECICE_ERROR("Communication type \"{}\" can only be used if preCICE was compiled with MPI support enabled. "
+                    "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".",
+                    tagName);
 #else
 #ifdef OMPI_MAJOR_VERSION
-      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-singleports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.");
+      PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:{} />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems.", tagName);
 #endif
       comFactory = std::make_shared<com::MPISinglePortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();

@@ -23,7 +23,7 @@ void SVDFactorization::initialize(
     PtrParMatrixOps parOps,
     int             globalRows)
 {
-  _parMatrixOps = parOps;
+  _parMatrixOps = std::move(parOps);
   _globalRows   = globalRows;
   _initialized  = true;
 }
@@ -295,7 +295,7 @@ int SVDFactorization::rows()
   return _rows;
 }
 
-int SVDFactorization::rank()
+Rank SVDFactorization::rank()
 {
   return _cols;
 }

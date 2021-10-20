@@ -42,19 +42,19 @@ public:
    * @brief Constructor.
    */
   MVQNAcceleration(
-      double                  initialRelaxation,
-      bool                    forceInitialRelaxation,
-      int                     maxIterationsUsed,
-      int                     pastTimeWindowsReused,
-      int                     filter,
-      double                  singularityLimit,
-      std::vector<int>        dataIDs,
-      impl::PtrPreconditioner preconditioner,
-      bool                    alwaysBuildJacobian,
-      int                     imvjRestartType,
-      int                     chunkSize,
-      int                     RSLSreusedTimeWindows,
-      double                  RSSVDtruncationEps);
+      double                         initialRelaxation,
+      bool                           forceInitialRelaxation,
+      int                            maxIterationsUsed,
+      int                            pastTimeWindowsReused,
+      int                            filter,
+      double                         singularityLimit,
+      std::vector<int>               dataIDs,
+      const impl::PtrPreconditioner &preconditioner,
+      bool                           alwaysBuildJacobian,
+      int                            imvjRestartType,
+      int                            chunkSize,
+      int                            RSLSreusedTimeWindows,
+      double                         RSSVDtruncationEps);
 
   /**
     * @brief Destructor, empty.

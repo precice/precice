@@ -3,8 +3,10 @@
 #include <Eigen/Core>
 #include <array>
 #include <iostream>
+
 #include "math/differences.hpp"
 #include "mesh/Vertex.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -28,7 +30,7 @@ public:
   Edge(
       Vertex &vertexOne,
       Vertex &vertexTwo,
-      int     id);
+      EdgeID  id);
 
   /// Returns number of spatial dimensions (2 or 3) the edge is embedded to.
   int getDimensions() const;
@@ -43,7 +45,7 @@ public:
   Eigen::VectorXd computeNormal() const;
 
   /// Returns the (among edges) unique ID of the edge.
-  int getID() const;
+  EdgeID getID() const;
 
   /// Returns the length of the edge
   double getLength() const;

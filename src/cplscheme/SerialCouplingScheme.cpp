@@ -2,6 +2,8 @@
 #include <cmath>
 #include <memory>
 #include <ostream>
+#include <utility>
+
 #include <vector>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
@@ -27,9 +29,10 @@ SerialCouplingScheme::SerialCouplingScheme(
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
-    int                           maxIterations)
+    int                           maxIterations,
+    int                           extrapolationOrder)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod)
+                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
@@ -81,7 +84,6 @@ void SerialCouplingScheme::exchangeInitialData()
   } else { // second participant
     PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
     if (sendsInitializedData()) {
-      updateOldValues(getSendData());
       // The second participant sends the initialized data to the first participant
       // here, which receives the data on call of initialize().
       sendData(getM2N(), getSendData());
@@ -105,7 +107,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     }
     sendData(getM2N(), getSendData());
     if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence();
+      convergence = receiveConvergence(getM2N());
     }
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
@@ -113,7 +115,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
   } else { // second participant
     if (isImplicitCouplingScheme()) {
       PRECICE_DEBUG("Test Convergence and accelerate...");
-      convergence = accelerate();
+      convergence = doImplicitStep();
       sendConvergence(getM2N(), convergence);
     }
     PRECICE_DEBUG("Sending data...");

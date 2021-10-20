@@ -37,6 +37,9 @@ public:
   /// Returns all configured meshes.
   std::vector<PtrMesh> &meshes();
 
+  /// Returns whether Mesh has Data with the dataName
+  bool hasMeshName(const std::string &meshName) const;
+
   /// Returns the configured mesh with given name, or NULL.
   mesh::PtrMesh getMesh(const std::string &meshName) const;
 

@@ -10,8 +10,7 @@ namespace impl {
 
 ValuePreconditioner::ValuePreconditioner(
     int maxNonConstTimeWindows)
-    : Preconditioner(maxNonConstTimeWindows),
-      _firstTimeWindow(true)
+    : Preconditioner(maxNonConstTimeWindows)
 {
 }
 

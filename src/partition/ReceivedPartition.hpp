@@ -23,6 +23,9 @@ namespace partition {
  * Afterwards necessary distribution data structures are set up.
  */
 class ReceivedPartition : public Partition {
+  /// Make the fixture friend of this class
+  friend struct ReceivedPartitionFixture;
+
 public:
   /// Defines the typ of geometric filter used
   enum GeometricFilter {
@@ -37,7 +40,7 @@ public:
   };
 
   /// Constructor
-  ReceivedPartition(mesh::PtrMesh mesh, GeometricFilter geometricFilter, double safetyFactor);
+  ReceivedPartition(const mesh::PtrMesh &mesh, GeometricFilter geometricFilter, double safetyFactor, bool allowDirectAccess = false);
 
   virtual ~ReceivedPartition() {}
 
@@ -87,6 +90,8 @@ private:
   int _dimensions;
 
   double _safetyFactor;
+
+  bool _allowDirectAccess;
 
   logging::Logger _log{"partition::ReceivedPartition"};
 

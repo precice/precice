@@ -73,7 +73,7 @@ void MeshConfiguration::xmlTagCallback(
   if (tag.getName() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
-    if (tag.hasAttribute(ATTR_FLIP_NORMALS)) {
+    if (tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS)) {
       PRECICE_WARN("You used the attribute \"{}\" when configuring mesh \"\". "
                    "This attribute is deprecated and will be removed in the next major release. "
                    "Please remove the attribute to silence this warning.",
@@ -134,6 +134,14 @@ const std::vector<PtrMesh> &MeshConfiguration::meshes() const
 std::vector<PtrMesh> &MeshConfiguration::meshes()
 {
   return _meshes;
+}
+
+bool MeshConfiguration::hasMeshName(const std::string &meshName) const
+{
+  auto iter = std::find_if(_meshes.begin(), _meshes.end(), [&meshName](const auto &mptr) {
+    return mptr->getName() == meshName;
+  });
+  return iter != _meshes.end(); // if name was not found in _meshes, iter == _meshes.end()
 }
 
 mesh::PtrMesh MeshConfiguration::getMesh(

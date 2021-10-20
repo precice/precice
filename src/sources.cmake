@@ -5,6 +5,7 @@
 target_sources(precice
     PRIVATE
     ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
+    ${CMAKE_BINARY_DIR}/src/precice/impl/versions.hpp
     src/acceleration/Acceleration.cpp
     src/acceleration/Acceleration.hpp
     src/acceleration/AitkenAcceleration.cpp
@@ -98,6 +99,7 @@ target_sources(precice
     src/cplscheme/CompositionalCouplingScheme.hpp
     src/cplscheme/Constants.cpp
     src/cplscheme/Constants.hpp
+    src/cplscheme/CouplingData.cpp
     src/cplscheme/CouplingData.hpp
     src/cplscheme/CouplingScheme.cpp
     src/cplscheme/CouplingScheme.hpp
@@ -238,12 +240,15 @@ target_sources(precice
     src/precice/impl/WatchIntegral.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
-    src/precice/impl/versions.hpp
+    src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp
     src/query/impl/Indexer.cpp
     src/query/impl/Indexer.hpp
     src/query/impl/RTreeAdapter.hpp
+    src/time/SharedPointer.hpp
+    src/time/Waveform.cpp
+    src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
@@ -280,6 +285,8 @@ target_sources(precice
     src/utils/fmtSTL.hpp
     src/utils/networking.cpp
     src/utils/networking.hpp
+    src/utils/span.hpp
+    src/utils/span_tools.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
     src/utils/traits.hpp
@@ -300,4 +307,5 @@ target_sources(precice
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     src/precice/SolverInterface.hpp
+    src/precice/types.hpp
     )

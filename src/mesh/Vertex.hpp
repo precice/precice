@@ -4,7 +4,9 @@
 #include <array>
 #include <iostream>
 #include <utility>
+
 #include "math/differences.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -20,7 +22,7 @@ public:
   template <typename VECTOR_T>
   Vertex(
       const VECTOR_T &coordinates,
-      int             id);
+      VertexID        id);
 
   /// Returns spatial dimensionality of vertex.
   int getDimensions() const;
@@ -30,7 +32,7 @@ public:
   void setCoords(const VECTOR_T &coordinates);
 
   /// Returns the unique (among vertices of one mesh on one processor) ID of the vertex.
-  int getID() const;
+  VertexID getID() const;
 
   /// Returns the coordinates of the vertex.
   Eigen::VectorXd getCoords() const;
@@ -63,7 +65,7 @@ private:
   short _dim;
 
   /// Unique (among vertices in one mesh) ID of the vertex.
-  int _id;
+  VertexID _id;
 
   /// global (unique) index for parallel simulations
   int _globalIndex = -1;
@@ -100,7 +102,7 @@ void Vertex::setCoords(
   _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
 }
 
-inline int Vertex::getID() const
+inline VertexID Vertex::getID() const
 {
   return _id;
 }
