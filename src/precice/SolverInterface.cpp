@@ -2,6 +2,8 @@
 #include "cplscheme/Constants.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/impl/versions.hpp"
+#include "xml/Printer.hpp"
+#include "precice/config/Configuration.hpp"
 
 namespace precice {
 
@@ -320,6 +322,25 @@ void SolverInterface::getMeshVerticesAndIDs(const int meshID,
 std::string getVersionInformation()
 {
   return {precice::versionInformation};
+}
+
+void printConfigAsMD(std::ostream &out)
+{
+  precice::config::Configuration config;
+  out << "<!-- generated with preCICE " PRECICE_VERSION " -->\n";
+  precice::xml::toMarkdown(out, config.getXMLTag());
+}
+
+void printConfigAsDTD(std::ostream &out)
+{
+  precice::config::Configuration config;
+  precice::xml::toDTD(out, config.getXMLTag());
+}
+
+void printConfigAsXML(std::ostream &out)
+{
+  precice::config::Configuration config;
+  precice::xml::toDocumentation(out, config.getXMLTag());
 }
 
 namespace constants {

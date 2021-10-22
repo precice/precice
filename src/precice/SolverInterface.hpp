@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <iosfwd>
 
 /**
  * forward declarations.
@@ -906,6 +907,15 @@ private:
  * 3) the configuration of preCICE including MPI, PETSC, PYTHON
  */
 std::string getVersionInformation();
+
+/// @brief Prints the configuration reference as Markdown.
+void printConfigAsMD(std::ostream &out);
+
+/// @brief Prints the configuration reference as DTD.
+void printConfigAsDTD(std::ostream &out);
+
+/// @brief Prints the configuration reference as XML with inlined help.
+void printConfigAsXML(std::ostream &out);
 
 namespace constants {
 

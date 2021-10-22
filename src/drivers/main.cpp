@@ -1,9 +1,7 @@
+#include <cassert>
 #include <iostream>
+#include <precice/SolverInterface.hpp>
 #include <string>
-#include "precice/config/Configuration.hpp"
-#include "precice/impl/versions.hpp"
-#include "utils/assertion.hpp"
-#include "xml/Printer.hpp"
 
 void printUsage()
 {
@@ -43,17 +41,13 @@ int main(int argc, char **argv)
   }
 
   if (runHelp) {
-    precice::config::Configuration config;
-    precice::xml::toDocumentation(std::cout, config.getXMLTag());
+    precice::printConfigAsXML(std::cout);
   } else if (runDtd) {
-    precice::config::Configuration config;
-    precice::xml::toDTD(std::cout, config.getXMLTag());
+    precice::printConfigAsDTD(std::cout);
   } else if (runMD) {
-    precice::config::Configuration config;
-    std::cout << "<!-- generated with preCICE " PRECICE_VERSION " -->\n";
-    precice::xml::toMarkdown(std::cout, config.getXMLTag());
+    precice::printConfigAsMD(std::cout);
   } else {
-    PRECICE_ASSERT(false);
+    assert(false);
   }
   return 0;
 }

@@ -352,18 +352,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 add_executable(binprecice "src/drivers/main.cpp")
 target_link_libraries(binprecice
   PRIVATE
-  Threads::Threads
   precice
-  fmt-header-only
-  Eigen3::Eigen
-  Boost::boost
-  Boost::filesystem
-  Boost::log
-  Boost::log_setup
-  Boost::program_options
-  Boost::system
-  Boost::thread
-  Boost::unit_test_framework
   )
 set_target_properties(binprecice PROPERTIES
   # precice is a C++14 project
@@ -371,17 +360,6 @@ set_target_properties(binprecice PROPERTIES
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   )
-# Copy needed properties from the lib to the executatble. This is necessary as
-# this executable uses the library source, not only the interface.
-copy_target_property(precice binprecice COMPILE_DEFINITIONS)
-copy_target_property(precice binprecice COMPILE_OPTIONS)
-if(PRECICE_MPICommunication)
-  target_link_libraries(binprecice PRIVATE MPI::MPI_CXX)
-endif()
-if(PRECICE_MPICommunication AND PRECICE_PETScMapping)
-  target_link_libraries(binprecice PRIVATE PETSc::PETSc)
-endif()
-
 
 #
 # Configuration of Target testprecice
