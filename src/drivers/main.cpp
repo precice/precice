@@ -5,49 +5,35 @@
 
 void printUsage()
 {
-  std::cout << "Usage:\n\n";
-  std::cout << "Print XML reference      :  binprecice xml\n";
-  std::cout << "Print DTD for XML config :  binprecice dtd" << std::endl;
-  std::cout << "Print Markdown reference :  binprecice md" << std::endl;
+  std::cerr << "Usage:\n\n";
+  std::cerr << "Print XML reference      :  binprecice xml\n";
+  std::cerr << "Print DTD for XML config :  binprecice dtd\n";
+  std::cerr << "Print Markdown reference :  binprecice md\n";
 }
 
 int main(int argc, char **argv)
 {
-  bool runHelp = false;
-  bool runDtd  = false;
-  bool runMD   = false;
-
-  bool wrongParameters = true;
-
-  if (argc >= 2) {
-    std::string action(argv[1]);
-    if (action == "dtd") {
-      wrongParameters = false;
-      runDtd          = true;
-    }
-    if (action == "md") {
-      wrongParameters = false;
-      runMD           = true;
-    }
-    if (action == "xml") {
-      wrongParameters = false;
-      runHelp         = true;
-    }
-  }
-
-  if (wrongParameters) {
+  if (argc < 2) {
     printUsage();
     return 1;
   }
 
-  if (runHelp) {
+  const std::string action(argv[1]);
+  const int         args = argc - 2;
+
+  if (action == "dtd" && args == 0) {
     precice::printConfigAsXML(std::cout);
-  } else if (runDtd) {
-    precice::printConfigAsDTD(std::cout);
-  } else if (runMD) {
-    precice::printConfigAsMD(std::cout);
-  } else {
-    assert(false);
+    return 0;
   }
-  return 0;
+  if (action == "md" && args == 0) {
+    precice::printConfigAsMD(std::cout);
+    return 0;
+  }
+  if (action == "xml" && args == 0) {
+    precice::printConfigAsDTD(std::cout);
+    return 0;
+  }
+
+  printUsage();
+  return 1;
 }
