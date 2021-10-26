@@ -7,13 +7,13 @@ namespace precice {
 
 namespace testing {
 // Forward declaration to friend the boost test struct
-struct WaveformFixture;
+class WaveformFixture;
 } // namespace testing
 
 namespace time {
 
 class Waveform {
-  friend struct testing::WaveformFixture; // Make the fixture friend of this class
+  friend class testing::WaveformFixture; // Make the fixture friend of this class
 public:
   /**
    * @brief Waveform object which stores data of current and past time windows for performing extrapolation.
