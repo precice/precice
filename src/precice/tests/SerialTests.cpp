@@ -328,6 +328,9 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling)
   }
 }
 
+BOOST_AUTO_TEST_SUITE(Waveform)
+BOOST_AUTO_TEST_SUITE(Explicit)
+
 /// Test to run a simple coupling with subcycling.
 /// Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.
 BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
@@ -438,6 +441,8 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
   precice.finalize();
   BOOST_TEST(timestep == nWindows * nSubsteps);
 }
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 /// One solver uses incremental position set, read/write methods.
 /// @todo This test uses resetmesh. How did this ever work?
@@ -533,6 +538,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
 }
 #endif
 
+BOOST_AUTO_TEST_SUITE(InitializeData)
 /**
  * @brief The second solver initializes the data of the first.
  *
@@ -589,6 +595,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization)
     cplInterface.finalize();
   }
 }
+BOOST_AUTO_TEST_SUITE_END()
 
 /**
  * @brief Tests the reading and writing of data multiple times within one timestep.
@@ -1550,6 +1557,7 @@ BOOST_AUTO_TEST_CASE(testImplicit)
   }
 }
 
+BOOST_AUTO_TEST_SUITE(InitializeData)
 /// Test simple coupled simulation with iterations, data initialization and without acceleration
 BOOST_AUTO_TEST_CASE(testImplicitWithDataInitialization)
 {
@@ -1614,6 +1622,8 @@ BOOST_AUTO_TEST_CASE(testImplicitWithDataInitialization)
   }
   couplingInterface.finalize();
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 /// Tests stationary mapping with solver provided meshes.
 void runTestStationaryMappingWithSolverMesh(std::string const &config, int dim, TestContext const &context)
