@@ -291,6 +291,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitSockets)
   runTestExplicit(config, context);
 }
 
+BOOST_AUTO_TEST_SUITE(Time)
+BOOST_AUTO_TEST_SUITE(Explicit)
+
 /// Test to run a simple "do nothing" coupling with subcycling solvers.
 BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling)
 {
@@ -327,9 +330,6 @@ BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling)
     BOOST_TEST(timestep == 30);
   }
 }
-
-BOOST_AUTO_TEST_SUITE(Waveform)
-BOOST_AUTO_TEST_SUITE(Explicit)
 
 /// Test to run a simple coupling with subcycling.
 /// Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.
