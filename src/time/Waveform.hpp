@@ -36,10 +36,9 @@ public:
   void moveToNextWindow(int timeWindows, int order = 0);
 
   /**
-   * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)
-   * being the current time window.
+   * @brief getter for data at the current time window.
    */
-  const Eigen::MatrixXd &lastTimeWindows();
+  const Eigen::VectorXd getInitialGuess();
 
 private:
   /// Data values of time windows.
