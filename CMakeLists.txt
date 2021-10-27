@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.10.2)
-project(preCICE VERSION 2.2.1 LANGUAGES CXX)
+project(preCICE VERSION 2.3.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -49,7 +49,7 @@ if(NOT CMAKE_BUILD_TYPE)
   message(WARNING "You did not specify a CMAKE_BUILD_TYPE.
 
   We will assume you asked for a Debug build.")
-  set(CMAKE_BUILD_TYPE Debug CACHE STRINGS "The type of this build" FORCE)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "The type of this build" FORCE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
 

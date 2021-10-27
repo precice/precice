@@ -7,20 +7,20 @@ namespace precice {
 
 namespace testing {
 // Forward declaration to friend the boost test struct
-struct WaveformFixture;
+class WaveformFixture;
 } // namespace testing
 
 namespace time {
 
 class Waveform {
-  friend struct testing::WaveformFixture; // Make the fixture friend of this class
+  friend class testing::WaveformFixture; // Make the fixture friend of this class
 public:
   /**
    * @brief Waveform object which stores data of current and past time windows for performing extrapolation.
-   * @param numberOfData defines how many pieces of data one sample in time consists of
+   * @param dataCount defines how many pieces of data one sample in time consists of
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(const int numberOfData,
+  Waveform(const int dataCount,
            const int extrapolationOrder);
 
   /**
@@ -35,35 +35,29 @@ public:
   void moveToNextWindow();
 
   /**
-   * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)
-   * being the current time window.
+   * @brief getter for data at the current time window.
    */
-  const Eigen::MatrixXd &lastTimeWindows();
+  const Eigen::VectorXd getInitialGuess();
 
 private:
   /// Data values of time windows.
-  Eigen::MatrixXd _timeWindows;
+  Eigen::MatrixXd _timeWindowsStorage;
 
   /// extrapolation order for this waveform
   const int _extrapolationOrder;
 
-  /// number of valid samples in _timeWindows
-  int _numberOfValidSamples;
+  /// number of stored samples in _timeWindowsStorage
+  int _numberOfStoredSamples;
 
   /**
-   * @brief returns number of samples in time stored by this waveform
+   * @brief returns number samples in time this waveform can store
    */
-  int numberOfSamples();
-
-  /**
-   * @brief returns number of valid samples in time stored by this waveform
-   */
-  int numberOfValidSamples();
+  int sizeOfSampleStorage();
 
   /**
    * @brief returns number of data per sample in time stored by this waveform
    */
-  int numberOfData(); // @todo bad naming, consider renaming. See https://github.com/precice/precice/pull/1094#pullrequestreview-771715472
+  int dataSize();
 
   mutable logging::Logger _log{"time::Waveform"};
 

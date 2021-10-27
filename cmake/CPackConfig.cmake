@@ -48,7 +48,7 @@ set(CPACK_GENERATOR "TGZ")
 if("${CMAKE_INSTALL_PREFIX}" STREQUAL "/usr")
   list(APPEND CPACK_GENERATOR "DEB")
 else()
-  message("Debian package generator disabled: Install prefix is not \"/usr\"")
+  message(STATUS "Debian package generator disabled: Install prefix is not \"/usr\"")
 endif()
 
 #set(CPACK_SOURCE_PACKAGE_FILE_NAME "")
