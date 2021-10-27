@@ -11,11 +11,11 @@ namespace testing {
  */
 class WaveformFixture {
 public:
-  int numberOfValidSamples(time::Waveform &waveform);
+  int numberOfStoredSamples(time::Waveform &waveform);
 
-  int numberOfSamples(time::Waveform &waveform);
+  int sizeOfSampleStorage(time::Waveform &waveform);
 
-  int numberOfData(time::Waveform &waveform);
+  int dataCount(time::Waveform &waveform);
 };
 
 } // namespace testing

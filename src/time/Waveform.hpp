@@ -17,10 +17,10 @@ class Waveform {
 public:
   /**
    * @brief Waveform object which stores data of current and past time windows for performing extrapolation.
-   * @param numberOfData defines how many pieces of data one sample in time consists of
+   * @param dataCount defines how many pieces of data one sample in time consists of
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(const int numberOfData,
+  Waveform(const int dataCount,
            const int extrapolationOrder);
 
   /**
@@ -47,23 +47,18 @@ private:
   /// extrapolation order for this waveform
   const int _extrapolationOrder;
 
-  /// number of valid samples in _timeWindows
-  int _numberOfValidSamples;
+  /// number of stored samples in _timeWindows
+  int _numberOfStoredSamples;
 
   /**
-   * @brief returns number of samples in time stored by this waveform
+   * @brief returns number samples in time this waveform can store
    */
-  int numberOfSamples();
-
-  /**
-   * @brief returns number of valid samples in time stored by this waveform
-   */
-  int numberOfValidSamples();
+  int sizeOfSampleStorage();
 
   /**
    * @brief returns number of data per sample in time stored by this waveform
    */
-  int numberOfData(); // @todo bad naming, consider renaming. See https://github.com/precice/precice/pull/1094#pullrequestreview-771715472
+  int dataCount(); // @todo bad naming, consider renaming. See https://github.com/precice/precice/pull/1094#pullrequestreview-771715472
 
   mutable logging::Logger _log{"time::Waveform"};
 

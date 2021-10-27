@@ -7,7 +7,7 @@ namespace precice {
 namespace time {
 
 Waveform::Waveform(
-    const int numberOfData,
+    const int dataCount,
     const int extrapolationOrder)
     : _extrapolationOrder(extrapolationOrder)
 {
@@ -18,18 +18,18 @@ Waveform::Waveform(
      * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
      * extrapolation.
      */
-  int initializedNumberOfSamples = std::max({2, _extrapolationOrder + 1});
-  _timeWindows                   = Eigen::MatrixXd::Zero(numberOfData, initializedNumberOfSamples);
-  _numberOfValidSamples          = 1; // we assume that upon creation the first sample is always valid.
-  PRECICE_ASSERT(numberOfSamples() == initializedNumberOfSamples);
-  PRECICE_ASSERT(numberOfData() == numberOfData);
+  int sampleStorageSize = std::max({2, _extrapolationOrder + 1});
+  _timeWindows                   = Eigen::MatrixXd::Zero(dataCount, sampleStorageSize);
+  _numberOfStoredSamples          = 1; // we assume that upon creation the first sample is always valid.
+  PRECICE_ASSERT(this->sizeOfSampleStorage() == sampleStorageSize);
+  PRECICE_ASSERT(this->dataCount() == dataCount);
 }
 
 void Waveform::store(const Eigen::VectorXd &data)
 {
   int columnID = 0;
-  PRECICE_ASSERT(_timeWindows.cols() > columnID, numberOfSamples(), columnID);
-  PRECICE_ASSERT(data.size() == numberOfData(), data.size(), numberOfData());
+  PRECICE_ASSERT(_timeWindows.cols() > columnID, sizeOfSampleStorage(), columnID);
+  PRECICE_ASSERT(data.size() == dataCount(), data.size(), dataCount());
   this->_timeWindows.col(columnID) = data;
 }
 
@@ -37,22 +37,17 @@ void Waveform::moveToNextWindow()
 {
   auto initialGuess = extrapolateData();
   utils::shiftSetFirst(this->_timeWindows, initialGuess); // archive old samples and store initial guess
-  if (_numberOfValidSamples < numberOfSamples()) {        // together with the initial guess the number of valid samples increases
-    _numberOfValidSamples++;
+  if (_numberOfStoredSamples < sizeOfSampleStorage()) {     // together with the initial guess the number of valid samples increases
+    _numberOfStoredSamples++;
   }
 }
 
-int Waveform::numberOfSamples()
+int Waveform::sizeOfSampleStorage()
 {
   return _timeWindows.cols();
 }
 
-int Waveform::numberOfValidSamples()
-{
-  return _numberOfValidSamples;
-}
-
-int Waveform::numberOfData()
+int Waveform::dataCount()
 {
   return _timeWindows.rows();
 }
@@ -99,27 +94,27 @@ static int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
 
 Eigen::VectorXd Waveform::extrapolateData()
 {
-  const int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfValidSamples);
+  const int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfStoredSamples);
 
   if (usedOrder == 0) {
-    PRECICE_ASSERT(this->numberOfSamples() > 0);
-    return this->_timeWindows.col(0);
+    PRECICE_ASSERT(_numberOfStoredSamples > 0);
+    return _timeWindows.col(0);
   }
   Eigen::VectorXd extrapolatedValue;
   if (usedOrder == 1) { //timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
-    PRECICE_ASSERT(this->numberOfSamples() > 1);
-    extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
-    extrapolatedValue -= this->_timeWindows.col(1);      // = 2*x^t - x^(t-1)
+    PRECICE_ASSERT(_numberOfStoredSamples > 1);
+    extrapolatedValue = _timeWindows.col(0) * 2.0; // = 2*x^t
+    extrapolatedValue -= _timeWindows.col(1);      // = 2*x^t - x^(t-1)
     return extrapolatedValue;
   }
   PRECICE_ASSERT(usedOrder == 2);
   // uses formula given in https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1
   PRECICE_DEBUG("Performing second order extrapolation");
-  PRECICE_ASSERT(this->numberOfSamples() > 2);
-  extrapolatedValue = this->_timeWindows.col(0) * 2.5;  // = 2.5*x^t
-  extrapolatedValue -= this->_timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-  extrapolatedValue += this->_timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
+  PRECICE_ASSERT(_numberOfStoredSamples > 2);
+  extrapolatedValue = _timeWindows.col(0) * 2.5;  // = 2.5*x^t
+  extrapolatedValue -= _timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
+  extrapolatedValue += _timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
   return extrapolatedValue;
 }
 
