@@ -46,6 +46,11 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
   return this->interpolateData(normalizedDt);
 }
 
+const Eigen::VectorXd Waveform::getInitialGuess()
+{
+  return _timeWindows.col(0);
+}
+
 void Waveform::moveToNextWindow()
 {
   auto initialGuess = extrapolateData();
@@ -68,11 +73,6 @@ int Waveform::numberOfValidSamples()
 int Waveform::numberOfData()
 {
   return _timeWindows.rows();
-}
-
-const Eigen::MatrixXd &Waveform::lastTimeWindows()
-{
-  return _timeWindows;
 }
 
 /**

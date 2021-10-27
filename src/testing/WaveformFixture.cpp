@@ -17,5 +17,11 @@ int WaveformFixture::numberOfData(time::Waveform &waveform)
 {
   return waveform.numberOfData();
 }
+
+double WaveformFixture::getValue(time::Waveform &waveform, int dataID, int sampleID)
+{
+  return waveform._timeWindows(dataID, sampleID);
+}
+
 } // namespace testing
 } // namespace precice

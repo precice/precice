@@ -7,13 +7,13 @@ namespace precice {
 
 namespace testing {
 // Forward declaration to friend the boost test struct
-struct WaveformFixture;
+class WaveformFixture;
 } // namespace testing
 
 namespace time {
 
 class Waveform {
-  friend struct testing::WaveformFixture; // Make the fixture friend of this class
+  friend class testing::WaveformFixture; // Make the fixture friend of this class
 public:
   /// To be used, when the interpolation order is not defined for this Waveform.
   static const int UNDEFINED_INTERPOLATION_ORDER;
@@ -46,10 +46,9 @@ public:
   Eigen::VectorXd sample(const double normalizedDt);
 
   /**
-   * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)
-   * being the current time window.
+   * @brief getter for data at the current time window.
    */
-  const Eigen::MatrixXd &lastTimeWindows();
+  const Eigen::VectorXd getInitialGuess();
 
 private:
   /// Data values of time windows.

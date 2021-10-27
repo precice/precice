@@ -272,7 +272,7 @@ void BaseCouplingScheme::moveToNextWindow()
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     _waveforms[pair.first]->moveToNextWindow();
-    pair.second->values() = _waveforms[pair.first]->lastTimeWindows().col(0);
+    pair.second->values() = _waveforms[pair.first]->getInitialGuess();
   }
 }
 

@@ -16,6 +16,8 @@ public:
   int numberOfSamples(time::Waveform &waveform);
 
   int numberOfData(time::Waveform &waveform);
+
+  double getValue(time::Waveform &waveform, int dataID, int sampleID);
 };
 
 } // namespace testing
