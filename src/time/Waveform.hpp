@@ -38,16 +38,16 @@ public:
    * @brief getter for Eigen::MatrixXd containing data of current and past time windows. Each column represents a sample in time, with col(0)
    * being the current time window.
    */
-  const Eigen::MatrixXd &lastTimeWindows();
+  const Eigen::VectorXd getInitialGuess();
 
 private:
   /// Data values of time windows.
-  Eigen::MatrixXd _timeWindows;
+  Eigen::MatrixXd _timeWindowsStorage;
 
   /// extrapolation order for this waveform
   const int _extrapolationOrder;
 
-  /// number of stored samples in _timeWindows
+  /// number of stored samples in _timeWindowsStorage
   int _numberOfStoredSamples;
 
   /**

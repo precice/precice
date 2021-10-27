@@ -19,7 +19,7 @@ Waveform::Waveform(
      * extrapolation.
      */
   int sampleStorageSize = std::max({2, _extrapolationOrder + 1});
-  _timeWindows                   = Eigen::MatrixXd::Zero(dataCount, sampleStorageSize);
+  _timeWindowsStorage                   = Eigen::MatrixXd::Zero(dataCount, sampleStorageSize);
   _numberOfStoredSamples          = 1; // we assume that upon creation the first sample is always valid.
   PRECICE_ASSERT(this->sizeOfSampleStorage() == sampleStorageSize);
   PRECICE_ASSERT(this->dataCount() == dataCount);
@@ -28,15 +28,15 @@ Waveform::Waveform(
 void Waveform::store(const Eigen::VectorXd &data)
 {
   int columnID = 0;
-  PRECICE_ASSERT(_timeWindows.cols() > columnID, sizeOfSampleStorage(), columnID);
+  PRECICE_ASSERT(_timeWindowsStorage.cols() > columnID, sizeOfSampleStorage(), columnID);
   PRECICE_ASSERT(data.size() == dataCount(), data.size(), dataCount());
-  this->_timeWindows.col(columnID) = data;
+  this->_timeWindowsStorage.col(columnID) = data;
 }
 
 void Waveform::moveToNextWindow()
 {
   auto initialGuess = extrapolateData();
-  utils::shiftSetFirst(this->_timeWindows, initialGuess); // archive old samples and store initial guess
+  utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
   if (_numberOfStoredSamples < sizeOfSampleStorage()) {     // together with the initial guess the number of valid samples increases
     _numberOfStoredSamples++;
   }
@@ -44,17 +44,17 @@ void Waveform::moveToNextWindow()
 
 int Waveform::sizeOfSampleStorage()
 {
-  return _timeWindows.cols();
+  return _timeWindowsStorage.cols();
 }
 
 int Waveform::dataCount()
 {
-  return _timeWindows.rows();
+  return _timeWindowsStorage.rows();
 }
 
-const Eigen::MatrixXd &Waveform::lastTimeWindows()
+const Eigen::VectorXd Waveform::getInitialGuess()
 {
-  return _timeWindows;
+  return _timeWindowsStorage.col(0);
 }
 
 /**
@@ -98,23 +98,23 @@ Eigen::VectorXd Waveform::extrapolateData()
 
   if (usedOrder == 0) {
     PRECICE_ASSERT(_numberOfStoredSamples > 0);
-    return _timeWindows.col(0);
+    return _timeWindowsStorage.col(0);
   }
   Eigen::VectorXd extrapolatedValue;
   if (usedOrder == 1) { //timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
     PRECICE_ASSERT(_numberOfStoredSamples > 1);
-    extrapolatedValue = _timeWindows.col(0) * 2.0; // = 2*x^t
-    extrapolatedValue -= _timeWindows.col(1);      // = 2*x^t - x^(t-1)
+    extrapolatedValue = _timeWindowsStorage.col(0) * 2.0; // = 2*x^t
+    extrapolatedValue -= _timeWindowsStorage.col(1);      // = 2*x^t - x^(t-1)
     return extrapolatedValue;
   }
   PRECICE_ASSERT(usedOrder == 2);
   // uses formula given in https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1
   PRECICE_DEBUG("Performing second order extrapolation");
   PRECICE_ASSERT(_numberOfStoredSamples > 2);
-  extrapolatedValue = _timeWindows.col(0) * 2.5;  // = 2.5*x^t
-  extrapolatedValue -= _timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-  extrapolatedValue += _timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
+  extrapolatedValue = _timeWindowsStorage.col(0) * 2.5;  // = 2.5*x^t
+  extrapolatedValue -= _timeWindowsStorage.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
+  extrapolatedValue += _timeWindowsStorage.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
   return extrapolatedValue;
 }
 

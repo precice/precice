@@ -17,5 +17,10 @@ int WaveformFixture::dataCount(time::Waveform &waveform)
 {
   return waveform.dataCount();
 }
+
+double WaveformFixture::getValue(time::Waveform &waveform, int dataID, int sampleID)
+{
+  return waveform._timeWindowsStorage(dataID, sampleID);
+}
 } // namespace testing
 } // namespace precice
