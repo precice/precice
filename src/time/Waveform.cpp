@@ -37,9 +37,9 @@ void Waveform::moveToNextWindow(int timeWindows, int order)
   utils::shiftSetFirst(this->_timeWindows, initialGuess);
 }
 
-const Eigen::MatrixXd &Waveform::lastTimeWindows()
+const Eigen::VectorXd Waveform::getInitialGuess()
 {
-  return _timeWindows;
+  return _timeWindows.col(0);
 }
 
 int Waveform::numberOfSamples()
