@@ -21,13 +21,13 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataFirstOrder)
   // Test first order extrapolation
   const int extrapolationOrder = 1;
   Waveform  waveform(1, extrapolationOrder, Waveform::UNDEFINED_INTERPOLATION_ORDER);
-  BOOST_TEST(fixture.numberOfSamples(waveform) == 2);
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 1);
-  BOOST_TEST(fixture.numberOfData(waveform) == 1);
+  BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
+  BOOST_TEST(fixture.dataSize(waveform) == 1);
 
   // use zero initial data
   waveform.moveToNextWindow();
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 0.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
 
@@ -36,9 +36,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataFirstOrder)
   waveform.store(value);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 1.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   waveform.moveToNextWindow(); // applies first order extrapolation in second window
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 2.0)); // = 2*1 - 0
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 1.0));
 
@@ -46,9 +46,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataFirstOrder)
   waveform.store(value);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 4.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 1.0));
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   waveform.moveToNextWindow(); // applies first order extrapolation in third window
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 7.0)); // = 2*4 - 1
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 4.0));
 
@@ -56,9 +56,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataFirstOrder)
   waveform.store(value);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 8.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 4.0));
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   waveform.moveToNextWindow(); // applies first order extrapolation in forth window
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 12.0)); // 10.0 = 2 * 8 - 4
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 8.0));
 }
@@ -72,9 +72,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataSecondOrder)
   // Test second order extrapolation
   const int extrapolationOrder = 2;
   Waveform  waveform(1, extrapolationOrder, Waveform::UNDEFINED_INTERPOLATION_ORDER);
-  BOOST_TEST(fixture.numberOfSamples(waveform) == 3);
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 1);
-  BOOST_TEST(fixture.numberOfData(waveform) == 1);
+  BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 3);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
+  BOOST_TEST(fixture.dataSize(waveform) == 1);
 
   // use zero initial data
   waveform.moveToNextWindow();
@@ -88,9 +88,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 1.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   waveform.moveToNextWindow(); // applies first order extrapolation in second window
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 3);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 2.0)); // = 2*1 - 0
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 1.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
@@ -100,9 +100,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 4.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 1.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 3);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
   waveform.moveToNextWindow(); // applies second order extrapolation in third window
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 3);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 8.0)); // = 2.5*4 - 2 * 1 + 0.5 * 0
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 4.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 1.0));
@@ -112,9 +112,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 8.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 4.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 1.0));
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 3);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
   waveform.moveToNextWindow(); // applies second order extrapolation in fourth window
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 3);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 12.5)); // = 2.5 * 8 - 2 * 4 + 0.5 * 1
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 8.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 4.0));
@@ -124,9 +124,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 16.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 8.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 4.0));
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 3);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
   waveform.moveToNextWindow(); // applies second order extrapolation in fifth window
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 3);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 26.0)); // = 2.5 * 16.0 - 2 * 8 + 0.5 * 4
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 16.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 8.0));
@@ -145,9 +145,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
   const int interpolationOrder = 0;
   Waveform  waveform(1, extrapolationOrder, interpolationOrder);
 
-  BOOST_TEST(fixture.numberOfSamples(waveform) == 2);
-  BOOST_TEST(fixture.numberOfData(waveform) == 1);
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 1);
+  BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 2);
+  BOOST_TEST(fixture.dataSize(waveform) == 1);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 0.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
 
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
 
   waveform.moveToNextWindow();
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 2.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
 
@@ -195,9 +195,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
   const int extrapolationOrder = 0;
   const int interpolationOrder = 1;
   Waveform  waveform(1, extrapolationOrder, interpolationOrder);
-  BOOST_TEST(fixture.numberOfSamples(waveform) == 2);
-  BOOST_TEST(fixture.numberOfData(waveform) == 1);
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 1);
+  BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 2);
+  BOOST_TEST(fixture.dataSize(waveform) == 1);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 0.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
 
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
 
   waveform.moveToNextWindow();
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 2.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
 
@@ -248,9 +248,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   const int extrapolationOrder = 0;
   const int interpolationOrder = 2;
   Waveform  waveform(1, extrapolationOrder, interpolationOrder);
-  BOOST_TEST(fixture.numberOfSamples(waveform) == 3);
-  BOOST_TEST(fixture.numberOfData(waveform) == 1);
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 1);
+  BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 3);
+  BOOST_TEST(fixture.dataSize(waveform) == 1);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 0.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
 
   waveform.moveToNextWindow();
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 2);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 2.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 4.0));
 
   waveform.moveToNextWindow();
-  BOOST_TEST(fixture.numberOfValidSamples(waveform) == 3);
+  BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 4.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 4.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 2.0));

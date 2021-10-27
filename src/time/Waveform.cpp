@@ -9,7 +9,7 @@ namespace time {
 const int Waveform::UNDEFINED_INTERPOLATION_ORDER = -1;
 
 Waveform::Waveform(
-    const int initializedNumberOfData,
+    const int dataCount,
     const int extrapolationOrder,
     const int interpolationOrder)
     : _extrapolationOrder(extrapolationOrder), _interpolationOrder(interpolationOrder)
@@ -23,19 +23,19 @@ Waveform::Waveform(
      */
   PRECICE_ASSERT(_extrapolationOrder >= 0);
   PRECICE_ASSERT(_interpolationOrder >= 0 || _interpolationOrder == UNDEFINED_INTERPOLATION_ORDER);
-  const int initializedNumberOfSamples = std::max({2, _extrapolationOrder + 1, interpolationOrder + 1});
-  _timeWindows                         = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
-  _numberOfValidSamples                = 1; // we assume that upon creation the first sample is always valid.
-  PRECICE_ASSERT(numberOfSamples() == initializedNumberOfSamples);
-  PRECICE_ASSERT(numberOfData() == initializedNumberOfData);
+  const int sampleStorageSize = std::max({2, _extrapolationOrder + 1, interpolationOrder + 1});
+  _timeWindowsStorage         = Eigen::MatrixXd::Zero(dataCount, sampleStorageSize);
+  _numberOfStoredSamples      = 1; // we assume that upon creation the first sample is always valid.
+  PRECICE_ASSERT(this->sizeOfSampleStorage() == sampleStorageSize);
+  PRECICE_ASSERT(this->dataSize() == dataCount);
 }
 
 void Waveform::store(const Eigen::VectorXd &data)
 {
   int columnID = 0;
-  PRECICE_ASSERT(_timeWindows.cols() > columnID, numberOfSamples(), columnID);
-  PRECICE_ASSERT(data.size() == numberOfData(), data.size(), numberOfData());
-  this->_timeWindows.col(columnID) = data;
+  PRECICE_ASSERT(_timeWindowsStorage.cols() > columnID, sizeOfSampleStorage(), columnID);
+  PRECICE_ASSERT(data.size() == dataSize(), data.size(), dataSize());
+  this->_timeWindowsStorage.col(columnID) = data;
 }
 
 Eigen::VectorXd Waveform::sample(double normalizedDt)
@@ -48,31 +48,26 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
 const Eigen::VectorXd Waveform::getInitialGuess()
 {
-  return _timeWindows.col(0);
+  return _timeWindowsStorage.col(0);
 }
 
 void Waveform::moveToNextWindow()
 {
   auto initialGuess = extrapolateData();
-  utils::shiftSetFirst(this->_timeWindows, initialGuess); // archive old samples and store initial guess
-  if (_numberOfValidSamples < numberOfSamples()) {        // together with the initial guess the number of valid samples increases
-    _numberOfValidSamples++;
+  utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
+  if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of valid samples increases
+    _numberOfStoredSamples++;
   }
 }
 
-int Waveform::numberOfSamples()
+int Waveform::sizeOfSampleStorage()
 {
-  return _timeWindows.cols();
+  return _timeWindowsStorage.cols();
 }
 
-int Waveform::numberOfValidSamples()
+int Waveform::dataSize()
 {
-  return _numberOfValidSamples;
-}
-
-int Waveform::numberOfData()
-{
-  return _timeWindows.rows();
+  return _timeWindowsStorage.rows();
 }
 
 /**
@@ -112,54 +107,54 @@ static int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
 
 Eigen::VectorXd Waveform::extrapolateData()
 {
-  const int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfValidSamples);
+  const int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfStoredSamples);
 
   if (usedOrder == 0) {
-    PRECICE_ASSERT(this->numberOfSamples() > 0);
-    return this->_timeWindows.col(0);
+    PRECICE_ASSERT(_numberOfStoredSamples > 0);
+    return _timeWindowsStorage.col(0);
   }
   Eigen::VectorXd extrapolatedValue;
   if (usedOrder == 1) { //timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
-    PRECICE_ASSERT(this->numberOfSamples() > 1);
-    extrapolatedValue = this->_timeWindows.col(0) * 2.0; // = 2*x^t
-    extrapolatedValue -= this->_timeWindows.col(1);      // = 2*x^t - x^(t-1)
+    PRECICE_ASSERT(_numberOfStoredSamples > 1);
+    extrapolatedValue = _timeWindowsStorage.col(0) * 2.0; // = 2*x^t
+    extrapolatedValue -= _timeWindowsStorage.col(1);      // = 2*x^t - x^(t-1)
     return extrapolatedValue;
   }
   PRECICE_ASSERT(usedOrder == 2);
   // uses formula given in https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1
   PRECICE_DEBUG("Performing second order extrapolation");
-  PRECICE_ASSERT(this->numberOfSamples() > 2);
-  extrapolatedValue = this->_timeWindows.col(0) * 2.5;  // = 2.5*x^t
-  extrapolatedValue -= this->_timeWindows.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-  extrapolatedValue += this->_timeWindows.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
+  PRECICE_ASSERT(_numberOfStoredSamples > 2);
+  extrapolatedValue = _timeWindowsStorage.col(0) * 2.5;  // = 2.5*x^t
+  extrapolatedValue -= _timeWindowsStorage.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
+  extrapolatedValue += _timeWindowsStorage.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
   return extrapolatedValue;
 }
 
 Eigen::VectorXd Waveform::interpolateData(const double normalizedDt)
 {
-  const int usedOrder = computeUsedOrder(_interpolationOrder, _numberOfValidSamples);
+  const int usedOrder = computeUsedOrder(_interpolationOrder, _numberOfStoredSamples);
 
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
   if (usedOrder == 0) {
     // constant interpolation = just use sample at the end of the window: x(dt) = x^t
-    PRECICE_ASSERT(this->numberOfSamples() > 0);
-    return this->_timeWindows.col(0);
+    PRECICE_ASSERT(_numberOfStoredSamples > 0);
+    return this->_timeWindowsStorage.col(0);
   }
   Eigen::VectorXd interpolatedValue;
   if (usedOrder == 1) {
     // linear interpolation inside window: x(dt) = dt * x^t + (1-dt) * x^(t-1)
-    PRECICE_ASSERT(this->numberOfSamples() > 1);
-    interpolatedValue = this->_timeWindows.col(0) * normalizedDt;        // = dt * x^t
-    interpolatedValue += this->_timeWindows.col(1) * (1 - normalizedDt); // = dt * x^t + (1-dt) * x^(t-1)
+    PRECICE_ASSERT(_numberOfStoredSamples > 1);
+    interpolatedValue = this->_timeWindowsStorage.col(0) * normalizedDt;        // = dt * x^t
+    interpolatedValue += this->_timeWindowsStorage.col(1) * (1 - normalizedDt); // = dt * x^t + (1-dt) * x^(t-1)
     return interpolatedValue;
   }
   PRECICE_ASSERT(usedOrder == 2);
   // quadratic interpolation inside window: x(dt) = x^t * (dt^2 + dt)/2 + x^(t-1) * (1-dt^2)+ x^(t-2) * (dt^2-dt)/2
-  interpolatedValue = this->_timeWindows.col(0) * (normalizedDt + 1) * normalizedDt * 0.5;
-  interpolatedValue += this->_timeWindows.col(1) * (1 - normalizedDt * normalizedDt);
-  interpolatedValue += this->_timeWindows.col(2) * (normalizedDt - 1) * normalizedDt * 0.5;
+  interpolatedValue = this->_timeWindowsStorage.col(0) * (normalizedDt + 1) * normalizedDt * 0.5;
+  interpolatedValue += this->_timeWindowsStorage.col(1) * (1 - normalizedDt * normalizedDt);
+  interpolatedValue += this->_timeWindowsStorage.col(2) * (normalizedDt - 1) * normalizedDt * 0.5;
   return interpolatedValue;
 }
 
