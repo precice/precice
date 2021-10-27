@@ -22,14 +22,14 @@ Waveform::Waveform(
   _timeWindowsStorage                   = Eigen::MatrixXd::Zero(dataCount, sampleStorageSize);
   _numberOfStoredSamples          = 1; // we assume that upon creation the first sample is always valid.
   PRECICE_ASSERT(this->sizeOfSampleStorage() == sampleStorageSize);
-  PRECICE_ASSERT(this->dataCount() == dataCount);
+  PRECICE_ASSERT(this->dataSize() == dataCount);
 }
 
 void Waveform::store(const Eigen::VectorXd &data)
 {
   int columnID = 0;
   PRECICE_ASSERT(_timeWindowsStorage.cols() > columnID, sizeOfSampleStorage(), columnID);
-  PRECICE_ASSERT(data.size() == dataCount(), data.size(), dataCount());
+  PRECICE_ASSERT(data.size() == dataSize(), data.size(), dataSize());
   this->_timeWindowsStorage.col(columnID) = data;
 }
 
@@ -52,7 +52,7 @@ int Waveform::sizeOfSampleStorage()
   return _timeWindowsStorage.cols();
 }
 
-int Waveform::dataCount()
+int Waveform::dataSize()
 {
   return _timeWindowsStorage.rows();
 }

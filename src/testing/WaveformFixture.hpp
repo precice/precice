@@ -15,7 +15,7 @@ public:
 
   int sizeOfSampleStorage(time::Waveform &waveform);
 
-  int dataCount(time::Waveform &waveform);
+  int dataSize(time::Waveform &waveform);
 
   double getValue(time::Waveform &waveform, int dataID, int sampleID);
 };

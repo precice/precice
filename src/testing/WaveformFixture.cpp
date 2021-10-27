@@ -13,9 +13,9 @@ int WaveformFixture::sizeOfSampleStorage(time::Waveform &waveform)
   return waveform.sizeOfSampleStorage();
 }
 
-int WaveformFixture::dataCount(time::Waveform &waveform)
+int WaveformFixture::dataSize(time::Waveform &waveform)
 {
-  return waveform.dataCount();
+  return waveform.dataSize();
 }
 
 double WaveformFixture::getValue(time::Waveform &waveform, int dataID, int sampleID)
