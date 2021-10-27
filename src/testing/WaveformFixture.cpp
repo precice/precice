@@ -22,5 +22,11 @@ double WaveformFixture::getValue(time::Waveform &waveform, int dataID, int sampl
 {
   return waveform._timeWindowsStorage(dataID, sampleID);
 }
+
+double WaveformFixture::getValue(time::Waveform &waveform, int dataID, int sampleID)
+{
+  return waveform._timeWindows(dataID, sampleID);
+}
+
 } // namespace testing
 } // namespace precice

@@ -42,6 +42,11 @@ void Waveform::moveToNextWindow()
   }
 }
 
+const Eigen::VectorXd Waveform::getInitialGuess()
+{
+  return _timeWindowsStorage.col(0);
+}
+
 int Waveform::sizeOfSampleStorage()
 {
   return _timeWindowsStorage.cols();
@@ -50,11 +55,6 @@ int Waveform::sizeOfSampleStorage()
 int Waveform::dataCount()
 {
   return _timeWindowsStorage.rows();
-}
-
-const Eigen::VectorXd Waveform::getInitialGuess()
-{
-  return _timeWindowsStorage.col(0);
 }
 
 /**

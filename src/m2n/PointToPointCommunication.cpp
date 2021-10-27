@@ -576,6 +576,7 @@ void PointToPointCommunication::closeConnection()
 
   _communication.reset();
   _mappings.clear();
+  _connectionDataVector.clear();
   _isConnected = false;
 }
 

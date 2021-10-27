@@ -60,6 +60,16 @@ struct MeshContext {
 
   /// Mappings used when mapping data to the mesh. Can be empty.
   std::vector<MappingContext> toMappingContexts;
+
+  void clearMappings()
+  {
+    for (auto &mc : fromMappingContexts) {
+      mc.mapping->clear();
+    }
+    for (auto &mc : toMappingContexts) {
+      mc.mapping->clear();
+    }
+  }
 };
 
 inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement)
