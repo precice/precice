@@ -7,7 +7,7 @@ namespace precice {
 namespace time {
 
 Waveform::Waveform(
-    const int initializedNumberOfData,
+    const int numberOfData,
     const int extrapolationOrder)
     : _extrapolationOrder(extrapolationOrder)
 {
@@ -19,10 +19,10 @@ Waveform::Waveform(
      * extrapolation.
      */
   int initializedNumberOfSamples = std::max({2, _extrapolationOrder + 1});
-  _timeWindows                   = Eigen::MatrixXd::Zero(initializedNumberOfData, initializedNumberOfSamples);
+  _timeWindows                   = Eigen::MatrixXd::Zero(numberOfData, initializedNumberOfSamples);
   _numberOfValidSamples          = 1; // we assume that upon creation the first sample is always valid.
   PRECICE_ASSERT(numberOfSamples() == initializedNumberOfSamples);
-  PRECICE_ASSERT(numberOfData() == initializedNumberOfData);
+  PRECICE_ASSERT(numberOfData() == numberOfData);
 }
 
 void Waveform::store(const Eigen::VectorXd &data)
