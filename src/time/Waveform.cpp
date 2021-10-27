@@ -18,9 +18,9 @@ Waveform::Waveform(
      * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
      * extrapolation.
      */
-  int sampleStorageSize = std::max({2, _extrapolationOrder + 1});
-  _timeWindowsStorage                   = Eigen::MatrixXd::Zero(dataCount, sampleStorageSize);
-  _numberOfStoredSamples          = 1; // we assume that upon creation the first sample is always valid.
+  int sampleStorageSize  = std::max({2, _extrapolationOrder + 1});
+  _timeWindowsStorage    = Eigen::MatrixXd::Zero(dataCount, sampleStorageSize);
+  _numberOfStoredSamples = 1; // we assume that upon creation the first sample is always valid.
   PRECICE_ASSERT(this->sizeOfSampleStorage() == sampleStorageSize);
   PRECICE_ASSERT(this->dataSize() == dataCount);
 }
@@ -37,7 +37,7 @@ void Waveform::moveToNextWindow()
 {
   auto initialGuess = extrapolateData();
   utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
-  if (_numberOfStoredSamples < sizeOfSampleStorage()) {     // together with the initial guess the number of valid samples increases
+  if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of valid samples increases
     _numberOfStoredSamples++;
   }
 }
