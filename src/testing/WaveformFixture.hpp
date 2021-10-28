@@ -15,9 +15,9 @@ public:
 
   int sizeOfSampleStorage(time::Waveform &waveform);
 
-  int dataSize(time::Waveform &waveform);
+  int valuesSize(time::Waveform &waveform);
 
-  double getValue(time::Waveform &waveform, int dataID, int sampleID);
+  double getValue(time::Waveform &waveform, int valueID, int sampleID);
 };
 
 } // namespace testing
