@@ -1,6 +1,7 @@
 #include <cassert>
 #include <iostream>
-#include <precice/SolverInterface.hpp>
+#include <precice/Tooling.hpp>
+#include <stdexcept>
 #include <string>
 
 void printUsage()
@@ -22,15 +23,15 @@ int main(int argc, char **argv)
   const int         args = argc - 2;
 
   if (action == "dtd" && args == 0) {
-    precice::printConfigAsXML(std::cout);
+    precice::tooling::printConfigAsXML(std::cout);
     return 0;
   }
   if (action == "md" && args == 0) {
-    precice::printConfigAsMD(std::cout);
+    precice::tooling::printConfigAsMD(std::cout);
     return 0;
   }
   if (action == "xml" && args == 0) {
-    precice::printConfigAsDTD(std::cout);
+    precice::tooling::printConfigAsDTD(std::cout);
     return 0;
   }
 
