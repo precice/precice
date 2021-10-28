@@ -37,6 +37,9 @@ enum struct ConfigReferenceType {
  */
 void printConfigReference(std::ostream &out, ConfigReferenceType reftype);
 
+/// @brief Checks a given configuration
+void checkConfiguration(const std::string &filename, const std::string &participant, int size);
+
 } // namespace tooling
 
 } // namespace precice
