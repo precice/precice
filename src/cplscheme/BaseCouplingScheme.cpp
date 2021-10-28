@@ -215,7 +215,9 @@ void BaseCouplingScheme::advance()
 
   if (reachedEndOfTimeWindow()) {
 
+    _timeWindows++;  // @todo: Remove! Needed currently for call of isCouplingOngoing in exchangeDataAndAccelerate.
     bool convergence = exchangeDataAndAccelerate();
+    _timeWindows--;  // @todo: Remove! Needed currently for call of isCouplingOngoing in exchangeDataAndAccelerate.
 
     if (isImplicitCouplingScheme()) { // check convergence
       if (not convergence) {          // repeat window
