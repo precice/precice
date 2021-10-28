@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <precice/SolverInterface.hpp>
 #include <precice/Tooling.hpp>
 #include <stdexcept>
 #include <string>
@@ -10,6 +11,7 @@ void printUsage()
   std::cerr << "Print XML reference      :  binprecice xml\n";
   std::cerr << "Print DTD for XML config :  binprecice dtd\n";
   std::cerr << "Print Markdown reference :  binprecice md\n";
+  std::cerr << "Print preCICE version    :  binprecice version\n";
 }
 
 int main(int argc, char **argv)
@@ -32,6 +34,10 @@ int main(int argc, char **argv)
   }
   if (action == "xml" && args == 0) {
     precice::tooling::printConfigAsDTD(std::cout);
+    return 0;
+  }
+  if (action == "version" && args == 0) {
+    std::cout << precice::getVersionInformation() << '\n';
     return 0;
   }
 
