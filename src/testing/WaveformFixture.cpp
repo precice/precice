@@ -13,14 +13,14 @@ int WaveformFixture::sizeOfSampleStorage(time::Waveform &waveform)
   return waveform.sizeOfSampleStorage();
 }
 
-int WaveformFixture::dataSize(time::Waveform &waveform)
+int WaveformFixture::valuesSize(time::Waveform &waveform)
 {
-  return waveform.dataSize();
+  return waveform.valuesSize();
 }
 
-double WaveformFixture::getValue(time::Waveform &waveform, int dataID, int sampleID)
+double WaveformFixture::getValue(time::Waveform &waveform, int valueID, int sampleID)
 {
-  return waveform._timeWindowsStorage(dataID, sampleID);
+  return waveform._timeWindowsStorage(valueID, sampleID);
 }
 
 } // namespace testing

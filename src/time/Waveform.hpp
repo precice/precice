@@ -19,20 +19,20 @@ public:
   static const int UNDEFINED_INTERPOLATION_ORDER;
 
   /**
-   * @brief Waveform object which stores data of current and past time windows for performing extrapolation.
-   * @param dataCount defines how many pieces of data one sample in time consists of
+   * @brief Waveform object which stores values of current and past time windows for performing extrapolation.
+   * @param valuesSize defines how many values one sample in time consists of
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    * @param interpolationOrder defines the maximum interpolation order supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(const int dataCount,
+  Waveform(const int valuesSize,
            const int extrapolationOrder,
            const int interpolationOrder);
 
   /**
-   * @brief Updates entry in _timeWindows corresponding to this window with given data
-   * @param data new sample for this time window
+   * @brief Updates entry in _timeWindows corresponding to this window with given values
+   * @param values new sample for this time window
    */
-  void store(const Eigen::VectorXd &data);
+  void store(const Eigen::VectorXd &values);
 
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
@@ -46,12 +46,12 @@ public:
   Eigen::VectorXd sample(const double normalizedDt);
 
   /**
-   * @brief getter for data at the current time window.
+   * @brief getter for values at the current time window.
    */
   const Eigen::VectorXd getInitialGuess();
 
 private:
-  /// Data values of time windows.
+  /// Stores values for several time windows.
   Eigen::MatrixXd _timeWindowsStorage;
 
   /// extrapolation order for this waveform
@@ -69,26 +69,26 @@ private:
   int sizeOfSampleStorage();
 
   /**
-   * @brief returns number of data per sample in time stored by this waveform
+   * @brief returns number of values per sample in time stored by this waveform
    */
-  int dataSize();
+  int valuesSize();
 
   mutable logging::Logger _log{"time::Waveform"};
 
   /**
-   * @brief Extrapolates data _timeWindows using an extrapolation scheme of given order. 
+   * @brief Extrapolates values from _timeWindowsStorage using an extrapolation scheme of given order. 
    * 
    * If the order condition cannot be satisfied, since there are not enough samples available, the order is automatically reduced.
    * If order two is required, but only two samples are available, the extrapolation order is automatically reduced to one.
    */
-  Eigen::VectorXd extrapolateData();
+  Eigen::VectorXd extrapolate();
 
   /**
-   * @brief Interpolates data inside current time window using an interpolation scheme of the order of this Waveform.
+   * @brief Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order of this Waveform.
    *
    * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
    */
-  Eigen::VectorXd interpolateData(const double normalizedDt);
+  Eigen::VectorXd interpolate(const double normalizedDt);
 };
 
 } // namespace time
