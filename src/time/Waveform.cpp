@@ -7,7 +7,7 @@ namespace precice {
 namespace time {
 
 Waveform::Waveform(
-    const int dataCount,
+    const int valuesSize,
     const int extrapolationOrder)
     : _extrapolationOrder(extrapolationOrder)
 {
@@ -19,23 +19,23 @@ Waveform::Waveform(
      * extrapolation.
      */
   int sampleStorageSize  = std::max({2, _extrapolationOrder + 1});
-  _timeWindowsStorage    = Eigen::MatrixXd::Zero(dataCount, sampleStorageSize);
+  _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, sampleStorageSize);
   _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
   PRECICE_ASSERT(this->sizeOfSampleStorage() == sampleStorageSize);
-  PRECICE_ASSERT(this->dataSize() == dataCount);
+  PRECICE_ASSERT(this->valuesSize() == valuesSize);
 }
 
-void Waveform::store(const Eigen::VectorXd &data)
+void Waveform::store(const Eigen::VectorXd &values)
 {
   int columnID = 0;
   PRECICE_ASSERT(_timeWindowsStorage.cols() > columnID, sizeOfSampleStorage(), columnID);
-  PRECICE_ASSERT(data.size() == dataSize(), data.size(), dataSize());
-  this->_timeWindowsStorage.col(columnID) = data;
+  PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
+  this->_timeWindowsStorage.col(columnID) = values;
 }
 
 void Waveform::moveToNextWindow()
 {
-  auto initialGuess = extrapolateData();
+  auto initialGuess = extrapolate();
   utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
   if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
     _numberOfStoredSamples++;
@@ -52,7 +52,7 @@ int Waveform::sizeOfSampleStorage()
   return _timeWindowsStorage.cols();
 }
 
-int Waveform::dataSize()
+int Waveform::valuesSize()
 {
   return _timeWindowsStorage.rows();
 }
@@ -92,7 +92,7 @@ static int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
   return usedOrder;
 }
 
-Eigen::VectorXd Waveform::extrapolateData()
+Eigen::VectorXd Waveform::extrapolate()
 {
   const int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfStoredSamples);
 
