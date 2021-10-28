@@ -25,6 +25,17 @@ void printConfigReference(std::ostream &out, ConfigReferenceType reftype)
   }
 }
 
+void checkConfiguration(const std::string &filename, const std::string &participant, int size)
+{
+  config::Configuration config;
+  logging::setMPIRank(0);
+  xml::ConfigurationContext context{
+      participant,
+      0,
+      size};
+  xml::configure(config.getXMLTag(), context, filename);
+}
+
 } // namespace tooling
 
 } // namespace precice
