@@ -215,9 +215,7 @@ void BaseCouplingScheme::advance()
 
   if (reachedEndOfTimeWindow()) {
 
-    _timeWindows++; // @todo: Remove! Needed currently for call of isCouplingOngoing in exchangeDataAndAccelerate.
     bool convergence = exchangeDataAndAccelerate();
-    _timeWindows--; // @todo: Remove! Needed currently for call of isCouplingOngoing in exchangeDataAndAccelerate.
 
     if (isImplicitCouplingScheme()) { // check convergence
       if (not convergence) {          // repeat window
@@ -624,6 +622,12 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
     }
   }
   return false;
+}
+
+bool BaseCouplingScheme::isLastWindow() const
+{
+  PRECICE_ASSERT(_timeWindows <= _maxTimeWindows || _maxTimeWindows == UNDEFINED_TIME_WINDOWS);
+  return _maxTimeWindows == _timeWindows;
 }
 
 bool BaseCouplingScheme::doImplicitStep()

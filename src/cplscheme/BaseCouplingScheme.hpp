@@ -373,6 +373,11 @@ protected:
    */
   void determineInitialReceive(DataMap &receiveData);
 
+  /**
+   * @brief returns true, if current iteration is in the last time window.
+   */
+  bool isLastTimeWindow() const;
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
