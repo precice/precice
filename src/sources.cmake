@@ -217,6 +217,8 @@ target_sources(precice
     src/partition/SharedPointer.hpp
     src/precice/SolverInterface.cpp
     src/precice/SolverInterface.hpp
+    src/precice/Tooling.cpp
+    src/precice/Tooling.hpp
     src/precice/config/Configuration.cpp
     src/precice/config/Configuration.hpp
     src/precice/config/ParticipantConfiguration.cpp
@@ -306,5 +308,6 @@ target_sources(precice
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     src/precice/SolverInterface.hpp
+    src/precice/Tooling.hpp
     src/precice/types.hpp
     )
