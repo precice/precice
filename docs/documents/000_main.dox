@@ -4,7 +4,8 @@
 
 # For Adapter Developers
 
-Please refer to the documentation on precice.org and to the documentation of the \ref precice::SolverInterface SolverInterface.
+Please refer to the documentation on https://precice.org/docs and to the documentation of the \ref precice::SolverInterface SolverInterface.
+Refer to \ref precice::tooling for the tooling API.
 
 # For Library Developers
 
