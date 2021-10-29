@@ -1029,7 +1029,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       // iterate over all the samples in the _fromWaveform
-      for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
+      for (int sampleID = 0; sampleID < context.sizeOfSampleStorageInWaveform(); ++sampleID) {
         context.moveWaveformSampleToData(sampleID);                                              // put samples from _fromWaveform into _fromData
         context.mappingContext().mapping->map(context.getFromDataID(), context.getToDataID());   // map from _fromData to _toData
         context.moveDataToWaveformSample(sampleID);                                              // store _toData at the right place into the _toWaveform
@@ -1072,7 +1072,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       // iterate over all the samples in the _fromWaveform
-      for (int sampleID = 0; sampleID < context.numberOfSamplesInWaveform(); ++sampleID) {
+      for (int sampleID = 0; sampleID < context.sizeOfSampleStorageInWaveform(); ++sampleID) {
         context.moveWaveformSampleToData(sampleID);                                              // put samples from _fromWaveform into _fromData
         context.mappingContext().mapping->map(context.getFromDataID(), context.getToDataID());   // map from _fromData to _toData
         context.moveDataToWaveformSample(sampleID);                                              // store _toData at the right place into the _toWaveform
@@ -1611,6 +1611,8 @@ void SolverInterfaceImpl::compareBoundingBoxes()
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     if (meshContext->provideMesh) // provided meshes need their bounding boxes already for the re-partitioning
       meshContext->mesh->computeBoundingBox();
+
+    meshContext->clearMappings();
   }
 
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {

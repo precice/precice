@@ -15,7 +15,7 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
   _providedWaveform = ptrWaveform;
   _providedWaveform->store(data->values());
   _providedData = data;
-  PRECICE_ASSERT(_providedWaveform->numberOfData() == _providedData->values().size());
+  PRECICE_ASSERT(_providedWaveform->valuesSize() == _providedData->values().size());
   PRECICE_ASSERT(mesh);
   _mesh = mesh;
 }
@@ -115,7 +115,7 @@ void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromDa
   PRECICE_ASSERT(fromWaveform == _providedWaveform || toWaveform == _providedWaveform, "Either fromWaveform or toWaveform has to equal provided waveform.");
   _fromWaveform = fromWaveform;
   _toWaveform   = toWaveform;
-  PRECICE_ASSERT(_fromWaveform->numberOfData() == _toWaveform->numberOfData());
+  PRECICE_ASSERT(_fromWaveform->valuesSize() == _toWaveform->valuesSize());
   PRECICE_ASSERT(_toWaveform != _fromWaveform);
 }
 
@@ -226,22 +226,22 @@ void DataContext::moveProvidedDataToProvidedWaveformSample(int sampleID)
   storeDataInWaveform(_providedData, _providedWaveform, sampleID);
 }
 
-int DataContext::numberOfSamplesInWaveform()
+int DataContext::sizeOfSampleStorageInWaveform()
 {
   PRECICE_TRACE();
   if (hasMapping()) {
-    PRECICE_ASSERT(_fromWaveform->numberOfSamples() == _toWaveform->numberOfSamples());
-    return _fromWaveform->numberOfSamples();
+    PRECICE_ASSERT(_fromWaveform->sizeOfSampleStorage() == _toWaveform->sizeOfSampleStorage());
+    return _fromWaveform->sizeOfSampleStorage();
   } else {
-    return _providedWaveform->numberOfSamples();
+    return _providedWaveform->sizeOfSampleStorage();
   }
 }
 
 Eigen::VectorXd DataContext::sampleAt(double normalizedDt)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_providedWaveform->numberOfData() == _providedData->values().size(),
-                 _providedWaveform->numberOfData(), _providedData->values().size());
+  PRECICE_ASSERT(_providedWaveform->valuesSize() == _providedData->values().size(),
+                 _providedWaveform->valuesSize(), _providedData->values().size());
 
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
@@ -251,28 +251,28 @@ Eigen::VectorXd DataContext::sampleAt(double normalizedDt)
 void DataContext::initializeWaveform(mesh::PtrData initializingData, time::PtrWaveform initializedWaveform)
 {
   PRECICE_TRACE();
-  int numberOfSamples = numberOfSamplesInWaveform();
-  int numberOfData    = initializingData->values().size();
-  // PRECICE_ASSERT(numberOfData > 0, numberOfData);  // @todo assertion breaks, but seems like calling advance on empty write data is ok?
-  initializedWaveform->resizeData(numberOfData);
-  for (int sampleID = 0; sampleID < numberOfSamples; ++sampleID) {
+  int sizeOfSampleStorage = sizeOfSampleStorageInWaveform();
+  int valuesSize          = initializingData->values().size();
+  // PRECICE_ASSERT(valuesSize > 0, valuesSize);  // @todo assertion breaks, but seems like calling advance on empty write data is ok?
+  initializedWaveform->resizeData(valuesSize);
+  for (int sampleID = 0; sampleID < sizeOfSampleStorage; ++sampleID) {
     initializedWaveform->storeAt(initializingData->values(), sampleID);
   }
-  PRECICE_ASSERT(initializedWaveform->numberOfData() == numberOfData);
+  PRECICE_ASSERT(initializedWaveform->valuesSize() == valuesSize);
 }
 
 void DataContext::sampleWaveformIntoData(mesh::PtrData targetData, time::PtrWaveform sourceWaveform, int sampleID)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(sourceWaveform->numberOfData() == targetData->values().size(),
-                 sourceWaveform->numberOfData(), targetData->values().size());
-  targetData->values() = sourceWaveform->lastTimeWindows().col(sampleID);
+  PRECICE_ASSERT(sourceWaveform->valuesSize() == targetData->values().size(),
+                 sourceWaveform->valuesSize(), targetData->values().size());
+  targetData->values() = sourceWaveform->getSample(sampleID);
 }
 
 void DataContext::storeDataInWaveform(mesh::PtrData sourceData, time::PtrWaveform targetWaveform, int sampleID)
 {
-  PRECICE_ASSERT(targetWaveform->numberOfData() == sourceData->values().size(),
-                 targetWaveform->numberOfData(), sourceData->values().size());
+  PRECICE_ASSERT(targetWaveform->valuesSize() == sourceData->values().size(),
+                 targetWaveform->valuesSize(), sourceData->values().size());
   targetWaveform->storeAt(sourceData->values(), sampleID);
 }
 

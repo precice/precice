@@ -96,7 +96,7 @@ public:
   // shift data in time
   void moveProvidedWaveform();
 
-  int numberOfSamplesInWaveform();
+  int sizeOfSampleStorageInWaveform();
 
   /**
    * @brief Allows to sample data at a given point in time insize of the time window

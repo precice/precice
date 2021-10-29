@@ -3,19 +3,25 @@
 namespace precice {
 namespace testing {
 
-int WaveformFixture::numberOfValidSamples(time::Waveform &waveform)
+int WaveformFixture::numberOfStoredSamples(time::Waveform &waveform)
 {
-  return waveform.numberOfValidSamples();
+  return waveform._numberOfStoredSamples;
 }
 
-int WaveformFixture::numberOfSamples(time::Waveform &waveform)
+int WaveformFixture::sizeOfSampleStorage(time::Waveform &waveform)
 {
-  return waveform.numberOfSamples();
+  return waveform.sizeOfSampleStorage();
 }
 
-int WaveformFixture::numberOfData(time::Waveform &waveform)
+int WaveformFixture::valuesSize(time::Waveform &waveform)
 {
-  return waveform.numberOfData();
+  return waveform.valuesSize();
 }
+
+double WaveformFixture::getValue(time::Waveform &waveform, int valueID, int sampleID)
+{
+  return waveform._timeWindowsStorage(valueID, sampleID);
+}
+
 } // namespace testing
 } // namespace precice
