@@ -46,11 +46,6 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
   return this->interpolate(normalizedDt);
 }
 
-const Eigen::VectorXd Waveform::getInitialGuess()
-{
-  return _timeWindowsStorage.col(0);
-}
-
 void Waveform::moveToNextWindow()
 {
   auto initialGuess = extrapolate();
@@ -58,6 +53,11 @@ void Waveform::moveToNextWindow()
   if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
     _numberOfStoredSamples++;
   }
+}
+
+const Eigen::VectorXd Waveform::getInitialGuess()
+{
+  return _timeWindowsStorage.col(0);
 }
 
 int Waveform::sizeOfSampleStorage()
