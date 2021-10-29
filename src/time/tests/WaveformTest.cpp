@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataFirstOrder)
   Waveform  waveform(1, extrapolationOrder);
   BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 2);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
-  BOOST_TEST(fixture.dataSize(waveform) == 1);
+  BOOST_TEST(fixture.valuesSize(waveform) == 1);
 
   // use zero initial data
   waveform.moveToNextWindow();
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataSecondOrder)
   Waveform  waveform(1, extrapolationOrder);
   BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 3);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
-  BOOST_TEST(fixture.dataSize(waveform) == 1);
+  BOOST_TEST(fixture.valuesSize(waveform) == 1);
 
   // use zero initial data
   waveform.moveToNextWindow();
