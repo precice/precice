@@ -291,6 +291,9 @@ BOOST_AUTO_TEST_CASE(TestExplicitSockets)
   runTestExplicit(config, context);
 }
 
+BOOST_AUTO_TEST_SUITE(Time)
+BOOST_AUTO_TEST_SUITE(Explicit)
+
 /// Test to run a simple "do nothing" coupling with subcycling solvers.
 BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling)
 {
@@ -382,7 +385,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
   int    timestep      = 0;
   int    timewindow    = 0;
   double dt            = windowDt / (nSubsteps - 0.5); // Timestep length desired by solver. E.g. 4 steps with size 2/7. Fourth step will be restricted to 1/7 via preCICE steering to fit into the window.
-  double expectedDts[] = {2.0 / 7.0, 2.0 / 7.0, 2.0 / 7.0, 1.0 / 7.0};
+  double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0};
   double currentDt     = dt; // Timestep length used by solver
   double time          = timestep * dt;
 
@@ -438,6 +441,8 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
   precice.finalize();
   BOOST_TEST(timestep == nWindows * nSubsteps);
 }
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 /// One solver uses incremental position set, read/write methods.
 /// @todo This test uses resetmesh. How did this ever work?
@@ -533,6 +538,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataExchange)
 }
 #endif
 
+BOOST_AUTO_TEST_SUITE(InitializeData)
 /**
  * @brief The second solver initializes the data of the first.
  *
@@ -589,6 +595,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization)
     cplInterface.finalize();
   }
 }
+BOOST_AUTO_TEST_SUITE_END()
 
 /**
  * @brief Tests the reading and writing of data multiple times within one timestep.
@@ -1550,6 +1557,7 @@ BOOST_AUTO_TEST_CASE(testImplicit)
   }
 }
 
+BOOST_AUTO_TEST_SUITE(InitializeData)
 /// Test simple coupled simulation with iterations, data initialization and without acceleration
 BOOST_AUTO_TEST_CASE(testImplicitWithDataInitialization)
 {
@@ -1614,6 +1622,8 @@ BOOST_AUTO_TEST_CASE(testImplicitWithDataInitialization)
   }
   couplingInterface.finalize();
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 /// Tests stationary mapping with solver provided meshes.
 void runTestStationaryMappingWithSolverMesh(std::string const &config, int dim, TestContext const &context)
