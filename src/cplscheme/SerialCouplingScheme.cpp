@@ -121,7 +121,7 @@ bool SerialCouplingScheme::exchangeDataAndAccelerate()
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
     // the second participant does not want new data in the last iteration of the last time window
-    if ((isCouplingOngoing() && not isLastWindow()) || (isImplicitCouplingScheme() && not convergence)) {
+    if ((isCouplingOngoing() && not isLastTimeWindow()) || (isImplicitCouplingScheme() && not convergence)) {
       if (_participantReceivesTimeWindowSize) {
         receiveAndSetTimeWindowSize();
       }

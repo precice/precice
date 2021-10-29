@@ -624,7 +624,7 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
   return false;
 }
 
-bool BaseCouplingScheme::isLastWindow() const
+bool BaseCouplingScheme::isLastTimeWindow() const
 {
   PRECICE_ASSERT(_timeWindows <= _maxTimeWindows || _maxTimeWindows == UNDEFINED_TIME_WINDOWS);
   return _maxTimeWindows == _timeWindows;
