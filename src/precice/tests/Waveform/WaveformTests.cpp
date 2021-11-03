@@ -32,7 +32,7 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-struct SerialTestFixture : testing::WhiteboxAccessor {
+struct WaveformTestFixture : testing::WhiteboxAccessor {
 
   std::string _pathToTests;
 
@@ -41,25 +41,26 @@ struct SerialTestFixture : testing::WhiteboxAccessor {
     mesh::Data::resetDataCount();
   }
 
-  SerialTestFixture()
+  WaveformTestFixture()
   {
-    _pathToTests = testing::getPathToSources() + "/precice/tests/";
+    _pathToTests = testing::getPathToSources() + "/precice/tests/Waveform/";
     reset();
   }
 };
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
-BOOST_FIXTURE_TEST_SUITE(Serial, SerialTestFixture)
-BOOST_AUTO_TEST_SUITE(Waveform)
+BOOST_AUTO_TEST_SUITE(Serial)
+BOOST_FIXTURE_TEST_SUITE(Waveform, WaveformTestFixture)
 BOOST_AUTO_TEST_SUITE(Explicit)
+BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /// Test to run a simple coupling with subcycling.
 /// Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.
-BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, _pathToTests + "explicit-scalar-data-init.xml", 0, 1); // serial coupling, SolverOne first
+  SolverInterface precice(context.name, _pathToTests + "serial-explicit-scalar-data-init.xml", 0, 1); // serial coupling, SolverOne first
 
   MeshID meshID;
   DataID writeDataID;
@@ -167,11 +168,11 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
 }
 
 /// Test to run a simple coupling with sampling from the waveform.
-BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSampling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, _pathToTests + "explicit-scalar-data-init.xml", 0, 1);
+  SolverInterface precice(context.name, _pathToTests + "serial-explicit-scalar-data-init.xml", 0, 1);
 
   MeshID meshID;
   DataID writeDataID;
@@ -283,11 +284,11 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSampling)
 }
 
 /// Test to run a simple coupling with subcycling with sampling from the waveform.
-BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSubcycling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, _pathToTests + "explicit-scalar-data-init.xml", 0, 1);
+  SolverInterface precice(context.name, _pathToTests + "serial-explicit-scalar-data-init.xml", 0, 1);
 
   MeshID meshID;
   DataID writeDataID;
@@ -399,6 +400,7 @@ BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithWaveformSubcycling)
   BOOST_TEST(timestep == nWindows * nSubsteps);
 }
 BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Implicit)
 
@@ -410,7 +412,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, _pathToTests + "implicit-scalar-data-init.xml", 0, 1); // serial coupling, SolverOne first
+  SolverInterface precice(context.name, _pathToTests + "serial-implicit-scalar-data-init.xml", 0, 1); // serial coupling, SolverOne first
 
   MeshID meshID;
   DataID writeDataID;
@@ -547,7 +549,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSampling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, _pathToTests + "implicit-scalar-data-init.xml", 0, 1);
+  SolverInterface precice(context.name, _pathToTests + "serial-implicit-scalar-data-init.xml", 0, 1);
 
   MeshID meshID;
   DataID writeDataID;
@@ -677,7 +679,9 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSampling)
 {
-  //@todo
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  SolverInterface precice(context.name, _pathToTests + "parallel-implicit-scalar-data-init.xml", 0, 1);
 }
 BOOST_AUTO_TEST_SUITE_END()
 
