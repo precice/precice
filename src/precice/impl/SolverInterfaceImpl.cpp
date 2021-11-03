@@ -350,6 +350,7 @@ void SolverInterfaceImpl::initializeData()
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     doDataTransferAndReadMapping();
+    moveReadWaveform();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
 
