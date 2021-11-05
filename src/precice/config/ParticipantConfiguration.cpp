@@ -13,6 +13,7 @@
 #include "io/ExportContext.hpp"
 #include "io/ExportVTK.hpp"
 #include "io/ExportVTKXML.hpp"
+#include "io/ExportVTP.hpp"
 #include "io/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "logging/LogMacros.hpp"
@@ -552,6 +553,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         exporter = io::PtrExport(new io::ExportVTKXML());
       } else {
         exporter = io::PtrExport(new io::ExportVTK());
+      }
+    } else if (exportContext.type == VALUE_VTP) {
+      if (context.size > 1) {
+        PRECICE_ERROR("VTP Export only available for non-parallel cases");
+      } else {
+        exporter = io::PtrExport(new io::ExportVTP());
       }
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
