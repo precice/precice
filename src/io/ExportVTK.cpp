@@ -75,8 +75,11 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
   // Plot triangles
   if (mesh.getDimensions() == 3) {
     size_t sizeTriangles = mesh.triangles().size();
-    outFile << "CELLS " << sizeTriangles << ' '
-            << sizeTriangles * 4 << "\n\n";
+    size_t sizeEdges     = mesh.edges().size();
+    size_t sizeElements  = sizeTriangles + sizeEdges;
+
+    outFile << "CELLS " << sizeElements << ' '
+            << sizeTriangles * 4 + sizeEdges * 3 << "\n\n";
     for (auto const &triangle : mesh.triangles()) {
       int internalIndices[3];
       internalIndices[0] = triangle.vertex(0).getID();
@@ -84,10 +87,19 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
       internalIndices[2] = triangle.vertex(2).getID();
       writeTriangle(internalIndices, outFile);
     }
+    for (auto const &edge : mesh.edges()) {
+      int internalIndices[2];
+      internalIndices[0] = edge.vertex(0).getID();
+      internalIndices[1] = edge.vertex(1).getID();
+      writeLine(internalIndices, outFile);
+    }
 
-    outFile << "\nCELL_TYPES " << sizeTriangles << "\n\n";
+    outFile << "\nCELL_TYPES " << sizeElements << "\n\n";
     for (size_t i = 0; i < sizeTriangles; i++) {
       outFile << "5\n";
+    }
+    for (size_t i = 0; i < sizeEdges; ++i) {
+      outFile << "3\n";
     }
   }
   outFile << '\n';
