@@ -19,6 +19,11 @@ int exportVTKXML()
   return 3;
 }
 
+int exportVTP()
+{
+  return 4;
+}
+
 } // namespace constants
 } // namespace io
 } // namespace precice

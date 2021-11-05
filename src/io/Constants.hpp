@@ -7,6 +7,7 @@ namespace constants {
 int exportVTK();
 int exportAll();
 int exportVTKXML();
+int exportVTP();
 
 } // namespace constants
 } // namespace io
