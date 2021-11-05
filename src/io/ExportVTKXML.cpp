@@ -67,7 +67,7 @@ void ExportVTKXML::writeMasterFile(
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name + "_master.pvtu");
+  outfile = outfile / fs::path(name + ".pvtu");
   std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
 
   PRECICE_CHECK(outMasterFile, "VTKXML export failed to open master file \"{}\"", outfile);
@@ -112,7 +112,7 @@ void ExportVTKXML::writeMasterFile(
 
   for (int i = 0; i < utils::MasterSlave::getSize(); i++) {
     if (mesh.getVertexDistribution()[i].size() > 0) { //only non-empty subfiles
-      outMasterFile << "      <Piece Source=\"" << name << "_r" << i << ".vtu\"/>\n";
+      outMasterFile << "      <Piece Source=\"" << name << "_" << i << ".vtu\"/>\n";
     }
   }
 
@@ -137,7 +137,7 @@ void ExportVTKXML::writeSubFile(
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name + "_r" + std::to_string(utils::MasterSlave::getRank()) + ".vtu");
+  outfile = outfile / fs::path(name + "_" + std::to_string(utils::MasterSlave::getRank()) + ".vtu");
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
   PRECICE_CHECK(outSubFile, "VTKXML export failed to open slave file \"{}\"", outfile);
