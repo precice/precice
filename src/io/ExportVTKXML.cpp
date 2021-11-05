@@ -132,7 +132,7 @@ void ExportVTKXML::writeSubFile(
   if (mesh.getDimensions() == 2) {
     numCells = mesh.edges().size();
   } else {
-    numCells = mesh.triangles().size();
+    numCells = mesh.triangles().size() + mesh.edges().size();
   }
 
   namespace fs = boost::filesystem;
@@ -205,6 +205,9 @@ void ExportVTKXML::exportMesh(
     for (const mesh::Triangle &triangle : mesh.triangles()) {
       writeTriangle(triangle, outFile);
     }
+    for (const mesh::Edge &edge : mesh.edges()) {
+      writeLine(edge, outFile);
+    }
     outFile << '\n';
     outFile << "            </DataArray> \n";
     outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">\n";
@@ -212,12 +215,18 @@ void ExportVTKXML::exportMesh(
     for (size_t i = 1; i <= mesh.triangles().size(); i++) {
       outFile << 3 * i << "  ";
     }
+    for (size_t i = 1; i <= mesh.edges().size(); i++) {
+      outFile << 2 * i << "  ";
+    }
     outFile << '\n';
     outFile << "            </DataArray>\n";
     outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">\n";
     outFile << "               ";
     for (size_t i = 1; i <= mesh.triangles().size(); i++) {
       outFile << 5 << "  ";
+    }
+    for (size_t i = 1; i <= mesh.edges().size(); i++) {
+      outFile << 3 << "  ";
     }
     outFile << '\n';
     outFile << "            </DataArray>\n";
