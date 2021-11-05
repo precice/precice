@@ -130,6 +130,8 @@ target_sources(precice
     src/io/ExportVTK.hpp
     src/io/ExportVTKXML.cpp
     src/io/ExportVTKXML.hpp
+    src/io/ExportVTP.cpp
+    src/io/ExportVTP.hpp
     src/io/SharedPointer.hpp
     src/io/TXTReader.cpp
     src/io/TXTReader.hpp
