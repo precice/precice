@@ -16,23 +16,26 @@ namespace precice {
  */
 namespace tooling {
 
-/** @brief Prints the configuration reference as Markdown.
- *
- * @param[inout] out the stream to write the result to
+/** The type of reference to generate
+ * @see \ref precice::tooling::printConfigReference
  */
-void printConfigAsMD(std::ostream &out);
+enum struct ConfigReferenceType {
+  /// XML with inlined help
+  XML = 0,
+  /// DTD to check an XML
+  DTD = 1,
+  /// Markdown version used for the website
+  Markdown = 2
+};
 
-/** @brief Prints the configuration reference as DTD.
+/** @brief Generates a configuration reference
  *
- * @param[inout] out the stream to write the result to
- */
-void printConfigAsDTD(std::ostream &out);
-
-/** @brief Prints the configuration reference as XML with inlined help.
+ * @param[inout] out The stream to write the result to.
+ * @param[in] reftype The type of reference to generate.
  *
- * @param[inout] out the stream to write the result to
+ * @see \ref precice::tooling::ConfigReferenceType
  */
-void printConfigAsXML(std::ostream &out);
+void printConfigReference(std::ostream &out, ConfigReferenceType reftype);
 
 } // namespace tooling
 

@@ -8,23 +8,21 @@ namespace precice {
 
 namespace tooling {
 
-void printConfigAsMD(std::ostream &out)
+void printConfigReference(std::ostream &out, ConfigReferenceType reftype)
 {
   precice::config::Configuration config;
-  out << "<!-- generated with preCICE " PRECICE_VERSION " -->\n";
-  precice::xml::toMarkdown(out, config.getXMLTag());
-}
-
-void printConfigAsDTD(std::ostream &out)
-{
-  precice::config::Configuration config;
-  precice::xml::toDTD(out, config.getXMLTag());
-}
-
-void printConfigAsXML(std::ostream &out)
-{
-  precice::config::Configuration config;
-  precice::xml::toDocumentation(out, config.getXMLTag());
+  switch (reftype) {
+  case ConfigReferenceType::XML:
+    precice::xml::toDocumentation(out, config.getXMLTag());
+    return;
+  case ConfigReferenceType::DTD:
+    precice::xml::toDTD(out, config.getXMLTag());
+    return;
+  case ConfigReferenceType::Markdown:
+    out << "<!-- generated with preCICE " PRECICE_VERSION " -->\n";
+    precice::xml::toMarkdown(out, config.getXMLTag());
+    return;
+  }
 }
 
 } // namespace tooling

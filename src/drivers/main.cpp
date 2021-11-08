@@ -24,16 +24,18 @@ int main(int argc, char **argv)
   const std::string action(argv[1]);
   const int         args = argc - 2;
 
+  using namespace precice::tooling;
+
   if (action == "dtd" && args == 0) {
-    precice::tooling::printConfigAsXML(std::cout);
+    printConfigReference(std::cout, ConfigReferenceType::DTD);
     return 0;
   }
   if (action == "md" && args == 0) {
-    precice::tooling::printConfigAsMD(std::cout);
+    printConfigReference(std::cout, ConfigReferenceType::Markdown);
     return 0;
   }
   if (action == "xml" && args == 0) {
-    precice::tooling::printConfigAsDTD(std::cout);
+    printConfigReference(std::cout, ConfigReferenceType::XML);
     return 0;
   }
   if (action == "version" && args == 0) {
