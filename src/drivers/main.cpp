@@ -12,6 +12,7 @@ void printUsage()
   std::cerr << "Print DTD for XML config :  binprecice dtd\n";
   std::cerr << "Print Markdown reference :  binprecice md\n";
   std::cerr << "Print preCICE version    :  binprecice version\n";
+  std::cerr << "                            binprecice --version\n";
 }
 
 int main(int argc, char **argv)
@@ -38,7 +39,7 @@ int main(int argc, char **argv)
     printConfigReference(std::cout, ConfigReferenceType::XML);
     return 0;
   }
-  if (action == "version" && args == 0) {
+  if ((action == "version" || action == "--version") && args == 0) {
     std::cout << precice::getVersionInformation() << '\n';
     return 0;
   }
