@@ -384,6 +384,21 @@ add_bin_test(
   MATCH "<!ELEMENT precice-configuration"
   )
 
+add_bin_test(
+  NAME check.file
+  COMMAND binprecice check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml
+  )
+
+add_bin_test(
+  NAME check.file+name
+  COMMAND binprecice check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
+  )
+
+add_bin_test(
+  NAME check.file+name+size
+  COMMAND binprecice check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
+  )
+
 # Add a separate target to test only the base
 add_custom_target(
   test_base
