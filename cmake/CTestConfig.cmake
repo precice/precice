@@ -361,6 +361,12 @@ add_bin_test(
   )
 
 add_bin_test(
+  NAME versionopt
+  COMMAND binprecice --version
+  MATCH "${CMAKE_PROJECT_VERSION}"
+  )
+
+add_bin_test(
   NAME markdown
   COMMAND binprecice md
   MATCH "# precice-configuration"
