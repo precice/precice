@@ -18,7 +18,7 @@ void printConfigReference(std::ostream &out, ConfigReferenceType reftype)
   case ConfigReferenceType::DTD:
     precice::xml::toDTD(out, config.getXMLTag());
     return;
-  case ConfigReferenceType::Markdown:
+  case ConfigReferenceType::MD:
     out << "<!-- generated with preCICE " PRECICE_VERSION " -->\n";
     precice::xml::toMarkdown(out, config.getXMLTag());
     return;

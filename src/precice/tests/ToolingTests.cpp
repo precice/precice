@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_CASE(MarkdownReference)
 {
   const std::string ref = [] {
     std::ostringstream oss;
-    precice::tooling::printConfigReference(oss, precice::tooling::ConfigReferenceType::Markdown);
+    precice::tooling::printConfigReference(oss, precice::tooling::ConfigReferenceType::MD);
     return oss.str();
   }();
 
