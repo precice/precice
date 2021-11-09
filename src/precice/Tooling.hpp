@@ -25,7 +25,7 @@ enum struct ConfigReferenceType {
   /// DTD to check an XML
   DTD = 1,
   /// Markdown version used for the website
-  Markdown = 2
+  MD = 2
 };
 
 /** @brief Generates a configuration reference

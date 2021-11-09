@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     return 0;
   }
   if (action == "md" && args == 0) {
-    printConfigReference(std::cout, ConfigReferenceType::Markdown);
+    printConfigReference(std::cout, ConfigReferenceType::MD);
     return 0;
   }
   if (action == "xml" && args == 0) {
