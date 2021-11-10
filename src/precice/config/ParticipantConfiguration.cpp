@@ -12,7 +12,7 @@
 #include "com/config/CommunicationConfiguration.hpp"
 #include "io/ExportContext.hpp"
 #include "io/ExportVTK.hpp"
-#include "io/ExportVTKXML.hpp"
+#include "io/ExportVTU.hpp"
 #include "io/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "logging/LogMacros.hpp"
@@ -549,7 +549,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
       if (context.size > 1) {
-        exporter = io::PtrExport(new io::ExportVTKXML());
+        exporter = io::PtrExport(new io::ExportVTU());
       } else {
         exporter = io::PtrExport(new io::ExportVTK());
       }

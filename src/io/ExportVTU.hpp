@@ -19,7 +19,7 @@ namespace precice {
 namespace io {
 
 /// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
-class ExportVTKXML : public Export {
+class ExportVTU : public Export {
 public:
   /// Perform writing to vtk file
   /**
@@ -45,7 +45,7 @@ public:
       std::ofstream &       outFile);
 
 private:
-  logging::Logger _log{"io::ExportVTKXML"};
+  logging::Logger _log{"io::ExportVTU"};
 
   /// List of names of all scalar data on mesh
   std::vector<std::string> _scalarDataNames;

@@ -30,7 +30,7 @@ target_sources(testprecice
     src/cplscheme/tests/SerialImplicitCouplingSchemeTest.cpp
     src/io/tests/ExportConfigurationTest.cpp
     src/io/tests/ExportVTKTest.cpp
-    src/io/tests/ExportVTKXMLTest.cpp
+    src/io/tests/ExportVTUTest.cpp
     src/io/tests/TXTTableWriterTest.cpp
     src/io/tests/TXTWriterReaderTest.cpp
     src/m2n/tests/GatherScatterCommunicationTest.cpp
