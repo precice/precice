@@ -25,6 +25,27 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(VTUExport)
 
+BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
+{
+  PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
+  int             dim = 2;
+  mesh::Mesh      mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
+  mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
+  Eigen::VectorXd coords3 = Eigen::VectorXd::Constant(dim, 0.0);
+  coords3(0)              = 1.0;
+  mesh::Vertex &v3        = mesh.createVertex(coords3);
+
+  mesh.createEdge(v1, v2);
+  mesh.createEdge(v2, v3);
+  mesh.createEdge(v3, v1);
+
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-VTUExport-ExportPolygonalMesh";
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
@@ -62,8 +83,8 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   }
 
   io::ExportVTU exportVTU;
-  std::string      filename = "io-ExportVTUTest-testExportPolygonalMesh";
-  std::string      location = "";
+  std::string   filename = "io-ExportVTUTest-testExportPolygonalMesh";
+  std::string   location = "";
   exportVTU.doExport(filename, location, mesh);
 }
 
@@ -107,8 +128,8 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   }
 
   io::ExportVTU exportVTU;
-  std::string      filename = "io-ExportVTUTest-testExportTriangulatedMesh";
-  std::string      location = "";
+  std::string   filename = "io-ExportVTUTest-testExportTriangulatedMesh";
+  std::string   location = "";
   exportVTU.doExport(filename, location, mesh);
 }
 
