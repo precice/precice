@@ -26,7 +26,6 @@ void ExportVTU::doExport(
     mesh::Mesh &       mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
-  PRECICE_ASSERT(utils::MasterSlave::isParallel());
   processDataNamesAndDimensions(mesh);
   if (not location.empty())
     boost::filesystem::create_directories(location);

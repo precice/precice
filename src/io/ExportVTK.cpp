@@ -12,6 +12,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -24,6 +25,7 @@ void ExportVTK::doExport(
 {
   PRECICE_TRACE(name, location, mesh.getName());
   PRECICE_ASSERT(name != std::string(""));
+  PRECICE_ASSERT(!utils::MasterSlave::isParallel());
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
