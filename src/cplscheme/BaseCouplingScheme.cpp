@@ -455,9 +455,7 @@ void BaseCouplingScheme::setupDataMatrices()
   PRECICE_TRACE();
   // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
-    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder));
-    WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
-    _waveforms.insert(waveformPair);
+    _waveforms[pair.first]->initializeData(pair.second->values().size());
     pair.second->storeIteration();
   }
 }
@@ -612,6 +610,12 @@ void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &re
   if (anyDataRequiresInitialization(receiveData)) {
     _receivesInitializedData = true;
   }
+}
+
+void BaseCouplingScheme::addWaveform(int id, const time::PtrWaveform &ptrWaveform)
+{
+  WaveformMap::value_type waveformPair = std::make_pair(id, ptrWaveform);
+  _waveforms.insert(waveformPair);
 }
 
 bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const

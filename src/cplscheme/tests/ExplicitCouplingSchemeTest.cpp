@@ -22,6 +22,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
+#include "time/Waveform.hpp"
 #include "xml/XMLTag.hpp"
 
 using namespace precice;
@@ -313,8 +314,10 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  time::PtrWaveform ptrSendWaveform(new time::Waveform(0));
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, false);
+  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(0));
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, false);
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
 }
 
@@ -616,8 +619,10 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+  time::PtrWaveform ptrSendWaveform(new time::Waveform(0));
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, false);
+  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(0));
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, false);
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
 }
 

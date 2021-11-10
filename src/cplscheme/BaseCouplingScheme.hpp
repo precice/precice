@@ -373,6 +373,13 @@ protected:
    */
   void determineInitialReceive(DataMap &receiveData);
 
+  /**
+   * @brief adds ptrWaveform under id to _waveforms
+   * @param id will be used as key in _waveforms
+   * @param ptrWaveform pointer to the waveform
+   */
+  void addWaveform(int id, const time::PtrWaveform &ptrWaveform);
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
