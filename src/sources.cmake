@@ -122,14 +122,12 @@ target_sources(precice
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.cpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/SharedPointer.hpp
-    src/io/Constants.cpp
-    src/io/Constants.hpp
     src/io/Export.hpp
     src/io/ExportContext.hpp
     src/io/ExportVTK.cpp
     src/io/ExportVTK.hpp
-    src/io/ExportVTKXML.cpp
-    src/io/ExportVTKXML.hpp
+    src/io/ExportVTU.cpp
+    src/io/ExportVTU.hpp
     src/io/SharedPointer.hpp
     src/io/TXTReader.cpp
     src/io/TXTReader.hpp

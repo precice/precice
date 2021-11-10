@@ -1,4 +1,4 @@
-#include "ExportVTKXML.hpp"
+#include "io/ExportVTU.hpp"
 #include <Eigen/Core>
 #include <algorithm>
 #include <boost/filesystem.hpp>
@@ -20,7 +20,7 @@
 namespace precice {
 namespace io {
 
-void ExportVTKXML::doExport(
+void ExportVTU::doExport(
     const std::string &name,
     const std::string &location,
     mesh::Mesh &       mesh)
@@ -38,7 +38,7 @@ void ExportVTKXML::doExport(
   }
 }
 
-void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
+void ExportVTU::processDataNamesAndDimensions(mesh::Mesh const &mesh)
 {
   _vectorDataNames.clear();
   _scalarDataNames.clear();
@@ -54,7 +54,7 @@ void ExportVTKXML::processDataNamesAndDimensions(mesh::Mesh const &mesh)
   }
 }
 
-void ExportVTKXML::writeMasterFile(
+void ExportVTU::writeMasterFile(
     const std::string &name,
     const std::string &location,
     mesh::Mesh &       mesh)
@@ -64,7 +64,7 @@ void ExportVTKXML::writeMasterFile(
   outfile = outfile / fs::path(name + ".pvtu");
   std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outMasterFile, "VTKXML export failed to open master file \"{}\"", outfile);
+  PRECICE_CHECK(outMasterFile, "VTU export failed to open master file \"{}\"", outfile);
 
   outMasterFile << "<?xml version=\"1.0\"?>\n";
   outMasterFile << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"";
@@ -116,7 +116,7 @@ void ExportVTKXML::writeMasterFile(
   outMasterFile.close();
 }
 
-void ExportVTKXML::writeSubFile(
+void ExportVTU::writeSubFile(
     const std::string &name,
     const std::string &location,
     mesh::Mesh &       mesh)
@@ -134,7 +134,7 @@ void ExportVTKXML::writeSubFile(
   outfile = outfile / fs::path(name + "_" + std::to_string(utils::MasterSlave::getRank()) + ".vtu");
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outSubFile, "VTKXML export failed to open slave file \"{}\"", outfile);
+  PRECICE_CHECK(outSubFile, "VTU export failed to open slave file \"{}\"", outfile);
 
   outSubFile << "<?xml version=\"1.0\"?>\n";
   outSubFile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"";
@@ -163,7 +163,7 @@ void ExportVTKXML::writeSubFile(
   outSubFile.close();
 }
 
-void ExportVTKXML::exportMesh(
+void ExportVTU::exportMesh(
     std::ofstream &   outFile,
     mesh::Mesh const &mesh)
 {
@@ -228,7 +228,7 @@ void ExportVTKXML::exportMesh(
   }
 }
 
-void ExportVTKXML::exportData(
+void ExportVTU::exportData(
     std::ofstream &outFile,
     mesh::Mesh &   mesh)
 {
@@ -284,7 +284,7 @@ void ExportVTKXML::exportData(
   outFile << "         </PointData> \n";
 }
 
-void ExportVTKXML::writeVertex(
+void ExportVTU::writeVertex(
     const Eigen::VectorXd &position,
     std::ofstream &        outFile)
 {
@@ -298,7 +298,7 @@ void ExportVTKXML::writeVertex(
   outFile << '\n';
 }
 
-void ExportVTKXML::writeTriangle(
+void ExportVTU::writeTriangle(
     const mesh::Triangle &triangle,
     std::ofstream &       outFile)
 {
@@ -307,7 +307,7 @@ void ExportVTKXML::writeTriangle(
   outFile << triangle.vertex(2).getID() << "  ";
 }
 
-void ExportVTKXML::writeLine(
+void ExportVTU::writeLine(
     const mesh::Edge &edge,
     std::ofstream &   outFile)
 {
