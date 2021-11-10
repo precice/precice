@@ -19,22 +19,6 @@ class Vertex;
 } // namespace mesh
 } // namespace precice
 
-// void ExportVTKXMLTest:: run()
-// {
-//   PRECICE_TRACE();
-//   typedef utils::Parallel Par;
-//   if (Par::getCommunicatorSize() > 3){
-//     const std::vector<int> ranksWanted = {0, 1, 2, 3};
-//     MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
-//     if (Par::getProcessRank() <= 3){
-//       Par::setGlobalCommunicator(comm);
-//       testMethod(testExportPolygonalMesh);
-//       testMethod(testExportTriangulatedMesh);
-//       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
-//     }
-//   }
-// }
-
 BOOST_AUTO_TEST_SUITE(IOTests)
 
 using namespace precice;

@@ -4,7 +4,6 @@
 #include <fstream>
 #include <iomanip>
 #include <memory>
-#include "Constants.hpp"
 #include "io/Export.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
@@ -17,11 +16,6 @@
 
 namespace precice {
 namespace io {
-
-int ExportVTK::getType() const
-{
-  return constants::exportVTK();
-}
 
 void ExportVTK::doExport(
     const std::string &name,

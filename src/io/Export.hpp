@@ -14,12 +14,9 @@ namespace io {
 /// Abstract base class of all classes exporting container data structures.
 class Export {
 public:
+  virtual ~Export() = default;
+
   Export &operator=(Export &&) = delete;
-
-  virtual ~Export() {}
-
-  /// Returns the export type ID.
-  virtual int getType() const = 0;
 
   /**
    * @brief Does export. Has to be implemented in subclass.

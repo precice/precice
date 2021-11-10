@@ -4,7 +4,7 @@
 #include <iosfwd>
 #include <string>
 #include <vector>
-#include "Export.hpp"
+#include "io/Export.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -21,9 +21,6 @@ namespace io {
 /// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
 class ExportVTKXML : public Export {
 public:
-  /// Returns the VTK type ID.
-  virtual int getType() const;
-
   /// Perform writing to vtk file
   /**
    * @param[in] name filename to export to
