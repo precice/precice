@@ -553,6 +553,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       } else {
         exporter = io::PtrExport(new io::ExportVTK());
       }
+    } else if (exportContext.type == VALUE_VTU) {
+      exporter = io::PtrExport(new io::ExportVTU());
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
                     _participants.back()->getName(), exportContext.type);

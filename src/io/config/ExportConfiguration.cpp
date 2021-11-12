@@ -17,6 +17,11 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
     tag.setDocumentation("Exports meshes to VTK text files.");
     tags.push_back(tag);
   }
+  {
+    XMLTag tag(*this, VALUE_VTU, occ, TAG);
+    tag.setDocumentation("Exports meshes to VTU files in serial or PVTU files with VTU piece files in parallel.");
+    tags.push_back(tag);
+  }
 
   auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, "")
                           .setDocumentation("Directory to export the files to.");
