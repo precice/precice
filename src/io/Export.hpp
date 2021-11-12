@@ -16,6 +16,10 @@ class Export {
 public:
   virtual ~Export() = default;
 
+  Export()               = default;
+  Export(const Export &) = delete;
+  Export(Export &&)      = delete;
+  Export &operator=(const Export &) = delete;
   Export &operator=(Export &&) = delete;
 
   /**
