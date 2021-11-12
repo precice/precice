@@ -14,7 +14,7 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   {
     XMLTag tag(*this, VALUE_VTK, occ, TAG);
-    tag.setDocumentation("Exports meshes to VTK text files.");
+    tag.setDocumentation("Exports meshes to VTK legacy format files. Parallel participants will use the VTU exporter instead.");
     tags.push_back(tag);
   }
   {
