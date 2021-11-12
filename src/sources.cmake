@@ -126,6 +126,8 @@ target_sources(precice
     src/io/ExportContext.hpp
     src/io/ExportVTK.cpp
     src/io/ExportVTK.hpp
+    src/io/ExportVTP.cpp
+    src/io/ExportVTP.hpp
     src/io/ExportVTU.cpp
     src/io/ExportVTU.hpp
     src/io/ExportXML.cpp

@@ -60,10 +60,10 @@ void ExportXML::writeMasterFile(
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name + ".pvtu");
+  outfile = outfile / fs::path(name + getMasterExtension());
   std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outMasterFile, "VTU export failed to open master file \"{}\"", outfile);
+  PRECICE_CHECK(outMasterFile, "{} export failed to open master file \"{}\"", getVTKFormat(), outfile);
 
   const auto formatType = getVTKFormat();
   outMasterFile << "<?xml version=\"1.0\"?>\n";
@@ -84,7 +84,7 @@ void ExportXML::writeMasterFile(
     auto iter = vertexDistribution.find(i);
     if (iter != vertexDistribution.end() && iter->second.size() > 0) {
       //only non-empty subfiles
-      outMasterFile << "      <Piece Source=\"" << name << "_" << i << ".vtu\"/>\n";
+      outMasterFile << "      <Piece Source=\"" << name << "_" << i << getPieceExtension() << "\"/>\n";
     }
   }
 
@@ -99,20 +99,12 @@ void ExportXML::writeSubFile(
     const std::string &location,
     const mesh::Mesh & mesh) const
 {
-  int numPoints = mesh.vertices().size(); // number of vertices
-  int numCells;                           // number of cells
-  if (mesh.getDimensions() == 2) {
-    numCells = mesh.edges().size();
-  } else {
-    numCells = mesh.triangles().size() + mesh.edges().size();
-  }
-
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name + "_" + std::to_string(utils::MasterSlave::getRank()) + ".vtu");
+  outfile = outfile / fs::path(name + "_" + std::to_string(utils::MasterSlave::getRank()) + getPieceExtension());
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outSubFile, "VTU export failed to open slave file \"{}\"", outfile);
+  PRECICE_CHECK(outSubFile, "{} export failed to open slave file \"{}\"", getVTKFormat(), outfile);
 
   const auto formatType = getVTKFormat();
   outSubFile << "<?xml version=\"1.0\"?>\n";
@@ -120,7 +112,7 @@ void ExportXML::writeSubFile(
   outSubFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
 
   outSubFile << "   <" << formatType << ">\n";
-  outSubFile << "      <Piece NumberOfPoints=\"" << numPoints << "\" NumberOfCells=\"" << numCells << "\"> \n";
+  outSubFile << "      <Piece "<<getPieceAttributes(mesh)<<"> \n";
   exportPoints(outSubFile, mesh);
 
   // Write Mesh

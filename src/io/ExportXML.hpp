@@ -54,6 +54,9 @@ private:
   std::vector<std::string> _vectorDataNames;
 
   virtual std::string getVTKFormat() const = 0;
+  virtual std::string getMasterExtension() const = 0;
+  virtual std::string getPieceExtension() const = 0;
+  virtual std::string getPieceAttributes(const mesh::Mesh & mesh) const = 0;
 
   /**
     * @brief Stores scalar and vector data names in string vectors
@@ -92,6 +95,7 @@ private:
   void exportData(
       std::ostream &    outFile,
       const mesh::Mesh &mesh) const;
+
 };
 
 } // namespace io

@@ -19,9 +19,9 @@ namespace precice {
 namespace io {
 
 /// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
-class ExportVTU : public ExportXML {
+class ExportVTP : public ExportXML {
 private:
-  mutable logging::Logger _log{"io::ExportVTU"};
+  mutable logging::Logger _log{"io::ExportVTP"};
 
   std::string getVTKFormat() const override;
   std::string getMasterExtension() const override;

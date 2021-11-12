@@ -25,6 +25,24 @@ std::string ExportVTU::getVTKFormat() const
   return "UnstructuredGrid";
 }
 
+std::string ExportVTU::getMasterExtension() const
+{
+  return ".pvtu";
+}
+
+std::string ExportVTU::getPieceExtension() const
+{
+  return ".vtu";
+}
+
+std::string ExportVTU::getPieceAttributes(const mesh::Mesh &mesh) const
+{
+  std::ostringstream oss;
+  oss << "NumberOfPoints=\"" << mesh.vertices().size() << "\" ";
+  oss << "NumberOfCells=\"" << mesh.edges().size() + mesh.triangles().size() << "\" ";
+  return oss.str();
+}
+
 void ExportVTU::writeMasterCells(std::ostream &out) const
 {
   out << "      <PCells>\n";
@@ -35,7 +53,7 @@ void ExportVTU::writeMasterCells(std::ostream &out) const
 }
 
 void ExportVTU::exportConnectivity(
-    std::ostream &   outFile,
+    std::ostream &    outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <Cells>\n";
