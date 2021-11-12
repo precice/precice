@@ -25,7 +25,7 @@ void ExportVTK::doExport(
 {
   PRECICE_TRACE(name, location, mesh.getName());
   PRECICE_ASSERT(name != std::string(""));
-  PRECICE_ASSERT(!utils::MasterSlave::isParallel());
+  PRECICE_ASSERT(!utils::MasterSlave::isParallel(), "ExportVTK only supports serial participants.");
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
