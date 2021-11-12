@@ -28,13 +28,11 @@ BOOST_AUTO_TEST_SUITE(VTUExport)
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
   PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
-  int             dim = 2;
-  mesh::Mesh      mesh("MyMesh", dim, testing::nextMeshID());
-  mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
-  mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
-  Eigen::VectorXd coords3 = Eigen::VectorXd::Constant(dim, 0.0);
-  coords3(0)              = 1.0;
-  mesh::Vertex &v3        = mesh.createVertex(coords3);
+  int           dim = 2;
+  mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
+  mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector2d::Constant(1));
+  mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector2d{1.0, 0.0});
 
   mesh.createEdge(v1, v2);
   mesh.createEdge(v2, v3);
@@ -52,12 +50,10 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   int        dim = 2;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
-  if (utils::Parallel::getProcessRank() == 0) {
-    mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
-    mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
-    Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
-    coords3(0)              = 1.0;
-    mesh::Vertex &v3        = mesh.createVertex(coords3);
+  if (context.isRank(0)) {
+    mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
+    mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector2d::Constant(1));
+    mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector2d{1.0, 0});
 
     mesh.createEdge(v1, v2);
     mesh.createEdge(v2, v3);
@@ -66,20 +62,18 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.getVertexDistribution()[1] = {};
     mesh.getVertexDistribution()[2] = {3, 4, 5};
     mesh.getVertexDistribution()[3] = {6};
-  } else if (utils::Parallel::getProcessRank() == 1) {
-
-  } else if (utils::Parallel::getProcessRank() == 2) {
-    mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
-    mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
-    Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
-    coords3(1)              = 1.0;
-    mesh::Vertex &v3        = mesh.createVertex(coords3);
+  } else if (context.isRank(1)) {
+    // nothing
+  } else if (context.isRank(2)) {
+    mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Constant(1));
+    mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector2d::Constant(2));
+    mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector2d{1.0, 0.0});
 
     mesh.createEdge(v1, v2);
     mesh.createEdge(v2, v3);
     mesh.createEdge(v3, v1);
-  } else if (utils::Parallel::getProcessRank() == 3) {
-    mesh.createVertex(Eigen::VectorXd::Constant(dim, 3.0));
+  } else if (context.isRank(3)) {
+    mesh.createVertex(Eigen::Vector2d::Constant(3.0));
   }
 
   io::ExportVTU exportVTU;
@@ -94,12 +88,10 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
-  if (utils::Parallel::getProcessRank() == 0) {
-    mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Zero(dim));
-    mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
-    Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
-    coords3(0)              = 1.0;
-    mesh::Vertex &v3        = mesh.createVertex(coords3);
+  if (context.isRank(0)) {
+    mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Zero());
+    mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d::Constant(1));
+    mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
 
     mesh::Edge &e1 = mesh.createEdge(v1, v2);
     mesh::Edge &e2 = mesh.createEdge(v2, v3);
@@ -110,21 +102,19 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.getVertexDistribution()[1] = {};
     mesh.getVertexDistribution()[2] = {3, 4, 5};
     mesh.getVertexDistribution()[3] = {6};
-  } else if (utils::Parallel::getProcessRank() == 1) {
-
-  } else if (utils::Parallel::getProcessRank() == 2) {
-    mesh::Vertex &  v1      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
-    mesh::Vertex &  v2      = mesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
-    Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
-    coords3(1)              = 1.0;
-    mesh::Vertex &v3        = mesh.createVertex(coords3);
+  } else if (context.isRank(1)) {
+    // nothing
+  } else if (context.isRank(2)) {
+    mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(1));
+    mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d::Constant(2));
+    mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
 
     mesh::Edge &e1 = mesh.createEdge(v1, v2);
     mesh::Edge &e2 = mesh.createEdge(v2, v3);
     mesh::Edge &e3 = mesh.createEdge(v3, v1);
     mesh.createTriangle(e1, e2, e3);
-  } else if (utils::Parallel::getProcessRank() == 3) {
-    mesh.createVertex(Eigen::VectorXd::Constant(dim, 3.0));
+  } else if (context.isRank(3)) {
+    mesh.createVertex(Eigen::Vector3d::Constant(3.0));
   }
 
   io::ExportVTU exportVTU;
