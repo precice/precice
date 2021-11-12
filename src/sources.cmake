@@ -128,6 +128,8 @@ target_sources(precice
     src/io/ExportVTK.hpp
     src/io/ExportVTU.cpp
     src/io/ExportVTU.hpp
+    src/io/ExportXML.cpp
+    src/io/ExportXML.hpp
     src/io/SharedPointer.hpp
     src/io/TXTReader.cpp
     src/io/TXTReader.hpp

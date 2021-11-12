@@ -21,7 +21,7 @@ namespace io {
 void ExportVTK::doExport(
     const std::string &name,
     const std::string &location,
-    mesh::Mesh &       mesh)
+    const mesh::Mesh & mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   PRECICE_ASSERT(name != std::string(""));
@@ -42,7 +42,9 @@ void ExportVTK::doExport(
   outstream.close();
 }
 
-void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
+void ExportVTK::exportMesh(
+    std::ofstream &   outFile,
+    const mesh::Mesh &mesh)
 {
   PRECICE_TRACE(mesh.getName());
 
@@ -101,7 +103,9 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
   outFile << '\n';
 }
 
-void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
+void ExportVTK::exportData(
+    std::ofstream &   outFile,
+    const mesh::Mesh &mesh)
 {
   outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
 

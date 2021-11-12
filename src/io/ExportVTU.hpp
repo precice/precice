@@ -4,7 +4,7 @@
 #include <iosfwd>
 #include <string>
 #include <vector>
-#include "io/Export.hpp"
+#include "io/ExportXML.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -19,69 +19,15 @@ namespace precice {
 namespace io {
 
 /// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
-class ExportVTU : public Export {
-public:
-  /// Perform writing to vtk file
-  /**
-   * @param[in] name filename to export to
-   * @param[in] locastion Export path
-   * @param[mesh] mesh Mesh to export
-   */
-  virtual void doExport(
-      const std::string &name,
-      const std::string &location,
-      mesh::Mesh &       mesh);
-
-  static void writeVertex(
-      const Eigen::VectorXd &position,
-      std::ofstream &        outFile);
-
-  static void writeLine(
-      const mesh::Edge &edge,
-      std::ofstream &   outFile);
-
-  static void writeTriangle(
-      const mesh::Triangle &triangle,
-      std::ofstream &       outFile);
-
+class ExportVTU : public ExportXML {
 private:
-  logging::Logger _log{"io::ExportVTU"};
+  mutable logging::Logger _log{"io::ExportVTU"};
 
-  /// List of names of all scalar data on mesh
-  std::vector<std::string> _scalarDataNames;
+  std::string getVTKFormat() const override;
 
-  /// List of names of all vector data on mesh
-  std::vector<std::string> _vectorDataNames;
+  void writeMasterCells(std::ostream &out) const override;
 
-  /**
-    * @brief Stores scalar and vector data names in string vectors
-    * Needed for writing master file and sub files
-    */
-  void processDataNamesAndDimensions(mesh::Mesh const &mesh);
-
-  /**
-    * @brief Writes the master file (called only by the master rank)
-    */
-  void writeMasterFile(
-      const std::string &name,
-      const std::string &location,
-      mesh::Mesh &       mesh);
-
-  /**
-    * @brief Writes the sub file for each rank
-    */
-  void writeSubFile(
-      const std::string &name,
-      const std::string &location,
-      mesh::Mesh &       mesh);
-
-  void exportMesh(
-      std::ofstream &   outFile,
-      mesh::Mesh const &mesh);
-
-  void exportData(
-      std::ofstream &outFile,
-      mesh::Mesh &   mesh);
+  void exportConnectivity(std::ostream &outFile, const mesh::Mesh &mesh) const override;
 };
 
 } // namespace io
