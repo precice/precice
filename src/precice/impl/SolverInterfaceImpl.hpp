@@ -10,7 +10,6 @@
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "io/Constants.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
@@ -573,9 +572,7 @@ public:
    *
    * @param[in] filenameSuffix Suffix of all plotted files
    */
-  void exportMesh(
-      const std::string &filenameSuffix,
-      int                exportType = io::constants::exportAll()) const;
+  void exportMesh(const std::string &filenameSuffix) const;
 
   /**
    * @brief Scales data values according to configuration.

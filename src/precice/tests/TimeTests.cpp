@@ -50,8 +50,45 @@ struct SerialTestFixture : testing::WhiteboxAccessor {
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Serial, SerialTestFixture)
-BOOST_AUTO_TEST_SUITE(Waveform)
+BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Explicit)
+
+/// Test to run a simple "do nothing" coupling with subcycling solvers.
+BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
+  SolverInterface precice(context.name, _pathToTests + "explicit-mpi-single.xml", 0, 1);
+  if (context.isNamed("SolverOne")) {
+    double maxDt     = precice.initialize();
+    int    timestep  = 0;
+    double dt        = maxDt / 2.0; // Timestep length desired by solver
+    double currentDt = dt;          // Timestep length used by solver
+    while (precice.isCouplingOngoing()) {
+      maxDt     = precice.advance(currentDt);
+      currentDt = dt > maxDt ? maxDt : dt;
+      timestep++;
+    }
+    precice.finalize();
+    BOOST_TEST(timestep == 20);
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    MeshID meshID = precice.getMeshID("Test-Square");
+    precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    double maxDt     = precice.initialize();
+    int    timestep  = 0;
+    double dt        = maxDt / 3.0; // Timestep length desired by solver
+    double currentDt = dt;          // Timestep length used by solver
+    while (precice.isCouplingOngoing()) {
+      maxDt     = precice.advance(currentDt);
+      currentDt = dt > maxDt ? maxDt : dt;
+      timestep++;
+    }
+    precice.finalize();
+    BOOST_TEST(timestep == 30);
+  }
+}
 
 /// Test to run a simple coupling with subcycling.
 /// Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.

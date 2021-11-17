@@ -10,7 +10,7 @@ currently implemented:
 Export:
 
 - Geometry VTK (geometry and data, for serial computations only)
-- Geometry VTKXML (geometry and data, for parallel computations only)
+- Geometry VTU (geometry and data, for serial and parallel computations)
 
 Import:
 

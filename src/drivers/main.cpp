@@ -1,59 +1,67 @@
+#include <cassert>
 #include <iostream>
+#include <precice/SolverInterface.hpp>
+#include <precice/Tooling.hpp>
+#include <stdexcept>
 #include <string>
-#include "precice/config/Configuration.hpp"
-#include "precice/impl/versions.hpp"
-#include "utils/assertion.hpp"
-#include "xml/Printer.hpp"
 
 void printUsage()
 {
-  std::cout << "Usage:\n\n";
-  std::cout << "Print XML reference      :  binprecice xml\n";
-  std::cout << "Print DTD for XML config :  binprecice dtd" << std::endl;
-  std::cout << "Print Markdown reference :  binprecice md" << std::endl;
+  std::cerr << "Usage:\n\n";
+  std::cerr << "Print XML reference      :  binprecice xml\n";
+  std::cerr << "Print DTD for XML config :  binprecice dtd\n";
+  std::cerr << "Print Markdown reference :  binprecice md\n";
+  std::cerr << "Print preCICE version    :  binprecice version\n";
+  std::cerr << "                            binprecice --version\n";
+  std::cerr << "Check configuration file :  binprecice check FILE [ PARTICIPANT [ COMMSIZE ] ]\n";
 }
 
 int main(int argc, char **argv)
 {
-  bool runHelp = false;
-  bool runDtd  = false;
-  bool runMD   = false;
-
-  bool wrongParameters = true;
-
-  if (argc >= 2) {
-    std::string action(argv[1]);
-    if (action == "dtd") {
-      wrongParameters = false;
-      runDtd          = true;
-    }
-    if (action == "md") {
-      wrongParameters = false;
-      runMD           = true;
-    }
-    if (action == "xml") {
-      wrongParameters = false;
-      runHelp         = true;
-    }
-  }
-
-  if (wrongParameters) {
+  if (argc < 2) {
     printUsage();
     return 1;
   }
 
-  if (runHelp) {
-    precice::config::Configuration config;
-    precice::xml::toDocumentation(std::cout, config.getXMLTag());
-  } else if (runDtd) {
-    precice::config::Configuration config;
-    precice::xml::toDTD(std::cout, config.getXMLTag());
-  } else if (runMD) {
-    precice::config::Configuration config;
-    std::cout << "<!-- generated with preCICE " PRECICE_VERSION " -->\n";
-    precice::xml::toMarkdown(std::cout, config.getXMLTag());
-  } else {
-    PRECICE_ASSERT(false);
+  const std::string action(argv[1]);
+  const int         args = argc - 2;
+
+  using namespace precice::tooling;
+
+  if (action == "dtd" && args == 0) {
+    printConfigReference(std::cout, ConfigReferenceType::DTD);
+    return 0;
   }
-  return 0;
+  if (action == "md" && args == 0) {
+    printConfigReference(std::cout, ConfigReferenceType::MD);
+    return 0;
+  }
+  if (action == "xml" && args == 0) {
+    printConfigReference(std::cout, ConfigReferenceType::XML);
+    return 0;
+  }
+  if ((action == "version" || action == "--version") && args == 0) {
+    std::cout << precice::getVersionInformation() << '\n';
+    return 0;
+  }
+  if (action == "check" && args >= 1 && args <= 3) {
+    std::string file(argv[2]);
+    std::string participant = (args > 1) ? std::string(argv[3]) : "";
+
+    int size = 1;
+    if (args == 3) {
+      try {
+        size = std::stoi(argv[4]);
+      } catch (std::invalid_argument &e) {
+        std::cerr << "ERROR: passed COMMSIZE is not a valid number\n";
+        printUsage();
+        return 1;
+      }
+    }
+    precice::tooling::checkConfiguration(file, participant, size);
+    return 0;
+  }
+
+  printUsage();
+  return 1;
 }

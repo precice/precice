@@ -3,7 +3,7 @@
 #include <Eigen/Core>
 #include <iosfwd>
 #include <string>
-#include "Export.hpp"
+#include "io/Export.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -18,9 +18,6 @@ namespace io {
 /// Writes polygonal, or triangle meshes to vtk files.
 class ExportVTK : public Export {
 public:
-  /// Returns the VTK type ID.
-  virtual int getType() const;
-
   /// Perform writing to VTK file
   virtual void doExport(
       const std::string &name,
