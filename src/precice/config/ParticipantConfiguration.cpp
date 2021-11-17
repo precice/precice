@@ -549,10 +549,13 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
       if (context.size > 1) {
+        PRECICE_WARN("You are using the VTK exporter in a parallel participant. Note that this will export as PVTU instead. For consistency, prefer \"<export:vtu ... />\" instead.");
         exporter = io::PtrExport(new io::ExportVTU());
       } else {
         exporter = io::PtrExport(new io::ExportVTK());
       }
+    } else if (exportContext.type == VALUE_VTU) {
+      exporter = io::PtrExport(new io::ExportVTU());
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
                     _participants.back()->getName(), exportContext.type);
