@@ -291,43 +291,6 @@ BOOST_AUTO_TEST_CASE(TestExplicitSockets)
   runTestExplicit(config, context);
 }
 
-/// Test to run a simple "do nothing" coupling with subcycling solvers.
-BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling)
-{
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-
-  SolverInterface precice(context.name, _pathToTests + "explicit-mpi-single.xml", 0, 1);
-  if (context.isNamed("SolverOne")) {
-    double maxDt     = precice.initialize();
-    int    timestep  = 0;
-    double dt        = maxDt / 2.0; // Timestep length desired by solver
-    double currentDt = dt;          // Timestep length used by solver
-    while (precice.isCouplingOngoing()) {
-      maxDt     = precice.advance(currentDt);
-      currentDt = dt > maxDt ? maxDt : dt;
-      timestep++;
-    }
-    precice.finalize();
-    BOOST_TEST(timestep == 20);
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    MeshID meshID = precice.getMeshID("Test-Square");
-    precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    double maxDt     = precice.initialize();
-    int    timestep  = 0;
-    double dt        = maxDt / 3.0; // Timestep length desired by solver
-    double currentDt = dt;          // Timestep length used by solver
-    while (precice.isCouplingOngoing()) {
-      maxDt     = precice.advance(currentDt);
-      currentDt = dt > maxDt ? maxDt : dt;
-      timestep++;
-    }
-    precice.finalize();
-    BOOST_TEST(timestep == 30);
-  }
-}
-
 /// One solver uses incremental position set, read/write methods.
 /// @todo This test uses resetmesh. How did this ever work?
 #if 0

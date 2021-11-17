@@ -60,22 +60,38 @@ endfunction()
 
 # Validation for LibPython
 macro(precice_validate_libpython)
-  precice_validate_lib(
-    "#include <Python.h>\nint main() { return 0; } "
-    NAME LibPython
-    LINK_LIBRARIES ${PYTHON_LIBRARIES}
-    COMPILE_DEFINITIONS -I ${PYTHON_INCLUDE_DIRS}
-    )
+  if(TARGET Python3::Python)
+    precice_validate_lib(
+      "#include <Python.h>\nint main() { return 0; } "
+      NAME LibPython
+      LINK_LIBRARIES Python3::Python
+      )
+  else()
+    precice_validate_lib(
+      "#include <Python.h>\nint main() { return 0; } "
+      NAME LibPython
+      LINK_LIBRARIES ${PYTHON_LIBRARIES}
+      COMPILE_DEFINITIONS -I ${PYTHON_INCLUDE_DIRS}
+      )
+  endif()
 endmacro()
 
 # Validation for NumPy
 macro(precice_validate_numpy)
-  precice_validate_lib(
-    "#include <Python.h>\n#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n#include <numpy/arrayobject.h>\n int main() { import_array1(0); return 0; } "
-    NAME NumPy
-    COMPILE_DEFINITIONS "-I ${PYTHON_INCLUDE_DIRS}"
-    LINK_LIBRARIES NumPy::NumPy ${PYTHON_LIBRARIES}
-    )
+  if(TARGET Python3::NumPy AND TARGET Python3::Python)
+    precice_validate_lib(
+      "#include <Python.h>\n#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n#include <numpy/arrayobject.h>\n int main() { import_array1(0); return 0; } "
+      NAME NumPy
+      LINK_LIBRARIES Python3::NumPy Python3::Python
+      )
+  else()
+    precice_validate_lib(
+      "#include <Python.h>\n#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n#include <numpy/arrayobject.h>\n int main() { import_array1(0); return 0; } "
+      NAME NumPy
+      COMPILE_DEFINITIONS "-I ${PYTHON_INCLUDE_DIRS}"
+      LINK_LIBRARIES NumPy::NumPy ${PYTHON_LIBRARIES}
+      )
+  endif()
 endmacro()
 
 # Validation for LibXML2
