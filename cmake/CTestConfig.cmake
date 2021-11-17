@@ -324,6 +324,81 @@ add_precice_test_run_solverdummies(cpp c)
 add_precice_test_run_solverdummies(cpp fortran)
 add_precice_test_run_solverdummies(c fortran)
 
+# Add tests for binprecice
+
+function(add_bin_test)
+  cmake_parse_arguments(PARSE_ARGV 0 PAT "WILL_FAIL" "NAME;MATCH" "COMMAND")
+  set(PAT_FULL_NAME "precice.bin.${PAT_NAME}")
+  message(STATUS "Test ${PAT_FULL_NAME}")
+  add_test(
+    NAME ${PAT_FULL_NAME}
+    COMMAND ${PAT_COMMAND}
+    )
+  set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT} LABELS "bin")
+  if(PAT_WILL_FAIL)
+    set_tests_properties(${PAT_FULL_NAME} PROPERTIES WILL_FAIL YES)
+  endif()
+  if(PAT_MATCH)
+    set_tests_properties(${PAT_FULL_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "${PAT_MATCH}")
+  endif()
+endfunction()
+
+
+add_bin_test(
+  NAME noarg
+  COMMAND binprecice
+  WILL_FAIL)
+
+add_bin_test(
+  NAME invalidcmd
+  COMMAND binprecice invalidcommand
+  WILL_FAIL)
+
+add_bin_test(
+  NAME version
+  COMMAND binprecice version
+  MATCH "${CMAKE_PROJECT_VERSION}"
+  )
+
+add_bin_test(
+  NAME versionopt
+  COMMAND binprecice --version
+  MATCH "${CMAKE_PROJECT_VERSION}"
+  )
+
+add_bin_test(
+  NAME markdown
+  COMMAND binprecice md
+  MATCH "# precice-configuration"
+  )
+
+add_bin_test(
+  NAME xml
+  COMMAND binprecice xml
+  MATCH "<!-- TAG precice-configuration"
+  )
+
+add_bin_test(
+  NAME dtd
+  COMMAND binprecice dtd
+  MATCH "<!ELEMENT precice-configuration"
+  )
+
+add_bin_test(
+  NAME check.file
+  COMMAND binprecice check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml
+  )
+
+add_bin_test(
+  NAME check.file+name
+  COMMAND binprecice check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
+  )
+
+add_bin_test(
+  NAME check.file+name+size
+  COMMAND binprecice check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
+  )
+
 # Add a separate target to test only the base
 add_custom_target(
   test_base

@@ -16,56 +16,58 @@ class Waveform {
   friend class testing::WaveformFixture; // Make the fixture friend of this class
 public:
   /**
-   * @brief Waveform object which stores data of current and past time windows for performing extrapolation.
-   * @param numberOfData defines how many pieces of data one sample in time consists of
+   * @brief Waveform object which stores values of current and past time windows for performing extrapolation.
+   * @param valuesSize defines how many values one sample in time consists of
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(int numberOfData,
-           int extrapolationOrder);
+  Waveform(const int valuesSize,
+           const int extrapolationOrder);
 
   /**
-   * @brief Updates entry in _timeWindows corresponding to this window with given data
-   * @param data new sample for this time window
+   * @brief Updates entry in _timeWindows corresponding to this window with given values
+   * @param values new sample for this time window
    */
-  void store(const Eigen::VectorXd &data);
+  void store(const Eigen::VectorXd &values);
 
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
-   * @param timeWindows number of samples that are valid and may be used for extrapolation. Usually number of past time windows.
    */
-  void moveToNextWindow(int timeWindows, int order = 0);
+  void moveToNextWindow();
 
   /**
-   * @brief getter for data at the current time window.
+   * @brief getter for values at the current time window.
    */
   const Eigen::VectorXd getInitialGuess();
 
 private:
-  /// Data values of time windows.
-  Eigen::MatrixXd _timeWindows;
+  /// Stores values for several time windows.
+  Eigen::MatrixXd _timeWindowsStorage;
+
+  /// extrapolation order for this waveform
+  const int _extrapolationOrder;
+
+  /// number of stored samples in _timeWindowsStorage
+  int _numberOfStoredSamples;
 
   /**
-   * @brief returns number of samples in time stored by this waveform
+   * @brief returns number samples in time this waveform can store
    */
-  int numberOfSamples();
+  int sizeOfSampleStorage();
 
   /**
-   * @brief returns number of data per sample in time stored by this waveform
+   * @brief returns number of values per sample in time stored by this waveform
    */
-  int numberOfData(); // @todo bad naming, consider renaming. See https://github.com/precice/precice/pull/1094#pullrequestreview-771715472
+  int valuesSize();
 
   mutable logging::Logger _log{"time::Waveform"};
 
   /**
-   * @brief Extrapolates data _timeWindows using an extrapolation scheme of given order. 
+   * @brief Extrapolates values from _timeWindowsStorage using an extrapolation scheme of given order. 
    * 
    * If the order condition cannot be satisfied, since there are not enough samples available, the order is automatically reduced.
    * If order two is required, but only two samples are available, the extrapolation order is automatically reduced to one.
-   * 
-   * @param order Order of the extrapolation scheme to be used.
-   * @param timeWindows number of valid samples.
    */
-  Eigen::VectorXd extrapolateData(int order, int timeWindows);
+  Eigen::VectorXd extrapolate();
 };
 
 } // namespace time

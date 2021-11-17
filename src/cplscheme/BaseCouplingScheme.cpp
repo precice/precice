@@ -154,8 +154,18 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   initializeImplementation();
 
-  if (sendsInitializedData()) {
+  if (_sendsInitializedData) {
     requireAction(constants::actionWriteInitialData());
+  }
+
+  // @todo duplicate code also in BaseCouplingScheme::initializeData().
+  if (not _sendsInitializedData && not _receivesInitializedData) {
+    if (isImplicitCouplingScheme()) {
+      if (not doesFirstStep()) {
+        storeDataInWaveforms();
+        moveToNextWindow();
+      }
+    }
   }
 
   _isInitialized = true;
@@ -184,6 +194,7 @@ void BaseCouplingScheme::initializeData()
 
   exchangeInitialData();
 
+  // @todo duplicate code also in BaseCouplingScheme::initialize().
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
       storeDataInWaveforms();
@@ -260,7 +271,7 @@ void BaseCouplingScheme::moveToNextWindow()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->moveToNextWindow(getTimeWindows(), _extrapolationOrder);
+    _waveforms[pair.first]->moveToNextWindow();
     pair.second->values() = _waveforms[pair.first]->getInitialGuess();
   }
 }
