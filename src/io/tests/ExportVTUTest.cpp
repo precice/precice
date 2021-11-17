@@ -123,6 +123,70 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   exportVTU.doExport(filename, location, mesh);
 }
 
+BOOST_AUTO_TEST_CASE(ExportSplitSquare)
+{
+  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  int        dim = 3;
+  mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
+
+  mesh::Vertex &vm = mesh.createVertex(Eigen::Vector3d::Zero());
+  if (context.isRank(0)) {
+    mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d{-1.0, 1.0, 0.0});
+    mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 0.0});
+    mesh::Vertex &vo = mesh.createVertex(Eigen::Vector3d{0.0, 2.0, 0.0});
+    mesh::Edge &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge &e2m = mesh.createEdge(v2, vm);
+    mesh.createTriangle(em1, e12, e2m);
+    mesh::Edge &eo1 = mesh.createEdge(vo, v1);
+    mesh::Edge &e2o = mesh.createEdge(v2, vo);
+    mesh.createTriangle(eo1, e12, e2o);
+
+    mesh.getVertexDistribution()[0] = {0, 1, 2};
+    mesh.getVertexDistribution()[1] = {3, 4, 5};
+    mesh.getVertexDistribution()[2] = {6, 7, 8};
+    mesh.getVertexDistribution()[3] = {9, 10, 11};
+  } else if (context.isRank(1)) {
+    mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d{1.0, -1.0, 0.0});
+    mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{-1.0, -1.0, 0.0});
+    mesh::Vertex &vo = mesh.createVertex(Eigen::Vector3d{0.0, -2.0, 0.0});
+    mesh::Edge &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge &e2m = mesh.createEdge(v2, vm);
+    mesh.createTriangle(em1, e12, e2m);
+    mesh::Edge &eo1 = mesh.createEdge(vo, v1);
+    mesh::Edge &e2o = mesh.createEdge(v2, vo);
+    mesh.createTriangle(eo1, e12, e2o);
+  } else if (context.isRank(2)) {
+    mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d{-1.0, 1.0, 0.0});
+    mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{-1.0, -1.0, 0.0});
+    mesh::Vertex &vo = mesh.createVertex(Eigen::Vector3d{-2.0, 0.0, 0.0});
+    mesh::Edge &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge &e2m = mesh.createEdge(v2, vm);
+    mesh.createTriangle(em1, e12, e2m);
+    mesh::Edge &eo1 = mesh.createEdge(vo, v1);
+    mesh::Edge &e2o = mesh.createEdge(v2, vo);
+    mesh.createTriangle(eo1, e12, e2o);
+  } else if (context.isRank(3)) {
+    mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 0.0});
+    mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{1.0, -1.0, 0.0});
+    mesh::Vertex &vo = mesh.createVertex(Eigen::Vector3d{2.0, 0.0, 0.0});
+    mesh::Edge &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge &e2m = mesh.createEdge(v2, vm);
+    mesh.createTriangle(em1, e12, e2m);
+    mesh::Edge &eo1 = mesh.createEdge(vo, v1);
+    mesh::Edge &e2o = mesh.createEdge(v2, vo);
+    mesh.createTriangle(eo1, e12, e2o);
+  }
+
+  io::ExportVTU exportVTU;
+  std::string   filename = "io-ExportVTUTest-Square";
+  std::string   location = "";
+  exportVTU.doExport(filename, location, mesh);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // IOTests
 BOOST_AUTO_TEST_SUITE_END() // VTUExport
 
