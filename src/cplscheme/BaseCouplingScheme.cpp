@@ -455,7 +455,7 @@ void BaseCouplingScheme::setupDataMatrices()
   PRECICE_TRACE();
   // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
-    _waveforms[pair.first]->initializeData(pair.second->values().size());
+    _waveforms[pair.first]->initialize(pair.second->values().size());
     pair.second->storeIteration();
   }
 }

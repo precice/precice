@@ -13,7 +13,7 @@ Waveform::Waveform(
   PRECICE_ASSERT(not _storageIsInitialized);
 }
 
-void Waveform::initializeData(
+void Waveform::initialize(
     const int valuesSize)
 {
   int sampleStorageSize  = std::max({2, _extrapolationOrder + 1});

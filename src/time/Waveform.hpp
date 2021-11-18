@@ -18,7 +18,7 @@ public:
   /**
    * @brief Waveform object which stores values of current and past time windows for performing extrapolation. 
    *
-   * Storage still needs to be initialized with Waveform::initializeData, before the Waveform can be used.
+   * Storage still needs to be initialized with Waveform::initialize, before the Waveform can be used.
    *
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    */
@@ -28,7 +28,7 @@ public:
    * @brief Used to initialize _timeWindowsStorage according to required size.
    * @param valuesSize defines how many values one sample in time consists of
    */
-  void initializeData(const int valuesSize);
+  void initialize(const int valuesSize);
 
   /**
    * @brief Updates entry in _timeWindows corresponding to this window with given values
@@ -47,7 +47,7 @@ public:
   const Eigen::VectorXd getInitialGuess();
 
 private:
-  /// Set by initializeData. Used for consistency checks.
+  /// Set by initialize. Used for consistency checks.
   bool _storageIsInitialized = false;
 
   /// Stores values for several time windows.
