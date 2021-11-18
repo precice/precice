@@ -12,8 +12,8 @@
 #include "com/config/CommunicationConfiguration.hpp"
 #include "io/ExportContext.hpp"
 #include "io/ExportVTK.hpp"
-#include "io/ExportVTU.hpp"
 #include "io/ExportVTP.hpp"
+#include "io/ExportVTU.hpp"
 #include "io/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "logging/LogMacros.hpp"
@@ -549,8 +549,15 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
+      // This is handles with respect to the current configuration context.
+      // Hence, this is potentially wrong for every participant other than context.name.
       if (context.size > 1) {
-        PRECICE_WARN("You are using the VTK exporter in a parallel participant. Note that this will export as PVTU instead. For consistency, prefer \"<export:vtu ... />\" instead.");
+        // Only display the warning message if this participant configuration is the current one.
+        if (context.name == participant->getName()) {
+          PRECICE_WARN("You are using the VTK exporter in the parallel participant {}. "
+                       "Note that this will export as PVTU instead. For consistency, prefer \"<export:vtu ... />\" instead.",
+                       participant->getName());
+        }
         exporter = io::PtrExport(new io::ExportVTU());
       } else {
         exporter = io::PtrExport(new io::ExportVTK());
