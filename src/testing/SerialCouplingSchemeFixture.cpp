@@ -28,9 +28,9 @@ void SerialCouplingSchemeFixture::storeIteration(cplscheme::SerialCouplingScheme
   cplscheme.storeIteration();
 }
 
-void SerialCouplingSchemeFixture::setupDataMatrices(cplscheme::SerialCouplingScheme &cplscheme)
+void SerialCouplingSchemeFixture::initializeStorage(cplscheme::SerialCouplingScheme &cplscheme)
 {
-  cplscheme.setupDataMatrices();
+  cplscheme.initializeStorage();
 }
 
 void SerialCouplingSchemeFixture::storeDataInWaveforms(cplscheme::SerialCouplingScheme &cplscheme)

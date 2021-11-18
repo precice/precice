@@ -9,29 +9,27 @@ namespace time {
 const int Waveform::UNDEFINED_INTERPOLATION_ORDER = -1;
 
 Waveform::Waveform(
-    const int valuesSize,
     const int extrapolationOrder,
     const int interpolationOrder)
     : _extrapolationOrder(extrapolationOrder), _interpolationOrder(interpolationOrder)
 {
-  /**
-     * Reserve storage depending on required extrapolation order. Extrapolation happens in-place. Therefore, for zeroth
-     * order extrapolation we need one column (to read from and write to), for first order two, for second order three. 
-     * Note that extrapolationOrder = 0 is an exception, since we want to always work with at least two samples. One at
-     * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
-     * extrapolation.
-     */
-  PRECICE_ASSERT(_extrapolationOrder >= 0);
-  PRECICE_ASSERT(_interpolationOrder >= 0 || _interpolationOrder == UNDEFINED_INTERPOLATION_ORDER);
-  const int sampleStorageSize = std::max({2, _extrapolationOrder + 1, interpolationOrder + 1});
-  _timeWindowsStorage         = Eigen::MatrixXd::Zero(valuesSize, sampleStorageSize);
-  _numberOfStoredSamples      = 1; // the first sample is automatically initialized as zero and stored.
+  PRECICE_ASSERT(not _storageIsInitialized);
+}
+
+void Waveform::initialize(
+    const int valuesSize)
+{
+  int sampleStorageSize  = std::max({2, _extrapolationOrder + 1, _interpolationOrder + 1});
+  _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, sampleStorageSize);
+  _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
+  _storageIsInitialized  = true;
   PRECICE_ASSERT(this->sizeOfSampleStorage() == sampleStorageSize);
   PRECICE_ASSERT(this->valuesSize() == valuesSize);
 }
 
 void Waveform::store(const Eigen::VectorXd &values)
 {
+  PRECICE_ASSERT(_storageIsInitialized);
   int columnID = 0;
   PRECICE_ASSERT(_timeWindowsStorage.cols() > columnID, sizeOfSampleStorage(), columnID);
   PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
@@ -40,6 +38,7 @@ void Waveform::store(const Eigen::VectorXd &values)
 
 Eigen::VectorXd Waveform::sample(double normalizedDt)
 {
+  PRECICE_ASSERT(_storageIsInitialized);
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
   PRECICE_ASSERT(_interpolationOrder != UNDEFINED_INTERPOLATION_ORDER, "Sampling is only allowed, if Waveform is configured correspondingly");
@@ -48,6 +47,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 
 void Waveform::moveToNextWindow()
 {
+  PRECICE_ASSERT(_storageIsInitialized);
   auto initialGuess = extrapolate();
   utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
   if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
@@ -57,16 +57,19 @@ void Waveform::moveToNextWindow()
 
 const Eigen::VectorXd Waveform::getInitialGuess()
 {
+  PRECICE_ASSERT(_storageIsInitialized);
   return _timeWindowsStorage.col(0);
 }
 
 int Waveform::sizeOfSampleStorage()
 {
+  PRECICE_ASSERT(_storageIsInitialized);
   return _timeWindowsStorage.cols();
 }
 
 int Waveform::valuesSize()
 {
+  PRECICE_ASSERT(_storageIsInitialized);
   return _timeWindowsStorage.rows();
 }
 
@@ -108,6 +111,7 @@ static int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
 Eigen::VectorXd Waveform::extrapolate()
 {
   const int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfStoredSamples);
+  PRECICE_ASSERT(_storageIsInitialized);
 
   if (usedOrder == 0) {
     PRECICE_ASSERT(_numberOfStoredSamples > 0);
