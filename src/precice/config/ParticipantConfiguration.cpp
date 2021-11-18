@@ -13,6 +13,7 @@
 #include "io/ExportContext.hpp"
 #include "io/ExportVTK.hpp"
 #include "io/ExportVTU.hpp"
+#include "io/ExportVTP.hpp"
 #include "io/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "logging/LogMacros.hpp"
@@ -556,6 +557,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       }
     } else if (exportContext.type == VALUE_VTU) {
       exporter = io::PtrExport(new io::ExportVTU());
+    } else if (exportContext.type == VALUE_VTP) {
+      exporter = io::PtrExport(new io::ExportVTP());
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
                     _participants.back()->getName(), exportContext.type);
