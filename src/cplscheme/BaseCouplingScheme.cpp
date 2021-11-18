@@ -143,10 +143,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
       // reserve memory and initialize data with zero
-      setupDataMatrices();
-      if (_acceleration) {
-        _acceleration->initialize(getAccelerationData()); // Reserve memory, initialize
-      }
+      initializeStorage();
     }
     requireAction(constants::actionWriteIterationCheckpoint());
     initializeTXTWriters();
@@ -450,15 +447,17 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   }
 }
 
-void BaseCouplingScheme::setupDataMatrices()
+void BaseCouplingScheme::initializeStorage()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
-    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
-    WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
-    _waveforms.insert(waveformPair);
+    _waveforms[pair.first]->initialize(pair.second->values().size());
     pair.second->storeIteration();
+  }
+  // Reserve storage for acceleration
+  if (_acceleration) {
+    _acceleration->initialize(getAccelerationData());
   }
 }
 
@@ -612,6 +611,12 @@ void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &re
   if (anyDataRequiresInitialization(receiveData)) {
     _receivesInitializedData = true;
   }
+}
+
+void BaseCouplingScheme::addWaveform(int id, const time::PtrWaveform &ptrWaveform)
+{
+  WaveformMap::value_type waveformPair = std::make_pair(id, ptrWaveform);
+  _waveforms.insert(waveformPair);
 }
 
 bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const

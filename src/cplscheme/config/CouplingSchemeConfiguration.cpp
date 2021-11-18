@@ -29,6 +29,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
+#include "time/Waveform.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"
@@ -948,7 +949,9 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
 
     const bool requiresInitialization = exchange.requiresInitialization;
     if (from == accessor) {
-      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
+      time::PtrWaveform ptrWaveform(new time::Waveform(_config.extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
+      // @todo store all waveforms in _waveforms? See acceleration config.
+      scheme.addDataToSend(exchange.data, ptrWaveform, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(not scheme.doesFirstStep(),
                       "In serial coupling only second participant can initialize data and send it. "
@@ -956,7 +959,9 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                       dataName, meshName, from, to, requiresInitialization);
       }
     } else if (to == accessor) {
-      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
+      time::PtrWaveform ptrWaveform(new time::Waveform(_config.extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
+      // @todo store all waveforms in _waveforms? See acceleration config.
+      scheme.addDataToReceive(exchange.data, ptrWaveform, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(scheme.doesFirstStep(),
                       "In serial coupling only first participant can receive initial data. "
@@ -992,11 +997,13 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme", to);
 
-    const bool initialize = exchange.requiresInitialization;
+    const bool        initialize = exchange.requiresInitialization;
+    time::PtrWaveform ptrWaveform(new time::Waveform(_config.extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
+    // @todo store all waveforms in _waveforms? See acceleration config.
     if (from == accessor) {
-      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
+      scheme.addDataToSend(exchange.data, ptrWaveform, exchange.mesh, initialize, to);
     } else if (to == accessor) {
-      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
+      scheme.addDataToReceive(exchange.data, ptrWaveform, exchange.mesh, initialize, from);
     }
   }
 }

@@ -42,15 +42,17 @@ public:
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
-      const mesh::PtrData &data,
-      mesh::PtrMesh        mesh,
-      bool                 requiresInitialization);
+      const mesh::PtrData &    data,
+      const time::PtrWaveform &ptrWaveform,
+      mesh::PtrMesh            mesh,
+      bool                     requiresInitialization);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
-      const mesh::PtrData &data,
-      mesh::PtrMesh        mesh,
-      bool                 requiresInitialization);
+      const mesh::PtrData &    data,
+      const time::PtrWaveform &ptrWaveform,
+      mesh::PtrMesh            mesh,
+      bool                     requiresInitialization);
 
   /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;

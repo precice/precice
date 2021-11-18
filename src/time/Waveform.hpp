@@ -19,14 +19,21 @@ public:
   static const int UNDEFINED_INTERPOLATION_ORDER;
 
   /**
-   * @brief Waveform object which stores values of current and past time windows for performing extrapolation.
-   * @param valuesSize defines how many values one sample in time consists of
+   * @brief Waveform object which stores values of current and past time windows for performing extrapolation. 
+   *
+   * Storage still needs to be initialized with Waveform::initialize, before the Waveform can be used.
+   *
    * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    * @param interpolationOrder defines the maximum interpolation order supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(const int valuesSize,
-           const int extrapolationOrder,
+  Waveform(const int extrapolationOrder,
            const int interpolationOrder);
+
+  /**
+   * @brief Used to initialize _timeWindowsStorage according to required size.
+   * @param valuesSize defines how many values one sample in time consists of
+   */
+  void initialize(const int valuesSize);
 
   /**
    * @brief resizes _timeWindows to store more data. Used for already created waveforms.
@@ -82,6 +89,9 @@ public:
   Eigen::VectorXd getSample(int sampleID);
 
 private:
+  /// Set by initialize. Used for consistency checks.
+  bool _storageIsInitialized = false;
+
   /// Stores values for several time windows.
   Eigen::MatrixXd _timeWindowsStorage;
 

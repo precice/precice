@@ -313,10 +313,9 @@ protected:
   }
 
   /**
-   * @brief Sets up data matrices to store data values from previous iterations and time windows.
-   * @param data Data fields for which data is stored
+   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data, waveforms and acceleration and initializes with zero.
    */
-  void setupDataMatrices();
+  void initializeStorage();
 
   /**
    * @brief sends convergence to other participant via m2n
@@ -372,6 +371,13 @@ protected:
    * @param receiveData CouplingData being checked
    */
   void determineInitialReceive(DataMap &receiveData);
+
+  /**
+   * @brief adds ptrWaveform under id to _waveforms
+   * @param id will be used as key in _waveforms
+   * @param ptrWaveform pointer to the waveform
+   */
+  void addWaveform(int id, const time::PtrWaveform &ptrWaveform);
 
 private:
   /// Coupling mode used by coupling scheme.

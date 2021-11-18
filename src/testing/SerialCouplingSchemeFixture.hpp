@@ -20,7 +20,7 @@ struct SerialCouplingSchemeFixture {
 
   static void storeIteration(cplscheme::SerialCouplingScheme &cplscheme);
 
-  static void setupDataMatrices(cplscheme::SerialCouplingScheme &cplscheme);
+  static void initializeStorage(cplscheme::SerialCouplingScheme &cplscheme);
 
   static void storeDataInWaveforms(cplscheme::SerialCouplingScheme &cplscheme);
 
