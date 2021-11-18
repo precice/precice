@@ -4,7 +4,7 @@
 #include <iosfwd>
 #include <string>
 #include <vector>
-#include "Export.hpp"
+#include "io/Export.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -19,11 +19,8 @@ namespace precice {
 namespace io {
 
 /// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
-class ExportVTKXML : public Export {
+class ExportVTU : public Export {
 public:
-  /// Returns the VTK type ID.
-  virtual int getType() const;
-
   /// Perform writing to vtk file
   /**
    * @param[in] name filename to export to
@@ -48,7 +45,7 @@ public:
       std::ofstream &       outFile);
 
 private:
-  logging::Logger _log{"io::ExportVTKXML"};
+  logging::Logger _log{"io::ExportVTU"};
 
   /// List of names of all scalar data on mesh
   std::vector<std::string> _scalarDataNames;

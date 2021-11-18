@@ -48,5 +48,27 @@ BOOST_AUTO_TEST_CASE(DTDReference)
   }
 }
 
+BOOST_AUTO_TEST_SUITE(ConfigCheck)
+
+BOOST_AUTO_TEST_CASE(Serial)
+{
+  BOOST_REQUIRE_NO_THROW(
+      precice::tooling::checkConfiguration(
+          precice::testing::getPathToSources() + "/precice/tests/config-checker.xml",
+          "SolverTwo",
+          1));
+}
+
+BOOST_AUTO_TEST_CASE(Parallel)
+{
+  BOOST_REQUIRE_NO_THROW(
+      precice::tooling::checkConfiguration(
+          precice::testing::getPathToSources() + "/precice/tests/config-checker.xml",
+          "SolverTwo",
+          4));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
