@@ -73,7 +73,7 @@ public:
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod,
-      int                           extrapolationOrder);
+      int                           extrapolationOrder); // @todo extrapolationOrder is not needed here (anymore)!
 
   /**
    * @brief getter for _isInitialized
