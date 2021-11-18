@@ -6,6 +6,7 @@
 
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
+#include "time/SharedPointer.hpp"
 
 namespace precice {
 namespace mesh {
@@ -23,6 +24,9 @@ namespace mesh {
  */
 class Data {
 public:
+  static const int EXTRAPOLATION_ORDER = 0; // @todo currently hard-coded; we don't care about extrapolation here.
+  static const int INTERPOLATION_ORDER = 1; // @todo currently hard-coded; should be configurable.
+
   // @brief Possible types of data values.
   //  enum DataType {
   //    TYPE_UNDEFINED,
@@ -86,6 +90,12 @@ public:
   /// Returns the dimension (i.e., number of components) of one data value.
   int getDimensions() const;
 
+  void createWaveform(int extrapolationOrder, int interpolationOrder);
+
+  time::PtrWaveform waveform();
+
+  void setExtrapolationOrder(int extrapolationOrder);
+
 private:
   logging::Logger _log{"mesh::Data"};
 
@@ -93,6 +103,8 @@ private:
   static size_t _dataCount;
 
   Eigen::VectorXd _values;
+
+  time::PtrWaveform _ptrWaveform;
 
   /// Name of the data set.
   std::string _name;

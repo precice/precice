@@ -4,6 +4,7 @@
 
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
+#include "time/Waveform.hpp"
 
 namespace precice {
 namespace mesh {
@@ -28,6 +29,7 @@ Data::Data(
       _dimensions(dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
+  _ptrWaveform = time::PtrWaveform(new time::Waveform(Data::EXTRAPOLATION_ORDER, Data::INTERPOLATION_ORDER));
   _dataCount++;
 }
 
@@ -76,6 +78,14 @@ size_t Data::getDataCount()
 void Data::resetDataCount()
 {
   _dataCount = 0;
+}
+
+time::PtrWaveform Data::waveform() {
+  return _ptrWaveform;
+}
+
+void Data::setExtrapolationOrder(int extrapolationOrder) {
+  _ptrWaveform->setExtrapolationOrder(extrapolationOrder);
 }
 
 } // namespace mesh

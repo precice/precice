@@ -140,7 +140,6 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
 
 void MultiCouplingScheme::addDataToSend(
     const mesh::PtrData &    data,
-    const time::PtrWaveform &ptrWaveform,
     mesh::PtrMesh            mesh,
     bool                     initialize,
     const std::string &      to)
@@ -153,12 +152,11 @@ void MultiCouplingScheme::addDataToSend(
   if (!utils::contained(id, _allData)) {
     _allData.insert(dataPair);
   }
-  addWaveform(id, ptrWaveform);
+  addWaveform(id, data->waveform());
 }
 
 void MultiCouplingScheme::addDataToReceive(
     const mesh::PtrData &    data,
-    const time::PtrWaveform &ptrWaveform,
     mesh::PtrMesh            mesh,
     bool                     initialize,
     const std::string &      from)
@@ -171,7 +169,7 @@ void MultiCouplingScheme::addDataToReceive(
   if (!utils::contained(id, _allData)) {
     _allData.insert(dataPair);
   }
-  addWaveform(id, ptrWaveform);
+  addWaveform(id, data->waveform());
 }
 
 } // namespace cplscheme

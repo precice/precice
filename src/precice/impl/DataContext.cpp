@@ -11,8 +11,7 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(data);
-  time::PtrWaveform ptrWaveform(new time::Waveform(DataContext::EXTRAPOLATION_ORDER, DataContext::INTERPOLATION_ORDER));
-  _providedWaveform = ptrWaveform;
+  _providedWaveform = data->waveform();
   _providedWaveform->initialize(data->values().size());
   _providedWaveform->store(data->values());
   _providedData = data;
@@ -126,7 +125,7 @@ void DataContext::configureForReadMapping(MappingContext mappingContext, MeshCon
   PRECICE_ASSERT(fromMeshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData fromData = fromMeshContext.mesh->data(getDataName());
   PRECICE_ASSERT(fromData != _providedData);
-  time::PtrWaveform ptrFromWaveform(new time::Waveform(DataContext::EXTRAPOLATION_ORDER, DataContext::INTERPOLATION_ORDER));
+  time::PtrWaveform ptrFromWaveform = fromData->waveform();
   ptrFromWaveform->initialize(fromData->values().size());
   this->setMapping(mappingContext, fromData, _providedData, ptrFromWaveform, _providedWaveform);
   PRECICE_ASSERT(hasReadMapping());
@@ -138,7 +137,7 @@ void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshCo
   PRECICE_ASSERT(toMeshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData toData = toMeshContext.mesh->data(getDataName());
   PRECICE_ASSERT(toData != _providedData);
-  time::PtrWaveform ptrToWaveform(new time::Waveform(DataContext::EXTRAPOLATION_ORDER, DataContext::INTERPOLATION_ORDER));
+  time::PtrWaveform ptrToWaveform = toData->waveform();
   ptrToWaveform->initialize(toData->values().size());
   this->setMapping(mappingContext, _providedData, toData, _providedWaveform, ptrToWaveform);
   PRECICE_ASSERT(hasWriteMapping());
@@ -232,6 +231,7 @@ void DataContext::moveProvidedDataToProvidedWaveformSample(int sampleID)
 int DataContext::sizeOfSampleStorageInWaveform()
 {
   PRECICE_TRACE();
+  // @todo mpirun -np 4 ./testprecice -t PreciceTests/Serial/MultiCoupling breaks?
   if (hasMapping()) {
     PRECICE_ASSERT(_fromWaveform->sizeOfSampleStorage() == _toWaveform->sizeOfSampleStorage());
     return _fromWaveform->sizeOfSampleStorage();

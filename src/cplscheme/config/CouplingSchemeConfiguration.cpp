@@ -949,9 +949,9 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
 
     const bool requiresInitialization = exchange.requiresInitialization;
     if (from == accessor) {
-      time::PtrWaveform ptrWaveform(new time::Waveform(_config.extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
-      // @todo store all waveforms in _waveforms? See acceleration config.
-      scheme.addDataToSend(exchange.data, ptrWaveform, exchange.mesh, requiresInitialization);
+      //@todo try to set this somewhere else
+      exchange.data->waveform()->setExtrapolationOrder(_config.extrapolationOrder);
+      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(not scheme.doesFirstStep(),
                       "In serial coupling only second participant can initialize data and send it. "
@@ -959,9 +959,9 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                       dataName, meshName, from, to, requiresInitialization);
       }
     } else if (to == accessor) {
-      time::PtrWaveform ptrWaveform(new time::Waveform(_config.extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
-      // @todo store all waveforms in _waveforms? See acceleration config.
-      scheme.addDataToReceive(exchange.data, ptrWaveform, exchange.mesh, requiresInitialization);
+      //@todo try to set this somewhere else
+      exchange.data->waveform()->setExtrapolationOrder(_config.extrapolationOrder);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(scheme.doesFirstStep(),
                       "In serial coupling only first participant can receive initial data. "
@@ -998,12 +998,12 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
                   "Participant \"{}\" is not configured for coupling scheme", to);
 
     const bool        initialize = exchange.requiresInitialization;
-    time::PtrWaveform ptrWaveform(new time::Waveform(_config.extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
-    // @todo store all waveforms in _waveforms? See acceleration config.
+    // @todo try to move this somewhere else
+    exchange.data->waveform()->setExtrapolationOrder(_config.extrapolationOrder);
     if (from == accessor) {
-      scheme.addDataToSend(exchange.data, ptrWaveform, exchange.mesh, initialize, to);
+      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
     } else if (to == accessor) {
-      scheme.addDataToReceive(exchange.data, ptrWaveform, exchange.mesh, initialize, from);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
     }
   }
 }

@@ -19,9 +19,6 @@ namespace impl {
 class DataContext {
 
 public:
-  static const int EXTRAPOLATION_ORDER = 0; // @todo currently hard-coded; we don't care about extrapolation here.
-  static const int INTERPOLATION_ORDER = 1; // @todo currently hard-coded; should be configurable.
-
   DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
   mesh::PtrData providedData();

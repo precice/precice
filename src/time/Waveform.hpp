@@ -88,6 +88,9 @@ public:
    */
   Eigen::VectorXd getSample(int sampleID);
 
+  /// @todo try to get rid of this method
+  void setExtrapolationOrder(int extrapolationOrder);
+
 private:
   /// Set by initialize. Used for consistency checks.
   bool _storageIsInitialized = false;
@@ -96,7 +99,7 @@ private:
   Eigen::MatrixXd _timeWindowsStorage;
 
   /// extrapolation order for this waveform
-  const int _extrapolationOrder;
+  int _extrapolationOrder;  // @todo make const!
 
   /// interpolation order for this waveform
   const int _interpolationOrder;

@@ -51,7 +51,6 @@ BiCouplingScheme::BiCouplingScheme(
 
 void BiCouplingScheme::addDataToSend(
     const mesh::PtrData &    data,
-    const time::PtrWaveform &ptrWaveform,
     mesh::PtrMesh            mesh,
     bool                     requiresInitialization)
 {
@@ -64,7 +63,7 @@ void BiCouplingScheme::addDataToSend(
     _sendData.insert(pair);
     PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
     _allData.insert(pair);
-    addWaveform(id, ptrWaveform);
+    addWaveform(id, data->waveform());
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
@@ -72,7 +71,6 @@ void BiCouplingScheme::addDataToSend(
 
 void BiCouplingScheme::addDataToReceive(
     const mesh::PtrData &    data,
-    const time::PtrWaveform &ptrWaveform,
     mesh::PtrMesh            mesh,
     bool                     requiresInitialization)
 {
@@ -85,7 +83,7 @@ void BiCouplingScheme::addDataToReceive(
     _receiveData.insert(pair);
     PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
     _allData.insert(pair);
-    addWaveform(id, ptrWaveform);
+    addWaveform(id, data->waveform());
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }

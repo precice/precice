@@ -85,6 +85,11 @@ Eigen::VectorXd Waveform::getSample(int sampleID)
   return _timeWindowsStorage.col(sampleID);
 }
 
+void Waveform::setExtrapolationOrder(int extrapolationOrder)
+{
+  _extrapolationOrder = extrapolationOrder;
+}
+
 int Waveform::valuesSize()
 {
   PRECICE_ASSERT(_storageIsInitialized);
