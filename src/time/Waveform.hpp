@@ -99,7 +99,7 @@ private:
   Eigen::MatrixXd _timeWindowsStorage;
 
   /// extrapolation order for this waveform
-  int _extrapolationOrder; // @todo make const!
+  int _extrapolationOrder; // @todo make const! Possible, if extrapolation order is set at configuration of data.
 
   /// interpolation order for this waveform
   const int _interpolationOrder;

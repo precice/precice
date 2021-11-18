@@ -619,6 +619,11 @@ void BaseCouplingScheme::addWaveform(int id, const time::PtrWaveform &ptrWavefor
   _waveforms.insert(waveformPair);
 }
 
+int BaseCouplingScheme::getExtrapolationOrder()
+{
+  return _extrapolationOrder;
+}
+
 bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of

@@ -379,6 +379,11 @@ protected:
    */
   void addWaveform(int id, const time::PtrWaveform &ptrWaveform);
 
+  /**
+   * @brief getter for _extrapolationOrder
+   */
+  int getExtrapolationOrder();
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;

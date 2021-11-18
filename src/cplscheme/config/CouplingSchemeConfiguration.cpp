@@ -949,8 +949,6 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
 
     const bool requiresInitialization = exchange.requiresInitialization;
     if (from == accessor) {
-      //@todo try to set this somewhere else
-      exchange.data->waveform()->setExtrapolationOrder(_config.extrapolationOrder);
       scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(not scheme.doesFirstStep(),
@@ -959,8 +957,6 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                       dataName, meshName, from, to, requiresInitialization);
       }
     } else if (to == accessor) {
-      //@todo try to set this somewhere else
-      exchange.data->waveform()->setExtrapolationOrder(_config.extrapolationOrder);
       scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(scheme.doesFirstStep(),
@@ -998,8 +994,6 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
                   "Participant \"{}\" is not configured for coupling scheme", to);
 
     const bool initialize = exchange.requiresInitialization;
-    // @todo try to move this somewhere else
-    exchange.data->waveform()->setExtrapolationOrder(_config.extrapolationOrder);
     if (from == accessor) {
       scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
     } else if (to == accessor) {

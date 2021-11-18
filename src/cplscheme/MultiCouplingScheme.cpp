@@ -15,6 +15,7 @@
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "time/Waveform.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -144,6 +145,7 @@ void MultiCouplingScheme::addDataToSend(
     bool                 initialize,
     const std::string &  to)
 {
+  data->setExtrapolationOrder(getExtrapolationOrder());
   int id = data->getID();
   PRECICE_DEBUG("Configuring send data to {}", to);
   PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize));
@@ -161,6 +163,7 @@ void MultiCouplingScheme::addDataToReceive(
     bool                 initialize,
     const std::string &  from)
 {
+  data->setExtrapolationOrder(getExtrapolationOrder());
   int id = data->getID();
   PRECICE_DEBUG("Configuring receive data from {}", from);
   PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize));

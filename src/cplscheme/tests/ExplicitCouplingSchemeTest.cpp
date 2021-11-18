@@ -315,9 +315,7 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  mesh->data(sendDataIndex)->waveform()->setExtrapolationOrder(extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  mesh->data(receiveDataIndex)->waveform()->setExtrapolationOrder(extrapolationOrder);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
 }
@@ -622,9 +620,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  mesh->data(sendDataIndex)->waveform()->setExtrapolationOrder(extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  mesh->data(receiveDataIndex)->waveform()->setExtrapolationOrder(extrapolationOrder);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
 }

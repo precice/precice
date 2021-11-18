@@ -116,10 +116,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100, extrapolationOrder);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
-  mesh->data(sendDataIndex)->waveform()->setExtrapolationOrder(extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
   CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
-  mesh->data(receiveDataIndex)->waveform()->setExtrapolationOrder(extrapolationOrder);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
 

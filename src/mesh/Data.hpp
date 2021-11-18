@@ -94,7 +94,7 @@ public:
 
   time::PtrWaveform waveform();
 
-  void setExtrapolationOrder(int extrapolationOrder);
+  void setExtrapolationOrder(int extrapolationOrder); // @todo configuring the extrapolationOrder together with data would allow us to remove this functions and others.
 
 private:
   logging::Logger _log{"mesh::Data"};

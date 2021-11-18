@@ -14,6 +14,7 @@
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "precice/types.hpp"
+#include "time/Waveform.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice {
@@ -57,6 +58,7 @@ void BiCouplingScheme::addDataToSend(
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _sendData)) {
+    data->setExtrapolationOrder(getExtrapolationOrder());
     PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     PRECICE_ASSERT(_sendData.count(pair.first) == 0, "Key already exists!");
@@ -77,6 +79,7 @@ void BiCouplingScheme::addDataToReceive(
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _receiveData)) {
+    data->setExtrapolationOrder(getExtrapolationOrder());
     PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     PRECICE_ASSERT(_receiveData.count(pair.first) == 0, "Key already exists!");
