@@ -139,10 +139,10 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
 }
 
 void MultiCouplingScheme::addDataToSend(
-    const mesh::PtrData &    data,
-    mesh::PtrMesh            mesh,
-    bool                     initialize,
-    const std::string &      to)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 initialize,
+    const std::string &  to)
 {
   int id = data->getID();
   PRECICE_DEBUG("Configuring send data to {}", to);
@@ -156,10 +156,10 @@ void MultiCouplingScheme::addDataToSend(
 }
 
 void MultiCouplingScheme::addDataToReceive(
-    const mesh::PtrData &    data,
-    mesh::PtrMesh            mesh,
-    bool                     initialize,
-    const std::string &      from)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 initialize,
+    const std::string &  from)
 {
   int id = data->getID();
   PRECICE_DEBUG("Configuring receive data from {}", from);

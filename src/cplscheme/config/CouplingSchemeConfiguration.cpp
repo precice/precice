@@ -997,7 +997,7 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme", to);
 
-    const bool        initialize = exchange.requiresInitialization;
+    const bool initialize = exchange.requiresInitialization;
     // @todo try to move this somewhere else
     exchange.data->waveform()->setExtrapolationOrder(_config.extrapolationOrder);
     if (from == accessor) {

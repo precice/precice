@@ -50,9 +50,9 @@ BiCouplingScheme::BiCouplingScheme(
 }
 
 void BiCouplingScheme::addDataToSend(
-    const mesh::PtrData &    data,
-    mesh::PtrMesh            mesh,
-    bool                     requiresInitialization)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
@@ -70,9 +70,9 @@ void BiCouplingScheme::addDataToSend(
 }
 
 void BiCouplingScheme::addDataToReceive(
-    const mesh::PtrData &    data,
-    mesh::PtrMesh            mesh,
-    bool                     requiresInitialization)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();

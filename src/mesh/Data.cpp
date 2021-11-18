@@ -3,8 +3,8 @@
 #include <utility>
 
 #include "precice/types.hpp"
-#include "utils/assertion.hpp"
 #include "time/Waveform.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {
@@ -80,11 +80,13 @@ void Data::resetDataCount()
   _dataCount = 0;
 }
 
-time::PtrWaveform Data::waveform() {
+time::PtrWaveform Data::waveform()
+{
   return _ptrWaveform;
 }
 
-void Data::setExtrapolationOrder(int extrapolationOrder) {
+void Data::setExtrapolationOrder(int extrapolationOrder)
+{
   _ptrWaveform->setExtrapolationOrder(extrapolationOrder);
 }
 
