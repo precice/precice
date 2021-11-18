@@ -143,10 +143,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
       // reserve memory and initialize data with zero
-      setupDataMatrices();
-      if (_acceleration) {
-        _acceleration->initialize(getAccelerationData()); // Reserve memory, initialize
-      }
+      initializeStorage();
     }
     requireAction(constants::actionWriteIterationCheckpoint());
     initializeTXTWriters();
@@ -450,13 +447,17 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   }
 }
 
-void BaseCouplingScheme::setupDataMatrices()
+void BaseCouplingScheme::initializeStorage()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
     _waveforms[pair.first]->initialize(pair.second->values().size());
     pair.second->storeIteration();
+  }
+  // Reserve storage for acceleration
+  if (_acceleration) {
+    _acceleration->initialize(getAccelerationData());
   }
 }
 

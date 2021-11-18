@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
 
   time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder));
   scheme.addDataToSend(data, ptrSendWaveform, mesh, true);
-  Fixture::setupDataMatrices(scheme);
+  Fixture::initializeStorage(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
 
   time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder));
   scheme.addDataToSend(data, ptrSendWaveform, mesh, true);
-  Fixture::setupDataMatrices(scheme);
+  Fixture::initializeStorage(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
   BOOST_TEST(cplData->values().size() == 1);

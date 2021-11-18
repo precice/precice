@@ -313,10 +313,9 @@ protected:
   }
 
   /**
-   * @brief Sets up data matrices to store data values from previous iterations and time windows.
-   * @param data Data fields for which data is stored
+   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data, waveforms and acceleration and initializes with zero.
    */
-  void setupDataMatrices();
+  void initializeStorage();
 
   /**
    * @brief sends convergence to other participant via m2n
