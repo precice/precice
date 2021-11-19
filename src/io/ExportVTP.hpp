@@ -26,7 +26,7 @@ private:
   std::string getVTKFormat() const override;
   std::string getMasterExtension() const override;
   std::string getPieceExtension() const override;
-  std::string getPieceAttributes(const mesh::Mesh& mesh) const override;
+  std::string getPieceAttributes(const mesh::Mesh &mesh) const override;
 
   void writeMasterCells(std::ostream &out) const override;
 

@@ -26,11 +26,7 @@
       <use-mesh name="B" provide="on" />
       <read-data name="S" mesh="B" />
       <read-data name="V" mesh="B" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="A"
-        to="B"
-        constraint="consistent"/>
+      <mapping:nearest-neighbor direction="read" from="A" to="B" constraint="consistent" />
       <export:vtu />
       <export:vtp />
     </participant>

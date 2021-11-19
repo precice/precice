@@ -112,7 +112,7 @@ void ExportXML::writeSubFile(
   outSubFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
 
   outSubFile << "   <" << formatType << ">\n";
-  outSubFile << "      <Piece "<<getPieceAttributes(mesh)<<"> \n";
+  outSubFile << "      <Piece " << getPieceAttributes(mesh) << "> \n";
   exportPoints(outSubFile, mesh);
 
   // Write Mesh
