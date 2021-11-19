@@ -94,6 +94,16 @@ void ExportXML::writeMasterFile(
   outMasterFile.close();
 }
 
+namespace {
+std::string getPieceSuffix()
+{
+  if (!utils::MasterSlave::isParallel()) {
+    return "";
+  }
+  return "_" + std::to_string(utils::MasterSlave::getRank());
+}
+} // namespace
+
 void ExportXML::writeSubFile(
     const std::string &name,
     const std::string &location,
@@ -101,7 +111,7 @@ void ExportXML::writeSubFile(
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name + "_" + std::to_string(utils::MasterSlave::getRank()) + getPieceExtension());
+  outfile /= fs::path(name + getPieceSuffix() + getPieceExtension());
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
   PRECICE_CHECK(outSubFile, "{} export failed to open slave file \"{}\"", getVTKFormat(), outfile);
