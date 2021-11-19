@@ -18,7 +18,9 @@
       <use-mesh name="A" provide="on" />
       <write-data name="S" mesh="A" />
       <write-data name="V" mesh="A" />
-      <export:vtk />
+      <export:vtk directory="timeseries" />
+      <export:vtu directory="timeseries" />
+      <export:vtp directory="timeseries" />
     </participant>
 
     <participant name="ExporterTwo">
@@ -27,8 +29,8 @@
       <read-data name="S" mesh="B" />
       <read-data name="V" mesh="B" />
       <mapping:nearest-neighbor direction="read" from="A" to="B" constraint="consistent" />
-      <export:vtu />
-      <export:vtp />
+      <export:vtu directory="timeseries" />
+      <export:vtp directory="timeseries" />
     </participant>
 
     <m2n:sockets from="ExporterOne" to="ExporterTwo" />
