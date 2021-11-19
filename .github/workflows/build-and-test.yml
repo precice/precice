@@ -62,18 +62,22 @@ jobs:
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Debug
+            MORECXXFLAGS: '-Wextra -Wno-unused-parameter -Werror'
           - IMAGE: 'archlinux'
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Release
+            MORECXXFLAGS: '-Wextra -Wno-unused-parameter -Wno-unused-variable -Werror'
           - IMAGE: 'archlinux'
             CONFIG: MPIPETSc
             CXX: 'clang++'
             TYPE: Debug
+            MORECXXFLAGS: '-Wextra -Wno-unused-parameter -Werror'
           - IMAGE: 'archlinux'
             CONFIG: MPIPETSc
             CXX: 'clang++'
             TYPE: Release
+            MORECXXFLAGS: '-Wextra -Wno-unused-parameter -Wno-unused-variable -Werror'
           - IMAGE: 'fedora-34'
             CONFIG: MPIPETSc
             CXX: 'g++'
@@ -98,7 +102,7 @@ jobs:
         working-directory: build
         env:
           CXX: ${{ matrix.CXX }}
-          CXXFLAGS: "-Wall ${{ matrix.COVFLAGS }}"
+          CXXFLAGS: "-Wall ${{ matrix.COVFLAGS }} ${{ matrix.MORECXXFLAGS }}"
           MPI: ${{ contains(matrix.CONFIG, 'MPI') }}
           PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
         run: |
