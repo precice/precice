@@ -47,9 +47,6 @@ public:
   /// To be used, when the time window size is determined dynamically during the coupling.
   static const double UNDEFINED_TIME_WINDOW_SIZE;
 
-  /// To be used, when the extrapolation order is not defined (for explicit coupling).
-  static const int UNDEFINED_EXTRAPOLATION_ORDER;
-
   /// To be used, when the number of max iterations is not defined (for explicit coupling).
   static const int UNDEFINED_MAX_ITERATIONS;
 

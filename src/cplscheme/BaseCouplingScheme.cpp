@@ -18,6 +18,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
+#include "time/Time.hpp"
 #include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -71,7 +72,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 
   if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
+    PRECICE_ASSERT(_extrapolationOrder == time::Time::UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1) || (_extrapolationOrder == 2),
