@@ -11,7 +11,7 @@ namespace precice {
 namespace mesh {
 
 // const int Data::EXTRAPOLATION_ORDER = cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER;
-const int Data::EXTRAPOLATION_ORDER = 0;  // @todo should be cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER, but then some tests break.
+const int Data::EXTRAPOLATION_ORDER = 0; // @todo should be cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER, but then some tests break.
 const int Data::INTERPOLATION_ORDER = 1;
 
 size_t Data::_dataCount = 0;

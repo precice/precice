@@ -1,13 +1,12 @@
-#include "cplscheme/CouplingScheme.hpp"
 #include "time/Waveform.hpp"
 #include <algorithm>
+#include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
+#include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
 namespace time {
-
-const int Waveform::UNDEFINED_INTERPOLATION_ORDER = -1;
 
 Waveform::Waveform(
     const int extrapolationOrder,
@@ -53,14 +52,14 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
   PRECICE_ASSERT(_storageIsInitialized);
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
-  PRECICE_ASSERT(_interpolationOrder != UNDEFINED_INTERPOLATION_ORDER, "Sampling is only allowed, if Waveform is configured correspondingly");
+  PRECICE_ASSERT(_interpolationOrder != Time::UNDEFINED_INTERPOLATION_ORDER, "Sampling is only allowed, if Waveform is configured correspondingly");
   return this->interpolate(normalizedDt);
 }
 
 void Waveform::moveToNextWindow()
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  if(_extrapolationOrder != cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER) {  // @todo: we should define the extrapolation data for all data (if the waveform is owned by the mesh::Data), another argument for configuring extrapolation order there.
+  if (_extrapolationOrder != Time::UNDEFINED_EXTRAPOLATION_ORDER) { // @todo: we should define the extrapolation data for all data (if the waveform is owned by the mesh::Data), another argument for configuring extrapolation order there.
     auto initialGuess = extrapolate();
     utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
     if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases

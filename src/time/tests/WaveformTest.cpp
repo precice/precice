@@ -2,6 +2,7 @@
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "testing/WaveformFixture.hpp"
+#include "time/Time.hpp"
 #include "time/Waveform.hpp"
 
 using namespace precice;
@@ -20,7 +21,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataFirstOrder)
 
   // Test first order extrapolation
   const int extrapolationOrder = 1;
-  Waveform  waveform(extrapolationOrder, Waveform::UNDEFINED_INTERPOLATION_ORDER);
+  Waveform  waveform(extrapolationOrder, Time::UNDEFINED_INTERPOLATION_ORDER);
   const int valuesSize = 1;
   waveform.initialize(valuesSize);
   BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 2);
@@ -73,7 +74,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataSecondOrder)
 
   // Test second order extrapolation
   const int extrapolationOrder = 2;
-  Waveform  waveform(extrapolationOrder, Waveform::UNDEFINED_INTERPOLATION_ORDER);
+  Waveform  waveform(extrapolationOrder, Time::UNDEFINED_INTERPOLATION_ORDER);
   const int valuesSize = 1;
   waveform.initialize(valuesSize);
   BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 3);
