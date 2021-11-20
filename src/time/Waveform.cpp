@@ -1,12 +1,11 @@
 #include "time/Waveform.hpp"
 #include <algorithm>
 #include "logging/LogMacros.hpp"
+#include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
 namespace time {
-
-const int Waveform::UNDEFINED_INTERPOLATION_ORDER = -1;
 
 Waveform::Waveform(
     const int extrapolationOrder,
@@ -41,7 +40,7 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
   PRECICE_ASSERT(_storageIsInitialized);
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
-  PRECICE_ASSERT(_interpolationOrder != UNDEFINED_INTERPOLATION_ORDER, "Sampling is only allowed, if Waveform is configured correspondingly");
+  PRECICE_ASSERT(_interpolationOrder != Time::UNDEFINED_INTERPOLATION_ORDER, "Sampling is only allowed, if Waveform is configured correspondingly");
   return this->interpolate(normalizedDt);
 }
 
