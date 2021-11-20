@@ -15,9 +15,6 @@ namespace time {
 class Waveform {
   friend class testing::WaveformFixture; // Make the fixture friend of this class
 public:
-  /// To be used, when the interpolation order is not defined for this Waveform.
-  static const int UNDEFINED_INTERPOLATION_ORDER;
-
   /**
    * @brief Waveform object which stores values of current and past time windows for performing extrapolation. 
    *

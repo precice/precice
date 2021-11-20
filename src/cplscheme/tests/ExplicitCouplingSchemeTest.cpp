@@ -315,9 +315,9 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
+  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
   cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, false);
-  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
+  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, false);
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
 }
@@ -622,9 +622,9 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
       maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
+  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
   cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, false);
-  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Waveform::UNDEFINED_INTERPOLATION_ORDER));
+  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, false);
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
 }
