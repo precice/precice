@@ -1732,7 +1732,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
   data << 1.0, 1.0;
   datas.push_back(data);
   data << 2.0, 2.0;
-  datas.push_back(position);
+  datas.push_back(data);
   data << 3.0, 3.0;
   datas.push_back(data);
   data << 4.0, 5.0;
@@ -1792,8 +1792,8 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
 
     BOOST_TEST(datas.at(0)(0) == 1.00000000000000002082e-03);
     BOOST_TEST(datas.at(0)(1) == 1.00000000000000002082e-03);
-    BOOST_TEST(datas.at(1)(0) == 0.00000000000000000000e+00);
-    BOOST_TEST(datas.at(1)(1) == 1.00000000000000002082e-03);
+    BOOST_TEST(datas.at(1)(0) == 2.00000000000000000000e-03);
+    BOOST_TEST(datas.at(1)(1) == 2.00000000000000002082e-03);
     BOOST_TEST(datas.at(2)(0) == 3.00000000000000006245e-03);
     BOOST_TEST(datas.at(2)(1) == 3.00000000000000006245e-03);
     BOOST_TEST(datas.at(3)(0) == 4.00000000000000008327e-03);
