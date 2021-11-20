@@ -23,7 +23,7 @@ public:
    *
    * Storage still needs to be initialized with Waveform::initialize, before the Waveform can be used.
    *
-   * @param extrapolatioOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
+   * @param extrapolationOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    * @param interpolationOrder defines the maximum interpolation order supported by this Waveform and reserves storage correspondingly
    */
   Waveform(const int extrapolationOrder,

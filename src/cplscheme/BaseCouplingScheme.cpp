@@ -70,8 +70,10 @@ BaseCouplingScheme::BaseCouplingScheme(
     PRECICE_ASSERT(maxIterations >= 1);
   }
 
+  PRECICE_ASSERT(_extrapolationOrder != UNDEFINED_EXTRAPOLATION_ORDER);
+
   if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
+    PRECICE_ASSERT(_extrapolationOrder == 0, "Only zeroth order extrapolation is used for explicit coupling (by default!). If you see this message, this is likely a preCICE internal issue.");
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1) || (_extrapolationOrder == 2),

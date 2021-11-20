@@ -24,8 +24,8 @@ namespace mesh {
  */
 class Data {
 public:
-  static const int EXTRAPOLATION_ORDER = 0; // @todo currently hard-coded; we don't care about extrapolation here.
-  static const int INTERPOLATION_ORDER = 1; // @todo currently hard-coded; should be configurable.
+  static const int EXTRAPOLATION_ORDER; // @todo currently hard-coded; we don't care about extrapolation here.
+  static const int INTERPOLATION_ORDER; // @todo currently hard-coded; should be configurable.
 
   // @brief Possible types of data values.
   //  enum DataType {

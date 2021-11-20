@@ -757,10 +757,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
   PRECICE_TRACE(accessor);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  SerialCouplingScheme *scheme = new SerialCouplingScheme(
+  const int             extrapolationOrder = 0; // explicit coupling formally uses zeroth order extrapolation.
+  SerialCouplingScheme *scheme             = new SerialCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit, CouplingScheme::UNDEFINED_MAX_ITERATIONS, extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -773,10 +774,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
   PRECICE_TRACE(accessor);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
+  const int               extrapolationOrder = 0; // explicit coupling formally uses zeroth order extrapolation.
+  ParallelCouplingScheme *scheme             = new ParallelCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit, CouplingScheme::UNDEFINED_MAX_ITERATIONS, extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
 

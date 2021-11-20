@@ -1,3 +1,4 @@
+#include "cplscheme/CouplingScheme.hpp"
 #include "time/Waveform.hpp"
 #include <algorithm>
 #include "logging/LogMacros.hpp"
@@ -59,10 +60,12 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 void Waveform::moveToNextWindow()
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  auto initialGuess = extrapolate();
-  utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
-  if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
-    _numberOfStoredSamples++;
+  if(_extrapolationOrder != cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER) {  // @todo: we should define the extrapolation data for all data (if the waveform is owned by the mesh::Data), another argument for configuring extrapolation order there.
+    auto initialGuess = extrapolate();
+    utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
+    if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
+      _numberOfStoredSamples++;
+    }
   }
 }
 
