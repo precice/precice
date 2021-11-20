@@ -61,7 +61,7 @@ BaseCouplingScheme::BaseCouplingScheme(
                    "Time window size has to be given when the fixed time window size method is used.");
   }
 
-  PRECICE_ASSERT((maxIterations > 0) || (maxIterations == time::Time::UNDEFINED_EXTRAPOLATION_ORDER),
+  PRECICE_ASSERT((maxIterations > 0) || (maxIterations == UNDEFINED_MAX_ITERATIONS),
                  "Maximal iteration limit has to be larger than zero.");
 
   if (isExplicitCouplingScheme()) {
