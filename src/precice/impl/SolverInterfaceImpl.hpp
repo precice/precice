@@ -46,23 +46,6 @@ namespace impl {
 /// Implementation of solver interface.
 class SolverInterfaceImpl {
 public:
-  /**
-   * @brief Constructor.
-   *
-   * A solver that wants to use the SolverInterfaceImpl must instatiate an object
-   * of this class. The object has to be configured by one of the configure
-   * methods before it has a reasonable state and can be used.
-   *
-   * @param[in] configurationFileName Name (with path) of the xml config file.
-   * @param[in] participantName Name of the participant using the interface. Has to
-   *                            match the name given for a participant in the
-   *                            xml configuration file.
-   */
-  SolverInterfaceImpl(
-      std::string        participantName,
-      const std::string &configurationFileName,
-      int                accessorProcessRank,
-      int                accessorCommunicatorSize);
 
   /// Deleted copy constructor
   SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
@@ -90,14 +73,19 @@ public:
    *                            match the name given for a participant in the
    *                            xml configuration file.
    * @param[in] configurationFileName Name (with path) of the xml config file.
-   * @param[in] communicator    A pointer to the MPI_Comm to use.
+   * @param[in] accessorProcessRank If the solver code runs with several processes,
+   *        each process using preCICE has to specify its index, which has to start
+   *        from 0 and end with accessorCommunicatorSize - 1.
+   * @param[in] accessorCommunicatorSize The number of solver processes using preCICE.
+   * @param[in] communicator A pointer to the MPI_Comm to use. Is nullptr if
+   *                         standard communicator should be used.
    */
   SolverInterfaceImpl(
       std::string        participantName,
       const std::string &configurationFileName,
       int                accessorProcessRank,
       int                accessorCommunicatorSize,
-      void *             communicator);
+      void *             communicator = nullptr);
 
   /** Ensures that finalize() has been called.
    *

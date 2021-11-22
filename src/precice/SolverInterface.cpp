@@ -9,15 +9,6 @@ SolverInterface::SolverInterface(
     const std::string &participantName,
     const std::string &configurationFileName,
     int                solverProcessIndex,
-    int                solverProcessSize)
-    : _impl(new impl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize))
-{
-}
-
-SolverInterface::SolverInterface(
-    const std::string &participantName,
-    const std::string &configurationFileName,
-    int                solverProcessIndex,
     int                solverProcessSize,
     void *             communicator)
     : _impl(new impl::SolverInterfaceImpl(participantName, configurationFileName, solverProcessIndex, solverProcessSize, communicator))

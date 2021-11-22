@@ -136,15 +136,6 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 #endif
 }
 
-SolverInterfaceImpl::SolverInterfaceImpl(
-    std::string        participantName,
-    const std::string &configurationFileName,
-    int                accessorProcessRank,
-    int                accessorCommunicatorSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, nullptr)
-{
-}
-
 SolverInterfaceImpl::~SolverInterfaceImpl()
 {
   if (_state != State::Finalized) {
