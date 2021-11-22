@@ -40,7 +40,6 @@ public:
   ///@name Construction and Configuration
   ///@{
 
-
   /**
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.

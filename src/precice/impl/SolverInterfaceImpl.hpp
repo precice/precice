@@ -46,7 +46,6 @@ namespace impl {
 /// Implementation of solver interface.
 class SolverInterfaceImpl {
 public:
-
   /// Deleted copy constructor
   SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
 
