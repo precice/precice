@@ -2,6 +2,9 @@
 
 #include <utility>
 
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
+#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -67,6 +70,23 @@ std::string CouplingData::getDataName()
 std::vector<int> CouplingData::getVertexOffsets()
 {
   return _mesh->getVertexOffsets();
+}
+
+void CouplingData::initializeStorage()
+{
+  _data->waveform()->initialize(values().size());
+  storeIteration();
+}
+
+void CouplingData::moveToNextWindow()
+{
+  _data->waveform()->moveToNextWindow();
+  values() = _data->waveform()->getInitialGuess();
+}
+
+void CouplingData::storeDataInWaveform()
+{
+  _data->waveform()->store(values());
 }
 
 } // namespace cplscheme

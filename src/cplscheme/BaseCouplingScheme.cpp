@@ -19,7 +19,6 @@
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "time/Time.hpp"
-#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -71,8 +70,10 @@ BaseCouplingScheme::BaseCouplingScheme(
     PRECICE_ASSERT(maxIterations >= 1);
   }
 
+  PRECICE_ASSERT(_extrapolationOrder != time::Time::UNDEFINED_EXTRAPOLATION_ORDER);
+
   if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(_extrapolationOrder == time::Time::UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
+    PRECICE_ASSERT(_extrapolationOrder == 0, "Only zeroth order extrapolation is used for explicit coupling (by default!). If you see this message, this is likely a preCICE internal issue.");
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1) || (_extrapolationOrder == 2),
@@ -260,7 +261,7 @@ void BaseCouplingScheme::storeDataInWaveforms()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->store(pair.second->values());
+    pair.second->storeDataInWaveform();
   }
 }
 
@@ -269,8 +270,7 @@ void BaseCouplingScheme::moveToNextWindow()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->moveToNextWindow();
-    pair.second->values() = _waveforms[pair.first]->getInitialGuess();
+    pair.second->moveToNextWindow();
   }
 }
 
@@ -453,8 +453,7 @@ void BaseCouplingScheme::initializeStorage()
   PRECICE_TRACE();
   // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
-    _waveforms[pair.first]->initialize(pair.second->values().size());
-    pair.second->storeIteration();
+    pair.second->initializeStorage();
   }
   // Reserve storage for acceleration
   if (_acceleration) {
@@ -614,10 +613,9 @@ void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &re
   }
 }
 
-void BaseCouplingScheme::addWaveform(int id, const time::PtrWaveform &ptrWaveform)
+int BaseCouplingScheme::getExtrapolationOrder()
 {
-  WaveformMap::value_type waveformPair = std::make_pair(id, ptrWaveform);
-  _waveforms.insert(waveformPair);
+  return _extrapolationOrder;
 }
 
 bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const

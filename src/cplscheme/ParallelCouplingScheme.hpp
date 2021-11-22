@@ -6,7 +6,6 @@
 #include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
-#include "time/Time.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -54,8 +53,8 @@ public:
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
-      int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
-      int                           extrapolationOrder = time::Time::UNDEFINED_EXTRAPOLATION_ORDER);
+      int                           maxIterations,
+      int                           extrapolationOrder);
 
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};

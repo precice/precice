@@ -50,42 +50,40 @@ BiCouplingScheme::BiCouplingScheme(
 }
 
 void BiCouplingScheme::addDataToSend(
-    const mesh::PtrData &    data,
-    const time::PtrWaveform &ptrWaveform,
-    mesh::PtrMesh            mesh,
-    bool                     requiresInitialization)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _sendData)) {
+    data->setExtrapolationOrder(getExtrapolationOrder());
     PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     PRECICE_ASSERT(_sendData.count(pair.first) == 0, "Key already exists!");
     _sendData.insert(pair);
     PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
     _allData.insert(pair);
-    addWaveform(id, ptrWaveform);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
 }
 
 void BiCouplingScheme::addDataToReceive(
-    const mesh::PtrData &    data,
-    const time::PtrWaveform &ptrWaveform,
-    mesh::PtrMesh            mesh,
-    bool                     requiresInitialization)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _receiveData)) {
+    data->setExtrapolationOrder(getExtrapolationOrder());
     PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), requiresInitialization));
     DataMap::value_type pair = std::make_pair(id, ptrCplData);
     PRECICE_ASSERT(_receiveData.count(pair.first) == 0, "Key already exists!");
     _receiveData.insert(pair);
     PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
     _allData.insert(pair);
-    addWaveform(id, ptrWaveform);
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }

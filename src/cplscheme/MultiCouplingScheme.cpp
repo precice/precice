@@ -139,12 +139,12 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
 }
 
 void MultiCouplingScheme::addDataToSend(
-    const mesh::PtrData &    data,
-    const time::PtrWaveform &ptrWaveform,
-    mesh::PtrMesh            mesh,
-    bool                     initialize,
-    const std::string &      to)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 initialize,
+    const std::string &  to)
 {
+  data->setExtrapolationOrder(getExtrapolationOrder());
   int id = data->getID();
   PRECICE_DEBUG("Configuring send data to {}", to);
   PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize));
@@ -153,16 +153,15 @@ void MultiCouplingScheme::addDataToSend(
   if (!utils::contained(id, _allData)) {
     _allData.insert(dataPair);
   }
-  addWaveform(id, ptrWaveform);
 }
 
 void MultiCouplingScheme::addDataToReceive(
-    const mesh::PtrData &    data,
-    const time::PtrWaveform &ptrWaveform,
-    mesh::PtrMesh            mesh,
-    bool                     initialize,
-    const std::string &      from)
+    const mesh::PtrData &data,
+    mesh::PtrMesh        mesh,
+    bool                 initialize,
+    const std::string &  from)
 {
+  data->setExtrapolationOrder(getExtrapolationOrder());
   int id = data->getID();
   PRECICE_DEBUG("Configuring receive data from {}", from);
   PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize));
@@ -171,7 +170,6 @@ void MultiCouplingScheme::addDataToReceive(
   if (!utils::contained(id, _allData)) {
     _allData.insert(dataPair);
   }
-  addWaveform(id, ptrWaveform);
 }
 
 } // namespace cplscheme

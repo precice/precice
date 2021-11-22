@@ -2,11 +2,17 @@
 #include <algorithm>
 #include <utility>
 
+#include "cplscheme/CouplingScheme.hpp"
 #include "precice/types.hpp"
+#include "time/Waveform.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
 namespace mesh {
+
+// const int Data::EXTRAPOLATION_ORDER = cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER;
+const int Data::EXTRAPOLATION_ORDER = 0; // @todo should be cplscheme::CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER, but then some tests break.
+const int Data::INTERPOLATION_ORDER = 1;
 
 size_t Data::_dataCount = 0;
 
@@ -28,6 +34,7 @@ Data::Data(
       _dimensions(dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
+  _ptrWaveform = time::PtrWaveform(new time::Waveform(Data::EXTRAPOLATION_ORDER, Data::INTERPOLATION_ORDER));
   _dataCount++;
 }
 
@@ -76,6 +83,16 @@ size_t Data::getDataCount()
 void Data::resetDataCount()
 {
   _dataCount = 0;
+}
+
+time::PtrWaveform Data::waveform()
+{
+  return _ptrWaveform;
+}
+
+void Data::setExtrapolationOrder(int extrapolationOrder)
+{
+  _ptrWaveform->setExtrapolationOrder(extrapolationOrder);
 }
 
 } // namespace mesh

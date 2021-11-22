@@ -640,6 +640,15 @@ private:
   // SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
 
+  // SolverInterface.initializeWrittenWaveforms() triggers transition from false to true.
+  bool _hasInitializedWrittenWaveforms = false;
+
+  // SolverInterface.initializeReadWaveforms() triggers transition from false to true.
+  bool _hasInitializedReadWaveforms = false;
+
+  // SolverInterface.resetMesh() triggers transition from false to true.
+  bool _hasResetMesh = false;
+
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
@@ -723,11 +732,37 @@ private:
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
 
+  /// Initializes waveforms of write data contexts before mapping.
+  void initializeWrittenWaveforms();
+
+  /// Prepare for write mapping
+  void storeWriteDataInWrittenWaveform();
+
+  /// Prepares exchange of write data by sampling waveform and storing sample in mesh::Data
+  void prepareExchangedWriteData();
+
+  /// Prepares exchange of read data by sampling waveform and storing sample in mesh::Data
+  void prepareExchangedReadData();
+
+  /// Initializes waveforms of read data contexts before mapping.
+  void initializeReadWaveforms();
+
+  /// Completes exchange of read data by storing the mesh::Data at the correct place in the waveform
+  void storeReadDataInReadWaveform();
+
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();
 
   /// Computes, performs, and resets all suitable read mappings.
   void mapReadData();
+
+  // bundles functionality needed by initialize, initializeData and advance
+  void doDataTransferAndReadMapping();
+
+  void doDataTransferAndWriteMapping();
+
+  // store data before overwriting it
+  void moveReadWaveform();
 
   /**
    * @brief Performs all data actions with given timing.

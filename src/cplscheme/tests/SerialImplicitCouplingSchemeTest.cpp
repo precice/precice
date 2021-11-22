@@ -460,8 +460,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
 
   using Fixture = testing::SerialCouplingSchemeFixture;
 
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  scheme.addDataToSend(data, ptrSendWaveform, mesh, true);
+  scheme.addDataToSend(data, mesh, true);
   Fixture::initializeStorage(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
@@ -536,8 +535,7 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
 
   using Fixture = testing::SerialCouplingSchemeFixture;
 
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  scheme.addDataToSend(data, ptrSendWaveform, mesh, true);
+  scheme.addDataToSend(data, mesh, true);
   Fixture::initializeStorage(scheme);
   CouplingData *cplData = Fixture::getSendData(scheme, dataID);
   BOOST_CHECK(cplData); // no nullptr
@@ -659,10 +657,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, false);
-  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
   // Add acceleration
   acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
@@ -860,10 +856,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, context.isNamed(second));
-  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, context.isNamed(first));
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second));
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first));
 
   // Add acceleration
   acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
@@ -1104,10 +1098,8 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
       maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, false);
-  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
   // Add acceleration
   acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
@@ -1333,10 +1325,8 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, false);
-  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
   cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
@@ -1436,10 +1426,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, false);
-  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1503,10 +1491,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, false);
-  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, false);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -1571,11 +1557,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       BaseCouplingScheme::Implicit, 100, extrapolationOrder);
   using Fixture = testing::SerialCouplingSchemeFixture;
 
-  time::PtrWaveform ptrSendWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), ptrSendWaveform, mesh, dataRequiresInitialization);
-  CouplingData *    sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
-  time::PtrWaveform ptrReceiveWaveform(new time::Waveform(extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), ptrReceiveWaveform, mesh, not dataRequiresInitialization);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
+  CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
 
   // Add convergence measures

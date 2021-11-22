@@ -29,7 +29,6 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
-#include "time/Time.hpp"
 #include "time/Waveform.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
@@ -758,10 +757,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
   PRECICE_TRACE(accessor);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  SerialCouplingScheme *scheme = new SerialCouplingScheme(
+  const int             extrapolationOrder = 0; // explicit coupling formally uses zeroth order extrapolation.
+  SerialCouplingScheme *scheme             = new SerialCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit, CouplingScheme::UNDEFINED_MAX_ITERATIONS, extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -774,10 +774,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
   PRECICE_TRACE(accessor);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
+  const int               extrapolationOrder = 0; // explicit coupling formally uses zeroth order extrapolation.
+  ParallelCouplingScheme *scheme             = new ParallelCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit, CouplingScheme::UNDEFINED_MAX_ITERATIONS, extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -950,9 +951,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
 
     const bool requiresInitialization = exchange.requiresInitialization;
     if (from == accessor) {
-      time::PtrWaveform ptrWaveform(new time::Waveform(_config.extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-      // @todo store all waveforms in _waveforms? See acceleration config.
-      scheme.addDataToSend(exchange.data, ptrWaveform, exchange.mesh, requiresInitialization);
+      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(not scheme.doesFirstStep(),
                       "In serial coupling only second participant can initialize data and send it. "
@@ -960,9 +959,7 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
                       dataName, meshName, from, to, requiresInitialization);
       }
     } else if (to == accessor) {
-      time::PtrWaveform ptrWaveform(new time::Waveform(_config.extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-      // @todo store all waveforms in _waveforms? See acceleration config.
-      scheme.addDataToReceive(exchange.data, ptrWaveform, exchange.mesh, requiresInitialization);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(scheme.doesFirstStep(),
                       "In serial coupling only first participant can receive initial data. "
@@ -998,13 +995,11 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme", to);
 
-    const bool        initialize = exchange.requiresInitialization;
-    time::PtrWaveform ptrWaveform(new time::Waveform(_config.extrapolationOrder, time::Time::UNDEFINED_INTERPOLATION_ORDER));
-    // @todo store all waveforms in _waveforms? See acceleration config.
+    const bool initialize = exchange.requiresInitialization;
     if (from == accessor) {
-      scheme.addDataToSend(exchange.data, ptrWaveform, exchange.mesh, initialize, to);
+      scheme.addDataToSend(exchange.data, exchange.mesh, initialize, to);
     } else if (to == accessor) {
-      scheme.addDataToReceive(exchange.data, ptrWaveform, exchange.mesh, initialize, from);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, initialize, from);
     }
   }
 }

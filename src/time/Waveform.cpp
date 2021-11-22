@@ -1,5 +1,6 @@
 #include "time/Waveform.hpp"
 #include <algorithm>
+#include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 #include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -26,10 +27,21 @@ void Waveform::initialize(
   PRECICE_ASSERT(this->valuesSize() == valuesSize);
 }
 
+void Waveform::resizeData(int newValuesSize)
+{
+  _timeWindowsStorage = Eigen::MatrixXd::Zero(newValuesSize, sizeOfSampleStorage());
+  PRECICE_ASSERT(valuesSize() == newValuesSize);
+}
+
 void Waveform::store(const Eigen::VectorXd &values)
 {
   PRECICE_ASSERT(_storageIsInitialized);
   int columnID = 0;
+  this->storeAt(values, columnID);
+}
+
+void Waveform::storeAt(const Eigen::VectorXd values, int columnID)
+{
   PRECICE_ASSERT(_timeWindowsStorage.cols() > columnID, sizeOfSampleStorage(), columnID);
   PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
   this->_timeWindowsStorage.col(columnID) = values;
@@ -47,10 +59,12 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 void Waveform::moveToNextWindow()
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  auto initialGuess = extrapolate();
-  utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
-  if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
-    _numberOfStoredSamples++;
+  if (_extrapolationOrder != Time::UNDEFINED_EXTRAPOLATION_ORDER) { // @todo: we should define the extrapolation data for all data (if the waveform is owned by the mesh::Data), another argument for configuring extrapolation order there.
+    auto initialGuess = extrapolate();
+    utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
+    if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
+      _numberOfStoredSamples++;
+    }
   }
 }
 
@@ -64,6 +78,18 @@ int Waveform::sizeOfSampleStorage()
 {
   PRECICE_ASSERT(_storageIsInitialized);
   return _timeWindowsStorage.cols();
+}
+
+Eigen::VectorXd Waveform::getSample(int sampleID)
+{
+  //PRECICE_ASSERT(sampleID < _numberOfStoredSamples);  // @todo use this stricted assertion?
+  PRECICE_ASSERT(sampleID < sizeOfSampleStorage());
+  return _timeWindowsStorage.col(sampleID);
+}
+
+void Waveform::setExtrapolationOrder(int extrapolationOrder)
+{
+  _extrapolationOrder = extrapolationOrder;
 }
 
 int Waveform::valuesSize()

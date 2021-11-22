@@ -19,7 +19,6 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "time/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -73,7 +72,7 @@ public:
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod,
-      int                           extrapolationOrder);
+      int                           extrapolationOrder); // @todo extrapolationOrder is not needed here (anymore)!
 
   /**
    * @brief getter for _isInitialized
@@ -373,11 +372,9 @@ protected:
   void determineInitialReceive(DataMap &receiveData);
 
   /**
-   * @brief adds ptrWaveform under id to _waveforms
-   * @param id will be used as key in _waveforms
-   * @param ptrWaveform pointer to the waveform
+   * @brief getter for _extrapolationOrder
    */
-  void addWaveform(int id, const time::PtrWaveform &ptrWaveform);
+  int getExtrapolationOrder();
 
 private:
   /// Coupling mode used by coupling scheme.
@@ -495,12 +492,6 @@ private:
    * the data is fetched from send and receive data assigned to the cpl scheme.
    */
   std::vector<ConvergenceMeasureContext> _convergenceMeasures;
-
-  /// Map that links DataID to Waveform
-  typedef std::map<int, time::PtrWaveform> WaveformMap;
-
-  /// All waveforms this coupling scheme needs data from as a map "data ID -> waveform"
-  WaveformMap _waveforms;
 
   /// Functions needed for initialize()
 
