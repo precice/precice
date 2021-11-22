@@ -19,7 +19,6 @@
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "time/Time.hpp"
-#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -262,7 +261,7 @@ void BaseCouplingScheme::storeDataInWaveforms()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->store(pair.second->values());
+    pair.second->storeDataInWaveform();
   }
 }
 
@@ -271,8 +270,7 @@ void BaseCouplingScheme::moveToNextWindow()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->moveToNextWindow();
-    pair.second->values() = _waveforms[pair.first]->getInitialGuess();
+    pair.second->moveToNextWindow();
   }
 }
 
@@ -455,8 +453,7 @@ void BaseCouplingScheme::initializeStorage()
   PRECICE_TRACE();
   // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
-    _waveforms[pair.first]->initialize(pair.second->values().size());
-    pair.second->storeIteration();
+    pair.second->initializeStorage();
   }
   // Reserve storage for acceleration
   if (_acceleration) {
@@ -614,12 +611,6 @@ void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &re
   if (anyDataRequiresInitialization(receiveData)) {
     _receivesInitializedData = true;
   }
-}
-
-void BaseCouplingScheme::addWaveform(int id, const time::PtrWaveform &ptrWaveform)
-{
-  WaveformMap::value_type waveformPair = std::make_pair(id, ptrWaveform);
-  _waveforms.insert(waveformPair);
 }
 
 int BaseCouplingScheme::getExtrapolationOrder()

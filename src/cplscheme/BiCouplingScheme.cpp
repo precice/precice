@@ -14,7 +14,6 @@
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "precice/types.hpp"
-#include "time/Waveform.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice {
@@ -65,7 +64,6 @@ void BiCouplingScheme::addDataToSend(
     _sendData.insert(pair);
     PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
     _allData.insert(pair);
-    addWaveform(id, data->waveform());
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
@@ -86,7 +84,6 @@ void BiCouplingScheme::addDataToReceive(
     _receiveData.insert(pair);
     PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
     _allData.insert(pair);
-    addWaveform(id, data->waveform());
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }

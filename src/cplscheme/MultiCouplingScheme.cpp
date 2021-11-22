@@ -15,7 +15,6 @@
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "time/Waveform.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
@@ -154,7 +153,6 @@ void MultiCouplingScheme::addDataToSend(
   if (!utils::contained(id, _allData)) {
     _allData.insert(dataPair);
   }
-  addWaveform(id, data->waveform());
 }
 
 void MultiCouplingScheme::addDataToReceive(
@@ -172,7 +170,6 @@ void MultiCouplingScheme::addDataToReceive(
   if (!utils::contained(id, _allData)) {
     _allData.insert(dataPair);
   }
-  addWaveform(id, data->waveform());
 }
 
 } // namespace cplscheme

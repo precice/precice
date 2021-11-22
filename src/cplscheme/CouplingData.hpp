@@ -4,6 +4,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -44,6 +45,12 @@ public:
 
   ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
+
+  void initializeStorage();
+
+  void moveToNextWindow();
+
+  void storeDataInWaveform();
 
 private:
   /**
