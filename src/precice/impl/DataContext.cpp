@@ -9,10 +9,10 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(data);
-  data->waveform()->initialize(data->values().size());
-  data->waveform()->store(data->values());
   _providedData = data;
-  PRECICE_ASSERT(data->waveform()->valuesSize() == _providedData->values().size());
+  _providedData->waveform()->initialize(_providedData->values().size());
+  _providedData->waveform()->store(_providedData->values());
+  PRECICE_ASSERT(_providedData->waveform()->valuesSize() == _providedData->values().size());
   PRECICE_ASSERT(mesh);
   _mesh = mesh;
 }
