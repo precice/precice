@@ -6,23 +6,6 @@
 #include "testing/Testing.hpp"
 #include <fstream>
 
-using namespace precice;
-using precice::testing::TestContext;
-
-namespace {
-std::vector<double> readDoublesFromTXTFile(const std::string &filename, int skip = 0)
-{
-  std::ifstream is{filename};
-  if (skip > 0) {
-    std::string ignore;
-    while (skip--) {
-      is >> ignore;
-    }
-  }
-  return {std::istream_iterator<double>{is}, std::istream_iterator<double>{}};
-}
-} // namespace
-
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_FIXTURE_TEST_SUITE(MultiCouplingFourSolvers, MultiCouplingFourSolversFixture)
