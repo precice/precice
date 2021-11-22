@@ -4,7 +4,6 @@
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "time/SharedPointer.hpp"
 
 namespace precice {
 namespace impl {
@@ -107,31 +106,24 @@ private:
 
   mesh::PtrMesh _mesh;
 
-  // data this participant will write to and read from
-  time::PtrWaveform _providedWaveform;
-
   mesh::PtrData _providedData;
 
-  time::PtrWaveform _fromWaveform;
-
   mesh::PtrData _fromData;
-
-  time::PtrWaveform _toWaveform;
 
   mesh::PtrData _toData;
 
   MappingContext _mappingContext;
 
   // helper function for initializing waveforms from given data
-  void initializeWaveform(mesh::PtrData initializingData, time::PtrWaveform initializedWaveform);
+  void initializeWaveform(mesh::PtrData initializingData);
 
   // helper functions for communication
-  void sampleWaveformIntoData(mesh::PtrData targetData, time::PtrWaveform sourceWaveform, int sampleID = 0);
+  void sampleWaveformIntoData(mesh::PtrData data, int sampleID = 0);
 
-  void storeDataInWaveform(mesh::PtrData sourceData, time::PtrWaveform targetWaveform, int sampleID = 0);
+  void storeDataInWaveform(mesh::PtrData data, int sampleID = 0);
 
   // helper function for creating read and write mappings
-  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData, time::PtrWaveform fromWaveform, time::PtrWaveform toWaveform);
+  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 };
 
 } // namespace impl

@@ -1,7 +1,5 @@
 #include "precice/impl/DataContext.hpp"
 #include <memory>
-#include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
 #include "time/Waveform.hpp"
 
 namespace precice {
@@ -11,11 +9,10 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(data);
-  _providedWaveform = data->waveform();
-  _providedWaveform->initialize(data->values().size());
-  _providedWaveform->store(data->values());
+  data->waveform()->initialize(data->values().size());
+  data->waveform()->store(data->values());
   _providedData = data;
-  PRECICE_ASSERT(_providedWaveform->valuesSize() == _providedData->values().size());
+  PRECICE_ASSERT(data->waveform()->valuesSize() == _providedData->values().size());
   PRECICE_ASSERT(mesh);
   _mesh = mesh;
 }
@@ -53,7 +50,7 @@ int DataContext::getFromDataID() const
   PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   PRECICE_ASSERT(_fromData);
-  PRECICE_ASSERT(_fromWaveform);
+  PRECICE_ASSERT(_fromData->waveform());
   return _fromData->getID();
 }
 
@@ -62,7 +59,7 @@ void DataContext::resetProvidedData()
   PRECICE_TRACE();
   _providedData->toZero();
   // TODO: consistently reset waveform
-  // _providedWaveform->toZero();
+  // _providedData->waveform()->toZero();
 }
 
 void DataContext::resetToData()
@@ -70,7 +67,7 @@ void DataContext::resetToData()
   PRECICE_TRACE();
   _toData->toZero();
   // TODO: consistently reset waveform
-  // _toWaveform->toZero();
+  // _toData->waveform()->toZero();
 }
 
 int DataContext::getToDataID() const
@@ -78,7 +75,7 @@ int DataContext::getToDataID() const
   PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   PRECICE_ASSERT(_toData);
-  PRECICE_ASSERT(_toWaveform);
+  PRECICE_ASSERT(_toData->waveform());
   return _toData->getID();
 }
 
@@ -96,27 +93,22 @@ int DataContext::getMeshID() const
   return _mesh->getID();
 }
 
-void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData, time::PtrWaveform fromWaveform, time::PtrWaveform toWaveform)
+void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(!hasMapping());
   PRECICE_ASSERT(fromData);
   PRECICE_ASSERT(toData);
   _mappingContext = mappingContext;
-  PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal provided data.");
+  PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal _providedData.");
   PRECICE_ASSERT(fromData->getName() == getDataName());
   _fromData = fromData;
   PRECICE_ASSERT(toData->getName() == getDataName());
   _toData = toData;
   PRECICE_ASSERT(_toData != _fromData);
-
-  PRECICE_ASSERT(fromWaveform);
-  PRECICE_ASSERT(toWaveform);
-  PRECICE_ASSERT(fromWaveform == _providedWaveform || toWaveform == _providedWaveform, "Either fromWaveform or toWaveform has to equal provided waveform.");
-  _fromWaveform = fromWaveform;
-  _toWaveform   = toWaveform;
-  PRECICE_ASSERT(_fromWaveform->valuesSize() == _toWaveform->valuesSize());
-  PRECICE_ASSERT(_toWaveform != _fromWaveform);
+  PRECICE_ASSERT(fromData->waveform() == _providedData->waveform() || toData->waveform() == _providedData->waveform(), "Either _fromData->waveform() or _toData->waveform() has to equal _providedData->waveform().");
+  PRECICE_ASSERT(_fromData->waveform()->valuesSize() == _toData->waveform()->valuesSize());
+  PRECICE_ASSERT(_toData->waveform() != _fromData->waveform());
 }
 
 void DataContext::configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext)
@@ -125,9 +117,8 @@ void DataContext::configureForReadMapping(MappingContext mappingContext, MeshCon
   PRECICE_ASSERT(fromMeshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData fromData = fromMeshContext.mesh->data(getDataName());
   PRECICE_ASSERT(fromData != _providedData);
-  time::PtrWaveform ptrFromWaveform = fromData->waveform();
-  ptrFromWaveform->initialize(fromData->values().size());
-  this->setMapping(mappingContext, fromData, _providedData, ptrFromWaveform, _providedWaveform);
+  fromData->waveform()->initialize(fromData->values().size());
+  this->setMapping(mappingContext, fromData, _providedData);
   PRECICE_ASSERT(hasReadMapping());
 }
 
@@ -137,9 +128,8 @@ void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshCo
   PRECICE_ASSERT(toMeshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData toData = toMeshContext.mesh->data(getDataName());
   PRECICE_ASSERT(toData != _providedData);
-  time::PtrWaveform ptrToWaveform = toData->waveform();
-  ptrToWaveform->initialize(toData->values().size());
-  this->setMapping(mappingContext, _providedData, toData, _providedWaveform, ptrToWaveform);
+  toData->waveform()->initialize(toData->values().size());
+  this->setMapping(mappingContext, _providedData, toData);
   PRECICE_ASSERT(hasWriteMapping());
 }
 
@@ -172,30 +162,30 @@ void DataContext::initializeProvidedWaveform()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(not hasMapping());
-  initializeWaveform(_providedData, _providedWaveform);
+  initializeWaveform(_providedData);
 }
 
 void DataContext::initializeFromWaveform()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
-  initializeWaveform(_fromData, _fromWaveform);
+  initializeWaveform(_fromData);
 }
 
 void DataContext::initializeToWaveform()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
-  initializeWaveform(_toData, _toWaveform);
+  initializeWaveform(_toData);
 }
 
 void DataContext::sampleWaveformInToData()
 {
   PRECICE_TRACE();
   if (hasMapping()) {
-    sampleWaveformIntoData(_toData, _toWaveform);
+    sampleWaveformIntoData(_toData);
   } else {
-    sampleWaveformIntoData(_providedData, _providedWaveform);
+    sampleWaveformIntoData(_providedData);
   }
 }
 
@@ -203,29 +193,29 @@ void DataContext::storeFromDataInWaveform()
 {
   PRECICE_TRACE();
   if (hasMapping()) {
-    storeDataInWaveform(_fromData, _fromWaveform);
+    storeDataInWaveform(_fromData);
   } else {
-    storeDataInWaveform(_providedData, _providedWaveform);
+    storeDataInWaveform(_providedData);
   }
 }
 
 void DataContext::moveWaveformSampleToData(int sampleID)
 {
   PRECICE_TRACE();
-  sampleWaveformIntoData(_fromData, _fromWaveform, sampleID);
+  sampleWaveformIntoData(_fromData, sampleID);
 }
 
 void DataContext::moveDataToWaveformSample(int sampleID)
 {
   PRECICE_TRACE();
-  storeDataInWaveform(_toData, _toWaveform, sampleID);
+  storeDataInWaveform(_toData, sampleID);
 }
 
 void DataContext::moveProvidedDataToProvidedWaveformSample(int sampleID)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(not hasMapping());
-  storeDataInWaveform(_providedData, _providedWaveform, sampleID);
+  storeDataInWaveform(_providedData, sampleID);
 }
 
 int DataContext::sizeOfSampleStorageInWaveform()
@@ -233,55 +223,55 @@ int DataContext::sizeOfSampleStorageInWaveform()
   PRECICE_TRACE();
   // @todo mpirun -np 4 ./testprecice -t PreciceTests/Serial/MultiCoupling breaks?
   if (hasMapping()) {
-    PRECICE_ASSERT(_fromWaveform->sizeOfSampleStorage() == _toWaveform->sizeOfSampleStorage());
-    return _fromWaveform->sizeOfSampleStorage();
+    PRECICE_ASSERT(_fromData->waveform()->sizeOfSampleStorage() == _toData->waveform()->sizeOfSampleStorage());
+    return _fromData->waveform()->sizeOfSampleStorage();
   } else {
-    return _providedWaveform->sizeOfSampleStorage();
+    return _providedData->waveform()->sizeOfSampleStorage();
   }
 }
 
 Eigen::VectorXd DataContext::sampleAt(double normalizedDt)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_providedWaveform->valuesSize() == _providedData->values().size(),
-                 _providedWaveform->valuesSize(), _providedData->values().size());
+  PRECICE_ASSERT(_providedData->waveform()->valuesSize() == _providedData->values().size(),
+                 _providedData->waveform()->valuesSize(), _providedData->values().size());
 
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
-  return _providedWaveform->sample(normalizedDt);
+  return _providedData->waveform()->sample(normalizedDt);
 }
 
-void DataContext::initializeWaveform(mesh::PtrData initializingData, time::PtrWaveform initializedWaveform)
+void DataContext::initializeWaveform(mesh::PtrData initializingData)
 {
   PRECICE_TRACE();
   int sizeOfSampleStorage = sizeOfSampleStorageInWaveform();
   int valuesSize          = initializingData->values().size();
   // PRECICE_ASSERT(valuesSize > 0, valuesSize);  // @todo assertion breaks, but seems like calling advance on empty write data is ok?
-  initializedWaveform->resizeData(valuesSize);
+  initializingData->waveform()->resizeData(valuesSize);
   for (int sampleID = 0; sampleID < sizeOfSampleStorage; ++sampleID) {
-    initializedWaveform->storeAt(initializingData->values(), sampleID);
+    initializingData->waveform()->storeAt(initializingData->values(), sampleID);
   }
-  PRECICE_ASSERT(initializedWaveform->valuesSize() == valuesSize);
+  PRECICE_ASSERT(initializingData->waveform()->valuesSize() == valuesSize);
 }
 
-void DataContext::sampleWaveformIntoData(mesh::PtrData targetData, time::PtrWaveform sourceWaveform, int sampleID)
+void DataContext::sampleWaveformIntoData(mesh::PtrData data, int sampleID)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(sourceWaveform->valuesSize() == targetData->values().size(),
-                 sourceWaveform->valuesSize(), targetData->values().size());
-  targetData->values() = sourceWaveform->getSample(sampleID);
+  PRECICE_ASSERT(data->waveform()->valuesSize() == data->values().size(),
+                 data->waveform()->valuesSize(), data->values().size());
+  data->values() = data->waveform()->getSample(sampleID);
 }
 
-void DataContext::storeDataInWaveform(mesh::PtrData sourceData, time::PtrWaveform targetWaveform, int sampleID)
+void DataContext::storeDataInWaveform(mesh::PtrData data, int sampleID)
 {
-  PRECICE_ASSERT(targetWaveform->valuesSize() == sourceData->values().size(),
-                 targetWaveform->valuesSize(), sourceData->values().size());
-  targetWaveform->storeAt(sourceData->values(), sampleID);
+  PRECICE_ASSERT(data->waveform()->valuesSize() == data->values().size(),
+                 data->waveform()->valuesSize(), data->values().size());
+  data->waveform()->storeAt(data->values(), sampleID);
 }
 
 void DataContext::moveProvidedWaveform()
 {
-  _providedWaveform->moveToNextWindow();
+  _providedData->waveform()->moveToNextWindow();
 }
 
 } // namespace impl
