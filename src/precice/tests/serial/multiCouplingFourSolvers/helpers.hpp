@@ -8,7 +8,7 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-struct MultiCouplingFourSolversFixture : testing::WhiteboxAccessor{
+struct MultiCouplingFourSolversFixture : testing::WhiteboxAccessor {
   std::string _pathToTests;
 
   MultiCouplingFourSolversFixture();

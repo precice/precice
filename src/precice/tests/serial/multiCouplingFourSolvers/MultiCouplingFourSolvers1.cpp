@@ -2,9 +2,9 @@
 
 #include <string>
 
+#include <fstream>
 #include "precice/tests/serial/multiCouplingFourSolvers/helpers.hpp"
 #include "testing/Testing.hpp"
-#include <fstream>
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Serial)
