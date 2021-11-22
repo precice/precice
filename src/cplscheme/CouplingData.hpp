@@ -1,10 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "time/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {

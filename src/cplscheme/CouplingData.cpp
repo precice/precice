@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
