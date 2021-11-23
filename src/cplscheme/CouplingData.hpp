@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <vector>
 #include "mesh/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
