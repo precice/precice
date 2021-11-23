@@ -1,6 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
-#include "precice/tests/serial/multiCouplingFourSolvers/helpers.hpp"
+#include "../tests/serial/multiCouplingFourSolvers/helpers.hpp"
 
 #include "precice/SolverInterface.hpp"
 
@@ -14,7 +14,7 @@ void MultiCouplingFourSolversFixture::reset()
 
 MultiCouplingFourSolversFixture::MultiCouplingFourSolversFixture()
 {
-  _pathToTests = testing::getPathToSources() + "/precice/tests/serial/multiCouplingFourSolvers/";
+  _pathToTests = testing::getPathToSources() + "/../tests/serial/multiCouplingFourSolvers/";
   reset();
 }
 

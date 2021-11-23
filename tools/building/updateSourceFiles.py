@@ -30,6 +30,7 @@ def file_extension(name):
 
 
 def get_cmake_file_paths(root):
+    # TODO: Needs an update?
     src = os.path.join(root, "src")
     sources = os.path.join(src, "sources.cmake")
     tests = os.path.join(src, "tests.cmake")

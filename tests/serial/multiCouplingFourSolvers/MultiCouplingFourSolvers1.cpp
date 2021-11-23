@@ -3,17 +3,17 @@
 #include <string>
 
 #include <fstream>
-#include "precice/tests/serial/multiCouplingFourSolvers/helpers.hpp"
+#include "../tests/serial/multiCouplingFourSolvers/helpers.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_FIXTURE_TEST_SUITE(MultiCouplingFourSolvers, MultiCouplingFourSolversFixture)
 
-BOOST_AUTO_TEST_CASE(MultiCouplingFourSolvers2)
+BOOST_AUTO_TEST_CASE(MultiCouplingFourSolvers1)
 {
   PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank), "SolverD"_on(1_rank));
-  const std::string configFile = _pathToTests + "multi-coupling-four-solver-2.xml";
+  const std::string configFile = _pathToTests + "multi-coupling-four-solver-1.xml";
   multiCouplingFourSolvers(configFile, context);
 }
 
