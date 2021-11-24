@@ -576,7 +576,7 @@ endif()
 #
 
 add_custom_target(
-  docs
+  doxygen
   COMMAND doxygen
   WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
   USES_TERMINAL
@@ -590,7 +590,7 @@ add_custom_target(
   )
 
 add_custom_target(
-  update
+  sourcesIndex
   COMMAND tools/building/updateSourceFiles.py
   WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
   USES_TERMINAL
