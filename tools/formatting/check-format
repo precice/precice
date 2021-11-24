@@ -5,7 +5,7 @@
 # Returns
 # 0 on success
 # 1 on an incorrect format
-# 2 is clang-format 8 could not be found 
+# 2 is clang-format 8 could not be found
 
 # Detect version
 if command -v clang-format-8 > /dev/null; then
@@ -92,6 +92,7 @@ if [[ -n "$DIFFS" ]]; then
     for file in $DIFFS; do
         echo "$file"
     done
+    echo "You can automatically reformat all files using the script tools/formatting/format-all"
     exit 1
 else
     echo "All files are formatted correctly"
