@@ -56,9 +56,6 @@ target_sources(testprecice
     src/precice/tests/DataContextTest.cpp
     src/precice/tests/ParallelTests.cpp
     src/precice/tests/SerialTests.cpp
-    tests/serial/multiCouplingFourSolvers/helpers.cpp
-    tests/serial/multiCouplingFourSolvers/MultiCouplingFourSolvers1.cpp
-    tests/serial/multiCouplingFourSolvers/MultiCouplingFourSolvers2.cpp
     src/precice/tests/ToolingTests.cpp
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp

@@ -403,6 +403,7 @@ IF (BUILD_TESTING)
   message(STATUS "Including test sources")
   # Test Sources Configuration
   include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/tests/tests.cmake)
 else(BUILD_TESTING)
   message(STATUS "Excluding test sources")
 endif(BUILD_TESTING)
