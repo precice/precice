@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <boost/filesystem.hpp>
 #include <exception>
 #include <memory>
 #include <numeric>
@@ -18,6 +19,7 @@
 #include "precice/types.hpp"
 #include "query/Index.hpp"
 #include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
@@ -50,6 +52,22 @@ TestContext::~TestContext() noexcept
   // Reset communicators
   Par::resetCommState();
   Par::resetManagedMPI();
+}
+
+std::string TestContext::config() const
+{
+  auto suites = testing::getTestSuites();
+  PRECICE_ASSERT(suites.size() > 1);
+  suites.erase(suites.begin());
+
+  auto name = testing::getTestName();
+
+  boost::filesystem::path location(testing::getPathToTests());
+  for (const auto &suite : suites) {
+    location /= suite;
+  }
+  location /= name + ".xml";
+  return location.string();
 }
 
 bool TestContext::hasSize(int size) const

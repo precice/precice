@@ -227,6 +227,16 @@ public:
    */
   ~TestContext() noexcept;
 
+  /** Returns the canonical config name of this test.
+   *
+   * The location of integration tests are tied the test name and test suites.
+   * This computes the canonical filename of this test's configuration file
+   * based on the repository root, the current test suites and name.
+   *
+   * @return the full filepath of this test's configuration file
+   */
+  std::string config() const;
+
   /// Check wheater this context has a given size
   bool hasSize(int size) const;
 

@@ -108,8 +108,20 @@ typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::pr
   return true;
 }
 
-/// Returns $PRECICE_ROOT/src, the base path to the sources.
+/// Returns $PRECICE_ROOT, the base path of the repo.
+std::string getPathToRepository();
+
+/// Returns the base path to the sources.
 std::string getPathToSources();
+
+/// Returns the base path to the integration tests.
+std::string getPathToTests();
+
+/// Returns the name of the current test.
+std::string getTestName();
+
+/// Returns the suites the current test belongs to.
+std::vector<std::string> getTestSuites();
 
 /** Generates a new mesh id for use in tests.
  *
