@@ -18,15 +18,9 @@ class Triangle;
 namespace precice {
 namespace io {
 
-/// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
+/// Common class to generate the VTK XML-based formats.
 class ExportXML : public Export {
 public:
-  /// Perform writing to vtk file
-  /**
-   * @param[in] name filename to export to
-   * @param[in] locastion Export path
-   * @param[mesh] mesh Mesh to export
-   */
   void doExport(
       const std::string &name,
       const std::string &location,

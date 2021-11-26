@@ -18,7 +18,12 @@ class Triangle;
 namespace precice {
 namespace io {
 
-/// Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
+/** Exporter for VTU and PVTU.
+ *
+ * Writes meshes to VTU piece files.
+ * Parallel participants additionally write a PVTU file.
+ * The naming scheme allows to import these files into Paraview as time series.
+ */
 class ExportVTU : public ExportXML {
 private:
   mutable logging::Logger _log{"io::ExportVTU"};
