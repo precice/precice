@@ -27,6 +27,11 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
     tag.setDocumentation("Exports meshes to VTP files in serial or PVTP files with VTP piece files in parallel.");
     tags.push_back(tag);
   }
+  {
+    XMLTag tag(*this, VALUE_CSV, occ, TAG);
+    tag.setDocumentation("Exports vertex coordinates and data to CSV files.");
+    tags.push_back(tag);
+  }
 
   auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, "")
                           .setDocumentation("Directory to export the files to.");

@@ -21,6 +21,7 @@
       <export:vtk directory="timeseries" />
       <export:vtu directory="timeseries" />
       <export:vtp directory="timeseries" />
+      <export:csv directory="timeseries" />
     </participant>
 
     <participant name="ExporterTwo">
@@ -31,6 +32,7 @@
       <mapping:nearest-neighbor direction="read" from="A" to="B" constraint="consistent" />
       <export:vtu directory="timeseries" />
       <export:vtp directory="timeseries" />
+      <export:csv directory="timeseries" />
     </participant>
 
     <m2n:sockets from="ExporterOne" to="ExporterTwo" />
