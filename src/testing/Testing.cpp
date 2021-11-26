@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/test/framework.hpp>
 #include <cstdlib>
 #include <string>
@@ -17,7 +19,10 @@ std::string getPathToRepository()
   char *                   preciceRoot = std::getenv("PRECICE_ROOT");
   PRECICE_CHECK(preciceRoot != nullptr,
                 "Environment variable PRECICE_ROOT is required to run the tests, but has not been set. Please set it to the root directory of the precice repository.");
-  return std::string(preciceRoot);
+
+  // Cleanup the path by canonicalising it.
+  boost::filesystem::path root(preciceRoot);
+  return boost::filesystem::weakly_canonical(root).string();
 }
 
 std::string getPathToSources()
