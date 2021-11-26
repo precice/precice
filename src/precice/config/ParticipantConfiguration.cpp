@@ -549,7 +549,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
-      // This is handles with respect to the current configuration context.
+      // This is handled with respect to the current configuration context.
       // Hence, this is potentially wrong for every participant other than context.name.
       if (context.size > 1) {
         // Only display the warning message if this participant configuration is the current one.
