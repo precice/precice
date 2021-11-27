@@ -1,8 +1,8 @@
 #include <Eigen/Core>
+#include "cplscheme/impl/Extrapolation.hpp"
+#include "testing/ExtrapolationFixture.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "testing/ExtrapolationFixture.hpp"
-#include "cplscheme/impl/Extrapolation.hpp"
 
 using namespace precice;
 using namespace precice::cplscheme;
@@ -17,9 +17,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataFirstOrder)
   testing::ExtrapolationFixture fixture;
 
   // Test first order extrapolation
-  const int extrapolationOrder = 1;
+  const int     extrapolationOrder = 1;
   Extrapolation extrapolation(extrapolationOrder);
-  const int valuesSize = 1;
+  const int     valuesSize = 1;
   extrapolation.initialize(valuesSize);
   BOOST_TEST(fixture.sizeOfSampleStorage(extrapolation) == 2);
   BOOST_TEST(fixture.numberOfStoredSamples(extrapolation) == 1);
@@ -70,9 +70,9 @@ BOOST_AUTO_TEST_CASE(testExtrapolateDataSecondOrder)
   testing::ExtrapolationFixture fixture;
 
   // Test second order extrapolation
-  const int extrapolationOrder = 2;
+  const int     extrapolationOrder = 2;
   Extrapolation extrapolation(extrapolationOrder);
-  const int valuesSize = 1;
+  const int     valuesSize = 1;
   extrapolation.initialize(valuesSize);
   BOOST_TEST(fixture.sizeOfSampleStorage(extrapolation) == 3);
   BOOST_TEST(fixture.numberOfStoredSamples(extrapolation) == 1);
