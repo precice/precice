@@ -16,15 +16,13 @@ class Waveform {
   friend class testing::WaveformFixture; // Make the fixture friend of this class
 public:
   /**
-   * @brief Waveform object which stores values of current and past time windows for performing extrapolation. 
+   * @brief Waveform object which stores values of current and past time windows for performing interpolation. 
    *
    * Storage still needs to be initialized with Waveform::initialize, before the Waveform can be used.
    *
-   * @param extrapolationOrder defines the maximum extrapolation order supported by this Waveform and reserves storage correspondingly
    * @param interpolationOrder defines the maximum interpolation order supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(const int extrapolationOrder,
-           const int interpolationOrder);
+  Waveform(const int interpolationOrder);
 
   /**
    * @brief Used to initialize _timeWindowsStorage according to required size.
@@ -85,18 +83,12 @@ public:
    */
   Eigen::VectorXd getSample(int sampleID);
 
-  /// @todo try to get rid of this method
-  void setExtrapolationOrder(int extrapolationOrder);
-
 private:
   /// Set by initialize. Used for consistency checks.
   bool _storageIsInitialized = false;
 
   /// Stores values for several time windows.
   Eigen::MatrixXd _timeWindowsStorage;
-
-  /// extrapolation order for this waveform
-  int _extrapolationOrder; // @todo make const! Possible, if extrapolation order is set at configuration of data.
 
   /// interpolation order for this waveform
   const int _interpolationOrder;
@@ -105,14 +97,6 @@ private:
   int _numberOfStoredSamples;
 
   mutable logging::Logger _log{"time::Waveform"};
-
-  /**
-   * @brief Extrapolates values from _timeWindowsStorage using an extrapolation scheme of given order. 
-   * 
-   * If the order condition cannot be satisfied, since there are not enough samples available, the order is automatically reduced.
-   * If order two is required, but only two samples are available, the extrapolation order is automatically reduced to one.
-   */
-  Eigen::VectorXd extrapolate();
 
   /**
    * @brief Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order of this Waveform.

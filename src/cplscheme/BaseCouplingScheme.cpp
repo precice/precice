@@ -18,7 +18,6 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
-#include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -70,10 +69,8 @@ BaseCouplingScheme::BaseCouplingScheme(
     PRECICE_ASSERT(maxIterations >= 1);
   }
 
-  PRECICE_ASSERT(_extrapolationOrder != time::Time::UNDEFINED_EXTRAPOLATION_ORDER);
-
   if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(_extrapolationOrder == 0, "Only zeroth order extrapolation is used for explicit coupling (by default!). If you see this message, this is likely a preCICE internal issue.");
+    PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1) || (_extrapolationOrder == 2),

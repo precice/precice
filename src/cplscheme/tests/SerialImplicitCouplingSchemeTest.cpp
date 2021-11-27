@@ -33,7 +33,6 @@
 #include "testing/SerialCouplingSchemeFixture.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "time/Waveform.hpp"
 #include "xml/XMLTag.hpp"
 
 using namespace precice;

@@ -4,7 +4,6 @@
 
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -13,10 +12,12 @@ namespace cplscheme {
 CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
-    bool          requiresInitialization)
+    bool          requiresInitialization,
+    int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
       _data(std::move(data)),
-      _mesh(std::move(mesh))
+      _mesh(std::move(mesh)),
+      _extrapolation(extrapolationOrder)
 {
   PRECICE_ASSERT(_data != nullptr);
   _previousIteration = Eigen::VectorXd::Zero(_data->values().size());
@@ -74,19 +75,19 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::initializeStorage()
 {
-  _data->waveform()->initialize(values().size());
+  _extrapolation.initialize(values().size());
   storeIteration();
 }
 
 void CouplingData::moveToNextWindow()
 {
-  _data->waveform()->moveToNextWindow();
-  values() = _data->waveform()->getInitialGuess();
+  _extrapolation.moveToNextWindow();
+  values() = _extrapolation.getInitialGuess();
 }
 
 void CouplingData::storeDataInWaveform()
 {
-  _data->waveform()->store(values());
+  _extrapolation.store(values());
 }
 
 } // namespace cplscheme

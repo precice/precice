@@ -24,7 +24,6 @@ namespace mesh {
  */
 class Data {
 public:
-  static const int EXTRAPOLATION_ORDER; // @todo currently hard-coded; we don't care about extrapolation here.
   static const int INTERPOLATION_ORDER; // @todo currently hard-coded; should be configurable.
 
   // @brief Possible types of data values.
@@ -90,11 +89,8 @@ public:
   /// Returns the dimension (i.e., number of components) of one data value.
   int getDimensions() const;
 
-  void createWaveform(int extrapolationOrder, int interpolationOrder);
-
+  /// Returns pointer to the waveform of this data.
   time::PtrWaveform waveform();
-
-  void setExtrapolationOrder(int extrapolationOrder); // @todo configuring the extrapolationOrder together with data would allow us to remove this functions and others.
 
 private:
   logging::Logger _log{"mesh::Data"};

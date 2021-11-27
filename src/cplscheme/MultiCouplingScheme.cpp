@@ -144,10 +144,9 @@ void MultiCouplingScheme::addDataToSend(
     bool                 initialize,
     const std::string &  to)
 {
-  data->setExtrapolationOrder(getExtrapolationOrder());
   int id = data->getID();
   PRECICE_DEBUG("Configuring send data to {}", to);
-  PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize));
+  PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
   DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
   _sendDataVector[to].insert(dataPair);
   if (!utils::contained(id, _allData)) {
@@ -161,10 +160,9 @@ void MultiCouplingScheme::addDataToReceive(
     bool                 initialize,
     const std::string &  from)
 {
-  data->setExtrapolationOrder(getExtrapolationOrder());
   int id = data->getID();
   PRECICE_DEBUG("Configuring receive data from {}", from);
-  PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize));
+  PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
   DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
   _receiveDataVector[from].insert(dataPair);
   if (!utils::contained(id, _allData)) {

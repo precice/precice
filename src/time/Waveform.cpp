@@ -9,9 +9,8 @@ namespace precice {
 namespace time {
 
 Waveform::Waveform(
-    const int extrapolationOrder,
     const int interpolationOrder)
-    : _extrapolationOrder(extrapolationOrder), _interpolationOrder(interpolationOrder)
+    : _interpolationOrder(interpolationOrder)
 {
   PRECICE_ASSERT(not _storageIsInitialized);
 }
@@ -19,7 +18,7 @@ Waveform::Waveform(
 void Waveform::initialize(
     const int valuesSize)
 {
-  int sampleStorageSize  = std::max({2, _extrapolationOrder + 1, _interpolationOrder + 1});
+  int sampleStorageSize  = std::max({2, _interpolationOrder + 1});
   _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, sampleStorageSize);
   _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
   _storageIsInitialized  = true;
@@ -59,19 +58,11 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
 void Waveform::moveToNextWindow()
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  if (_extrapolationOrder != Time::UNDEFINED_EXTRAPOLATION_ORDER) { // @todo: we should define the extrapolation data for all data (if the waveform is owned by the mesh::Data), another argument for configuring extrapolation order there.
-    auto initialGuess = extrapolate();
-    utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
-    if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
-      _numberOfStoredSamples++;
-    }
+  auto initialGuess = _timeWindowsStorage.col(0);                // use value from last window as initial guess for next
+  utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
+  if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
+    _numberOfStoredSamples++;
   }
-}
-
-const Eigen::VectorXd Waveform::getInitialGuess()
-{
-  PRECICE_ASSERT(_storageIsInitialized);
-  return _timeWindowsStorage.col(0);
 }
 
 int Waveform::sizeOfSampleStorage()
@@ -87,11 +78,6 @@ Eigen::VectorXd Waveform::getSample(int sampleID)
   return _timeWindowsStorage.col(sampleID);
 }
 
-void Waveform::setExtrapolationOrder(int extrapolationOrder)
-{
-  _extrapolationOrder = extrapolationOrder;
-}
-
 int Waveform::valuesSize()
 {
   PRECICE_ASSERT(_storageIsInitialized);
@@ -99,13 +85,13 @@ int Waveform::valuesSize()
 }
 
 /**
- * @brief Computes which order may be used for extrapolation or interpolation.
+ * @brief Computes which order may be used for interpolation.
  * 
- * Order of extrapolation or interpolation is determined by number of stored samples and maximum order defined by the user.
+ * Order of interpolation is determined by number of stored samples and maximum order defined by the user.
  * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
  *
  * @param requestedOrder Order requested by the user.
- * @param numberOfAvailableSamples Samples available for extrapolation or interpolation.
+ * @param numberOfAvailableSamples Samples available for interpolation.
  * @return Order that may be used.
  */
 static int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
@@ -131,33 +117,6 @@ static int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
     PRECICE_ASSERT(false);
   }
   return usedOrder;
-}
-
-Eigen::VectorXd Waveform::extrapolate()
-{
-  const int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfStoredSamples);
-  PRECICE_ASSERT(_storageIsInitialized);
-
-  if (usedOrder == 0) {
-    PRECICE_ASSERT(_numberOfStoredSamples > 0);
-    return _timeWindowsStorage.col(0);
-  }
-  Eigen::VectorXd extrapolatedValue;
-  if (usedOrder == 1) { //timesteps is increased before extrapolate is called
-    PRECICE_DEBUG("Performing first order extrapolation");
-    PRECICE_ASSERT(_numberOfStoredSamples > 1);
-    extrapolatedValue = _timeWindowsStorage.col(0) * 2.0; // = 2*x^t
-    extrapolatedValue -= _timeWindowsStorage.col(1);      // = 2*x^t - x^(t-1)
-    return extrapolatedValue;
-  }
-  PRECICE_ASSERT(usedOrder == 2);
-  // uses formula given in https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1
-  PRECICE_DEBUG("Performing second order extrapolation");
-  PRECICE_ASSERT(_numberOfStoredSamples > 2);
-  extrapolatedValue = _timeWindowsStorage.col(0) * 2.5;  // = 2.5*x^t
-  extrapolatedValue -= _timeWindowsStorage.col(1) * 2.0; // = 2.5*x^t - 2*x^(t-1)
-  extrapolatedValue += _timeWindowsStorage.col(2) * 0.5; // = 2.5*x^t - 2*x^(t-1) + 0.5*x^(t-2)
-  return extrapolatedValue;
 }
 
 Eigen::VectorXd Waveform::interpolate(const double normalizedDt)
