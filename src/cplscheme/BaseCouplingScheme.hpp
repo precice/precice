@@ -312,7 +312,7 @@ protected:
   }
 
   /**
-   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data, waveforms and acceleration and initializes with zero.
+   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
    */
   void initializeStorage();
 
@@ -339,9 +339,9 @@ protected:
   bool doImplicitStep();
 
   /**
-   * @brief stores current data in buffer of all Waveforms
+   * @brief stores current data in buffer for extrapolation
    */
-  void storeDataInWaveforms();
+  void storeExtrapolationData();
 
   /**
    * @brief finalizes this window's data and initializes data for next window.

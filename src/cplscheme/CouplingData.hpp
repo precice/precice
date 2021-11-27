@@ -47,11 +47,14 @@ public:
   ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
 
-  void initializeStorage();
+  /// initialize _extrapolation
+  void initializeExtrapolation();
 
+  /// move to next window and initialize data via extrapolation
   void moveToNextWindow();
 
-  void storeDataInWaveform();
+  /// store current value in _extrapolation
+  void storeDataInExtrapolation();
 
 private:
   /**

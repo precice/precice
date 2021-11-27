@@ -22,7 +22,7 @@ struct SerialCouplingSchemeFixture {
 
   static void initializeStorage(cplscheme::SerialCouplingScheme &cplscheme);
 
-  static void storeDataInWaveforms(cplscheme::SerialCouplingScheme &cplscheme);
+  static void storeExtrapolationData(cplscheme::SerialCouplingScheme &cplscheme);
 
   static void moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme);
 };

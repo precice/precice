@@ -73,7 +73,7 @@ std::vector<int> CouplingData::getVertexOffsets()
   return _mesh->getVertexOffsets();
 }
 
-void CouplingData::initializeStorage()
+void CouplingData::initializeExtrapolation()
 {
   _extrapolation.initialize(values().size());
   storeIteration();
@@ -85,7 +85,7 @@ void CouplingData::moveToNextWindow()
   values() = _extrapolation.getInitialGuess();
 }
 
-void CouplingData::storeDataInWaveform()
+void CouplingData::storeDataInExtrapolation()
 {
   _extrapolation.store(values());
 }

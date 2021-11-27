@@ -158,7 +158,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   if (not _sendsInitializedData && not _receivesInitializedData) {
     if (isImplicitCouplingScheme()) {
       if (not doesFirstStep()) {
-        storeDataInWaveforms();
+        storeExtrapolationData();
         moveToNextWindow();
       }
     }
@@ -193,7 +193,7 @@ void BaseCouplingScheme::initializeData()
   // @todo duplicate code also in BaseCouplingScheme::initialize().
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
-      storeDataInWaveforms();
+      storeExtrapolationData();
       moveToNextWindow();
     }
   }
@@ -253,12 +253,12 @@ void BaseCouplingScheme::advance()
   }
 }
 
-void BaseCouplingScheme::storeDataInWaveforms()
+void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->storeDataInWaveform();
+    pair.second->storeDataInExtrapolation();
   }
 }
 
@@ -450,7 +450,7 @@ void BaseCouplingScheme::initializeStorage()
   PRECICE_TRACE();
   // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
-    pair.second->initializeStorage();
+    pair.second->initializeExtrapolation();
   }
   // Reserve storage for acceleration
   if (_acceleration) {
@@ -628,7 +628,7 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
 
 bool BaseCouplingScheme::doImplicitStep()
 {
-  storeDataInWaveforms();
+  storeExtrapolationData();
 
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   bool convergence = measureConvergence();
