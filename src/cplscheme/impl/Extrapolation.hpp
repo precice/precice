@@ -36,7 +36,7 @@ public:
    */
   void store(const Eigen::VectorXd &values);
 
-    /**
+  /**
    * @brief Called, when moving to the next time window. All entries in _timeWindowsStorage are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
    */
   void moveToNextWindow();
