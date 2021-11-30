@@ -34,8 +34,10 @@ void ExportCSV::doExport(
 
   // Construct full filename
   std::string filename{name};
+  int         rank{0};
   if (utils::MasterSlave::isParallel()) {
-    filename.append("_").append(std::to_string(utils::MasterSlave::getRank()));
+    rank = utils::MasterSlave::getRank();
+    filename.append("_").append(std::to_string(rank));
   }
   filename.append(".csv");
 
@@ -48,10 +50,11 @@ void ExportCSV::doExport(
   const bool    is3d = (mesh.getDimensions() == 3);
 
   // write header
-  outFile << "PosX;PosY;";
+  outFile << "PosX;PosY";
   if (is3d) {
-    outFile << "PosZ";
+    outFile << ";PosZ";
   }
+  outFile << ";Rank";
   for (const auto &data : mesh.data()) {
     auto name = data->getName();
     auto dim  = data->getDimensions();
@@ -65,7 +68,8 @@ void ExportCSV::doExport(
   outFile << '\n';
 
   // write vertex data
-  const auto size = mesh.vertices().size();
+  const std::string rankCol = ";" + std::to_string(rank);
+  const auto        size    = mesh.vertices().size();
   for (std::size_t vid = 0; vid < size; ++vid) {
     const auto &vertex = mesh.vertices()[vid];
     outFile << vertex.getCoords()[0] << ';';
@@ -73,7 +77,7 @@ void ExportCSV::doExport(
     if (is3d) {
       outFile << ";" << vertex.getCoords()[2];
     }
-
+    outFile << rankCol;
     for (const auto &data : mesh.data()) {
       auto dim    = data->getDimensions();
       auto offset = vid * dim;
