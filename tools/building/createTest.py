@@ -3,7 +3,11 @@
 import os
 import argparse
 import pathlib
+import re
 
+
+def camel_case_to_kebab_case(camel_case_input):
+    return re.sub(r'(?<!^)(?=[A-Z])', '-', camel_case_input).lower()
 
 def is_precice_root(dir):
     detect = [
@@ -123,14 +127,17 @@ def main():
     args = parser.parse_args()
 
     root = find_precice_root()
-    location = os.path.join(root, "tests", *args.suite)
+
+    suites = list(args.suite)
+    suitepath = "/".join([camel_case_to_kebab_case(suite) for suite in suites])
+    location = os.path.join(root, "tests", suitepath)
 
     print("Create directory {}".format(location))
     if not args.dry_run:
         os.makedirs(location, exist_ok=True)
 
     source = args.name + ".cpp"
-    config = args.name + ".xml"
+    config = camel_case_to_kebab_case(args.name) + ".xml"
     sourcePath = os.path.join(location, source)
     configPath = os.path.join(location, config)
 
