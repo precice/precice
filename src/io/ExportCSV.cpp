@@ -19,6 +19,23 @@
 namespace precice {
 namespace io {
 
+namespace {
+struct StridedAccess {
+  double const *ptr;
+  int           stride;
+
+  double operator*() const
+  {
+    return *ptr;
+  }
+
+  void next()
+  {
+    std::advance(ptr, stride);
+  }
+};
+} // namespace
+
 void ExportCSV::doExport(
     const std::string &name,
     const std::string &location,
@@ -58,6 +75,7 @@ void ExportCSV::doExport(
   for (const auto &data : mesh.data()) {
     auto name = data->getName();
     auto dim  = data->getDimensions();
+    PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == mesh.vertices().size() * dim);
     outFile << ';' << name;
     if (dim == 2) {
       outFile << "X;" << name << 'Y';
@@ -66,6 +84,16 @@ void ExportCSV::doExport(
     }
   }
   outFile << '\n';
+
+  // Prepare writing data
+  std::vector<StridedAccess> dataColumns;
+  for (const auto &data : mesh.data()) {
+    auto    dim    = data->getDimensions();
+    double *values = data->values().data();
+    for (int i = 0; i < dim; ++i) {
+      dataColumns.push_back({std::next(values, i), dim});
+    }
+  }
 
   // write vertex data
   const std::string rankCol = ";" + std::to_string(rank);
@@ -78,19 +106,9 @@ void ExportCSV::doExport(
       outFile << ";" << vertex.getCoords()[2];
     }
     outFile << rankCol;
-    for (const auto &data : mesh.data()) {
-      auto dim    = data->getDimensions();
-      auto offset = vid * dim;
-
-      outFile << ';' << data->values()[offset];
-      if (dim == 1) {
-        continue;
-      }
-      outFile << ';' << data->values()[offset + 1];
-      if (dim == 2) {
-        continue;
-      }
-      outFile << ';' << data->values()[offset + 2];
+    for (auto &dc : dataColumns) {
+      outFile << ';' << *dc;
+      dc.next();
     }
     outFile << '\n';
   }
