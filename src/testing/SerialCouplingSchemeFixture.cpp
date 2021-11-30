@@ -28,14 +28,14 @@ void SerialCouplingSchemeFixture::storeIteration(cplscheme::SerialCouplingScheme
   cplscheme.storeIteration();
 }
 
-void SerialCouplingSchemeFixture::setupDataMatrices(cplscheme::SerialCouplingScheme &cplscheme)
+void SerialCouplingSchemeFixture::initializeStorage(cplscheme::SerialCouplingScheme &cplscheme)
 {
-  cplscheme.setupDataMatrices();
+  cplscheme.initializeStorage();
 }
 
-void SerialCouplingSchemeFixture::storeDataInWaveforms(cplscheme::SerialCouplingScheme &cplscheme)
+void SerialCouplingSchemeFixture::storeExtrapolationData(cplscheme::SerialCouplingScheme &cplscheme)
 {
-  cplscheme.storeDataInWaveforms();
+  cplscheme.storeExtrapolationData();
 }
 
 void SerialCouplingSchemeFixture::moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme)

@@ -18,7 +18,6 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
-#include "time/Waveform.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -143,10 +142,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
       // reserve memory and initialize data with zero
-      setupDataMatrices();
-      if (_acceleration) {
-        _acceleration->initialize(getAccelerationData()); // Reserve memory, initialize
-      }
+      initializeStorage();
     }
     requireAction(constants::actionWriteIterationCheckpoint());
     initializeTXTWriters();
@@ -162,7 +158,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   if (not _sendsInitializedData && not _receivesInitializedData) {
     if (isImplicitCouplingScheme()) {
       if (not doesFirstStep()) {
-        storeDataInWaveforms();
+        storeExtrapolationData();
         moveToNextWindow();
       }
     }
@@ -197,7 +193,7 @@ void BaseCouplingScheme::initializeData()
   // @todo duplicate code also in BaseCouplingScheme::initialize().
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
-      storeDataInWaveforms();
+      storeExtrapolationData();
       moveToNextWindow();
     }
   }
@@ -257,12 +253,12 @@ void BaseCouplingScheme::advance()
   }
 }
 
-void BaseCouplingScheme::storeDataInWaveforms()
+void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->store(pair.second->values());
+    pair.second->storeDataInExtrapolation();
   }
 }
 
@@ -271,8 +267,7 @@ void BaseCouplingScheme::moveToNextWindow()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    _waveforms[pair.first]->moveToNextWindow();
-    pair.second->values() = _waveforms[pair.first]->getInitialGuess();
+    pair.second->moveToNextWindow();
   }
 }
 
@@ -450,15 +445,16 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   }
 }
 
-void BaseCouplingScheme::setupDataMatrices()
+void BaseCouplingScheme::initializeStorage()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
   for (DataMap::value_type &pair : _allData) {
-    time::PtrWaveform       ptrWaveform(new time::Waveform(pair.second->values().size(), _extrapolationOrder));
-    WaveformMap::value_type waveformPair = std::make_pair(pair.first, ptrWaveform);
-    _waveforms.insert(waveformPair);
-    pair.second->storeIteration();
+    pair.second->initializeExtrapolation();
+  }
+  // Reserve storage for acceleration
+  if (_acceleration) {
+    _acceleration->initialize(getAccelerationData());
   }
 }
 
@@ -614,6 +610,11 @@ void BaseCouplingScheme::determineInitialReceive(BaseCouplingScheme::DataMap &re
   }
 }
 
+int BaseCouplingScheme::getExtrapolationOrder()
+{
+  return _extrapolationOrder;
+}
+
 bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataMap &dataMap) const
 {
   /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
@@ -627,7 +628,7 @@ bool BaseCouplingScheme::anyDataRequiresInitialization(BaseCouplingScheme::DataM
 
 bool BaseCouplingScheme::doImplicitStep()
 {
-  storeDataInWaveforms();
+  storeExtrapolationData();
 
   PRECICE_DEBUG("measure convergence of the coupling iteration");
   bool convergence = measureConvergence();

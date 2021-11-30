@@ -605,6 +605,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
   std::string nameParticipant1("Participant1");
   int         sendDataIndex    = -1;
   int         receiveDataIndex = -1;
+
   if (context.isNamed(nameParticipant0)) {
     sendDataIndex    = 0;
     receiveDataIndex = 1;
