@@ -32,7 +32,7 @@ public:
   virtual void doExport(
       const std::string &name,
       const std::string &location,
-      mesh::Mesh &       mesh) = 0;
+      const mesh::Mesh & mesh) = 0;
 };
 
 } // namespace io
