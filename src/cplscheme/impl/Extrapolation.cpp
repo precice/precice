@@ -25,24 +25,11 @@ void Extrapolation::initialize(
   PRECICE_ASSERT(this->valuesSize() == valuesSize);
 }
 
-void Extrapolation::resizeData(int newValuesSize)
-{
-  _timeWindowsStorage = Eigen::MatrixXd::Zero(newValuesSize, sizeOfSampleStorage());
-  PRECICE_ASSERT(valuesSize() == newValuesSize);
-}
-
 void Extrapolation::store(const Eigen::VectorXd &values)
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  int columnID = 0;
-  this->storeAt(values, columnID);
-}
-
-void Extrapolation::storeAt(const Eigen::VectorXd values, int columnID)
-{
-  PRECICE_ASSERT(_timeWindowsStorage.cols() > columnID, sizeOfSampleStorage(), columnID);
   PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
-  this->_timeWindowsStorage.col(columnID) = values;
+  this->_timeWindowsStorage.col(0) = values;
 }
 
 void Extrapolation::moveToNextWindow()

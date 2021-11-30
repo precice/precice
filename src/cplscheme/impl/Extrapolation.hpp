@@ -31,26 +31,13 @@ public:
   void initialize(const int valuesSize);
 
   /**
-   * @brief resizes _timeWindows to store more data. Used for already created extrapolation.
-   * @param numberOfData defines how many pieces of data one sample in time consists of
-   */
-  void resizeData(int valuesSize);
-
-  /**
-   * @brief Updates entry in _timeWindows corresponding to this window with given values
+   * @brief Updates entry in _timeWindowsStorage corresponding to this window with given values
    * @param values new sample for this time window
    */
   void store(const Eigen::VectorXd &values);
 
   /**
-   * @brief Updates entry in _timeWindowsStorage corresponding to a given column ID with given values
-   * @param values new sample for this time window
-   * @param columnID ID of column to be updated
-   */
-  void storeAt(const Eigen::VectorXd values, int columnID);
-
-  /**
-   * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
+   * @brief Called, when moving to the next time window. All entries in _timeWindowsStorage are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
    */
   void moveToNextWindow();
 
@@ -58,12 +45,6 @@ public:
    * @brief getter for values at the current time window.
    */
   const Eigen::VectorXd getInitialGuess();
-
-  // @todo try to make private!
-  /**
-   * @brief returns number of values per sample in time stored by this extrapolation
-   */
-  int valuesSize();
 
 private:
   /// Set by initialize. Used for consistency checks.
@@ -84,6 +65,11 @@ private:
    * @brief returns number samples in time this extrapolation can store
    */
   int sizeOfSampleStorage();
+
+  /**
+   * @brief returns number of values per sample in time stored by this extrapolation
+   */
+  int valuesSize();
 
   /**
    * @brief Extrapolates values from _timeWindowsStorage using an extrapolation scheme of given order. 
