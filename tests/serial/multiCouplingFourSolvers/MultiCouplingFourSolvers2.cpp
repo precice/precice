@@ -3,7 +3,7 @@
 #include <string>
 
 #include <fstream>
-#include "../tests/serial/multiCouplingFourSolvers/helpers.hpp"
+#include "helpers.hpp"
 #include "testing/Testing.hpp"
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)

@@ -1,6 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
-#include "../tests/serial/multiCouplingFourSolvers/helpers.hpp"
+#include "helpers.hpp"
 
 #include "precice/SolverInterface.hpp"
 
