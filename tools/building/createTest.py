@@ -3,11 +3,11 @@
 import os
 import argparse
 import pathlib
-import re
+import inflection
 
 
 def camel_case_to_kebab_case(camel_case_input):
-    return re.sub(r'(?<!^)(?=[A-Z])', '-', camel_case_input).lower()
+    return inflection.dasherize(inflection.underscore(camel_case_input))
 
 def is_precice_root(dir):
     detect = [
