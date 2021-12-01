@@ -59,6 +59,9 @@ def testname(arg):
 PRECICE_TEST_BODY = """
 {
   PRECICE_TEST(TODO);
+  
+  // Implement your test here.
+  BOOST_TEST(false);
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
