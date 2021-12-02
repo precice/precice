@@ -9,6 +9,7 @@ import inflection
 def camel_case_to_kebab_case(camel_case_input):
     return inflection.dasherize(inflection.underscore(camel_case_input))
 
+
 def is_precice_root(dir):
     detect = [
         "CHANGELOG.md", "CMakeLists.txt", "LICENSE", "src", "tests", "cmake"
@@ -17,7 +18,7 @@ def is_precice_root(dir):
 
 
 def find_precice_root():
-    search_depth = 4
+    search_depth = 10
     current = pathlib.Path(os.path.curdir).absolute()
     candidats = [current] + list(current.parents)[:search_depth]
     for dir in candidats:
