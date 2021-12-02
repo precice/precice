@@ -3,11 +3,8 @@
 import os
 import argparse
 import pathlib
-import inflection
-
-
-def camel_case_to_kebab_case(camel_case_input):
-    return inflection.dasherize(inflection.underscore(camel_case_input))
+import re
+import collections
 
 
 def is_precice_root(dir):
@@ -24,10 +21,28 @@ def find_precice_root():
     for dir in candidats:
         if is_precice_root(dir):
             return dir
-    raise "Unable to find the root directory of precice"
+    raise BaseException("Unable to find the root directory of precice")
 
 
-def patharg(arg):
+ABREVIATIONS = ["MPI", "QN", "RBF", "NN", "NP"]
+
+
+def dirToSuite(dir):
+    """
+    Takes a kebab-case-directory and transforms it to a KebabCaseDirectory.
+    Abbreviations defined above will be all upper case.
+    """
+    def toSuite(s):
+        upper = s.upper()
+        if upper in ABREVIATIONS:
+            return upper
+        else:
+            return s.capitalize()
+
+    return "".join(map(toSuite, dir.split("-")))
+
+
+def checkTestSuite(arg):
     assert (arg)
     if " " in arg:
         raise argparse.ArgumentTypeError(
@@ -36,13 +51,22 @@ def patharg(arg):
         raise argparse.ArgumentTypeError(
             "The given suite name \"{}\" cannot contain the file extensions.".
             format(arg))
-    if not arg[0].isupper():
+    if re.search(r"[^a-z-]", arg) is not None:
         raise argparse.ArgumentTypeError(
-            "The given suite name \"{}\" must use CamelCase.".format(arg))
+            "The given suite dir \"{}\" must be dashed-lower-case.".format(
+                arg))
+    if re.search(r"^[a-z]", arg) is None:
+        raise argparse.ArgumentTypeError(
+            "The given suite dir \"{}\" must start with a lowercase letter".format(
+                arg))
+    if re.search(r"[a-z]$", arg) is None:
+        raise argparse.ArgumentTypeError(
+            "The given suite dir \"{}\" must end with a lowercase letter".format(
+                arg))
     return arg
 
 
-def testname(arg):
+def checkTestName(arg):
     assert (arg)
     if " " in arg:
         raise argparse.ArgumentTypeError(
@@ -51,16 +75,44 @@ def testname(arg):
         raise argparse.ArgumentTypeError(
             "The given test name \"{}\" cannot contain the file extensions.".
             format(arg))
-    if not arg[0].isupper():
+    if re.search(r"[^a-zA-Z]", arg) is not None:
         raise argparse.ArgumentTypeError(
             "The given test name \"{}\" must use CamelCase.".format(arg))
     return arg
 
 
-PRECICE_TEST_BODY = """
-{
+def testarg(arg):
+    """
+    Checks the given test argument and computes:
+    - the location as pathlib.PurePath
+    - the suites as a list of suite names
+    - the name of the test
+    """
+    parts = pathlib.PurePath(arg).parts
+    dirs, name = parts[:-1], parts[-1]
+    checkTestName(name)
+    [checkTestSuite(d) for d in dirs]
+
+    # If the given path is inside the tests dir, then use the realtive path
+    full = pathlib.Path(arg).absolute()
+    tests = find_precice_root().joinpath("tests")
+    if full.is_relative_to(tests):
+        parts = full.relative_to(tests).parts
+        dirs, name = parts[:-1], parts[-1]
+
+    location = tests.joinpath(*dirs)
+    if location.exists() and not location.is_dir():
+        raise argparse.ArgumentTypeError(
+            "The given test location \"{}\" exists, but is not a directory.".format(location))
+
+    suites = [dirToSuite(dir) for dir in dirs]
+    return collections.namedtuple("TestSetup","location suites name")(location, suites, name)
+
+
+
+PRECICE_TEST_BODY = """{
   PRECICE_TEST(TODO);
-  
+
   // Implement your test here.
   BOOST_TEST(false);
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
@@ -82,7 +134,7 @@ PRECICE_TEST_BODY = """
 
 def generateTestSource(name, suite, filepath):
     if os.path.exists(filepath):
-        raise "The test source at \"{}\" already exists.".format(filepath)
+        raise BaseException("The test source at \"{}\" already exists.".format(filepath))
 
     includes = [
         "<precice/SolverInterface.hpp>", "<vector>", '"testing/Testing.hpp"'
@@ -115,43 +167,37 @@ def generateTestConfig(name, suite, filepath):
 def main():
     parser = argparse.ArgumentParser(
         description="preCICE integration test creation tool.")
-    parser.add_argument("suite",
-                        metavar="TestSuite",
-                        nargs="+",
-                        type=patharg,
-                        help="test suite(s) to add the test to")
-    parser.add_argument("name",
-                        metavar="TestName",
-                        type=testname,
-                        help="name of the test")
+    parser.add_argument(
+        "test",
+        metavar="[Suite/]TestName",
+        type=testarg,
+        help=
+        "The path to the test, the last component being the test name. "
+        "If executed withing tests/, then the test will be created relative to the local directory. "
+        "Otherwise, the path will be assumed to be relative to the tests directory."
+    )
     parser.add_argument("-n",
                         "--dry-run",
                         action="store_true",
                         help="print actions only")
     args = parser.parse_args()
 
-    root = find_precice_root()
-
-    suites = list(args.suite)
-    suitepath = "/".join([camel_case_to_kebab_case(suite) for suite in suites])
-    location = os.path.join(root, "tests", suitepath)
-
-    print("Create directory {}".format(location))
+    print("Create directory {}".format(args.test.location))
     if not args.dry_run:
-        os.makedirs(location, exist_ok=True)
+        os.makedirs(args.test.location, exist_ok=True)
 
-    source = args.name + ".cpp"
-    config = camel_case_to_kebab_case(args.name) + ".xml"
-    sourcePath = os.path.join(location, source)
-    configPath = os.path.join(location, config)
+    source = args.test.name + ".cpp"
+    config = args.test.name + ".xml"
+    sourcePath = args.test.location.joinpath(source)
+    configPath = args.test.location.joinpath(config)
 
     print("Create test source {}".format(source))
     if not args.dry_run:
-        generateTestSource(args.name, args.suite, sourcePath)
+        generateTestSource(args.test.name, args.test.suites, sourcePath)
 
     print("Create test config {}".format(config))
     if not args.dry_run:
-        generateTestConfig(args.name, args.suite, configPath)
+        generateTestConfig(args.test.name, args.test.suites, configPath)
 
 
 if __name__ == '__main__':
