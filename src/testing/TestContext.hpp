@@ -237,6 +237,14 @@ public:
    */
   std::string config() const;
 
+  /** Prefixes the given filename with the test directory.
+   *
+   * The filename will be located in the same directory as the current test file.
+   *
+   * @return the full filepath to the filename relative
+   */
+  std::string prefix(const std::string &filename) const;
+
   /// Check wheater this context has a given size
   bool hasSize(int size) const;
 

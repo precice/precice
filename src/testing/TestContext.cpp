@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <exception>
 #include <memory>
 #include <numeric>
@@ -54,20 +55,17 @@ TestContext::~TestContext() noexcept
   Par::resetManagedMPI();
 }
 
+std::string TestContext::prefix(const std::string &filename) const
+{
+  boost::filesystem::path location{testing::getTestPath()};
+  auto                    dir = location.parent_path();
+  dir /= filename;
+  return boost::filesystem::weakly_canonical(dir).string();
+}
+
 std::string TestContext::config() const
 {
-  auto suites = testing::getTestSuites();
-  PRECICE_ASSERT(suites.size() > 1);
-  suites.erase(suites.begin());
-
-  auto name = testing::getTestName();
-
-  boost::filesystem::path location(testing::getPathToTests());
-  for (const auto &suite : suites) {
-    location /= suite;
-  }
-  location /= name + ".xml";
-  return location.string();
+  return prefix(testing::getTestName() + ".xml");
 }
 
 bool TestContext::hasSize(int size) const

@@ -13,8 +13,7 @@ BOOST_FIXTURE_TEST_SUITE(MultiCouplingFourSolvers, MultiCouplingFourSolversFixtu
 BOOST_AUTO_TEST_CASE(MultiCouplingFourSolvers2)
 {
   PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank), "SolverD"_on(1_rank));
-  const std::string configFile = _pathToTests + "multi-coupling-four-solver-2.xml";
-  multiCouplingFourSolvers(configFile, context);
+  multiCouplingFourSolvers(context.config(), context);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

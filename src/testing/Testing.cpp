@@ -35,29 +35,10 @@ std::string getPathToTests()
   return getPathToRepository() + "/tests";
 }
 
-std::vector<std::string> getTestSuites()
+std::string getTestPath()
 {
-  std::vector<std::string> suites;
-
-  auto &current = boost::unit_test::framework::current_test_case();
-
-  auto pid = current.p_parent_id;
-  while (true) {
-    auto &parent = boost::unit_test::framework::get<boost::unit_test::test_suite>(pid);
-    // the parent type may be "case", "suite" or "module"
-    // "case" will not appear as it can only be a leaf (current)
-    // "module" is the root of the tree
-    PRECICE_ASSERT(parent.p_type_name != "case");
-    if (parent.p_type_name == "suite") {
-      suites.emplace_back(parent.p_name);
-      pid = parent.p_parent_id;
-    } else {
-      // We hit the root of the tree/"module".
-      // The suites are in backwards order: leaf-root
-      std::reverse(suites.begin(), suites.end());
-      return suites;
-    }
-  }
+  const auto &cspan = boost::unit_test::framework::current_test_case().p_file_name;
+  return {cspan.begin(), cspan.end()};
 }
 
 std::string getTestName()
