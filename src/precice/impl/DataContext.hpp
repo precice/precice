@@ -22,8 +22,6 @@ public:
 
   mesh::PtrData providedData();
 
-  mesh::PtrData toData();
-
   std::string getDataName() const;
 
   int getProvidedDataID() const;
@@ -33,6 +31,10 @@ public:
   void resetProvidedData();
 
   void resetToData();
+
+  void doWaveformMapping();
+
+  void mapWaveformSample(int sampleID);
 
   int getToDataID() const;
 
@@ -65,34 +67,18 @@ public:
   const MappingContext mappingContext() const;
 
   // for updating waveforms after communication
-  void initializeProvidedWaveform();
-
-  void initializeFromWaveform();
-
-  void initializeToWaveform();
-
-  // for mapping waveforms
-  void moveWaveformSampleToData(int sampleID);
-
-  void moveDataToWaveformSample(int sampleID);
+  void initializeContextWaveforms();
 
   // for communication of read and write data
   void sampleWaveformInToData();
 
   void storeFromDataInWaveform();
 
-  // for actions
-  void sampleWaveformInProvidedData();
-
-  void storeProvidedDataInWaveform();
-
   // for copying read data into waveform
   void moveProvidedDataToProvidedWaveformSample(int sampleID);
 
   // shift data in time
-  void moveProvidedWaveform();
-
-  int sizeOfSampleStorageInWaveform();
+  void moveToNextWindow();
 
   /**
    * @brief Allows to sample data at a given point in time insize of the time window
@@ -116,11 +102,6 @@ private:
 
   // helper function for initializing waveforms from given data
   void initializeWaveform(mesh::PtrData initializingData);
-
-  // helper functions for communication
-  void sampleWaveformIntoData(mesh::PtrData data, int sampleID = 0);
-
-  void storeDataInWaveform(mesh::PtrData data, int sampleID = 0);
 
   // helper function for creating read and write mappings
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);

@@ -350,7 +350,7 @@ void SolverInterfaceImpl::initializeData()
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     doDataTransferAndReadMapping();
-    moveReadWaveform();
+    moveReadWaveforms();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
 
@@ -435,7 +435,7 @@ double SolverInterfaceImpl::advance(
   }
 
   if (_couplingScheme->isTimeWindowComplete()) {
-    moveReadWaveform();
+    moveReadWaveforms();
   }
 
   if (_couplingScheme->hasDataBeenReceived()) {
@@ -1022,20 +1022,11 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       mappingContext.mapping->computeMapping();
     }
     for (impl::DataContext &context : _accessor->writeDataContexts()) {
-
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
-      context.resetToData();
-      PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      // iterate over all the samples in the _fromWaveform
-      for (int sampleID = 0; sampleID < context.sizeOfSampleStorageInWaveform(); ++sampleID) {
-        context.moveWaveformSampleToData(sampleID);                                              // put samples from _fromWaveform into _fromData
-        context.mappingContext().mapping->map(context.getFromDataID(), context.getToDataID());   // map from _fromData to _toData
-        context.moveDataToWaveformSample(sampleID);                                              // store _toData at the right place into the _toWaveform
-        PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
-      }
+      context.doWaveformMapping();
     }
     mappingContext.hasMappedData = true;
   }
@@ -1069,16 +1060,8 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.getMeshID() != toMeshID) {
         continue;
       }
-      context.resetToData();
-      PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      // iterate over all the samples in the _fromWaveform
-      for (int sampleID = 0; sampleID < context.sizeOfSampleStorageInWaveform(); ++sampleID) {
-        context.moveWaveformSampleToData(sampleID);                                              // put samples from _fromWaveform into _fromData
-        context.mappingContext().mapping->map(context.getFromDataID(), context.getToDataID());   // map from _fromData to _toData
-        context.moveDataToWaveformSample(sampleID);                                              // store _toData at the right place into the _toWaveform
-        PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
-      }
+      context.doWaveformMapping();
     }
     mappingContext.hasMappedData = true;
   }
@@ -1690,19 +1673,13 @@ void SolverInterfaceImpl::mapData(const utils::ptr_vector<DataContext> &contexts
       bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
       mapNow |= timing == MappingConfiguration::INITIAL;
       if (mapNow && (not hasMapped)) {
-        int inDataID  = context.getFromDataID();
-        int outDataID = context.getToDataID();
         PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
                       mappingType, context.getDataName(), context.getMeshName());
-        PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
         context.resetToData();
-        context.moveWaveformSampleToData(sampleID);                                              // put samples from _fromWaveform into _fromData
-        context.mappingContext().mapping->map(inDataID, outDataID);                              // map from _fromData to _toData
-        context.moveDataToWaveformSample(sampleID);                                              // store _toData at the right place into the _toWaveform
-        PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
+        context.mapWaveformSample(sampleID);
       }
     } else {
-      context.moveProvidedDataToProvidedWaveformSample(0); // store _providedData at the right place into the _providedWaveform
+      context.moveProvidedDataToProvidedWaveformSample(sampleID); // store _providedData at the right place into the _providedWaveform
     }
   }
 }
@@ -1726,12 +1703,7 @@ void SolverInterfaceImpl::initializeWrittenWaveforms()
   PRECICE_TRACE();
   PRECICE_ASSERT(not _hasInitializedWrittenWaveforms);
   for (impl::DataContext &context : _accessor->writeDataContexts()) {
-    if (context.hasMapping()) {
-      context.initializeFromWaveform();
-      context.initializeToWaveform();
-    } else {
-      context.initializeProvidedWaveform();
-    }
+    context.initializeContextWaveforms();
   }
   _hasInitializedWrittenWaveforms = true;
 }
@@ -1777,12 +1749,7 @@ void SolverInterfaceImpl::initializeReadWaveforms()
   PRECICE_TRACE();
   PRECICE_ASSERT(not _hasInitializedReadWaveforms);
   for (impl::DataContext &context : _accessor->readDataContexts()) {
-    if (context.hasMapping()) {
-      context.initializeFromWaveform();
-      context.initializeToWaveform();
-    } else {
-      context.initializeProvidedWaveform();
-    }
+    context.initializeContextWaveforms();
   }
   _hasInitializedReadWaveforms = true;
 }
@@ -1960,10 +1927,10 @@ void SolverInterfaceImpl::doDataTransferAndReadMapping()
   prepareExchangedReadData();
 }
 
-void SolverInterfaceImpl::moveReadWaveform()
+void SolverInterfaceImpl::moveReadWaveforms()
 {
   for (impl::DataContext &context : _accessor->readDataContexts()) {
-    context.moveProvidedWaveform();
+    context.moveToNextWindow();
   }
 }
 

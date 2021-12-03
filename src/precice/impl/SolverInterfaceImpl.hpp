@@ -762,7 +762,7 @@ private:
   void doDataTransferAndWriteMapping();
 
   // store data before overwriting it
-  void moveReadWaveform();
+  void moveReadWaveforms();
 
   /**
    * @brief Performs all data actions with given timing.

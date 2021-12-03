@@ -89,8 +89,17 @@ public:
   /// Returns the dimension (i.e., number of components) of one data value.
   int getDimensions() const;
 
-  /// Returns pointer to the waveform of this data.
-  time::PtrWaveform waveform();
+  void storeDataInWaveform(int waveformSampleID);
+
+  int sizeOfSampleStorageInWaveform();
+
+  Eigen::VectorXd waveformSampleAt(double normalizedDt);
+
+  void initializeWaveform();
+
+  void sampleWaveformIntoData(int sampleID = 0);
+
+  void moveToNextWindow();
 
 private:
   logging::Logger _log{"mesh::Data"};

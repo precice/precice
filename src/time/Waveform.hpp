@@ -60,11 +60,6 @@ public:
    */
   Eigen::VectorXd sample(const double normalizedDt);
 
-  /**
-   * @brief getter for values at the current time window.
-   */
-  const Eigen::VectorXd getInitialGuess();
-
   // @todo try to make private!
   /**
    * @brief returns number of values per sample in time stored by this waveform

@@ -83,9 +83,51 @@ void Data::resetDataCount()
   _dataCount = 0;
 }
 
-time::PtrWaveform Data::waveform()
+void Data::storeDataInWaveform(int waveformSampleID)
 {
-  return _ptrWaveform;
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_ptrWaveform->valuesSize() == _values.size(),
+                 _ptrWaveform->valuesSize(), _values.size());
+  _ptrWaveform->storeAt(_values, waveformSampleID);
+}
+
+int Data::sizeOfSampleStorageInWaveform()
+{
+  PRECICE_TRACE();
+  return _ptrWaveform->sizeOfSampleStorage();
+}
+
+Eigen::VectorXd Data::waveformSampleAt(double normalizedDt)
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_ptrWaveform->valuesSize() == _values.size(), _ptrWaveform->valuesSize(), _values.size());
+  PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
+  PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
+  return _ptrWaveform->sample(normalizedDt);
+}
+
+void Data::initializeWaveform()
+{
+  PRECICE_TRACE();
+  // PRECICE_ASSERT(_values.size() > 0, _values.size());  // @todo assertion breaks, but seems like calling advance on empty write data is ok?
+  _ptrWaveform->initialize(_values.size());
+  for (int sampleID = 0; sampleID < _ptrWaveform->sizeOfSampleStorage(); ++sampleID) {
+    _ptrWaveform->storeAt(_values, sampleID);
+  }
+  PRECICE_ASSERT(_ptrWaveform->valuesSize() == _values.size());
+}
+
+void Data::sampleWaveformIntoData(int sampleID)
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_ptrWaveform->valuesSize() == _values.size(), _ptrWaveform->valuesSize(), _values.size());
+  values() = _ptrWaveform->getSample(sampleID);
+}
+
+void Data::moveToNextWindow()
+{
+  PRECICE_TRACE();
+  _ptrWaveform->moveToNextWindow();
 }
 
 } // namespace mesh
