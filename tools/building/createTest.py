@@ -96,9 +96,11 @@ def testarg(arg):
     # If the given path is inside the tests dir, then use the realtive path
     full = pathlib.Path(arg).absolute()
     tests = find_precice_root().joinpath("tests")
-    if full.is_relative_to(tests):
+    try:
         parts = full.relative_to(tests).parts
         dirs, name = parts[:-1], parts[-1]
+    except ValueError:
+        pass
 
     location = tests.joinpath(*dirs)
     if location.exists() and not location.is_dir():
@@ -201,7 +203,4 @@ def main():
 
 
 if __name__ == '__main__':
-    import platform
-    if int(platform.python_version_tuple()[1]) < 9:
-        raise Exception("This script requires you to use python3.9 or newer. You are currently running python version {}.".format(platform.python_version()))
     main()
