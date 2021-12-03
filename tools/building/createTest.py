@@ -201,4 +201,7 @@ def main():
 
 
 if __name__ == '__main__':
+    import platform
+    if int(platform.python_version_tuple()[1]) < 9:
+        raise Exception("This script requires you to use python3.9 or newer. You are currently running python version {}.".format(platform.python_version()))
     main()
