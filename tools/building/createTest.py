@@ -96,7 +96,7 @@ def testarg(arg):
     # If the given path is inside the tests dir, then use the realtive path
     full = pathlib.Path(arg).absolute()
     tests = find_precice_root().joinpath("tests")
-    if full.relative_to(tests):
+    if full.is_relative_to(tests):
         parts = full.relative_to(tests).parts
         dirs, name = parts[:-1], parts[-1]
 
