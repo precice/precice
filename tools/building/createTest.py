@@ -29,7 +29,7 @@ ABREVIATIONS = ["MPI", "QN", "RBF", "NN", "NP"]
 
 def dirToSuite(dir):
     """
-    Takes a kebab-case-directory and transforms it to a KebabCaseDirectory.
+    Takes a kebab-case-directory and transforms it to a CamelCaseDirectory.
     Abbreviations defined above will be all upper case.
     """
     def toSuite(s):
@@ -96,7 +96,7 @@ def testarg(arg):
     # If the given path is inside the tests dir, then use the realtive path
     full = pathlib.Path(arg).absolute()
     tests = find_precice_root().joinpath("tests")
-    if full.is_relative_to(tests):
+    if full.relative_to(tests):
         parts = full.relative_to(tests).parts
         dirs, name = parts[:-1], parts[-1]
 
@@ -173,7 +173,7 @@ def main():
         type=testarg,
         help=
         "The path to the test, the last component being the test name. "
-        "If executed withing tests/, then the test will be created relative to the local directory. "
+        "If executed within tests/, then the test will be created relative to the local directory. "
         "Otherwise, the path will be assumed to be relative to the tests directory."
     )
     parser.add_argument("-n",
