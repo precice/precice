@@ -26,12 +26,6 @@ void Waveform::initialize(
   PRECICE_ASSERT(this->valuesSize() == valuesSize);
 }
 
-void Waveform::resizeData(int newValuesSize)
-{
-  _timeWindowsStorage = Eigen::MatrixXd::Zero(newValuesSize, sizeOfSampleStorage());
-  PRECICE_ASSERT(valuesSize() == newValuesSize);
-}
-
 void Waveform::store(const Eigen::VectorXd &values)
 {
   PRECICE_ASSERT(_storageIsInitialized);

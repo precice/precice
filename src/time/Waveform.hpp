@@ -31,12 +31,6 @@ public:
   void initialize(const int valuesSize);
 
   /**
-   * @brief resizes _timeWindows to store more data. Used for already created waveforms.
-   * @param numberOfData defines how many pieces of data one sample in time consists of
-   */
-  void resizeData(int valuesSize);
-
-  /**
    * @brief Updates entry in _timeWindows corresponding to this window with given values
    * @param values new sample for this time window
    */
