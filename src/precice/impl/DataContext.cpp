@@ -1,6 +1,5 @@
 #include "precice/impl/DataContext.hpp"
 #include <memory>
-#include "time/Waveform.hpp"
 
 namespace precice {
 namespace impl {
