@@ -314,7 +314,7 @@ protected:
   /**
    * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
    */
-  void initializeStorage();
+  void initializeStorages();
 
   /**
    * @brief sends convergence to other participant via m2n

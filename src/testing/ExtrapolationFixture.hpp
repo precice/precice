@@ -11,13 +11,13 @@ namespace testing {
  */
 class ExtrapolationFixture {
 public:
-  int numberOfStoredSamples(cplscheme::Extrapolation &extrapolation);
+  int numberOfStoredSamples(cplscheme::impl::Extrapolation &extrapolation);
 
-  int sizeOfSampleStorage(cplscheme::Extrapolation &extrapolation);
+  int sizeOfSampleStorage(cplscheme::impl::Extrapolation &extrapolation);
 
-  int valuesSize(cplscheme::Extrapolation &extrapolation);
+  int valuesSize(cplscheme::impl::Extrapolation &extrapolation);
 
-  double getValue(cplscheme::Extrapolation &extrapolation, int valueID, int sampleID);
+  double getValue(cplscheme::impl::Extrapolation &extrapolation, int valueID, int sampleID);
 };
 
 } // namespace testing

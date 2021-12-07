@@ -11,6 +11,7 @@ class ExtrapolationFixture;
 } // namespace testing
 
 namespace cplscheme {
+namespace impl {
 
 class Extrapolation {
   friend class testing::ExtrapolationFixture; // Make the fixture friend of this class
@@ -80,5 +81,6 @@ private:
   Eigen::VectorXd extrapolate();
 };
 
+} // namespace impl
 } // namespace cplscheme
 } // namespace precice

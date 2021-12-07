@@ -6,6 +6,7 @@
 
 namespace precice {
 namespace cplscheme {
+namespace impl {
 
 Extrapolation::Extrapolation(
     const int extrapolationOrder)
@@ -122,5 +123,6 @@ Eigen::VectorXd Extrapolation::extrapolate()
   return extrapolatedValue;
 }
 
+} // namespace impl
 } // namespace cplscheme
 } // namespace precice

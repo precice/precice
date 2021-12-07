@@ -142,7 +142,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
         assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
       }
       // reserve memory and initialize data with zero
-      initializeStorage();
+      initializeStorages();
     }
     requireAction(constants::actionWriteIterationCheckpoint());
     initializeTXTWriters();
@@ -258,7 +258,7 @@ void BaseCouplingScheme::storeExtrapolationData()
   PRECICE_TRACE(_timeWindows);
   for (DataMap::value_type &pair : _allData) {
     PRECICE_DEBUG("Store data: {}", pair.first);
-    pair.second->storeDataInExtrapolation();
+    pair.second->storeExtrapolationData();
   }
 }
 
@@ -445,7 +445,7 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   }
 }
 
-void BaseCouplingScheme::initializeStorage()
+void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
