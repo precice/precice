@@ -1,40 +1,41 @@
-#include "time/Waveform.hpp"
+#include "Extrapolation.hpp"
 #include <algorithm>
+#include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
-namespace time {
+namespace cplscheme {
+namespace impl {
 
-Waveform::Waveform(
-    const int valuesSize,
+Extrapolation::Extrapolation(
     const int extrapolationOrder)
     : _extrapolationOrder(extrapolationOrder)
 {
-  /**
-     * Reserve storage depending on required extrapolation order. Extrapolation happens in-place. Therefore, for zeroth
-     * order extrapolation we need one column (to read from and write to), for first order two, for second order three. 
-     * Note that extrapolationOrder = 0 is an exception, since we want to always work with at least two samples. One at
-     * the beginning and one at the end of the time window. Therefore, we use 2 samples for zeroth and first order
-     * extrapolation.
-     */
-  int sampleStorageSize  = std::max({2, _extrapolationOrder + 1});
+  PRECICE_ASSERT(not _storageIsInitialized);
+}
+
+void Extrapolation::initialize(
+    const int valuesSize)
+{
+  int sampleStorageSize  = std::max({_extrapolationOrder + 1});
   _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, sampleStorageSize);
   _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
+  _storageIsInitialized  = true;
   PRECICE_ASSERT(this->sizeOfSampleStorage() == sampleStorageSize);
   PRECICE_ASSERT(this->valuesSize() == valuesSize);
 }
 
-void Waveform::store(const Eigen::VectorXd &values)
+void Extrapolation::store(const Eigen::VectorXd &values)
 {
-  int columnID = 0;
-  PRECICE_ASSERT(_timeWindowsStorage.cols() > columnID, sizeOfSampleStorage(), columnID);
+  PRECICE_ASSERT(_storageIsInitialized);
   PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
-  this->_timeWindowsStorage.col(columnID) = values;
+  this->_timeWindowsStorage.col(0) = values;
 }
 
-void Waveform::moveToNextWindow()
+void Extrapolation::moveToNextWindow()
 {
+  PRECICE_ASSERT(_storageIsInitialized);
   auto initialGuess = extrapolate();
   utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
   if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
@@ -42,29 +43,32 @@ void Waveform::moveToNextWindow()
   }
 }
 
-const Eigen::VectorXd Waveform::getInitialGuess()
+const Eigen::VectorXd Extrapolation::getInitialGuess()
 {
+  PRECICE_ASSERT(_storageIsInitialized);
   return _timeWindowsStorage.col(0);
 }
 
-int Waveform::sizeOfSampleStorage()
+int Extrapolation::sizeOfSampleStorage()
 {
+  PRECICE_ASSERT(_storageIsInitialized);
   return _timeWindowsStorage.cols();
 }
 
-int Waveform::valuesSize()
+int Extrapolation::valuesSize()
 {
+  PRECICE_ASSERT(_storageIsInitialized);
   return _timeWindowsStorage.rows();
 }
 
 /**
- * @brief Computes which order may be used for extrapolation or interpolation.
+ * @brief Computes which order may be used for extrapolation.
  * 
- * Order of extrapolation or interpolation is determined by number of stored samples and maximum order defined by the user.
+ * Order of extrapolation is determined by number of stored samples and maximum order defined by the user.
  * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
  *
  * @param requestedOrder Order requested by the user.
- * @param numberOfAvailableSamples Samples available for extrapolation or interpolation.
+ * @param numberOfAvailableSamples Samples available for extrapolation.
  * @return Order that may be used.
  */
 static int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
@@ -92,9 +96,10 @@ static int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples)
   return usedOrder;
 }
 
-Eigen::VectorXd Waveform::extrapolate()
+Eigen::VectorXd Extrapolation::extrapolate()
 {
   const int usedOrder = computeUsedOrder(_extrapolationOrder, _numberOfStoredSamples);
+  PRECICE_ASSERT(_storageIsInitialized);
 
   if (usedOrder == 0) {
     PRECICE_ASSERT(_numberOfStoredSamples > 0);
@@ -118,5 +123,6 @@ Eigen::VectorXd Waveform::extrapolate()
   return extrapolatedValue;
 }
 
-} // namespace time
+} // namespace impl
+} // namespace cplscheme
 } // namespace precice

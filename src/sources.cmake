@@ -115,6 +115,8 @@ target_sources(precice
     src/cplscheme/impl/AbsoluteConvergenceMeasure.cpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.hpp
     src/cplscheme/impl/ConvergenceMeasure.hpp
+    src/cplscheme/impl/Extrapolation.cpp
+    src/cplscheme/impl/Extrapolation.hpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.cpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.hpp
     src/cplscheme/impl/RelativeConvergenceMeasure.cpp
@@ -249,9 +251,6 @@ target_sources(precice
     src/query/impl/Indexer.cpp
     src/query/impl/Indexer.hpp
     src/query/impl/RTreeAdapter.hpp
-    src/time/SharedPointer.hpp
-    src/time/Waveform.cpp
-    src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
