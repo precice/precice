@@ -6,7 +6,7 @@
 #include <string>
 #include "com/SharedPointer.hpp"
 #include "io/Export.hpp"
-#include "io/ExportVTU.hpp"
+#include "io/ExportVTP.hpp"
 #include "mesh/Mesh.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(IOTests)
 
 using namespace precice;
 
-BOOST_AUTO_TEST_SUITE(VTUExport)
+BOOST_AUTO_TEST_SUITE(VTPExport)
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
@@ -38,10 +38,10 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
-  io::ExportVTU exportVTU;
-  std::string   filename = "io-VTUExport-ExportPolygonalMesh";
+  io::ExportVTP exportVTP;
+  std::string   filename = "io-VTPExport-ExportPolygonalMesh";
   std::string   location = "";
-  exportVTU.doExport(filename, location, mesh);
+  exportVTP.doExport(filename, location, mesh);
 }
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::Vector2d::Constant(3.0));
   }
 
-  io::ExportVTU exportVTU;
-  std::string   filename = "io-ExportVTUTest-testExportPolygonalMesh";
+  io::ExportVTP exportVTP;
+  std::string   filename = "io-ExportVTPTest-testExportPolygonalMesh";
   std::string   location = "";
-  exportVTU.doExport(filename, location, mesh);
+  exportVTP.doExport(filename, location, mesh);
 }
 
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
@@ -117,10 +117,10 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.createVertex(Eigen::Vector3d::Constant(3.0));
   }
 
-  io::ExportVTU exportVTU;
-  std::string   filename = "io-ExportVTUTest-testExportTriangulatedMesh";
+  io::ExportVTP exportVTP;
+  std::string   filename = "io-ExportVTPTest-testExportTriangulatedMesh";
   std::string   location = "";
-  exportVTU.doExport(filename, location, mesh);
+  exportVTP.doExport(filename, location, mesh);
 }
 
 BOOST_AUTO_TEST_CASE(ExportSplitSquare)
@@ -181,13 +181,13 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh.createTriangle(eo1, e12, e2o);
   }
 
-  io::ExportVTU exportVTU;
-  std::string   filename = "io-ExportVTUTest-Square";
+  io::ExportVTP exportVTP;
+  std::string   filename = "io-ExportVTPTest-Square";
   std::string   location = "";
-  exportVTU.doExport(filename, location, mesh);
+  exportVTP.doExport(filename, location, mesh);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests
-BOOST_AUTO_TEST_SUITE_END() // VTUExport
+BOOST_AUTO_TEST_SUITE_END() // VTPExport
 
 #endif // PRECICE_NO_MPI

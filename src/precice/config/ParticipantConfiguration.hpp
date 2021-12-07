@@ -99,6 +99,7 @@ private:
 
   const std::string VALUE_VTK = "vtk";
   const std::string VALUE_VTU = "vtu";
+  const std::string VALUE_VTP = "vtp";
 
   int _dimensions = 0;
 
