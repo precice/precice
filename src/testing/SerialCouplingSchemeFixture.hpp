@@ -20,7 +20,7 @@ struct SerialCouplingSchemeFixture {
 
   static void storeIteration(cplscheme::SerialCouplingScheme &cplscheme);
 
-  static void initializeStorage(cplscheme::SerialCouplingScheme &cplscheme);
+  static void initializeStorages(cplscheme::SerialCouplingScheme &cplscheme);
 
   static void storeExtrapolationData(cplscheme::SerialCouplingScheme &cplscheme);
 
