@@ -5,7 +5,7 @@
 #include "testing/Testing.hpp"
 
 using namespace precice;
-using namespace precice::cplscheme;
+using namespace precice::cplscheme::impl;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 

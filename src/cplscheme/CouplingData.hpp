@@ -54,7 +54,7 @@ public:
   void moveToNextWindow();
 
   /// store current value in _extrapolation
-  void storeDataInExtrapolation();
+  void storeExtrapolationData();
 
 private:
   /**
@@ -64,7 +64,7 @@ private:
    */
   CouplingData()
       : requiresInitialization(false),
-        _extrapolation(0)
+        _extrapolation(CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER)
   {
     PRECICE_ASSERT(false);
   }
@@ -76,7 +76,7 @@ private:
   mesh::PtrData _data;
 
   /// Extrapolation associated with this CouplingData
-  cplscheme::Extrapolation _extrapolation;
+  cplscheme::impl::Extrapolation _extrapolation;
 
   /// Mesh associated with this CouplingData
   mesh::PtrMesh _mesh;

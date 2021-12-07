@@ -85,7 +85,7 @@ void CouplingData::moveToNextWindow()
   values() = _extrapolation.getInitialGuess();
 }
 
-void CouplingData::storeDataInExtrapolation()
+void CouplingData::storeExtrapolationData()
 {
   _extrapolation.store(values());
 }

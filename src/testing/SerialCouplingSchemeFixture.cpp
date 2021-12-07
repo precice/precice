@@ -30,7 +30,7 @@ void SerialCouplingSchemeFixture::storeIteration(cplscheme::SerialCouplingScheme
 
 void SerialCouplingSchemeFixture::initializeStorage(cplscheme::SerialCouplingScheme &cplscheme)
 {
-  cplscheme.initializeStorage();
+  cplscheme.initializeStorages();
 }
 
 void SerialCouplingSchemeFixture::storeExtrapolationData(cplscheme::SerialCouplingScheme &cplscheme)
