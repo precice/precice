@@ -13,12 +13,19 @@ Waveform::Waveform(
     : _interpolationOrder(interpolationOrder)
 {
   PRECICE_ASSERT(not _storageIsInitialized);
+  PRECICE_ASSERT(_interpolationOrder == Time::UNDEFINED_INTERPOLATION_ORDER || (0 <= _interpolationOrder && _interpolationOrder <= 2));
 }
 
 void Waveform::initialize(
     const int valuesSize)
 {
-  int sampleStorageSize  = std::max({2, _interpolationOrder + 1});
+  int sampleStorageSize;
+  if (_interpolationOrder == Time::UNDEFINED_INTERPOLATION_ORDER) {
+    sampleStorageSize = 1;
+  } else {
+    PRECICE_ASSERT(_interpolationOrder >= 0);
+    sampleStorageSize = std::max({_interpolationOrder + 1});
+  }
   _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, sampleStorageSize);
   _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
   _storageIsInitialized  = true;
@@ -45,8 +52,11 @@ Eigen::VectorXd Waveform::sample(double normalizedDt)
   PRECICE_ASSERT(_storageIsInitialized);
   PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
   PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
-  PRECICE_ASSERT(_interpolationOrder != Time::UNDEFINED_INTERPOLATION_ORDER, "Sampling is only allowed, if Waveform is configured correspondingly");
-  return this->interpolate(normalizedDt);
+  if (_interpolationOrder == Time::UNDEFINED_INTERPOLATION_ORDER) {
+    return this->_timeWindowsStorage.col(0);
+  } else {
+    return this->interpolate(normalizedDt);
+  }
 }
 
 void Waveform::moveToNextWindow()

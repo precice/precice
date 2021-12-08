@@ -10,8 +10,6 @@
 namespace precice {
 namespace mesh {
 
-const int Data::INTERPOLATION_ORDER = 1;
-
 size_t Data::_dataCount = 0;
 
 Data::Data()
@@ -25,14 +23,15 @@ Data::Data()
 Data::Data(
     std::string name,
     DataID      id,
-    int         dimensions)
+    int         dimensions,
+    int         interpolationOrder)
     : _values(),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
-  _ptrWaveform = time::PtrWaveform(new time::Waveform(Data::INTERPOLATION_ORDER));
+  _ptrWaveform = time::PtrWaveform(new time::Waveform(interpolationOrder));
   _dataCount++;
 }
 

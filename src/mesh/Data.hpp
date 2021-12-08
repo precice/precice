@@ -7,6 +7,7 @@
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
 #include "time/SharedPointer.hpp"
+#include "time/Time.hpp"
 
 namespace precice {
 namespace mesh {
@@ -24,8 +25,6 @@ namespace mesh {
  */
 class Data {
 public:
-  static const int INTERPOLATION_ORDER; // @todo currently hard-coded; should be configurable.
-
   // @brief Possible types of data values.
   //  enum DataType {
   //    TYPE_UNDEFINED,
@@ -66,7 +65,8 @@ public:
   Data(
       std::string name,
       DataID      id,
-      int         dimension);
+      int         dimension,
+      int         interpolationOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER);
 
   /// Destructor, decrements data count.
   ~Data();

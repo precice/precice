@@ -14,18 +14,27 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
 
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)
                       .setDocumentation("Unique name for the data set.");
+  XMLTag            tagWaveform(*this, TAG_WAVEFORM, XMLTag::OCCUR_NOT_OR_ONCE);
+  XMLAttribute<int> attrOrder(ATTR_ORDER);
+  attrOrder.setDocumentation("Set order used by waveform iteration.");
+  tagWaveform.addAttribute(attrOrder);
+  {
+    XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
+    tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
+    tagScalar.addAttribute(attrName);
+    tagScalar.addSubtag(tagWaveform);
+    parent.addSubtag(tagScalar);
+  }
 
-  XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
-  tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
-  tagScalar.addAttribute(attrName);
-  parent.addSubtag(tagScalar);
-
-  XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
-  tagVector.setDocumentation("Defines a vector data set to be assigned to meshes. The number of "
-                             "components of each data entry depends on the spatial dimensions set "
-                             "in tag <solver-interface>.");
-  tagVector.addAttribute(attrName);
-  parent.addSubtag(tagVector);
+  {
+    XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
+    tagVector.setDocumentation("Defines a vector data set to be assigned to meshes. The number of "
+                               "components of each data entry depends on the spatial dimensions set "
+                               "in tag <solver-interface>.");
+    tagVector.addAttribute(attrName);
+    tagVector.addSubtag(tagWaveform);
+    parent.addSubtag(tagVector);
+  }
 }
 
 void DataConfiguration::setDimensions(
@@ -56,10 +65,11 @@ void DataConfiguration::xmlTagCallback(
 {
   if (tag.getNamespace() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
-    const std::string &name           = tag.getStringAttributeValue(ATTR_NAME);
-    const std::string &typeName       = tag.getName();
-    int                dataDimensions = getDataDimensions(typeName);
-    addData(name, dataDimensions);
+    const std::string &typeName = tag.getName();
+    _config.name                = tag.getStringAttributeValue(ATTR_NAME);
+    _config.dataDimensions      = getDataDimensions(typeName);
+  } else if (tag.getName() == TAG_WAVEFORM) {
+    _config.waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
   } else {
     PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
   }
@@ -69,13 +79,18 @@ void DataConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
     xml::XMLTag &                    tag)
 {
+  PRECICE_TRACE(tag.getFullName());
+  if (tag.getNamespace() == TAG) {
+    addData(_config.name, _config.dataDimensions, _config.waveformOrder);
+  }
 }
 
 void DataConfiguration::addData(
     const std::string &name,
-    int                dataDimensions)
+    int                dataDimensions,
+    int                interpolationData)
 {
-  ConfiguredData data(name, dataDimensions);
+  ConfiguredData data(name, dataDimensions, interpolationData);
 
   // Check if data with same name has been added already
   for (auto &elem : _data) {
