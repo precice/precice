@@ -75,7 +75,7 @@ def checkTestName(arg):
         raise argparse.ArgumentTypeError(
             "The given test name \"{}\" cannot contain the file extensions.".
             format(arg))
-    if re.search(r"[^a-zA-Z]", arg) is not None:
+    if re.search(r"[^a-zA-Z0-9]", arg) is not None:
         raise argparse.ArgumentTypeError(
             "The given test name \"{}\" must use CamelCase.".format(arg))
     return arg
