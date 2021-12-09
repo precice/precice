@@ -8,3 +8,4 @@ building preCICE often.
 - `updateSourceFiles.py`: Update the list of source files that CMake needs to build.
   Useful when adding/removing source files.
 - `createChangelog`: Creates a changelog file for the current PR. This is based on the GitHub CLI.
+- `createTest.py`: Automatically creates integration tests

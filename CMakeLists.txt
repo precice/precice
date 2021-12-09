@@ -387,6 +387,10 @@ IF (BUILD_TESTING)
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
+  target_include_directories(testprecice PRIVATE
+    ${preCICE_SOURCE_DIR}/src
+    ${preCICE_SOURCE_DIR}/tests
+    )
   # Copy needed properties from the lib to the executatble. This is necessary as
   # this executable uses the library source, not only the interface.
   copy_target_property(precice testprecice COMPILE_DEFINITIONS)
@@ -403,6 +407,7 @@ IF (BUILD_TESTING)
   message(STATUS "Including test sources")
   # Test Sources Configuration
   include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
+  include(${CMAKE_CURRENT_LIST_DIR}/tests/tests.cmake)
 else(BUILD_TESTING)
   message(STATUS "Excluding test sources")
 endif(BUILD_TESTING)
