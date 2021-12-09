@@ -6,8 +6,6 @@
 # 0 on success
 # 2 is clang-format 8 could not be found 
 
-#TODO: Needs an update?
-
 # Detect clang-format version
 if command -v clang-format-8 > /dev/null; then
     BINARY="clang-format-8"
