@@ -16,8 +16,10 @@ target_sources(testprecice
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithWaveformSampling.cpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
-    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithWaveformSampling.cpp
-    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcycling.cpp
+    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
+    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithWaveformSamplingZero.cpp
+    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcyclingFirst.cpp
+    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcyclingZero.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSampling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSampling.cpp

@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
   <solver-interface dimensions="3">
-    <data:scalar name="DataOne" />
-    <data:scalar name="DataTwo" />
+    <data:scalar name="DataOne">
+      <waveform order="0" />
+    </data:scalar>
+
+    <data:scalar name="DataTwo">
+      <waveform order="0" />
+    </data:scalar>
 
     <mesh name="MeshOne">
       <use-data name="DataOne" />

@@ -16,9 +16,9 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 /**
  * @brief Test to run a simple coupling with subcycling.
  *
- * Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.
+ * Provides a dt argument to the read function, but since a zeroth order waveform is used the result should be identical to the case without waveform relaxation
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 

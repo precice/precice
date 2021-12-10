@@ -2,11 +2,11 @@
 <precice-configuration>
   <solver-interface dimensions="3">
     <data:scalar name="DataOne">
-      <waveform order="1" />
+      <waveform order="0" />
     </data:scalar>
 
     <data:scalar name="DataTwo">
-      <waveform order="1" />
+      <waveform order="0" />
     </data:scalar>
 
     <mesh name="MeshOne">

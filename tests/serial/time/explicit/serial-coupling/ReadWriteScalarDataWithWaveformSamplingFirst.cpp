@@ -14,9 +14,12 @@ BOOST_AUTO_TEST_SUITE(Explicit)
 BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
- * @brief Test to run a simple coupling with sampling from the waveform.
+ * @brief Test to run a simple coupling with sampling from a first order waveform; no subcycling.
+ * 
+ * Provides a dt argument to the read function.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSampling)
+
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
