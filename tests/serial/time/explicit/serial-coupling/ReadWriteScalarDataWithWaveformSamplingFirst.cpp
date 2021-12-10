@@ -72,11 +72,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
   double currentDt    = dt;    // Timestep length used by solver
   double time         = timewindow * dt;
   double sampleDts[4] = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
+  double readDts[4]   = {sampleDts[0], sampleDts[1], sampleDts[2], sampleDts[3]};
   int    nSamples     = 4;
   int    iterations   = 0;
-  double readTime; // time where we are reading
   double sampleDt; // dt relative to timestep start, where we are sampling
-
+  double readDt;   // dt relative to timestep start for readTime
+  double readTime; // time where we are reading from the reference solution
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     for (int i = 0; i < nVertices; i++) {
       writeData[i] = writeFunction(time, i);
@@ -93,7 +94,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     for (int i = 0; i < nVertices; i++) {
       for (int j = 0; j < nSamples; j++) {
         sampleDt = sampleDts[j];
-        readTime = time + sampleDt;
+        readDt   = readDts[j];
+        readTime = time + readDt;
         precice.readScalarData(readDataID, vertexIDs[i], sampleDt, readData[i]);
         if (context.isNamed("SolverOne") && timewindow == 0) {
           BOOST_TEST(readData[i] == readFunction(time, i));
