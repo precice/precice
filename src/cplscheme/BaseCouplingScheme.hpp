@@ -19,7 +19,6 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "time/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -313,10 +312,9 @@ protected:
   }
 
   /**
-   * @brief Sets up data matrices to store data values from previous iterations and time windows.
-   * @param data Data fields for which data is stored
+   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
    */
-  void setupDataMatrices();
+  void initializeStorages();
 
   /**
    * @brief sends convergence to other participant via m2n
@@ -341,9 +339,9 @@ protected:
   bool doImplicitStep();
 
   /**
-   * @brief stores current data in buffer of all Waveforms
+   * @brief stores current data in buffer for extrapolation
    */
-  void storeDataInWaveforms();
+  void storeExtrapolationData();
 
   /**
    * @brief finalizes this window's data and initializes data for next window.
@@ -372,6 +370,11 @@ protected:
    * @param receiveData CouplingData being checked
    */
   void determineInitialReceive(DataMap &receiveData);
+
+  /**
+   * @brief getter for _extrapolationOrder
+   */
+  int getExtrapolationOrder();
 
 private:
   /// Coupling mode used by coupling scheme.
@@ -489,12 +492,6 @@ private:
    * the data is fetched from send and receive data assigned to the cpl scheme.
    */
   std::vector<ConvergenceMeasureContext> _convergenceMeasures;
-
-  /// Map that links DataID to Waveform
-  typedef std::map<int, time::PtrWaveform> WaveformMap;
-
-  /// All waveforms this coupling scheme needs data from as a map "data ID -> waveform"
-  WaveformMap _waveforms;
 
   /// Functions needed for initialize()
 

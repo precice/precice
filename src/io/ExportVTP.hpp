@@ -18,15 +18,15 @@ class Triangle;
 namespace precice {
 namespace io {
 
-/** Exporter for VTU and PVTU.
+/** Exporter for VTP and PVTP.
  *
- * Writes meshes to VTU piece files.
- * Parallel participants additionally write a PVTU file.
+ * Writes meshes to VTP piece files.
+ * Parallel participants additionally write a PVTP file.
  * The naming scheme allows to import these files into Paraview as time series.
  */
-class ExportVTU : public ExportXML {
+class ExportVTP : public ExportXML {
 private:
-  mutable logging::Logger _log{"io::ExportVTU"};
+  mutable logging::Logger _log{"io::ExportVTP"};
 
   std::string getVTKFormat() const override;
   std::string getMasterExtension() const override;
