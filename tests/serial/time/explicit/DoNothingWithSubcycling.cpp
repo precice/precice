@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(Explicit)
  * @brief Test to run a simple "do nothing" coupling with subcycling solvers.
  * 
  */
-BOOST_AUTO_TEST_CASE(testExplicitWithSubcycling)
+BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 

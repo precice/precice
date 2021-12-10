@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_SUITE(InitializeData)
 /**
  * @brief The second solver initializes the data of the first. Use write mapping for data.
  */
-BOOST_AUTO_TEST_CASE(testDataInitializationWriteMapping)
+BOOST_AUTO_TEST_CASE(WriteMapping)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 

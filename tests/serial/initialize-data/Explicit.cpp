@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(InitializeData)
  * A mapping is employed for the second solver, i.e., at the end of
  * initializeData(), the mapping needs to be invoked.
  */
-BOOST_AUTO_TEST_CASE(testExplicitWithDataInitialization)
+BOOST_AUTO_TEST_CASE(Explicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 

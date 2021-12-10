@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_SUITE(InitializeData)
  * @brief Test simple coupled simulation with iterations, data initialization and without acceleration
  * 
  */
-BOOST_AUTO_TEST_CASE(testImplicitWithDataInitialization)
+BOOST_AUTO_TEST_CASE(Implicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 

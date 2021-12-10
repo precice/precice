@@ -17,10 +17,10 @@ BOOST_AUTO_TEST_SUITE(Implicit)
  *
  *  Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.
  */
-BOOST_AUTO_TEST_CASE(testImplicitReadWriteScalarDataWithSubcycling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  SolverInterface          precice(context.name, context.config(), 0, 1); // serial coupling, SolverOne first
+  SolverInterface precice(context.name, context.config(), 0, 1); // serial coupling, SolverOne first
 
   MeshID meshID;
   DataID writeDataID;

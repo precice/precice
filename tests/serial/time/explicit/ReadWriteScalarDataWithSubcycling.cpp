@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(Explicit)
  *
  * Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.
  */
-BOOST_AUTO_TEST_CASE(testExplicitReadWriteScalarDataWithSubcycling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
