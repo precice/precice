@@ -13,4 +13,7 @@ target_sources(testprecice
     tests/serial/initialize-data/testDataInitializationWriteMapping.cpp
     tests/serial/initialize-data/testExplicitWithDataInitialization.cpp
     tests/serial/initialize-data/testImplicitWithDataInitialization.cpp
+    tests/serial/time/explicit/testExplicitReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/explicit/testExplicitWithSubcycling.cpp
+    tests/serial/time/implicit/testImplicitReadWriteScalarDataWithSubcycling.cpp
     )
