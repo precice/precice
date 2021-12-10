@@ -1,0 +1,24 @@
+#
+# This file lists all tests sources that will be compiled into the test executable
+#
+target_sources(testprecice
+    PRIVATE
+    tests/serial/MultiCouplingFourSolvers1.cpp
+    tests/serial/MultiCouplingFourSolvers2.cpp
+    tests/serial/helpers.cpp
+    tests/serial/helpers.hpp
+    tests/serial/initialize-data/Explicit.cpp
+    tests/serial/initialize-data/Implicit.cpp
+    tests/serial/initialize-data/ReadMapping.cpp
+    tests/serial/initialize-data/WriteMapping.cpp
+    tests/serial/initialize-data/helpers.cpp
+    tests/serial/initialize-data/helpers.hpp
+    tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithWaveformSampling.cpp
+    tests/serial/time/explicit/serial-coupling/DoNothingWithSubcycling.cpp
+    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithWaveformSampling.cpp
+    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcycling.cpp
+    tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSampling.cpp
+    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSampling.cpp
+    )

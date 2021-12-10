@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <exception>
 #include <memory>
 #include <numeric>
@@ -18,6 +20,7 @@
 #include "precice/types.hpp"
 #include "query/Index.hpp"
 #include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
@@ -50,6 +53,19 @@ TestContext::~TestContext() noexcept
   // Reset communicators
   Par::resetCommState();
   Par::resetManagedMPI();
+}
+
+std::string TestContext::prefix(const std::string &filename) const
+{
+  boost::filesystem::path location{testing::getTestPath()};
+  auto                    dir = location.parent_path();
+  dir /= filename;
+  return boost::filesystem::weakly_canonical(dir).string();
+}
+
+std::string TestContext::config() const
+{
+  return prefix(testing::getTestName() + ".xml");
 }
 
 bool TestContext::hasSize(int size) const

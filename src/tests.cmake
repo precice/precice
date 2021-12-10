@@ -31,6 +31,7 @@ target_sources(testprecice
     src/cplscheme/tests/SerialImplicitCouplingSchemeTest.cpp
     src/io/tests/ExportConfigurationTest.cpp
     src/io/tests/ExportVTKTest.cpp
+    src/io/tests/ExportVTPTest.cpp
     src/io/tests/ExportVTUTest.cpp
     src/io/tests/TXTTableWriterTest.cpp
     src/io/tests/TXTWriterReaderTest.cpp
@@ -55,10 +56,8 @@ target_sources(testprecice
     src/partition/tests/ReceivedPartitionTest.cpp
     src/partition/tests/fixtures.hpp
     src/precice/tests/DataContextTest.cpp
-    src/precice/tests/InitializeDataTests.cpp
     src/precice/tests/ParallelTests.cpp
     src/precice/tests/SerialTests.cpp
-    src/precice/tests/Time/TimeTests.cpp
     src/precice/tests/ToolingTests.cpp
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
