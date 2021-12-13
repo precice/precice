@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        UBUNTU: ["18.04", "20.04", "20.10", "21.04"]
+        UBUNTU: ["18.04", "20.04", "21.04", "21.10"]
     steps:
       - uses: actions/checkout@v2
       - name: Generate build directory
