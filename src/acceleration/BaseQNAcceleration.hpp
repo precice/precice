@@ -293,6 +293,9 @@ private:
 
   /// Number of dropped columns in this time window (old time window out of scope)
   int _nbDropCols = 0;
+
+  /// Delete first column if input values are zero
+  bool _deleteFirstColumn = false; 
 };
 } // namespace acceleration
 } // namespace precice

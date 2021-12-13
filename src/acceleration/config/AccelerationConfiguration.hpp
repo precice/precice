@@ -65,6 +65,8 @@ private:
   const std::string ATTR_RSLS_REUSED_TIME_WINDOWS;
   const std::string ATTR_RSSVD_TRUNCATIONEPS;
   const std::string ATTR_PRECOND_NONCONST_TIME_WINDOWS;
+  const std::string ATTR_PRECOND_MONITOR;
+  const std::string ATTR_PRECOND_FREEZE_RESET;
 
   const std::string VALUE_CONSTANT;
   const std::string VALUE_AITKEN;
@@ -110,6 +112,8 @@ private:
     int                   imvjChunkSize              = 0;
     int                   imvjRSLS_reusedTimeWindows = 0;
     int                   precond_nbNonConstTWindows = -1;
+    bool                  precond_monitor            = false;
+    int                   precond_freezeReset        = 10;
     double                singularityLimit           = 0;
     double                imvjRSSVD_truncationEps    = 0;
     bool                  estimateJacobian           = false;

@@ -24,7 +24,7 @@ namespace impl {
 class Preconditioner {
 public:
   Preconditioner(int maxNonConstTimeWindows)
-      : _maxNonConstTimeWindows(maxNonConstTimeWindows)
+      : _maxNonConstTimeWindows(maxNonConstTimeWindows) 
   {
   }
 
@@ -192,6 +192,18 @@ public:
     _requireNewQR = false;
   }
 
+  /// to tell the filtering that the pre-scaling weights were updated 
+  bool updatedWeights()
+  {
+    return _updatedWeights;
+  }
+
+  /// to tell that the QR decomposition has been reset due to updated pre-scaling weights
+  void updatedWeightsReset()
+  {
+    _updatedWeights = false;
+  }
+
   std::vector<double> &getWeights()
   {
     return _weights;
@@ -222,6 +234,9 @@ protected:
 
   /// True if a QR decomposition from scratch is necessary
   bool _requireNewQR = false;
+
+  /// True if pre-scaling weights were updated
+  bool _updatedWeights = false;
 
   /// True if _nbNonConstTimeWindows >= _maxNonConstTimeWindows, i.e., preconditioner is not updated any more.
   bool _frozen = false;

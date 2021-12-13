@@ -352,8 +352,10 @@ void BaseQNAcceleration::performAcceleration(
     // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
     _preconditioner->apply(_matrixV);
 
+
     if (_preconditioner->requireNewQR()) {
-      if (not(_filter == Acceleration::QR2FILTER)) { //for QR2 filter, there is no need to do this twice
+      if (not(_filter == Acceleration::QR2FILTER) || (its < 3 && tWindows == 0)) { //for QR2 filter, there is no need to do this twice
+        // Must reset qrV if (its < 3 && tWindows == 0) as the filter does not perform this step.
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
@@ -365,9 +367,18 @@ void BaseQNAcceleration::performAcceleration(
     }
 
     // apply the configured filter to the LS system
-    utils::Event applyingFilter("ApplyFilter");
-    applyFilter();
-    applyingFilter.stop();
+    // Delete the first column if a zero vector occurs. Do not apply the filter before this stage.
+    if (its == 3 && tWindows == 0){
+      if (_deleteFirstColumn){
+        removeMatrixColumn(2);
+        _qrV.deleteColumn(2);
+        _deleteFirstColumn = false;
+      }
+    } else if (its > 3 || tWindows > 0){
+      utils::Event applyingFilter("ApplyFilter");
+      applyFilter();
+      applyingFilter.stop();
+    }
 
     // revert scaling of V, in computeQNUpdate all data objects are unscaled.
     _preconditioner->revert(_matrixV);
@@ -473,6 +484,12 @@ void BaseQNAcceleration::concatenateCouplingData(
     for (int i = 0; i < size; i++) {
       _values(i + offset)    = values(i);
       _oldValues(i + offset) = oldValues(i);
+    }
+    // Delete column if input values fro solver are zero
+    double _normValues = utils::MasterSlave::l2norm(values);
+    if (_firstIteration && (_normValues == 0) ){
+      _deleteFirstColumn = true;
+      PRECICE_DEBUG( "Data with ID: {} in has a zero input vector.", id );
     }
     offset += size;
   }

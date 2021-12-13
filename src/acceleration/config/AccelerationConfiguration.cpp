@@ -54,6 +54,8 @@ AccelerationConfiguration::AccelerationConfiguration(
       ATTR_RSLS_REUSED_TIME_WINDOWS("reused-time-windows-at-restart"),
       ATTR_RSSVD_TRUNCATIONEPS("truncation-threshold"),
       ATTR_PRECOND_NONCONST_TIME_WINDOWS("freeze-after"),
+      ATTR_PRECOND_MONITOR("monitor"),
+      ATTR_PRECOND_FREEZE_RESET("freeze-reset"),
       VALUE_CONSTANT("constant"),
       VALUE_AITKEN("aitken"),
       VALUE_IQNILS("IQN-ILS"),
@@ -204,6 +206,8 @@ void AccelerationConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _config.preconditionerType         = callingTag.getStringAttributeValue(ATTR_TYPE);
     _config.precond_nbNonConstTWindows = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
+    _config.precond_monitor            = callingTag.getBooleanAttributeValue(ATTR_PRECOND_MONITOR);
+    _config.precond_freezeReset        = callingTag.getIntAttributeValue(ATTR_PRECOND_FREEZE_RESET);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
 
     if (_config.alwaysBuildJacobian)
@@ -258,10 +262,16 @@ void AccelerationConfiguration::xmlEndTagCallback(
         _preconditioner = PtrPreconditioner(new ConstantPreconditioner(factors));
       } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_monitor ));
+        _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_freezeReset ));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.precond_monitor ));
+        _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.precond_freezeReset ));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_monitor ));
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_freezeReset ));
       } else {
         // no preconditioner defined
         std::vector<double> factors;
