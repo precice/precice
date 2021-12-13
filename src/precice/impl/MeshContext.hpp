@@ -39,6 +39,10 @@ struct MeshContext {
   /// bounding box to speed up decomposition of received mesh is increased by this safety factor
   double safetyFactor = -1;
 
+  /// In case a mapping done by the solver is favored over a preCICE mapping, apply user-defined
+  /// bounding-boxes.
+  bool allowDirectAccess = false;
+
   /// True, if accessor does create the mesh.
   bool provideMesh = false;
 
@@ -56,6 +60,16 @@ struct MeshContext {
 
   /// Mappings used when mapping data to the mesh. Can be empty.
   std::vector<MappingContext> toMappingContexts;
+
+  void clearMappings()
+  {
+    for (auto &mc : fromMappingContexts) {
+      mc.mapping->clear();
+    }
+    for (auto &mc : toMappingContexts) {
+      mc.mapping->clear();
+    }
+  }
 };
 
 inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement)

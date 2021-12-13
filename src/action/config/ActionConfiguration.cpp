@@ -207,13 +207,8 @@ void ActionConfiguration::xmlEndTagCallback(
 
 int ActionConfiguration::getUsedMeshID() const
 {
-  for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
-    if (mesh->getName() == _configuredAction.mesh) {
-      return mesh->getID();
-    }
-  }
-  PRECICE_ERROR("No mesh name \"{}\" found. Please check that the correct mesh name is used.", _configuredAction.mesh);
-  return -1; // To please compiler
+  PRECICE_CHECK(_meshConfig->hasMeshName(_configuredAction.mesh), "No mesh name \"{}\" found. Please check that the correct mesh name is used.", _configuredAction.mesh);
+  return _meshConfig->getMesh(_configuredAction.mesh)->getID();
 }
 
 void ActionConfiguration::createAction()
@@ -226,40 +221,31 @@ void ActionConfiguration::createAction()
   // Determine data and mesh
   std::vector<int> sourceDataIDs;
   int              targetDataID = -1;
-  mesh::PtrMesh    mesh;
-  for (const mesh::PtrMesh &aMesh : _meshConfig->meshes()) {
-    if (aMesh->getName() == _configuredAction.mesh) {
-      mesh = aMesh;
-      for (const mesh::PtrData &data : mesh->data()) {
-        if (std::find(_configuredAction.sourceDataVector.begin(), _configuredAction.sourceDataVector.end(), data->getName()) != _configuredAction.sourceDataVector.end()) {
-          sourceDataIDs.push_back(data->getID());
-        }
-        if (data->getName() == _configuredAction.targetData) {
-          targetDataID = data->getID();
-        }
-      }
-    }
-  }
-  PRECICE_CHECK(mesh,
+  PRECICE_CHECK(_meshConfig->hasMeshName(_configuredAction.mesh),
                 "Data action uses mesh \"{}\" which is not configured. Please ensure that the correct mesh name is given in <action:python mesh=\"...\">", _configuredAction.mesh);
+  mesh::PtrMesh mesh = _meshConfig->getMesh(_configuredAction.mesh);
+
+  if (!_configuredAction.targetData.empty()) {
+    PRECICE_CHECK(mesh->hasDataName(_configuredAction.targetData),
+                  "Data action uses target data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh with name \"{}\".", _configuredAction.targetData, _configuredAction.mesh);
+    targetDataID = mesh->data(_configuredAction.targetData)->getID();
+    PRECICE_ASSERT(targetDataID != -1);
+  }
+
+  for (const std::string &dataName : _configuredAction.sourceDataVector) {
+    PRECICE_CHECK(mesh->hasDataName(dataName), "Data action uses source data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh with name \"{}\".", dataName, _configuredAction.mesh);
+    sourceDataIDs.push_back(mesh->data(dataName)->getID());
+  }
+
   PRECICE_CHECK((_configuredAction.sourceDataVector.empty() || not sourceDataIDs.empty()),
-                "Data action uses source data \"{}\" which is not configured. Please ensure that the source data name is used by the mesh.", _configuredAction.sourceDataVector.back());
-  PRECICE_CHECK((_configuredAction.targetData.empty() || (targetDataID != -1)),
-                "Data action uses target data \"{}\" which is not configured. Please ensure that the target data name is used by the mesh", _configuredAction.targetData);
+                "Data action uses source data \"{}\" which is not configured. Please ensure that the source data name is used by the mesh with name \"{}\".", _configuredAction.sourceDataVector.back(), _configuredAction.mesh);
+
   action::PtrAction action;
   if (_configuredAction.type == NAME_MULTIPLY_BY_AREA) {
-    PRECICE_CHECK(mesh->getDimensions() == 2,
-                  "The action \"{}\" is only available for a solverinterface dimensionality of 2. "
-                  "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.",
-                  NAME_MULTIPLY_BY_AREA);
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_MULTIPLY_BY_AREA));
   } else if (_configuredAction.type == NAME_DIVIDE_BY_AREA) {
-    PRECICE_CHECK(mesh->getDimensions() == 2,
-                  "The action \"{}\" is only available for a solverinterface dimensionality of 2. "
-                  "Please check the \"dimensions\" attribute of the <solverinterface> or use a custom action.",
-                  NAME_DIVIDE_BY_AREA);
     action = action::PtrAction(
         new action::ScaleByAreaAction(timing, targetDataID,
                                       mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));

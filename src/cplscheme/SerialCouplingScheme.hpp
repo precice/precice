@@ -8,8 +8,13 @@
 #include "m2n/SharedPointer.hpp"
 
 namespace precice {
-namespace cplscheme {
 
+namespace testing {
+// Forward declaration to friend the boost test struct
+struct SerialCouplingSchemeFixture;
+} // namespace testing
+
+namespace cplscheme {
 /**
  * @brief Coupling scheme for serial coupling, i.e. staggered execution of two coupled participants
  *
@@ -17,6 +22,7 @@ namespace cplscheme {
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class SerialCouplingScheme : public BiCouplingScheme {
+  friend struct testing::SerialCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
  * @brief Constructor.
@@ -32,6 +38,7 @@ public:
  * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
  * @param[in] cplMode Set implicit or explicit coupling
  * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
+ * @param[in] extrapolationOrder order used for extrapolation
  */
   SerialCouplingScheme(
       double                        maxTime,
@@ -44,7 +51,8 @@ public:
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
-      int                           maxIterations = -1);
+      int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
+      int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};

@@ -10,7 +10,7 @@ Short rational why preCICE needs this change. If this is already described in an
 ## Author's checklist
 
 * [ ] I added a changelog file with this PR number in `docs/changelog/` if there are noteworthy changes.
-* [ ] I ran `tools/formatting/check-format` and everything is formatted correctly.
+* [ ] I ran `tools/formatting/format-all` to ensure everything is formatted correctly.
 * [ ] I sticked to C++14 features.
 * [ ] I sticked to CMake version 3.10.
 * [ ] I squashed / am about to squash all commits that should be seen as one.
@@ -21,4 +21,5 @@ Short rational why preCICE needs this change. If this is already described in an
 
 * [ ] Does the changelog entry make sense? Is it formatted correctly?
 * [ ] Do you understand the code changes?
-* [ ] (more questions/tasks)
+
+<!-- add more questions/tasks if necessary -->

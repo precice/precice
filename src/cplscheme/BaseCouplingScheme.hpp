@@ -19,7 +19,6 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "time/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -72,7 +71,8 @@ public:
       std::string                   localParticipant,
       int                           maxIterations,
       CouplingMode                  cplMode,
-      constants::TimesteppingMethod dtMethod);
+      constants::TimesteppingMethod dtMethod,
+      int                           extrapolationOrder);
 
   /**
    * @brief getter for _isInitialized
@@ -212,20 +212,6 @@ public:
    */
   void advance() override final;
 
-  /**
-   * @brief Sets order of predictor of interface values for first participant.
-   *
-   * The first participant in the implicit coupling scheme has to take some
-   * initial guess for the interface values computed by the second participant.
-   * In order to improve this initial guess, an extrapolation from previous
-   * time windows can be performed.
-   *
-   * The standard predictor is of order zero, i.e., simply the converged values
-   * of the last time windows are taken as initial guess for the coupling iterations.
-   * Currently, an order 1 predictor is implement besides that.
-   */
-  void setExtrapolationOrder(int order);
-
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
       int                         dataID,
@@ -235,7 +221,7 @@ public:
       bool                        doesLogging);
 
   /// Set an acceleration technique.
-  void setAcceleration(acceleration::PtrAcceleration acceleration);
+  void setAcceleration(const acceleration::PtrAcceleration &acceleration);
 
   /**
    * @brief Getter for _doesFirstStep
@@ -259,10 +245,10 @@ protected:
   DataMap _allData;
 
   /// Sends data sendDataIDs given in mapCouplingData with communication.
-  void sendData(m2n::PtrM2N m2n, DataMap sendData);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
   /// Receives data receiveDataIDs given in mapCouplingData with communication.
-  void receiveData(m2n::PtrM2N m2n, DataMap receiveData);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -326,17 +312,16 @@ protected:
   }
 
   /**
-   * @brief Sets up data matrices to store data values from previous iterations and time windows.
-   * @param data Data fields for which data is stored
+   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
    */
-  void setupDataMatrices();
+  void initializeStorages();
 
   /**
    * @brief sends convergence to other participant via m2n
    * @param m2n used for sending
    * @param convergence bool that is being sent
    */
-  void sendConvergence(m2n::PtrM2N m2n, bool convergence);
+  void sendConvergence(const m2n::PtrM2N &m2n, bool convergence);
 
   /**
    * @brief receives convergence from other participant via m2n
@@ -354,9 +339,9 @@ protected:
   bool doImplicitStep();
 
   /**
-   * @brief stores current data in buffer of all Waveforms
+   * @brief stores current data in buffer for extrapolation
    */
-  void storeDataInWaveforms();
+  void storeExtrapolationData();
 
   /**
    * @brief finalizes this window's data and initializes data for next window.
@@ -385,6 +370,11 @@ protected:
    * @param receiveData CouplingData being checked
    */
   void determineInitialReceive(DataMap &receiveData);
+
+  /**
+   * @brief getter for _extrapolationOrder
+   */
+  int getExtrapolationOrder();
 
 private:
   /// Coupling mode used by coupling scheme.
@@ -419,11 +409,21 @@ private:
   /// Number of total iterations performed.
   int _totalIterations = -1;
 
-  /// Extrapolation order of coupling data for first iteration of every dt.
-  int _extrapolationOrder = 0;
-
-  /// valid digits for computation of the remainder of a time window
-  int _validDigits;
+  /**
+   * Order of predictor of interface values for first participant.
+   *
+   * The first participant in the implicit coupling scheme has to take some
+   * initial guess for the interface values computed by the second participant.
+   * In order to improve this initial guess, an extrapolation from previous
+   * time windows can be performed.
+   *
+   * The standard predictor is of order zero, i.e., simply the converged values
+   * of the last time windows are taken as initial guess for the coupling iterations.
+   * Currently, an order 1 predictor (linear extrapolation) and order 2 predictor
+   * (see https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1 )
+   * is implement besides that.
+   */
+  const int _extrapolationOrder;
 
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;
@@ -492,12 +492,6 @@ private:
    * the data is fetched from send and receive data assigned to the cpl scheme.
    */
   std::vector<ConvergenceMeasureContext> _convergenceMeasures;
-
-  /// Map that links DataID to Waveform
-  typedef std::map<int, time::PtrWaveform> WaveformMap;
-
-  /// All waveforms this coupling scheme needs data from as a map "data ID -> waveform"
-  WaveformMap _waveforms;
 
   /// Functions needed for initialize()
 

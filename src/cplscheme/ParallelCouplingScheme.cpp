@@ -1,4 +1,7 @@
 #include "ParallelCouplingScheme.hpp"
+
+#include <utility>
+
 #include "cplscheme/BiCouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 
@@ -16,9 +19,10 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
-    int                           maxIterations)
+    int                           maxIterations,
+    int                           extrapolationOrder)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, m2n, maxIterations, cplMode, dtMethod) {}
+                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
 void ParallelCouplingScheme::initializeImplementation()
 {

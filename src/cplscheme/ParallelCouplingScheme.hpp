@@ -9,6 +9,12 @@
 #include "utils/assertion.hpp"
 
 namespace precice {
+
+namespace testing {
+// Forward declaration to friend the boost test struct
+struct ParallelCouplingSchemeFixture;
+} // namespace testing
+
 namespace cplscheme {
 
 /**
@@ -18,6 +24,7 @@ namespace cplscheme {
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class ParallelCouplingScheme : public BiCouplingScheme {
+  friend struct testing::ParallelCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
    * @brief Constructor.
@@ -33,6 +40,7 @@ public:
    * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
    * @param[in] cplMode Set implicit or explicit coupling
    * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
+   * @param[in] extrapolationOrder order used for extrapolation
    */
   ParallelCouplingScheme(
       double                        maxTime,
@@ -45,7 +53,8 @@ public:
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
-      int                           maxIterations = -1);
+      int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
+      int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};

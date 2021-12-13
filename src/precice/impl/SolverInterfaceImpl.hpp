@@ -5,17 +5,18 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "io/Constants.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "precice/types.hpp"
 #include "utils/MultiLock.hpp"
 
 namespace precice {
@@ -241,14 +242,17 @@ public:
   /// Returns all mesh IDs (besides sub-ids).
   std::set<int> getMeshIDs() const;
 
+  /// @copydoc SolverInterface::isMeshConnectivityRequired()
+  bool isMeshConnectivityRequired(int meshID) const;
+
   /// Returns true, if the data with given name is used in the given mesh.
-  bool hasData(const std::string &dataName, int meshID) const;
+  bool hasData(const std::string &dataName, MeshID meshID) const;
 
   /// Returns data id corresponding to the given name (from configuration) and mesh.
-  int getDataID(const std::string &dataName, int meshID) const;
+  int getDataID(const std::string &dataName, MeshID meshID) const;
 
   /// Returns the number of nodes of a mesh.
-  int getMeshVertexSize(int meshID) const;
+  int getMeshVertexSize(MeshID meshID) const;
 
   /**
    * @brief Resets mesh with given ID.
@@ -257,7 +261,7 @@ public:
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  void resetMesh(int meshID);
+  void resetMesh(MeshID meshID);
 
   /**
    * @brief Set the position of a solver mesh vertex.
@@ -310,39 +314,39 @@ public:
    * @return Index of the edge to be used when setting a triangle.
    */
   int setMeshEdge(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID);
 
   /// Set a triangle of a solver mesh.
   void setMeshTriangle(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID);
+      MeshID meshID,
+      int    firstEdgeID,
+      int    secondEdgeID,
+      int    thirdEdgeID);
 
   /// Sets a triangle and creates/sets edges automatically of a solver mesh.
   void setMeshTriangleWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID);
 
   /// Set a quadrangle of a solver mesh.
   void setMeshQuad(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID,
-      int fourthEdgeID);
+      MeshID meshID,
+      int    firstEdgeID,
+      int    secondEdgeID,
+      int    thirdEdgeID,
+      int    fourthEdgeID);
 
   /// Sets a quadrangle and creates/sets edges automatically of a solver mesh.
   void setMeshQuadWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID,
-      int fourthVertexID);
+      MeshID meshID,
+      int    firstVertexID,
+      int    secondVertexID,
+      int    thirdVertexID,
+      int    fourthVertexID);
 
   /**
    * @brief Computes and maps all write data mapped from mesh with given ID.
@@ -470,6 +474,21 @@ public:
       double &value) const;
 
   /**
+   * @copydoc precice::SolverInterface::setMeshAccessRegion()
+   */
+  void setMeshAccessRegion(const int     meshID,
+                           const double *boundingBox) const;
+
+  /**
+   * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
+   */
+  void getMeshVerticesAndIDs(
+      const int meshID,
+      const int size,
+      int *     ids,
+      double *  coordinates) const;
+
+  /**
    * @brief Sets the location for all output of preCICE.
    *
    * If done after configuration, this overwrites the output location specified
@@ -487,9 +506,7 @@ public:
    *
    * @param[in] filenameSuffix Suffix of all plotted files
    */
-  void exportMesh(
-      const std::string &filenameSuffix,
-      int                exportType = io::constants::exportAll()) const;
+  void exportMesh(const std::string &filenameSuffix) const;
 
   /**
    * @brief Scales data values according to configuration.
@@ -556,6 +573,12 @@ private:
 
   // SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
+
+  /// Are experimental API calls allowed?
+  bool _allowsExperimental = false;
+
+  // setMeshAccessRegion may only be called once
+  mutable bool _accessRegionDefined = false;
 
   /// The current State of the solverinterface
   State _state{State::Constructed};
@@ -626,10 +649,10 @@ private:
   void computePartitions();
 
   /// Helper for mapWrittenData and mapReadData
-  void computeMappings(utils::ptr_vector<MappingContext> contexts, const std::string &mappingType);
+  void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
-  void mapData(utils::ptr_vector<DataContext> contexts, const std::string &mappingType);
+  void mapData(const utils::ptr_vector<DataContext> &contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
@@ -677,6 +700,15 @@ private:
 
   /// Syncs the timestep between slaves and master (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
+
+  /// Which channels to close in closeCommunicationChannels()
+  enum class CloseChannels : bool {
+    All         = false,
+    Distributed = true
+  };
+
+  /// Syncs the masters of all connected participants
+  void closeCommunicationChannels(CloseChannels cc);
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfigurationPeano;

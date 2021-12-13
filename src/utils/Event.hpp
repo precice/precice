@@ -36,11 +36,11 @@ public:
   std::string name;
 
   /// Allows to put a non-measured (i.e. with a given duration) Event to the measurements.
-  Event(std::string eventName, Clock::duration initialDuration);
+  Event(const std::string &eventName, Clock::duration initialDuration);
 
   /// Creates a new event and starts it, unless autostart = false, synchronize processes, when barrier == true
   /** Use barrier == true with caution, as it can lead to deadlocks. */
-  Event(std::string eventName, bool barrier = false, bool autostart = true);
+  Event(const std::string &eventName, bool barrier = false, bool autostart = true);
 
   /// Stops the event if it's running and report its times to the EventRegistry
   ~Event();
@@ -58,7 +58,7 @@ public:
   Clock::duration getDuration() const;
 
   /// Adds named integer data, associated to an event.
-  void addData(std::string key, int value);
+  void addData(const std::string &key, int value);
 
   Data data;
 

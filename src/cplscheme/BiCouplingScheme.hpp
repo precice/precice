@@ -2,19 +2,14 @@
 
 #include <string>
 #include <vector>
+
 #include "BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "precice/types.hpp"
 #include "utils/assertion.hpp"
-
-// Forward declaration to friend the boost test struct
-namespace CplSchemeTests {
-namespace SerialImplicitCouplingSchemeTests {
-struct testExtrapolateData;
-}
-} // namespace CplSchemeTests
 
 namespace precice {
 namespace cplscheme {
@@ -42,21 +37,20 @@ public:
       m2n::PtrM2N                   m2n,
       int                           maxIterations,
       CouplingMode                  cplMode,
-      constants::TimesteppingMethod dtMethod);
-
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
+      constants::TimesteppingMethod dtMethod,
+      int                           extrapolationOrder);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
-      mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      bool          requiresInitialization);
+      const mesh::PtrData &data,
+      mesh::PtrMesh        mesh,
+      bool                 requiresInitialization);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
-      mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      bool          requiresInitialization);
+      const mesh::PtrData &data,
+      mesh::PtrMesh        mesh,
+      bool                 requiresInitialization);
 
   /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;
@@ -72,7 +66,7 @@ public:
   /**
    * @returns true, if coupling scheme has sendData with given DataID
    */
-  bool hasSendData(int dataID)
+  bool hasSendData(DataID dataID)
   {
     return getSendData(dataID) != nullptr;
   }
@@ -91,10 +85,10 @@ protected:
   }
 
   /// Sets the values
-  CouplingData *getSendData(int dataID);
+  CouplingData *getSendData(DataID dataID);
 
   /// Returns all data to be received with data ID as given.
-  CouplingData *getReceiveData(int dataID);
+  CouplingData *getReceiveData(DataID dataID);
 
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N() const

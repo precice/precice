@@ -105,17 +105,17 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
   if (context.isNamed("A")) {
     c.requestConnection("B", "A");
 
-    c.send(data.data(), data.size());
-    c.receive(data.data(), data.size());
+    c.send(data);
+    c.receive(data);
 
-    BOOST_TEST(data == expectedData);
+    BOOST_TEST(testing::equals(data, expectedData));
   } else {
     c.acceptConnection("B", "A");
 
-    c.receive(data.data(), data.size());
-    BOOST_TEST(data == expectedData);
+    c.receive(data);
+    BOOST_TEST(testing::equals(data, expectedData));
     process(data);
-    c.send(data.data(), data.size());
+    c.send(data);
   }
 }
 
@@ -181,16 +181,16 @@ void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
   if (context.isNamed("A")) {
     c.requestConnection("B", "A");
 
-    c.send(data.data(), data.size());
-    c.receive(data.data(), data.size());
-    BOOST_TEST(data == expectedData);
+    c.send(data);
+    c.receive(data);
+    BOOST_TEST(testing::equals(data, expectedData));
   } else {
     c.acceptConnection("B", "A");
 
-    c.receive(data.data(), data.size());
-    BOOST_TEST(data == expectedData);
+    c.receive(data);
+    BOOST_TEST(testing::equals(data, expectedData));
     process(data);
-    c.send(data.data(), data.size());
+    c.send(data);
   }
 }
 

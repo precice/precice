@@ -12,7 +12,8 @@
 #include "com/config/CommunicationConfiguration.hpp"
 #include "io/ExportContext.hpp"
 #include "io/ExportVTK.hpp"
-#include "io/ExportVTKXML.hpp"
+#include "io/ExportVTP.hpp"
+#include "io/ExportVTU.hpp"
 #include "io/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "logging/LogMacros.hpp"
@@ -167,6 +168,19 @@ ParticipantConfiguration::ParticipantConfiguration(
                            .setDefaultValue(VALUE_FILTER_ON_SLAVES);
   tagUseMesh.addAttribute(attrGeoFilter);
 
+  auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
+                              .setDocumentation(
+                                  "If a mesh is received from another partipant (see tag <from>), it needs to be"
+                                  "decomposed at the receiving participant. In case a mapping is defined, the "
+                                  "mesh is decomposed according to the local provided mesh associated to the mapping. "
+                                  "In case no mapping has been defined (you want to access "
+                                  "the mesh and related data direct), there is no obvious way on how to decompose the "
+                                  "mesh, since no mesh needs to be provided by the participant. For this purpose, bounding "
+                                  "boxes can be defined (see API function \"setMeshAccessRegion\") and used by selecting "
+                                  "the option direct-access=\"true\".");
+
+  tagUseMesh.addAttribute(attrDirectAccess);
+
   auto attrProvide = makeXMLAttribute(ATTR_PROVIDE, false)
                          .setDocumentation(
                              "If this attribute is set to \"on\", the "
@@ -261,13 +275,20 @@ void ParticipantConfiguration::xmlTagCallback(
     Eigen::VectorXd offset(_dimensions);
     /// @todo offset currently not supported
     //offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
-    const std::string &                           from         = tag.getStringAttributeValue(ATTR_FROM);
-    double                                        safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
-    partition::ReceivedPartition::GeometricFilter geoFilter    = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
+    std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
+    double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
+    partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
+    const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
+
+    if (allowDirectAccess) {
+      PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
+    }
+
     PRECICE_CHECK(safetyFactor >= 0,
                   "Participant \"{}\" uses mesh \"{}\" with safety-factor=\"{}\". "
                   "Please use a positive or zero safety-factor instead.",
                   context.name, name, safetyFactor);
+
     bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
     if (_participants.back()->getName() == from) {
       PRECICE_CHECK(provide,
@@ -286,7 +307,15 @@ void ParticipantConfiguration::xmlTagCallback(
           "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />",
           _participants.back()->getName(), name, name);
     }
-    _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter);
+
+    PRECICE_CHECK(!(allowDirectAccess && from.empty()),
+                  "Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a direct access defined. "
+                  "This combination of options is not allowed. "
+                  "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />"
+                  " or remove the direct access option.",
+                  _participants.back()->getName(), name, name);
+
+    _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter, allowDirectAccess);
   } else if (tag.getName() == TAG_WRITE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_NAME);
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
@@ -359,14 +388,11 @@ const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
     const std::string &  nameData) const
 {
-  for (const mesh::PtrData &data : mesh->data()) {
-    if (data->getName() == nameData) {
-      return data;
-    }
-  }
-  PRECICE_ERROR("Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
+  PRECICE_CHECK(mesh->hasDataName(nameData),
+                "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
                 "Please add a use-data tag with name=\"{}\" to this mesh.",
                 _participants.back()->getName(), nameData, mesh->getName(), nameData);
+  return mesh->data(nameData);
 }
 
 void ParticipantConfiguration::finishParticipantConfiguration(
@@ -470,49 +496,39 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Set participant data for data contexts
   for (impl::DataContext &dataContext : participant->writeDataContexts()) {
-    int fromMeshID = dataContext.mesh->getID();
-    PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
+    int fromMeshID = dataContext.getMeshID();
+    PRECICE_CHECK(participant->isMeshProvided(fromMeshID) || participant->isDirectAccessAllowed(fromMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
                   "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
-                  participant->getName(), dataContext.mesh->getName(), dataContext.mesh->getName());
+                  participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
 
     for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
       if (mappingContext.fromMeshID == fromMeshID) {
-        dataContext.mappingContext     = mappingContext;
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.toMeshID);
-        for (const mesh::PtrData &data : meshContext.mesh->data()) {
-          if (data->getName() == dataContext.fromData->getName()) {
-            dataContext.toData = data;
-          }
-        }
-        PRECICE_CHECK(dataContext.fromData != dataContext.toData,
+        PRECICE_CHECK(meshContext.mesh->hasDataName(dataContext.getDataName()),
                       "Mesh \"{}\" needs to use data \"{}\" to allow a write mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
-                      meshContext.mesh->getName(), dataContext.fromData->getName(), dataContext.fromData->getName());
+                      meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
+        dataContext.configureForWriteMapping(mappingContext, meshContext);
       }
     }
   }
 
   for (impl::DataContext &dataContext : participant->readDataContexts()) {
-    int toMeshID = dataContext.mesh->getID();
-    PRECICE_CHECK(participant->isMeshProvided(toMeshID),
+    int toMeshID = dataContext.getMeshID();
+    PRECICE_CHECK(participant->isMeshProvided(toMeshID) || participant->isDirectAccessAllowed(toMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
                   "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
-                  participant->getName(), dataContext.mesh->getName(), dataContext.mesh->getName());
+                  participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
 
     for (impl::MappingContext &mappingContext : participant->readMappingContexts()) {
       if (mappingContext.toMeshID == toMeshID) {
-        dataContext.mappingContext     = mappingContext;
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.fromMeshID);
-        for (const mesh::PtrData &data : meshContext.mesh->data()) {
-          if (data->getName() == dataContext.toData->getName()) {
-            dataContext.fromData = data;
-          }
-        }
-        PRECICE_CHECK(dataContext.toData != dataContext.fromData,
+        PRECICE_CHECK(meshContext.mesh->hasDataName(dataContext.getDataName()),
                       "Mesh \"{}\" needs to use data \"{}\" to allow a read mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
-                      meshContext.mesh->getName(), dataContext.toData->getName(), dataContext.toData->getName());
+                      meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
+        dataContext.configureForReadMapping(mappingContext, meshContext);
       }
     }
   }
@@ -533,11 +549,23 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
+      // This is handled with respect to the current configuration context.
+      // Hence, this is potentially wrong for every participant other than context.name.
       if (context.size > 1) {
-        exporter = io::PtrExport(new io::ExportVTKXML());
+        // Only display the warning message if this participant configuration is the current one.
+        if (context.name == participant->getName()) {
+          PRECICE_WARN("You are using the VTK exporter in the parallel participant {}. "
+                       "Note that this will export as PVTU instead. For consistency, prefer \"<export:vtu ... />\" instead.",
+                       participant->getName());
+        }
+        exporter = io::PtrExport(new io::ExportVTU());
       } else {
         exporter = io::PtrExport(new io::ExportVTK());
       }
+    } else if (exportContext.type == VALUE_VTU) {
+      exporter = io::PtrExport(new io::ExportVTU());
+    } else if (exportContext.type == VALUE_VTP) {
+      exporter = io::PtrExport(new io::ExportVTP());
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
                     _participants.back()->getName(), exportContext.type);
@@ -626,12 +654,12 @@ void ParticipantConfiguration::checkIllDefinedMappings(
 
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
             for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
-              sameDirection |= data->getName() == dataContext.getName();
+              sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
             for (const impl::DataContext &dataContext : participant->readDataContexts()) {
-              sameDirection |= data->getName() == dataContext.getName();
+              sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           PRECICE_CHECK(!sameDirection,

@@ -35,6 +35,7 @@ public:
  * @param[in] m2ns M2N communications to all other participants of coupling scheme.
  * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
  * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
+ * @param[in] extrapolationOrder order used for extrapolation
  */
   MultiCouplingScheme(
       double                             maxTime,
@@ -45,21 +46,22 @@ public:
       std::map<std::string, m2n::PtrM2N> m2ns,
       constants::TimesteppingMethod      dtMethod,
       const std::string &                controller,
-      int                                maxIterations = -1);
+      int                                maxIterations,
+      int                                extrapolationOrder);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
-      mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      bool          initialize,
-      std::string   to);
+      const mesh::PtrData &data,
+      mesh::PtrMesh        mesh,
+      bool                 initialize,
+      const std::string &  to);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
-      mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      bool          initialize,
-      std::string   from);
+      const mesh::PtrData &data,
+      mesh::PtrMesh        mesh,
+      bool                 initialize,
+      const std::string &  from);
 
   /// returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const override final;

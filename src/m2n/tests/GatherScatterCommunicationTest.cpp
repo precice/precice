@@ -41,9 +41,8 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
     m2n->acceptSlavesConnection("Part1", "Part2");
     Eigen::VectorXd values = Eigen::VectorXd::Zero(numberOfVertices);
     values << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
-    m2n->send(values.data(), numberOfVertices, pMesh->getID(), valueDimension);
-    m2n->receive(values.data(), numberOfVertices, pMesh->getID(),
-                 valueDimension);
+    m2n->send(values, pMesh->getID(), valueDimension);
+    m2n->receive(values, pMesh->getID(), valueDimension);
     BOOST_TEST(values(0) == 2.0);
     BOOST_TEST(values(1) == 4.0);
     BOOST_TEST(values(2) == 6.0);
@@ -68,26 +67,26 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
       pMesh->getVertexDistribution()[2].push_back(5);
 
       Eigen::Vector3d values(0.0, 0.0, 0.0);
-      m2n->receive(values.data(), 3, pMesh->getID(), valueDimension);
+      m2n->receive(values, pMesh->getID(), valueDimension);
       BOOST_TEST(values(0) == 1.0);
       BOOST_TEST(values(1) == 2.0);
       BOOST_TEST(values(2) == 4.0);
       values = values * 2;
-      m2n->send(values.data(), 3, pMesh->getID(), valueDimension);
+      m2n->send(values, pMesh->getID(), valueDimension);
     } else if (context.isRank(1)) { // Slave1
       Eigen::VectorXd values;
-      m2n->receive(values.data(), 0, pMesh->getID(), valueDimension);
-      m2n->send(values.data(), 0, pMesh->getID(), valueDimension);
+      m2n->receive({}, pMesh->getID(), valueDimension);
+      m2n->send(values, pMesh->getID(), valueDimension);
     } else {
       BOOST_TEST(context.isRank(2));
       Eigen::Vector4d values(0.0, 0.0, 0.0, 0.0);
-      m2n->receive(values.data(), 4, pMesh->getID(), valueDimension);
+      m2n->receive(values, pMesh->getID(), valueDimension);
       BOOST_TEST(values(0) == 3.0);
       BOOST_TEST(values(1) == 4.0);
       BOOST_TEST(values(2) == 5.0);
       BOOST_TEST(values(3) == 6.0);
       values = values * 2;
-      m2n->send(values.data(), 4, pMesh->getID(), valueDimension);
+      m2n->send(values, pMesh->getID(), valueDimension);
     }
   }
 }

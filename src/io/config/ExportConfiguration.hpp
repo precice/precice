@@ -43,6 +43,8 @@ private:
   const std::string ATTR_TYPE     = "type";
   const std::string ATTR_AUTO     = "auto";
   const std::string VALUE_VTK     = "vtk";
+  const std::string VALUE_VTU     = "vtu";
+  const std::string VALUE_VTP     = "vtp";
 
   const std::string ATTR_EVERY_N_TIME_WINDOWS = "every-n-time-windows";
   const std::string ATTR_NEIGHBORS            = "neighbors";

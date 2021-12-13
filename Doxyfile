@@ -229,6 +229,7 @@ TAB_SIZE               = 4
 # newlines.
 
 ALIASES                ="API=@note The API provides access via \ref"
+ALIASES               +="experimental=@attention This API function is \b experimental and may change in the future!"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"
@@ -754,7 +755,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ./src/ ./docs/documents/ ./tools/
+INPUT                  = ./src/ ./docs/documents/ ./tools/ ./extras/bindings/
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

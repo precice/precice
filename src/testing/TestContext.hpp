@@ -5,8 +5,10 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
+#include "precice/types.hpp"
 #include "utils/Parallel.hpp"
 
 namespace precice {
@@ -156,7 +158,7 @@ public:
   std::string name;
 
   /// the rank of the current participant
-  int rank = 0;
+  Rank rank = 0;
 
   /// the size of the Communicator of the current participant
   int size = 1;
@@ -225,6 +227,24 @@ public:
    */
   ~TestContext() noexcept;
 
+  /** Returns the canonical config name of this test.
+   *
+   * The location of integration tests are tied the test name and test suites.
+   * This computes the canonical filename of this test's configuration file
+   * based on the repository root, the current test suites and name.
+   *
+   * @return the full filepath of this test's configuration file
+   */
+  std::string config() const;
+
+  /** Prefixes the given filename with the test directory.
+   *
+   * The filename will be located in the same directory as the current test file.
+   *
+   * @return the full filepath to the filename relative
+   */
+  std::string prefix(const std::string &filename) const;
+
   /// Check wheater this context has a given size
   bool hasSize(int size) const;
 
@@ -232,7 +252,7 @@ public:
   bool isNamed(const std::string &name) const;
 
   /// Check wheater this context has a given rank inside the Partiticipant
-  bool isRank(int rank) const;
+  bool isRank(Rank rank) const;
 
   /** Check wheater this context is the master of a Participants
    * @note This is equivalent to `isRank(0)`
@@ -294,7 +314,7 @@ private:
   /** set the context from a Participants and a given rank
    * Both uniquely identify a context.
    */
-  void setContextFrom(const Participant &p, int rank);
+  void setContextFrom(const Participant &p, Rank rank);
 
   /// @{
   /// @name Initialization
