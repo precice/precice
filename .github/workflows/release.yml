@@ -49,7 +49,7 @@ jobs:
           PETSc: ${{ matrix.UBUNTU != '18.04' }}
         run: |
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB;TAR" -DPRECICE_PETScMapping=${{ env.PETSc }} -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_PETScMapping=${{ env.PETSc }} -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
       - name: Compile
         working-directory: build
         run: make -j $(nproc)
@@ -61,13 +61,6 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/libprecice*.deb*
-          file_glob: true
-          tag: ${{ github.ref }}
-      - name: Upload tar package
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/libprecice*.tar*
           file_glob: true
           tag: ${{ github.ref }}
 
