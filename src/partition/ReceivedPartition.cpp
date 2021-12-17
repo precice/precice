@@ -144,6 +144,7 @@ void ReceivedPartition::compute()
   // To better understand steps (2) to (5), it is recommended to look at BU's thesis, especially Figure 69 on page 89
   // for RBF-based filtering. https://mediatum.ub.tum.de/doc/1320661/document.pdf
 
+  // (1) Bounding-Box-Filter
   filterByBoundingBox();
 
   // (2) Tag vertices 1st round (i.e. who could be owned by this rank)
