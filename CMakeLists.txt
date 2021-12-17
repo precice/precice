@@ -574,3 +574,36 @@ if (BUILD_TESTING)
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/TestInstall.cmake)
 endif()
+
+
+#
+# Tooling
+#
+
+add_custom_target(
+  doxygen
+  COMMAND doxygen
+  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+  USES_TERMINAL
+  )
+
+add_custom_target(
+  format
+  COMMAND tools/formatting/format-all
+  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+  USES_TERMINAL
+  )
+
+add_custom_target(
+  sourcesIndex
+  COMMAND tools/building/updateSourceFiles.py
+  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+  USES_TERMINAL
+  )
+
+add_custom_target(
+  changelog
+  COMMAND tools/building/createChangelog
+  WORKING_DIRECTORY ${preCICE_SOURCE_DIR}
+  USES_TERMINAL
+  )
