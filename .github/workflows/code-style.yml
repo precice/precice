@@ -1,4 +1,8 @@
-name: code-style
+name: Code Style
+# Runs the check-format script from the repository.
+# The used docker image contains all required tools at the correct version.
+#
+# See https://github.com/precice/ci-images
 on:
   pull_request:
     paths:

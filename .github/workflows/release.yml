@@ -1,4 +1,8 @@
-name: "Release Pipeline"
+name: Release Pipeline
+# Creates a draft release, generates packages and attaches them to the release.
+# This is automatically run when vMAJOR.MINOR.PATCH tag is pushed to the repo.
+# The release-draft will run before the other jobs, but it will succeed even
+# if the release already exists.
 on:
   push:
     tags:
