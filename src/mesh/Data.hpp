@@ -65,6 +65,17 @@ public:
       DataID      id,
       int         dimension);
 
+  /**
+   * @brief Constructor with gradient data.
+   */
+
+  Data(
+      std::string name,
+      DataID      id,
+      int         dimension, 
+      int         meshDimensions,
+      bool        hasGradient);
+
   /// Destructor, decrements data count.
   ~Data();
 
@@ -73,6 +84,12 @@ public:
 
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
+
+  /// Returns a reference to the gradient data values.
+  Eigen::MatrixXd &gradientValues();
+
+  /// Returns a const reference to the gradient data values.
+  const Eigen::MatrixXd &gradientValues() const;
 
   /// Returns the name of the data set, as set in the config file.
   const std::string &getName() const;
@@ -83,7 +100,13 @@ public:
   /// Sets all values to zero
   void toZero();
 
-  /// Returns the dimension (i.e., number of components) of one data value.
+  /// Returns if the data contains gradient data
+  bool hasGradient() const;
+
+  /// Returns the mesh dimension (i.e., number of rows) of one gradient data value .
+  int getMeshDimensions() const;
+
+  /// Returns the dimension (i.e., number of components) of one data value (i.e number of columns of one gradient data value).
   int getDimensions() const;
 
 private:
@@ -94,14 +117,22 @@ private:
 
   Eigen::VectorXd _values;
 
+  Eigen::MatrixXd _gradientValues;
+
   /// Name of the data set.
   std::string _name;
 
   /// ID of the data set (supposed to be unique).
   DataID _id;
 
+  /// Dimensionality of one mesh elements -> number of rows (only 2, 3 allowed for 2D, 3D).
+  int _meshDimensions;
+
   /// Dimensionality of one data value.
   int _dimensions;
+
+  /// Flag is the gradient data is available
+  bool _hasGradient;
 };
 
 } // namespace mesh
