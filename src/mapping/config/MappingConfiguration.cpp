@@ -8,11 +8,11 @@
 #include <utility>
 #include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"
+#include "mapping/NearestNeighborGradientMapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
-#include "mapping/NearestNeighborGradientMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -312,10 +312,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     configuredMapping.isRBF = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {
-      configuredMapping.mapping = PtrMapping(
+    configuredMapping.mapping = PtrMapping(
         new NearestNeighborGradientMapping(constraintValue, dimensions));
-      configuredMapping.isRBF = false;
-      return configuredMapping;
+    configuredMapping.isRBF = false;
+    return configuredMapping;
   }
 
   // the mapping is a RBF mapping

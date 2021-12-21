@@ -72,7 +72,7 @@ public:
   Data(
       std::string name,
       DataID      id,
-      int         dimension, 
+      int         dimension,
       int         meshDimensions,
       bool        hasGradient);
 

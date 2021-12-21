@@ -127,7 +127,7 @@ bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
   case (Mapping::MeshRequirement::UNDEFINED):
     return rhs != Mapping::MeshRequirement::UNDEFINED;
   case (Mapping::MeshRequirement::VERTEX):
-    return rhs == Mapping::MeshRequirement::FULL || rhs == Mapping::MeshRequirement:: GRADIENT;
+    return rhs == Mapping::MeshRequirement::FULL || rhs == Mapping::MeshRequirement::GRADIENT;
   case (Mapping::MeshRequirement::FULL):
     return rhs == Mapping::MeshRequirement::GRADIENT;
   case (Mapping::MeshRequirement::GRADIENT):

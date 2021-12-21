@@ -94,10 +94,9 @@ void Data::toZero()
   auto end   = begin + _values.size();
   std::fill(begin, end, 0.0);
 
-  if(_hasGradient)
-  {
+  if (_hasGradient) {
     auto beginGradient = _gradientValues.data();
-    auto endGradient = beginGradient + _gradientValues.size();
+    auto endGradient   = beginGradient + _gradientValues.size();
     std::fill(beginGradient, endGradient, 0.0);
   }
 }

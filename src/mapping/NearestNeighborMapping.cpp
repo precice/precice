@@ -4,10 +4,10 @@
 #include <boost/container/flat_set.hpp>
 #include <functional>
 #include "logging/LogMacros.hpp"
-#include "utils/Event.hpp"
-#include "utils/assertion.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/Event.hpp"
 #include "utils/EventUtils.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 extern bool syncMode;
@@ -17,7 +17,7 @@ namespace mapping {
 NearestNeighborMapping::NearestNeighborMapping(
     Constraint constraint,
     int        dimensions)
-    : NearestNeighborBaseMapping(constraint, dimensions, false, "NearestNeighborMapping", "nn" )
+    : NearestNeighborBaseMapping(constraint, dimensions, false, "NearestNeighborMapping", "nn")
 {
   if (hasConstraint(SCALEDCONSISTENT)) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
@@ -35,11 +35,10 @@ void NearestNeighborMapping::map(
   PRECICE_TRACE(inputDataID, outputDataID);
 
   precice::utils::Event e("map." + MAPPING_NAME_SHORT + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  int valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (bei scalar = 1, bei vectors > 1)
+  int                   valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (bei scalar = 1, bei vectors > 1)
 
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
   Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
-
 
   //assign(outputValues) = 0.0;
 
@@ -49,7 +48,6 @@ void NearestNeighborMapping::map(
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
                  outputValues.size(), valueDimensions, output()->vertices().size());
-
 
   if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Map conservative");
@@ -61,10 +59,9 @@ void NearestNeighborMapping::map(
       for (int dim = 0; dim < valueDimensions; dim++) {
 
         int mapOutputIndex = outputIndex + dim;
-        int mapInputIndex = (i * valueDimensions) + dim;
+        int mapInputIndex  = (i * valueDimensions) + dim;
 
         outputValues(mapOutputIndex) += inputValues(mapInputIndex);
-
       }
     }
   } else {
@@ -77,7 +74,7 @@ void NearestNeighborMapping::map(
       for (int dim = 0; dim < valueDimensions; dim++) {
 
         int mapOutputIndex = (i * valueDimensions) + dim;
-        int mapInputIndex =  inputIndex + dim;
+        int mapInputIndex  = inputIndex + dim;
 
         outputValues(mapOutputIndex) = inputValues(mapInputIndex);
       }
