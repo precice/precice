@@ -37,7 +37,7 @@ void NearestNeighborGradientMapping::map(
 
   precice::utils::Event e("map." + MAPPING_NAME_SHORT + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
-  int valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (bei scalar = 1, bei vectors > 1)
+ const int valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
 
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
   Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
@@ -50,14 +50,11 @@ void NearestNeighborGradientMapping::map(
 
   const Eigen::MatrixXd &gradientValues = input()->data(inputDataID)->gradientValues();
 
-
-  //assign(outputValues) = 0.0;
-
   PRECICE_ASSERT(valueDimensions == output()->data(outputDataID)->getDimensions(),
                  valueDimensions, output()->data(outputDataID)->getDimensions());
-  PRECICE_ASSERT(inputValues.size() / valueDimensions == (int) input()->vertices().size(),
+  PRECICE_ASSERT(inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size()),
                  inputValues.size(), valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
+  PRECICE_ASSERT(outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size()),
                  outputValues.size(), valueDimensions, output()->vertices().size());
 
 
@@ -70,8 +67,8 @@ void NearestNeighborGradientMapping::map(
 
       for (int dim = 0; dim < valueDimensions; dim++) {
 
-        int mapOutputIndex = outputIndex + dim;
-        int mapInputIndex = (i * valueDimensions) + dim;
+       const int mapOutputIndex = outputIndex + dim;
+       const int mapInputIndex = (i * valueDimensions) + dim;
 
         outputValues(mapOutputIndex) += inputValues(mapInputIndex) + _distancesMatched[i].transpose() * gradientValues.col(mapInputIndex);
 
@@ -86,8 +83,8 @@ void NearestNeighborGradientMapping::map(
 
       for (int dim = 0; dim < valueDimensions; dim++) {
 
-        int mapOutputIndex = (i * valueDimensions) + dim;
-        int mapInputIndex =  inputIndex + dim;
+       const int mapOutputIndex = (i * valueDimensions) + dim;
+       const int mapInputIndex =  inputIndex + dim;
 
         outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _distancesMatched[i].transpose() * gradientValues.col(mapInputIndex);
       }
