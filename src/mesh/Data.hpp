@@ -125,13 +125,13 @@ private:
   /// ID of the data set (supposed to be unique).
   DataID _id;
 
-  /// Dimensionality of one mesh elements -> number of rows (only 2, 3 allowed for 2D, 3D).
+  /// Dimension of one mesh element -> number of rows (only 2, 3 allowed for 2D, 3D).
   int _meshDimensions;
 
   /// Dimensionality of one data value.
   int _dimensions;
 
-  /// Flag is the gradient data is available
+  /// Flag if the gradient data is available
   bool _hasGradient;
 };
 
