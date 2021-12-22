@@ -22,7 +22,7 @@ public:
                              std::string mappingNameShort);
 
   /// Destructor, empty.
-  virtual ~NearestNeighborBaseMapping() {}
+  virtual ~NearestNeighborBaseMapping() = default;
 
   /// Checks if this is a Nearest Neighbor Gradient mapping.
   bool hasGradient();
@@ -54,7 +54,7 @@ protected:
   mutable logging::Logger _log{"mapping::" + MAPPING_NAME};
 
   /// Compute the vector difference between the matched vector and the source vector (needed for gradient mapping)
-  std::vector<Eigen::VectorXd> _distancesMatched;
+  std::vector<Eigen::VectorXd> _distancesMatched; // TODO: Improve so the Vector has static size
 
   /// Computed output vertex indices to map data from input vertices to.
   std::vector<int> _vertexIndices;

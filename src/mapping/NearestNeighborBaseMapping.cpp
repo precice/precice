@@ -64,33 +64,40 @@ void NearestNeighborBaseMapping::computeMapping()
   query::Index          indexTree(searchSpace);
   e2.stop();
 
+  // Set up of output arrays
   const size_t verticesSize   = origins->vertices().size();
   const auto & sourceVertices = origins->vertices();
   _vertexIndices.resize(verticesSize);
-
-  if (hasGradient())
+  if (hasGradient()) {
     _distancesMatched.resize(verticesSize);
+  }
 
+  // Needed for error studies
   utils::statistics::DistanceAccumulator distanceStatistics;
 
   for (size_t i = 0; i < verticesSize; ++i) {
-    auto matchedVertex = indexTree.getClosestVertex(sourceVertices[i].getCoords());
+
+    const auto &matchedVertex = indexTree.getClosestVertex(sourceVertices[i].getCoords());
 
     // Match the difference vector between the source vector and the matched one (relevant for gradient)
     if (hasGradient()) {
-      auto matchedVertexCoords = searchSpace.get()->vertices()[matchedVertex.index].getCoords();
-      _distancesMatched[i]     = matchedVertexCoords - sourceVertices[i].getCoords();
 
-      // TODO: EXPLAIN THIS BETTER
-      if (hasConstraint(CONSERVATIVE))
-        _distancesMatched[i] *= -1; // distances must always be from input to output
+      const auto &matchedVertexCoords = searchSpace.get()->vertices()[matchedVertex.index].getCoords();
+
+      // We calculate the distances uniformly for both mapping constraints as the difference (input - output)
+      if (hasConstraint(CONSERVATIVE)) {
+        _distancesMatched[i] = sourceVertices[i].getCoords() - matchedVertexCoords;
+      } else {
+        _distancesMatched[i] = matchedVertexCoords - sourceVertices[i].getCoords();
+      }
     }
 
     _vertexIndices[i] = matchedVertex.index;
     distanceStatistics(matchedVertex.distance);
   }
 
-  // TODO: ADD COMMENTS
+  // This is the distance object between the coordinates of the vertices and its match in the mesh.
+  // It contains the min, max, average and count of accumulated values.
   if (distanceStatistics.empty()) {
     PRECICE_INFO("Mapping distance not available due to empty partition.");
   } else {
@@ -148,7 +155,7 @@ void NearestNeighborBaseMapping::tagMeshFirstRound()
 void NearestNeighborBaseMapping::tagMeshSecondRound()
 {
   PRECICE_TRACE();
-  // for NNG mapping no operation needed here
+  // for NN mapping no operation needed here
 }
 
 } // namespace mapping
