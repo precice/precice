@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
         if (timewindow == 0) {
           BOOST_TEST(readData[i] == readFunction(time, i));
         } else if (timewindow > 0) {
-          BOOST_TEST(readData[i] == readFunction(readTime - windowDt, i)); // both solvers lag one window behind for serial-explicit coupling.
+          BOOST_TEST(readData[i] == readFunction(readTime - windowDt, i)); // both solvers lag one window behind for parallel-explicit coupling.
         } else {
           BOOST_TEST(false); // unreachable!
         }
