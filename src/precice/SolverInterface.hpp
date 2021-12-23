@@ -796,7 +796,7 @@ public:
    *
    * @param[in] dataID ID to read from.
    * @param[in] valueIndex Index of the vertex.
-   * @param[in] dt Defines point in time where data is sampled relative to the beginning of the current time step.
+   * @param[in] dt Point in time where data is sampled relative to the beginning of the current time step.
    * @param[out] value Read destination of the value.
    *
    * @pre initialize() has been called
