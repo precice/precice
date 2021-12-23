@@ -24,7 +24,7 @@ void Waveform::initialize(
     sampleStorageSize = 1;
   } else {
     PRECICE_ASSERT(_interpolationOrder >= 0);
-    sampleStorageSize = std::max({_interpolationOrder + 1});
+    sampleStorageSize = _interpolationOrder + 1;
   }
   _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, sampleStorageSize);
   _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
