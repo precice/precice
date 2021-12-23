@@ -23,7 +23,7 @@ void Waveform::initialize(
    *  @todo: Assertion leads to failing tests. For example: mpirun -np 4 ./testprecice -t PreciceTests/Serial/Time/Explicit/SerialCoupling/DoNothingWithSubcycling
    * But this condition should hold! What's the problem here?
    * See https://github.com/precice/precice/pull/1029#discussion_r772344672.
-   * /
+   */
   //PRECICE_ASSERT(valuesSize > 0, valuesSize);
   int sampleStorageSize;
   if (_interpolationOrder == Time::UNDEFINED_INTERPOLATION_ORDER) {
