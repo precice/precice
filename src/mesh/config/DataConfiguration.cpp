@@ -16,7 +16,7 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
                       .setDocumentation("Unique name for the data set.");
   XMLTag            tagWaveform(*this, TAG_WAVEFORM, XMLTag::OCCUR_NOT_OR_ONCE);
   XMLAttribute<int> attrOrder(ATTR_ORDER);
-  attrOrder.setDocumentation("Set order used by waveform iteration.");
+  attrOrder.setDocumentation("Sets interpolation order used by waveform iteration.");
   tagWaveform.addAttribute(attrOrder);
   {
     XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
