@@ -103,7 +103,6 @@ Eigen::VectorXd Data::waveformSampleAt(double normalizedDt)
 void Data::initializeWaveform()
 {
   PRECICE_TRACE();
-  // PRECICE_ASSERT(_values.size() > 0, _values.size());  // @todo assertion breaks, but seems like calling advance on empty write data is ok?
   _ptrWaveform->initialize(_values.size());
   for (int sampleID = 0; sampleID < _ptrWaveform->sizeOfSampleStorage(); ++sampleID) {
     _ptrWaveform->storeAt(_values, sampleID);
