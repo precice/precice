@@ -634,22 +634,22 @@ private:
     Finalized    // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to State::Finalized; mandatory
   };
 
-  // SolverInterface.initializeData() triggers transition from false to true.
+  /// SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
 
-  // SolverInterface.initializeWrittenWaveforms() triggers transition from false to true.
+  /// SolverInterface.initializeWrittenWaveforms() triggers transition from false to true.
   bool _hasInitializedWrittenWaveforms = false;
 
-  // SolverInterface.initializeReadWaveforms() triggers transition from false to true.
+  /// SolverInterface.initializeReadWaveforms() triggers transition from false to true.
   bool _hasInitializedReadWaveforms = false;
 
-  // SolverInterface.resetMesh() triggers transition from false to true.
+  /// SolverInterface.resetMesh() triggers transition from false to true.
   bool _hasResetMesh = false;
 
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
-  // setMeshAccessRegion may only be called once
+  /// setMeshAccessRegion may only be called once
   mutable bool _accessRegionDefined = false;
 
   /// The current State of the solverinterface
@@ -753,12 +753,13 @@ private:
   /// Computes, performs, and resets all suitable read mappings.
   void mapReadData();
 
-  // bundles functionality needed by initialize, initializeData and advance
+  /// bundles functionality needed by initialize, initializeData and advance
   void doDataTransferAndReadMapping();
 
+  /// bundles functionality needed by initialize, initializeData and advance
   void doDataTransferAndWriteMapping();
 
-  // store data before overwriting it
+  /// store data before overwriting it
   void moveReadWaveforms();
 
   /**
