@@ -58,21 +58,18 @@ void DataContext::resetToData()
   // _toData->waveform()->toZero();
 }
 
-void DataContext::doWaveformMapping()
+void DataContext::moveProvidedDataToProvidedWaveform()
 {
-  resetToData();
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", getDataName(), getMeshName());
-  for (int sampleID = 0; sampleID < _providedData->sizeOfSampleStorageInWaveform(); ++sampleID) {
-    mapWaveformSample(sampleID);
-  }
+  PRECICE_TRACE();
+  PRECICE_ASSERT(not hasMapping());
+  _providedData->storeDataInWaveform();
 }
 
-void DataContext::mapWaveformSample(int sampleID)
+void DataContext::mapWaveformSample()
 {
-  _fromData->sampleWaveformIntoData(sampleID);                   // put samples from _fromWaveform into _fromData
+  _fromData->sampleWaveformIntoData();                           // put samples from _fromWaveform into _fromData
   mappingContext().mapping->map(getFromDataID(), getToDataID()); // map from _fromData to _toData
-  _toData->storeDataInWaveform(sampleID);                        // store _toData at the right place into the _toWaveform
+  _toData->storeDataInWaveform();                                // store _toData at the right place into the _toWaveform
 }
 
 int DataContext::getToDataID() const
@@ -180,19 +177,11 @@ void DataContext::sampleWaveformInToData()
 void DataContext::storeFromDataInWaveform()
 {
   PRECICE_TRACE();
-  int sampleID = 0;
   if (hasMapping()) {
-    _fromData->storeDataInWaveform(sampleID);
+    _fromData->storeDataInWaveform();
   } else {
-    _providedData->storeDataInWaveform(sampleID);
+    _providedData->storeDataInWaveform();
   }
-}
-
-void DataContext::moveProvidedDataToProvidedWaveformSample(int sampleID)
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(not hasMapping());
-  _providedData->storeDataInWaveform(sampleID);
 }
 
 Eigen::VectorXd DataContext::sampleAt(double normalizedDt)

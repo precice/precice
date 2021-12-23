@@ -89,15 +89,13 @@ public:
   /// Returns the dimension (i.e., number of components) of one data value.
   int getDimensions() const;
 
-  void storeDataInWaveform(int waveformSampleID);
-
-  int sizeOfSampleStorageInWaveform();
+  void storeDataInWaveform();
 
   Eigen::VectorXd waveformSampleAt(double normalizedDt);
 
   void initializeWaveform();
 
-  void sampleWaveformIntoData(int sampleID = 0);
+  void sampleWaveformIntoData();
 
   void moveToNextWindow();
 

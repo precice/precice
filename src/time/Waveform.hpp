@@ -37,11 +37,10 @@ public:
   void store(const Eigen::VectorXd &values);
 
   /**
-   * @brief Updates entry in _timeWindowsStorage corresponding to a given column ID with given values
+   * @brief Updates all entries in _timeWindowsStorage with given values
    * @param values new sample for this time window
-   * @param columnID ID of column to be updated
    */
-  void storeAt(const Eigen::VectorXd values, int columnID);
+  void storeAtAllSamples(const Eigen::VectorXd values);
 
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
@@ -56,15 +55,9 @@ public:
 
   // @todo try to make private!
   /**
-   * @brief returns number samples in time this waveform can store
+   * @brief getter for first sample in _timeWindowsStorage
    */
-  int sizeOfSampleStorage();
-
-  // @todo try to make private!
-  /**
-   * @brief getter for a sample in _timeWindowsStorage
-   */
-  Eigen::VectorXd getSample(int sampleID);
+  Eigen::VectorXd getSample();
 
 private:
   /// Set by initialize. Used for consistency checks.
@@ -85,6 +78,18 @@ private:
    * @brief returns number of values per sample in time stored by this waveform
    */
   int valuesSize();
+
+  /**
+   * @brief returns number samples in time this waveform can store
+   */
+  int sizeOfSampleStorage();
+
+  /**
+   * @brief Updates entry in _timeWindowsStorage corresponding to a given column ID with given values
+   * @param values new sample for this time window
+   * @param columnID ID of column to be updated
+   */
+  void storeAt(const Eigen::VectorXd values, int columnID);
 
   /**
    * @brief Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order of this Waveform.

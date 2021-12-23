@@ -1025,7 +1025,8 @@ void SolverInterfaceImpl::mapWriteDataFrom(
         continue;
       }
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      context.doWaveformMapping();
+      context.resetToData();
+      context.mapWaveformSample();
     }
     mappingContext.hasMappedData = true;
   }
@@ -1060,7 +1061,8 @@ void SolverInterfaceImpl::mapReadDataTo(
         continue;
       }
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      context.doWaveformMapping();
+      context.resetToData();
+      context.mapWaveformSample();
     }
     mappingContext.hasMappedData = true;
   }
@@ -1664,7 +1666,6 @@ void SolverInterfaceImpl::mapData(const utils::ptr_vector<DataContext> &contexts
   PRECICE_TRACE();
   using namespace mapping;
   MappingConfiguration::Timing timing;
-  int                          sampleID = 0;
   for (impl::DataContext &context : contexts) {
     if (context.hasMapping()) {
       timing         = context.mappingContext().timing;
@@ -1675,10 +1676,10 @@ void SolverInterfaceImpl::mapData(const utils::ptr_vector<DataContext> &contexts
         PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
                       mappingType, context.getDataName(), context.getMeshName());
         context.resetToData();
-        context.mapWaveformSample(sampleID);
+        context.mapWaveformSample();
       }
     } else {
-      context.moveProvidedDataToProvidedWaveformSample(sampleID); // store _providedData at the right place into the _providedWaveform
+      context.moveProvidedDataToProvidedWaveform();
     }
   }
 }

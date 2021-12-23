@@ -82,16 +82,10 @@ void Data::resetDataCount()
   _dataCount = 0;
 }
 
-void Data::storeDataInWaveform(int waveformSampleID)
+void Data::storeDataInWaveform()
 {
   PRECICE_TRACE();
-  _ptrWaveform->storeAt(_values, waveformSampleID);
-}
-
-int Data::sizeOfSampleStorageInWaveform()
-{
-  PRECICE_TRACE();
-  return _ptrWaveform->sizeOfSampleStorage();
+  _ptrWaveform->store(_values);
 }
 
 Eigen::VectorXd Data::waveformSampleAt(double normalizedDt)
@@ -104,15 +98,13 @@ void Data::initializeWaveform()
 {
   PRECICE_TRACE();
   _ptrWaveform->initialize(_values.size());
-  for (int sampleID = 0; sampleID < _ptrWaveform->sizeOfSampleStorage(); ++sampleID) {
-    _ptrWaveform->storeAt(_values, sampleID);
-  }
+  _ptrWaveform->storeAtAllSamples(_values);
 }
 
-void Data::sampleWaveformIntoData(int sampleID)
+void Data::sampleWaveformIntoData()
 {
   PRECICE_TRACE();
-  _values = _ptrWaveform->getSample(sampleID);
+  _values = _ptrWaveform->getSample();
 }
 
 void Data::moveToNextWindow()

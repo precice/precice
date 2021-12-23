@@ -13,7 +13,7 @@ class WaveformFixture {
 public:
   int numberOfStoredSamples(time::Waveform &waveform);
 
-  int sizeOfSampleStorage(time::Waveform &waveform); // @todo check whether is public or private Waveform::sizeOfSampleStorage. If public, not necessary to expose it via the fixture.
+  int sizeOfSampleStorage(time::Waveform &waveform);
 
   int valuesSize(time::Waveform &waveform);
 

@@ -32,9 +32,8 @@ public:
 
   void resetToData();
 
-  void doWaveformMapping();
-
-  void mapWaveformSample(int sampleID);
+  /// for copying read data into waveform, if no mapping exists
+  void moveProvidedDataToProvidedWaveform();
 
   int getToDataID() const;
 
@@ -66,19 +65,19 @@ public:
 
   const MappingContext mappingContext() const;
 
-  // for updating waveforms after communication
+  /// for updating waveforms after communication
   void initializeContextWaveforms();
 
-  // for communication of read and write data
+  /// for communication of read and write data
   void sampleWaveformInToData();
 
   void storeFromDataInWaveform();
 
-  // for copying read data into waveform
-  void moveProvidedDataToProvidedWaveformSample(int sampleID);
-
-  // shift data in time
+  /// shift data in time
   void moveToNextWindow();
+
+  /// helper function to map a Waveform sample
+  void mapWaveformSample();
 
   /**
    * @brief Allows to sample data at a given point in time insize of the time window
@@ -100,10 +99,10 @@ private:
 
   MappingContext _mappingContext;
 
-  // helper function for initializing waveforms from given data
+  /// helper function for initializing waveforms from given data
   void initializeWaveform(mesh::PtrData initializingData);
 
-  // helper function for creating read and write mappings
+  /// helper function for creating read and write mappings
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 };
 
