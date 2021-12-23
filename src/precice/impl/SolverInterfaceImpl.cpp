@@ -1025,7 +1025,6 @@ void SolverInterfaceImpl::mapWriteDataFrom(
         continue;
       }
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      context.resetToData();
       context.mapWaveformSample();
     }
     mappingContext.hasMappedData = true;
@@ -1061,7 +1060,6 @@ void SolverInterfaceImpl::mapReadDataTo(
         continue;
       }
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      context.resetToData();
       context.mapWaveformSample();
     }
     mappingContext.hasMappedData = true;
@@ -1675,11 +1673,8 @@ void SolverInterfaceImpl::mapData(const utils::ptr_vector<DataContext> &contexts
       if (mapNow && (not hasMapped)) {
         PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
                       mappingType, context.getDataName(), context.getMeshName());
-        context.resetToData();
         context.mapWaveformSample();
       }
-    } else {
-      context.moveProvidedDataToProvidedWaveform();
     }
   }
 }

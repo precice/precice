@@ -58,15 +58,11 @@ void DataContext::resetToData()
   // _toData->waveform()->toZero();
 }
 
-void DataContext::moveProvidedDataToProvidedWaveform()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(not hasMapping());
-  _providedData->storeDataInWaveform();
-}
-
 void DataContext::mapWaveformSample()
 {
+  PRECICE_TRACE();
+  PRECICE_ASSERT(hasMapping());
+  resetToData();
   _fromData->sampleWaveformIntoData();                           // put samples from _fromWaveform into _fromData
   mappingContext().mapping->map(getFromDataID(), getToDataID()); // map from _fromData to _toData
   _toData->storeDataInWaveform();                                // store _toData at the right place into the _toWaveform
@@ -156,6 +152,7 @@ const MappingContext DataContext::mappingContext() const
 
 void DataContext::initializeContextWaveforms()
 {
+  PRECICE_TRACE();
   if (hasMapping()) {
     _fromData->initializeWaveform();
     _toData->initializeWaveform();
@@ -192,6 +189,7 @@ Eigen::VectorXd DataContext::sampleAt(double normalizedDt)
 
 void DataContext::moveToNextWindow()
 {
+  PRECICE_TRACE();
   _providedData->moveToNextWindow();
 }
 
