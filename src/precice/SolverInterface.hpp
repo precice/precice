@@ -690,7 +690,7 @@ public:
       double value);
 
   /**
-   * @brief Reads vector data into a provided block.
+   * @brief Reads vector data values given as block from the interface mesh at the end of the time window.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are read into a block of continuous memory.
@@ -719,7 +719,7 @@ public:
       double *   values) const;
 
   /**
-   * @brief Reads vector data form a vertex
+   * @brief Read vector data at a vertex on the interface mesh at the end of the time window.
    *
    * This function reads a value of a specified vertex from a dataID.
    * Values are provided as a block of continuous memory.
@@ -744,7 +744,7 @@ public:
       double *value) const;
 
   /**
-   * @brief Reads scalar data as a block.
+   * @brief Reads scalar data values given as block from the interface mesh at the end of the time window.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are provided as a block of continuous memory.
@@ -770,7 +770,7 @@ public:
       double *   values) const;
 
   /**
-   * @brief Reads scalar data of a vertex.
+   * @brief Read scalar data at a vertex on the interface mesh at the end of the time window.
    *
    * This function reads a value of a specified vertex from a dataID.
    *
@@ -790,7 +790,7 @@ public:
       double &value) const;
 
   /**
-   * @brief Reads scalar data of a vertex.
+   * @brief Read scalar data at a vertex on the interface mesh at beginning of time step + dt.
    *
    * This function reads a value of a specified vertex from a dataID.
    *

@@ -417,13 +417,11 @@ public:
       double value);
 
   /**
-   * @brief Reads vector data values given as block.
+   * @brief Reads vector data values given as block from the interface mesh at the end of the time window.
    *
    * The block contains the vector values in the following form:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
-   *
-   * @brief Reads scalar data values given as block from the interface mesh at the end of the time window.
    *
    * @param[in] toDataID     ID of the data to be written.
    * @param[in] size         Number of valueIndices, and number of values.
@@ -437,12 +435,11 @@ public:
       double *   values) const;
 
   /**
-   * @brief Reads scalar data values given as block from the interface mesh at beginning of time step + dt.
+   * @brief Reads vector data values given as block from the interface mesh at beginning of time step + dt.
    *
    * The block contains the vector values in the following form:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
-   *
    *
    * @param[in] toDataID     ID of the data to be written.
    * @param[in] size         Number of valueIndices, and number of values.
@@ -458,7 +455,7 @@ public:
       double *   values) const;
 
   /**
-   * @brief Read vector data from the interface mesh at the end of the time window.
+   * @brief Read vector data at a vertex on the interface mesh at the end of the time window.
    *
    * @param[in] toDataID   ID of the data to be read, e.g. 1 = forces
    * @param[in] valueIndex Index (from setReadPosition()) of data value.
@@ -470,7 +467,7 @@ public:
       double *value) const;
 
   /**
-   * @brief Read vector data from the interface mesh at beginning of time step + dt.
+   * @brief Read vector data at a vertex on the interface mesh at beginning of time step + dt.
    *
    * @param[in] toDataID   ID of the data to be read, e.g. 1 = forces
    * @param[in] valueIndex Index (from setReadPosition()) of data value.
