@@ -297,10 +297,11 @@ double SolverInterfaceImpl::initialize()
   int    timeWindow = 1;
 
   PRECICE_DEBUG("Initialize coupling schemes");
-  double dt = _couplingScheme->getNextTimestepMaxLength();
 
   _couplingScheme->initialize(time, timeWindow);
   PRECICE_ASSERT(_couplingScheme->isInitialized());
+
+  double dt = _couplingScheme->getNextTimestepMaxLength();
 
   initializeReadWaveforms();
   if (_couplingScheme->hasDataBeenReceived()) {
