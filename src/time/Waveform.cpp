@@ -77,7 +77,7 @@ int Waveform::sizeOfSampleStorage()
 
 Eigen::VectorXd Waveform::getSample(int sampleID)
 {
-  //PRECICE_ASSERT(sampleID < _numberOfStoredSamples);  // @todo use this stricted assertion?
+  PRECICE_ASSERT(sampleID < _numberOfStoredSamples);
   PRECICE_ASSERT(sampleID < sizeOfSampleStorage());
   return _timeWindowsStorage.col(sampleID);
 }
