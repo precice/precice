@@ -63,8 +63,6 @@ void DataContext::doWaveformMapping()
   resetToData();
   PRECICE_ASSERT(hasMapping());
   PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", getDataName(), getMeshName());
-  PRECICE_ASSERT(_providedData->sizeOfSampleStorageInWaveform() == _toData->sizeOfSampleStorageInWaveform());
-  PRECICE_ASSERT(_providedData->sizeOfSampleStorageInWaveform() == _fromData->sizeOfSampleStorageInWaveform());
   for (int sampleID = 0; sampleID < _providedData->sizeOfSampleStorageInWaveform(); ++sampleID) {
     mapWaveformSample(sampleID);
   }
