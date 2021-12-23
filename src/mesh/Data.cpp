@@ -85,8 +85,6 @@ void Data::resetDataCount()
 void Data::storeDataInWaveform(int waveformSampleID)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_ptrWaveform->valuesSize() == _values.size(),
-                 _ptrWaveform->valuesSize(), _values.size());
   _ptrWaveform->storeAt(_values, waveformSampleID);
 }
 
@@ -99,9 +97,6 @@ int Data::sizeOfSampleStorageInWaveform()
 Eigen::VectorXd Data::waveformSampleAt(double normalizedDt)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_ptrWaveform->valuesSize() == _values.size(), _ptrWaveform->valuesSize(), _values.size());
-  PRECICE_ASSERT(normalizedDt >= 0, "Sampling outside of valid range!");
-  PRECICE_ASSERT(normalizedDt <= 1, "Sampling outside of valid range!");
   return _ptrWaveform->sample(normalizedDt);
 }
 
@@ -113,14 +108,12 @@ void Data::initializeWaveform()
   for (int sampleID = 0; sampleID < _ptrWaveform->sizeOfSampleStorage(); ++sampleID) {
     _ptrWaveform->storeAt(_values, sampleID);
   }
-  PRECICE_ASSERT(_ptrWaveform->valuesSize() == _values.size());
 }
 
 void Data::sampleWaveformIntoData(int sampleID)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_ptrWaveform->valuesSize() == _values.size(), _ptrWaveform->valuesSize(), _values.size());
-  values() = _ptrWaveform->getSample(sampleID);
+  _values = _ptrWaveform->getSample(sampleID);
 }
 
 void Data::moveToNextWindow()
