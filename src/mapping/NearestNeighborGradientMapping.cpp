@@ -43,16 +43,15 @@ void NearestNeighborGradientMapping::map(
   Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
 
   /// Check if input has gradient data, else send Error
-  if (input()->vertices().empty()) {
-    PRECICE_WARN("The mesh doesn't contain any vertices.");
+  if (!input()->vertices().empty() && !input()->data(inputDataID)->hasGradient()) {
+    PRECICE_ERROR("Mesh \"{}\" does not contain gradient data. ",
+                  input()->getName());
   }
-
-  PRECICE_CHECK(!input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data for each vertices.",
-                "Check if hasGradient flag in the Data object was successfully initialized.",
-                input()->getName());
 
   const Eigen::MatrixXd &gradientValues = input()->data(inputDataID)->gradientValues();
 
+  PRECICE_ASSERT(valueDimensions == output()->data(outputDataID)->getDimensions(),
+                 valueDimensions, output()->data(outputDataID)->getDimensions());
   PRECICE_ASSERT(inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size()),
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size()),

@@ -40,6 +40,10 @@ void NearestNeighborMapping::map(
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
   Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
 
+  //assign(outputValues) = 0.0;
+
+  PRECICE_ASSERT(valueDimensions == output()->data(outputDataID)->getDimensions(),
+                 valueDimensions, output()->data(outputDataID)->getDimensions());
   PRECICE_ASSERT(inputValues.size() / valueDimensions == (int) input()->vertices().size(),
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),

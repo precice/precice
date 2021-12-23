@@ -121,7 +121,6 @@ bool Mapping::hasConstraint(const Constraint &constraint) const
   return (getConstraint() == constraint);
 }
 
-// Is this order right ?
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
 {
   switch (lhs) {
@@ -130,7 +129,7 @@ bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
   case (Mapping::MeshRequirement::VERTEX):
     return rhs == Mapping::MeshRequirement::FULL || rhs == Mapping::MeshRequirement::GRADIENT;
   case (Mapping::MeshRequirement::FULL):
-    return false;
+    return rhs == Mapping::MeshRequirement::GRADIENT;
   case (Mapping::MeshRequirement::GRADIENT):
     return false;
   };
