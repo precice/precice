@@ -117,6 +117,26 @@ bool Triangle::operator!=(const Triangle &other) const
   return !(*this == other);
 }
 
+int Triangle::getGlobalIndex() const
+{
+  return _globalIndex;
+}
+
+void Triangle::setGlobalIndex(int globalIndex)
+{
+  _globalIndex = globalIndex;
+}
+
+bool Triangle::isOwner() const
+{
+  return _owner;
+}
+
+void Triangle::setOwner(bool owner)
+{
+  _owner = owner;
+}
+
 std::ostream &operator<<(std::ostream &os, const Triangle &t)
 {
   using utils::eigenio::wkt;

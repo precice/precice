@@ -102,6 +102,15 @@ public:
   /// Returns a among triangles globally unique ID.
   TriangleID getID() const;
 
+  /// Globally unique index
+  int getGlobalIndex() const;
+
+  void setGlobalIndex(int globalIndex);
+
+  bool isOwner() const;
+
+  void setOwner(bool owner);
+
   /// Returns the surface area of the triangle
   double getArea() const;
 
@@ -129,8 +138,14 @@ private:
   /// Decider for choosing unique vertices from _edges.
   std::array<bool, 3> _vertexMap;
 
-  /// ID of the triangle.
+  /// ID of the edge.
   TriangleID _id;
+
+  /// global (unique) index for parallel simulations
+  int _globalIndex = -1;
+
+  /// true if this processors is the owner of the triangle (for parallel simulations)
+  bool _owner = true;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS

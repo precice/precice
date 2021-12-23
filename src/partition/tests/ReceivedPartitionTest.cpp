@@ -724,6 +724,92 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
   tearDownParallelEnvironment();
 }
 
+BOOST_AUTO_TEST_CASE(NPPrimitiveOwnership3D)
+{
+  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupMasterSlaves(), Require::Events);
+  auto m2n = context.connectMasters("Solid", "Fluid");
+
+  int dimensions = 3;
+
+  if (context.isNamed("Solid")) { //SOLIDZ
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
+    createSolidzMesh3D(pSolidzMesh);
+    ProvidedPartition part(pSolidzMesh);
+    part.addM2N(m2n);
+    part.communicate();
+  } else {
+    BOOST_TEST(context.isNamed("Fluid"));
+    mesh::PtrMesh pNastinMesh(new mesh::Mesh("NastinMesh", dimensions, testing::nextMeshID()));
+    mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
+
+    double supportRadius1 = 1.2;
+    double supportRadius2 = 0.2;
+
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
+        new mapping::NearestProjectionMapping(mapping::Mapping::SCALEDCONSISTENT, dimensions));
+    boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
+
+    createNastinMesh3D(pNastinMesh, context.rank);
+
+    double            safetyFactor = 20.0;
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::NO_FILTER, safetyFactor);
+    part.addM2N(m2n);
+    part.addFromMapping(boundingFromMapping);
+    part.communicate();
+    part.compute();
+
+    BOOST_TEST_CONTEXT(*pSolidzMesh)
+    {
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().size() == 3);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 2);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 2);
+      BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 5);
+      BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 5);
+
+      // check if the sending and filtering worked right
+      if (context.isMaster()) { //Master
+        BOOST_TEST(pSolidzMesh->vertices().size() == 2);
+        BOOST_TEST(pSolidzMesh->edges().size() == 1);
+        BOOST_TEST(pSolidzMesh->triangles().size() == 0);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 3);
+
+        BOOST_TEST(pSolidzMesh->edges().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->edges().at(0).getGlobalIndex() == 1);
+
+        BOOST_TEST(pSolidzMesh->triangles().size() == 0);
+      } else if (context.isRank(1)) { //Slave2
+        BOOST_TEST(pSolidzMesh->vertices().size() == 0);
+        BOOST_TEST(pSolidzMesh->edges().size() == 0);
+        BOOST_TEST(pSolidzMesh->triangles().size() == 0);
+      } else if (context.isRank(2)) { //Slave3
+        BOOST_TEST(pSolidzMesh->vertices().size() == 3);
+        BOOST_TEST(pSolidzMesh->edges().size() == 3);
+        BOOST_TEST(pSolidzMesh->triangles().size() == 1);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->vertices().at(0).getGlobalIndex() == 0);
+        BOOST_TEST(pSolidzMesh->vertices().at(1).getGlobalIndex() == 2);
+        BOOST_TEST(pSolidzMesh->vertices().at(2).getGlobalIndex() == 4);
+
+        BOOST_TEST(pSolidzMesh->edges().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->edges().at(1).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->edges().at(2).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->edges().at(0).getGlobalIndex() == 3);
+        BOOST_TEST(pSolidzMesh->edges().at(1).getGlobalIndex() == 4);
+        BOOST_TEST(pSolidzMesh->edges().at(2).getGlobalIndex() == 5);
+
+        BOOST_TEST(pSolidzMesh->triangles().at(0).isOwner() == true);
+        BOOST_TEST(pSolidzMesh->triangles().at(0).getGlobalIndex() == 1);
+      }
+    }
+  }
+  tearDownParallelEnvironment();
+}
+
 #endif // PRECICE_NO_PETSC
 
 BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)

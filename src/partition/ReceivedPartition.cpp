@@ -53,9 +53,18 @@ void ReceivedPartition::communicate()
 
     if (utils::MasterSlave::isMaster()) {
       // Master receives remote mesh's global number of vertices
-      int globalNumberOfVertices = -1;
+      int globalNumberOfVertices  = -1;
+      int globalNumberOfEdges     = -1;
+      int globalNumberOfTriangles = -1;
+
       m2n().getMasterCommunication()->receive(globalNumberOfVertices, 0);
       _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
+
+      m2n().getMasterCommunication()->receive(globalNumberOfEdges, 0);
+      _mesh->setGlobalNumberOfEdges(globalNumberOfEdges);
+
+      m2n().getMasterCommunication()->receive(globalNumberOfTriangles, 0);
+      _mesh->setGlobalNumberOfTriangles(globalNumberOfTriangles);
     }
 
     // each rank receives max/min global vertex indices from connected remote ranks
@@ -73,18 +82,28 @@ void ReceivedPartition::communicate()
       // a ReceivedPartition can only have one communication, @todo nicer design
       com::CommunicateMesh(m2n().getMasterCommunication()).receiveMesh(*_mesh, 0);
       _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
+      _mesh->setGlobalNumberOfEdges(_mesh->edges().size());
+      _mesh->setGlobalNumberOfTriangles(_mesh->triangles().size());
     }
   }
 
   // for both initialization concepts broadcast and set the global number of vertices
   if (utils::MasterSlave::isMaster()) {
     utils::MasterSlave::_communication->broadcast(_mesh->getGlobalNumberOfVertices());
+    utils::MasterSlave::_communication->broadcast(_mesh->getGlobalNumberOfEdges());
+    utils::MasterSlave::_communication->broadcast(_mesh->getGlobalNumberOfTriangles());
   }
   if (utils::MasterSlave::isSlave()) {
-    int globalNumberOfVertices = -1;
+    int globalNumberOfVertices  = -1;
+    int globalNumberOfEdges     = -1;
+    int globalNumberOfTriangles = -1;
     utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
+    utils::MasterSlave::_communication->broadcast(globalNumberOfEdges, 0);
+    utils::MasterSlave::_communication->broadcast(globalNumberOfTriangles, 0);
     PRECICE_ASSERT(globalNumberOfVertices >= 0);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
+    _mesh->setGlobalNumberOfEdges(globalNumberOfEdges);
+    _mesh->setGlobalNumberOfTriangles(globalNumberOfTriangles);
   }
 }
 
@@ -125,6 +144,15 @@ void ReceivedPartition::compute()
       vertexCounter++;
     }
     _mesh->getVertexOffsets().push_back(vertexCounter);
+    if (_dimensions == 2) {
+      for (mesh::Edge &e : _mesh->edges()) {
+        e.setOwner(true);
+      }
+    } else {
+      for (mesh::Triangle &t : _mesh->triangles()) {
+        t.setOwner(true);
+      }
+    }
     return;
   }
 
@@ -134,6 +162,10 @@ void ReceivedPartition::compute()
                   "The received mesh {} needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?",
                   _mesh->getName());
   }
+
+  // If at least one of the mappings is a scaled-consistent mapping, we communicate full ownership and do relaxed filtering
+  bool communicateFullOwnership = std::any_of(_fromMappings.begin(), _fromMappings.end(), [](const mapping::PtrMapping &fromMapping) { return fromMapping->hasConstraint(mapping::Mapping::SCALEDCONSISTENT); }) or
+                                  std::any_of(_toMappings.begin(), _toMappings.end(), [](const mapping::PtrMapping &toMapping) { return toMapping->hasConstraint(mapping::Mapping::SCALEDCONSISTENT); });
 
   // To better understand steps (2) to (5), it is recommended to look at BU's thesis, especially Figure 69 on page 89
   // for RBF-based filtering. https://mediatum.ub.tum.de/doc/1320661/document.pdf
@@ -167,6 +199,15 @@ void ReceivedPartition::compute()
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
   e5.stop();
+
+  if (communicateFullOwnership) {
+    if (_mesh->getGlobalNumberOfEdges() > 0) {
+      createEdgeOwnerInformation();
+    }
+    if ((_dimensions == 3) and (_mesh->getGlobalNumberOfTriangles() > 0)) {
+      createTriangleOwnerInformation();
+    }
+  }
 
   // (6) Compute vertex distribution or local communication map
   if (m2n().usesTwoLevelInitialization()) {
@@ -806,9 +847,8 @@ void ReceivedPartition::createOwnerInformation()
       PRECICE_DEBUG("My tags: {}", slaveTags[0]);
 
       // receive slave data
-      Rank ranksAtInterface = 0;
       if (masterAtInterface)
-        ranksAtInterface++;
+        _ranksAtInterface++;
 
       for (Rank rank : utils::MasterSlave::allSlaves()) {
         int localNumberOfVertices = -1;
@@ -825,21 +865,21 @@ void ReceivedPartition::createOwnerInformation()
           bool atInterface = false;
           utils::MasterSlave::_communication->receive(atInterface, rank);
           if (atInterface)
-            ranksAtInterface++;
+            _ranksAtInterface++;
         }
       }
 
       // Decide upon owners,
       PRECICE_DEBUG("Decide owners, first round by rough load balancing");
       // Provide a more descriptive error message if direct access was enabled
-      PRECICE_CHECK(!(ranksAtInterface == 0 && _allowDirectAccess),
+      PRECICE_CHECK(!(_ranksAtInterface == 0 && _allowDirectAccess),
                     "After repartitioning of mesh \"{}\" all ranks are empty. "
                     "Please check the dimensions of the provided bounding box "
                     "(in \"setMeshAccessRegion\") and verify that it covers vertices "
                     "in the mesh or check the definition of the provided meshes.",
                     _mesh->getName());
-      PRECICE_ASSERT(ranksAtInterface != 0);
-      int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
+      PRECICE_ASSERT(_ranksAtInterface != 0);
+      int localGuess = _mesh->getGlobalNumberOfVertices() / _ranksAtInterface; // Guess for a decent load balancing
       // First round: every slave gets localGuess vertices
       for (Rank rank : utils::MasterSlave::allRanks()) {
         int counter = 0;
@@ -894,6 +934,205 @@ void ReceivedPartition::createOwnerInformation()
                                         : "");
       }
     }
+  }
+}
+
+void ReceivedPartition::createEdgeOwnerInformation()
+{
+  PRECICE_TRACE();
+  Event e("partition.createEdgeOwnerInformation." + _mesh->getName(), precice::syncMode);
+
+  PRECICE_ASSERT(utils::MasterSlave::getSize() > 0);
+
+  if (utils::MasterSlave::isSlave()) {
+    int numberOfEdges = _mesh->edges().size();
+    utils::MasterSlave::_communication->send(numberOfEdges, 0);
+
+    if (numberOfEdges != 0) {
+      std::vector<int> globalIDs(numberOfEdges, -1);
+      for (int i = 0; i < numberOfEdges; i++) {
+        globalIDs[i] = _mesh->edges()[i].getGlobalIndex();
+      }
+      PRECICE_DEBUG("Send global IDs");
+      utils::MasterSlave::_communication->send(globalIDs, 0);
+
+      PRECICE_DEBUG("Receive owner information");
+      std::vector<int> ownerVec(numberOfEdges, -1);
+      utils::MasterSlave::_communication->receive(ownerVec, 0);
+      PRECICE_DEBUG("My owner information: {}", ownerVec);
+      PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfEdges));
+      setEdgeOwnerInformation(ownerVec);
+    }
+  }
+
+  else if (utils::MasterSlave::isMaster()) {
+    // To temporary store which vertices already have an owner
+    std::vector<int> globalOwnerVec(_mesh->getGlobalNumberOfEdges(), 0);
+    // The same per rank
+    std::vector<std::vector<int>> slaveOwnerVecs(utils::MasterSlave::getSize());
+    // Global IDs per rank
+    std::vector<std::vector<int>> slaveGlobalIDs(utils::MasterSlave::getSize());
+
+    // Fill master data
+    slaveOwnerVecs[0].resize(_mesh->edges().size());
+    slaveGlobalIDs[0].resize(_mesh->edges().size());
+    for (size_t i = 0; i < _mesh->edges().size(); i++) {
+      slaveGlobalIDs[0][i] = _mesh->edges()[i].getGlobalIndex();
+    }
+
+    for (Rank rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+      int localNumberOfEdges = -1;
+      utils::MasterSlave::_communication->receive(localNumberOfEdges, rank);
+      PRECICE_DEBUG("Rank {} has {} edges.", rank, localNumberOfEdges);
+      slaveOwnerVecs[rank].resize(localNumberOfEdges, 0);
+
+      if (localNumberOfEdges != 0) {
+        utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank], rank);
+        PRECICE_DEBUG("Rank {} has global IDs {}", rank, slaveGlobalIDs[rank]);
+      }
+    }
+
+    // Decide upon owners,
+    PRECICE_DEBUG("Decide owners, first round by rough load balancing");
+    PRECICE_ASSERT(_ranksAtInterface != 0);
+    int localGuess = _mesh->getGlobalNumberOfEdges() / _ranksAtInterface; // Guess for a decent load balancing
+    // First round: every slave gets localGuess edges
+    for (Rank rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+      int counter = 0;
+      for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
+        // Vertex has no owner yet and rank could be owner
+        if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0) {
+          slaveOwnerVecs[rank][i]                 = 1; // Now rank is owner
+          globalOwnerVec[slaveGlobalIDs[rank][i]] = 1; // Edge now has owner
+          counter++;
+          if (counter == localGuess) {
+            break;
+          }
+        }
+      }
+    }
+
+    // Second round: distribute all other edges in a greedy way
+    PRECICE_DEBUG("Decide owners, second round in greedy way");
+    for (Rank rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+      for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
+        if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0) {
+          slaveOwnerVecs[rank][i]                 = 1;
+          globalOwnerVec[slaveGlobalIDs[rank][i]] = rank + 1;
+        }
+      }
+    }
+
+    // Send information back to slaves
+    for (Rank rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+      PRECICE_DEBUG("Send owner information to slave rank {}", rank);
+      if (slaveOwnerVecs[rank].size() != 0) {
+        utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);
+      }
+    }
+    // Master data
+    PRECICE_DEBUG("My owner information: {}", slaveOwnerVecs[0]);
+    setEdgeOwnerInformation(slaveOwnerVecs[0]);
+  }
+}
+
+void ReceivedPartition::createTriangleOwnerInformation()
+{
+  PRECICE_TRACE();
+  Event e("partition.createTriangleOwnerInformation." + _mesh->getName(), precice::syncMode);
+
+  PRECICE_ASSERT(utils::MasterSlave::getSize() > 0);
+  PRECICE_ASSERT(_dimensions == 3);
+
+  if (utils::MasterSlave::isSlave()) {
+    int numberOfTriangles = _mesh->triangles().size();
+    utils::MasterSlave::_communication->send(numberOfTriangles, 0);
+
+    if (numberOfTriangles != 0) {
+      std::vector<int> globalIDs(numberOfTriangles, -1);
+      for (int i = 0; i < numberOfTriangles; i++) {
+        globalIDs[i] = _mesh->triangles()[i].getGlobalIndex();
+      }
+      PRECICE_DEBUG("My global IDs: {}", globalIDs);
+      PRECICE_DEBUG("Send global IDs");
+      utils::MasterSlave::_communication->send(globalIDs, 0);
+
+      PRECICE_DEBUG("Receive owner information");
+      std::vector<int> ownerVec(numberOfTriangles, -1);
+      utils::MasterSlave::_communication->receive(ownerVec, 0);
+      PRECICE_DEBUG("My owner information: {}", ownerVec);
+      PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfTriangles));
+      setTriangleOwnerInformation(ownerVec);
+    }
+  }
+
+  else if (utils::MasterSlave::isMaster()) {
+    // To temporary store which vertices already have an owner
+    std::vector<int> globalOwnerVec(_mesh->getGlobalNumberOfTriangles(), 0);
+    // The same per rank
+    std::vector<std::vector<int>> slaveOwnerVecs(utils::MasterSlave::getSize());
+    // Global IDs per rank
+    std::vector<std::vector<int>> slaveGlobalIDs(utils::MasterSlave::getSize());
+
+    // Fill master data
+    slaveOwnerVecs[0].resize(_mesh->triangles().size());
+    slaveGlobalIDs[0].resize(_mesh->triangles().size());
+    for (size_t i = 0; i < _mesh->triangles().size(); i++) {
+      slaveGlobalIDs[0][i] = _mesh->triangles()[i].getGlobalIndex();
+    }
+
+    for (Rank rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+      int localNumberOfTriangles = -1;
+      utils::MasterSlave::_communication->receive(localNumberOfTriangles, rank);
+      PRECICE_DEBUG("Rank {} has {} triangles.", rank, localNumberOfTriangles);
+      slaveOwnerVecs[rank].resize(localNumberOfTriangles, 0);
+
+      if (localNumberOfTriangles != 0) {
+        utils::MasterSlave::_communication->receive(slaveGlobalIDs[rank], rank);
+        PRECICE_DEBUG("Rank {} has global IDs {}.", rank, slaveGlobalIDs[rank]);
+      }
+    }
+
+    // Decide upon owners,
+    PRECICE_DEBUG("Decide owners, first round by rough load balancing");
+    PRECICE_ASSERT(_ranksAtInterface != 0);
+    int localGuess = _mesh->getGlobalNumberOfTriangles() / _ranksAtInterface; // Guess for a decent load balancing
+    // First round: every slave gets localGuess triangles
+    for (Rank rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+      int counter = 0;
+      for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
+        // Vertex has no owner yet and rank could be owner
+        if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0) {
+          slaveOwnerVecs[rank][i]                 = 1; // Now rank is owner
+          globalOwnerVec[slaveGlobalIDs[rank][i]] = 1; // Triangle now has owner
+          counter++;
+          if (counter == localGuess)
+            break;
+        }
+      }
+    }
+
+    // Second round: distribute all other edges in a greedy way
+    PRECICE_DEBUG("Decide owners, second round in greedy way");
+    for (Rank rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+      for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
+        if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0) {
+          slaveOwnerVecs[rank][i]                 = 1;
+          globalOwnerVec[slaveGlobalIDs[rank][i]] = rank + 1;
+        }
+      }
+    }
+
+    // Send information back to slaves
+    for (Rank rank = 1; rank < utils::MasterSlave::getSize(); rank++) {
+      PRECICE_DEBUG("Send owner information to slave rank {}", rank);
+      if (slaveOwnerVecs[rank].size() != 0) {
+        utils::MasterSlave::_communication->send(slaveOwnerVecs[rank], rank);
+      }
+    }
+    // Master data
+    PRECICE_DEBUG("My owner information: {}", slaveOwnerVecs[0]);
+    setTriangleOwnerInformation(slaveOwnerVecs[0]);
   }
 }
 
@@ -955,6 +1194,28 @@ void ReceivedPartition::setOwnerInformation(const std::vector<int> &ownerVec)
     PRECICE_ASSERT(i < ownerVec.size());
     PRECICE_ASSERT(ownerVec[i] != -1);
     vertex.setOwner(ownerVec[i] == 1);
+    i++;
+  }
+}
+
+void ReceivedPartition::setEdgeOwnerInformation(const std::vector<int> &ownerVec)
+{
+  size_t i = 0;
+  for (mesh::Edge &edge : _mesh->edges()) {
+    PRECICE_ASSERT(i < ownerVec.size());
+    PRECICE_ASSERT(ownerVec[i] != -1);
+    edge.setOwner(ownerVec[i] == 1);
+    i++;
+  }
+}
+
+void ReceivedPartition::setTriangleOwnerInformation(const std::vector<int> &ownerVec)
+{
+  size_t i = 0;
+  for (mesh::Triangle &triangle : _mesh->triangles()) {
+    PRECICE_ASSERT(i < ownerVec.size());
+    PRECICE_ASSERT(ownerVec[i] != -1);
+    triangle.setOwner(ownerVec[i] == 1);
     i++;
   }
 }

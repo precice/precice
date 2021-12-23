@@ -74,6 +74,26 @@ bool Edge::operator!=(const Edge &other) const
   return !(*this == other);
 }
 
+int Edge::getGlobalIndex() const
+{
+  return _globalIndex;
+}
+
+void Edge::setGlobalIndex(int globalIndex)
+{
+  _globalIndex = globalIndex;
+}
+
+bool Edge::isOwner() const
+{
+  return _owner;
+}
+
+void Edge::setOwner(bool owner)
+{
+  _owner = owner;
+}
+
 std::ostream &operator<<(std::ostream &stream, const Edge &edge)
 {
   using utils::eigenio::wkt;

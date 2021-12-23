@@ -296,6 +296,26 @@ void Mesh::setGlobalNumberOfVertices(int num)
   _globalNumberOfVertices = num;
 }
 
+int Mesh::getGlobalNumberOfEdges() const
+{
+  return _globalNumberOfEdges;
+}
+
+void Mesh::setGlobalNumberOfEdges(int num)
+{
+  _globalNumberOfEdges = num;
+}
+
+int Mesh::getGlobalNumberOfTriangles() const
+{
+  return _globalNumberOfTriangles;
+}
+
+void Mesh::setGlobalNumberOfTriangles(int num)
+{
+  _globalNumberOfTriangles = num;
+}
+
 Eigen::VectorXd Mesh::getOwnedVertexData(DataID dataID)
 {
 
@@ -353,7 +373,9 @@ void Mesh::addMesh(
     VertexID vertexIndex2 = edge.vertex(1).getID();
     PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
                    (vertexMap.count(vertexIndex2) == 1));
-    Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
+    Edge &e = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
+    e.setGlobalIndex(edge.getGlobalIndex());
+    e.setOwner(edge.isOwner());
     edgeMap[edge.getID()] = &e;
   }
 
@@ -365,7 +387,9 @@ void Mesh::addMesh(
       PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
                      (edgeMap.count(edgeIndex2) == 1) &&
                      (edgeMap.count(edgeIndex3) == 1));
-      createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
+      Triangle &t = createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
+      t.setGlobalIndex(triangle.getGlobalIndex());
+      t.setOwner(triangle.isOwner());
     }
   }
   meshChanged(*this);

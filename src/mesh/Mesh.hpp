@@ -193,6 +193,14 @@ public:
 
   void setGlobalNumberOfVertices(int num);
 
+  int getGlobalNumberOfEdges() const;
+
+  void setGlobalNumberOfEdges(int num);
+
+  int getGlobalNumberOfTriangles() const;
+
+  void setGlobalNumberOfTriangles(int num);
+
   // Get the data of owned vertices for given data ID
   Eigen::VectorXd getOwnedVertexData(DataID dataID);
 
@@ -266,6 +274,20 @@ private:
    * Duplicated vertices are only accounted once.
    */
   int _globalNumberOfVertices = -1;
+
+  /**
+   * @brief Number of unique edges for complete distributed mesh.
+   *
+   * Duplicated edges are only accounted once.
+   */
+  int _globalNumberOfEdges = -1;
+
+  /**
+   * @brief Number of unique triangles for complete distributed mesh.
+   *
+   * Duplicated triangles are only accounted once.
+   */
+  int _globalNumberOfTriangles = -1;
 
   /**
    * @brief each rank stores list of connected remote ranks.
