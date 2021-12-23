@@ -14,7 +14,9 @@ BOOST_AUTO_TEST_SUITE(Implicit)
 BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
- * @brief Test to run a simple coupling with sampling from the waveform.
+ * @brief Test to run a simple coupling with first order waveform subcycling.
+ * 
+ * Provides a dt argument to the read function. A first order waveform is used.
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 {
