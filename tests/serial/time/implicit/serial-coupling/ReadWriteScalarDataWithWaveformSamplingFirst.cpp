@@ -10,13 +10,13 @@ using namespace precice;
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
-BOOST_AUTO_TEST_SUITE(Explicit)
-BOOST_AUTO_TEST_SUITE(ParallelCoupling)
+BOOST_AUTO_TEST_SUITE(Implicit)
+BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
  * @brief Test to run a simple coupling with sampling from the waveform.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSampling)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
@@ -61,16 +61,19 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSampling)
   vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
   vertexIDs[1] = precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
 
-  int    nWindows     = 5; // perform 5 windows.
-  double maxDt        = precice.initialize();
-  double windowDt     = maxDt;
-  int    timewindow   = 0;
-  double dt           = maxDt; // Timestep length desired by solver
-  double currentDt    = dt;    // Timestep length used by solver
-  double time         = timewindow * dt;
-  double sampleDts[4] = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
-  int    nSamples     = 4;
-  int    iterations   = 0;
+  int    nWindows        = 5; // perform 5 windows.
+  double maxDt           = precice.initialize();
+  double windowDt        = maxDt;
+  int    timestep        = 0;
+  int    timewindow      = 0;
+  double windowStartTime = 0;
+  int    windowStartStep = 0;
+  double dt              = maxDt; // Timestep length desired by solver
+  double currentDt       = dt;    // Timestep length used by solver
+  double time            = timestep * dt;
+  double sampleDts[4]    = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
+  int    nSamples        = 4;
+  int    iterations      = 0;
   double readTime; // time where we are reading
   double sampleDt; // dt relative to timestep start, where we are sampling
 
@@ -85,6 +88,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSampling)
   precice.initializeData();
 
   while (precice.isCouplingOngoing()) {
+    if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+      windowStartTime = time;
+      windowStartStep = timestep;
+      precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
+    }
     BOOST_TEST(precice.isReadDataAvailable());
     BOOST_TEST(readData.size() == nVertices);
     for (int i = 0; i < nVertices; i++) {
@@ -92,10 +100,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSampling)
         sampleDt = sampleDts[j];
         readTime = time + sampleDt;
         precice.readScalarData(readDataID, vertexIDs[i], sampleDt, readData[i]);
-        if (timewindow == 0) {
+        if (context.isNamed("SolverOne") && iterations == 0) { // first participant always uses constant extrapolation in first iteration (from initializeData or writeData of second participant at end previous window).
           BOOST_TEST(readData[i] == readFunction(time, i));
-        } else if (timewindow > 0) {
-          BOOST_TEST(readData[i] == readFunction(readTime - windowDt, i)); // both solvers lag one window behind for serial-explicit coupling.
+        } else if (context.isNamed("SolverOne") && iterations > 0) { // first participant always uses linear interpolation in later iterations (additionally available writeData of second participant at end of this window).
+          BOOST_TEST(readData[i] == readFunction(readTime, i));
+        } else if (context.isNamed("SolverTwo") && timewindow == 0) { // second participant uses constant interpolation in first window (from writeData of first participant).
+          BOOST_TEST(readData[i] == readFunction(time + dt, i));
+        } else if (context.isNamed("SolverTwo") && timewindow > 0) { // second participant always uses linear interpolation in later windows (additionally available writeData of first participant at end of this window).
+          BOOST_TEST(readData[i] == readFunction(readTime, i));
         } else {
           BOOST_TEST(false); // unreachable!
         }
@@ -115,17 +127,28 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSampling)
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
-    timewindow++;
+    BOOST_CHECK(currentDt == windowDt); // no subcycling.
+    timestep++;
+    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
+      iterations++;
+      timestep = windowStartStep;
+      time     = windowStartTime;
+      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we have to make the action
+    }
+    if (precice.isTimeWindowComplete()) {
+      timewindow++;
+      iterations = 0;
+    }
   }
 
   precice.finalize();
-  BOOST_TEST(timewindow == nWindows);
+  BOOST_TEST(timestep == nWindows);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // PreciceTests
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
-BOOST_AUTO_TEST_SUITE_END() // Explicit
-BOOST_AUTO_TEST_SUITE_END() // ParallelCoupling
+BOOST_AUTO_TEST_SUITE_END() // Implicit
+BOOST_AUTO_TEST_SUITE_END() // SerialCoupling
 
 #endif // PRECICE_NO_MPI

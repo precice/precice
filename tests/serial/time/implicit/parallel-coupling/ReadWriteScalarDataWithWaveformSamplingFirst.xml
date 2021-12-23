@@ -6,7 +6,7 @@
     </data:scalar>
 
     <data:scalar name="DataTwo">
-      <waveform order="0" />
+      <waveform order="1" />
     </data:scalar>
 
     <mesh name="MeshOne">
