@@ -297,7 +297,6 @@ double SolverInterfaceImpl::initialize()
   int    timeWindow = 1;
 
   PRECICE_DEBUG("Initialize coupling schemes");
-
   _couplingScheme->initialize(time, timeWindow);
   PRECICE_ASSERT(_couplingScheme->isInitialized());
 
@@ -354,7 +353,6 @@ void SolverInterfaceImpl::initializeData()
     moveReadWaveforms();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
-
   resetWrittenData();
   PRECICE_DEBUG("Plot output");
   for (const io::ExportContext &context : _accessor->exportContexts()) {
