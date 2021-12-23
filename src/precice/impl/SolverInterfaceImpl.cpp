@@ -300,9 +300,7 @@ double SolverInterfaceImpl::initialize()
   _couplingScheme->initialize(time, timeWindow);
   PRECICE_ASSERT(_couplingScheme->isInitialized());
 
-  double dt = 0.0;
-
-  dt = _couplingScheme->getNextTimestepMaxLength();
+  double dt = _couplingScheme->getNextTimestepMaxLength();
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
