@@ -56,12 +56,6 @@ public:
 
   // @todo try to make private!
   /**
-   * @brief returns number of values per sample in time stored by this waveform
-   */
-  int valuesSize();
-
-  // @todo try to make private!
-  /**
    * @brief returns number samples in time this waveform can store
    */
   int sizeOfSampleStorage();
@@ -86,6 +80,11 @@ private:
   int _numberOfStoredSamples;
 
   mutable logging::Logger _log{"time::Waveform"};
+
+  /**
+   * @brief returns number of values per sample in time stored by this waveform
+   */
+  int valuesSize();
 
   /**
    * @brief Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order of this Waveform.
