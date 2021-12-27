@@ -54,8 +54,8 @@ public:
   void moveToNextWindow();
 
   /**
-   * @brief sample Waveform. Uses interpolation with Waveform's interpolation order, if necessary
-   * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
+   * @brief sample Waveform. Uses interpolation with Waveform's interpolation order, if necessary.
+   * @param normalizedDt time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
    */
   Eigen::VectorXd sample(const double normalizedDt);
 
