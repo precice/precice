@@ -76,8 +76,6 @@ private:
 
   MappingContext _mappingContext;
 
-  void resetProvidedData();
-
   bool hasReadMapping() const;
 
   bool hasWriteMapping() const;

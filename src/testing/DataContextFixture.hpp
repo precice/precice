@@ -14,8 +14,6 @@ public:
   bool hasReadMapping(precice::impl::DataContext &dataContext);
 
   bool hasWriteMapping(precice::impl::DataContext &dataContext);
-
-  void resetProvidedData(precice::impl::DataContext &dataContext);
 };
 
 } // namespace testing

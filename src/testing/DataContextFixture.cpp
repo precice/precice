@@ -13,10 +13,5 @@ bool DataContextFixture::hasWriteMapping(precice::impl::DataContext &dataContext
   return dataContext.hasWriteMapping();
 }
 
-void DataContextFixture::resetProvidedData(precice::impl::DataContext &dataContext)
-{
-  return dataContext.resetProvidedData();
-}
-
 } // namespace testing
 } // namespace precice

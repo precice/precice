@@ -45,11 +45,6 @@ int DataContext::getFromDataID() const
   return _fromData->getID();
 }
 
-void DataContext::resetProvidedData()
-{
-  _providedData->toZero();
-}
-
 void DataContext::resetToData()
 {
   _toData->toZero();
