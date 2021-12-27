@@ -18,5 +18,10 @@ void DataContextFixture::resetProvidedData(precice::impl::DataContext &dataConte
   return dataContext.resetProvidedData();
 }
 
+void DataContextFixture::resetToData(precice::impl::DataContext &dataContext)
+{
+  return dataContext.resetToData();
+}
+
 } // namespace testing
 } // namespace precice

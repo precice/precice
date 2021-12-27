@@ -34,8 +34,6 @@ public:
 
   int getFromDataID() const;
 
-  void resetToData();
-
   /// for copying read data into waveform, if no mapping exists
   void moveProvidedDataToProvidedWaveform();
 
@@ -101,6 +99,8 @@ private:
   MappingContext _mappingContext;
 
   void resetProvidedData();
+
+  void resetToData();
 
   bool hasReadMapping() const;
 
