@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(dataContext.mappingContext().mapping == mappingContext.mapping);
   BOOST_TEST(dataContext.mappingContext().timing == mappingContext.timing);
   fixture.resetProvidedData(dataContext);
-  dataContext.resetToData();
+  fixture.resetToData(dataContext);
 }
 
 BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   BOOST_TEST(dataContext.mappingContext().mapping == mappingContext.mapping);
   BOOST_TEST(dataContext.mappingContext().timing == mappingContext.timing);
   fixture.resetProvidedData(dataContext);
-  dataContext.resetToData();
+  fixture.resetToData(dataContext);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
