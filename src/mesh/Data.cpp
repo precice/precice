@@ -88,7 +88,7 @@ void Data::storeDataInWaveform()
   _ptrWaveform->storeAtFirstSample(_values);
 }
 
-Eigen::VectorXd Data::waveformSampleAt(double normalizedDt)
+Eigen::VectorXd Data::sampleAt(double normalizedDt)
 {
   PRECICE_TRACE();
   return _ptrWaveform->sample(normalizedDt);

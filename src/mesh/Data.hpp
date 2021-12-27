@@ -91,7 +91,12 @@ public:
 
   void storeDataInWaveform();
 
-  Eigen::VectorXd waveformSampleAt(double normalizedDt);
+  /**
+   * @brief Allows to sample data at a given point in time insize of the time window
+   *
+   * @param normalizedDt defines point in time where waveform will be sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the window.
+   */
+  Eigen::VectorXd sampleAt(double normalizedDt);
 
   void initializeWaveform();
 

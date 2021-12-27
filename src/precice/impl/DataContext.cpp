@@ -139,12 +139,6 @@ void DataContext::initializeContextWaveforms()
   }
 }
 
-Eigen::VectorXd DataContext::sampleAt(double normalizedDt)
-{
-  PRECICE_TRACE();
-  return _providedData->waveformSampleAt(normalizedDt);
-}
-
 void DataContext::moveToNextWindow()
 {
   PRECICE_TRACE();

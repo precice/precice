@@ -66,13 +66,6 @@ public:
   /// helper function to map a Waveform sample
   void mapWaveformSample();
 
-  /**
-   * @brief Allows to sample data at a given point in time insize of the time window
-   * 
-   * @param normalizedDt defines point in time where waveform will be sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the window.
-   */
-  Eigen::VectorXd sampleAt(double normalizedDt);
-
 private:
   mutable logging::Logger _log{"impl::DataContext"};
 
