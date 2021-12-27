@@ -39,7 +39,7 @@ void Waveform::initialize(
   PRECICE_ASSERT(this->valuesSize() == valuesSize);
 }
 
-void Waveform::store(const Eigen::VectorXd &values)
+void Waveform::storeAtFirstSample(const Eigen::VectorXd &values)
 {
   PRECICE_ASSERT(_storageIsInitialized);
   int columnID = 0;
@@ -88,7 +88,7 @@ int Waveform::sizeOfSampleStorage()
   return _timeWindowsStorage.cols();
 }
 
-Eigen::VectorXd Waveform::getSample()
+Eigen::VectorXd Waveform::readAtFirstSample()
 {
   int sampleID = 0;
   return _timeWindowsStorage.col(sampleID);

@@ -31,16 +31,22 @@ public:
   void initialize(const int valuesSize);
 
   /**
-   * @brief Updates entry in _timeWindows corresponding to this window with given values
+   * @brief Updates first entry in _timeWindows with given values
    * @param values new sample for this time window
    */
-  void store(const Eigen::VectorXd &values);
+  void storeAtFirstSample(const Eigen::VectorXd &values);
 
   /**
    * @brief Updates all entries in _timeWindowsStorage with given values
    * @param values new sample for this time window
    */
   void storeAtAllSamples(const Eigen::VectorXd values);
+
+  // @todo try to make private!
+  /**
+   * @brief getter for first entry in _timeWindowsStorage
+   */
+  Eigen::VectorXd readAtFirstSample();
 
   /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
@@ -52,12 +58,6 @@ public:
    * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
    */
   Eigen::VectorXd sample(const double normalizedDt);
-
-  // @todo try to make private!
-  /**
-   * @brief getter for first sample in _timeWindowsStorage
-   */
-  Eigen::VectorXd getSample();
 
 private:
   /// Set by initialize. Used for consistency checks.

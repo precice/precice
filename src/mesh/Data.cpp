@@ -85,7 +85,7 @@ void Data::resetDataCount()
 void Data::storeDataInWaveform()
 {
   PRECICE_TRACE();
-  _ptrWaveform->store(_values);
+  _ptrWaveform->storeAtFirstSample(_values);
 }
 
 Eigen::VectorXd Data::waveformSampleAt(double normalizedDt)
@@ -104,7 +104,7 @@ void Data::initializeWaveform()
 void Data::sampleWaveformIntoData()
 {
   PRECICE_TRACE();
-  _values = _ptrWaveform->getSample();
+  _values = _ptrWaveform->readAtFirstSample();
 }
 
 void Data::moveToNextWindow()

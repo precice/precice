@@ -1814,18 +1814,6 @@ void SolverInterfaceImpl::handleExports()
   }
 }
 
-void SolverInterfaceImpl::resetWrittenData()
-{
-  PRECICE_TRACE();
-  for (DataContext &context : _accessor->writeDataContexts()) {
-    context.resetProvidedData();
-    if (context.hasMapping()) {
-      PRECICE_ASSERT(context.hasWriteMapping());
-      context.resetToData();
-    }
-  }
-}
-
 PtrParticipant SolverInterfaceImpl::determineAccessingParticipant(
     const config::SolverInterfaceConfiguration &config)
 {

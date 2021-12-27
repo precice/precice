@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
 
   Eigen::VectorXd value(1);
   value(0) = 1.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 1.0));
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 1.0));
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 1.0));
 
   value(0) = 2.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.0));
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
 
   value(0) = 3.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 3.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 3.0));
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
 
   Eigen::VectorXd value(1);
   value(0) = 1.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 1.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 1.0));
 
   value(0) = 2.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
 
   BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
   BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.0));
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
 
   value(0) = 3.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
 
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 3.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
 
   Eigen::VectorXd value(1);
   value(0) = 1.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 1.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 1.0));
 
   value(0) = 2.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 2.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
 
   value(0) = 8.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
 
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 8.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 8.0));
 
   value(0) = 4.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
 
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 4.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 4.0));
 
   value(0) = 8.0;
-  waveform.store(value);
+  waveform.storeAtFirstSample(value);
 
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 8.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 4.0));
