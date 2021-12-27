@@ -16,10 +16,6 @@ public:
 
   bool hasWriteMapping(precice::impl::DataContext &dataContext);
 
-  void resetProvidedData(precice::impl::DataContext &dataContext);
-
-  void resetToData(precice::impl::DataContext &dataContext);
-
   const impl::MappingContext mappingContext(precice::impl::DataContext &dataContext) const;
 
   int getFromDataID(precice::impl::DataContext &dataContext) const;

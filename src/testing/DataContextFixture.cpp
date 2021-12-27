@@ -13,16 +13,6 @@ bool DataContextFixture::hasWriteMapping(precice::impl::DataContext &dataContext
   return dataContext.hasWriteMapping();
 }
 
-void DataContextFixture::resetProvidedData(precice::impl::DataContext &dataContext)
-{
-  return dataContext.resetProvidedData();
-}
-
-void DataContextFixture::resetToData(precice::impl::DataContext &dataContext)
-{
-  return dataContext.resetToData();
-}
-
 const impl::MappingContext DataContextFixture::mappingContext(precice::impl::DataContext &dataContext) const
 {
   return dataContext._mappingContext;

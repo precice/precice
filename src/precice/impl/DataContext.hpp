@@ -92,8 +92,6 @@ private:
 
   MappingContext _mappingContext;
 
-  void resetProvidedData();
-
   void resetToData();
 
   bool hasReadMapping() const;

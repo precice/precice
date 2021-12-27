@@ -34,14 +34,6 @@ int DataContext::getProvidedDataID() const
   return _providedData->getID();
 }
 
-void DataContext::resetProvidedData()
-{
-  PRECICE_TRACE();
-  _providedData->toZero();
-  // TODO: consistently reset waveform
-  // _providedData->waveform()->toZero();
-}
-
 void DataContext::resetToData()
 {
   PRECICE_TRACE();
