@@ -353,7 +353,6 @@ void SolverInterfaceImpl::initializeData()
     moveReadWaveforms();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
-  resetWrittenData();
   PRECICE_DEBUG("Plot output");
   for (const io::ExportContext &context : _accessor->exportContexts()) {
     if (context.everyNTimeWindows != -1) {
@@ -451,8 +450,6 @@ double SolverInterfaceImpl::advance(
 
   PRECICE_DEBUG("Handle exports");
   handleExports();
-
-  resetWrittenData();
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
@@ -1810,18 +1807,6 @@ void SolverInterfaceImpl::handleExports()
     }
     for (const PtrWatchIntegral &watchIntegral : _accessor->watchIntegrals()) {
       watchIntegral->exportIntegralData(_couplingScheme->getTime());
-    }
-  }
-}
-
-void SolverInterfaceImpl::resetWrittenData()
-{
-  PRECICE_TRACE();
-  for (DataContext &context : _accessor->writeDataContexts()) {
-    context.resetProvidedData();
-    if (context.hasMapping()) {
-      PRECICE_ASSERT(context.hasWriteMapping());
-      context.resetToData();
     }
   }
 }
