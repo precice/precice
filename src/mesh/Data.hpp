@@ -95,8 +95,6 @@ public:
 
   void initializeWaveform();
 
-  void sampleWaveformIntoData();
-
   void moveToNextWindow();
 
 private:

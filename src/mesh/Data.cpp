@@ -101,12 +101,6 @@ void Data::initializeWaveform()
   _ptrWaveform->storeAtAllSamples(_values);
 }
 
-void Data::sampleWaveformIntoData()
-{
-  PRECICE_TRACE();
-  _values = _ptrWaveform->readAtFirstSample();
-}
-
 void Data::moveToNextWindow()
 {
   PRECICE_TRACE();

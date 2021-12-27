@@ -88,12 +88,6 @@ int Waveform::maxNumberOfStoredSamples()
   return _timeWindowsStorage.cols();
 }
 
-Eigen::VectorXd Waveform::readAtFirstSample()
-{
-  int sampleIndex = 0;
-  return _timeWindowsStorage.col(sampleIndex);
-}
-
 int Waveform::valuesSize()
 {
   PRECICE_ASSERT(_storageIsInitialized);

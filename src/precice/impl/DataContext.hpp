@@ -57,11 +57,6 @@ public:
   /// for updating waveforms after communication
   void initializeContextWaveforms();
 
-  /// for communication of read and write data
-  void sampleWaveformInToData();
-
-  void storeFromDataInWaveform();
-
   /// shift data in time
   void moveToNextWindow();
 
@@ -91,8 +86,6 @@ private:
   mesh::PtrData _toData;
 
   MappingContext _mappingContext;
-
-  void resetToData();
 
   bool hasReadMapping() const;
 

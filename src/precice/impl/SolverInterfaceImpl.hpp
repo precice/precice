@@ -729,35 +729,14 @@ private:
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
 
-  /// Initializes waveforms of write data contexts before mapping.
-  void initializeWrittenWaveforms();
-
-  /// Prepare for write mapping
-  void storeWriteDataInWrittenWaveform();
-
-  /// Prepares exchange of write data by sampling waveform and storing sample in mesh::Data
-  void prepareExchangedWriteData();
-
-  /// Prepares exchange of read data by sampling waveform and storing sample in mesh::Data
-  void prepareExchangedReadData();
-
   /// Initializes waveforms of read data contexts before mapping.
   void initializeReadWaveforms();
-
-  /// Completes exchange of read data by storing the mesh::Data at the correct place in the waveform
-  void storeReadDataInReadWaveform();
 
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();
 
   /// Computes, performs, and resets all suitable read mappings.
   void mapReadData();
-
-  /// bundles functionality needed by initialize, initializeData and advance
-  void doDataTransferAndReadMapping();
-
-  /// bundles functionality needed by initialize, initializeData and advance
-  void doDataTransferAndWriteMapping();
 
   /// store data before overwriting it
   void moveReadWaveforms();

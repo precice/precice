@@ -43,11 +43,6 @@ public:
   void storeAtAllSamples(const Eigen::VectorXd values);
 
   /**
-   * @brief getter for first entry in _timeWindowsStorage
-   */
-  Eigen::VectorXd readAtFirstSample();
-
-  /**
    * @brief Called, when moving to the next time window. All entries in _timeWindows are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
    */
   void moveToNextWindow();

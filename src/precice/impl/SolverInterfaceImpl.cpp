@@ -302,10 +302,12 @@ double SolverInterfaceImpl::initialize()
 
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
-  initializeReadWaveforms();
+  if (not _hasInitializedReadWaveforms) { // always necessary in this case.
+    initializeReadWaveforms();
+  }
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
-    doDataTransferAndReadMapping();
+    mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
 
@@ -340,16 +342,15 @@ void SolverInterfaceImpl::initializeData()
   PRECICE_DEBUG("Initialize data");
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
-  initializeWrittenWaveforms();
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
-  doDataTransferAndWriteMapping();
+  mapWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
 
   _couplingScheme->initializeData();
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
-    doDataTransferAndReadMapping();
+    mapReadData();
     moveReadWaveforms();
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
@@ -413,32 +414,28 @@ double SolverInterfaceImpl::advance(
   timeWindowComputedPart = timeWindowSize - _couplingScheme->getThisTimeWindowRemainder();
   time                   = _couplingScheme->getTime();
 
-  if (not _hasInitializedWrittenWaveforms) { // necessary, if initializeData was not called or if mesh was reset.
-    PRECICE_ASSERT(not _hasInitializedData || _hasResetMesh);
-    initializeWrittenWaveforms();
-  }
-
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
-    doDataTransferAndWriteMapping();
+    mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
 
-  if (not _hasInitializedReadWaveforms) { // necessary, if mesh was reset.
-    PRECICE_ASSERT(_hasResetMesh);
-    initializeReadWaveforms();
-  }
 
   if (_couplingScheme->isTimeWindowComplete()) {
     moveReadWaveforms();
   }
 
+  if (not _hasInitializedReadWaveforms) { // necessary, if mesh was reset.
+    PRECICE_ASSERT(_hasResetMesh);
+    initializeReadWaveforms();
+  }
+
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
-    doDataTransferAndReadMapping();
+    mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
@@ -1008,9 +1005,10 @@ void SolverInterfaceImpl::mapWriteDataFrom(
   double time = _couplingScheme->getTime();
   performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
-  // @todo add check here to avoid initializing again and again.
-  _hasInitializedWrittenWaveforms = false; // @todo remove this! Trigger should only be set once.
-  initializeWrittenWaveforms();            // @todo should only initialize waveform for the fromMeshID
+  // @todo should only initialize waveform for the fromMeshID
+  for (impl::DataContext &context : _accessor->writeDataContexts()) {
+    context.initializeContextWaveforms();
+  }
 
   for (impl::MappingContext &mappingContext : context.fromMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
@@ -1042,9 +1040,10 @@ void SolverInterfaceImpl::mapReadDataTo(
   double time = _couplingScheme->getTime();
   performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
-  // @todo add check here to avoid initializing again and again.
-  _hasInitializedReadWaveforms = false; // @todo remove this! Trigger should only be set once.
-  initializeReadWaveforms();            // @todo should only initialize waveform for the toMeshID
+  // @todo should only initialize waveform for the toMeshID
+  for (impl::DataContext &context : _accessor->readDataContexts()) {
+    context.initializeContextWaveforms();
+  }
 
   for (impl::MappingContext &mappingContext : context.toMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
@@ -1658,9 +1657,7 @@ void SolverInterfaceImpl::mapData(const utils::ptr_vector<DataContext> &contexts
 {
   PRECICE_TRACE();
   for (impl::DataContext &context : contexts) {
-    if (context.hasMapping()) {
-      context.mapData(mappingType);
-    }
+    context.mapData(mappingType);
   }
 }
 
@@ -1678,52 +1675,6 @@ void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contex
   }
 }
 
-void SolverInterfaceImpl::initializeWrittenWaveforms()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(not _hasInitializedWrittenWaveforms);
-  for (impl::DataContext &context : _accessor->writeDataContexts()) {
-    context.initializeContextWaveforms();
-  }
-  _hasInitializedWrittenWaveforms = true;
-}
-
-void SolverInterfaceImpl::storeWriteDataInWrittenWaveform()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(_hasInitializedWrittenWaveforms);
-  for (impl::DataContext &context : _accessor->writeDataContexts()) {
-    context.storeFromDataInWaveform();
-  }
-}
-
-void SolverInterfaceImpl::storeReadDataInReadWaveform()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(_hasInitializedReadWaveforms);
-  for (impl::DataContext &context : _accessor->readDataContexts()) {
-    context.storeFromDataInWaveform();
-  }
-}
-
-void SolverInterfaceImpl::prepareExchangedWriteData()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(_hasInitializedWrittenWaveforms);
-  for (impl::DataContext &context : _accessor->writeDataContexts()) {
-    context.sampleWaveformInToData();
-  }
-}
-
-void SolverInterfaceImpl::prepareExchangedReadData()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(_hasInitializedReadWaveforms);
-  for (impl::DataContext &context : _accessor->readDataContexts()) {
-    context.sampleWaveformInToData();
-  }
-}
-
 void SolverInterfaceImpl::initializeReadWaveforms()
 {
   PRECICE_TRACE();
@@ -1732,22 +1683,6 @@ void SolverInterfaceImpl::initializeReadWaveforms()
     context.initializeContextWaveforms();
   }
   _hasInitializedReadWaveforms = true;
-}
-
-void SolverInterfaceImpl::mapWrittenData()
-{
-  PRECICE_TRACE();
-  computeMappings(_accessor->writeMappingContexts(), "write");
-  mapData(_accessor->writeDataContexts(), "write");
-  clearMappings(_accessor->writeMappingContexts());
-}
-
-void SolverInterfaceImpl::mapReadData()
-{
-  PRECICE_TRACE();
-  computeMappings(_accessor->readMappingContexts(), "read");
-  mapData(_accessor->readDataContexts(), "read");
-  clearMappings(_accessor->readMappingContexts());
 }
 
 void SolverInterfaceImpl::performDataActions(
@@ -1881,18 +1816,25 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
   return *_accessor->usedMeshContext(meshName).mesh;
 }
 
-void SolverInterfaceImpl::doDataTransferAndWriteMapping()
+void SolverInterfaceImpl::mapWrittenData()
 {
-  storeWriteDataInWrittenWaveform();
-  mapWrittenData();
-  prepareExchangedWriteData();
+  if (not _hasInitializedWrittenWaveforms) { // needs to be done before mapping
+    for (impl::DataContext &context : _accessor->writeDataContexts()) {
+      context.initializeContextWaveforms();
+    }
+    _hasInitializedWrittenWaveforms = true;
+  }
+  computeMappings(_accessor->writeMappingContexts(), "write");
+  mapData(_accessor->writeDataContexts(), "write");
+  clearMappings(_accessor->writeMappingContexts());
 }
 
-void SolverInterfaceImpl::doDataTransferAndReadMapping()
+void SolverInterfaceImpl::mapReadData()
 {
-  storeReadDataInReadWaveform(); // @todo this part is difficult: If the window is repeated, we have to overwrite the sample, if the window is complete and we move to the next window, we have to shift all samples and go to the next window.
-  mapReadData();
-  prepareExchangedReadData();
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
+  computeMappings(_accessor->readMappingContexts(), "read");
+  mapData(_accessor->readDataContexts(), "read");
+  clearMappings(_accessor->readMappingContexts());
 }
 
 void SolverInterfaceImpl::moveReadWaveforms()

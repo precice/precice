@@ -34,14 +34,6 @@ int DataContext::getProvidedDataID() const
   return _providedData->getID();
 }
 
-void DataContext::resetToData()
-{
-  PRECICE_TRACE();
-  _toData->toZero();
-  // TODO: consistently reset waveform
-  // _toData->waveform()->toZero();
-}
-
 void DataContext::mapData(const std::string &mappingType)
 {
   using namespace mapping;
@@ -49,10 +41,14 @@ void DataContext::mapData(const std::string &mappingType)
   bool                         hasMapped = _mappingContext.hasMappedData;
   bool                         mapNow    = timing == MappingConfiguration::ON_ADVANCE;
   mapNow |= timing == MappingConfiguration::INITIAL;
-  if (mapNow && (not hasMapped)) {
-    PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
-                  mappingType, getDataName(), getMeshName());
-    mapWaveformSample();
+  if(hasMapping()){
+    if (mapNow && (not hasMapped)) {
+      PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
+                    mappingType, getDataName(), getMeshName());
+      mapWaveformSample();
+    }
+  } else {
+    _providedData->storeDataInWaveform();
   }
 }
 
@@ -60,10 +56,9 @@ void DataContext::mapWaveformSample()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
-  resetToData();
-  _fromData->sampleWaveformIntoData();                                // put samples from _fromWaveform into _fromData
+  _toData->toZero();                                                  // reset _toData
   _mappingContext.mapping->map(_fromData->getID(), _toData->getID()); // map from _fromData to _toData
-  _toData->storeDataInWaveform();                                     // store _toData at the right place into the _toWaveform
+  _toData->storeDataInWaveform();                                     // store mapped _toData in the _toWaveform
 }
 
 std::string DataContext::getMeshName() const
@@ -141,26 +136,6 @@ void DataContext::initializeContextWaveforms()
     _toData->initializeWaveform();
   } else {
     _providedData->initializeWaveform();
-  }
-}
-
-void DataContext::sampleWaveformInToData()
-{
-  PRECICE_TRACE();
-  if (hasMapping()) {
-    _toData->sampleWaveformIntoData();
-  } else {
-    _providedData->sampleWaveformIntoData();
-  }
-}
-
-void DataContext::storeFromDataInWaveform()
-{
-  PRECICE_TRACE();
-  if (hasMapping()) {
-    _fromData->storeDataInWaveform();
-  } else {
-    _providedData->storeDataInWaveform();
   }
 }
 
