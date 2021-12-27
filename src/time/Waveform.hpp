@@ -42,7 +42,6 @@ public:
    */
   void storeAtAllSamples(const Eigen::VectorXd values);
 
-  // @todo try to make private!
   /**
    * @brief getter for first entry in _timeWindowsStorage
    */
@@ -80,7 +79,7 @@ private:
   int valuesSize();
 
   /**
-   * @brief returns number samples in time this waveform can store
+   * @brief returns number of samples in time this waveform can store
    */
   int sizeOfSampleStorage();
 
