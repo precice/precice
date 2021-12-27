@@ -1676,6 +1676,7 @@ void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contex
 
 void SolverInterfaceImpl::mapWrittenData()
 {
+  PRECICE_TRACE();
   if (not _hasInitializedWrittenWaveforms) { // needs to be done before mapping
     for (impl::DataContext &context : _accessor->writeDataContexts()) {
       context.initializeContextWaveforms();
@@ -1689,6 +1690,7 @@ void SolverInterfaceImpl::mapWrittenData()
 
 void SolverInterfaceImpl::mapReadData()
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   computeMappings(_accessor->readMappingContexts(), "read");
   mapData(_accessor->readDataContexts(), "read");
