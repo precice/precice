@@ -6,6 +6,12 @@
 #include "mesh/SharedPointer.hpp"
 
 namespace precice {
+
+namespace testing {
+// Forward declaration to friend the boost test struct
+class DataContextFixture;
+} // namespace testing
+
 namespace impl {
 
 /**
@@ -16,7 +22,7 @@ namespace impl {
  * - If this dataContext is not associated with a mapping, fromData and toData will be unset.
  */
 class DataContext {
-
+  friend class testing::DataContextFixture; // Make the fixture friend of this class
 public:
   DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
@@ -29,8 +35,6 @@ public:
   int getProvidedDataID() const;
 
   int getFromDataID() const;
-
-  void resetProvidedData();
 
   void resetToData();
 
@@ -58,10 +62,6 @@ public:
 
   bool hasMapping() const;
 
-  bool hasReadMapping() const;
-
-  bool hasWriteMapping() const;
-
   const MappingContext mappingContext() const;
 
 private:
@@ -75,6 +75,12 @@ private:
   mesh::PtrData _toData;
 
   MappingContext _mappingContext;
+
+  void resetProvidedData();
+
+  bool hasReadMapping() const;
+
+  bool hasWriteMapping() const;
 
   // helper function for creating read and write mappings
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);

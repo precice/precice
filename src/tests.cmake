@@ -64,6 +64,8 @@ target_sources(testprecice
     src/precice/tests/WatchPointTest.cpp
     src/query/tests/RTreeAdapterTests.cpp
     src/query/tests/RTreeTests.cpp
+    src/testing/DataContextFixture.hpp
+    src/testing/DataContextFixture.cpp
     src/testing/ExtrapolationFixture.cpp
     src/testing/ExtrapolationFixture.hpp
     src/testing/ParallelCouplingSchemeFixture.cpp
