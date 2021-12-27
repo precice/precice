@@ -86,6 +86,9 @@ private:
 
   /// helper function for creating read and write mappings
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
+
+  /// helper function to check whether mapping has to be performed
+  bool isMappingRequired();
 };
 
 } // namespace impl

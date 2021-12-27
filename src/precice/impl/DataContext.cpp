@@ -34,19 +34,22 @@ int DataContext::getProvidedDataID() const
   return _providedData->getID();
 }
 
-void DataContext::mapData(const std::string &mappingType)
+bool DataContext::isMappingRequired()
 {
   using namespace mapping;
   MappingConfiguration::Timing timing    = _mappingContext.timing;
   bool                         hasMapped = _mappingContext.hasMappedData;
   bool                         mapNow    = timing == MappingConfiguration::ON_ADVANCE;
   mapNow |= timing == MappingConfiguration::INITIAL;
-  if (hasMapping()) {
-    if (mapNow && (not hasMapped)) {
-      PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
-                    mappingType, getDataName(), getMeshName());
-      mapWaveformSample();
-    }
+  return (hasMapping() && mapNow && (not hasMapped));
+}
+
+void DataContext::mapData(const std::string &mappingType)
+{
+  if (isMappingRequired()) {
+    PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
+                  mappingType, getDataName(), getMeshName());
+    mapWaveformSample();
   } else {
     _providedData->storeDataInWaveform();
   }
