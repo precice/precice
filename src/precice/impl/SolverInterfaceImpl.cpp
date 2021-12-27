@@ -1674,6 +1674,27 @@ void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contex
   }
 }
 
+void SolverInterfaceImpl::mapWrittenData()
+{
+  if (not _hasInitializedWrittenWaveforms) { // needs to be done before mapping
+    for (impl::DataContext &context : _accessor->writeDataContexts()) {
+      context.initializeContextWaveforms();
+    }
+    _hasInitializedWrittenWaveforms = true;
+  }
+  computeMappings(_accessor->writeMappingContexts(), "write");
+  mapData(_accessor->writeDataContexts(), "write");
+  clearMappings(_accessor->writeMappingContexts());
+}
+
+void SolverInterfaceImpl::mapReadData()
+{
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
+  computeMappings(_accessor->readMappingContexts(), "read");
+  mapData(_accessor->readDataContexts(), "read");
+  clearMappings(_accessor->readMappingContexts());
+}
+
 void SolverInterfaceImpl::initializeReadWaveforms()
 {
   PRECICE_TRACE();
@@ -1813,27 +1834,6 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
   return *_accessor->usedMeshContext(meshName).mesh;
-}
-
-void SolverInterfaceImpl::mapWrittenData()
-{
-  if (not _hasInitializedWrittenWaveforms) { // needs to be done before mapping
-    for (impl::DataContext &context : _accessor->writeDataContexts()) {
-      context.initializeContextWaveforms();
-    }
-    _hasInitializedWrittenWaveforms = true;
-  }
-  computeMappings(_accessor->writeMappingContexts(), "write");
-  mapData(_accessor->writeDataContexts(), "write");
-  clearMappings(_accessor->writeMappingContexts());
-}
-
-void SolverInterfaceImpl::mapReadData()
-{
-  PRECICE_ASSERT(_hasInitializedReadWaveforms);
-  computeMappings(_accessor->readMappingContexts(), "read");
-  mapData(_accessor->readDataContexts(), "read");
-  clearMappings(_accessor->readMappingContexts());
 }
 
 void SolverInterfaceImpl::moveToNextWindow(const utils::ptr_vector<DataContext> &contexts)

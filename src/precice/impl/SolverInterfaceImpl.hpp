@@ -732,14 +732,14 @@ private:
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
 
-  /// Initializes waveforms of read data contexts before mapping.
-  void initializeReadWaveforms();
-
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();
 
   /// Computes, performs, and resets all suitable read mappings.
   void mapReadData();
+
+  /// Initializes waveforms of read data contexts before mapping.
+  void initializeReadWaveforms();
 
   /**
    * @brief Performs all data actions with given timing.
