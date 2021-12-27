@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
   const int valuesSize = 1;
   waveform.initialize(valuesSize);
 
-  BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 1);
+  BOOST_TEST(fixture.maxNumberOfStoredSamples(waveform) == 1);
   BOOST_TEST(fixture.valuesSize(waveform) == 1);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 0.0));
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
   const int valuesSize = 1;
   waveform.initialize(valuesSize);
 
-  BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 2);
+  BOOST_TEST(fixture.maxNumberOfStoredSamples(waveform) == 2);
   BOOST_TEST(fixture.valuesSize(waveform) == 1);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 0.0));
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   Waveform  waveform(interpolationOrder);
   const int valuesSize = 1;
   waveform.initialize(valuesSize);
-  BOOST_TEST(fixture.sizeOfSampleStorage(waveform) == 3);
+  BOOST_TEST(fixture.maxNumberOfStoredSamples(waveform) == 3);
   BOOST_TEST(fixture.valuesSize(waveform) == 1);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 0.0));

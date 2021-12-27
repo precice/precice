@@ -8,9 +8,9 @@ int WaveformFixture::numberOfStoredSamples(time::Waveform &waveform)
   return waveform._numberOfStoredSamples;
 }
 
-int WaveformFixture::sizeOfSampleStorage(time::Waveform &waveform)
+int WaveformFixture::maxNumberOfStoredSamples(time::Waveform &waveform)
 {
-  return waveform.sizeOfSampleStorage();
+  return waveform.maxNumberOfStoredSamples();
 }
 
 int WaveformFixture::valuesSize(time::Waveform &waveform)

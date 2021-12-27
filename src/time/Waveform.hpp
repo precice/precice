@@ -79,16 +79,16 @@ private:
   int valuesSize();
 
   /**
-   * @brief returns number of samples in time this waveform can store
+   * @brief returns maximum number of samples in time this waveform can store
    */
-  int sizeOfSampleStorage();
+  int maxNumberOfStoredSamples();
 
   /**
-   * @brief Updates entry in _timeWindowsStorage corresponding to a given column ID with given values
+   * @brief Updates entry in _timeWindowsStorage corresponding to a given sampleIndex with given values
    * @param values new sample for this time window
-   * @param columnID ID of column to be updated
+   * @param sampleIndex index of sample to be updated
    */
-  void storeAt(const Eigen::VectorXd values, int columnID);
+  void storeAt(const Eigen::VectorXd values, int sampleIndex);
 
   /**
    * @brief Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order of this Waveform.

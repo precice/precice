@@ -25,38 +25,38 @@ void Waveform::initialize(
    * See https://github.com/precice/precice/pull/1029#discussion_r772344672.
    */
   //PRECICE_ASSERT(valuesSize > 0, valuesSize);
-  int sampleStorageSize;
+  int storageSize;
   if (_interpolationOrder == Time::UNDEFINED_INTERPOLATION_ORDER) {
-    sampleStorageSize = 1;
+    storageSize = 1;
   } else {
     PRECICE_ASSERT(_interpolationOrder >= 0);
-    sampleStorageSize = _interpolationOrder + 1;
+    storageSize = _interpolationOrder + 1;
   }
-  _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, sampleStorageSize);
+  _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, storageSize);
   _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
   _storageIsInitialized  = true;
-  PRECICE_ASSERT(this->sizeOfSampleStorage() == sampleStorageSize);
+  PRECICE_ASSERT(this->maxNumberOfStoredSamples() == storageSize);
   PRECICE_ASSERT(this->valuesSize() == valuesSize);
 }
 
 void Waveform::storeAtFirstSample(const Eigen::VectorXd &values)
 {
   PRECICE_ASSERT(_storageIsInitialized);
-  int columnID = 0;
-  this->storeAt(values, columnID);
+  int sampleIndex = 0;
+  this->storeAt(values, sampleIndex);
 }
 
-void Waveform::storeAt(const Eigen::VectorXd values, int columnID)
+void Waveform::storeAt(const Eigen::VectorXd values, int sampleIndex)
 {
-  PRECICE_ASSERT(_timeWindowsStorage.cols() > columnID, sizeOfSampleStorage(), columnID);
+  PRECICE_ASSERT(_timeWindowsStorage.cols() > sampleIndex, maxNumberOfStoredSamples(), sampleIndex);
   PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
-  this->_timeWindowsStorage.col(columnID) = values;
+  this->_timeWindowsStorage.col(sampleIndex) = values;
 }
 
 void Waveform::storeAtAllSamples(const Eigen::VectorXd values)
 {
-  for (int columnID = 0; columnID < sizeOfSampleStorage(); ++columnID) {
-    this->storeAt(values, columnID);
+  for (int sampleIndex = 0; sampleIndex < maxNumberOfStoredSamples(); ++sampleIndex) {
+    this->storeAt(values, sampleIndex);
   }
 }
 
@@ -77,12 +77,12 @@ void Waveform::moveToNextWindow()
   PRECICE_ASSERT(_storageIsInitialized);
   auto initialGuess = _timeWindowsStorage.col(0);                // use value from last window as initial guess for next
   utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
-  if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
+  if (_numberOfStoredSamples < maxNumberOfStoredSamples()) {          // together with the initial guess the number of stored samples increases
     _numberOfStoredSamples++;
   }
 }
 
-int Waveform::sizeOfSampleStorage()
+int Waveform::maxNumberOfStoredSamples()
 {
   PRECICE_ASSERT(_storageIsInitialized);
   return _timeWindowsStorage.cols();
@@ -90,8 +90,8 @@ int Waveform::sizeOfSampleStorage()
 
 Eigen::VectorXd Waveform::readAtFirstSample()
 {
-  int sampleID = 0;
-  return _timeWindowsStorage.col(sampleID);
+  int sampleIndex = 0;
+  return _timeWindowsStorage.col(sampleIndex);
 }
 
 int Waveform::valuesSize()
