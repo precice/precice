@@ -32,13 +32,6 @@ public:
 
   int getProvidedDataID() const;
 
-  int getFromDataID() const;
-
-  /// for copying read data into waveform, if no mapping exists
-  void moveProvidedDataToProvidedWaveform();
-
-  int getToDataID() const;
-
   std::string getMeshName() const;
 
   int getMeshID() const;
@@ -61,8 +54,6 @@ public:
 
   bool hasMapping() const;
 
-  const MappingContext mappingContext() const;
-
   /// for updating waveforms after communication
   void initializeContextWaveforms();
 
@@ -73,6 +64,9 @@ public:
 
   /// shift data in time
   void moveToNextWindow();
+
+  /// helper function for mapping of data
+  void mapData(const std::string &mappingType);
 
   /// helper function to map a Waveform sample
   void mapWaveformSample();
@@ -105,9 +99,6 @@ private:
   bool hasReadMapping() const;
 
   bool hasWriteMapping() const;
-
-  /// helper function for initializing waveforms from given data
-  void initializeWaveform(mesh::PtrData initializingData);
 
   /// helper function for creating read and write mappings
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);

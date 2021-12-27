@@ -34,14 +34,6 @@ int DataContext::getProvidedDataID() const
   return _providedData->getID();
 }
 
-int DataContext::getFromDataID() const
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_ASSERT(_fromData);
-  return _fromData->getID();
-}
-
 void DataContext::resetProvidedData()
 {
   PRECICE_TRACE();
@@ -58,22 +50,28 @@ void DataContext::resetToData()
   // _toData->waveform()->toZero();
 }
 
+void DataContext::mapData(const std::string &mappingType)
+{
+  using namespace mapping;
+  MappingConfiguration::Timing timing    = _mappingContext.timing;
+  bool                         hasMapped = _mappingContext.hasMappedData;
+  bool                         mapNow    = timing == MappingConfiguration::ON_ADVANCE;
+  mapNow |= timing == MappingConfiguration::INITIAL;
+  if (mapNow && (not hasMapped)) {
+    PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
+                  mappingType, getDataName(), getMeshName());
+    mapWaveformSample();
+  }
+}
+
 void DataContext::mapWaveformSample()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   resetToData();
-  _fromData->sampleWaveformIntoData();                           // put samples from _fromWaveform into _fromData
-  mappingContext().mapping->map(getFromDataID(), getToDataID()); // map from _fromData to _toData
-  _toData->storeDataInWaveform();                                // store _toData at the right place into the _toWaveform
-}
-
-int DataContext::getToDataID() const
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_ASSERT(_toData);
-  return _toData->getID();
+  _fromData->sampleWaveformIntoData();                                // put samples from _fromWaveform into _fromData
+  _mappingContext.mapping->map(_fromData->getID(), _toData->getID()); // map from _fromData to _toData
+  _toData->storeDataInWaveform();                                     // store _toData at the right place into the _toWaveform
 }
 
 std::string DataContext::getMeshName() const
@@ -141,13 +139,6 @@ bool DataContext::hasWriteMapping() const
 {
   PRECICE_TRACE();
   return _fromData == _providedData;
-}
-
-const MappingContext DataContext::mappingContext() const
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(hasMapping());
-  return _mappingContext;
 }
 
 void DataContext::initializeContextWaveforms()

@@ -1021,7 +1021,6 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
-      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       context.mapWaveformSample();
     }
     mappingContext.hasMappedData = true;
@@ -1056,7 +1055,6 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.getMeshID() != toMeshID) {
         continue;
       }
-      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       context.mapWaveformSample();
     }
     mappingContext.hasMappedData = true;
@@ -1659,19 +1657,9 @@ void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext
 void SolverInterfaceImpl::mapData(const utils::ptr_vector<DataContext> &contexts, const std::string &mappingType)
 {
   PRECICE_TRACE();
-  using namespace mapping;
-  MappingConfiguration::Timing timing;
   for (impl::DataContext &context : contexts) {
     if (context.hasMapping()) {
-      timing         = context.mappingContext().timing;
-      bool hasMapped = context.mappingContext().hasMappedData;
-      bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
-      mapNow |= timing == MappingConfiguration::INITIAL;
-      if (mapNow && (not hasMapped)) {
-        PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
-                      mappingType, context.getDataName(), context.getMeshName());
-        context.mapWaveformSample();
-      }
+      context.mapData(mappingType);
     }
   }
 }

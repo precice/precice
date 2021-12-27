@@ -77,7 +77,7 @@ void Waveform::moveToNextWindow()
   PRECICE_ASSERT(_storageIsInitialized);
   auto initialGuess = _timeWindowsStorage.col(0);                // use value from last window as initial guess for next
   utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
-  if (_numberOfStoredSamples < maxNumberOfStoredSamples()) {          // together with the initial guess the number of stored samples increases
+  if (_numberOfStoredSamples < maxNumberOfStoredSamples()) {     // together with the initial guess the number of stored samples increases
     _numberOfStoredSamples++;
   }
 }

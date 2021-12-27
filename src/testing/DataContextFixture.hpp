@@ -1,6 +1,7 @@
 #pragma once
 
 #include "precice/impl/DataContext.hpp"
+#include "precice/impl/MappingContext.hpp"
 
 namespace precice {
 namespace testing {
@@ -18,6 +19,12 @@ public:
   void resetProvidedData(precice::impl::DataContext &dataContext);
 
   void resetToData(precice::impl::DataContext &dataContext);
+
+  const impl::MappingContext mappingContext(precice::impl::DataContext &dataContext) const;
+
+  int getFromDataID(precice::impl::DataContext &dataContext) const;
+
+  int getToDataID(precice::impl::DataContext &dataContext) const;
 };
 
 } // namespace testing
