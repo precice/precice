@@ -723,6 +723,9 @@ private:
   /// Helper for mapWrittenData and mapReadData
   void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
 
+  /// Move to next window and store current data
+  void moveToNextWindow(const utils::ptr_vector<DataContext> &contexts);
+
   /// Helper for mapWrittenData and mapReadData
   void mapData(const utils::ptr_vector<DataContext> &contexts, const std::string &mappingType);
 
@@ -737,9 +740,6 @@ private:
 
   /// Computes, performs, and resets all suitable read mappings.
   void mapReadData();
-
-  /// store data before overwriting it
-  void moveReadWaveforms();
 
   /**
    * @brief Performs all data actions with given timing.

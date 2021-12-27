@@ -351,7 +351,7 @@ void SolverInterfaceImpl::initializeData()
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
-    moveReadWaveforms();
+    moveToNextWindow(_accessor->readDataContexts());
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
   PRECICE_DEBUG("Plot output");
@@ -423,9 +423,8 @@ double SolverInterfaceImpl::advance(
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
 
-
   if (_couplingScheme->isTimeWindowComplete()) {
-    moveReadWaveforms();
+    moveToNextWindow(_accessor->readDataContexts());
   }
 
   if (not _hasInitializedReadWaveforms) { // necessary, if mesh was reset.
@@ -1837,9 +1836,9 @@ void SolverInterfaceImpl::mapReadData()
   clearMappings(_accessor->readMappingContexts());
 }
 
-void SolverInterfaceImpl::moveReadWaveforms()
+void SolverInterfaceImpl::moveToNextWindow(const utils::ptr_vector<DataContext> &contexts)
 {
-  for (impl::DataContext &context : _accessor->readDataContexts()) {
+  for (impl::DataContext &context : contexts) {
     context.moveToNextWindow();
   }
 }

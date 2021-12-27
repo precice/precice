@@ -41,7 +41,7 @@ void DataContext::mapData(const std::string &mappingType)
   bool                         hasMapped = _mappingContext.hasMappedData;
   bool                         mapNow    = timing == MappingConfiguration::ON_ADVANCE;
   mapNow |= timing == MappingConfiguration::INITIAL;
-  if(hasMapping()){
+  if (hasMapping()) {
     if (mapNow && (not hasMapped)) {
       PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
                     mappingType, getDataName(), getMeshName());
