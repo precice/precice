@@ -37,14 +37,6 @@ public:
   int getMeshID() const;
 
   /**
-   * @brief links a read mapping and the mesh context the read mapping requires to this data context
-   *
-   * @param[in] mappingContext provides context of read mapping
-   * @param[in] fromMeshContext provides context of mesh this read mapping is mapping to (_toData)
-   */
-  void configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext);
-
-  /**
    * @brief links a write mapping and the mesh context the write mapping requires to this data context
    *
    * @param[in] mappingContext provides context of write mapping
@@ -74,6 +66,9 @@ protected:
 
   bool hasWriteMapping() const;
 
+  /// helper function for creating read and write mappings
+  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
+
   /// helper function to check whether mapping has to be performed
   bool isMappingRequired();
 
@@ -81,9 +76,6 @@ private:
   mutable logging::Logger _log{"impl::DataContext"};
 
   mesh::PtrMesh _mesh;
-
-  /// helper function for creating read and write mappings
-  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 };
 
 } // namespace impl

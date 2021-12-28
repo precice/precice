@@ -22,6 +22,14 @@ public:
       mesh::PtrMesh mesh,
       int           interpolationOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER);
 
+  /**
+   * @brief links a read mapping and the mesh context the read mapping requires to this data context
+   *
+   * @param[in] mappingContext provides context of read mapping
+   * @param[in] fromMeshContext provides context of mesh this read mapping is mapping to (_toData)
+   */
+  void configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext);
+
   /// helper function for mapping of data
   void mapReadData();
 

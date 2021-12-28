@@ -95,16 +95,6 @@ void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromDa
   PRECICE_ASSERT(_toData != _fromData);
 }
 
-void DataContext::configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext)
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(fromMeshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData fromData = fromMeshContext.mesh->data(getDataName());
-  PRECICE_ASSERT(fromData != _providedData);
-  this->setMapping(mappingContext, fromData, _providedData);
-  PRECICE_ASSERT(hasReadMapping());
-}
-
 void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext)
 {
   PRECICE_TRACE();

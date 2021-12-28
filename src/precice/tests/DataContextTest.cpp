@@ -4,6 +4,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/impl/DataContext.hpp"
+#include "precice/impl/ReadDataContext.hpp"
 #include "testing/DataContextFixture.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -99,7 +100,7 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   MeshContext fromMeshContext(dimensions);
   fromMeshContext.mesh = ptrFromMesh;
 
-  DataContext dataContext(ptrToData, ptrToMesh);
+  ReadDataContext dataContext(ptrToData, ptrToMesh);
 
   MappingContext mappingContext;
   mappingContext.fromMeshID = ptrFromMesh->getID();
