@@ -54,7 +54,7 @@ public:
 
   bool hasMapping() const;
 
-  /// for updating waveforms after communication
+  /// for initializing waveforms of the context
   void initializeContextWaveforms();
 
   /// shift data in time
