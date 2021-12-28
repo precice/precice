@@ -23,6 +23,9 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 
   SolverInterface precice(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
+    MeshID meshID = precice.getMeshID("MeshOne");
+    precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
     double maxDt     = precice.initialize();
     int    timestep  = 0;
     double dt        = maxDt / 2.0; // Timestep length desired by solver
