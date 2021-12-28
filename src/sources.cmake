@@ -247,6 +247,8 @@ target_sources(precice
     src/precice/impl/WatchIntegral.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
+    src/precice/impl/WriteDataContext.cpp
+    src/precice/impl/WriteDataContext.hpp
     src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp

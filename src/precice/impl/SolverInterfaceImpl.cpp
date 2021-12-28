@@ -1004,7 +1004,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (impl::DataContext *context : _accessor->writeDataContexts()) {
+    for (impl::WriteDataContext *context : _accessor->writeDataContexts()) {
       if (context->getMeshID() != fromMeshID) {
         continue;
       }
@@ -1061,7 +1061,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
     return;
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockVectorData() was called with values == nullptr");
-  DataContext &context = _accessor->dataContext(dataID);
+  WriteDataContext &context = static_cast<WriteDataContext &>(_accessor->dataContext(dataID));
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == _dimensions,
@@ -1095,7 +1095,7 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called before finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
-  DataContext &context = _accessor->dataContext(dataID);
+  WriteDataContext &context = static_cast<WriteDataContext &>(_accessor->dataContext(dataID));
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == _dimensions,
@@ -1127,7 +1127,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
     return;
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockScalarData() was called with values == nullptr");
-  DataContext &context = _accessor->dataContext(dataID);
+  WriteDataContext &context = static_cast<WriteDataContext &>(_accessor->dataContext(dataID));
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == 1,
@@ -1154,7 +1154,7 @@ void SolverInterfaceImpl::writeScalarData(
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
-  DataContext &context = _accessor->dataContext(dataID);
+  WriteDataContext &context = static_cast<WriteDataContext &>(_accessor->dataContext(dataID));
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(valueIndex >= -1,
@@ -1658,7 +1658,7 @@ void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
-  for (impl::DataContext *context : _accessor->writeDataContexts()) {
+  for (impl::WriteDataContext *context : _accessor->writeDataContexts()) {
     context->mapWrittenData();
   }
   clearMappings(_accessor->writeMappingContexts());

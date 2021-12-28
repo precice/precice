@@ -44,28 +44,6 @@ bool DataContext::isMappingRequired()
   return (hasMapping() && mapNow && (not hasMapped));
 }
 
-void DataContext::mapWrittenData()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(hasWriteMapping() || not hasMapping());
-  if (isMappingRequired()) {
-    PRECICE_DEBUG("Map write data \"{}\" from mesh \"{}\"",
-                  getDataName(), getMeshName());
-    PRECICE_ASSERT(hasMapping());
-    _toData->toZero();                                                  // reset _toData
-    _mappingContext.mapping->map(_fromData->getID(), _toData->getID()); // map from _fromData to _toData
-  }
-}
-
-void DataContext::mapWriteDataFrom()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(hasWriteMapping());
-  PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", getDataName(), getMeshName());
-  _toData->toZero();                                                  // reset _toData
-  _mappingContext.mapping->map(_fromData->getID(), _toData->getID()); // store mapped _toData in the _toWaveform
-}
-
 std::string DataContext::getMeshName() const
 {
   PRECICE_TRACE();
@@ -93,16 +71,6 @@ void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromDa
   PRECICE_ASSERT(toData->getName() == getDataName());
   _toData = toData;
   PRECICE_ASSERT(_toData != _fromData);
-}
-
-void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext)
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(toMeshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData toData = toMeshContext.mesh->data(getDataName());
-  PRECICE_ASSERT(toData != _providedData);
-  this->setMapping(mappingContext, _providedData, toData);
-  PRECICE_ASSERT(hasWriteMapping());
 }
 
 bool DataContext::hasMapping() const

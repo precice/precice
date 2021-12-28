@@ -24,8 +24,6 @@ namespace impl {
 class DataContext {
   friend class testing::DataContextFixture; // Make the fixture friend of this class
 public:
-  DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
-
   mesh::PtrData providedData();
 
   std::string getDataName() const;
@@ -36,23 +34,11 @@ public:
 
   int getMeshID() const;
 
-  /**
-   * @brief links a write mapping and the mesh context the write mapping requires to this data context
-   *
-   * @param[in] mappingContext provides context of write mapping
-   * @param[in] fromMeshContext provides context of mesh this write mapping is mapping from (_fromData)
-   */
-  void configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext);
-
   bool hasMapping() const;
 
-  /// helper function for mapping of data
-  void mapWrittenData();
-
-  /// helper for mapWriteDataFrom
-  void mapWriteDataFrom();
-
 protected:
+  DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
+
   // data this participant will write to and read from
   mesh::PtrData _providedData;
 

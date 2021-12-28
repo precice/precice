@@ -115,7 +115,7 @@ void Participant::addWriteData(
 {
   checkDuplicatedData(data);
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size());
-  auto context                 = new DataContext(data, mesh);
+  auto context                 = new WriteDataContext(data, mesh);
   _dataContexts[data->getID()] = context;
   _writeDataContexts.push_back(context);
 }
@@ -161,12 +161,12 @@ DataContext &Participant::dataContext(DataID dataID)
   return *_dataContexts[dataID];
 }
 
-const std::vector<DataContext *> &Participant::writeDataContexts() const
+const std::vector<WriteDataContext *> &Participant::writeDataContexts() const
 {
   return _writeDataContexts;
 }
 
-std::vector<DataContext *> &Participant::writeDataContexts()
+std::vector<WriteDataContext *> &Participant::writeDataContexts()
 {
   return _writeDataContexts;
 }

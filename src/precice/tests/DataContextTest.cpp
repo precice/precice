@@ -3,8 +3,8 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/impl/DataContext.hpp"
 #include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/WriteDataContext.hpp"
 #include "testing/DataContextFixture.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   MeshContext toMeshContext(dimensions);
   toMeshContext.mesh = ptrToMesh;
 
-  DataContext dataContext(ptrFromData, ptrFromMesh);
+  WriteDataContext dataContext(ptrFromData, ptrFromMesh);
 
   MappingContext mappingContext;
   mappingContext.fromMeshID = ptrFromMesh->getID();

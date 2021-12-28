@@ -18,6 +18,7 @@
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
 #include "time/Time.hpp"
 #include "utils/ManageUniqueIDs.hpp"
@@ -133,12 +134,12 @@ public:
   /** Provides access to write \ref DataContext
    * @remarks does not contain nullptr.
    */
-  const std::vector<DataContext *> &writeDataContexts() const;
+  const std::vector<WriteDataContext *> &writeDataContexts() const;
 
   /** Provides access to write \ref DataContext
    * @remarks does not contain nullptr.
    */
-  std::vector<DataContext *> &writeDataContexts();
+  std::vector<WriteDataContext *> &writeDataContexts();
 
   /** Provides access to read \ref DataContext
    * @remarks does not contain nullptr.
@@ -313,7 +314,7 @@ private:
 
   std::vector<DataContext *> _dataContexts;
 
-  std::vector<DataContext *> _writeDataContexts;
+  std::vector<WriteDataContext *> _writeDataContexts;
 
   std::vector<ReadDataContext *> _readDataContexts;
 
