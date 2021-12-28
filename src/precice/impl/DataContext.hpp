@@ -24,9 +24,9 @@ namespace impl {
 class DataContext {
   friend class testing::DataContextFixture; // Make the fixture friend of this class
 public:
-  mesh::PtrData providedData();
-
   std::string getDataName() const;
+
+  int getDataDimensions() const;
 
   int getProvidedDataID() const;
 
