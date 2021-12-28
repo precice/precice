@@ -15,6 +15,7 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/DataContext.hpp"
+#include "precice/impl/ReadDataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/MultiLock.hpp"
@@ -640,9 +641,6 @@ private:
   /// SolverInterface.initializeReadWaveforms() triggers transition from false to true.
   bool _hasInitializedReadWaveforms = false;
 
-  /// SolverInterface.resetMesh() triggers transition from false to true.
-  bool _hasResetMesh = false;
-
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
@@ -721,7 +719,7 @@ private:
   void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
 
   /// Move to next window and store current data
-  void moveToNextWindow(const utils::ptr_vector<DataContext> &contexts);
+  void moveToNextWindow(const std::vector<ReadDataContext *> &contexts);
 
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);

@@ -17,7 +17,6 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
-#include "time/Time.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
@@ -130,8 +129,7 @@ public:
       Edge &edgeThree);
 
   PtrData &createData(const std::string &name,
-                      int                dimension,
-                      int                interpolationOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER);
+                      int                dimension);
 
   /// Allows access to all data
   const DataContainer &data() const;

@@ -129,8 +129,7 @@ Triangle &Mesh::createTriangle(
 
 PtrData &Mesh::createData(
     const std::string &name,
-    int                dimension,
-    int                interpolationOrder)
+    int                dimension)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -140,7 +139,7 @@ PtrData &Mesh::createData(
                   name, _name, name);
   }
   int     id = Data::getDataCount();
-  PtrData data(new Data(name, id, dimension, interpolationOrder));
+  PtrData data(new Data(name, id, dimension));
   _data.push_back(data);
   return _data.back();
 }

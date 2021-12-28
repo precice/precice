@@ -237,6 +237,8 @@ target_sources(precice
     src/precice/impl/MeshContext.hpp
     src/precice/impl/Participant.cpp
     src/precice/impl/Participant.hpp
+    src/precice/impl/ReadDataContext.cpp
+    src/precice/impl/ReadDataContext.hpp
     src/precice/impl/SharedPointer.hpp
     src/precice/impl/SolverInterfaceImpl.cpp
     src/precice/impl/SolverInterfaceImpl.hpp

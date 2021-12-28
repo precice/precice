@@ -675,7 +675,7 @@ void SolverInterfaceImpl::resetMesh(
   _meshLock.unlock(meshID);
   context.mesh->clear();
 
-  _hasInitializedReadWaveforms = false;  // waveforms must be re-initialized after resetting the mesh.
+  _hasInitializedReadWaveforms = false; // waveforms must be re-initialized after resetting the mesh.
 }
 
 int SolverInterfaceImpl::setMeshVertex(
@@ -1004,11 +1004,11 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (impl::DataContext &context : _accessor->writeDataContexts()) {
-      if (context.getMeshID() != fromMeshID) {
+    for (impl::DataContext *context : _accessor->writeDataContexts()) {
+      if (context->getMeshID() != fromMeshID) {
         continue;
       }
-      context.mapWriteDataFrom();
+      context->mapWriteDataFrom();
     }
     mappingContext.hasMappedData = true;
   }
@@ -1037,11 +1037,11 @@ void SolverInterfaceImpl::mapReadDataTo(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (impl::DataContext &context : _accessor->readDataContexts()) {
-      if (context.getMeshID() != toMeshID) {
+    for (impl::ReadDataContext *context : _accessor->readDataContexts()) {
+      if (context->getMeshID() != toMeshID) {
         continue;
       }
-      context.mapReadDataTo();
+      context->mapReadDataTo();
     }
     mappingContext.hasMappedData = true;
   }
@@ -1206,7 +1206,7 @@ void SolverInterfaceImpl::readBlockVectorData(
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
-  DataContext &context = _accessor->dataContext(dataID);
+  ReadDataContext &context = static_cast<ReadDataContext &>(_accessor->dataContext(dataID));
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   mesh::Data &data = *context.providedData();
@@ -1215,7 +1215,7 @@ void SolverInterfaceImpl::readBlockVectorData(
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
   const auto normalizedDt   = timeWindowDt / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto valuesInternal = data.sampleAt(normalizedDt);
+  const auto valuesInternal = context.sampleWaveformAt(normalizedDt);
   const auto vertexCount    = valuesInternal.size() / data.getDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1255,7 +1255,7 @@ void SolverInterfaceImpl::readVectorData(
   double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
   double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
-  DataContext &context = _accessor->dataContext(dataID);
+  ReadDataContext &context = static_cast<ReadDataContext &>(_accessor->dataContext(dataID));
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   mesh::Data &data = *context.providedData();
@@ -1267,7 +1267,7 @@ void SolverInterfaceImpl::readVectorData(
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 data.getName());
   const auto normalizedDt = timeWindowDt / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto values       = data.sampleAt(normalizedDt);
+  const auto values       = context.sampleWaveformAt(normalizedDt);
   const auto vertexCount  = values.size() / data.getDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
@@ -1310,7 +1310,7 @@ void SolverInterfaceImpl::readBlockScalarData(
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
-  DataContext &context = _accessor->dataContext(dataID);
+  ReadDataContext &context = static_cast<ReadDataContext &>(_accessor->dataContext(dataID));
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   mesh::Data &data = *context.providedData();
@@ -1319,7 +1319,7 @@ void SolverInterfaceImpl::readBlockScalarData(
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 data.getName());
   const auto normalizedDt   = timeWindowDt / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto valuesInternal = data.sampleAt(normalizedDt);
+  const auto valuesInternal = context.sampleWaveformAt(normalizedDt);
   const auto vertexCount    = valuesInternal.size();
 
   for (int i = 0; i < size; i++) {
@@ -1356,7 +1356,7 @@ void SolverInterfaceImpl::readScalarData(
   double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
   double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
-  DataContext &context = _accessor->dataContext(dataID);
+  ReadDataContext &context = static_cast<ReadDataContext &>(_accessor->dataContext(dataID));
   PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   mesh::Data &data = *context.providedData();
@@ -1369,7 +1369,7 @@ void SolverInterfaceImpl::readScalarData(
                 "Use readVectorData or change the data type for \"{}\" to scalar.",
                 data.getName());
   const auto normalizedDt = timeWindowDt / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  const auto values       = data.sampleAt(normalizedDt);
+  const auto values       = context.sampleWaveformAt(normalizedDt);
   const auto vertexCount  = values.size();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
@@ -1658,8 +1658,8 @@ void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
-  for (impl::DataContext &context : _accessor->writeDataContexts()) {
-    context.mapWrittenData();
+  for (impl::DataContext *context : _accessor->writeDataContexts()) {
+    context->mapWrittenData();
   }
   clearMappings(_accessor->writeMappingContexts());
 }
@@ -1669,8 +1669,8 @@ void SolverInterfaceImpl::mapReadData()
   PRECICE_TRACE();
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   computeMappings(_accessor->readMappingContexts(), "read");
-  for (impl::DataContext &context : _accessor->readDataContexts()) {
-    context.mapReadData();
+  for (impl::ReadDataContext *context : _accessor->readDataContexts()) {
+    context->mapReadData();
   }
   clearMappings(_accessor->readMappingContexts());
 }
@@ -1678,8 +1678,8 @@ void SolverInterfaceImpl::mapReadData()
 void SolverInterfaceImpl::initializeReadWaveforms()
 {
   PRECICE_TRACE();
-  for (impl::DataContext &context : _accessor->readDataContexts()) {
-    context.initializeContextWaveforms();
+  for (impl::ReadDataContext *context : _accessor->readDataContexts()) {
+    context->initializeWaveform();
   }
 }
 
@@ -1814,10 +1814,10 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
   return *_accessor->usedMeshContext(meshName).mesh;
 }
 
-void SolverInterfaceImpl::moveToNextWindow(const utils::ptr_vector<DataContext> &contexts)
+void SolverInterfaceImpl::moveToNextWindow(const std::vector<ReadDataContext *> &contexts)
 {
-  for (impl::DataContext &context : contexts) {
-    context.moveToNextWindow();
+  for (impl::ReadDataContext *context : contexts) {
+    context->moveToNextWindow();
   }
 }
 

@@ -4,7 +4,6 @@
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
-#include "time/Time.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
@@ -16,13 +15,11 @@ public:
   struct ConfiguredData {
     std::string name;
     int         dimensions;
-    int         interpolationOrder;
 
     ConfiguredData(
         const std::string &name,
-        int                dimensions,
-        int                interpolationOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER)
-        : name(name), dimensions(dimensions), interpolationOrder(interpolationOrder) {}
+        int                dimensions)
+        : name(name), dimensions(dimensions) {}
   };
 
   DataConfiguration(xml::XMLTag &parent);
@@ -48,24 +45,15 @@ public:
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    */
   void addData(const std::string &name,
-               int                dataDimensions,
-               int                interpolationOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER);
+               int                dataDimensions);
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
 
   const std::string TAG          = "data";
   const std::string ATTR_NAME    = "name";
-  const std::string TAG_WAVEFORM = "waveform";
-  const std::string ATTR_ORDER   = "order";
   const std::string VALUE_VECTOR = "vector";
   const std::string VALUE_SCALAR = "scalar";
-
-  struct Config {
-    std::string name;
-    int         dataDimensions;
-    int         waveformOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER;
-  } _config;
 
   /// Dimension of space.
   int _dimensions = 0;

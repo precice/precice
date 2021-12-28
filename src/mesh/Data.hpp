@@ -6,8 +6,6 @@
 
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
-#include "time/SharedPointer.hpp"
-#include "time/Time.hpp"
 
 namespace precice {
 namespace mesh {
@@ -65,8 +63,7 @@ public:
   Data(
       std::string name,
       DataID      id,
-      int         dimension,
-      int         interpolationOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER);
+      int         dimension);
 
   /// Destructor, decrements data count.
   ~Data();
@@ -89,19 +86,6 @@ public:
   /// Returns the dimension (i.e., number of components) of one data value.
   int getDimensions() const;
 
-  void storeDataInWaveform();
-
-  /**
-   * @brief Allows to sample data at a given point in time insize of the time window
-   *
-   * @param normalizedDt defines point in time where waveform will be sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the window.
-   */
-  Eigen::VectorXd sampleAt(double normalizedDt);
-
-  void initializeWaveform();
-
-  void moveToNextWindow();
-
 private:
   logging::Logger _log{"mesh::Data"};
 
@@ -109,8 +93,6 @@ private:
   static size_t _dataCount;
 
   Eigen::VectorXd _values;
-
-  time::PtrWaveform _ptrWaveform;
 
   /// Name of the data set.
   std::string _name;

@@ -2,9 +2,7 @@
 #include <algorithm>
 #include <utility>
 
-#include "cplscheme/CouplingScheme.hpp"
 #include "precice/types.hpp"
-#include "time/Waveform.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -23,15 +21,13 @@ Data::Data()
 Data::Data(
     std::string name,
     DataID      id,
-    int         dimensions,
-    int         interpolationOrder)
+    int         dimensions)
     : _values(),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
-  _ptrWaveform = time::PtrWaveform(new time::Waveform(interpolationOrder));
   _dataCount++;
 }
 
@@ -80,31 +76,6 @@ size_t Data::getDataCount()
 void Data::resetDataCount()
 {
   _dataCount = 0;
-}
-
-void Data::storeDataInWaveform()
-{
-  PRECICE_TRACE();
-  _ptrWaveform->storeAtFirstSample(_values);
-}
-
-Eigen::VectorXd Data::sampleAt(double normalizedDt)
-{
-  PRECICE_TRACE();
-  return _ptrWaveform->sample(normalizedDt);
-}
-
-void Data::initializeWaveform()
-{
-  PRECICE_TRACE();
-  _ptrWaveform->initialize(_values.size());
-  _ptrWaveform->storeAtAllSamples(_values);
-}
-
-void Data::moveToNextWindow()
-{
-  PRECICE_TRACE();
-  _ptrWaveform->moveToNextWindow();
 }
 
 } // namespace mesh

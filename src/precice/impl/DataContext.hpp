@@ -54,29 +54,13 @@ public:
 
   bool hasMapping() const;
 
-  /// for initializing waveforms of the context
-  void initializeContextWaveforms();
-
-  /// shift data in time
-  void moveToNextWindow();
-
   /// helper function for mapping of data
   void mapWrittenData();
-
-  /// helper function for mapping of data
-  void mapReadData();
 
   /// helper for mapWriteDataFrom
   void mapWriteDataFrom();
 
-  /// helper for mapReadDataTo
-  void mapReadDataTo();
-
-private:
-  mutable logging::Logger _log{"impl::DataContext"};
-
-  mesh::PtrMesh _mesh;
-
+protected:
   // data this participant will write to and read from
   mesh::PtrData _providedData;
 
@@ -90,11 +74,16 @@ private:
 
   bool hasWriteMapping() const;
 
-  /// helper function for creating read and write mappings
-  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
-
   /// helper function to check whether mapping has to be performed
   bool isMappingRequired();
+
+private:
+  mutable logging::Logger _log{"impl::DataContext"};
+
+  mesh::PtrMesh _mesh;
+
+  /// helper function for creating read and write mappings
+  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 };
 
 } // namespace impl

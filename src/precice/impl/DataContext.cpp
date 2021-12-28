@@ -57,20 +57,6 @@ void DataContext::mapWrittenData()
   }
 }
 
-void DataContext::mapReadData()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(hasReadMapping() || not hasMapping());
-  if (isMappingRequired()) {
-    PRECICE_DEBUG("Map read data \"{}\" from mesh \"{}\"",
-                  getDataName(), getMeshName());
-    PRECICE_ASSERT(hasMapping());
-    _toData->toZero();                                                  // reset _toData
-    _mappingContext.mapping->map(_fromData->getID(), _toData->getID()); // map from _fromData to _toData
-  }
-  _providedData->storeDataInWaveform(); // store mapped or received _providedData in the _providedWaveform
-}
-
 void DataContext::mapWriteDataFrom()
 {
   PRECICE_TRACE();
@@ -78,17 +64,6 @@ void DataContext::mapWriteDataFrom()
   PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", getDataName(), getMeshName());
   _toData->toZero();                                                  // reset _toData
   _mappingContext.mapping->map(_fromData->getID(), _toData->getID()); // store mapped _toData in the _toWaveform
-}
-
-void DataContext::mapReadDataTo()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(hasReadMapping());
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", getDataName(), getMeshName());
-  _toData->toZero();                                                  // reset _toData
-  _mappingContext.mapping->map(_fromData->getID(), _toData->getID()); // map from _fromData to _toData
-  _providedData->storeDataInWaveform();                               // store mapped _toData in the _toWaveform
 }
 
 std::string DataContext::getMeshName() const
@@ -156,19 +131,6 @@ bool DataContext::hasWriteMapping() const
 {
   PRECICE_TRACE();
   return _fromData == _providedData;
-}
-
-void DataContext::initializeContextWaveforms()
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(not hasWriteMapping(), "Write mapping does not need waveforms.");
-  _providedData->initializeWaveform();
-}
-
-void DataContext::moveToNextWindow()
-{
-  PRECICE_TRACE();
-  _providedData->moveToNextWindow();
 }
 
 } // namespace impl

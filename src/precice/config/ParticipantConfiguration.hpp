@@ -12,6 +12,7 @@
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "time/Time.hpp"
 #include "utils/networking.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -92,6 +93,7 @@ private:
   const std::string ATTR_NETWORK            = "network";
   const std::string ATTR_EXCHANGE_DIRECTORY = "exchange-directory";
   const std::string ATTR_SCALE_WITH_CONN    = "scale-with-connectivity";
+  const std::string ATTR_ORDER              = "waveform-order";
 
   const std::string VALUE_FILTER_ON_SLAVES = "on-slaves";
   const std::string VALUE_FILTER_ON_MASTER = "on-master";

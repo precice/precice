@@ -17,7 +17,9 @@
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/DataContext.hpp"
+#include "precice/impl/ReadDataContext.hpp"
 #include "precice/types.hpp"
+#include "time/Time.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/PointerVector.hpp"
@@ -75,7 +77,8 @@ public:
   /// Adds a configured read \ref Data to the Participant
   void addReadData(
       const mesh::PtrData &data,
-      const mesh::PtrMesh &mesh);
+      const mesh::PtrMesh &mesh,
+      int                  interpolationOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER);
 
   /// Adds a configured read \ref Mapping to the Participant
   void addReadMappingContext(MappingContext *mappingContext);
@@ -130,22 +133,22 @@ public:
   /** Provides access to write \ref DataContext
    * @remarks does not contain nullptr.
    */
-  const utils::ptr_vector<DataContext> &writeDataContexts() const;
+  const std::vector<DataContext *> &writeDataContexts() const;
 
   /** Provides access to write \ref DataContext
    * @remarks does not contain nullptr.
    */
-  utils::ptr_vector<DataContext> &writeDataContexts();
+  std::vector<DataContext *> &writeDataContexts();
 
   /** Provides access to read \ref DataContext
    * @remarks does not contain nullptr.
    */
-  const utils::ptr_vector<DataContext> &readDataContexts() const;
+  const std::vector<ReadDataContext *> &readDataContexts() const;
 
   /** Provides access to read \ref DataContext
    * @remarks does not contain nullptr.
    */
-  utils::ptr_vector<DataContext> &readDataContexts();
+  std::vector<ReadDataContext *> &readDataContexts();
 
   /// Is the dataID know to preCICE?
   bool hasData(DataID dataID) const;
@@ -310,9 +313,9 @@ private:
 
   std::vector<DataContext *> _dataContexts;
 
-  utils::ptr_vector<DataContext> _writeDataContexts;
+  std::vector<DataContext *> _writeDataContexts;
 
-  utils::ptr_vector<DataContext> _readDataContexts;
+  std::vector<ReadDataContext *> _readDataContexts;
 
   bool _useMaster = false;
 
