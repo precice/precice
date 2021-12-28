@@ -637,9 +637,6 @@ private:
   /// SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
 
-  /// SolverInterface.initializeWrittenWaveforms() triggers transition from false to true.
-  bool _hasInitializedWrittenWaveforms = false;
-
   /// SolverInterface.initializeReadWaveforms() triggers transition from false to true.
   bool _hasInitializedReadWaveforms = false;
 
@@ -725,9 +722,6 @@ private:
 
   /// Move to next window and store current data
   void moveToNextWindow(const utils::ptr_vector<DataContext> &contexts);
-
-  /// Helper for mapWrittenData and mapReadData
-  void mapData(const utils::ptr_vector<DataContext> &contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);

@@ -61,10 +61,16 @@ public:
   void moveToNextWindow();
 
   /// helper function for mapping of data
-  void mapData(const std::string &mappingType);
+  void mapWrittenData();
 
-  /// helper function to map a Waveform sample
-  void mapWaveformSample();
+  /// helper function for mapping of data
+  void mapReadData();
+
+  /// helper for mapWriteDataFrom
+  void mapWriteDataFrom();
+
+  /// helper for mapReadDataTo
+  void mapReadDataTo();
 
 private:
   mutable logging::Logger _log{"impl::DataContext"};
