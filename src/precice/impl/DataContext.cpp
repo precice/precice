@@ -34,16 +34,6 @@ int DataContext::getProvidedDataID() const
   return _providedData->getID();
 }
 
-bool DataContext::isMappingRequired()
-{
-  using namespace mapping;
-  MappingConfiguration::Timing timing    = _mappingContext.timing;
-  bool                         hasMapped = _mappingContext.hasMappedData;
-  bool                         mapNow    = timing == MappingConfiguration::ON_ADVANCE;
-  mapNow |= timing == MappingConfiguration::INITIAL;
-  return (hasMapping() && mapNow && (not hasMapped));
-}
-
 std::string DataContext::getMeshName() const
 {
   PRECICE_TRACE();
@@ -89,6 +79,16 @@ bool DataContext::hasWriteMapping() const
 {
   PRECICE_TRACE();
   return _fromData == _providedData;
+}
+
+bool DataContext::isMappingRequired()
+{
+  using namespace mapping;
+  MappingConfiguration::Timing timing    = _mappingContext.timing;
+  bool                         hasMapped = _mappingContext.hasMappedData;
+  bool                         mapNow    = timing == MappingConfiguration::ON_ADVANCE;
+  mapNow |= timing == MappingConfiguration::INITIAL;
+  return (hasMapping() && mapNow && (not hasMapped));
 }
 
 } // namespace impl

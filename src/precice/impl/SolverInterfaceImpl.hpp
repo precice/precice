@@ -14,9 +14,9 @@
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/impl/DataContext.hpp"
 #include "precice/impl/ReadDataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
 #include "utils/MultiLock.hpp"
 

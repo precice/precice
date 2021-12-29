@@ -24,35 +24,90 @@ namespace impl {
 class DataContext {
   friend class testing::DataContextFixture; // Make the fixture friend of this class
 public:
+  /**
+   * @brief Get the Name of _providedData.
+   *
+   * @return std::string Name of _providedData.
+   */
   std::string getDataName() const;
 
+  /**
+   * @brief Get the dimensions of _providedData.
+   *
+   * @return int Dimensions of _providedData.
+   */
   int getDataDimensions() const;
 
+  /**
+   * @brief Get the ID of _providedData.
+   *
+   * @return int ID of _providedData.
+   */
   int getProvidedDataID() const;
 
+  /**
+   * @brief Get the name of _mesh.
+   *
+   * @return std::string Name of _mesh.
+   */
   std::string getMeshName() const;
 
+  /**
+   * @brief Get the ID of _mesh.
+   *
+   * @return int ID of _mesh.
+   */
   int getMeshID() const;
 
+  /**
+   * @brief Informs the user whether this DataContext has a _mappingContext.
+   *
+   * @return True, if this DataContext is associated with a mapping. False, if not. 
+   */
   bool hasMapping() const;
 
 protected:
+  /**
+   * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should be used.
+   *
+   * @param data Data associated with this DataContext.
+   * @param mesh Mesh associated with this DataContext.
+   */
   DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
-  // data this participant will write to and read from
-  mesh::PtrData _providedData;
-
-  mesh::PtrData _fromData;
-
-  mesh::PtrData _toData;
-
+  /// Defines the mapping associated to this DataContext. A DataContext may also exist without a mapping.
   MappingContext _mappingContext;
 
+  /// Data this participant will write to and read from
+  mesh::PtrData _providedData;
+
+  /// If a mapping exists, mesh::PtrData the mapping maps from.
+  mesh::PtrData _fromData;
+
+  /// If a mapping exists, mesh::PtrData the mapping maps from.
+  mesh::PtrData _toData;
+
+  /**
+   * @brief Informs the user whether this DataContext has a read mapping.
+   *
+   * @return True, if DataContext has a read mapping.
+   */
   bool hasReadMapping() const;
 
+  /**
+   * @brief Informs the user whether this DataContext has a write mapping.
+   *
+   * @return True, if DataContext has a write mapping.
+   */
   bool hasWriteMapping() const;
 
-  /// helper function for creating read and write mappings
+  /**
+   * @brief Helper to set _mappingContext, _fromData and _toData.
+   *
+   * @param mappingContext MappingContext this DataContext will be associated to.
+   * @param fromData Data the mapping maps from.
+   * @param toData Data the mapping maps to.
+   */
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 
   /// helper function to check whether mapping has to be performed
@@ -61,6 +116,7 @@ protected:
 private:
   mutable logging::Logger _log{"impl::DataContext"};
 
+  /// Mesh associated with _providedData.
   mesh::PtrMesh _mesh;
 };
 
