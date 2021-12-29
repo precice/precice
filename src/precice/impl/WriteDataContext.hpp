@@ -33,7 +33,7 @@ public:
   mesh::PtrData providedData();
 
   /**
-   * @brief links a write mapping and the mesh context the write mapping requires to this data context
+   * @brief Links a write mapping and the mesh context the write mapping requires to this data context
    *
    * A write mapping maps _providedData to _toData. A WriteDataContext already has _providedData, but additionally requires _toData.
    *
@@ -42,10 +42,14 @@ public:
    */
   void configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext);
 
-  /// helper function for mapping of data
+  /**
+   * @brief Performs the mapping associated to this WriteDataContext. Called by SolverInterfaceImpl::mapWrittenData on all WriteDataContext objects.
+   */
   void mapWrittenData();
 
-  /// helper for mapWriteDataFrom
+  /**
+   * @brief Performs the mapping associated to this WriteDataContext. Called by SolverInterfaceImpl::mapWriteDataFrom.
+   */
   void mapWriteDataFrom();
 
 private:

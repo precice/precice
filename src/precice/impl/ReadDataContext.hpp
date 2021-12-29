@@ -39,10 +39,14 @@ public:
    */
   void configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext);
 
-  /// helper function for mapping of data
+  /**
+   * @brief Performs the mapping associated to this ReadDataContext. Called by SolverInterfaceImpl::mapReadData on all ReadDataContext objects.
+   */
   void mapReadData();
 
-  /// helper for mapReadDataTo
+  /**
+   * @brief Performs the mapping associated to this ReadDataContext. Called by SolverInterfaceImpl::mapReadDataTo.
+   */
   void mapReadDataTo();
 
   /**
@@ -52,10 +56,14 @@ public:
    */
   Eigen::VectorXd sampleWaveformAt(double normalizedDt);
 
-  /// for initializing waveforms of the context.
+  /**
+   * @brief Initializes the _providedWaveform as a constant function with values from _providedData.
+   */
   void initializeWaveform();
 
-  /// for moving to the next time window and updating waveform correspondingly.
+  /**
+   * @brief Updates _providedWaveform when moving to the next time window.
+   */
   void moveToNextWindow();
 
 private:
