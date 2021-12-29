@@ -17,6 +17,8 @@
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/DataContext.hpp"
+#include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
@@ -130,22 +132,22 @@ public:
   /** Provides access to write \ref DataContext
    * @remarks does not contain nullptr.
    */
-  const utils::ptr_vector<DataContext> &writeDataContexts() const;
+  const std::vector<WriteDataContext *> &writeDataContexts() const;
 
   /** Provides access to write \ref DataContext
    * @remarks does not contain nullptr.
    */
-  utils::ptr_vector<DataContext> &writeDataContexts();
+  std::vector<WriteDataContext *> &writeDataContexts();
 
   /** Provides access to read \ref DataContext
    * @remarks does not contain nullptr.
    */
-  const utils::ptr_vector<DataContext> &readDataContexts() const;
+  const std::vector<ReadDataContext *> &readDataContexts() const;
 
   /** Provides access to read \ref DataContext
    * @remarks does not contain nullptr.
    */
-  utils::ptr_vector<DataContext> &readDataContexts();
+  std::vector<ReadDataContext *> &readDataContexts();
 
   /// Is the dataID know to preCICE?
   bool hasData(DataID dataID) const;
@@ -310,9 +312,9 @@ private:
 
   std::vector<DataContext *> _dataContexts;
 
-  utils::ptr_vector<DataContext> _writeDataContexts;
+  std::vector<WriteDataContext *> _writeDataContexts;
 
-  utils::ptr_vector<DataContext> _readDataContexts;
+  std::vector<ReadDataContext *> _readDataContexts;
 
   bool _useMaster = false;
 

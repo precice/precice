@@ -6,6 +6,7 @@
 #include "DataContext.hpp"
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
+#include "ReadDataContext.hpp"
 #include "WatchIntegral.hpp"
 #include "WatchPoint.hpp"
 #include "action/Action.hpp"
@@ -37,8 +38,14 @@ Participant::~Participant()
     delete context;
   }
   _usedMeshContexts.clear();
-  _readDataContexts.deleteElements();
-  _writeDataContexts.deleteElements();
+  for (ReadDataContext *elem : _readDataContexts) {
+    PRECICE_ASSERT(elem != NULL);
+    delete (elem);
+  }
+  for (DataContext *elem : _writeDataContexts) {
+    PRECICE_ASSERT(elem != NULL);
+    delete (elem);
+  }
   _readMappingContexts.deleteElements();
   _writeMappingContexts.deleteElements();
 }
@@ -108,7 +115,7 @@ void Participant::addWriteData(
 {
   checkDuplicatedData(data);
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size());
-  auto context                 = new DataContext(data, mesh);
+  auto context                 = new WriteDataContext(data, mesh);
   _dataContexts[data->getID()] = context;
   _writeDataContexts.push_back(context);
 }
@@ -119,7 +126,7 @@ void Participant::addReadData(
 {
   checkDuplicatedData(data);
   PRECICE_ASSERT(data->getID() < (int) _dataContexts.size());
-  auto context                 = new DataContext(data, mesh);
+  auto context                 = new ReadDataContext(data, mesh);
   _dataContexts[data->getID()] = context;
   _readDataContexts.push_back(context);
 }
@@ -153,22 +160,22 @@ DataContext &Participant::dataContext(DataID dataID)
   return *_dataContexts[dataID];
 }
 
-const utils::ptr_vector<DataContext> &Participant::writeDataContexts() const
+const std::vector<WriteDataContext *> &Participant::writeDataContexts() const
 {
   return _writeDataContexts;
 }
 
-utils::ptr_vector<DataContext> &Participant::writeDataContexts()
+std::vector<WriteDataContext *> &Participant::writeDataContexts()
 {
   return _writeDataContexts;
 }
 
-const utils::ptr_vector<DataContext> &Participant::readDataContexts() const
+const std::vector<ReadDataContext *> &Participant::readDataContexts() const
 {
   return _readDataContexts;
 }
 
-utils::ptr_vector<DataContext> &Participant::readDataContexts()
+std::vector<ReadDataContext *> &Participant::readDataContexts()
 {
   return _readDataContexts;
 }
@@ -203,15 +210,15 @@ bool Participant::isDataUsed(DataID dataID) const
 
 bool Participant::isDataRead(DataID dataID) const
 {
-  return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](const DataContext &context) {
-    return context.getProvidedDataID() == dataID;
+  return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](const DataContext *context) {
+    return context->getProvidedDataID() == dataID;
   });
 }
 
 bool Participant::isDataWrite(DataID dataID) const
 {
-  return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](const DataContext &context) {
-    return context.getProvidedDataID() == dataID;
+  return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](const DataContext *context) {
+    return context->getProvidedDataID() == dataID;
   });
 }
 

@@ -237,6 +237,8 @@ target_sources(precice
     src/precice/impl/MeshContext.hpp
     src/precice/impl/Participant.cpp
     src/precice/impl/Participant.hpp
+    src/precice/impl/ReadDataContext.cpp
+    src/precice/impl/ReadDataContext.hpp
     src/precice/impl/SharedPointer.hpp
     src/precice/impl/SolverInterfaceImpl.cpp
     src/precice/impl/SolverInterfaceImpl.hpp
@@ -245,6 +247,8 @@ target_sources(precice
     src/precice/impl/WatchIntegral.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
+    src/precice/impl/WriteDataContext.cpp
+    src/precice/impl/WriteDataContext.hpp
     src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp

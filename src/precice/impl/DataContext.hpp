@@ -6,6 +6,12 @@
 #include "mesh/SharedPointer.hpp"
 
 namespace precice {
+
+namespace testing {
+// Forward declaration to friend the boost test struct
+class DataContextFixture;
+} // namespace testing
+
 namespace impl {
 
 /**
@@ -16,10 +22,8 @@ namespace impl {
  * - If this dataContext is not associated with a mapping, fromData and toData will be unset.
  */
 class DataContext {
-
+  friend class testing::DataContextFixture; // Make the fixture friend of this class
 public:
-  DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
-
   mesh::PtrData providedData();
 
   mesh::PtrData toData();
@@ -36,36 +40,22 @@ public:
 
   int getToDataID() const;
 
+  int getDataDimensions() const;
+
   std::string getMeshName() const;
 
   int getMeshID() const;
 
-  /**
-   * @brief links a read mapping and the mesh context the read mapping requires to this data context
-   *
-   * @param[in] mappingContext provides context of read mapping
-   * @param[in] fromMeshContext provides context of mesh this read mapping is mapping to (_toData)
-   */
-  void configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext);
-
-  /**
-   * @brief links a write mapping and the mesh context the write mapping requires to this data context
-   *
-   * @param[in] mappingContext provides context of write mapping
-   * @param[in] fromMeshContext provides context of mesh this write mapping is mapping from (_fromData)
-   */
-  void configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext);
-
   bool hasMapping() const;
+
+  const MappingContext mappingContext() const;
 
   bool hasReadMapping() const;
 
   bool hasWriteMapping() const;
 
-  const MappingContext mappingContext() const;
-
-private:
-  mesh::PtrMesh _mesh;
+protected:
+  DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
   // data this participant will write to and read from
   mesh::PtrData _providedData;
@@ -76,8 +66,16 @@ private:
 
   MappingContext _mappingContext;
 
-  // helper function for creating read and write mappings
+  /// helper function for creating read and write mappings
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
+
+  /// helper function to check whether mapping has to be performed
+  bool isMappingRequired();
+
+private:
+  mutable logging::Logger _log{"impl::DataContext"};
+
+  mesh::PtrMesh _mesh;
 };
 
 } // namespace impl
