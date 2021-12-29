@@ -96,14 +96,14 @@ public:
    * @return int ID of _mesh.
    */
   int getMeshID() const;
-  
+
   /**
    * @brief Informs the user whether this DataContext has a _mappingContext.
    * 
    * @return True, if this DataContext is associated with a mapping. False, if not. 
    */
   bool hasMapping() const;
-  
+
   /**
    * @brief Get the _mappingContext associated with this DataContext.
    * 
@@ -139,7 +139,7 @@ protected:
 
   /// Data this participant will write to and read from
   mesh::PtrData _providedData;
-  
+
   /// If a mapping exists, mesh::PtrData the mapping maps from.
   mesh::PtrData _fromData;
 
@@ -157,7 +157,7 @@ protected:
 
 private:
   mutable logging::Logger _log{"impl::DataContext"};
-  
+
   /// Mesh associated with _providedData.
   mesh::PtrMesh _mesh;
 };
