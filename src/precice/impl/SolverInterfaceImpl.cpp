@@ -58,8 +58,8 @@
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/EigenIO.hpp"
-#include "utils/Event.hpp"
-#include "utils/EventUtils.hpp"
+#include "EventTimings/Event.hpp"
+#include "EventTimings/EventUtils.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
@@ -69,8 +69,8 @@
 #include "utils/assertion.hpp"
 #include "xml/XMLTag.hpp"
 
-using precice::utils::Event;
-using precice::utils::EventRegistry;
+using EventTimings::Event;
+using EventTimings::EventRegistry;
 
 namespace precice {
 
@@ -184,7 +184,7 @@ void SolverInterfaceImpl::configure(
   PRECICE_TRACE();
 
   Event                    e("configure"); // no precice::syncMode as this is not yet configured here
-  utils::ScopedEventPrefix sep("configure/");
+  EventTimings::ScopedEventPrefix sep("configure/");
 
   mesh::Data::resetDataCount();
   _meshLock.clear();
@@ -222,7 +222,7 @@ void SolverInterfaceImpl::configure(
     _meshLock.add(meshContext->mesh->getID(), false);
   }
 
-  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
+  EventTimings::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
 
   PRECICE_DEBUG("Initialize master-slave communication");
   if (utils::MasterSlave::isParallel()) {
@@ -242,7 +242,7 @@ double SolverInterfaceImpl::initialize()
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
   solverInitEvent.pause(precice::syncMode);
   Event                    e("initialize", precice::syncMode);
-  utils::ScopedEventPrefix sep("initialize/");
+  EventTimings::ScopedEventPrefix sep("initialize/");
 
   // Setup communication
 
@@ -334,7 +334,7 @@ void SolverInterfaceImpl::initializeData()
   solverInitEvent.pause(precice::syncMode);
 
   Event                    e("initializeData", precice::syncMode);
-  utils::ScopedEventPrefix sep("initializeData/");
+  EventTimings::ScopedEventPrefix sep("initializeData/");
 
   PRECICE_DEBUG("Initialize data");
   double dt = _couplingScheme->getNextTimestepMaxLength();
@@ -377,7 +377,7 @@ double SolverInterfaceImpl::advance(
   solverInitEvent.stop(precice::syncMode);
 
   Event                    e("advance", precice::syncMode);
-  utils::ScopedEventPrefix sep("advance/");
+  EventTimings::ScopedEventPrefix sep("advance/");
 
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
   PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
@@ -452,7 +452,7 @@ void SolverInterfaceImpl::finalize()
   solverEvent.stop(precice::syncMode);
 
   Event                    e("finalize"); // no precice::syncMode here as MPI is already finalized at destruction of this event
-  utils::ScopedEventPrefix sep("finalize/");
+  EventTimings::ScopedEventPrefix sep("finalize/");
 
   if (_state == State::Initialized) {
 
@@ -489,15 +489,15 @@ void SolverInterfaceImpl::finalize()
 
   // Finalize PETSc and Events first
   utils::Petsc::finalize();
-  utils::EventRegistry::instance().finalize();
+  EventTimings::EventRegistry::instance().finalize();
 
   // Printing requires finalization
   if (not precice::utils::MasterSlave::isSlave()) {
-    utils::EventRegistry::instance().printAll();
+    EventTimings::EventRegistry::instance().printAll();
   }
 
   // Finally clear events and finalize MPI
-  utils::EventRegistry::instance().clear();
+  EventTimings::EventRegistry::instance().clear();
   utils::Parallel::finalizeManagedMPI();
   _state = State::Finalized;
 }

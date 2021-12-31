@@ -10,7 +10,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "query/Index.hpp"
-#include "utils/Event.hpp"
+#include "EventTimings/Event.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
 
@@ -41,7 +41,7 @@ void NearestNeighborMapping::computeMapping()
   PRECICE_ASSERT(output().get() != nullptr);
 
   const std::string     baseEvent = "map.nn.computeMapping.From" + input()->getName() + "To" + output()->getName();
-  precice::utils::Event e(baseEvent, precice::syncMode);
+  EventTimings::Event e(baseEvent, precice::syncMode);
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, searchSpace;
@@ -55,7 +55,7 @@ void NearestNeighborMapping::computeMapping()
     searchSpace = input();
   }
 
-  precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
+  EventTimings::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
   query::Index          indexTree(searchSpace);
   e2.stop();
 
@@ -104,7 +104,7 @@ void NearestNeighborMapping::map(
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.nn.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  EventTimings::Event e("map.nn.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
   Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
@@ -144,7 +144,7 @@ void NearestNeighborMapping::map(
 void NearestNeighborMapping::tagMeshFirstRound()
 {
   PRECICE_TRACE();
-  precice::utils::Event e("map.nn.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  EventTimings::Event e("map.nn.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   computeMapping();
 

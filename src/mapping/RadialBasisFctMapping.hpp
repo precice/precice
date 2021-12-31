@@ -11,7 +11,7 @@
 #include "precice/types.hpp"
 #include "query/Index.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Event.hpp"
+#include "../EventTimings/include/EventTimings/Event.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice {
@@ -131,7 +131,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   PRECICE_TRACE();
 
-  precice::utils::Event e("map.rbf.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  EventTimings::Event e("map.rbf.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
                  input()->getDimensions(), output()->getDimensions());
@@ -225,7 +225,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  EventTimings::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   PRECICE_ASSERT(_hasComputedMapping);
   PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),

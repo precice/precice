@@ -21,7 +21,7 @@
 #include "query/Index.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/EventUtils.hpp"
+#include "EventTimings/EventUtils.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
@@ -37,7 +37,7 @@ TestContext::~TestContext() noexcept
     precice::utils::Petsc::finalize();
   }
   if (!invalid && _events) {
-    precice::utils::EventRegistry::instance().finalize();
+    EventTimings::EventRegistry::instance().finalize();
   }
   if (!invalid && _initMS) {
     utils::MasterSlave::_communication = nullptr;
@@ -209,7 +209,7 @@ void TestContext::initializeMasterSlave()
 void TestContext::initializeEvents()
 {
   if (!invalid && _events) {
-    precice::utils::EventRegistry::instance().initialize("precice-Tests", "", _contextComm->comm);
+    EventTimings::EventRegistry::instance().initialize("precice-Tests", "", _contextComm->comm);
   }
 }
 

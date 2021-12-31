@@ -18,11 +18,11 @@
 #include "partition/Partition.hpp"
 #include "partition/ProvidedPartition.hpp"
 #include "precice/types.hpp"
-#include "utils/Event.hpp"
+#include "EventTimings/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
-using precice::utils::Event;
+using EventTimings::Event;
 
 namespace precice {
 extern bool syncMode;

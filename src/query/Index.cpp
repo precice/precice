@@ -7,7 +7,7 @@
 #include "impl/Indexer.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
-#include "utils/Event.hpp"
+#include "EventTimings/Event.hpp"
 
 namespace precice {
 extern bool syncMode;
@@ -35,7 +35,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
   PRECICE_TRACE();
   // Add tree to the local cache
   if (not _pimpl->indices.vertexRTree) {
-    precice::utils::Event e("query.index.getVertexIndexTree." + _mesh->getName());
+    EventTimings::Event e("query.index.getVertexIndexTree." + _mesh->getName());
     _pimpl->indices.vertexRTree = impl::Indexer::instance()->getVertexRTree(_mesh);
   }
 
@@ -52,7 +52,7 @@ std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord
   PRECICE_TRACE();
   // Add tree to the local cache
   if (not _pimpl->indices.edgeRTree) {
-    precice::utils::Event e("query.index.getEdgeIndexTree." + _mesh->getName());
+    EventTimings::Event e("query.index.getEdgeIndexTree." + _mesh->getName());
     _pimpl->indices.edgeRTree = impl::Indexer::instance()->getEdgeRTree(_mesh);
   }
 
@@ -69,7 +69,7 @@ std::vector<TriangleMatch> Index::getClosestTriangles(const Eigen::VectorXd &sou
   PRECICE_TRACE();
   // Add tree to the local cache
   if (not _pimpl->indices.triangleRTree) {
-    precice::utils::Event e("query.index.getTriangleIndexTree." + _mesh->getName());
+    EventTimings::Event e("query.index.getTriangleIndexTree." + _mesh->getName());
     _pimpl->indices.triangleRTree = impl::Indexer::instance()->getTriangleRTree(_mesh);
   }
 
@@ -87,7 +87,7 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVert
   PRECICE_TRACE();
   // Add tree to the local cache
   if (_pimpl->indices.vertexRTree == nullptr) {
-    precice::utils::Event e("query.index.getVertexIndexTree." + _mesh->getName());
+    EventTimings::Event e("query.index.getVertexIndexTree." + _mesh->getName());
     _pimpl->indices.vertexRTree = impl::Indexer::instance()->getVertexRTree(_mesh);
   }
 
@@ -106,7 +106,7 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
   PRECICE_TRACE();
   // Add tree to the local cache
   if (not _pimpl->indices.vertexRTree) {
-    precice::utils::Event e("query.index.getVertexIndexTree." + _mesh->getName());
+    EventTimings::Event e("query.index.getVertexIndexTree." + _mesh->getName());
     _pimpl->indices.vertexRTree = impl::Indexer::instance()->getVertexRTree(_mesh);
   }
   std::vector<VertexID> matches;

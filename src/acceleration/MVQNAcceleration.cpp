@@ -19,7 +19,7 @@
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Event.hpp"
+#include "EventTimings/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -757,7 +757,7 @@ void MVQNAcceleration::specializedIterationsConverged(
 
         // < RESTART >
         _nbRestarts++;
-        utils::Event restartUpdate("IMVJRestart");
+        EventTimings::Event restartUpdate("IMVJRestart");
         restartIMVJ();
         restartUpdate.stop();
       }

@@ -257,10 +257,6 @@ target_sources(precice
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
     src/utils/EigenIO.hpp
-    src/utils/Event.cpp
-    src/utils/Event.hpp
-    src/utils/EventUtils.cpp
-    src/utils/EventUtils.hpp
     src/utils/Helpers.cpp
     src/utils/Helpers.hpp
     src/utils/MPI_Mock.hpp

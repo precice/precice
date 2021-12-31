@@ -17,7 +17,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "query/Index.hpp"
-#include "utils/Event.hpp"
+#include "EventTimings/Event.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
 
@@ -63,7 +63,7 @@ void NearestProjectionMapping::computeMapping()
 {
   PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
   const std::string     baseEvent = "map.np.computeMapping.From" + input()->getName() + "To" + output()->getName();
-  precice::utils::Event e(baseEvent, precice::syncMode);
+  EventTimings::Event e(baseEvent, precice::syncMode);
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, searchSpace;
@@ -140,7 +140,7 @@ void NearestProjectionMapping::map(
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.np.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  EventTimings::Event e("map.np.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   mesh::PtrData          inData    = input()->data(inputDataID);
   mesh::PtrData          outData   = output()->data(outputDataID);
@@ -192,7 +192,7 @@ void NearestProjectionMapping::map(
 void NearestProjectionMapping::tagMeshFirstRound()
 {
   PRECICE_TRACE();
-  precice::utils::Event e("map.np.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  EventTimings::Event e("map.np.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
   PRECICE_DEBUG("Compute Mapping for Tagging");
 
   computeMapping();

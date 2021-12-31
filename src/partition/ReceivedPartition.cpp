@@ -18,12 +18,12 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
-#include "utils/Event.hpp"
+#include "EventTimings/Event.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 #include "utils/fmt.hpp"
 
-using precice::utils::Event;
+using EventTimings::Event;
 
 namespace precice {
 extern bool syncMode;

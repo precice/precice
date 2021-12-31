@@ -1,0 +1,3 @@
+[submodule "EventTimings"]
+	path = EventTimings
+	url = https://github.com/precice/EventTimings

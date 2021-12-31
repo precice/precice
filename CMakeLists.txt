@@ -17,6 +17,7 @@ set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 #
 
 
+
 #
 # PREAMBLE
 #
@@ -313,6 +314,10 @@ else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PETSC)
 endif()
 
+add_subdirectory(EventTimings)
+target_link_libraries(precice PRIVATE EventTimings::EventTimings)
+include_directories(${ROOT}/EventTimings)
+
 # Option Python
 if (PRECICE_PythonActions)
   if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.14")
@@ -380,6 +385,7 @@ IF (BUILD_TESTING)
     Boost::system
     Boost::thread
     Boost::unit_test_framework
+    EventTimings::EventTimings
     )
   set_target_properties(testprecice PROPERTIES
     # precice is a C++14 project

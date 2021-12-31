@@ -10,8 +10,8 @@ Usage
 
 preCICE includes functionality to measure timings of certain code blocks.
 ````
-#include "utils/Event.hpp"
-using precice::utils::Event;
+#include "EventTimings/include/EventTimings/Event.hpp"
+using EventTimings::Event;
 
 void foo()
 {
