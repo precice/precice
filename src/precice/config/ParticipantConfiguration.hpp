@@ -10,6 +10,7 @@
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "precice/config/SolverInterfaceConfiguration.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "time/Time.hpp"
@@ -25,8 +26,9 @@ namespace config {
 class ParticipantConfiguration : public xml::XMLTag::Listener {
 public:
   ParticipantConfiguration(
-      xml::XMLTag &              parent,
-      mesh::PtrMeshConfiguration meshConfiguration);
+      xml::XMLTag &                         parent,
+      mesh::PtrMeshConfiguration            meshConfiguration,
+      config::SolverInterfaceConfiguration *solverInterfaceConfiguration);
 
   void setDimensions(int dimensions);
 
@@ -107,6 +109,8 @@ private:
 
   mesh::PtrMeshConfiguration _meshConfig;
 
+  SolverInterfaceConfiguration *_solverInterfaceConfig;
+
   mapping::PtrMappingConfiguration _mappingConfig;
 
   action::PtrActionConfiguration _actionConfig;
@@ -142,6 +146,9 @@ private:
   void checkIllDefinedMappings(
       const mapping::MappingConfiguration::ConfiguredMapping &mapping,
       const impl::PtrParticipant &                            participant);
+
+  /// Are experimental API calls allowed?
+  bool _allowsExperimental = false;
 };
 
 } // namespace config

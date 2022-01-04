@@ -442,18 +442,20 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param[in] toDataID     ID of the data to be written.
-   * @param[in] size         Number of valueIndices, and number of values.
-   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
-   * @param[in] timeStepDt   Point in time where data is sampled relative to the beginning of the current time step
-   * @param[out] values      Read data value.
+   * @param[in] toDataID          ID of the data to be written.
+   * @param[in] size              Number of valueIndices, and number of values.
+   * @param[in] valueIndices      Indices (from setReadPosition()) of data values.
+   * @param[in] timeStepDt        Point in time where data is sampled relative to the beginning of the current time step
+   * @param[out] values           Read data value.
+   * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
    */
   void readBlockVectorData(
       int        toDataID,
       int        size,
       const int *valueIndices,
       double     timeStepDt,
-      double *   values) const;
+      double *   values,
+      bool       checkExperimental = true) const;
 
   /**
    * @brief Read vector data at a vertex on the interface mesh at the end of the time window.
@@ -474,12 +476,14 @@ public:
    * @param[in] valueIndex Index (from setReadPosition()) of data value.
    * @param[in] timeStepDt Point in time where data is sampled relative to the beginning of the current time step
    * @param[out] value     Read data value
+   * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
    */
   void readVectorData(
       int     toDataID,
       int     valueIndex,
       double  timeStepDt,
-      double *value) const;
+      double *value,
+      bool    checkExperimenal = true) const;
 
   /**
    * @brief Reads scalar data values given as block from the interface mesh at the end of the time window.
@@ -498,18 +502,20 @@ public:
   /**
    * @brief Reads scalar data values given as block from the interface mesh at beginning of time step + dt.
    *
-   * @param[in] toDataID     ID of the data to be written.
-   * @param[in] size         Number of valueIndices, and number of values.
-   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
-   * @param[in] timeStepDt   Point in time where data is sampled relative to the beginning of the current time step
-   * @param[out] values      Read data value.
+   * @param[in] toDataID          ID of the data to be written.
+   * @param[in] size              Number of valueIndices, and number of values.
+   * @param[in] valueIndices      Indices (from setReadPosition()) of data values.
+   * @param[in] timeStepDt        Point in time where data is sampled relative to the beginning of the current time step
+   * @param[out] values           Read data value.
+   * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
    */
   void readBlockScalarData(
       int        toDataID,
       int        size,
       const int *valueIndices,
       double     timeStepDt,
-      double *   values) const;
+      double *   values,
+      bool       checkExperimental = true) const;
 
   /**
    * @brief Read scalar data from the interface mesh at the end of the time window.
@@ -526,16 +532,18 @@ public:
   /**
    * @brief Read scalar data from the interface mesh at beginning of time step + dt.
    *
-   * @param[in] toDataID     ID of the data to be read, e.g. 2 = temperatures
-   * @param[in] valueIndex   Index (from setReadPosition()) of data value.
-   * @param[in] timeStepDt   Point in time where data is sampled relative to the beginning of the current time step
-   * @param[out] value       Read data value
+   * @param[in] toDataID          ID of the data to be read, e.g. 2 = temperatures
+   * @param[in] valueIndex        Index (from setReadPosition()) of data value.
+   * @param[in] timeStepDt        Point in time where data is sampled relative to the beginning of the current time step
+   * @param[out] value            Read data value
+   * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
    */
   void readScalarData(
       int     toDataID,
       int     valueIndex,
       double  timeStepDt,
-      double &value) const;
+      double &value,
+      bool    checkExperimental = true) const;
 
   /**
    * @copydoc precice::SolverInterface::setMeshAccessRegion()

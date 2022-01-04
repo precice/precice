@@ -25,6 +25,7 @@
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
+#include "precice/impl/ValidationMacros.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/MasterSlave.hpp"
@@ -38,9 +39,10 @@ namespace precice {
 namespace config {
 
 ParticipantConfiguration::ParticipantConfiguration(
-    xml::XMLTag &              parent,
-    mesh::PtrMeshConfiguration meshConfiguration)
-    : _meshConfig(std::move(meshConfiguration))
+    xml::XMLTag &                 parent,
+    mesh::PtrMeshConfiguration    meshConfiguration,
+    SolverInterfaceConfiguration *solverInterfaceConfiguration)
+    : _meshConfig(std::move(meshConfiguration)), _solverInterfaceConfig(solverInterfaceConfiguration)
 {
   PRECICE_ASSERT(_meshConfig);
   using namespace xml;
@@ -284,7 +286,7 @@ void ParticipantConfiguration::xmlTagCallback(
     const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
 
     if (allowDirectAccess) {
-      PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
+      PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name); //@todo should use PRECICE_EXPERIMENTAL_ATTRIBUTE?
     }
 
     PRECICE_CHECK(safetyFactor >= 0,
@@ -337,6 +339,10 @@ void ParticipantConfiguration::xmlTagCallback(
                   _participants.back()->getName(), meshName, meshName);
     mesh::PtrData data          = getData(mesh, dataName);
     int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
+    if (waveformOrder != time::Time::UNDEFINED_INTERPOLATION_ORDER) {
+      _allowsExperimental = _solverInterfaceConfig->allowsExperimental();
+      PRECICE_EXPERIMENTAL_ATTRIBUTE(TAG_READ, ATTR_ORDER);
+    }
     _participants.back()->addReadData(data, mesh, waveformOrder);
   } else if (tag.getName() == TAG_WATCH_POINT) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called

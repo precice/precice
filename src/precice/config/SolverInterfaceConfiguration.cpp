@@ -41,7 +41,7 @@ SolverInterfaceConfiguration::SolverInterfaceConfiguration(xml::XMLTag &parent)
   _m2nConfiguration = std::make_shared<m2n::M2NConfiguration>(
       tag);
   _participantConfiguration = std::make_shared<ParticipantConfiguration>(
-      tag, _meshConfiguration);
+      tag, _meshConfiguration, this);
   _couplingSchemeConfiguration = std::make_shared<cplscheme::CouplingSchemeConfiguration>(
       tag, _meshConfiguration,
       _m2nConfiguration);
