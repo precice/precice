@@ -57,24 +57,14 @@ public:
   Data();
 
   /**
-   * @brief Constructor.
+   * @brief Constructor
    */
-
-  Data(
-      std::string name,
-      DataID      id,
-      int         dimension);
-
-  /**
-   * @brief Constructor with gradient data.
-   */
-
   Data(
       std::string name,
       DataID      id,
       int         dimension,
-      int         meshDimensions,
-      bool        hasGradient);
+      int         spacialDimensions = -1,
+      bool        hasGradient       = false);
 
   /// Destructor, decrements data count.
   ~Data();
@@ -104,7 +94,7 @@ public:
   bool hasGradient() const;
 
   /// Returns the mesh dimension (i.e., number of rows) of one gradient data value .
-  int getMeshDimensions() const;
+  int getSpacialDimensions() const;
 
   /// Returns the dimension (i.e., number of components) of one data value (i.e number of columns of one gradient data value).
   int getDimensions() const;
@@ -125,8 +115,8 @@ private:
   /// ID of the data set (supposed to be unique).
   DataID _id;
 
-  /// Dimension of one mesh element -> number of rows (only 2, 3 allowed for 2D, 3D).
-  int _meshDimensions;
+  /// Spacial Dimension of one element -> number of rows (only 2, 3 allowed for 2D, 3D).
+  int _spacialDimensions;
 
   /// Dimensionality of one data value.
   int _dimensions;

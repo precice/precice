@@ -22,7 +22,7 @@ public:
                              std::string mappingNameShort);
 
   /// Destructor, empty.
-  virtual ~NearestNeighborBaseMapping() {}
+  virtual ~NearestNeighborBaseMapping() = default;
 
   /// Checks if this is a Nearest Neighbor Gradient mapping.
   bool hasGradient();
@@ -41,20 +41,24 @@ public:
       int inputDataID,
       int outputDataID) = 0;
 
+  /// Matches the offsets needed for the gradient mapping
+  virtual void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) = 0;
+
   virtual void tagMeshFirstRound() override;
   virtual void tagMeshSecondRound() override;
 
 protected:
   /// NearestNeighborMapping or NearestNeighborGradientMapping
-  std::string MAPPING_NAME;
+  std::string mappingName;
 
   /// nn or nng
-  std::string MAPPING_NAME_SHORT;
+  std::string mappingNameShort;
 
-  mutable logging::Logger _log{"mapping::" + MAPPING_NAME};
+  mutable logging::Logger _log{"mapping::" + mappingName};
 
-  /// Compute the vector difference between the matched vector and the source vector (needed for gradient mapping)
-  std::vector<Eigen::VectorXd> _distancesMatched;
+  /// Compute the vector offset between the matched vector and the source vector (needed for gradient mapping)
+  /// Optimization: save this as an std::vector<double> and use an Eigen::Map to create an interface that uses the correct dimensions.
+  std::vector<Eigen::VectorXd> _offsetsMatched;
 
   /// Computed output vertex indices to map data from input vertices to.
   std::vector<int> _vertexIndices;

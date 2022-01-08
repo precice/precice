@@ -29,13 +29,34 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
   }
 }
 
+void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace)
+{
+
+  // Initialize the offsets list
+  _offsetsMatched.resize(_vertexIndices.size());
+
+  // Calculate offsets
+  for (size_t i = 0; i < _vertexIndices.size(); ++i) {
+
+    const auto &matchedVertexCoords = searchSpace.get()->vertices()[_vertexIndices[i]].getCoords();
+    const auto &sourceVertexCoords  = origins->vertices()[i].getCoords();
+
+    // We calculate the distances uniformly for both mapping constraints as the difference (input - output)
+    if (hasConstraint(CONSERVATIVE)) {
+      _offsetsMatched[i] = sourceVertexCoords - matchedVertexCoords;
+    } else {
+      _offsetsMatched[i] = matchedVertexCoords - sourceVertexCoords;
+    }
+  }
+};
+
 void NearestNeighborGradientMapping::map(
     int inputDataID,
     int outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map." + MAPPING_NAME_SHORT + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   const int valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
 
@@ -43,15 +64,16 @@ void NearestNeighborGradientMapping::map(
   Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
 
   /// Check if input has gradient data, else send Error
-  if (!input()->vertices().empty() && !input()->data(inputDataID)->hasGradient()) {
-    PRECICE_ERROR("Mesh \"{}\" does not contain gradient data. ",
-                  input()->getName());
+  if (input()->vertices().empty()) {
+    PRECICE_WARN("The mesh doesn't contain any vertices.");
   }
+
+  PRECICE_CHECK(input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data for each vertices.",
+                "Check if hasGradient flag in the Data object was successfully initialized.",
+                input()->getName());
 
   const Eigen::MatrixXd &gradientValues = input()->data(inputDataID)->gradientValues();
 
-  PRECICE_ASSERT(valueDimensions == output()->data(outputDataID)->getDimensions(),
-                 valueDimensions, output()->data(outputDataID)->getDimensions());
   PRECICE_ASSERT(inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size()),
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size()),
@@ -69,7 +91,7 @@ void NearestNeighborGradientMapping::map(
         const int mapOutputIndex = outputIndex + dim;
         const int mapInputIndex  = (i * valueDimensions) + dim;
 
-        outputValues(mapOutputIndex) += inputValues(mapInputIndex) + _distancesMatched[i].transpose() * gradientValues.col(mapInputIndex);
+        outputValues(mapOutputIndex) += inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
       }
     }
   } else {
@@ -84,7 +106,7 @@ void NearestNeighborGradientMapping::map(
         const int mapOutputIndex = (i * valueDimensions) + dim;
         const int mapInputIndex  = inputIndex + dim;
 
-        outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _distancesMatched[i].transpose() * gradientValues.col(mapInputIndex);
+        outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
       }
     }
     if (hasConstraint(SCALEDCONSISTENT)) {

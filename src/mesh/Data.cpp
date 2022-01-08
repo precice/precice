@@ -15,7 +15,7 @@ Data::Data()
     : _name(""),
       _id(-1),
       _dimensions(0),
-      _meshDimensions(-1),
+      _spacialDimensions(-1),
       _hasGradient(false)
 {
   PRECICE_ASSERT(false);
@@ -24,29 +24,14 @@ Data::Data()
 Data::Data(
     std::string name,
     DataID      id,
-    int         dimensions)
-    : _values(),
-      _name(std::move(name)),
-      _id(id),
-      _dimensions(dimensions),
-      _meshDimensions(-1),
-      _hasGradient(false)
-{
-  PRECICE_ASSERT(dimensions > 0, dimensions);
-  _dataCount++;
-}
-
-Data::Data(
-    std::string name,
-    DataID      id,
     int         dimensions,
-    int         meshDimensions,
+    int         spacialDimensions,
     bool        hasGradient)
     : _values(),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
-      _meshDimensions(meshDimensions),
+      _spacialDimensions(spacialDimensions),
       _hasGradient(hasGradient)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
@@ -111,9 +96,9 @@ int Data::getDimensions() const
   return _dimensions;
 }
 
-int Data::getMeshDimensions() const
+int Data::getSpacialDimensions() const
 {
-  return _meshDimensions;
+  return _spacialDimensions;
 }
 
 size_t Data::getDataCount()

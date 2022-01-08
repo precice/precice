@@ -129,8 +129,6 @@ bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
   case (Mapping::MeshRequirement::VERTEX):
     return rhs == Mapping::MeshRequirement::FULL || rhs == Mapping::MeshRequirement::GRADIENT;
   case (Mapping::MeshRequirement::FULL):
-    return rhs == Mapping::MeshRequirement::GRADIENT;
-  case (Mapping::MeshRequirement::GRADIENT):
     return false;
   };
   BOOST_UNREACHABLE_RETURN(false);

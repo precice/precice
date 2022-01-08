@@ -21,6 +21,9 @@ public:
 
   /// Maps input data to output data from input mesh to output mesh.
   virtual void map(int inputDataID, int outputDataID) override;
+
+  /// Second lookup to calculate offsets. Only implemented for gradient mapping
+  virtual void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) override;
 };
 
 } // namespace mapping

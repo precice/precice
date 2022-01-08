@@ -28,22 +28,23 @@ NearestNeighborMapping::NearestNeighborMapping(
   }
 }
 
+void NearestNeighborMapping::onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace)
+{
+  // No implementation needed for NN because offsets not needed
+}
+
 void NearestNeighborMapping::map(
     int inputDataID,
     int outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map." + MAPPING_NAME_SHORT + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
   const int             valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
 
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
   Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
 
-  //assign(outputValues) = 0.0;
-
-  PRECICE_ASSERT(valueDimensions == output()->data(outputDataID)->getDimensions(),
-                 valueDimensions, output()->data(outputDataID)->getDimensions());
   PRECICE_ASSERT(inputValues.size() / valueDimensions == (int) input()->vertices().size(),
                  inputValues.size(), valueDimensions, input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
