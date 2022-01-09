@@ -75,7 +75,7 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       if(((1 / _residualSum[k])/_setWeights[k] > 10) || ((1 / _residualSum[k])/_setWeights[k] < 0.1)){
         resetWeight = 1;
-        PRECICE_DEBUG( "Resetting weights due to difference to previous weights in subvector." );
+        PRECICE_DEBUG( "Resetting pre-scaling weights as the value has changed by more than 1 order of magnitude" );
       }
     }
 

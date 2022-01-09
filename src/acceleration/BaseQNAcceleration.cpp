@@ -351,11 +351,14 @@ void BaseQNAcceleration::performAcceleration(
     _preconditioner->update(false, _values, _residuals);
     // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
     _preconditioner->apply(_matrixV);
-
+    if (_preconditioner->updatedWeights() == true ){
+      // If the pre-scaling weights have been updated, then the normal QR2 filter must be run.
+      _qrV.computeQR2 = true;
+    }
 
     if (_preconditioner->requireNewQR()) {
-      if (not(_filter == Acceleration::QR2FILTER) || (its < 3 && tWindows == 0)) { //for QR2 filter, there is no need to do this twice
-        // Must reset qrV if (its < 3 && tWindows == 0) as the filter does not perform this step.
+      if ( ( not(_filter == Acceleration::QR2FILTER) && not(_filter == Acceleration::QR3FILTER) ) || (its < 3 && tWindows == 0) ) { //for QR2 filter, there is no need to do this twice
+        // Must reset qrV if (its < 3 && tWindows == 0) as the filter does not perform this step yet.
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
@@ -370,8 +373,9 @@ void BaseQNAcceleration::performAcceleration(
     // Delete the first column if a zero vector occurs. Do not apply the filter before this stage.
     if (its == 3 && tWindows == 0){
       if (_deleteFirstColumn){
-        removeMatrixColumn(2);
-        _qrV.deleteColumn(2);
+        PRECICE_DEBUG("  Automatically removing the first column in Matrices V and W.");
+        removeMatrixColumn(_matrixV.cols() - 1);
+        _qrV.deleteColumn(_matrixV.cols() - 1);
         _deleteFirstColumn = false;
       }
     } else if (its > 3 || tWindows > 0){
@@ -379,7 +383,7 @@ void BaseQNAcceleration::performAcceleration(
       applyFilter();
       applyingFilter.stop();
     }
-
+    _preconditioner->updatedWeightsReset();   // Reset the check for the pre-scaling weights.
     // revert scaling of V, in computeQNUpdate all data objects are unscaled.
     _preconditioner->revert(_matrixV);
 

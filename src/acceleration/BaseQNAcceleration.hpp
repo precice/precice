@@ -204,7 +204,7 @@ protected:
   impl::QRFactorization _qrV;
 
   /** @brief filter method that is used to maintain good conditioning of the least-squares system
-    *        Either of two types: QR1FILTER or QR2Filter
+    *        Either of two types: QR1FILTER, QR2Filter or QR3Filter
     */
   int _filter;
 
