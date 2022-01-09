@@ -43,13 +43,11 @@ public:
     /// Vertices only.
     VERTEX = 1,
     /// Full mesh.
-    FULL = 2,
-    /// Gradient data available.
-    GRADIENT = 3
+    FULL = 2
   };
 
   /// Constructor, takes mapping constraint.
-  Mapping(Constraint constraint, int dimensions);
+  Mapping(Constraint constraint, int dimensions, bool requireGradient = false);
 
   Mapping &operator=(Mapping &&) = delete;
 
@@ -136,6 +134,9 @@ protected:
   /// Sets the mesh requirement for the output mesh.
   void setOutputRequirement(MeshRequirement requirement);
 
+  /// Returns if the mapping needs gradient data
+  bool requireGradient() const;
+
   int getDimensions() const;
 
 private:
@@ -153,6 +154,9 @@ private:
 
   /// Pointer to output mesh.
   mesh::PtrMesh _output;
+
+  /// Flag if gradient data is required for the mapping
+  bool _requireGradient;
 
   int _dimensions;
 };

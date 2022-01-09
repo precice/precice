@@ -24,7 +24,7 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {
-    setInputRequirement(Mapping::MeshRequirement::GRADIENT);
+    setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   }
 }

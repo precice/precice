@@ -10,13 +10,15 @@ namespace mapping {
 
 Mapping::Mapping(
     Constraint constraint,
-    int        dimensions)
+    int        dimensions,
+    bool       requireGradient)
     : _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
       _input(),
       _output(),
-      _dimensions(dimensions)
+      _dimensions(dimensions),
+      _requireGradient(requireGradient)
 {
 }
 
@@ -80,6 +82,11 @@ int Mapping::getDimensions() const
   return _dimensions;
 }
 
+bool Mapping::requireGradient() const
+{
+  return _requireGradient;
+}
+
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 {
   // Only serial participant is supported for scale-consistent mapping
@@ -127,7 +134,7 @@ bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
   case (Mapping::MeshRequirement::UNDEFINED):
     return rhs != Mapping::MeshRequirement::UNDEFINED;
   case (Mapping::MeshRequirement::VERTEX):
-    return rhs == Mapping::MeshRequirement::FULL || rhs == Mapping::MeshRequirement::GRADIENT;
+    return rhs == Mapping::MeshRequirement::FULL;
   case (Mapping::MeshRequirement::FULL):
     return false;
   };
@@ -145,9 +152,6 @@ std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val)
     break;
   case (Mapping::MeshRequirement::FULL):
     out << "FULL";
-    break;
-  case (Mapping::MeshRequirement::GRADIENT):
-    out << "GRADIENT";
     break;
   default:
     PRECICE_ASSERT(false, "Implementation does not cover all cases");

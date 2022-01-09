@@ -22,19 +22,19 @@ namespace mapping {
 NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     Constraint  constraint,
     int         dimensions,
-    bool        hasGradient,
+    bool        requireGradient,
     std::string mappingName,
     std::string mappingNameShort)
-    : Mapping(constraint, dimensions),
-      _hasGradient(hasGradient),
+    : Mapping(constraint, dimensions, requireGradient),
+      _requireGradient(requireGradient),
       mappingName(mappingName),
       mappingNameShort(mappingNameShort)
 {
 }
 
-bool NearestNeighborBaseMapping::hasGradient()
+bool NearestNeighborBaseMapping::requireGradient()
 {
-  return _hasGradient;
+  return _requireGradient;
 }
 
 void NearestNeighborBaseMapping::computeMapping()
@@ -104,7 +104,7 @@ void NearestNeighborBaseMapping::clear()
   _vertexIndices.clear();
   _hasComputedMapping = false;
 
-  if (hasGradient())
+  if (requireGradient())
     _offsetsMatched.clear();
 
   if (getConstraint() == CONSISTENT) {
