@@ -81,8 +81,11 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     XMLTag tag(*this, VALUE_RBF_GAUSSIAN, occ, TAG);
-    tag.setDocumentation("Local radial-basis-function mapping based on the Gaussian RBF with a cut-off threshold.");
-    tag.addAttribute(attrShapeParam);
+    tag.setDocumentation("Local radial-basis-function mapping based on the Gaussian RBF using a cut-off threshold.");
+    tag.addAttribute(makeXMLAttribute<double>(ATTR_SHAPE_PARAM, 0.)
+                         .setDocumentation("Specific shape parameter for RBF basis function."));
+    tag.addAttribute(makeXMLAttribute(ATTR_SUPPORT_RADIUS, std::numeric_limits<double>::infinity())
+                         .setDocumentation("Support radius of each RBF basis function (global choice)."));
     tags.push_back(tag);
   }
   {
@@ -347,6 +350,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), xDead, yDead, zDead));
     } else if (type == VALUE_RBF_GAUSSIAN) {
+      if (!std::isinf(supportRadius)) {
+        // Compute shape parameter from the support radius
+        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
+      }
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<Gaussian>(
               constraintValue, dimensions, Gaussian(shapeParameter), xDead, yDead, zDead));
@@ -388,6 +395,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
           new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
                                                       xDead, yDead, zDead, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_GAUSSIAN) {
+      if (!std::isinf(supportRadius)) {
+        // Compute shape parameter from the support radius
+        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
+      }
       configuredMapping.mapping = PtrMapping(
           new PetRadialBasisFctMapping<Gaussian>(constraintValue, dimensions, Gaussian(shapeParameter),
                                                  xDead, yDead, zDead, solverRtol, polynomial, preallocation));

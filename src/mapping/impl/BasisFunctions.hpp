@@ -149,11 +149,11 @@ public:
       return std::exp(-std::pow(_shape * radius, 2.0)) - _deltaY;
   }
 
+  /// Below that value the function is supposed to be zero. Defines the support radius if not explicitely given
+  static constexpr double cutoffThreshold = 1e-9;
+
 private:
   logging::Logger _log{"mapping::Gaussian"};
-
-  /// Below that value the function is supposed to be zero. Defines the support radius if not explicitely given
-  double const cutoffThreshold = 1e-9;
 
   double const _shape;
 
