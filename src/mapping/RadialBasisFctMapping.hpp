@@ -5,6 +5,7 @@
 
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "config/MappingConfiguration.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/Filter.hpp"
@@ -47,7 +48,8 @@ public:
       RADIAL_BASIS_FUNCTION_T function,
       bool                    xDead,
       bool                    yDead,
-      bool                    zDead);
+      bool                    zDead,
+      Polynomial              polynomial = Polynomial::SEPARATE);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping() override;
@@ -73,34 +75,29 @@ private:
   /// Radial basis function type used in interpolation.
   RADIAL_BASIS_FUNCTION_T _basisFunction;
 
+  /// Interpolation evaluation matrix. Evaluated basis function on the output mesh
   Eigen::MatrixXd _matrixA;
 
-  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qr;
+  /// QR decomposed system matrix. Evaluated basis function on the input mesh
+  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixC;
+
+  /// Vandermonde Matrix for linear polynomial, constructed from vertices of the input mesh
+  // Eigen::MatrixXd _matrixQ;
+
+  /// Coordinates of the output mesh to evaluate the separated polynomial
+  // Eigen::MatrixXd _matrixV;
 
   /// true if the mapping along some axis should be ignored
   std::vector<bool> _deadAxis;
 
+  /// Toggles the use of the additonal polynomial
+  Polynomial _polynomial;
+
   void mapConservative(int inputDataID, int outputDataID, int polyparams);
   void mapConsistent(int inputDataID, int outputDataID, int polyparams);
 
-  void setDeadAxis(bool xDead, bool yDead, bool zDead)
-  {
-    _deadAxis.resize(getDimensions());
-    if (getDimensions() == 2) {
-      _deadAxis[0] = xDead;
-      _deadAxis[1] = yDead;
-      PRECICE_CHECK(not(xDead && yDead), "You cannot choose all axes to be dead for a RBF mapping");
-      if (zDead)
-        PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect.");
-    } else if (getDimensions() == 3) {
-      _deadAxis[0] = xDead;
-      _deadAxis[1] = yDead;
-      _deadAxis[2] = zDead;
-      PRECICE_CHECK(not(xDead && yDead && zDead), "You cannot choose all axes to be dead for a RBF mapping");
-    } else {
-      PRECICE_ASSERT(false);
-    }
-  }
+  // Set dead axis in the _deadAxis vector
+  void setDeadAxis(bool xDead, bool yDead, bool zDead);
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -112,7 +109,8 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     RADIAL_BASIS_FUNCTION_T function,
     bool                    xDead,
     bool                    yDead,
-    bool                    zDead)
+    bool                    zDead,
+    Polynomial              polynomial)
     : Mapping(constraint, dimensions),
       _basisFunction(function)
 {
@@ -123,7 +121,31 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   }
+
+  PRECICE_CHECK(polynomial == Polynomial::ON || polynomial == Polynomial::SEPARATE, "RBF mappings without a polynomial ( polynomial = \"off\") are only implemented using PETSc. Please install preCICE with PETSc or remove the use-qr-decomposition=\"true\" tag in your configuration file.");
   setDeadAxis(xDead, yDead, zDead);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::setDeadAxis(bool xDead, bool yDead, bool zDead)
+{
+  _deadAxis.resize(getDimensions());
+  if (getDimensions() == 2) {
+    _deadAxis = {xDead, yDead};
+    PRECICE_CHECK(not(xDead and yDead),
+                  "You cannot set all axes to dead for an RBF mapping. "
+                  "Please remove one of the respective mapping's \"x-dead\" or \"y-dead\" attributes.");
+    if (zDead)
+      PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. "
+                   "Please remove the respective mapping's \"z-dead\" attribute.");
+  } else if (getDimensions() == 3) {
+    _deadAxis = {xDead, yDead, zDead};
+    PRECICE_CHECK(not(xDead and yDead and zDead),
+                  "You cannot set all axes to dead for an RBF mapping. "
+                  "Please remove one of the respective mapping's \"x-dead\", \"y-dead\", or \"z-dead\" attributes.");
+  } else {
+    PRECICE_ASSERT(false);
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -189,10 +211,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalOutMesh.addMesh(*outMesh);
     }
 
-    _matrixA = buildMatrixA(_basisFunction, globalInMesh, globalOutMesh, _deadAxis);
-    _qr      = buildMatrixCLU(_basisFunction, globalInMesh, _deadAxis).colPivHouseholderQr();
+    _matrixA   = buildMatrixA(_basisFunction, globalInMesh, globalOutMesh, _deadAxis);
+    _qrMatrixC = buildMatrixCLU(_basisFunction, globalInMesh, _deadAxis).colPivHouseholderQr();
 
-    PRECICE_CHECK(_qr.isInvertible(),
+    PRECICE_CHECK(_qrMatrixC.isInvertible(),
                   "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
                   "This means that the mapping problem is not well-posed. "
                   "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
@@ -214,7 +236,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 {
   PRECICE_TRACE();
   _matrixA            = Eigen::MatrixXd();
-  _qr                 = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>();
+  _qrMatrixC          = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>();
   _hasComputedMapping = false;
 }
 
@@ -323,7 +345,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       }
 
       Au  = _matrixA.transpose() * in;
-      out = _qr.solve(Au);
+      out = _qrMatrixC.solve(Au);
 
       // Copy mapped data to output data values
       for (int i = 0; i < out.size() - polyparams; i++) {
@@ -442,7 +464,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
         in[i] = inputValues[i * valueDim + dim];
       }
 
-      p   = _qr.solve(in);
+      p   = _qrMatrixC.solve(in);
       out = _matrixA * p;
 
       // Copy mapped data to ouptut data values
@@ -539,7 +561,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 // ------- Non-Member Functions ---------
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis)
+static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis)
 {
   int inputSize  = inputMesh.vertices().size();
   int dimensions = inputMesh.getDimensions();
@@ -578,7 +600,7 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
+static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
 {
   int inputSize  = inputMesh.vertices().size();
   int outputSize = outputMesh.vertices().size();

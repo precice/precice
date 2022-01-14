@@ -334,34 +334,34 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     PRECICE_DEBUG("Eigen RBF is used");
     if (type == VALUE_RBF_TPS) {
       configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead));
+          new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead, polynomial));
     } else if (type == VALUE_RBF_MULTIQUADRICS) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<Multiquadrics>(
-              constraintValue, dimensions, Multiquadrics(shapeParameter), xDead, yDead, zDead));
+              constraintValue, dimensions, Multiquadrics(shapeParameter), xDead, yDead, zDead, polynomial));
     } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<InverseMultiquadrics>(
-              constraintValue, dimensions, InverseMultiquadrics(shapeParameter), xDead, yDead, zDead));
+              constraintValue, dimensions, InverseMultiquadrics(shapeParameter), xDead, yDead, zDead, polynomial));
     } else if (type == VALUE_RBF_VOLUME_SPLINES) {
       configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), xDead, yDead, zDead));
+          new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), xDead, yDead, zDead, polynomial));
     } else if (type == VALUE_RBF_GAUSSIAN) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<Gaussian>(
-              constraintValue, dimensions, Gaussian(shapeParameter), xDead, yDead, zDead));
+              constraintValue, dimensions, Gaussian(shapeParameter), xDead, yDead, zDead, polynomial));
     } else if (type == VALUE_RBF_CTPS_C2) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactThinPlateSplinesC2>(
-              constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius), xDead, yDead, zDead));
+              constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius), xDead, yDead, zDead, polynomial));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC0>(
-              constraintValue, dimensions, CompactPolynomialC0(supportRadius), xDead, yDead, zDead));
+              constraintValue, dimensions, CompactPolynomialC0(supportRadius), xDead, yDead, zDead, polynomial));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<CompactPolynomialC6>(
-              constraintValue, dimensions, CompactPolynomialC6(supportRadius), xDead, yDead, zDead));
+              constraintValue, dimensions, CompactPolynomialC6(supportRadius), xDead, yDead, zDead, polynomial));
     } else {
       PRECICE_ERROR("Unknown mapping type!");
     }
