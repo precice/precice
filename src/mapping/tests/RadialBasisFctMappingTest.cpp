@@ -1730,21 +1730,22 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
   bool                                    yDead = false;
   bool                                    zDead = false;
   ThinPlateSplines                        fct;
-  RadialBasisFctMapping<ThinPlateSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  Polynomial                              polynomial = Polynomial::ON;
+  RadialBasisFctMapping<ThinPlateSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConsistentMapping(consistentMap2D);
-  RadialBasisFctMapping<ThinPlateSplines> consistentMap2DVector(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<ThinPlateSplines> consistentMap2DVector(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConsistentMappingVector(consistentMap2DVector);
-  RadialBasisFctMapping<ThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<ThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  RadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<ThinPlateSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  RadialBasisFctMapping<ThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<ThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConservativeMapping(conservativeMap2D);
-  RadialBasisFctMapping<ThinPlateSplines> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<ThinPlateSplines> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConservativeMappingVector(conservativeMap2DVector);
-  RadialBasisFctMapping<ThinPlateSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<ThinPlateSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1755,17 +1756,18 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
   bool                                 yDead = false;
   bool                                 zDead = false;
   Multiquadrics                        fct(1e-3);
-  RadialBasisFctMapping<Multiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  Polynomial                           polynomial = Polynomial::ON;
+  RadialBasisFctMapping<Multiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConsistentMapping(consistentMap2D);
-  RadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<Multiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<Multiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  RadialBasisFctMapping<Multiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<Multiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  RadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConservativeMapping(conservativeMap2D);
-  RadialBasisFctMapping<Multiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<Multiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1776,17 +1778,18 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
   bool                                        yDead = false;
   bool                                        zDead = false;
   InverseMultiquadrics                        fct(1e-3);
-  RadialBasisFctMapping<InverseMultiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  Polynomial                                  polynomial = Polynomial::ON;
+  RadialBasisFctMapping<InverseMultiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConsistentMapping(consistentMap2D);
-  RadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  RadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConservativeMapping(conservativeMap2D);
-  RadialBasisFctMapping<InverseMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<InverseMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1797,17 +1800,18 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines)
   bool                                 yDead = false;
   bool                                 zDead = false;
   VolumeSplines                        fct;
-  RadialBasisFctMapping<VolumeSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  Polynomial                           polynomial = Polynomial::ON;
+  RadialBasisFctMapping<VolumeSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConsistentMapping(consistentMap2D);
-  RadialBasisFctMapping<VolumeSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<VolumeSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<VolumeSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<VolumeSplines> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  RadialBasisFctMapping<VolumeSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<VolumeSplines> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  RadialBasisFctMapping<VolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<VolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConservativeMapping(conservativeMap2D);
-  RadialBasisFctMapping<VolumeSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<VolumeSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1818,17 +1822,18 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
   bool                            yDead = false;
   bool                            zDead = false;
   Gaussian                        fct(1.0);
-  RadialBasisFctMapping<Gaussian> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  Polynomial                      polynomial = Polynomial::ON;
+  RadialBasisFctMapping<Gaussian> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConsistentMapping(consistentMap2D);
-  RadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<Gaussian> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<Gaussian> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  RadialBasisFctMapping<Gaussian> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<Gaussian> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  RadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConservativeMapping(conservativeMap2D);
-  RadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1840,18 +1845,19 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   bool                      yDead         = false;
   bool                      zDead         = false;
   CompactThinPlateSplinesC2 fct(supportRadius);
-  using Mapping = RadialBasisFctMapping<CompactThinPlateSplinesC2>;
-  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  using Mapping         = RadialBasisFctMapping<CompactThinPlateSplinesC2>;
+  Polynomial polynomial = Polynomial::ON;
+  Mapping    consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConsistentMapping(consistentMap2D);
-  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConservativeMapping(conservativeMap2D);
-  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1863,18 +1869,19 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
   bool                yDead         = false;
   bool                zDead         = false;
   CompactPolynomialC0 fct(supportRadius);
-  using Mapping = RadialBasisFctMapping<CompactPolynomialC0>;
-  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  using Mapping         = RadialBasisFctMapping<CompactPolynomialC0>;
+  Polynomial polynomial = Polynomial::ON;
+  Mapping    consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConsistentMapping(consistentMap2D);
-  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConservativeMapping(conservativeMap2D);
-  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1886,18 +1893,19 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
   bool                yDead         = false;
   bool                zDead         = false;
   CompactPolynomialC6 fct(supportRadius);
-  using Mapping = RadialBasisFctMapping<CompactPolynomialC6>;
-  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
+  using Mapping         = RadialBasisFctMapping<CompactPolynomialC6>;
+  Polynomial polynomial = Polynomial::ON;
+  Mapping    consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConsistentMapping(consistentMap2D);
-  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  Mapping scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
-  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead, polynomial);
   perform2DTestConservativeMapping(conservativeMap2D);
-  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead, polynomial);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -1913,7 +1921,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
 
   ThinPlateSplines                        fct;
   RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
-                                                  xDead, yDead, zDead);
+                                                  xDead, yDead, zDead, Polynomial::ON);
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));

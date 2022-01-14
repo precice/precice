@@ -93,8 +93,14 @@ private:
   /// Toggles the use of the additonal polynomial
   Polynomial _polynomial;
 
-  void mapConservative(int inputDataID, int outputDataID, int polyparams);
-  void mapConsistent(int inputDataID, int outputDataID, int polyparams);
+  /// Number of coefficients for the integrated polynomial. Depends on dimension and number of dead dimensions
+  unsigned int polyparams;
+
+  /// Number of coefficients for the separated polynomial. Depends on dimension and number of dead dimensions
+  unsigned int sepPolyparams;
+
+  void mapConservative(int inputDataID, int outputDataID);
+  void mapConsistent(int inputDataID, int outputDataID);
 
   // Set dead axis in the _deadAxis vector
   void setDeadAxis(bool xDead, bool yDead, bool zDead);
@@ -112,7 +118,9 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
     bool                    zDead,
     Polynomial              polynomial)
     : Mapping(constraint, dimensions),
-      _basisFunction(function)
+      _basisFunction(function),
+      _polynomial(polynomial)
+
 {
   if (constraint == SCALEDCONSISTENT) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
@@ -124,11 +132,21 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
 
   PRECICE_CHECK(polynomial == Polynomial::ON || polynomial == Polynomial::SEPARATE, "RBF mappings without a polynomial ( polynomial = \"off\") are only implemented using PETSc. Please install preCICE with PETSc or remove the use-qr-decomposition=\"true\" tag in your configuration file.");
   setDeadAxis(xDead, yDead, zDead);
+
+  // Count number of dead dimensions
+  int deadDimensions = 0;
+  for (int d = 0; d < dimensions; d++) {
+    if (_deadAxis[d])
+      deadDimensions += 1;
+  }
+  polyparams    = (_polynomial == Polynomial::ON) ? 1 + dimensions - deadDimensions : 0;
+  sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::setDeadAxis(bool xDead, bool yDead, bool zDead)
 {
+  // TODO: Remove duplication here with PETSc based implementation
   _deadAxis.resize(getDimensions());
   if (getDimensions() == 2) {
     _deadAxis = {xDead, yDead};
@@ -160,9 +178,17 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
 
+  // Some Debug information
+  if (_polynomial == Polynomial::ON) {
+    PRECICE_DEBUG("Using integrated polynomial.");
+  }
+  if (_polynomial == Polynomial::SEPARATE) {
+    PRECICE_DEBUG("Using seperated polynomial.");
+  }
+
+  // Determine input and output
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
-
   if (hasConstraint(CONSERVATIVE)) {
     inMesh  = output();
     outMesh = input();
@@ -171,6 +197,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = output();
   }
 
+  // Handle the gather-scatter of the meshes
   if (utils::MasterSlave::isSlave()) {
 
     // Input mesh may have overlaps
@@ -259,22 +286,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(
     PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
                    valueDim, output()->data(outputDataID)->getDimensions());
   }
-  int deadDimensions = 0;
-  for (int d = 0; d < getDimensions(); d++) {
-    if (_deadAxis[d])
-      deadDimensions += 1;
-  }
-  int polyparams = 1 + getDimensions() - deadDimensions;
 
   if (hasConstraint(CONSERVATIVE)) {
-    mapConservative(inputDataID, outputDataID, polyparams);
+    mapConservative(inputDataID, outputDataID);
   } else {
-    mapConsistent(inputDataID, outputDataID, polyparams);
+    mapConsistent(inputDataID, outputDataID);
   }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDataID, int outputDataID, int polyparams)
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDataID, int outputDataID)
 {
 
   PRECICE_TRACE(inputDataID, outputDataID, polyparams);
@@ -397,7 +418,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputDataID, int outputDataID, int polyparams)
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputDataID, int outputDataID)
 {
 
   PRECICE_TRACE(inputDataID, outputDataID, polyparams);
