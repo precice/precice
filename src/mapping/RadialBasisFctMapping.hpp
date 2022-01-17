@@ -81,11 +81,14 @@ private:
   /// QR decomposed system matrix. Evaluated basis function on the input mesh
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixC;
 
+  /// QR decomposed system matrix. Evaluated basis function on the input mesh
+  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixQ;
+
   /// Vandermonde Matrix for linear polynomial, constructed from vertices of the input mesh
-  // Eigen::MatrixXd _matrixQ;
+  Eigen::MatrixXd _matrixQ;
 
   /// Coordinates of the output mesh to evaluate the separated polynomial
-  // Eigen::MatrixXd _matrixV;
+  Eigen::MatrixXd _matrixV;
 
   /// true if the mapping along some axis should be ignored
   std::vector<bool> _deadAxis;
@@ -105,6 +108,9 @@ private:
   // Set dead axis in the _deadAxis vector
   void setDeadAxis(bool xDead, bool yDead, bool zDead);
 };
+
+// Forward declaration
+static void fillPolynomialContribution(Eigen::MatrixXd &matrixA, Eigen::MatrixXd &matrixV, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, unsigned int polyparams, unsigned int sepPolyparams);
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
@@ -237,12 +243,23 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       globalInMesh.addMesh(*inMesh);
       globalOutMesh.addMesh(*outMesh);
     }
+    // Determine columnSize of Matrix A
+    const unsigned int columnSize = globalInMesh.vertices().size() + polyparams;
+    _matrixA                      = buildMatrixA(_basisFunction, globalInMesh, globalOutMesh, _deadAxis, columnSize);
+    fillPolynomialContribution(_matrixA, _matrixV, globalOutMesh, _deadAxis, polyparams, sepPolyparams);
+    {
+      Eigen::MatrixXd _matrixCLU = buildMatrixCLU(_basisFunction, globalInMesh, _deadAxis, columnSize);
+      fillPolynomialContribution(_matrixCLU, _matrixQ, globalInMesh, _deadAxis, polyparams, sepPolyparams);
+      _matrixCLU.triangularView<Eigen::Lower>() = _matrixCLU.transpose();
+      _qrMatrixC                                = _matrixCLU.colPivHouseholderQr();
 
-    _matrixA   = buildMatrixA(_basisFunction, globalInMesh, globalOutMesh, _deadAxis);
-    _qrMatrixC = buildMatrixCLU(_basisFunction, globalInMesh, _deadAxis).colPivHouseholderQr();
-
+      if (_polynomial == Polynomial::SEPARATE) {
+        // Eigen::MatrixXd qq = _matrixQ.transpose();
+        _qrMatrixQ = _matrixQ.colPivHouseholderQr();
+      }
+    }
     PRECICE_CHECK(_qrMatrixC.isInvertible(),
-                  "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertable. "
+                  "The interpolation matrix of the RBF mapping from mesh {} to mesh {} is not invertible. "
                   "This means that the mapping problem is not well-posed. "
                   "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
                   "by marking perpendicular axes as dead?",
@@ -470,6 +487,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     Eigen::VectorXd p(_matrixA.cols());   // rows == n
     Eigen::VectorXd in(_matrixA.cols());  // rows == n
     Eigen::VectorXd out(_matrixA.rows()); // rows == outputSize
+    Eigen::VectorXd res(_matrixQ.cols()); // res
     in.setZero();
 
     // Construct Eigen vectors
@@ -485,12 +503,22 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
         in[i] = inputValues[i * valueDim + dim];
       }
 
-      p   = _qrMatrixC.solve(in);
-      out = _matrixA * p;
+      if (_polynomial == Polynomial::SEPARATE) {
+        // Solve polynomial QR and substract it form the input data
 
-      // Copy mapped data to ouptut data values
-      for (int i = 0; i < out.size(); i++) {
-        outputValues[i * valueDim + dim] = out[i];
+        res = _qrMatrixQ.solve(in);
+        in -= (_matrixQ * res);
+
+        p   = _qrMatrixC.solve(in);
+        out = _matrixA * p;
+
+        out += (_matrixV * res);
+
+        // Copy mapped data to ouptut data values
+        for (int i = 0; i < out.size(); i++) {
+          outputValues[i * valueDim + dim] = out[i];
+          // std::cout << "Out value is " << out[i] << std::endl;
+        }
       }
     }
 
@@ -582,22 +610,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 // ------- Non-Member Functions ---------
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis)
+static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, std::vector<bool> deadAxis, unsigned int matSize)
 {
-  int inputSize  = inputMesh.vertices().size();
-  int dimensions = inputMesh.getDimensions();
+  const unsigned int inputSize  = inputMesh.vertices().size();
+  const unsigned int dimensions = inputMesh.getDimensions();
 
-  int deadDimensions = 0;
-  for (int d = 0; d < dimensions; d++) {
-    if (deadAxis[d])
-      deadDimensions += 1;
-  }
+  PRECICE_ASSERT(matSize >= inputSize, matSize, inputSize);
 
-  int polyparams = 1 + dimensions - deadDimensions;
-  PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
-  int n = inputSize + polyparams; // Add linear polynom degrees
-
-  Eigen::MatrixXd matrixCLU(n, n);
+  Eigen::MatrixXd matrixCLU(matSize, matSize);
   matrixCLU.setZero();
 
   for (int i = 0; i < inputSize; ++i) {
@@ -606,38 +626,22 @@ static Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, con
       const auto &v   = inputMesh.vertices()[j].getCoords();
       matrixCLU(i, j) = basisFunction.evaluate(utils::reduceVector((u - v), deadAxis).norm());
     }
-
-    const auto reduced = utils::reduceVector(inputMesh.vertices()[i].getCoords(), deadAxis);
-
-    for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-      matrixCLU(i, inputSize + 1 + dim) = reduced[dim];
-    }
-    matrixCLU(i, inputSize) = 1.0;
   }
-
-  matrixCLU.triangularView<Eigen::Lower>() = matrixCLU.transpose();
-
   return matrixCLU;
 }
 
+// build the interpolation part of Matrix A without the polynomial
 template <typename RADIAL_BASIS_FUNCTION_T>
-static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
+static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, unsigned int columnSize)
 {
-  int inputSize  = inputMesh.vertices().size();
-  int outputSize = outputMesh.vertices().size();
-  int dimensions = inputMesh.getDimensions();
+  const unsigned int inputSize  = inputMesh.vertices().size();
+  const unsigned int outputSize = outputMesh.vertices().size();
+  const unsigned int dimensions = inputMesh.getDimensions();
 
-  int deadDimensions = 0;
-  for (int d = 0; d < dimensions; d++) {
-    if (deadAxis[d])
-      deadDimensions += 1;
-  }
+  PRECICE_ASSERT(columnSize >= inputSize, columnSize, inputSize);
 
-  int polyparams = 1 + dimensions - deadDimensions;
-  PRECICE_ASSERT(inputSize >= 1 + polyparams, inputSize);
-  int n = inputSize + polyparams; // Add linear polynom degrees
-
-  Eigen::MatrixXd matrixA(outputSize, n);
+  // Allocate memory
+  Eigen::MatrixXd matrixA(outputSize, columnSize);
   matrixA.setZero();
 
   // Fill _matrixA with values
@@ -647,16 +651,41 @@ static Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const
       const auto &v = inputMesh.vertices()[j].getCoords();
       matrixA(i, j) = basisFunction.evaluate(utils::reduceVector((u - v), deadAxis).norm());
     }
-
-    const auto reduced = utils::reduceVector(outputMesh.vertices()[i].getCoords(), deadAxis);
-
-    for (int dim = 0; dim < dimensions - deadDimensions; dim++) {
-      matrixA(i, inputSize + 1 + dim) = reduced[dim];
-    }
-    matrixA(i, inputSize) = 1.0;
   }
   return matrixA;
 }
 
+// The actual filling of the matrices
+static void fillPolyEntries(Eigen::MatrixXd &matrix, const mesh::Mesh &outputMesh, unsigned int startIndex, std::vector<bool> deadAxis, unsigned int polyparams)
+{
+  for (unsigned int i = 0; i < outputMesh.vertices().size(); ++i) {
+    // Constant contribution
+    matrix(i, startIndex) = 1.0;
+
+    const auto reduced = utils::reduceVector(outputMesh.vertices()[i].getCoords(), deadAxis);
+    for (int dim = 1; dim < polyparams; dim++) {
+      PRECICE_ASSERT(reduced.size() > dim - 1, reduced.size(), dim - 1);
+      PRECICE_ASSERT(matrix.rows() > i, matrix.cols(), i);
+      PRECICE_ASSERT(matrix.cols() > startIndex + dim, matrix.rows(), startIndex + dim);
+      matrix(i, startIndex + dim) = reduced[dim - 1];
+    }
+  }
+}
+
+// Function to set the proper matrices and the initial index
+static void fillPolynomialContribution(Eigen::MatrixXd &matrixA, Eigen::MatrixXd &matrixV, const mesh::Mesh &outputMesh, std::vector<bool> deadAxis, unsigned int polyparams, unsigned int sepPolyparams)
+{
+  // The integrated polynomial (polynomial == ON)
+  if (polyparams > 0) {
+    // the remaining fill of the A matrix
+    const unsigned int startIndex = matrixA.cols() - polyparams;
+    fillPolyEntries(matrixA, outputMesh, startIndex, deadAxis, polyparams);
+  } else {
+    // The separated polynomial (polynomial == SEPARATE)
+    PRECICE_ASSERT(sepPolyparams > 0, polyparams, sepPolyparams);
+    matrixV.resize(outputMesh.vertices().size(), sepPolyparams);
+    fillPolyEntries(matrixV, outputMesh, 0, deadAxis, sepPolyparams);
+  }
+}
 } // namespace mapping
 } // namespace precice

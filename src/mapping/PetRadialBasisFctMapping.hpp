@@ -821,6 +821,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         }
 
         VecScale(a, -1);
+        // in = Q * a + in
         MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
       }
 
@@ -867,6 +868,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       if (_polynomial == Polynomial::SEPARATE) {
         ierr = VecScale(a, -1); // scale it back to add the polynomial
+        // out = V * a + out
         ierr = MatMultAdd(_matrixV, a, out, out);
         CHKERRV(ierr);
       }
