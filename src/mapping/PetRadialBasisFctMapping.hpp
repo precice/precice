@@ -686,7 +686,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       if (_polynomial == Polynomial::SEPARATE) {
         auto epsilon = petsc::Vector::allocate(_matrixV, "epsilon", petsc::Vector::RIGHT);
-        ierr         = MatMultTranspose(_matrixV, in, epsilon);
+        // epsilon = V^T * in
+        ierr = MatMultTranspose(_matrixV, in, epsilon);
         CHKERRV(ierr);
         auto eta = petsc::Vector::allocate(_matrixA, "eta", petsc::Vector::RIGHT);
         ierr     = MatMultTranspose(_matrixA, in, eta);
@@ -695,7 +696,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         _solver.solve(eta, mu);
         VecScale(epsilon, -1);
         auto tau = petsc::Vector::allocate(_matrixQ, "tau", petsc::Vector::RIGHT);
-        ierr     = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau);
+        // tau = Q^T * mu + epsilon
+        ierr = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau);
         CHKERRV(ierr);
         auto sigma = petsc::Vector::allocate(_matrixQ, "sigma", petsc::Vector::LEFT);
 
@@ -720,7 +722,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                         input()->getName(), output()->getName(), _QRsolver.summaryFor(tau));
           break;
         }
-
+        // out = alpha * sigma + mu.
         VecWAXPY(out, -1, sigma, mu);
       } else {
         ierr = MatMultTranspose(_matrixA, in, au);
@@ -970,7 +972,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
     constraintName = "conservative";
   }
 
-  const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
+  const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off"
+                                                                                                           : "separate";
 
   PRECICE_INFO("Mapping \"{}\" {} from \"{}\" (ID {}) to \"{}\" (ID {}) for dimension {} with polynomial set to {}",
                input()->data(inputDataID)->getName(), constraintName,
