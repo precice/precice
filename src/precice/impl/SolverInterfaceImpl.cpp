@@ -1601,8 +1601,7 @@ void SolverInterfaceImpl::mapWrittenData()
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (const auto &item : _accessor->writeDataContexts()) {
-    impl::WriteDataContext &context = *(item.second.get());
-    mapData(&context, "write");
+    mapData(item.second.get(), "write");
   }
   clearMappings(_accessor->writeMappingContexts());
 }
@@ -1612,8 +1611,7 @@ void SolverInterfaceImpl::mapReadData()
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
   for (const auto &item : _accessor->readDataContexts()) {
-    impl::ReadDataContext &context = *(item.second.get());
-    mapData(&context, "read");
+    mapData(item.second.get(), "read");
   }
   clearMappings(_accessor->readMappingContexts());
 }
