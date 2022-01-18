@@ -127,7 +127,7 @@ public:
 
 protected:
   /**
-   * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should be used.
+   * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.
    * 
    * @param data Data associated with this DataContext.
    * @param mesh Mesh associated with this DataContext.
