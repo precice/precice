@@ -9,7 +9,7 @@ namespace precice {
 namespace impl {
 
 /**
- * @brief Stores one Data object with related mesh. Context is used to be written to and potentially provides a write mapping.
+ * @brief Stores one Data object with related mesh. Context stores data to be written to and potentially provides a write mapping.
  *
  * Derived from DataContext
  */
