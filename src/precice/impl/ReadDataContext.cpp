@@ -9,13 +9,13 @@ ReadDataContext::ReadDataContext(
 {
 }
 
-void ReadDataContext::configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext)
+void ReadDataContext::configureMapping(MappingContext mappingContext, MeshContext meshContext)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(fromMeshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData fromData = fromMeshContext.mesh->data(getDataName());
-  PRECICE_ASSERT(fromData != _providedData);
-  this->setMapping(mappingContext, fromData, _providedData);
+  PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
+  mesh::PtrData data = meshContext.mesh->data(getDataName());
+  PRECICE_ASSERT(data != _providedData);
+  this->setMapping(mappingContext, data, _providedData);
   PRECICE_ASSERT(hasReadMapping());
 }
 

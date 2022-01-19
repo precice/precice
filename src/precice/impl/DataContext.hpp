@@ -125,6 +125,16 @@ public:
    */
   bool hasWriteMapping() const;
 
+  /**
+   * @brief Links a MappingContext and the MeshContext required by the mapping to this DataContext.
+   * 
+   * A mapping maps the given data from or to _providedData (depending on whether it is a read or write mapping).
+   *
+   * @param[in] mappingContext Context of read mapping
+   * @param[in] meshContext Context of mesh this mapping is mapping from or to
+   */
+  virtual void configureMapping(MappingContext mappingContext, MeshContext meshContext) = 0;
+
 protected:
   /**
    * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.

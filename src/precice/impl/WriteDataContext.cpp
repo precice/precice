@@ -9,13 +9,13 @@ WriteDataContext::WriteDataContext(
 {
 }
 
-void WriteDataContext::configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext)
+void WriteDataContext::configureMapping(MappingContext mappingContext, MeshContext meshContext)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(toMeshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData toData = toMeshContext.mesh->data(getDataName());
-  PRECICE_ASSERT(toData != _providedData);
-  this->setMapping(mappingContext, _providedData, toData);
+  PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
+  mesh::PtrData data = meshContext.mesh->data(getDataName());
+  PRECICE_ASSERT(data != _providedData);
+  this->setMapping(mappingContext, _providedData, data);
   PRECICE_ASSERT(hasWriteMapping());
 }
 

@@ -26,14 +26,14 @@ public:
       mesh::PtrMesh mesh);
 
   /**
-   * @brief links a write mapping and the mesh context the write mapping requires to this data context
+   * @brief Links a MappingContext and the MeshContext required by the write to this WriteDataContext.
    *
    * A write mapping maps _providedData to _toData. A WriteDataContext already has _providedData, but additionally requires _toData.
    * 
    * @param[in] mappingContext provides context of write mapping
-   * @param[in] toMeshContext provides context of mesh this write mapping is mapping to (_toData)
+   * @param[in] meshContext provides context of mesh this write mapping is mapping to (_toData)
    */
-  void configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext);
+  void configureMapping(MappingContext mappingContext, MeshContext meshContext);
 
 private:
   logging::Logger _log{"impl::WriteDataContext"};

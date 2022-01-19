@@ -509,7 +509,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                       "Mesh \"{}\" needs to use data \"{}\" to allow a write mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
                       meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
-        dataContext.configureForWriteMapping(mappingContext, meshContext);
+        dataContext.configureMapping(mappingContext, meshContext);
       }
     }
   }
@@ -529,7 +529,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                       "Mesh \"{}\" needs to use data \"{}\" to allow a read mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
                       meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
-        dataContext.configureForReadMapping(mappingContext, meshContext);
+        dataContext.configureMapping(mappingContext, meshContext);
       }
     }
   }
