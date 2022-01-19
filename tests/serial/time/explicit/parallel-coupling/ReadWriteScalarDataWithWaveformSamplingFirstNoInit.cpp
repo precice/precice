@@ -16,9 +16,10 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 /**
  * @brief Test to run a simple coupling with first order waveform subcycling.
  * 
+ * Does not call initializeData and therefore automatically uses 0 initial data.
  * Provides a dt argument to the read function. A first order waveform is used.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
@@ -76,18 +77,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
   double readTime; // time where we are reading
   double sampleDt; // dt relative to timestep start, where we are sampling
 
-  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-    }
-    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
-  }
-
-  precice.initializeData();
-
   while (precice.isCouplingOngoing()) {
-    BOOST_TEST(precice.isReadDataAvailable());
+    if (timewindow == 0) {
+      BOOST_TEST(!precice.isReadDataAvailable()); // no initial data is available
+    } else {
+      BOOST_TEST(precice.isReadDataAvailable());
+    }
     BOOST_TEST(readData.size() == nVertices);
     for (int i = 0; i < nVertices; i++) {
       for (int j = 0; j < nSamples; j++) {
@@ -95,8 +90,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
         readTime = time + sampleDt;
         precice.readScalarData(readDataID, vertexIDs[i], sampleDt, readData[i]);
         if (timewindow == 0) {
-          BOOST_TEST(readData[i] == readFunction(time, i)); // first window is constant interpolation from initial data
-        } else if (timewindow > 0) {
+          BOOST_TEST(readData[i] == 0);                                                            // initial data is zero
+        } else if (timewindow == 1) {                                                              // second window is special, because of interpolation between zero initial data and data at end of first window
+          BOOST_TEST(readData[i] == (readTime - windowDt) / windowDt * readFunction(windowDt, i)); // self-made linear interpolation.
+        } else if (timewindow > 1) {
           BOOST_TEST(readData[i] == readFunction(readTime - windowDt, i)); // both solvers lag one window behind for parallel-explicit coupling.
         } else {
           BOOST_TEST(false); // unreachable!
