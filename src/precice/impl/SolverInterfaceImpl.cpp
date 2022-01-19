@@ -451,7 +451,6 @@ double SolverInterfaceImpl::advance(
 
   _meshLock.lockAll();
   solverEvent.start(precice::syncMode);
-
   return _couplingScheme->getNextTimestepMaxLength();
 }
 
@@ -1005,11 +1004,12 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (impl::WriteDataContext *context : _accessor->writeDataContexts()) {
-      if (context->getMeshID() != fromMeshID) {
+    for (const auto &item : _accessor->writeDataContexts()) {
+      impl::WriteDataContext &context = *(item.second.get());
+      if (context.getMeshID() != fromMeshID) {
         continue;
       }
-      context->mapWriteDataFrom();
+      context.mapWriteDataFrom();
     }
     mappingContext.hasMappedData = true;
   }
@@ -1038,11 +1038,12 @@ void SolverInterfaceImpl::mapReadDataTo(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (impl::ReadDataContext *context : _accessor->readDataContexts()) {
-      if (context->getMeshID() != toMeshID) {
+    for (const auto &item : _accessor->readDataContexts()) {
+      impl::ReadDataContext &context = *item.second.get();
+      if (context.getMeshID() != toMeshID) {
         continue;
       }
-      context->mapReadDataTo();
+      context.mapReadDataTo();
     }
     mappingContext.hasMappedData = true;
   }
@@ -1062,7 +1063,7 @@ void SolverInterfaceImpl::writeBlockVectorData(
     return;
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockVectorData() was called with values == nullptr");
-  WriteDataContext &context = static_cast<WriteDataContext &>(_accessor->dataContext(dataID));
+  WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeBlockVectorData on the scalar data type \"{0}\". Use writeBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
@@ -1095,7 +1096,7 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_CHECK(_state != State::Finalized, "writeVectorData(...) cannot be called before finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
-  WriteDataContext &context = static_cast<WriteDataContext &>(_accessor->dataContext(dataID));
+  WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeVectorData on the scalar data type \"{0}\". Use writeScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
@@ -1126,7 +1127,7 @@ void SolverInterfaceImpl::writeBlockScalarData(
     return;
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockScalarData() was called with values == nullptr");
-  WriteDataContext &context = static_cast<WriteDataContext &>(_accessor->dataContext(dataID));
+  WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call writeBlockScalarData on the vector data type \"{}\". Use writeBlockVectorData or change the data type for \"{}\" to scalar.",
                 context.getDataName(), context.getDataName());
@@ -1152,7 +1153,7 @@ void SolverInterfaceImpl::writeScalarData(
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
-  WriteDataContext &context = static_cast<WriteDataContext &>(_accessor->dataContext(dataID));
+  WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ({}) when writing scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1208,7 +1209,7 @@ void SolverInterfaceImpl::readBlockVectorData(
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
-  ReadDataContext &context = static_cast<ReadDataContext &>(_accessor->dataContext(dataID));
+  ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
@@ -1260,7 +1261,7 @@ void SolverInterfaceImpl::readVectorData(
   double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
   double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
-  ReadDataContext &context = static_cast<ReadDataContext &>(_accessor->dataContext(dataID));
+  ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading vector data. Value index must be >= 0. "
@@ -1318,7 +1319,7 @@ void SolverInterfaceImpl::readBlockScalarData(
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
-  ReadDataContext &context = static_cast<ReadDataContext &>(_accessor->dataContext(dataID));
+  ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
@@ -1367,7 +1368,7 @@ void SolverInterfaceImpl::readScalarData(
   double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
   double timeWindowDt  = timeStepStart + timeStepDt;
   PRECICE_REQUIRE_DATA_READ(dataID);
-  ReadDataContext &context = static_cast<ReadDataContext &>(_accessor->dataContext(dataID));
+  ReadDataContext &context = _accessor->readDataContext(dataID);
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading scalar data. Value index must be >= 0. "
@@ -1667,8 +1668,8 @@ void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
-  for (impl::WriteDataContext *context : _accessor->writeDataContexts()) {
-    context->mapWrittenData();
+  for (const auto &item : _accessor->writeDataContexts()) {
+    item.second.get()->mapWrittenData();
   }
   clearMappings(_accessor->writeMappingContexts());
 }
@@ -1678,8 +1679,8 @@ void SolverInterfaceImpl::mapReadData()
   PRECICE_TRACE();
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   computeMappings(_accessor->readMappingContexts(), "read");
-  for (impl::ReadDataContext *context : _accessor->readDataContexts()) {
-    context->mapReadData();
+  for (const auto &item : _accessor->readDataContexts()) {
+    item.second.get()->mapReadData();
   }
   clearMappings(_accessor->readMappingContexts());
 }
@@ -1687,8 +1688,8 @@ void SolverInterfaceImpl::mapReadData()
 void SolverInterfaceImpl::initializeReadWaveforms()
 {
   PRECICE_TRACE();
-  for (impl::ReadDataContext *context : _accessor->readDataContexts()) {
-    context->initializeWaveform();
+  for (auto const &context : _accessor->readDataContexts()) {
+    context.second.get()->initializeWaveform();
   }
 }
 
@@ -1823,10 +1824,10 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
   return *_accessor->usedMeshContext(meshName).mesh;
 }
 
-void SolverInterfaceImpl::moveToNextWindow(const std::vector<ReadDataContext *> &contexts)
+void SolverInterfaceImpl::moveToNextWindow(const std::map<DataID, std::unique_ptr<ReadDataContext>> &contexts)
 {
-  for (impl::ReadDataContext *context : contexts) {
-    context->moveToNextWindow();
+  for (auto const &context : contexts) {
+    context.second.get()->moveToNextWindow();
   }
 }
 

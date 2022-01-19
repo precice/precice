@@ -17,9 +17,9 @@ namespace impl {
 /**
  * @brief Stores one Data object with related mesh.
  *
- * - If this dataContext is associated with a mapping, fromData and toData will be set correspondingly.
+ * - If a DataContext is associated with a mapping, fromData and toData will be set correspondingly.
  *   One of the two must be equal to providedData. fromData and toData must be different.
- * - If this dataContext is not associated with a mapping, fromData and toData will be unset.
+ * - If a DataContext is not associated with a mapping, fromData and toData will be unset.
  */
 class DataContext {
   friend class testing::DataContextFixture; // Make the fixture friend of this class
@@ -47,29 +47,53 @@ public:
 
   /**
    * @brief Get the name of _mesh.
-   *
+   * 
    * @return std::string Name of _mesh.
    */
   std::string getMeshName() const;
 
   /**
    * @brief Get the ID of _mesh.
-   *
+   * 
    * @return int ID of _mesh.
    */
   int getMeshID() const;
 
   /**
    * @brief Informs the user whether this DataContext has a _mappingContext.
-   *
+   * 
    * @return True, if this DataContext is associated with a mapping. False, if not. 
    */
   bool hasMapping() const;
 
+  /**
+   * @brief Informs the user whether this DataContext has a read mapping.
+   * 
+   * @return True, if DataContext has a read mapping.
+   */
+  bool hasReadMapping() const;
+
+  /**
+   * @brief Informs the user whether this DataContext has a write mapping.
+   * 
+   * @return True, if DataContext has a write mapping.
+   */
+  bool hasWriteMapping() const;
+
+  /**
+   * @brief Links a MappingContext and the MeshContext required by the mapping to this DataContext.
+   * 
+   * A mapping maps the given data from or to _providedData (depending on whether it is a read or write mapping).
+   *
+   * @param[in] mappingContext Context of read mapping
+   * @param[in] meshContext Context of mesh this mapping is mapping from or to
+   */
+  virtual void configureMapping(MappingContext mappingContext, MeshContext meshContext) = 0;
+
 protected:
   /**
-   * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should be used.
-   *
+   * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.
+   * 
    * @param data Data associated with this DataContext.
    * @param mesh Mesh associated with this DataContext.
    */
@@ -88,22 +112,8 @@ protected:
   mesh::PtrData _toData;
 
   /**
-   * @brief Informs the user whether this DataContext has a read mapping.
-   *
-   * @return True, if DataContext has a read mapping.
-   */
-  bool hasReadMapping() const;
-
-  /**
-   * @brief Informs the user whether this DataContext has a write mapping.
-   *
-   * @return True, if DataContext has a write mapping.
-   */
-  bool hasWriteMapping() const;
-
-  /**
    * @brief Helper to set _mappingContext, _fromData and _toData.
-   *
+   * 
    * @param mappingContext MappingContext this DataContext will be associated to.
    * @param fromData Data the mapping maps from.
    * @param toData Data the mapping maps to.

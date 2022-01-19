@@ -11,7 +11,7 @@ namespace precice {
 namespace impl {
 
 /**
- * @brief Stores one Data object with related mesh. Context is used to be read from and potentially provides a read mapping. Additionally stores Waveform associated with _providedData.
+ * @brief Stores one Data object with related mesh. Context stores data to be read from and potentially provides a read mapping. Additionally stores Waveform associated with _providedData.
  *
  * Derived from DataContext
  */
@@ -30,14 +30,14 @@ public:
       int           interpolationOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER);
 
   /**
-   * @brief Links a MappingContext for a read mapping and the MeshContext the read mapping requires to this DataContext.
-   *
+   * @brief Links a MappingContext and the MeshContext required by the read mapping requires to this ReadDataContext.
+   * 
    * A read mapping maps _fromData to _providedData. A ReadDataContext already has _providedData, but additionally requires _fromData.
    *
    * @param[in] mappingContext Context of read mapping
-   * @param[in] fromMeshContext Context of mesh this read mapping is mapping from (_fromData)
+   * @param[in] meshContext Context of mesh this read mapping is mapping from (_fromData)
    */
-  void configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext);
+  void configureMapping(MappingContext mappingContext, MeshContext meshContext);
 
   /**
    * @brief Performs the mapping associated to this ReadDataContext. Called by SolverInterfaceImpl::mapReadData on all ReadDataContext objects.

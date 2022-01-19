@@ -107,7 +107,7 @@
  */
 #define PRECICE_REQUIRE_DATA_READ_IMPL(id)                                                                                      \
   PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                             \
-  PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataRead(id)),                                                       \
+  PRECICE_CHECK((_accessor->isDataRead(id)),                                                                                    \
                 "This participant does not use Data \"{0}\", but attempted to read it. "                                        \
                 "Please extend the configuarion of partiticipant \"{1}\" by defining <read-data mesh=\"{2}\" name=\"{0}\" />.", \
                 _accessor->getDataName(id), _accessorName, _accessor->getMeshNameFromData(id));
@@ -118,7 +118,7 @@
  */
 #define PRECICE_REQUIRE_DATA_WRITE_IMPL(id)                                                                                      \
   PRECICE_VALIDATE_DATA_ID_IMPL(id)                                                                                              \
-  PRECICE_CHECK((_accessor->isDataUsed(id) && _accessor->isDataWrite(id)),                                                       \
+  PRECICE_CHECK((_accessor->isDataWrite(id)),                                                                                    \
                 "This participant does not use Data \"{0}\", but attempted to write it. "                                        \
                 "Please extend the configuarion of partiticipant \"{1}\" by defining <write-data mesh=\"{2}\" name=\"{0}\" />.", \
                 _accessor->getDataName(id), _accessorName, _accessor->getMeshNameFromData(id));

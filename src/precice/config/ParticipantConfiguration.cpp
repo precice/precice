@@ -505,40 +505,42 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   _mappingConfig->resetMappings();
 
   // Set participant data for data contexts
-  for (impl::WriteDataContext *dataContext : participant->writeDataContexts()) {
-    int fromMeshID = dataContext->getMeshID();
+  for (const auto &item : participant->writeDataContexts()) {
+    impl::WriteDataContext &dataContext = *(item.second.get());
+    int                     fromMeshID  = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(fromMeshID) || participant->isDirectAccessAllowed(fromMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
                   "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
-                  participant->getName(), dataContext->getMeshName(), dataContext->getMeshName());
+                  participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
 
     for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
       if (mappingContext.fromMeshID == fromMeshID) {
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.toMeshID);
-        PRECICE_CHECK(meshContext.mesh->hasDataName(dataContext->getDataName()),
+        PRECICE_CHECK(meshContext.mesh->hasDataName(dataContext.getDataName()),
                       "Mesh \"{}\" needs to use data \"{}\" to allow a write mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
-                      meshContext.mesh->getName(), dataContext->getDataName(), dataContext->getDataName());
-        dataContext->configureForWriteMapping(mappingContext, meshContext);
+                      meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
+        dataContext.configureMapping(mappingContext, meshContext);
       }
     }
   }
 
-  for (impl::ReadDataContext *dataContext : participant->readDataContexts()) {
-    int toMeshID = dataContext->getMeshID();
+  for (const auto &item : participant->readDataContexts()) {
+    impl::ReadDataContext &dataContext = *(item.second.get());
+    int                    toMeshID    = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(toMeshID) || participant->isDirectAccessAllowed(toMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
                   "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
-                  participant->getName(), dataContext->getMeshName(), dataContext->getMeshName());
+                  participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
 
     for (impl::MappingContext &mappingContext : participant->readMappingContexts()) {
       if (mappingContext.toMeshID == toMeshID) {
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.fromMeshID);
-        PRECICE_CHECK(meshContext.mesh->hasDataName(dataContext->getDataName()),
+        PRECICE_CHECK(meshContext.mesh->hasDataName(dataContext.getDataName()),
                       "Mesh \"{}\" needs to use data \"{}\" to allow a read mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
-                      meshContext.mesh->getName(), dataContext->getDataName(), dataContext->getDataName());
-        dataContext->configureForReadMapping(mappingContext, meshContext);
+                      meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
+        dataContext.configureMapping(mappingContext, meshContext);
       }
     }
   }
@@ -663,13 +665,15 @@ void ParticipantConfiguration::checkIllDefinedMappings(
           bool sameDirection = false;
 
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
-            for (const impl::DataContext *dataContext : participant->writeDataContexts()) {
-              sameDirection |= data->getName() == dataContext->getDataName();
+            for (const auto &item : participant->writeDataContexts()) {
+              impl::WriteDataContext &dataContext = *(item.second.get());
+              sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
-            for (const impl::DataContext *dataContext : participant->readDataContexts()) {
-              sameDirection |= data->getName() == dataContext->getDataName();
+            for (const auto &item : participant->readDataContexts()) {
+              impl::ReadDataContext &dataContext = *(item.second.get());
+              sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           PRECICE_CHECK(!sameDirection,

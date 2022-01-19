@@ -16,7 +16,6 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/ReadDataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
 #include "utils/MultiLock.hpp"
 
@@ -727,7 +726,7 @@ private:
   void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
 
   /// Move to next window and store current data
-  void moveToNextWindow(const std::vector<ReadDataContext *> &contexts);
+  void moveToNextWindow(const std::map<DataID, std::unique_ptr<ReadDataContext>> &contexts);
 
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
