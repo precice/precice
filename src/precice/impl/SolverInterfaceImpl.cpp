@@ -304,7 +304,7 @@ double SolverInterfaceImpl::initialize()
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
   if (not _hasInitializedReadWaveforms) { // always necessary in this case.
-    initializeReadWaveforms();
+    initializeReadWaveforms();            // sets 0 for all samples
     _hasInitializedReadWaveforms = true;
   }
   if (_couplingScheme->hasDataBeenReceived()) {
@@ -353,7 +353,6 @@ void SolverInterfaceImpl::initializeData()
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
-    moveToNextWindow(_accessor->readDataContexts());
     performDataActions({action::Action::READ_MAPPING_POST}, 0.0, 0.0, 0.0, dt);
   }
   PRECICE_DEBUG("Plot output");
@@ -393,6 +392,11 @@ double SolverInterfaceImpl::advance(
   PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
   PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
   _numberAdvanceCalls++;
+
+  // This is the first time advance is called. Initializes the waveform with data from initializeData or 0, if initializeData was not called.
+  if (_numberAdvanceCalls == 1) {
+    moveToNextWindow(_accessor->readDataContexts());
+  }
 
 #ifndef NDEBUG
   PRECICE_DEBUG("Synchronize timestep length");
