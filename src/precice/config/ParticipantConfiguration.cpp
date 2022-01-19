@@ -77,7 +77,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagWriteData.addAttribute(attrMesh);
   tagReadData.addAttribute(attrMesh);
 
-  XMLAttribute<int> attrOrder = makeXMLAttribute(ATTR_ORDER, time::Time::UNDEFINED_INTERPOLATION_ORDER)
+  XMLAttribute<int> attrOrder = makeXMLAttribute(ATTR_ORDER, time::Time::DEFAULT_INTERPOLATION_ORDER)
                                     .setDocumentation("Sets interpolation order used by waveform iteration.");
   tagReadData.addAttribute(attrOrder);
   tag.addSubtag(tagWriteData);
@@ -339,7 +339,7 @@ void ParticipantConfiguration::xmlTagCallback(
                   _participants.back()->getName(), meshName, meshName);
     mesh::PtrData data          = getData(mesh, dataName);
     int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
-    if (waveformOrder != time::Time::UNDEFINED_INTERPOLATION_ORDER) {
+    if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {
       _allowsExperimental = _solverInterfaceConfig->allowsExperimental();
       PRECICE_EXPERIMENTAL_ATTRIBUTE(TAG_READ, ATTR_ORDER);
     }

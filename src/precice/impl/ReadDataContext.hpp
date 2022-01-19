@@ -27,7 +27,7 @@ public:
   ReadDataContext(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
-      int           interpolationOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER);
+      int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
 
   /**
    * @brief Links a MappingContext and the MeshContext required by the read mapping requires to this ReadDataContext.

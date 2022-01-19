@@ -3,7 +3,7 @@
 namespace precice {
 namespace time {
 
-const int Time::UNDEFINED_INTERPOLATION_ORDER = -1;
+const int Time::DEFAULT_INTERPOLATION_ORDER = 0;
 
 } // namespace time
 } // namespace precice

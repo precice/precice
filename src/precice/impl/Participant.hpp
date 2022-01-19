@@ -19,7 +19,6 @@
 #include "precice/impl/ReadDataContext.hpp"
 #include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
-#include "time/Time.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/PointerVector.hpp"
@@ -77,7 +76,7 @@ public:
   void addReadData(
       const mesh::PtrData &data,
       const mesh::PtrMesh &mesh,
-      int                  interpolationOrder = time::Time::UNDEFINED_INTERPOLATION_ORDER);
+      int                  interpolationOrder);
 
   /// Adds a configured read \ref Mapping to the Participant
   void addReadMappingContext(MappingContext *mappingContext);

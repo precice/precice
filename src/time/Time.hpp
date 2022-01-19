@@ -6,7 +6,7 @@ namespace time {
 class Time {
 public:
   /// To be used, when the interpolation order is not defined.
-  static const int UNDEFINED_INTERPOLATION_ORDER;
+  static const int DEFAULT_INTERPOLATION_ORDER;
 };
 
 } // namespace time
