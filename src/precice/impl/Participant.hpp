@@ -126,7 +126,17 @@ public:
   /** Provides access to \ref ReadDataContext
    * @pre there exists a \ref ReadDataContext for \ref dataID
    */
+  const ReadDataContext &readDataContext(DataID dataID) const;
+
+  /** Provides access to \ref ReadDataContext
+   * @pre there exists a \ref ReadDataContext for \ref dataID
+   */
   ReadDataContext &readDataContext(DataID dataID);
+
+  /** Provides access to \ref WriteDataContext
+   * @pre there exists a \ref WriteDataContext for \ref dataID
+   */
+  const WriteDataContext &writeDataContext(DataID dataID) const;
 
   /** Provides access to \ref WriteDataContext
    * @pre there exists a \ref WriteDataContext for \ref dataID

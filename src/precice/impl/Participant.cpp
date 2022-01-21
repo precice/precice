@@ -129,10 +129,10 @@ void Participant::addWriteMappingContext(
 }
 
 // Data queries
-WriteDataContext &Participant::writeDataContext(DataID dataID)
+const ReadDataContext &Participant::readDataContext(DataID dataID) const
 {
-  auto it = _writeDataContexts.find(dataID);
-  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID does not exist.")
+  auto it = _readDataContexts.find(dataID);
+  PRECICE_CHECK(it != _readDataContexts.end(), "DataID does not exist.")
   return it->second;
 }
 
@@ -143,14 +143,28 @@ ReadDataContext &Participant::readDataContext(DataID dataID)
   return it->second;
 }
 
-decltype(Participant::_writeDataContexts | boost::adaptors::map_values) Participant::writeDataContexts()
+const WriteDataContext &Participant::writeDataContext(DataID dataID) const
 {
-  return _writeDataContexts | boost::adaptors::map_values;
+  auto it = _writeDataContexts.find(dataID);
+  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID does not exist.")
+  return it->second;
+}
+
+WriteDataContext &Participant::writeDataContext(DataID dataID)
+{
+  auto it = _writeDataContexts.find(dataID);
+  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID does not exist.")
+  return it->second;
 }
 
 decltype(Participant::_readDataContexts | boost::adaptors::map_values) Participant::readDataContexts()
 {
   return _readDataContexts | boost::adaptors::map_values;
+}
+
+decltype(Participant::_writeDataContexts | boost::adaptors::map_values) Participant::writeDataContexts()
+{
+  return _writeDataContexts | boost::adaptors::map_values;
 }
 
 bool Participant::hasData(DataID dataID) const
