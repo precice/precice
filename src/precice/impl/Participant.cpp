@@ -177,9 +177,7 @@ bool Participant::isDataRead(DataID dataID) const
 
 bool Participant::isDataWrite(DataID dataID) const
 {
-  return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](auto const &item) {
-    return item.second->getProvidedDataID() == dataID;
-  });
+  return _writeDataContexts.count(dataID) > 0;
 }
 
 int Participant::getUsedDataID(const std::string &dataName, MeshID meshID) const
