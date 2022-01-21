@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <boost/range/adaptor/map.hpp>
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
@@ -726,7 +727,7 @@ private:
   void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
 
   /// Move to next window and store current data
-  void moveToNextWindow(const std::map<DataID, std::unique_ptr<ReadDataContext>> &contexts);
+  void moveToNextWindow(boost::range_detail::select_second_mutable_range<std::map<DataID, precice::impl::ReadDataContext>> contexts);
 
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);

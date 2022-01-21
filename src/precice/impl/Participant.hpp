@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <boost/range/adaptor/map.hpp>
 #include <memory>
 #include <stddef.h>
 #include <string>
@@ -47,6 +48,11 @@ namespace impl {
 
 /// Holds coupling state of one participating solver in coupled simulation.
 class Participant {
+private:
+  std::map<DataID, WriteDataContext> _writeDataContexts;
+
+  std::map<DataID, ReadDataContext> _readDataContexts;
+
 public:
   enum MappingConstants {
     MAPPING_LINEAR_CONSERVATIVE,
@@ -121,7 +127,17 @@ public:
   /** Provides access to \ref ReadDataContext
    * @pre there exists a \ref ReadDataContext for \ref dataID
    */
+  const ReadDataContext &readDataContext(DataID dataID) const;
+
+  /** Provides access to \ref ReadDataContext
+   * @pre there exists a \ref ReadDataContext for \ref dataID
+   */
   ReadDataContext &readDataContext(DataID dataID);
+
+  /** Provides access to \ref WriteDataContext
+   * @pre there exists a \ref WriteDataContext for \ref dataID
+   */
+  const WriteDataContext &writeDataContext(DataID dataID) const;
 
   /** Provides access to \ref WriteDataContext
    * @pre there exists a \ref WriteDataContext for \ref dataID
@@ -131,12 +147,12 @@ public:
   /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
    */
-  std::map<DataID, std::unique_ptr<WriteDataContext>> &writeDataContexts();
+  decltype(Participant::_writeDataContexts | boost::adaptors::map_values) writeDataContexts();
 
   /** Provides access to all \ref ReadDataContext objects
    * @remarks does not contain nullptr.
    */
-  std::map<DataID, std::unique_ptr<ReadDataContext>> &readDataContexts();
+  decltype(Participant::_readDataContexts | boost::adaptors::map_values) readDataContexts();
 
   /// Is the dataID know to preCICE?
   bool hasData(DataID dataID) const;
@@ -295,10 +311,6 @@ private:
 
   /// Mesh contexts used by the participant.
   std::vector<MeshContext *> _usedMeshContexts;
-
-  std::map<DataID, std::unique_ptr<WriteDataContext>> _writeDataContexts;
-
-  std::map<DataID, std::unique_ptr<ReadDataContext>> _readDataContexts;
 
   bool _useMaster = false;
 

@@ -103,7 +103,8 @@ void Participant::addWriteData(
     const mesh::PtrMesh &mesh)
 {
   checkDuplicatedData(data);
-  _writeDataContexts[data->getID()] = std::make_unique<WriteDataContext>(data, mesh);
+  auto inserted = _writeDataContexts.insert(std::make_pair(data->getID(), WriteDataContext(data, mesh)));
+  PRECICE_ASSERT(inserted.second, "addWriteData failed.");
 }
 
 void Participant::addReadData(
@@ -112,7 +113,8 @@ void Participant::addReadData(
     int                  interpolationOrder)
 {
   checkDuplicatedData(data);
-  _readDataContexts[data->getID()] = std::make_unique<ReadDataContext>(data, mesh, interpolationOrder);
+  auto inserted = _readDataContexts.insert(std::make_pair(data->getID(), ReadDataContext(data, mesh, interpolationOrder)));
+  PRECICE_ASSERT(inserted.second, "addReadData failed.");
 }
 
 void Participant::addReadMappingContext(
@@ -128,25 +130,42 @@ void Participant::addWriteMappingContext(
 }
 
 // Data queries
+const ReadDataContext &Participant::readDataContext(DataID dataID) const
+{
+  auto it = _readDataContexts.find(dataID);
+  PRECICE_CHECK(it != _readDataContexts.end(), "DataID does not exist.")
+  return it->second;
+}
 
 ReadDataContext &Participant::readDataContext(DataID dataID)
 {
-  return *_readDataContexts[dataID];
+  auto it = _readDataContexts.find(dataID);
+  PRECICE_CHECK(it != _readDataContexts.end(), "DataID does not exist.")
+  return it->second;
+}
+
+const WriteDataContext &Participant::writeDataContext(DataID dataID) const
+{
+  auto it = _writeDataContexts.find(dataID);
+  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID does not exist.")
+  return it->second;
 }
 
 WriteDataContext &Participant::writeDataContext(DataID dataID)
 {
-  return *_writeDataContexts[dataID];
+  auto it = _writeDataContexts.find(dataID);
+  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID does not exist.")
+  return it->second;
 }
 
-std::map<DataID, std::unique_ptr<WriteDataContext>> &Participant::writeDataContexts()
+decltype(Participant::_readDataContexts | boost::adaptors::map_values) Participant::readDataContexts()
 {
-  return _writeDataContexts;
+  return _readDataContexts | boost::adaptors::map_values;
 }
 
-std::map<DataID, std::unique_ptr<ReadDataContext>> &Participant::readDataContexts()
+decltype(Participant::_writeDataContexts | boost::adaptors::map_values) Participant::writeDataContexts()
 {
-  return _readDataContexts;
+  return _writeDataContexts | boost::adaptors::map_values;
 }
 
 bool Participant::hasData(DataID dataID) const
@@ -173,16 +192,12 @@ bool Participant::isDataUsed(const std::string &dataName, MeshID meshID) const
 
 bool Participant::isDataRead(DataID dataID) const
 {
-  return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](auto const &item) {
-    return item.second->getProvidedDataID() == dataID;
-  });
+  return _readDataContexts.count(dataID) > 0;
 }
 
 bool Participant::isDataWrite(DataID dataID) const
 {
-  return std::any_of(_writeDataContexts.begin(), _writeDataContexts.end(), [dataID](auto const &item) {
-    return item.second->getProvidedDataID() == dataID;
-  });
+  return _writeDataContexts.count(dataID) > 0;
 }
 
 int Participant::getUsedDataID(const std::string &dataName, MeshID meshID) const
@@ -409,7 +424,7 @@ void Participant::checkDuplicatedUse(const mesh::PtrMesh &mesh)
 
 void Participant::checkDuplicatedData(const mesh::PtrData &data)
 {
-  PRECICE_CHECK(_readDataContexts.find(data->getID()) == _readDataContexts.end() && _writeDataContexts.find(data->getID()) == _writeDataContexts.end(),
+  PRECICE_CHECK(!isDataWrite(data->getID()) && !isDataRead(data->getID()),
                 "Participant \"{}\" can read/write data \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
                 _name, data->getName());

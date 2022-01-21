@@ -88,7 +88,7 @@ public:
    * @param[in] mappingContext Context of read mapping
    * @param[in] meshContext Context of mesh this mapping is mapping from or to
    */
-  virtual void configureMapping(MappingContext mappingContext, MeshContext meshContext) = 0;
+  virtual void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) = 0;
 
 protected:
   /**
@@ -124,10 +124,10 @@ protected:
   bool isMappingRequired();
 
 private:
-  mutable logging::Logger _log{"impl::DataContext"};
-
   /// Mesh associated with _providedData.
   mesh::PtrMesh _mesh;
+
+  static logging::Logger _log;
 };
 
 } // namespace impl

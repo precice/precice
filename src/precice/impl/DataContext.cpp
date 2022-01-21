@@ -4,6 +4,8 @@
 namespace precice {
 namespace impl {
 
+logging::Logger DataContext::_log{"impl::DataContext"};
+
 DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 {
   PRECICE_TRACE();

@@ -37,7 +37,7 @@ public:
    * @param[in] mappingContext Context of read mapping
    * @param[in] meshContext Context of mesh this read mapping is mapping from (_fromData)
    */
-  void configureMapping(MappingContext mappingContext, MeshContext meshContext);
+  void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) override;
 
   /**
    * @brief Performs the mapping associated to this ReadDataContext. Called by SolverInterfaceImpl::mapReadData on all ReadDataContext objects.
@@ -67,7 +67,7 @@ public:
   void moveToNextWindow();
 
 private:
-  logging::Logger _log{"impl::ReadDataContext"};
+  static logging::Logger _log;
 
   /// Waveform wrapped by this ReadDataContext.
   time::PtrWaveform _providedWaveform;

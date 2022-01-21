@@ -40,7 +40,7 @@ public:
    * @param[in] mappingContext provides context of write mapping
    * @param[in] meshContext provides context of mesh this write mapping is mapping to (_toData)
    */
-  void configureMapping(MappingContext mappingContext, MeshContext meshContext);
+  void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext);
 
   /**
    * @brief Performs the mapping associated to this WriteDataContext. Called by SolverInterfaceImpl::mapWrittenData on all WriteDataContext objects.
@@ -53,7 +53,7 @@ public:
   void mapWriteDataFrom();
 
 private:
-  logging::Logger _log{"impl::WriteDataContext"};
+  static logging::Logger _log;
 };
 
 } // namespace impl

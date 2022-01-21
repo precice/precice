@@ -505,9 +505,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   _mappingConfig->resetMappings();
 
   // Set participant data for data contexts
-  for (const auto &item : participant->writeDataContexts()) {
-    impl::WriteDataContext &dataContext = *(item.second.get());
-    int                     fromMeshID  = dataContext.getMeshID();
+  for (auto &dataContext : participant->writeDataContexts()) {
+    int fromMeshID = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(fromMeshID) || participant->isDirectAccessAllowed(fromMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
                   "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
@@ -525,9 +524,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     }
   }
 
-  for (const auto &item : participant->readDataContexts()) {
-    impl::ReadDataContext &dataContext = *(item.second.get());
-    int                    toMeshID    = dataContext.getMeshID();
+  for (auto &dataContext : participant->readDataContexts()) {
+    int toMeshID = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(toMeshID) || participant->isDirectAccessAllowed(toMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
                   "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
@@ -665,14 +663,12 @@ void ParticipantConfiguration::checkIllDefinedMappings(
           bool sameDirection = false;
 
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
-            for (const auto &item : participant->writeDataContexts()) {
-              impl::WriteDataContext &dataContext = *(item.second.get());
+            for (const auto &dataContext : participant->writeDataContexts()) {
               sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
-            for (const auto &item : participant->readDataContexts()) {
-              impl::ReadDataContext &dataContext = *(item.second.get());
+            for (const auto &dataContext : participant->readDataContexts()) {
               sameDirection |= data->getName() == dataContext.getDataName();
             }
           }

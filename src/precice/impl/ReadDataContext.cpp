@@ -4,6 +4,9 @@
 
 namespace precice {
 namespace impl {
+
+logging::Logger ReadDataContext::_log{"impl::ReadDataContext"};
+
 ReadDataContext::ReadDataContext(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
@@ -13,13 +16,13 @@ ReadDataContext::ReadDataContext(
   _providedWaveform = time::PtrWaveform(new time::Waveform(interpolationOrder));
 }
 
-void ReadDataContext::configureMapping(MappingContext mappingContext, MeshContext meshContext)
+void ReadDataContext::configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData data = meshContext.mesh->data(getDataName());
   PRECICE_ASSERT(data != _providedData, "Data the read mapping is mapping from needs to be different from _providedData");
-  this->setMapping(mappingContext, data, _providedData);
+  setMapping(mappingContext, data, _providedData);
   PRECICE_ASSERT(hasReadMapping());
 }
 

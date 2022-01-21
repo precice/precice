@@ -1008,8 +1008,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (const auto &item : _accessor->writeDataContexts()) {
-      impl::WriteDataContext &context = *(item.second.get());
+    for (auto &context : _accessor->writeDataContexts()) {
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
@@ -1042,8 +1041,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (const auto &item : _accessor->readDataContexts()) {
-      impl::ReadDataContext &context = *item.second.get();
+    for (auto &context : _accessor->readDataContexts()) {
       if (context.getMeshID() != toMeshID) {
         continue;
       }
@@ -1672,8 +1670,8 @@ void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
-  for (const auto &item : _accessor->writeDataContexts()) {
-    item.second.get()->mapWrittenData();
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.mapWrittenData();
   }
   clearMappings(_accessor->writeMappingContexts());
 }
@@ -1683,8 +1681,8 @@ void SolverInterfaceImpl::mapReadData()
   PRECICE_TRACE();
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   computeMappings(_accessor->readMappingContexts(), "read");
-  for (const auto &item : _accessor->readDataContexts()) {
-    item.second.get()->mapReadData();
+  for (auto &context : _accessor->readDataContexts()) {
+    context.mapReadData();
   }
   clearMappings(_accessor->readMappingContexts());
 }
@@ -1692,8 +1690,8 @@ void SolverInterfaceImpl::mapReadData()
 void SolverInterfaceImpl::initializeReadWaveforms()
 {
   PRECICE_TRACE();
-  for (auto const &context : _accessor->readDataContexts()) {
-    context.second.get()->initializeWaveform();
+  for (auto &context : _accessor->readDataContexts()) {
+    context.initializeWaveform();
   }
 }
 
@@ -1828,10 +1826,10 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
   return *_accessor->usedMeshContext(meshName).mesh;
 }
 
-void SolverInterfaceImpl::moveToNextWindow(const std::map<DataID, std::unique_ptr<ReadDataContext>> &contexts)
+void SolverInterfaceImpl::moveToNextWindow(boost::range_detail::select_second_mutable_range<std::map<DataID, precice::impl::ReadDataContext>> contexts)
 {
-  for (auto const &context : contexts) {
-    context.second.get()->moveToNextWindow();
+  for (auto &context : contexts) {
+    context.moveToNextWindow();
   }
 }
 
