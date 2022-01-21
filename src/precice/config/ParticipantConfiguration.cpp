@@ -495,7 +495,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Set participant data for data contexts
   for (auto &dataContext : participant->writeDataContexts()) {
-    int                     fromMeshID  = dataContext.getMeshID();
+    int fromMeshID = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(fromMeshID) || participant->isDirectAccessAllowed(fromMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
                   "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
@@ -514,7 +514,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
 
   for (auto &dataContext : participant->readDataContexts()) {
-    int                    toMeshID    = dataContext.getMeshID();
+    int toMeshID = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(toMeshID) || participant->isDirectAccessAllowed(toMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
                   "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",

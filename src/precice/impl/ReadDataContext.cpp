@@ -2,7 +2,7 @@
 
 namespace precice {
 namespace impl {
-  
+
 logging::Logger ReadDataContext::_log{"impl::ReadDataContext"};
 
 ReadDataContext::ReadDataContext(
@@ -12,7 +12,7 @@ ReadDataContext::ReadDataContext(
 {
 }
 
-void ReadDataContext::configureMapping(const MappingContext& mappingContext, const MeshContext& meshContext)
+void ReadDataContext::configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));

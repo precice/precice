@@ -1,12 +1,12 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <boost/range/adaptor/map.hpp>
 #include <memory>
 #include <stddef.h>
 #include <string>
 #include <utility>
 #include <vector>
-#include <boost/range/adaptor/map.hpp>
 
 #include "SharedPointer.hpp"
 #include "action/SharedPointer.hpp"
@@ -52,6 +52,7 @@ private:
   std::map<DataID, WriteDataContext> _writeDataContexts;
 
   std::map<DataID, ReadDataContext> _readDataContexts;
+
 public:
   enum MappingConstants {
     MAPPING_LINEAR_CONSERVATIVE,

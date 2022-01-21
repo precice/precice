@@ -143,7 +143,6 @@ ReadDataContext &Participant::readDataContext(DataID dataID)
   return it->second;
 }
 
-
 decltype(Participant::_writeDataContexts | boost::adaptors::map_values) Participant::writeDataContexts()
 {
   return _writeDataContexts | boost::adaptors::map_values;

@@ -33,7 +33,7 @@ public:
    * @param[in] mappingContext Context of read mapping
    * @param[in] meshContext Context of mesh this read mapping is mapping from (_fromData)
    */
-  void configureMapping(const MappingContext& mappingContext, const MeshContext& meshContext) override;
+  void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) override;
 
 private:
   static logging::Logger _log;
