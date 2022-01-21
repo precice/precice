@@ -21,7 +21,7 @@ void WriteDataContext::configureMapping(MappingContext mappingContext, MeshConte
   PRECICE_TRACE();
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData data = meshContext.mesh->data(getDataName());
-  PRECICE_ASSERT(data != _providedData);
+  PRECICE_ASSERT(data != _providedData, "Data the write mapping is mapping to needs to be different from _providedData");
   this->setMapping(mappingContext, _providedData, data);
   PRECICE_ASSERT(hasWriteMapping());
 }

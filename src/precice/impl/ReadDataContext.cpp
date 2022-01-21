@@ -18,7 +18,7 @@ void ReadDataContext::configureMapping(MappingContext mappingContext, MeshContex
   PRECICE_TRACE();
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData data = meshContext.mesh->data(getDataName());
-  PRECICE_ASSERT(data != _providedData);
+  PRECICE_ASSERT(data != _providedData, "Data the read mapping is mapping from needs to be different from _providedData");
   this->setMapping(mappingContext, data, _providedData);
   PRECICE_ASSERT(hasReadMapping());
 }
