@@ -404,7 +404,7 @@ void Participant::checkDuplicatedUse(const mesh::PtrMesh &mesh)
 
 void Participant::checkDuplicatedData(const mesh::PtrData &data)
 {
-  PRECICE_CHECK(isDataWrite(data->getID()) || isDataRead(data->getID()),
+  PRECICE_CHECK(!isDataWrite(data->getID()) && !isDataRead(data->getID()),
                 "Participant \"{}\" can read/write data \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
                 _name, data->getName());
