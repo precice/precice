@@ -9,7 +9,7 @@ WriteDataContext::WriteDataContext(
 {
 }
 
-void WriteDataContext::configureMapping(MappingContext mappingContext, MeshContext meshContext)
+void WriteDataContext::configureMapping(const MappingContext& mappingContext, const MeshContext& meshContext)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));

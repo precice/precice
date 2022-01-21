@@ -9,7 +9,7 @@ ReadDataContext::ReadDataContext(
 {
 }
 
-void ReadDataContext::configureMapping(MappingContext mappingContext, MeshContext meshContext)
+void ReadDataContext::configureMapping(const MappingContext& mappingContext, const MeshContext& meshContext)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
