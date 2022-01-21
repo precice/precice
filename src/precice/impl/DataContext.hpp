@@ -166,10 +166,10 @@ protected:
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 
 private:
-  mutable logging::Logger _log{"impl::DataContext"};
-
   /// Mesh associated with _providedData.
   mesh::PtrMesh _mesh;
+
+  static logging::Logger _log;
 };
 
 } // namespace impl

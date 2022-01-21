@@ -36,7 +36,7 @@ public:
   void configureMapping(const MappingContext& mappingContext, const MeshContext& meshContext) override;
 
 private:
-  logging::Logger _log{"impl::ReadDataContext"};
+  static logging::Logger _log;
 };
 
 } // namespace impl

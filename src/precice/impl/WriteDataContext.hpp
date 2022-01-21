@@ -36,7 +36,7 @@ public:
   void configureMapping(const MappingContext& mappingContext, const MeshContext& meshContext);
 
 private:
-  logging::Logger _log{"impl::WriteDataContext"};
+  static logging::Logger _log;
 };
 
 } // namespace impl

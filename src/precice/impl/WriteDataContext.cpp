@@ -2,6 +2,9 @@
 
 namespace precice {
 namespace impl {
+
+logging::Logger WriteDataContext::_log{"impl::WriteDataContext"};
+
 WriteDataContext::WriteDataContext(
     mesh::PtrData data,
     mesh::PtrMesh mesh)

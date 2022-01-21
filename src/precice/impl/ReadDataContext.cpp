@@ -2,6 +2,9 @@
 
 namespace precice {
 namespace impl {
+  
+logging::Logger ReadDataContext::_log{"impl::ReadDataContext"};
+
 ReadDataContext::ReadDataContext(
     mesh::PtrData data,
     mesh::PtrMesh mesh)
