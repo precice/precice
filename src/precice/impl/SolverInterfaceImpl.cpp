@@ -991,8 +991,8 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (const auto &item : _accessor->writeDataContexts()) {
-      impl::WriteDataContext &context = *(item.second.get());
+    for (auto &item : _accessor->writeDataContexts()) {
+      impl::WriteDataContext &context = item.second;
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
@@ -1025,8 +1025,8 @@ void SolverInterfaceImpl::mapReadDataTo(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (const auto &item : _accessor->readDataContexts()) {
-      impl::ReadDataContext &context = *item.second.get();
+    for (auto &item : _accessor->readDataContexts()) {
+      impl::ReadDataContext &context = item.second;
       if (context.getMeshID() != toMeshID) {
         continue;
       }
@@ -1559,25 +1559,25 @@ void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext
   }
 }
 
-void SolverInterfaceImpl::mapData(DataContext *context, const std::string &mappingType)
+void SolverInterfaceImpl::mapData(DataContext &context, const std::string &mappingType)
 {
   PRECICE_TRACE();
   using namespace mapping;
   MappingConfiguration::Timing timing;
-  if (context->hasMapping()) {
-    timing         = context->mappingContext().timing;
-    bool hasMapped = context->mappingContext().hasMappedData;
+  if (context.hasMapping()) {
+    timing         = context.mappingContext().timing;
+    bool hasMapped = context.mappingContext().hasMappedData;
     bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
     mapNow |= timing == MappingConfiguration::INITIAL;
     if (mapNow && (not hasMapped)) {
-      int inDataID  = context->getFromDataID();
-      int outDataID = context->getToDataID();
+      int inDataID  = context.getFromDataID();
+      int outDataID = context.getToDataID();
       PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
-                    mappingType, context->getDataName(), context->getMeshName());
-      context->resetToData();
+                    mappingType, context.getDataName(), context.getMeshName());
+      context.resetToData();
       PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
-      context->mappingContext().mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context->toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
+      context.mappingContext().mapping->map(inDataID, outDataID);
+      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
     }
   }
 }
@@ -1600,8 +1600,8 @@ void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
-  for (const auto &item : _accessor->writeDataContexts()) {
-    mapData(item.second.get(), "write");
+  for (auto &item : _accessor->writeDataContexts()) {
+    mapData(item.second, "write");
   }
   clearMappings(_accessor->writeMappingContexts());
 }
@@ -1610,8 +1610,8 @@ void SolverInterfaceImpl::mapReadData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
-  for (const auto &item : _accessor->readDataContexts()) {
-    mapData(item.second.get(), "read");
+  for (auto &item : _accessor->readDataContexts()) {
+    mapData(item.second, "read");
   }
   clearMappings(_accessor->readMappingContexts());
 }
@@ -1668,8 +1668,8 @@ void SolverInterfaceImpl::handleExports()
 void SolverInterfaceImpl::resetWrittenData()
 {
   PRECICE_TRACE();
-  for (const auto &item : _accessor->writeDataContexts()) {
-    impl::WriteDataContext &context = *(item.second.get());
+  for (auto &item : _accessor->writeDataContexts()) {
+    impl::WriteDataContext &context = item.second;
     context.resetProvidedData();
     if (context.hasMapping()) {
       PRECICE_ASSERT(context.hasWriteMapping());

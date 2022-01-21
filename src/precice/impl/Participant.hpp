@@ -130,12 +130,12 @@ public:
   /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
    */
-  std::map<DataID, std::unique_ptr<WriteDataContext>> &writeDataContexts();
+  std::map<DataID, WriteDataContext> &writeDataContexts();
 
   /** Provides access to all \ref ReadDataContext objects
    * @remarks does not contain nullptr.
    */
-  std::map<DataID, std::unique_ptr<ReadDataContext>> &readDataContexts();
+  std::map<DataID, ReadDataContext> &readDataContexts();
 
   /// Is the dataID know to preCICE?
   bool hasData(DataID dataID) const;
@@ -295,9 +295,9 @@ private:
   /// Mesh contexts used by the participant.
   std::vector<MeshContext *> _usedMeshContexts;
 
-  std::map<DataID, std::unique_ptr<WriteDataContext>> _writeDataContexts;
+  std::map<DataID, WriteDataContext> _writeDataContexts;
 
-  std::map<DataID, std::unique_ptr<ReadDataContext>> _readDataContexts;
+  std::map<DataID, ReadDataContext> _readDataContexts;
 
   bool _useMaster = false;
 
