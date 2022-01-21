@@ -172,9 +172,7 @@ bool Participant::isDataUsed(const std::string &dataName, MeshID meshID) const
 
 bool Participant::isDataRead(DataID dataID) const
 {
-  return std::any_of(_readDataContexts.begin(), _readDataContexts.end(), [dataID](auto const &item) {
-    return item.second->getProvidedDataID() == dataID;
-  });
+  return _readDataContexts.count(dataID) > 0;
 }
 
 bool Participant::isDataWrite(DataID dataID) const
@@ -408,7 +406,7 @@ void Participant::checkDuplicatedUse(const mesh::PtrMesh &mesh)
 
 void Participant::checkDuplicatedData(const mesh::PtrData &data)
 {
-  PRECICE_CHECK(_readDataContexts.find(data->getID()) == _readDataContexts.end() && _writeDataContexts.find(data->getID()) == _writeDataContexts.end(),
+  PRECICE_CHECK(isDataWrite(data->getID()) || isDataRead(data->getID()),
                 "Participant \"{}\" can read/write data \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
                 _name, data->getName());

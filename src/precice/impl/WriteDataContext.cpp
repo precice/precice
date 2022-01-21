@@ -15,7 +15,7 @@ void WriteDataContext::configureMapping(MappingContext mappingContext, MeshConte
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData data = meshContext.mesh->data(getDataName());
   PRECICE_ASSERT(data != _providedData);
-  this->setMapping(mappingContext, _providedData, data);
+  setMapping(mappingContext, _providedData, data);
   PRECICE_ASSERT(hasWriteMapping());
 }
 
