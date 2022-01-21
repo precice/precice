@@ -494,8 +494,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   _mappingConfig->resetMappings();
 
   // Set participant data for data contexts
-  for (auto &item : participant->writeDataContexts()) {
-    impl::WriteDataContext &dataContext = item.second;
+  for (auto &dataContext : participant->writeDataContexts()) {
     int                     fromMeshID  = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(fromMeshID) || participant->isDirectAccessAllowed(fromMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
@@ -514,8 +513,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     }
   }
 
-  for (auto &item : participant->readDataContexts()) {
-    impl::ReadDataContext &dataContext = item.second;
+  for (auto &dataContext : participant->readDataContexts()) {
     int                    toMeshID    = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(toMeshID) || participant->isDirectAccessAllowed(toMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
@@ -654,14 +652,12 @@ void ParticipantConfiguration::checkIllDefinedMappings(
           bool sameDirection = false;
 
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
-            for (const auto &item : participant->writeDataContexts()) {
-              const impl::WriteDataContext &dataContext = item.second;
+            for (const auto &dataContext : participant->writeDataContexts()) {
               sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
-            for (const auto &item : participant->readDataContexts()) {
-              const impl::ReadDataContext &dataContext = item.second;
+            for (const auto &dataContext : participant->readDataContexts()) {
               sameDirection |= data->getName() == dataContext.getDataName();
             }
           }

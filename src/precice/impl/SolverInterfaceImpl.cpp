@@ -991,8 +991,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (auto &item : _accessor->writeDataContexts()) {
-      impl::WriteDataContext &context = item.second;
+    for (auto &context : _accessor->writeDataContexts()) {
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
@@ -1025,8 +1024,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
       mappingContext.mapping->computeMapping();
     }
-    for (auto &item : _accessor->readDataContexts()) {
-      impl::ReadDataContext &context = item.second;
+    for (auto &context : _accessor->readDataContexts()) {
       if (context.getMeshID() != toMeshID) {
         continue;
       }
@@ -1600,8 +1598,8 @@ void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
-  for (auto &item : _accessor->writeDataContexts()) {
-    mapData(item.second, "write");
+  for (auto &context : _accessor->writeDataContexts()) {
+    mapData(context, "write");
   }
   clearMappings(_accessor->writeMappingContexts());
 }
@@ -1610,8 +1608,8 @@ void SolverInterfaceImpl::mapReadData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
-  for (auto &item : _accessor->readDataContexts()) {
-    mapData(item.second, "read");
+  for (auto &context : _accessor->readDataContexts()) {
+    mapData(context, "read");
   }
   clearMappings(_accessor->readMappingContexts());
 }
@@ -1668,8 +1666,7 @@ void SolverInterfaceImpl::handleExports()
 void SolverInterfaceImpl::resetWrittenData()
 {
   PRECICE_TRACE();
-  for (auto &item : _accessor->writeDataContexts()) {
-    impl::WriteDataContext &context = item.second;
+  for (auto &context : _accessor->writeDataContexts()) {
     context.resetProvidedData();
     if (context.hasMapping()) {
       PRECICE_ASSERT(context.hasWriteMapping());

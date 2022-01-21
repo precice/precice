@@ -144,14 +144,14 @@ ReadDataContext &Participant::readDataContext(DataID dataID)
 }
 
 
-std::map<DataID, WriteDataContext> &Participant::writeDataContexts()
+decltype(Participant::_writeDataContexts | boost::adaptors::map_values) Participant::writeDataContexts()
 {
-  return _writeDataContexts;
+  return _writeDataContexts | boost::adaptors::map_values;
 }
 
-std::map<DataID, ReadDataContext> &Participant::readDataContexts()
+decltype(Participant::_readDataContexts | boost::adaptors::map_values) Participant::readDataContexts()
 {
-  return _readDataContexts;
+  return _readDataContexts | boost::adaptors::map_values;
 }
 
 bool Participant::hasData(DataID dataID) const

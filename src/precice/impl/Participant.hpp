@@ -6,6 +6,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <boost/range/adaptor/map.hpp>
 
 #include "SharedPointer.hpp"
 #include "action/SharedPointer.hpp"
@@ -47,6 +48,10 @@ namespace impl {
 
 /// Holds coupling state of one participating solver in coupled simulation.
 class Participant {
+private:
+  std::map<DataID, WriteDataContext> _writeDataContexts;
+
+  std::map<DataID, ReadDataContext> _readDataContexts;
 public:
   enum MappingConstants {
     MAPPING_LINEAR_CONSERVATIVE,
@@ -130,12 +135,12 @@ public:
   /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
    */
-  std::map<DataID, WriteDataContext> &writeDataContexts();
+  decltype(Participant::_writeDataContexts | boost::adaptors::map_values) writeDataContexts();
 
   /** Provides access to all \ref ReadDataContext objects
    * @remarks does not contain nullptr.
    */
-  std::map<DataID, ReadDataContext> &readDataContexts();
+  decltype(Participant::_readDataContexts | boost::adaptors::map_values) readDataContexts();
 
   /// Is the dataID know to preCICE?
   bool hasData(DataID dataID) const;
@@ -294,10 +299,6 @@ private:
 
   /// Mesh contexts used by the participant.
   std::vector<MeshContext *> _usedMeshContexts;
-
-  std::map<DataID, WriteDataContext> _writeDataContexts;
-
-  std::map<DataID, ReadDataContext> _readDataContexts;
 
   bool _useMaster = false;
 
