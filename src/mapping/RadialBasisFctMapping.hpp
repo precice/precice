@@ -529,22 +529,24 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
         in[i] = inputValues[i * valueDim + dim];
       }
 
+      // Solve polynomial QR and substract it form the input data
       if (_polynomial == Polynomial::SEPARATE) {
-        // Solve polynomial QR and substract it form the input data
-
         res = _qrMatrixQ.solve(in);
         in -= (_matrixQ * res);
+      }
 
-        p   = _qrMatrixC.solve(in);
-        out = _matrixA * p;
+      // Integrated polynomial (and separated)
+      p   = _qrMatrixC.solve(in);
+      out = _matrixA * p;
 
+      // Add the polynomial part again for separated polynomial
+      if (_polynomial == Polynomial::SEPARATE) {
         out += (_matrixV * res);
+      }
 
-        // Copy mapped data to ouptut data values
-        for (int i = 0; i < out.size(); i++) {
-          outputValues[i * valueDim + dim] = out[i];
-          // std::cout << "Out value is " << out[i] << std::endl;
-        }
+      // Copy mapped data to ouptut data values
+      for (int i = 0; i < out.size(); i++) {
+        outputValues[i * valueDim + dim] = out[i];
       }
     }
 
