@@ -81,8 +81,11 @@ private:
   /// QR decomposed system matrix. Evaluated basis function on the input mesh
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixC;
 
-  /// QR decomposed system matrix. Evaluated basis function on the input mesh
+  /// QR decomposed polynomial on the input mesh
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixQ;
+
+  /// orthogonal decomposed polynomial on the input mesh (tranposed matrix). Only required for conservative mappings
+  Eigen::CompleteOrthogonalDecomposition<Eigen::MatrixXd> _coDMatrixQT;
 
   /// Vandermonde Matrix for linear polynomial, constructed from vertices of the input mesh
   Eigen::MatrixXd _matrixQ;
@@ -254,8 +257,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       _qrMatrixC                                = _matrixCLU.colPivHouseholderQr();
 
       if (_polynomial == Polynomial::SEPARATE) {
-        // Eigen::MatrixXd qq = _matrixQ.transpose();
-        _qrMatrixQ = _matrixQ.colPivHouseholderQr();
+        if (hasConstraint(CONSERVATIVE)) {
+          const Eigen::MatrixXd qTransposed = _matrixQ.transpose().eval();
+          _coDMatrixQT                      = qTransposed.completeOrthogonalDecomposition();
+        } else {
+          _qrMatrixQ = _matrixQ.colPivHouseholderQr();
+        }
       }
     }
     PRECICE_CHECK(_qrMatrixC.isInvertible(),
@@ -382,9 +389,28 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
         in[i] = inputValues(i * valueDim + dim);
       }
 
-      Au  = _matrixA.transpose() * in;
+      // Au is equal to the eta in our PETSc implementation
+      Au = _matrixA.transpose() * in;
+      PRECICE_ASSERT(Au.size() == _matrixA.cols());
+
+      // mu in the PETSc implementation
       out = _qrMatrixC.solve(Au);
 
+      if (_polynomial == Polynomial::SEPARATE) {
+        const Eigen::VectorXd epsilon = _matrixV.transpose() * in;
+        PRECICE_ASSERT(epsilon.size() == _matrixV.cols());
+
+        // tau = Q^T * mu - epsilon
+        const Eigen::VectorXd tau = _matrixQ.transpose() * out - epsilon;
+        PRECICE_ASSERT(tau.size() == _matrixQ.cols());
+
+        // sigma =  solveTranspose tau
+        const Eigen::VectorXd sigma = _coDMatrixQT.solve(tau);
+        PRECICE_ASSERT(sigma.size() == _matrixQ.rows());
+
+        // out = mu - sigma
+        out -= sigma;
+      }
       // Copy mapped data to output data values
       for (int i = 0; i < out.size() - polyparams; i++) {
         outputValues[i * valueDim + dim] = out[i];
