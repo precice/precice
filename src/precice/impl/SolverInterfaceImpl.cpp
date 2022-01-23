@@ -1826,7 +1826,7 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
   return *_accessor->usedMeshContext(meshName).mesh;
 }
 
-void SolverInterfaceImpl::moveToNextWindow(boost::range_detail::select_second_mutable_range<std::map<DataID, precice::impl::ReadDataContext>> contexts)
+void SolverInterfaceImpl::moveToNextWindow(Participant::ReadDataContextValues contexts)
 {
   for (auto &context : contexts) {
     context.moveToNextWindow();
