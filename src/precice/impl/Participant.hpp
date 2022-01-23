@@ -49,11 +49,15 @@ namespace impl {
 /// Holds coupling state of one participating solver in coupled simulation.
 class Participant {
 private:
+  // needs to be declared here for typedef to work properly
   std::map<DataID, WriteDataContext> _writeDataContexts;
 
   std::map<DataID, ReadDataContext> _readDataContexts;
 
 public:
+  using ReadDataContextValues  = decltype(Participant::_readDataContexts | boost::adaptors::map_values);
+  using WriteDataContextValues = decltype(Participant::_writeDataContexts | boost::adaptors::map_values);
+
   enum MappingConstants {
     MAPPING_LINEAR_CONSERVATIVE,
     MAPPING_LINEAR_CONSISTENT,
@@ -147,12 +151,12 @@ public:
   /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
    */
-  decltype(Participant::_writeDataContexts | boost::adaptors::map_values) writeDataContexts();
+  WriteDataContextValues writeDataContexts();
 
   /** Provides access to all \ref ReadDataContext objects
    * @remarks does not contain nullptr.
    */
-  decltype(Participant::_readDataContexts | boost::adaptors::map_values) readDataContexts();
+  ReadDataContextValues readDataContexts();
 
   /// Is the dataID know to preCICE?
   bool hasData(DataID dataID) const;
