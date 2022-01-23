@@ -130,7 +130,7 @@ public:
    * 
    * A mapping maps the given data from or to _providedData (depending on whether it is a read or write mapping).
    *
-   * @param[in] mappingContext Context of read mapping
+   * @param[in] mappingContext Context of the mapping
    * @param[in] meshContext Context of mesh this mapping is mapping from or to
    */
   virtual void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) = 0;
