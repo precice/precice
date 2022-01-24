@@ -8,6 +8,7 @@
 #include <utility>
 #include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"
+#include "mapping/NearestNeighborGradientMapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/PetRadialBasisFctMapping.hpp"
@@ -121,6 +122,11 @@ MappingConfiguration::MappingConfiguration(
   {
     XMLTag tag(*this, VALUE_NEAREST_PROJECTION, occ, TAG);
     tag.setDocumentation("Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate the nearest projections.");
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG);
+    tag.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries with a gradient optimization.");
     tags.push_back(tag);
   }
 
@@ -303,6 +309,11 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (type == VALUE_NEAREST_PROJECTION) {
     configuredMapping.mapping = PtrMapping(
         new NearestProjectionMapping(constraintValue, dimensions));
+    configuredMapping.isRBF = false;
+    return configuredMapping;
+  } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {
+    configuredMapping.mapping = PtrMapping(
+        new NearestNeighborGradientMapping(constraintValue, dimensions));
     configuredMapping.isRBF = false;
     return configuredMapping;
   }

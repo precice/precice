@@ -132,6 +132,8 @@ private:
   const std::string VALUE_RBF_CPOLYNOMIAL_C0    = "rbf-compact-polynomial-c0";
   const std::string VALUE_RBF_CPOLYNOMIAL_C6    = "rbf-compact-polynomial-c6";
 
+  const std::string VALUE_NEAREST_NEIGHBOR_GRADIENT = "nearest-neighbor-gradient";
+
   const std::string VALUE_TIMING_INITIAL    = "initial";
   const std::string VALUE_TIMING_ON_ADVANCE = "onadvance";
   const std::string VALUE_TIMING_ON_DEMAND  = "ondemand";
