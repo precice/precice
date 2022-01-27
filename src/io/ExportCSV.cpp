@@ -60,6 +60,9 @@ void ExportCSV::doExport(
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
+  if (not location.empty()) {
+    fs::create_directories(outfile);
+  }
   outfile /= filename;
 
   // Prepare filestream
