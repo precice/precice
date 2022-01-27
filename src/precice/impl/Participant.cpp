@@ -103,8 +103,7 @@ void Participant::addWriteData(
     const mesh::PtrMesh &mesh)
 {
   checkDuplicatedData(data);
-  auto inserted = _writeDataContexts.insert(std::make_pair(data->getID(), WriteDataContext(data, mesh)));
-  PRECICE_ASSERT(inserted.second, "addWriteData failed.");
+  _writeDataContexts.emplace(data->getID(), WriteDataContext(data, mesh));
 }
 
 void Participant::addReadData(
@@ -112,8 +111,7 @@ void Participant::addReadData(
     const mesh::PtrMesh &mesh)
 {
   checkDuplicatedData(data);
-  auto inserted = _readDataContexts.insert(std::make_pair(data->getID(), ReadDataContext(data, mesh)));
-  PRECICE_ASSERT(inserted.second, "addReadData failed.");
+  _readDataContexts.emplace(data->getID(), ReadDataContext(data, mesh));
 }
 
 void Participant::addReadMappingContext(
