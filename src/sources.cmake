@@ -125,6 +125,8 @@ target_sources(precice
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/SharedPointer.hpp
     src/io/Export.hpp
+    src/io/ExportCSV.cpp
+    src/io/ExportCSV.hpp
     src/io/ExportContext.hpp
     src/io/ExportVTK.cpp
     src/io/ExportVTK.hpp
