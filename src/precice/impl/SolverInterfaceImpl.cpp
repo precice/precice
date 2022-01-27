@@ -395,7 +395,9 @@ double SolverInterfaceImpl::advance(
 
   // This is the first time advance is called. Initializes the waveform with data from initializeData or 0, if initializeData was not called.
   if (_numberAdvanceCalls == 1) {
-    moveToNextWindow(_accessor->readDataContexts());
+    for (auto &context : _accessor->readDataContexts()) {
+      context.moveToNextWindow();
+    }
   }
 
 #ifndef NDEBUG
@@ -430,7 +432,9 @@ double SolverInterfaceImpl::advance(
   _couplingScheme->advance();
 
   if (_couplingScheme->isTimeWindowComplete()) {
-    moveToNextWindow(_accessor->readDataContexts());
+    for (auto &context : _accessor->readDataContexts()) {
+      context.moveToNextWindow();
+    }
   }
 
   if (not _hasInitializedReadWaveforms) { // necessary, if mesh was reset.
@@ -1824,13 +1828,6 @@ const mesh::Mesh &SolverInterfaceImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
   return *_accessor->usedMeshContext(meshName).mesh;
-}
-
-void SolverInterfaceImpl::moveToNextWindow(Participant::ReadDataContextValues contexts)
-{
-  for (auto &context : contexts) {
-    context.moveToNextWindow();
-  }
 }
 
 } // namespace impl

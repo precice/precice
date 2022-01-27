@@ -726,9 +726,6 @@ private:
   /// Helper for mapWrittenData and mapReadData
   void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
 
-  /// Move to next window and store current data
-  void moveToNextWindow(Participant::ReadDataContextValues contexts);
-
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
 
