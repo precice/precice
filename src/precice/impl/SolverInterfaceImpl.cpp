@@ -1562,22 +1562,28 @@ void SolverInterfaceImpl::mapData(DataContext &context, const std::string &mappi
   PRECICE_TRACE();
   using namespace mapping;
   MappingConfiguration::Timing timing;
-  if (context.hasMapping()) {
-    timing         = context.mappingContext().timing;
-    bool hasMapped = context.mappingContext().hasMappedData;
-    bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
-    mapNow |= timing == MappingConfiguration::INITIAL;
-    if (mapNow && (not hasMapped)) {
-      int inDataID  = context.getFromDataID();
-      int outDataID = context.getToDataID();
-      PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
-                    mappingType, context.getDataName(), context.getMeshName());
-      context.resetToData();
-      PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
-      context.mappingContext().mapping->map(inDataID, outDataID);
-      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
-    }
+
+  if (not context.hasMapping()) {
+    return;
   }
+
+  timing         = context.mappingContext().timing;
+  bool hasMapped = context.mappingContext().hasMappedData;
+  bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
+  mapNow |= timing == MappingConfiguration::INITIAL;
+
+  if ((not mapNow) || hasMapped) {
+    return;
+  }
+
+  int inDataID  = context.getFromDataID();
+  int outDataID = context.getToDataID();
+  PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
+                mappingType, context.getDataName(), context.getMeshName());
+  context.resetToData();
+  PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
+  context.mappingContext().mapping->map(inDataID, outDataID);
+  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
 }
 
 void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contexts)
