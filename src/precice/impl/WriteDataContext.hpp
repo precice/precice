@@ -37,10 +37,10 @@ public:
    *
    * A write mapping maps _providedData to _toData. A WriteDataContext already has _providedData, but additionally requires _toData.
    * 
-   * @param[in] mappingContext provides context of write mapping
-   * @param[in] meshContext provides context of mesh this write mapping is mapping to (_toData)
+   * @param[in] mappingContext Context of write mapping
+   * @param[in] meshContext Context of mesh this write mapping is mapping to (_toData)
    */
-  void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext);
+  void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) override;
 
   /**
    * @brief Performs the mapping associated to this WriteDataContext. Called by SolverInterfaceImpl::mapWrittenData on all WriteDataContext objects.

@@ -158,16 +158,6 @@ WriteDataContext &Participant::writeDataContext(DataID dataID)
   return it->second;
 }
 
-Participant::ReadDataContextValues Participant::readDataContexts()
-{
-  return _readDataContexts | boost::adaptors::map_values;
-}
-
-Participant::WriteDataContextValues Participant::writeDataContexts()
-{
-  return _writeDataContexts | boost::adaptors::map_values;
-}
-
 bool Participant::hasData(DataID dataID) const
 {
   return std::any_of(
