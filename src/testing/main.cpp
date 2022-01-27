@@ -123,9 +123,9 @@ int main(int argc, char *argv[])
   const auto size = utils::Parallel::current()->size();
   logging::setMPIRank(rank);
 
-  if (size < 4) {
+  if (size < 4 && argc < 2) {
     if (rank == 0) {
-      std::cerr << "ERROR: The tests require at least 4 MPI processes.\n";
+      std::cerr << "ERROR: The tests require at least 4 MPI processes. Please use \"mpirun -np 4 ./tesprecice\" or \"ctest\" to run the full testsuite. \n";
     }
     return 2;
   }
