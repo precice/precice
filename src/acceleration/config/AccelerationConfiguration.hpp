@@ -113,8 +113,8 @@ private:
     int                   imvjChunkSize              = 0;
     int                   imvjRSLS_reusedTimeWindows = 0;
     int                   precond_nbNonConstTWindows = -1;
-    bool                  precond_monitor            = false;
-    int                   precond_freezeReset        = 10;
+    bool                  precondMonitor             = false;
+    int                   precondFreezeReset         = 10;
     double                singularityLimit           = 0;
     double                imvjRSSVD_truncationEps    = 0;
     bool                  estimateJacobian           = false;

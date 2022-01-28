@@ -351,14 +351,14 @@ void BaseQNAcceleration::performAcceleration(
     _preconditioner->update(false, _values, _residuals);
     // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
     _preconditioner->apply(_matrixV);
-    if (_preconditioner->updatedWeights() == true ){
+    if (_preconditioner->areWeightsUpdated() == true) {
       // If the pre-scaling weights have been updated, then the normal QR2 filter must be run.
       _qrV.computeQR2 = true;
     }
 
     if (_preconditioner->requireNewQR()) {
-      if ( ( not(_filter == Acceleration::QR2FILTER) && not(_filter == Acceleration::QR3FILTER) ) || (its < 3 && tWindows == 0) ) { //for QR2 filter, there is no need to do this twice
-        // Must reset qrV if (its < 3 && tWindows == 0) as the filter does not perform this step yet.
+      if ((not(_filter == Acceleration::QR2FILTER) && not(_filter == Acceleration::QR3FILTER))) { //for QR2 and QR3 (Fast filter) filter, there is no need to do this twice
+        PRECICE_DEBUG("  QR Reset");
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
@@ -369,21 +369,25 @@ void BaseQNAcceleration::performAcceleration(
       _nbDropCols = 0;
     }
 
-    // apply the configured filter to the LS system
-    // Delete the first column if a zero vector occurs. Do not apply the filter before this stage.
-    if (its == 3 && tWindows == 0){
-      if (_deleteFirstColumn){
-        PRECICE_DEBUG("  Automatically removing the first column in Matrices V and W.");
-        removeMatrixColumn(_matrixV.cols() - 1);
-        _qrV.deleteColumn(_matrixV.cols() - 1);
-        _deleteFirstColumn = false;
+    // apply the configured filter to the LS system. Automatically delete the first column if a zero vector occurs.
+    // Automatic deletion can only occur in the first time window.
+    if (its == 2 && tWindows == 0) {
+      if (_deleteFirstColumn) {
+        // Only remove a column if it exists, i.e. at least 2 columns are present
+        if ((_matrixV.cols() - 1) == 1) {
+          PRECICE_DEBUG("  Automatically removing the first column in Matrices V and W due to an initial zero sub-vector.");
+          removeMatrixColumn(_matrixV.cols() - 1);
+          _qrV.deleteColumn(_matrixV.cols() - 1);
+        }
       }
-    } else if (its > 3 || tWindows > 0){
-      utils::Event applyingFilter("ApplyFilter");
-      applyFilter();
-      applyingFilter.stop();
+      _deleteFirstColumn = false;
     }
-    _preconditioner->updatedWeightsReset();   // Reset the check for the pre-scaling weights.
+
+    utils::Event applyingFilter("ApplyFilter");
+    applyFilter();
+    applyingFilter.stop();
+
+    _preconditioner->updatedWeightsReset(); // Reset the check for the pre-scaling weights.
     // revert scaling of V, in computeQNUpdate all data objects are unscaled.
     _preconditioner->revert(_matrixV);
 
@@ -489,11 +493,11 @@ void BaseQNAcceleration::concatenateCouplingData(
       _values(i + offset)    = values(i);
       _oldValues(i + offset) = oldValues(i);
     }
-    // Delete column if input values fro solver are zero
+    // Delete column if the input values of solver is zero
     double _normValues = utils::MasterSlave::l2norm(values);
-    if (_firstIteration && (_normValues == 0) ){
+    if (_firstIteration && (_normValues == 0)) {
       _deleteFirstColumn = true;
-      PRECICE_DEBUG( "Data with ID: {} in has a zero input vector.", id );
+      PRECICE_DEBUG("Data with ID: {} in has a zero input vector.", id);
     }
     offset += size;
   }

@@ -146,25 +146,19 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
     resetFilter(singularityLimit, delIndices, V);
 
   } else if (_filter == Acceleration::QR3FILTER) {
-    int index        = cols() - 1;
+    int index = cols() - 1;
     // Iterate from the last column to the 2nd column from the left
-    if ( computeQR2 == true) {
-      PRECICE_DEBUG("  Weights were reset. Reverting to QR2.");
+    if (computeQR2 == true) {
+      PRECICE_DEBUG("  Pre-scaling weights were reset. Reverting to QR2 and rebuilding QR.");
       resetFilter(singularityLimit, delIndices, V);
     } else {
-      for (size_t i = index; i > 1 ; i--) {
-        Eigen::VectorXd v = V.col(i);
-        double rho0 = utils::MasterSlave::l2norm(v);
-        if (std::fabs(_R(i, i)) < rho0*singularityLimit) {
+      for (size_t i = index; i > 1; i--) {
+        Eigen::VectorXd v    = V.col(i);
+        double          rho0 = utils::MasterSlave::l2norm(v);
+        if (std::fabs(_R(i, i)) < rho0 * singularityLimit) {
           resetFilter(singularityLimit, delIndices, V);
           break;
-          //deleteColumn(i);
-          //delIndices.push_back(i);
         }
-        /*if ( delIndices.size() > 2 ) 
-          PRECICE_DEBUG("Too many columns deleted. Defaulting to QR2 Filter");
-          resetFilter(singularityLimit, delIndices, V);
-          break; */
       }
     }
     computeQR2 = false;

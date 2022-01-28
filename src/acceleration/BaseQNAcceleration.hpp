@@ -204,7 +204,7 @@ protected:
   impl::QRFactorization _qrV;
 
   /** @brief filter method that is used to maintain good conditioning of the least-squares system
-    *        Either of two types: QR1FILTER, QR2Filter or QR3Filter
+    *        Either of three types: QR1FILTER, QR2Filter, or QR3Filter
     */
   int _filter;
 
@@ -294,8 +294,8 @@ private:
   /// Number of dropped columns in this time window (old time window out of scope)
   int _nbDropCols = 0;
 
-  /// Delete first column if input values are zero
-  bool _deleteFirstColumn = false; 
+  /// @brief Sets the first column to be deleted due to an initial zero sub-vector from a solver.
+  bool _deleteFirstColumn = false;
 };
 } // namespace acceleration
 } // namespace precice

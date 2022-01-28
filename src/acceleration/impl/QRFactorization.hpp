@@ -63,8 +63,8 @@ public:
   virtual ~QRFactorization() {}
 
   /**
-   * @brief performs a reset of A = QR using the QR2 Filter. This eliminates
-   * columns during the reconsrtuction of QR.
+   * @brief Performs a reset of A = QR using the QR2 Filter. This eliminates
+   * columns during the reconstruction of the QR decomposition.
    * 
    */
   void resetFilter(double singularityLimit, std::vector<int> &delIndices, Eigen::MatrixXd &V);
@@ -165,7 +165,11 @@ public:
   // @brief sets the filtering technique to maintain good conditioning of the least squares system
   void setFilter(int filter);
 
+  // @brief forces a complete QR decomposition
   bool computeQR2 = false;
+
+  // @brief forces the truncated SVD to be reset
+  bool resetSVD = false;
 
 private:
   struct givensRot {
