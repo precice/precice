@@ -43,8 +43,8 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterations(1),
       _localParticipant(std::move(localParticipant)),
-      _eps(std::pow(10.0, -1 * validDigits)),
-      _extrapolationOrder(extrapolationOrder)
+      _extrapolationOrder(extrapolationOrder),
+      _eps(std::pow(10.0, -1 * validDigits))
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
                  "Maximum time has to be larger than zero.");
