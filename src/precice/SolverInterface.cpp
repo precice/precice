@@ -107,11 +107,6 @@ bool SolverInterface::isMeshConnectivityRequired(int meshID) const
   return _impl->isMeshConnectivityRequired(meshID);
 }
 
-bool SolverInterface::isGradientRequired(int meshID) const
-{
-  return _impl->isGradientRequired(meshID);
-}
-
 bool SolverInterface::hasData(
     const std::string &dataName, int meshID) const
 {

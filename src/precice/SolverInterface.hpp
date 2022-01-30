@@ -362,16 +362,6 @@ public:
   bool isMeshConnectivityRequired(int meshID) const;
 
   /**
-     * @brief Checks if the given mesh requires additional gradient data.
-     *
-     * preCICE may require gradient information from the solver and
-     *
-     * @param[in] meshID the id of the mesh
-     * @returns whether gradient data is required
-    */
-  bool isGradientRequired(int meshID) const;
-
-  /**
    * @brief Creates a mesh vertex
    *
    * @param[in] meshID the id of the mesh to add the vertex to.

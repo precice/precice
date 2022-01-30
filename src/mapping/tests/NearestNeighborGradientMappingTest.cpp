@@ -59,6 +59,9 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  //Check if gradient is required for mapping
+  BOOST_TEST(mapping.requireGradient() == true);
+
   // Map data with coinciding vertices, has to result in equal values.
   // Distance between in and out vertices is zero
   mapping.computeMapping();
@@ -153,6 +156,9 @@ BOOST_AUTO_TEST_CASE(ConsistentGradientNotConstant)
   precice::mapping::NearestNeighborGradientMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  //Check if gradient is required for mapping
+  BOOST_TEST(mapping.requireGradient() == true);
 
   mapping.computeMapping();
   mapping.map(inDataScalarID, outDataScalarID);

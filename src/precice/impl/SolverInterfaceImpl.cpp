@@ -628,13 +628,6 @@ bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
   return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
 }
 
-bool SolverInterfaceImpl::isGradientRequired(int meshID) const
-{
-  PRECICE_VALIDATE_MESH_ID(meshID);
-  MeshContext &context = _accessor->usedMeshContext(meshID);
-  return context.meshRequirement == mapping::Mapping::MeshRequirement::GRADIENT;
-}
-
 int SolverInterfaceImpl::getMeshVertexSize(
     MeshID meshID) const
 {

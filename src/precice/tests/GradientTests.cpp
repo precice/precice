@@ -32,53 +32,13 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-std::string pathToTests = testing::getPathToSources() + "/precice/tests/";
+std::string pathToTests = testing::getPathToSources() + "/precice/tests/gradient-tests/";
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 
 BOOST_AUTO_TEST_SUITE(GradientMappingTests)
 
 BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
-
-// Check for correct mesh requirements
-
-BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Parallel_A)
-{
-  PRECICE_TEST(1_rank);
-  std::string filename = pathToTests + "nng-unidirectional-parallel.xml";
-
-  SolverInterface interfaceA("A", filename, 0, 1);
-  auto            meshIDA = interfaceA.getMeshID("MeshA");
-  BOOST_TEST(interfaceA.isGradientRequired(meshIDA));
-}
-
-BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Parallel_B)
-{
-  PRECICE_TEST(1_rank);
-  std::string     filename = pathToTests + "nng-unidirectional-parallel.xml";
-  SolverInterface interfaceB("B", filename, 0, 1);
-  auto            meshIDB = interfaceB.getMeshID("MeshB");
-  BOOST_TEST(!interfaceB.isGradientRequired(meshIDB));
-}
-
-BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Serial_A)
-{
-  PRECICE_TEST(1_rank);
-  std::string filename = pathToTests + "nng-unidirectional-serial.xml";
-
-  SolverInterface interfaceA("A", filename, 0, 1);
-  auto            meshIDA = interfaceA.getMeshID("MeshA");
-  BOOST_TEST(interfaceA.isGradientRequired(meshIDA));
-}
-
-BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Serial_B)
-{
-  PRECICE_TEST(1_rank);
-  std::string     filename = pathToTests + "nng-unidirectional-serial.xml";
-  SolverInterface interfaceB("B", filename, 0, 1);
-  auto            meshIDB = interfaceB.getMeshID("MeshB");
-  BOOST_TEST(!interfaceB.isGradientRequired(meshIDB));
-}
 
 // Unidirectional Nearest Neighbor Gradient Read Mapping
 BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Serial_Read_Only)
@@ -97,8 +57,6 @@ BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Serial_Read_Only)
     // Initialize, thus sending the mesh.
     double maxDt = cplInterface.initialize();
     BOOST_TEST(cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
-
-    BOOST_TEST(cplInterface.isGradientRequired(meshOneID));
 
     double valueA = 1.0;
     cplInterface.writeScalarData(dataID, 0, valueA);

@@ -245,9 +245,6 @@ public:
   /// @copydoc SolverInterface::isMeshConnectivityRequired()
   bool isMeshConnectivityRequired(int meshID) const;
 
-  /// Returns true, if gradient data is required for mapping
-  bool isGradientRequired(int meshID) const;
-
   /// Returns true, if the data with given name is used in the given mesh.
   bool hasData(const std::string &dataName, MeshID meshID) const;
 
