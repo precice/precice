@@ -86,7 +86,11 @@ void MeshConfiguration::xmlTagCallback(
     bool        found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
       if (data.name == name) {
-        _meshes.back()->createData(data.name, data.dimensions);
+        if (data.hasGradient) {
+          _meshes.back()->createDataWithGradient(data.name, data.dimensions, _dimensions);
+        } else {
+          _meshes.back()->createData(data.name, data.dimensions);
+        }
         found = true;
         break;
       }

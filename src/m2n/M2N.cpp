@@ -209,7 +209,8 @@ void M2N::createDistributedCommunication(const mesh::PtrMesh &mesh)
 void M2N::send(
     precice::span<double const> itemsToSend,
     int                         meshID,
-    int                         valueDimension)
+    int                         valueDimension,
+    bool                        withGradient)
 {
   if (not _useOnlyMasterCom) {
     PRECICE_ASSERT(_areSlavesConnected);
@@ -222,7 +223,12 @@ void M2N::send(
       _masterCom->receive(ack, 0);
       _masterCom->send(ack, 0);
     }
-    Event e("m2n.sendData", precice::syncMode);
+
+    if (withGradient)
+      Event e("m2n.sendGradientData", precice::syncMode);
+    else
+      Event e("m2n.sendData", precice::syncMode);
+
     _distComs[meshID]->send(itemsToSend, valueDimension);
   } else {
     PRECICE_ASSERT(_isMasterConnected);
@@ -278,7 +284,8 @@ void M2N::broadcastSend(int &itemToSend, mesh::Mesh &mesh)
 
 void M2N::receive(precice::span<double> itemsToReceive,
                   int                   meshID,
-                  int                   valueDimension)
+                  int                   valueDimension,
+                  bool                  withGradient)
 {
   if (not _useOnlyMasterCom) {
     PRECICE_ASSERT(_areSlavesConnected);
@@ -294,7 +301,12 @@ void M2N::receive(precice::span<double> itemsToReceive,
         _masterCom->receive(ack, 0);
       }
     }
-    Event e("m2n.receiveData", precice::syncMode);
+
+    if (withGradient)
+      Event e("m2n.receiveGradientData", precice::syncMode);
+    else
+      Event e("m2n.receiveData", precice::syncMode);
+
     _distComs[meshID]->receive(itemsToReceive, valueDimension);
   } else {
     PRECICE_ASSERT(_isMasterConnected);

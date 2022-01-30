@@ -362,6 +362,16 @@ public:
   bool isMeshConnectivityRequired(int meshID) const;
 
   /**
+     * @brief Checks if the given mesh requires additional gradient data.
+     *
+     * preCICE may require gradient information from the solver and
+     *
+     * @param[in] meshID the id of the mesh
+     * @returns whether gradient data is required
+    */
+  bool isGradientRequired(int meshID) const;
+
+  /**
    * @brief Creates a mesh vertex
    *
    * @param[in] meshID the id of the mesh to add the vertex to.
@@ -625,6 +635,37 @@ public:
       const double *values);
 
   /**
+   * @brief Writes vector gradient data given as block.
+   *
+   * This function writes values of specified vertices to a dataID.
+   * Values are provided as a block of continuous memory.
+   * valueIndices contains the indices of the vertices
+   *
+   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny) in every direction (dX, dY and dZ for 3D in space)
+   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz) in every direction (dX, dY and dZ for 3D in space)
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] size Number n of vertices.
+   * @param[in] valueIndices Indices of the vertices.
+   * @param[in] valuesdX pointer to the vector values derived in X-direction.
+   * @param[in] valuesdY pointer to the vector values derived in Y-direction.
+   * @param[in] valuesdZ pointer to the vector values derived in Z-direction.
+   *
+   * @pre count of available elements at gradient values matches the configured dimension * size
+   * @pre count of available elements at valueIndices matches the given size
+   * @pre initialize() has been called
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void writeBlockVectorGradientData(
+      int           dataID,
+      int           size,
+      const int *   valueIndices,
+      const double *valuesdX,
+      const double *valuesdY,
+      const double *valuesdZ = nullptr);
+
+  /**
    * @brief Writes vector data to a vertex
    *
    * This function writes a value of a specified vertex to a dataID.
@@ -672,6 +713,34 @@ public:
       const double *values);
 
   /**
+   * @brief Writes scalar gradient data given as block.
+   *
+   * This function writes gradient values of specified vertices to a dataID.
+   * Values are provided as a block of continuous memory.
+   * valueIndices contains the indices of the vertices
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] size Number n of vertices.
+   * @param[in] valueIndices Indices of the vertices.
+   * @param[in] valuesdX pointer to the values derived in X-direction.
+   * @param[in] valuesdY pointer to the values derived in Y-direction.
+   * @param[in] valuesdZ pointer to the values derived in Z-direction.
+   *
+   * @pre count of available elements at values matches the given size
+   * @pre count of available elements at valueIndices matches the given size
+   * @pre initialize() has been called
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void writeBlockScalarGradientData(
+      int           dataID,
+      int           size,
+      const int *   valueIndices,
+      const double *valuesdX,
+      const double *valuesdY,
+      const double *valuesdZ = nullptr);
+
+  /**
    * @brief Writes scalar data to a vertex
    *
    * This function writes a value of a specified vertex to a dataID.
@@ -688,6 +757,59 @@ public:
       int    dataID,
       int    valueIndex,
       double value);
+
+  /**
+   * @brief Writes gradient data to a vertex
+   *
+   * This function writes a the corresponding gradient value of a specified vertex to a dataID.
+   * Values are provided as a block of continuous memory.
+   *
+   * The 2D-format of value is (x, y) respectively in directions dX, dY and dZ (if the space is in 3D).
+   * The 3D-format of value is (x, y, z) respectively in directions dX, dY and dZ (if the space is in 3D).
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[in] valuedX pointer to the gradient values in X-direction derived.
+   * @param[in] valuedY pointer to the gradient values in Y-direction derived.
+   * @param[in] valuedZ pointer to the gradient values in Z-direction derived (if the space is in 3D).
+   *
+   * @pre count of available elements at value matches the configured dimension
+   * @pre initialize() has been called
+   * @pre vertex with dataID exists and contains data
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void writeVectorGradientData(
+      int           dataID,
+      int           valueIndex,
+      const double *valuedX,
+      const double *valuedY,
+      const double *valuedZ = nullptr);
+
+  /**
+   * @brief Writes gradient data to a vertex
+   *
+   * This function writes a the corresponding gradient value of a specified vertex to a dataID.
+   * Values are provided as a block of continuous memory.
+   *
+   * @param[in] dataID ID to write to.
+   * @param[in] valueIndex Index of the vertex.
+   * @param[in] valuedX gradient value in dX.
+   * @param[in] valuedY gradient value in dY.
+   * @param[in] valuedZ gradient value in dZ.
+   *
+   * @pre count of available elements at value matches the configured dimension
+   * @pre initialize() has been called
+   * @pre vertex with dataID exists and contains data
+   *
+   * @see SolverInterface::setMeshVertex()
+   */
+  void writeScalarGradientData(
+      int          dataID,
+      int          valueIndex,
+      const double valuedX,
+      const double valuedY,
+      const double valuedZ = 0);
 
   /**
    * @brief Reads vector data into a provided block.

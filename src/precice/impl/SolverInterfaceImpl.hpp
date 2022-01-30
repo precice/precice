@@ -245,6 +245,9 @@ public:
   /// @copydoc SolverInterface::isMeshConnectivityRequired()
   bool isMeshConnectivityRequired(int meshID) const;
 
+  /// Returns true, if gradient data is required for mapping
+  bool isGradientRequired(int meshID) const;
+
   /// Returns true, if the data with given name is used in the given mesh.
   bool hasData(const std::string &dataName, MeshID meshID) const;
 
@@ -359,6 +362,36 @@ public:
   void mapReadDataTo(int toMeshID);
 
   /**
+   * @brief Write vectorial data to the interface mesh
+   *
+   * The exact mapping and communication must be specified in XYZ.
+   *
+   * @param[in] fromDataID ID of the data to be written, e.g. 1 = forces
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
+   * @param[in] dataValue Value of the data to be written
+   */
+  void writeVectorData(
+      int           fromDataID,
+      int           valueIndex,
+      const double *value);
+
+  /**
+   * @brief Write gradient data to the interface mesh
+   *
+   * The exact mapping and communication must be specified in XYZ.
+   *
+   * @param[in] dataID ID of the data to be written, e.g. 1 = forces
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
+   * @param[in] dataValue Value of the gradient data to be written
+   */
+  void writeVectorGradientData(
+      int           fromDataID,
+      int           valueIndex,
+      const double *valuedX,
+      const double *valuedY,
+      const double *valuedZ = nullptr);
+
+  /**
    * @brief Writes vector data values given as block.
    *
    * The block must contain the vector values in the following form:
@@ -376,18 +409,55 @@ public:
       const double *values);
 
   /**
-   * @brief Write vectorial data to the interface mesh
+   * @brief Writes vector data values given as block.
+   *
+   * The block must contain the vector values in the following form for each direction:
+   * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
+   * the number of vector values. In 2D, the z-components are removed.
+   *
+   * @param[in] fromDataID ID of the data to be written.
+   * @param[in] size Number of valueIndices, and number of values * dimensions.
+   * @param[in] valuesX Values of the data dX (derived in X-direction) to be written.
+   * @param[in] valuesY Values of the data dY (derived in Y-direction) to be written.
+   * @param[in] valuesZ Values of the data dZ (derived in Z-direction) to be written (if the space is in 3D).
+   */
+  void writeBlockVectorGradientData(
+      int           fromDataID,
+      int           size,
+      const int *   valueIndices,
+      const double *valuesdX,
+      const double *valuesdY,
+      const double *valuesdZ = nullptr);
+
+  /**
+   * @brief Write scalar data to the interface mesh
+   *
+   * The exact mapping and communication must be specified in XYZ.
+   *
+   * @param fromDataID       [IN] ID of the data to be written (2 = temperature, e.g.)
+   * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
+   * @param dataValue    [IN] Value of the data to be written
+   */
+  void writeScalarData(
+      int    fromDataID,
+      int    valueIndex,
+      double value);
+
+  /**
+   * @brief Write gradient data to the interface mesh
    *
    * The exact mapping and communication must be specified in XYZ.
    *
    * @param[in] fromDataID ID of the data to be written, e.g. 1 = forces
    * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
-   * @param[in] dataValue Value of the data to be written
+   * @param[in] dataValue Value of the gradient data to be written
    */
-  void writeVectorData(
-      int           fromDataID,
-      int           valueIndex,
-      const double *value);
+  void writeScalarGradientData(
+      int          fromDataID,
+      int          valueIndex,
+      const double valuedX,
+      const double valuedY,
+      const double valuedZ = 0);
 
   /**
    * @brief Writes scalar data values given as block.
@@ -403,18 +473,21 @@ public:
       const double *values);
 
   /**
-   * @brief Write scalar data to the interface mesh
+   * @brief Writes scalar gradient data values given as block.
    *
-   * The exact mapping and communication must be specified in XYZ.
-   *
-   * @param fromDataID       [IN] ID of the data to be written (2 = temperature, e.g.)
-   * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
-   * @param dataValue    [IN] Value of the data to be written
+   * @param fromDataID [IN] ID of the data to be written.
+   * @param size [IN] Number of valueIndices, and number of values.
+   * @param valuesX [IN] Values of the data dX to be written.
+   * @param valuesY [IN] Values of the data dY to be written.
+   * @param valuesZ [IN] Values of the data dZ to be written (if the space is in 3D).
    */
-  void writeScalarData(
-      int    fromDataID,
-      int    valueIndex,
-      double value);
+  void writeBlockScalarGradientData(
+      int           fromDataID,
+      int           size,
+      const int *   valueIndices,
+      const double *valuesdX,
+      const double *valuesdY,
+      const double *valuesdZ = nullptr);
 
   /**
    * @brief Reads vector data values given as block.

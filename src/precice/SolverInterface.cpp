@@ -107,6 +107,11 @@ bool SolverInterface::isMeshConnectivityRequired(int meshID) const
   return _impl->isMeshConnectivityRequired(meshID);
 }
 
+bool SolverInterface::isGradientRequired(int meshID) const
+{
+  return _impl->isGradientRequired(meshID);
+}
+
 bool SolverInterface::hasData(
     const std::string &dataName, int meshID) const
 {
@@ -244,12 +249,33 @@ void SolverInterface::writeBlockVectorData(
   _impl->writeBlockVectorData(dataID, size, valueIndices, values);
 }
 
+void SolverInterface::writeBlockVectorGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *valuesdX,
+    const double *valuesdY,
+    const double *valuesdZ)
+{
+  _impl->writeBlockVectorGradientData(dataID, size, valueIndices, valuesdX, valuesdY, valuesdZ);
+}
+
 void SolverInterface::writeVectorData(
     int           dataID,
     int           valueIndex,
     const double *value)
 {
   _impl->writeVectorData(dataID, valueIndex, value);
+}
+
+void SolverInterface::writeVectorGradientData(
+    int           dataID,
+    int           valueIndex,
+    const double *valuedX,
+    const double *valuedY,
+    const double *valuedZ)
+{
+  _impl->writeVectorGradientData(dataID, valueIndex, valuedX, valuedY, valuedZ);
 }
 
 void SolverInterface::writeBlockScalarData(
@@ -261,12 +287,33 @@ void SolverInterface::writeBlockScalarData(
   _impl->writeBlockScalarData(dataID, size, valueIndices, values);
 }
 
+void SolverInterface::writeBlockScalarGradientData(
+    int           dataID,
+    int           size,
+    const int *   valueIndices,
+    const double *valuesdX,
+    const double *valuesdY,
+    const double *valuesdZ)
+{
+  _impl->writeBlockScalarGradientData(dataID, size, valueIndices, valuesdX, valuesdY, valuesdZ);
+}
+
 void SolverInterface::writeScalarData(
     int    dataID,
     int    valueIndex,
     double value)
 {
   _impl->writeScalarData(dataID, valueIndex, value);
+}
+
+void SolverInterface::writeScalarGradientData(
+    int          dataID,
+    int          valueIndex,
+    const double valuedX,
+    const double valuedY,
+    const double valuedZ)
+{
+  _impl->writeScalarGradientData(dataID, valueIndex, valuedX, valuedY, valuedZ);
 }
 
 void SolverInterface::readBlockVectorData(
