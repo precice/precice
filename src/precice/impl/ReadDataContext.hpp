@@ -19,7 +19,7 @@ class ReadDataContext : public DataContext {
 public:
   /**
    * @brief Construct a new ReadDataContext object without a mapping.
-   *
+   * 
    * @param data Data associated with this ReadDataContext.
    * @param mesh Mesh associated with this ReadDataContext.
    * @param interpolationOrder Order of the Waveform stored by this ReadDataContext.

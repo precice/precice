@@ -125,6 +125,8 @@ target_sources(precice
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/SharedPointer.hpp
     src/io/Export.hpp
+    src/io/ExportCSV.cpp
+    src/io/ExportCSV.hpp
     src/io/ExportContext.hpp
     src/io/ExportVTK.cpp
     src/io/ExportVTK.hpp
@@ -171,8 +173,12 @@ target_sources(precice
     src/m2n/config/M2NConfiguration.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
+    src/mapping/NearestNeighborBaseMapping.cpp
+    src/mapping/NearestNeighborBaseMapping.hpp
     src/mapping/NearestNeighborMapping.cpp
     src/mapping/NearestNeighborMapping.hpp
+    src/mapping/NearestNeighborGradientMapping.cpp
+    src/mapping/NearestNeighborGradientMapping.hpp
     src/mapping/NearestProjectionMapping.cpp
     src/mapping/NearestProjectionMapping.hpp
     src/mapping/PetRadialBasisFctMapping.hpp

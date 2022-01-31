@@ -104,6 +104,7 @@ private:
   const std::string VALUE_VTK = "vtk";
   const std::string VALUE_VTU = "vtu";
   const std::string VALUE_VTP = "vtp";
+  const std::string VALUE_CSV = "csv";
 
   int _dimensions = 0;
 

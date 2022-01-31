@@ -1,4 +1,4 @@
-#
+ #
 # This file lists all tests sources that will be compiled into the test executable
 #
 target_sources(testprecice
@@ -29,6 +29,7 @@ target_sources(testprecice
     src/cplscheme/tests/RelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/ResidualRelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/SerialImplicitCouplingSchemeTest.cpp
+    src/io/tests/ExportCSVTest.cpp
     src/io/tests/ExportConfigurationTest.cpp
     src/io/tests/ExportVTKTest.cpp
     src/io/tests/ExportVTPTest.cpp
@@ -39,6 +40,7 @@ target_sources(testprecice
     src/m2n/tests/PointToPointCommunicationTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
     src/mapping/tests/NearestNeighborMappingTest.cpp
+    src/mapping/tests/NearestNeighborGradientMappingTest.cpp
     src/mapping/tests/NearestProjectionMappingTest.cpp
     src/mapping/tests/PetRadialBasisFctMappingTest.cpp
     src/mapping/tests/PolationTest.cpp

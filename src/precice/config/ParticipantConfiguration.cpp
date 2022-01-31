@@ -10,6 +10,7 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
+#include "io/ExportCSV.hpp"
 #include "io/ExportContext.hpp"
 #include "io/ExportVTK.hpp"
 #include "io/ExportVTP.hpp"
@@ -576,6 +577,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       exporter = io::PtrExport(new io::ExportVTU());
     } else if (exportContext.type == VALUE_VTP) {
       exporter = io::PtrExport(new io::ExportVTP());
+    } else if (exportContext.type == VALUE_CSV) {
+      exporter = io::PtrExport(new io::ExportCSV());
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
                     _participants.back()->getName(), exportContext.type);

@@ -26,24 +26,24 @@ class DataContext {
 public:
   /**
    * @brief Get the Name of _providedData.
-   *
+   * 
    * @return std::string Name of _providedData.
    */
   std::string getDataName() const;
 
   /**
-   * @brief Get the dimensions of _providedData.
-   *
-   * @return int Dimensions of _providedData.
-   */
-  int getDataDimensions() const;
-
-  /**
    * @brief Get the ID of _providedData.
-   *
+   * 
    * @return int ID of _providedData.
    */
   int getProvidedDataID() const;
+
+  /**
+   * @brief Get the dimensions of _providedData.
+   * 
+   * @return int Dimensions of _providedData.
+   */
+  int getDataDimensions() const;
 
   /**
    * @brief Get the name of _mesh.

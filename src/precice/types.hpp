@@ -18,7 +18,7 @@ using EdgeID = int;
 using TriangleID = int;
 
 /**
- * Type used for the IDs of data
+ * Type used for the IDs of data (incl. gradient data)
  */
 using DataID = int;
 

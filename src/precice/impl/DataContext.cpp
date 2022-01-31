@@ -8,7 +8,6 @@ logging::Logger DataContext::_log{"impl::DataContext"};
 
 DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 {
-  PRECICE_TRACE();
   PRECICE_ASSERT(data);
   _providedData = data;
   PRECICE_ASSERT(mesh);
@@ -17,42 +16,36 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 
 std::string DataContext::getDataName() const
 {
-  PRECICE_TRACE();
   PRECICE_ASSERT(_providedData);
   return _providedData->getName();
 }
 
-int DataContext::getDataDimensions() const
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(_providedData);
-  return _providedData->getDimensions();
-}
-
 int DataContext::getProvidedDataID() const
 {
-  PRECICE_TRACE();
   PRECICE_ASSERT(_providedData);
   return _providedData->getID();
 }
 
+int DataContext::getDataDimensions() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->getDimensions();
+}
+
 std::string DataContext::getMeshName() const
 {
-  PRECICE_TRACE();
   PRECICE_ASSERT(_mesh);
   return _mesh->getName();
 }
 
 int DataContext::getMeshID() const
 {
-  PRECICE_TRACE();
   PRECICE_ASSERT(_mesh);
   return _mesh->getID();
 }
 
 void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData)
 {
-  PRECICE_TRACE();
   PRECICE_ASSERT(!hasMapping());
   PRECICE_ASSERT(fromData);
   PRECICE_ASSERT(toData);
@@ -67,19 +60,16 @@ void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromDa
 
 bool DataContext::hasMapping() const
 {
-  PRECICE_TRACE();
   return hasReadMapping() || hasWriteMapping();
 }
 
 bool DataContext::hasReadMapping() const
 {
-  PRECICE_TRACE();
   return _toData == _providedData;
 }
 
 bool DataContext::hasWriteMapping() const
 {
-  PRECICE_TRACE();
   return _fromData == _providedData;
 }
 

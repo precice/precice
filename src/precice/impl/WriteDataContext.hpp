@@ -17,7 +17,7 @@ class WriteDataContext : public DataContext {
 public:
   /**
    * @brief Construct a new WriteDataContext object without a mapping.
-   *
+   * 
    * @param data Data associated with this WriteDataContext.
    * @param mesh Mesh associated with this WriteDataContext.
    */
