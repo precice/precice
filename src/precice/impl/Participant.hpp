@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <boost/range/adaptor/map.hpp>
 #include <memory>
 #include <stddef.h>
 #include <string>
@@ -16,7 +17,8 @@
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
-#include "precice/impl/DataContext.hpp"
+#include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
@@ -24,7 +26,6 @@
 
 namespace precice {
 namespace impl {
-class DataContext;
 struct MeshContext;
 struct MappingContext;
 } // namespace impl
@@ -117,41 +118,44 @@ public:
 
   /// @name Data queries
   /// @{
-  /** Provides access to both write and read \ref DataContext
-   * @pre there exists a \ref DataContext for \ref dataID
+  /** Provides access to \ref ReadDataContext
+   * @pre there exists a \ref ReadDataContext for \ref dataID
    */
-  const DataContext &dataContext(DataID dataID) const;
+  const ReadDataContext &readDataContext(DataID dataID) const;
 
-  /** Provides access to both write and read \ref DataContext
-   * @pre there exists a \ref DataContext for \ref dataID
+  /** Provides access to \ref ReadDataContext
+   * @pre there exists a \ref ReadDataContext for \ref dataID
    */
-  DataContext &dataContext(DataID dataID);
+  ReadDataContext &readDataContext(DataID dataID);
 
-  /** Provides access to write \ref DataContext
+  /** Provides access to \ref WriteDataContext
+   * @pre there exists a \ref WriteDataContext for \ref dataID
+   */
+  const WriteDataContext &writeDataContext(DataID dataID) const;
+
+  /** Provides access to \ref WriteDataContext
+   * @pre there exists a \ref WriteDataContext for \ref dataID
+   */
+  WriteDataContext &writeDataContext(DataID dataID);
+
+  /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
    */
-  const utils::ptr_vector<DataContext> &writeDataContexts() const;
+  auto writeDataContexts()
+  {
+    return _writeDataContexts | boost::adaptors::map_values;
+  }
 
-  /** Provides access to write \ref DataContext
+  /** Provides access to all \ref ReadDataContext objects
    * @remarks does not contain nullptr.
    */
-  utils::ptr_vector<DataContext> &writeDataContexts();
-
-  /** Provides access to read \ref DataContext
-   * @remarks does not contain nullptr.
-   */
-  const utils::ptr_vector<DataContext> &readDataContexts() const;
-
-  /** Provides access to read \ref DataContext
-   * @remarks does not contain nullptr.
-   */
-  utils::ptr_vector<DataContext> &readDataContexts();
+  auto readDataContexts()
+  {
+    return _readDataContexts | boost::adaptors::map_values;
+  }
 
   /// Is the dataID know to preCICE?
   bool hasData(DataID dataID) const;
-
-  /// Is the data used by this participant?
-  bool isDataUsed(DataID dataID) const;
 
   /// Is the data used by this participant?
   bool isDataUsed(const std::string &dataName, MeshID meshId) const;
@@ -297,7 +301,7 @@ private:
   std::vector<action::PtrAction> _actions;
 
   /// All mesh contexts involved in a simulation, mesh ID == index.
-  std::vector<MeshContext *> _meshContexts;
+  std::vector<MeshContext *> _meshContexts; // @todo use map here!
 
   /// Read mapping contexts used by the participant.
   utils::ptr_vector<MappingContext> _readMappingContexts;
@@ -308,11 +312,9 @@ private:
   /// Mesh contexts used by the participant.
   std::vector<MeshContext *> _usedMeshContexts;
 
-  std::vector<DataContext *> _dataContexts;
+  std::map<DataID, WriteDataContext> _writeDataContexts;
 
-  utils::ptr_vector<DataContext> _writeDataContexts;
-
-  utils::ptr_vector<DataContext> _readDataContexts;
+  std::map<DataID, ReadDataContext> _readDataContexts;
 
   bool _useMaster = false;
 

@@ -3,7 +3,8 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/impl/DataContext.hpp"
+#include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/WriteDataContext.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -38,7 +39,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   MeshContext toMeshContext(dimensions);
   toMeshContext.mesh = ptrToMesh;
 
-  DataContext dataContext(ptrFromData, ptrFromMesh);
+  WriteDataContext dataContext(ptrFromData, ptrFromMesh);
 
   MappingContext mappingContext;
   mappingContext.fromMeshID = ptrFromMesh->getID();
@@ -51,7 +52,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(dataContext.getProvidedDataID() == ptrFromData->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
 
-  dataContext.configureForWriteMapping(mappingContext, toMeshContext);
+  dataContext.configureMapping(mappingContext, toMeshContext);
 
   // mapping is configured. Write mapping, therefore _providedData == _fromData
   BOOST_TEST(dataContext.hasMapping());
@@ -68,8 +69,6 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(dataContext.mappingContext().hasMappedData == mappingContext.hasMappedData);
   BOOST_TEST(dataContext.mappingContext().mapping == mappingContext.mapping);
   BOOST_TEST(dataContext.mappingContext().timing == mappingContext.timing);
-  dataContext.resetProvidedData();
-  dataContext.resetToData();
 }
 
 BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
@@ -96,7 +95,7 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   MeshContext fromMeshContext(dimensions);
   fromMeshContext.mesh = ptrFromMesh;
 
-  DataContext dataContext(ptrToData, ptrToMesh);
+  ReadDataContext dataContext(ptrToData, ptrToMesh);
 
   MappingContext mappingContext;
   mappingContext.fromMeshID = ptrFromMesh->getID();
@@ -109,7 +108,7 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   BOOST_TEST(dataContext.getProvidedDataID() == ptrToData->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrToMesh->getID());
 
-  dataContext.configureForReadMapping(mappingContext, fromMeshContext);
+  dataContext.configureMapping(mappingContext, fromMeshContext);
 
   // mapping is configured. Write mapping, therefore _providedData == _toData
   BOOST_TEST(dataContext.hasMapping());
@@ -126,8 +125,6 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   BOOST_TEST(dataContext.mappingContext().hasMappedData == mappingContext.hasMappedData);
   BOOST_TEST(dataContext.mappingContext().mapping == mappingContext.mapping);
   BOOST_TEST(dataContext.mappingContext().timing == mappingContext.timing);
-  dataContext.resetProvidedData();
-  dataContext.resetToData();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -23,7 +23,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "partition/ReceivedPartition.hpp"
-#include "precice/impl/DataContext.hpp"
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
@@ -496,7 +495,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   _mappingConfig->resetMappings();
 
   // Set participant data for data contexts
-  for (impl::DataContext &dataContext : participant->writeDataContexts()) {
+  for (auto &dataContext : participant->writeDataContexts()) {
     int fromMeshID = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(fromMeshID) || participant->isDirectAccessAllowed(fromMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
@@ -510,12 +509,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                       "Mesh \"{}\" needs to use data \"{}\" to allow a write mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
                       meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
-        dataContext.configureForWriteMapping(mappingContext, meshContext);
+        dataContext.configureMapping(mappingContext, meshContext);
       }
     }
   }
 
-  for (impl::DataContext &dataContext : participant->readDataContexts()) {
+  for (auto &dataContext : participant->readDataContexts()) {
     int toMeshID = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(toMeshID) || participant->isDirectAccessAllowed(toMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
@@ -529,7 +528,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                       "Mesh \"{}\" needs to use data \"{}\" to allow a read mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
                       meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
-        dataContext.configureForReadMapping(mappingContext, meshContext);
+        dataContext.configureMapping(mappingContext, meshContext);
       }
     }
   }
@@ -656,12 +655,12 @@ void ParticipantConfiguration::checkIllDefinedMappings(
           bool sameDirection = false;
 
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
-            for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
+            for (const auto &dataContext : participant->writeDataContexts()) {
               sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
-            for (const impl::DataContext &dataContext : participant->readDataContexts()) {
+            for (const auto &dataContext : participant->readDataContexts()) {
               sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
