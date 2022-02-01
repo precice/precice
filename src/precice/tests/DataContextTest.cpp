@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(ptrToMesh->getID() != ptrFromMesh->getID());
 
   BOOST_TEST(!dataContext.hasMapping());
-  BOOST_TEST(dataContext.getProvidedDataID() == ptrFromData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrFromData->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
 
   dataContext.configureMapping(mappingContext, toMeshContext);
@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(dataContext.hasMapping());
   BOOST_TEST(fixture.getFromDataID(dataContext) == ptrFromData->getID());
   BOOST_TEST(fixture.getToDataID(dataContext) == ptrToData->getID());
-  BOOST_TEST(dataContext.getProvidedDataID() != ptrToData->getID());
-  BOOST_TEST(dataContext.getProvidedDataID() == ptrFromData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) != ptrToData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrFromData->getID());
   BOOST_TEST(dataContext.getMeshID() != ptrToMesh->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
   BOOST_TEST(fixture.hasWriteMapping(dataContext));
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   BOOST_TEST(ptrToMesh->getID() != ptrFromMesh->getID());
 
   BOOST_TEST(!dataContext.hasMapping());
-  BOOST_TEST(dataContext.getProvidedDataID() == ptrToData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrToData->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrToMesh->getID());
 
   dataContext.configureMapping(mappingContext, fromMeshContext);
@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   BOOST_TEST(dataContext.hasMapping());
   BOOST_TEST(fixture.getFromDataID(dataContext) == ptrFromData->getID());
   BOOST_TEST(fixture.getToDataID(dataContext) == ptrToData->getID());
-  BOOST_TEST(dataContext.getProvidedDataID() == ptrToData->getID());
-  BOOST_TEST(dataContext.getProvidedDataID() != ptrFromData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrToData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) != ptrFromData->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrToMesh->getID());
   BOOST_TEST(dataContext.getMeshID() != ptrFromMesh->getID());
   BOOST_TEST(!fixture.hasWriteMapping(dataContext));

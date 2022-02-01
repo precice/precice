@@ -3,6 +3,11 @@
 namespace precice {
 namespace testing {
 
+int DataContextFixture::getProvidedDataID(precice::impl::DataContext &dataContext)
+{
+  return dataContext.getProvidedDataID();
+}
+
 bool DataContextFixture::hasReadMapping(precice::impl::DataContext &dataContext)
 {
   return dataContext.hasReadMapping();

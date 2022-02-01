@@ -12,6 +12,8 @@ namespace testing {
  */
 class DataContextFixture {
 public:
+  int getProvidedDataID(precice::impl::DataContext &dataContext);
+
   bool hasReadMapping(precice::impl::DataContext &dataContext);
 
   bool hasWriteMapping(precice::impl::DataContext &dataContext);

@@ -32,13 +32,6 @@ public:
   std::string getDataName() const;
 
   /**
-   * @brief Get the ID of _providedData.
-   * 
-   * @return int ID of _providedData.
-   */
-  int getProvidedDataID() const;
-
-  /**
    * @brief Get the dimensions of _providedData.
    * 
    * @return int Dimensions of _providedData.
@@ -65,20 +58,6 @@ public:
    * @return True, if this DataContext is associated with a mapping. False, if not. 
    */
   bool hasMapping() const;
-
-  /**
-   * @brief Informs the user whether this DataContext has a read mapping.
-   * 
-   * @return True, if DataContext has a read mapping.
-   */
-  bool hasReadMapping() const;
-
-  /**
-   * @brief Informs the user whether this DataContext has a write mapping.
-   * 
-   * @return True, if DataContext has a write mapping.
-   */
-  bool hasWriteMapping() const;
 
   /**
    * @brief Links a MappingContext and the MeshContext required by the mapping to this DataContext.
@@ -112,6 +91,20 @@ protected:
   mesh::PtrData _toData;
 
   /**
+   * @brief Informs the user whether this DataContext has a read mapping.
+   * 
+   * @return True, if DataContext has a read mapping.
+   */
+  bool hasReadMapping() const;
+
+  /**
+   * @brief Informs the user whether this DataContext has a write mapping.
+   * 
+   * @return True, if DataContext has a write mapping.
+   */
+  bool hasWriteMapping() const;
+
+  /**
    * @brief Helper to set _mappingContext, _fromData and _toData.
    * 
    * @param mappingContext MappingContext this DataContext will be associated to.
@@ -128,6 +121,13 @@ private:
   mesh::PtrMesh _mesh;
 
   static logging::Logger _log;
+
+  /**
+   * @brief Get the ID of _providedData.
+   * 
+   * @return int ID of _providedData.
+   */
+  int getProvidedDataID() const;
 };
 
 } // namespace impl
