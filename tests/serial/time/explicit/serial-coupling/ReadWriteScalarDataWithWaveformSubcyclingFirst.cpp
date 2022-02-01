@@ -91,8 +91,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     }
 
     BOOST_TEST(readData.size() == nVertices);
+    BOOST_TEST(precice.isReadDataAvailable());
     for (int i = 0; i < nVertices; i++) {
-      precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
+      if (precice.isReadDataAvailable()) {
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
+      }
       if (timestep < nSubsteps) { // in the first window, we only have one sample of data. Therefore constant interpolation
         if (context.isNamed("SolverOne")) {
           BOOST_TEST(readData[i] == readFunction(0, i));
@@ -102,7 +105,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
       } else { // in the following windows we have two samples of data. Therefore linear interpolation
         BOOST_TEST(readData[i] == readFunction(readTime, i));
       }
-      precice.readScalarData(readDataID, vertexIDs[i], currentDt / 2, readData[i]);
+      if (precice.isReadDataAvailable()) {
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt / 2, readData[i]);
+      }
       if (timestep < nSubsteps) { // in the first window, we only have one sample of data. Therefore constant interpolation
         if (context.isNamed("SolverOne")) {
           BOOST_TEST(readData[i] == readFunction(0, i));
@@ -120,10 +125,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
       writeData[i] = writeFunction(time, i);
     }
 
-    BOOST_TEST(writeData.size() == nVertices);
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+    if (precice.isWriteDataRequired(currentDt)) {
+      BOOST_TEST(writeData.size() == nVertices);
+      for (int i = 0; i < nVertices; i++) {
+        writeData[i] = writeFunction(time, i);
+        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+      }
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;

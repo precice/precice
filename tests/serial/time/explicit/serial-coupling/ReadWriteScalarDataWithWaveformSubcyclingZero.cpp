@@ -94,7 +94,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     BOOST_TEST(readData.size() == n_vertices);
     for (int i = 0; i < n_vertices; i++) {
       oldReadData = readData[i];
-      precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
+      if (precice.isReadDataAvailable()) {
+        precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
+      }
       if (precice.isTimeWindowComplete() ||
           (timestep == 0)) {                      // exception: First timestep will also have different data, even though formally no time window is completed.
         BOOST_TEST((readData[i] != oldReadData)); // ensure that read data changes from one step to the next, if a new window is entered
@@ -110,12 +112,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
 
-    BOOST_TEST(writeData.size() == n_vertices);
-    for (int i = 0; i < n_vertices; i++) {
-      oldWriteData = writeData[i];
-      writeData[i] = writeFunction(time, i);
-      BOOST_TEST(writeData[i] != oldWriteData); // ensure that write data differs from one step to the next
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+    if (precice.isWriteDataRequired(currentDt)) {
+      BOOST_TEST(writeData.size() == n_vertices);
+      for (int i = 0; i < n_vertices; i++) {
+        oldWriteData = writeData[i];
+        writeData[i] = writeFunction(time, i);
+        BOOST_TEST(writeData[i] != oldWriteData); // ensure that write data differs from one step to the next
+        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+      }
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;

@@ -93,7 +93,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
       for (int j = 0; j < nSamples; j++) {
         sampleDt = sampleDts[j];
         readTime = time + sampleDt;
-        precice.readScalarData(readDataID, vertexIDs[i], sampleDt, readData[i]);
+        if (precice.isReadDataAvailable()) {
+          precice.readScalarData(readDataID, vertexIDs[i], sampleDt, readData[i]);
+        }
         if (timewindow == 0) {
           BOOST_TEST(readData[i] == readFunction(time, i)); // first window is constant interpolation from initial data
         } else if (timewindow > 0) {
@@ -110,10 +112,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
       writeData[i] = writeFunction(time, i);
     }
 
-    BOOST_TEST(writeData.size() == nVertices);
-    for (int i = 0; i < nVertices; i++) {
-      writeData[i] = writeFunction(time, i);
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+    if (precice.isWriteDataRequired(currentDt)) {
+      BOOST_TEST(writeData.size() == nVertices);
+      for (int i = 0; i < nVertices; i++) {
+        writeData[i] = writeFunction(time, i);
+        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+      }
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
