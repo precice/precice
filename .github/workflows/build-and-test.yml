@@ -119,6 +119,9 @@ jobs:
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands 
           path: build/compile_commands.json
+      - name: Enable compiler annotations
+        uses: electronjoe/gcc-problem-matcher@v1
+        if: ${{ matrix.IMAGE == 'archlinux' }}
       - name: Compile
         working-directory: build
         run: |
