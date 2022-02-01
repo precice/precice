@@ -1016,10 +1016,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
-      context.resetToData();
-      PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
-      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
+      mapData(context, "write");
     }
     mappingContext.hasMappedData = true;
   }
@@ -1052,10 +1049,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.getMeshID() != toMeshID) {
         continue;
       }
-      context.resetToData();
-      PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
-      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
+      mapData(context, "read");
       context.storeDataInWaveformFirstSample();
     }
     mappingContext.hasMappedData = true;
@@ -1665,17 +1659,13 @@ void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext
 
 void SolverInterfaceImpl::mapData(DataContext &context, const std::string &mappingType)
 {
-  if (not context.isMappingRequired()) {
-    return;
-  }
-
-  int inDataID  = context.getFromDataID();
-  int outDataID = context.getToDataID();
+  int fromDataID = context.getFromDataID();
+  int toDataID   = context.getToDataID();
   PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
                 mappingType, context.getDataName(), context.getMeshName());
   context.resetToData();
-  PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
-  context.mappingContext().mapping->map(inDataID, outDataID);
+  PRECICE_DEBUG("Map from dataID {} to dataID: {}", fromDataID, toDataID);
+  context.mappingContext().mapping->map(fromDataID, toDataID);
 }
 
 void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contexts)
@@ -1692,12 +1682,30 @@ void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contex
   }
 }
 
+bool SolverInterfaceImpl::isMappingRequired(DataContext &context)
+{
+  // check whether mapping exists
+  if (not context.hasMapping()) {
+    return false;
+  }
+  // if mapping exists, check whether it has already been performed
+  if (context.mappingContext().hasMappedData) {
+    return false;
+  }
+  // finally, check whether timing asks to map now
+  bool mapOnAdvance = (context.mappingContext().timing == mapping::MappingConfiguration::ON_ADVANCE);
+  bool mapInitial   = (context.mappingContext().timing == mapping::MappingConfiguration::INITIAL);
+  return (mapOnAdvance || mapInitial);
+}
+
 void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
-    mapData(context, "write");
+    if (isMappingRequired(context)) {
+      mapData(context, "write");
+    }
   }
   clearMappings(_accessor->writeMappingContexts());
 }
@@ -1708,7 +1716,9 @@ void SolverInterfaceImpl::mapReadData()
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
-    mapData(context, "read");
+    if (isMappingRequired(context)) {
+      mapData(context, "read");
+    }
     context.storeDataInWaveformFirstSample();
   }
   clearMappings(_accessor->readMappingContexts());

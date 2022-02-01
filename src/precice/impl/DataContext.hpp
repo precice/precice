@@ -79,15 +79,6 @@ public:
   bool hasMapping() const;
 
   /**
-   * @brief Check whether mapping has to be performed. 
-   * 
-   * Checks whether a mapping exists for this context and the timing configuration.
-   * 
-   * @return True, if a mapping has to be performed.
-   */
-  bool isMappingRequired();
-
-  /**
    * @brief Get the _mappingContext associated with this DataContext.
    * 
    * @return const MappingContext The _mappingContext of this DataContext.
