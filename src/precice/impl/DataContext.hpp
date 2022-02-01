@@ -46,23 +46,11 @@ public:
   std::string getDataName() const;
 
   /**
-   * @brief Get the ID of _providedData.
-   * 
-   * @return int ID of _providedData.
-   */
-  int getProvidedDataID() const;
-
-  /**
    * @brief Get the ID of _fromData. Used for performing the mapping outside of this class.
    * 
    * @return int ID of _fromData.
    */
   int getFromDataID() const;
-
-  /**
-   * @brief Purpose unclear. See also https://github.com/precice/precice/issues/1156.
-   */
-  void resetProvidedData();
 
   /**
    * @brief Resets _toData to zero. Used before mapping is performed.
@@ -112,20 +100,6 @@ public:
   const MappingContext mappingContext() const;
 
   /**
-   * @brief Informs the user whether this DataContext has a read mapping.
-   * 
-   * @return True, if DataContext has a read mapping.
-   */
-  bool hasReadMapping() const;
-
-  /**
-   * @brief Informs the user whether this DataContext has a write mapping.
-   * 
-   * @return True, if DataContext has a write mapping.
-   */
-  bool hasWriteMapping() const;
-
-  /**
    * @brief Links a MappingContext and the MeshContext required by the mapping to this DataContext.
    * 
    * A mapping maps the given data from or to _providedData (depending on whether it is a read or write mapping).
@@ -157,6 +131,20 @@ protected:
   mesh::PtrData _toData;
 
   /**
+   * @brief Informs the user whether this DataContext has a read mapping.
+   * 
+   * @return True, if DataContext has a read mapping.
+   */
+  bool hasReadMapping() const;
+
+  /**
+   * @brief Informs the user whether this DataContext has a write mapping.
+   * 
+   * @return True, if DataContext has a write mapping.
+   */
+  bool hasWriteMapping() const;
+
+  /**
    * @brief Helper to set _mappingContext, _fromData and _toData.
    * 
    * @param mappingContext MappingContext this DataContext will be associated to.
@@ -170,6 +158,13 @@ private:
   mesh::PtrMesh _mesh;
 
   static logging::Logger _log;
+
+  /**
+   * @brief Get the ID of _providedData.
+   * 
+   * @return int ID of _providedData.
+   */
+  int getProvidedDataID() const;
 };
 
 } // namespace impl

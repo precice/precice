@@ -5,6 +5,7 @@
 #include "mesh/Vertex.hpp"
 #include "precice/impl/ReadDataContext.hpp"
 #include "precice/impl/WriteDataContext.hpp"
+#include "testing/DataContextFixture.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -18,6 +19,8 @@ BOOST_AUTO_TEST_SUITE(DataContextTests)
 BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
 {
   PRECICE_TEST(1_rank);
+
+  testing::DataContextFixture fixture;
 
   // Create mesh object for from mesh
   int           dimensions  = 3;
@@ -49,7 +52,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(ptrToMesh->getID() != ptrFromMesh->getID());
 
   BOOST_TEST(!dataContext.hasMapping());
-  BOOST_TEST(dataContext.getProvidedDataID() == ptrFromData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrFromData->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
 
   dataContext.configureMapping(mappingContext, toMeshContext);
@@ -58,12 +61,12 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(dataContext.hasMapping());
   BOOST_TEST(dataContext.getFromDataID() == ptrFromData->getID());
   BOOST_TEST(dataContext.getToDataID() == ptrToData->getID());
-  BOOST_TEST(dataContext.getProvidedDataID() != ptrToData->getID());
-  BOOST_TEST(dataContext.getProvidedDataID() == ptrFromData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) != ptrToData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrFromData->getID());
   BOOST_TEST(dataContext.getMeshID() != ptrToMesh->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
-  BOOST_TEST(dataContext.hasWriteMapping());
-  BOOST_TEST(!dataContext.hasReadMapping());
+  BOOST_TEST(fixture.hasWriteMapping(dataContext));
+  BOOST_TEST(!fixture.hasReadMapping(dataContext));
   BOOST_TEST(dataContext.mappingContext().fromMeshID == mappingContext.fromMeshID);
   BOOST_TEST(dataContext.mappingContext().toMeshID == mappingContext.toMeshID);
   BOOST_TEST(dataContext.mappingContext().hasMappedData == mappingContext.hasMappedData);
@@ -74,6 +77,8 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
 BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
 {
   PRECICE_TEST(1_rank);
+
+  testing::DataContextFixture fixture;
 
   // Create mesh object
   int           dimensions = 3;
@@ -105,7 +110,7 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   BOOST_TEST(ptrToMesh->getID() != ptrFromMesh->getID());
 
   BOOST_TEST(!dataContext.hasMapping());
-  BOOST_TEST(dataContext.getProvidedDataID() == ptrToData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrToData->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrToMesh->getID());
 
   dataContext.configureMapping(mappingContext, fromMeshContext);
@@ -114,12 +119,12 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   BOOST_TEST(dataContext.hasMapping());
   BOOST_TEST(dataContext.getFromDataID() == ptrFromData->getID());
   BOOST_TEST(dataContext.getToDataID() == ptrToData->getID());
-  BOOST_TEST(dataContext.getProvidedDataID() == ptrToData->getID());
-  BOOST_TEST(dataContext.getProvidedDataID() != ptrFromData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrToData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) != ptrFromData->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrToMesh->getID());
   BOOST_TEST(dataContext.getMeshID() != ptrFromMesh->getID());
-  BOOST_TEST(!dataContext.hasWriteMapping());
-  BOOST_TEST(dataContext.hasReadMapping());
+  BOOST_TEST(!fixture.hasWriteMapping(dataContext));
+  BOOST_TEST(fixture.hasReadMapping(dataContext));
   BOOST_TEST(dataContext.mappingContext().fromMeshID == mappingContext.fromMeshID);
   BOOST_TEST(dataContext.mappingContext().toMeshID == mappingContext.toMeshID);
   BOOST_TEST(dataContext.mappingContext().hasMappedData == mappingContext.hasMappedData);
