@@ -436,16 +436,21 @@ public:
       double *   values) const;
 
   /**
-   * @brief Reads vector data values given as block from the interface mesh at beginning of time step + dt.
+   * @brief Reads vector data values given as block from the interface mesh at arbitrary point in time of the current time window.
    *
    * The block contains the vector values in the following form:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
+   * 
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
+   * the end of the time step.
    *
    * @param[in] toDataID          ID of the data to be written.
    * @param[in] size              Number of valueIndices, and number of values.
    * @param[in] valueIndices      Indices (from setReadPosition()) of data values.
-   * @param[in] timeStepDt        Point in time where data is sampled relative to the beginning of the current time step
+   * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
    * @param[out] values           Read data value.
    * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
    */
@@ -453,7 +458,7 @@ public:
       int        toDataID,
       int        size,
       const int *valueIndices,
-      double     timeStepDt,
+      double     relativeReadTime,
       double *   values,
       bool       checkExperimental = true) const;
 
@@ -470,18 +475,23 @@ public:
       double *value) const;
 
   /**
-   * @brief Read vector data at a vertex on the interface mesh at beginning of time step + dt.
+   * @brief Read vector data at a vertex on the interface mesh at arbitrary point in time of the current time window.
    *
-   * @param[in] toDataID   ID of the data to be read, e.g. 1 = forces
-   * @param[in] valueIndex Index (from setReadPosition()) of data value.
-   * @param[in] timeStepDt Point in time where data is sampled relative to the beginning of the current time step
-   * @param[out] value     Read data value
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
+   * the end of the time step.
+   * 
+   * @param[in] toDataID          ID of the data to be read, e.g. 1 = forces
+   * @param[in] valueIndex        Index (from setReadPosition()) of data value.
+   * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
+   * @param[out] value            Read data value
    * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
    */
   void readVectorData(
       int     toDataID,
       int     valueIndex,
-      double  timeStepDt,
+      double  relativeReadTime,
       double *value,
       bool    checkExperimenal = true) const;
 
@@ -500,12 +510,17 @@ public:
       double *   values) const;
 
   /**
-   * @brief Reads scalar data values given as block from the interface mesh at beginning of time step + dt.
+   * @brief Reads scalar data values given as block from the interface mesh at arbitrary point in time of the current time window.
    *
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
+   * the end of the time step.
+   * 
    * @param[in] toDataID          ID of the data to be written.
    * @param[in] size              Number of valueIndices, and number of values.
    * @param[in] valueIndices      Indices (from setReadPosition()) of data values.
-   * @param[in] timeStepDt        Point in time where data is sampled relative to the beginning of the current time step
+   * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
    * @param[out] values           Read data value.
    * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
    */
@@ -513,7 +528,7 @@ public:
       int        toDataID,
       int        size,
       const int *valueIndices,
-      double     timeStepDt,
+      double     relativeReadTime,
       double *   values,
       bool       checkExperimental = true) const;
 
@@ -530,18 +545,23 @@ public:
       double &value) const;
 
   /**
-   * @brief Read scalar data from the interface mesh at beginning of time step + dt.
+   * @brief Read scalar data from the interface mesh at arbitrary point in time of the current time window.
    *
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
+   * the end of the time step.
+   * 
    * @param[in] toDataID          ID of the data to be read, e.g. 2 = temperatures
    * @param[in] valueIndex        Index (from setReadPosition()) of data value.
-   * @param[in] timeStepDt        Point in time where data is sampled relative to the beginning of the current time step
+   * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
    * @param[out] value            Read data value
    * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
    */
   void readScalarData(
       int     toDataID,
       int     valueIndex,
-      double  timeStepDt,
+      double  relativeReadTime,
       double &value,
       bool    checkExperimental = true) const;
 
