@@ -42,16 +42,6 @@ public:
    */
   void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) override;
 
-  /**
-   * @brief Performs the mapping associated to this WriteDataContext. Called by SolverInterfaceImpl::mapWrittenData on all WriteDataContext objects.
-   */
-  void mapWrittenData();
-
-  /**
-   * @brief Performs the mapping associated to this WriteDataContext. Called by SolverInterfaceImpl::mapWriteDataFrom.
-   */
-  void mapWriteDataFrom();
-
 private:
   static logging::Logger _log;
 };

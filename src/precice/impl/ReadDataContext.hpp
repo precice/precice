@@ -40,16 +40,6 @@ public:
   void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) override;
 
   /**
-   * @brief Performs the mapping associated to this ReadDataContext. Called by SolverInterfaceImpl::mapReadData on all ReadDataContext objects.
-   */
-  void mapReadData();
-
-  /**
-   * @brief Performs the mapping associated to this ReadDataContext. Called by SolverInterfaceImpl::mapReadDataTo.
-   */
-  void mapReadDataTo();
-
-  /**
    * @brief Allows to sample data at a given point in time insize of the time window
    *
    * @param normalizedDt defines point in time where waveform will be sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the window.
@@ -65,6 +55,11 @@ public:
    * @brief Updates _providedWaveform when moving to the next time window.
    */
   void moveToNextWindow();
+
+  /**
+   * @brief Stores _providedData as first sample of _providedWaveform.
+   */
+  void storeDataInWaveformFirstSample();
 
 private:
   static logging::Logger _log;

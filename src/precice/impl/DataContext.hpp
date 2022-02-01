@@ -32,6 +32,25 @@ public:
   std::string getDataName() const;
 
   /**
+   * @brief Get the ID of _fromData. Used for performing the mapping outside of this class.
+   * 
+   * @return int ID of _fromData.
+   */
+  int getFromDataID() const;
+
+  /**
+   * @brief Resets _toData to zero. Used before mapping is performed.
+   */
+  void resetToData();
+
+  /**
+   * @brief Get the ID of _toData. Used for performing the mapping outside of this class.
+   * 
+   * @return int ID of _toData.
+   */
+  int getToDataID() const;
+
+  /**
    * @brief Get the dimensions of _providedData.
    * 
    * @return int Dimensions of _providedData.
@@ -58,6 +77,22 @@ public:
    * @return True, if this DataContext is associated with a mapping. False, if not. 
    */
   bool hasMapping() const;
+
+  /**
+   * @brief Check whether mapping has to be performed. 
+   * 
+   * Checks whether a mapping exists for this context and the timing configuration.
+   * 
+   * @return True, if a mapping has to be performed.
+   */
+  bool isMappingRequired();
+
+  /**
+   * @brief Get the _mappingContext associated with this DataContext.
+   * 
+   * @return const MappingContext The _mappingContext of this DataContext.
+   */
+  const MappingContext mappingContext() const;
 
   /**
    * @brief Links a MappingContext and the MeshContext required by the mapping to this DataContext.
@@ -112,9 +147,6 @@ protected:
    * @param toData Data the mapping maps to.
    */
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
-
-  /// helper function to check whether mapping has to be performed
-  bool isMappingRequired();
 
 private:
   /// Mesh associated with _providedData.

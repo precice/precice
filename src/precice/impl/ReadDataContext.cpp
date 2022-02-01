@@ -25,27 +25,9 @@ void ReadDataContext::configureMapping(const MappingContext &mappingContext, con
   PRECICE_ASSERT(hasReadMapping());
 }
 
-void ReadDataContext::mapReadData()
+void ReadDataContext::storeDataInWaveformFirstSample()
 {
-  PRECICE_ASSERT(hasReadMapping() || not hasMapping());
-  if (isMappingRequired()) {
-    PRECICE_DEBUG("Map read data \"{}\" from mesh \"{}\"",
-                  getDataName(), getMeshName());
-    PRECICE_ASSERT(hasMapping());
-    _toData->toZero();                                                  // reset _toData
-    _mappingContext.mapping->map(_fromData->getID(), _toData->getID()); // map from _fromData to _toData
-  }
   _providedWaveform->storeAtFirstSample(_providedData->values()); // store mapped or received _providedData in the _providedWaveform
-}
-
-void ReadDataContext::mapReadDataTo()
-{
-  PRECICE_ASSERT(hasReadMapping());
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", getDataName(), getMeshName());
-  _toData->toZero();                                                  // reset _toData
-  _mappingContext.mapping->map(_fromData->getID(), _toData->getID()); // map from _fromData to _toData
-  _providedWaveform->storeAtFirstSample(_providedData->values());     // store mapped or received _providedData in the _providedWaveform
 }
 
 Eigen::VectorXd ReadDataContext::sampleWaveformAt(double normalizedDt)

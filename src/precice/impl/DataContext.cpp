@@ -20,10 +20,23 @@ std::string DataContext::getDataName() const
   return _providedData->getName();
 }
 
-int DataContext::getProvidedDataID() const
+int DataContext::getFromDataID() const
 {
-  PRECICE_ASSERT(_providedData);
-  return _providedData->getID();
+  PRECICE_ASSERT(hasMapping());
+  PRECICE_ASSERT(_fromData);
+  return _fromData->getID();
+}
+
+void DataContext::resetToData()
+{
+  _toData->toZero();
+}
+
+int DataContext::getToDataID() const
+{
+  PRECICE_ASSERT(hasMapping());
+  PRECICE_ASSERT(_toData);
+  return _toData->getID();
 }
 
 int DataContext::getDataDimensions() const
@@ -61,6 +74,11 @@ void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromDa
 bool DataContext::hasMapping() const
 {
   return hasReadMapping() || hasWriteMapping();
+}
+
+const MappingContext DataContext::mappingContext() const
+{
+  return _mappingContext;
 }
 
 bool DataContext::hasReadMapping() const
