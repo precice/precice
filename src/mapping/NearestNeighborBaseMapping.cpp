@@ -26,9 +26,9 @@ NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     std::string mappingName,
     std::string mappingNameShort)
     : Mapping(constraint, dimensions, requireGradient),
-      _requireGradient(requireGradient),
       mappingName(mappingName),
-      mappingNameShort(mappingNameShort)
+      mappingNameShort(mappingNameShort),
+      _requireGradient(requireGradient)
 {
 }
 
@@ -112,6 +112,11 @@ void NearestNeighborBaseMapping::clear()
   } else {
     query::clearCache(output()->getID());
   }
+}
+
+void NearestNeighborBaseMapping::onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace)
+{
+  // Does nothing by default
 }
 
 void NearestNeighborBaseMapping::tagMeshFirstRound()

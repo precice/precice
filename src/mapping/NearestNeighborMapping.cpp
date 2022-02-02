@@ -28,11 +28,6 @@ NearestNeighborMapping::NearestNeighborMapping(
   }
 }
 
-void NearestNeighborMapping::onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace)
-{
-  // No implementation needed for NN because offsets not needed
-}
-
 void NearestNeighborMapping::map(
     int inputDataID,
     int outputDataID)
