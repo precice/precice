@@ -1,0 +1,98 @@
+name: Release Pipeline
+# Creates a draft release, generates packages and attaches them to the release.
+# This is automatically run when vMAJOR.MINOR.PATCH tag is pushed to the repo.
+# The release-draft will run before the other jobs, but it will succeed even
+# if the release already exists.
+on:
+  push:
+    tags:
+      - v*.*.*
+
+  workflow_dispatch:
+
+jobs:
+  release-draft:
+    name: 'Draft release'
+    runs-on: ubuntu-latest
+    steps:
+        - name: "Create draft release"
+          uses: softprops/action-gh-release@v1
+          with:
+            draft: True
+
+  package-ubuntu:
+    needs: release-draft
+    name: 'Package Ubuntu ${{ matrix.UBUNTU }}'
+    runs-on: ubuntu-latest
+    container: 'ubuntu:${{ matrix.UBUNTU }}'
+    strategy:
+      fail-fast: true
+      matrix:
+        UBUNTU: ["18.04", "20.04", "21.04", "21.10"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Generate build directory
+        run: mkdir -p build
+      - name: Install common dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          TZ: Europe/Berlin
+        run: |
+          apt update
+          apt -y upgrade
+          apt -y install git build-essential lsb-release cmake libeigen3-dev libxml2-dev libboost-all-dev python3-dev python3-numpy
+      - name: Install PETSc
+        if: ${{ matrix.UBUNTU != '18.04' }}
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt install -y petsc-dev
+      - name: Configure
+        working-directory: build
+        env:
+          PETSc: ${{ matrix.UBUNTU != '18.04' }}
+        run: |
+          cmake --version
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_PETScMapping=${{ env.PETSc }} -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+      - name: Compile
+        working-directory: build
+        run: make -j $(nproc)
+      - name: Create packages
+        working-directory: build
+        run: cpack
+      - name: Upload debian package
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/libprecice*.deb*
+          file_glob: true
+          tag: ${{ github.ref }}
+
+  dockerfile:
+    name: "Release Dockerfiles"
+    needs: release-draft
+    runs-on: ubuntu-latest
+    env:
+        docker_username: precice
+    steps:
+      - name: Get tag
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+        with:
+          strip_v: true
+      - uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.docker_username }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push Dockerfile
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          file: "./tools/releasing/packaging/docker/Dockerfile"
+          tags: ${{ env.docker_username }}/precice:${{ steps.tag.outputs.tag }},${{ env.docker_username }}/precice:latest
+          build-args: |
+            version=${{ steps.tag.outputs.tag }}
