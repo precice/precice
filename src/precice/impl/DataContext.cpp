@@ -20,6 +20,12 @@ std::string DataContext::getDataName() const
   return _providedData->getName();
 }
 
+int DataContext::getProvidedDataID() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->getID();
+}
+
 int DataContext::getFromDataID() const
 {
   PRECICE_ASSERT(hasMapping());
@@ -82,11 +88,6 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
-const MappingContext DataContext::mappingContext() const
-{
-  return _mappingContext;
-}
-
 bool DataContext::hasReadMapping() const
 {
   return _toData == _providedData;
@@ -95,6 +96,11 @@ bool DataContext::hasReadMapping() const
 bool DataContext::hasWriteMapping() const
 {
   return _fromData == _providedData;
+}
+
+const MappingContext DataContext::mappingContext() const
+{
+  return _mappingContext;
 }
 
 } // namespace impl

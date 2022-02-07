@@ -32,6 +32,13 @@ public:
   std::string getDataName() const;
 
   /**
+   * @brief Get the ID of _providedData.
+   * 
+   * @return int ID of _providedData.
+   */
+  int getProvidedDataID() const;
+
+  /**
    * @brief Get the ID of _fromData. Used for performing the mapping outside of this class.
    * 
    * @return int ID of _fromData.
