@@ -17,7 +17,7 @@
     <participant name="SolverOne">
       <use-mesh name="MeshOne" provide="on" />
       <write-data name="DataOne" mesh="MeshOne" />
-      <read-data name="DataTwo" mesh="MeshOne" waveform-order="0" />
+      <read-data name="DataTwo" mesh="MeshOne" />
     </participant>
 
     <participant name="SolverTwo">
@@ -34,17 +34,17 @@
         to="MeshTwo"
         constraint="consistent" />
       <write-data name="DataTwo" mesh="MeshTwo" />
-      <read-data name="DataOne" mesh="MeshTwo" waveform-order="0" />
+      <read-data name="DataOne" mesh="MeshTwo" />
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />
 
-    <coupling-scheme:serial-explicit>
+    <coupling-scheme:parallel-explicit>
       <participants first="SolverOne" second="SolverTwo" />
       <max-time-windows value="5" />
       <time-window-size value="2.0" />
-      <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+      <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
       <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
-    </coupling-scheme:serial-explicit>
+    </coupling-scheme:parallel-explicit>
   </solver-interface>
 </precice-configuration>

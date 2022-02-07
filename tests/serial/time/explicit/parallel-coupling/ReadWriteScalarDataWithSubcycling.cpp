@@ -11,14 +11,14 @@ BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Explicit)
-BOOST_AUTO_TEST_SUITE(SerialCoupling)
+BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 
 /**
- * @brief Test to run a simple coupling with zeroth order waveform subcycling.
- * 
- * Provides a dt argument to the read function, but since a zeroth order waveform is used the result should be identical to the case without waveform relaxation
+ * @brief Test to run a simple coupling with subcycling.
+ *
+ * Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
@@ -85,12 +85,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
   precice.initializeData();
 
   while (precice.isCouplingOngoing()) {
-    double readTime;
-    if (context.isNamed("SolverOne")) {
-      readTime = timewindow * windowDt; // SolverOne lags one window behind SolverTwo for serial-explicit coupling.
-    } else {
-      readTime = (timewindow + 1) * windowDt;
-    }
+    double readTime = timewindow * windowDt; // both solvers lags one window behind for parallel-explicit coupling.
     BOOST_TEST(readData.size() == n_vertices);
     for (int i = 0; i < n_vertices; i++) {
       oldReadData = readData[i];
