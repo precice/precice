@@ -3,16 +3,21 @@ FROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get -qq update && apt-get -qq install wget software-properties-common git build-essential pkg-config sudo
 
-# Install preCICE v2.2.1 from the Debian package
-RUN wget https://github.com/precice/precice/releases/download/v2.2.1/libprecice2_2.2.1_focal.deb && \
-    apt install -y ./libprecice2_2.2.1_focal.deb
+# Install preCICE v2.3.0 from the Debian package
+RUN wget https://github.com/precice/precice/releases/download/v2.3.0/libprecice2_2.3.0_focal.deb && \
+    apt install -y ./libprecice2_2.3.0_focal.deb
 
-# Create user precice
-ARG uid=1000
-ARG gid=1000
+# Create user precice.
+# Deliberately not uid=1000, to monitor any issues with wrong uids when running locally on single-user systems.
+ARG uid=1001
+ARG gid=1001
 RUN groupadd -g ${gid} precice \
     && useradd -u ${uid} -g ${gid} -m -s /bin/bash precice \
     && sudo usermod -a -G sudo precice
+
+# Create auxiliary user precice-aux. Used in the tutorials.
+RUN useradd -u 1002 -g 1001 -m -s /bin/bash precice-aux \
+    && sudo usermod -a -G sudo precice-aux
 
 # Setup passwordless sudo
 RUN echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers

@@ -1,5 +1,8 @@
 name: Build and store a Docker image to the GHCR
-on: push
+on:
+  push:
+  workflow_dispatch:
+
 jobs:
   build-docker:
     runs-on: ubuntu-latest
