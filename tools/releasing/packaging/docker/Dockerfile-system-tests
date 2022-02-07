@@ -7,25 +7,25 @@ RUN apt-get -qq update && apt-get -qq install wget software-properties-common gi
 RUN wget https://github.com/precice/precice/releases/download/v2.3.0/libprecice2_2.3.0_focal.deb && \
     apt install -y ./libprecice2_2.3.0_focal.deb
 
-# Create user precice.
-# Deliberately not uid=1000, to monitor any issues with wrong uids when running locally on single-user systems.
-ARG uid=1001
-ARG gid=1001
-RUN groupadd -g ${gid} precice \
-    && useradd -u ${uid} -g ${gid} -m -s /bin/bash precice \
-    && sudo usermod -a -G sudo precice
+# # Create user precice.
+# # Deliberately not uid=1000, to monitor any issues with wrong uids when running locally on single-user systems.
+# ARG uid=1001
+# ARG gid=1001
+# RUN groupadd -g ${gid} precice \
+#     && useradd -u ${uid} -g ${gid} -m -s /bin/bash precice \
+#     && sudo usermod -a -G sudo precice
 
-# Create auxiliary user precice-aux. Used in the tutorials.
-RUN useradd -u 1002 -g 1001 -m -s /bin/bash precice-aux \
-    && sudo usermod -a -G sudo precice-aux
+# # Create auxiliary user precice-aux. Used in the tutorials.
+# RUN useradd -u 1002 -g 1001 -m -s /bin/bash precice-aux \
+#     && sudo usermod -a -G sudo precice-aux
 
-# Setup passwordless sudo
-RUN echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
+# # Setup passwordless sudo
+# RUN echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 
-# Switch to the user precice
-USER precice
-WORKDIR /home/precice
-ENV USER=precice
+# # Switch to the user precice
+# USER precice
+# WORKDIR /home/precice
+# ENV USER=precice
 
-# Use bash instead of default sh
-SHELL ["/bin/bash", "-c"]
+# # Use bash instead of default sh
+# SHELL ["/bin/bash", "-c"]
