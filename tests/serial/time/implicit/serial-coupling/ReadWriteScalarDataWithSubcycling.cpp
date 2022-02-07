@@ -133,7 +133,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       for (int i = 0; i < n_vertices; i++) {
         oldWriteData = writeData[i];
         writeData[i] = writeFunction(time, i);
-        BOOST_TEST(writeData[i] != oldWriteData); // ensure that write data differs from one step to the next
         precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
       }
     }

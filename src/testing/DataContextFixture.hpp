@@ -13,16 +13,6 @@ namespace testing {
 class DataContextFixture {
 public:
   int getProvidedDataID(precice::impl::DataContext &dataContext);
-
-  bool hasReadMapping(precice::impl::DataContext &dataContext);
-
-  bool hasWriteMapping(precice::impl::DataContext &dataContext);
-
-  const impl::MappingContext mappingContext(precice::impl::DataContext &dataContext) const;
-
-  int getFromDataID(precice::impl::DataContext &dataContext) const;
-
-  int getToDataID(precice::impl::DataContext &dataContext) const;
 };
 
 } // namespace testing

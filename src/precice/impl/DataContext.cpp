@@ -27,6 +27,12 @@ int DataContext::getFromDataID() const
   return _fromData->getID();
 }
 
+void DataContext::resetProvidedData()
+{
+  PRECICE_TRACE();
+  _providedData->toZero();
+}
+
 void DataContext::resetToData()
 {
   _toData->toZero();

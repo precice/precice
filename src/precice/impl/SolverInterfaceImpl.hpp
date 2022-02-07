@@ -786,6 +786,9 @@ private:
       double                                  computedTimeWindowPart,
       double                                  timeWindowSize);
 
+  /// Resets written data, displacements and mesh neighbors to export.
+  void resetWrittenData();
+  
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
       const config::SolverInterfaceConfiguration &config);
