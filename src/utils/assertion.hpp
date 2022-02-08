@@ -66,7 +66,7 @@ static constexpr char const *ASSERT_FMT =
                              getStacktrace())                            \
               << std::flush;                                             \
     std::cout.flush();                                                   \
-    PRECICE_ASSERT_WRAPPER();                                             \
+    PRECICE_ASSERT_WRAPPER();                                            \
   }
 
 #define PRECICE_ASSERT_IMPL_N(check, ...) \
