@@ -171,7 +171,18 @@ void SolverInterfaceImpl::configure(
 #ifndef NDEBUG
     PRECICE_INFO("Configuration: Debug");
 #else
-    PRECICE_INFO("Configuration: Release (Debug and Trace log unavailable)");
+    // Assemble and print release message
+    std::string releaseMessage = "Release";
+#ifndef PRECICE_NO_DEBUG_LOG
+    releaseMessage.append(" + debug log");
+#endif
+#ifndef PRECICE_NO_TRACE_LOG
+    releaseMessage.append(" + trace log");
+#endif
+#ifndef PRECICE_NO_ASSERTIONS
+    releaseMessage.append(" + assertions");
+#endif
+    PRECICE_INFO("Configuration: {}", releaseMessage);
 #endif
     PRECICE_INFO("Configuring preCICE with configuration \"{}\"", configurationFileName);
     PRECICE_INFO("I am participant \"{}\"", _accessorName);
