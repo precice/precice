@@ -10,7 +10,7 @@ set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 # Find Mandatory Dependencies
 # Find Configurable Dependencies
 # Configuration of Target precice
-# Configuration of Target binprecice
+# Configuration of Target precice-tools
 # Configuration of Target testprecice
 # Install Targets for precice
 # CPack
@@ -346,15 +346,15 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 
 
 #
-# Configuration of Target binprecice
+# Configuration of Target precice-tools
 #
 
-add_executable(binprecice "src/drivers/main.cpp")
-target_link_libraries(binprecice
+add_executable(precice-tools "src/drivers/main.cpp")
+target_link_libraries(precice-tools
   PRIVATE
   precice
   )
-set_target_properties(binprecice PROPERTIES
+set_target_properties(precice-tools PROPERTIES
   # precice is a C++14 project
   CXX_STANDARD 14
   CXX_STANDARD_REQUIRED Yes
@@ -429,9 +429,9 @@ endif()
 
 # Setup General Install for:
 # precice - the library
-# binprecice - the precice binary
+# precice-tools - the precice binary
 include(GNUInstallDirs)
-install(TARGETS precice binprecice
+install(TARGETS precice precice-tools
   EXPORT preciceTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -504,7 +504,7 @@ mark_as_advanced(PRECICE_PACKAGING_DIR)
 find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
   # Process manpages for binaries
-  file(COPY docs/man/man1/binprecice.1 DESTINATION packaging/man1)
+  file(COPY docs/man/man1/precice-tools.1 DESTINATION packaging/man1)
   if(PRECICE_InstallTest)
     file(COPY docs/man/man1/testprecice.1 DESTINATION packaging/man1)
   endif()

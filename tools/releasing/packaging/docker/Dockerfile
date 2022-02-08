@@ -11,4 +11,4 @@ RUN echo "$version" | grep "v[0-9]\+\.[0-9]\+\.[0-9]\+" > /dev/null # The versio
 RUN wget -q -O libprecice.deb https://github.com/precice/precice/releases/download/${version}/libprecice`echo ${version} | sed 's/v\([0-9]\+\)\.\([0-9]\+\.[0-9]\+\)/\1_\1.\2/'`_focal.deb && \
     apt-get update && apt-get -yy install ./libprecice.deb && \
     rm libprecice.deb && rm -rf /var/lib/apt/lists/* && \
-    binprecice xml > /dev/null # Make sure the installation is functional
+    precice-tools xml > /dev/null # Make sure the installation is functional
