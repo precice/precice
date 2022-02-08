@@ -361,6 +361,17 @@ set_target_properties(precice-tools PROPERTIES
   CXX_EXTENSIONS No
   )
 
+# Add link for backwards compatibility
+# TODO remove in 3.0.0
+add_custom_target(
+  binprecice
+  ALL
+  COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
+  DEPENDS precice-tools
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  BYPRODUCTS binprecice
+  )
+
 #
 # Configuration of Target testprecice
 #
@@ -439,6 +450,10 @@ install(TARGETS precice precice-tools
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   )
+
+# Install the binprecice link for backwards compatibility
+# TODO remove in 3.0.0
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if(BUILD_TESTING AND PRECICE_InstallTest)
   # Install the testprecice target
