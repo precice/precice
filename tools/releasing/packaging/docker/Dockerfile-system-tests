@@ -19,8 +19,8 @@ RUN wget https://github.com/precice/precice/releases/download/v2.3.0/libprecice2
 # RUN useradd -u 1002 -g 1001 -m -s /bin/bash precice-aux \
 #     && sudo usermod -a -G sudo precice-aux
 
-# # Setup passwordless sudo
-# RUN echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
+# Setup passwordless sudo
+RUN echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # # Switch to the user precice
 # USER precice
