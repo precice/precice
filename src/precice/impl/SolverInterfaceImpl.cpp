@@ -544,7 +544,9 @@ bool SolverInterfaceImpl::isReadDataAvailable() const
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isReadDataAvailable().");
   PRECICE_CHECK(_state != State::Finalized, "isReadDataAvailable() cannot be called after finalize().");
-  return _couplingScheme->hasDataBeenReceived();
+  bool available = _couplingScheme->hasDataBeenReceived();
+  available |= (_allowsExperimental && _couplingScheme->hasInitialDataBeenReceived()); // if waveform relaxation is allowed, we always return true as soon as initialData is available.
+  return available;
 }
 
 bool SolverInterfaceImpl::isWriteDataRequired(

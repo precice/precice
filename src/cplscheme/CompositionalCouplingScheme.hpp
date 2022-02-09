@@ -126,8 +126,17 @@ public:
    */
   bool willDataBeExchanged(double lastSolverTimestepLength) const final override;
 
-  /// Returns true, if data has been exchanged in last call of advance().
-  virtual bool hasDataBeenReceived() const final override;
+  /**
+   * @brief checks all coupling schemes this coupling scheme is composed of.
+   * @returns true, if data has been received in call of initializeData().
+   */
+  bool hasInitialDataBeenReceived() const override final;
+
+  /**
+   * @brief checks all coupling schemes this coupling scheme is composed of.
+   * @returns true, if data has been exchanged in last call of advance().
+   */
+  bool hasDataBeenReceived() const final override;
 
   /**
    * @brief Returns the currently computed time of the coupling scheme.

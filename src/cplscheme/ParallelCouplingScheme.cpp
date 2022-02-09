@@ -39,12 +39,12 @@ void ParallelCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+      checkInitialDataHasBeenReceived();
     }
   } else { // second participant
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+      checkInitialDataHasBeenReceived();
     }
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
