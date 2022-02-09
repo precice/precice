@@ -1,5 +1,9 @@
 #pragma once
 
+#include <iostream>
+#include <cstdlib>
+#include "utils/fmt.hpp"
+
 // Assertions are disabled in release (NDEBUG) builds by default.
 // To enable them anyhow, enable the CMake option PRECICE_RELEASE_WITH_ASSERTIONS.
 
@@ -15,15 +19,11 @@
 
 #else
 
-#include <iostream>
-
 #include <boost/current_function.hpp>
 #include <boost/preprocessor/comparison/greater.hpp>
 #include <boost/preprocessor/control/if.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/variadic/size.hpp>
-
-#include "utils/fmt.hpp"
 
 #include "utils/ArgumentFormatter.hpp"
 #include "utils/Parallel.hpp"
@@ -48,7 +48,6 @@ static constexpr char const *ASSERT_FMT =
 #include <cassert>
 #define PRECICE_ASSERT_WRAPPER() assert(false)
 #else
-#include <cstdlib>
 #define PRECICE_ASSERT_WRAPPER() std::abort()
 #endif
 
