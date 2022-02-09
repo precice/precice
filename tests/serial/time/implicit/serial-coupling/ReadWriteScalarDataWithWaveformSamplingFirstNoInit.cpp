@@ -85,7 +85,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
       windowStartStep = timestep;
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
-    if (iterations == 0 && timewindow == 0) {
+
+    if (context.isNamed("SolverOne") && iterations == 0 && timewindow == 0) {
       BOOST_TEST(!precice.isReadDataAvailable());
     } else {
       BOOST_TEST(precice.isReadDataAvailable());
@@ -103,15 +104,15 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
         } else if (context.isNamed("SolverOne") && iterations == 0 && timewindow > 0) { // always use constant extrapolation in first iteration (from writeData of second participant at end previous window).
           BOOST_TEST(readData[i] == readFunction(time, i));
         } else if (context.isNamed("SolverTwo") && timewindow == 0) {
-          BOOST_TEST(readData[i] == readFunction(windowDt, i));  // @todo: This is actually a problem. SolverTwo should always use zero initial data for interpolation, currently only data from end of window.
-        } else if (((context.isNamed("SolverOne") && iterations > 0) || 
-                    context.isNamed("SolverTwo"))
-                    && timewindow == 0) {
+          BOOST_TEST(readData[i] == readFunction(windowDt, i)); // @todo: This is actually a problem. SolverTwo should always use zero initial data for interpolation, currently only data from end of window.
+        } else if (((context.isNamed("SolverOne") && iterations > 0) ||
+                    context.isNamed("SolverTwo")) &&
+                   timewindow == 0) {
           // first window is special, because of interpolation between zero initial data and data at end of first window.
           BOOST_TEST(readData[i] == (readTime) / windowDt * readFunction(windowDt, i)); // self-made linear interpolation.
-        } else if (((context.isNamed("SolverOne") && iterations > 0) ||                   // SolverOne can only perform interpolation in later iterations
+        } else if (((context.isNamed("SolverOne") && iterations > 0) ||                 // SolverOne can only perform interpolation in later iterations
                     context.isNamed("SolverTwo"))                                       // Always use linear interpolation for SolverTwo
-                    && timewindow > 0) { 
+                   && timewindow > 0) {
           BOOST_TEST(readData[i] == readFunction(readTime, i));
         } else {
           BOOST_TEST(false); // unreachable!

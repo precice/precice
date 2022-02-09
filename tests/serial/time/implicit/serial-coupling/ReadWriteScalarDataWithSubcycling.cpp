@@ -95,6 +95,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
 
+    if (timestep % nSubsteps == 0) {
+      BOOST_TEST(precice.isReadDataAvailable());
+    } else {
+      BOOST_TEST(!precice.isReadDataAvailable());
+    }
+
     BOOST_TEST(readData.size() == n_vertices);
     // @todo split in SolverOne and SolverTwo?
     for (int i = 0; i < n_vertices; i++) {
