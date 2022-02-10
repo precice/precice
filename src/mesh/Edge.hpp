@@ -41,9 +41,6 @@ public:
   /// Returns the edge's vertex as const object with index 0 or 1.
   const Vertex &vertex(int i) const;
 
-  /// Computes the normal of the edge
-  Eigen::VectorXd computeNormal() const;
-
   /// Returns the (among edges) unique ID of the edge.
   EdgeID getID() const;
 
