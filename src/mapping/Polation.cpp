@@ -18,9 +18,7 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Edge &element)
   const auto bcoords = math::barycenter::calcBarycentricCoordsForEdge(
                            A.getCoords(),
                            B.getCoords(),
-                           element.computeNormal(),
-                           location)
-                           .barycentricCoords;
+                           location);
 
   _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
   _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
@@ -37,9 +35,7 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Triangle &elemen
                            A.getCoords(),
                            B.getCoords(),
                            C.getCoords(),
-                           element.computeNormal(),
-                           location)
-                           .barycentricCoords;
+                           location);
 
   _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
   _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
