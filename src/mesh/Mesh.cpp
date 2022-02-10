@@ -1,7 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <array>
-#include <boost/container/flat_map.hpp>
 #include <functional>
 #include <memory>
 #include <ostream>
@@ -363,56 +362,6 @@ void Mesh::tagAll()
   for (auto &vertex : _vertices) {
     vertex.tag();
   }
-}
-
-template <typename UnaryPredicate>
-void Mesh::filterAndAddMesh(Mesh const &other, UnaryPredicate filter)
-{
-  PRECICE_TRACE();
-  PRECICE_ASSERT(_dimensions == other.getDimensions());
-
-  boost::container::flat_map<VertexID, Vertex *> vertexMap;
-  vertexMap.reserve(other.vertices().size());
-  Eigen::VectorXd coords(_dimensions);
-  for (const Vertex &vertex : other.vertices()) {
-    if (filter(vertex)) {
-      coords    = vertex.getCoords();
-      Vertex &v = createVertex(coords);
-      v.setGlobalIndex(vertex.getGlobalIndex());
-      if (vertex.isTagged())
-        v.tag();
-      v.setOwner(vertex.isOwner());
-      PRECICE_ASSERT(vertex.getID() >= 0, vertex.getID());
-      vertexMap[vertex.getID()] = &v;
-    }
-  }
-
-  boost::container::flat_map<EdgeID, Edge *> edgeMap;
-  edgeMap.reserve(other.edges().size());
-  // you cannot just take the vertices from the edge and add them,
-  // since you need the vertices from the new mesh
-  // (which may differ in IDs)
-  for (const Edge &edge : other.edges()) {
-    VertexID vertexIndex1 = edge.vertex(0).getID();
-    VertexID vertexIndex2 = edge.vertex(1).getID();
-    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
-                   (vertexMap.count(vertexIndex2) == 1));
-    Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-    edgeMap[edge.getID()] = &e;
-  }
-
-  if (_dimensions == 3) {
-    for (const Triangle &triangle : other.triangles()) {
-      EdgeID edgeIndex1 = triangle.edge(0).getID();
-      EdgeID edgeIndex2 = triangle.edge(1).getID();
-      EdgeID edgeIndex3 = triangle.edge(2).getID();
-      PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
-                     (edgeMap.count(edgeIndex2) == 1) &&
-                     (edgeMap.count(edgeIndex3) == 1));
-      createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-    }
-  }
-  meshChanged(*this);
 }
 
 void Mesh::addMesh(Mesh const &other)
