@@ -25,16 +25,16 @@ Eigen::Vector2d calcBarycentricCoordsForEdge(
 
   Vector2d barycentricCoords;
   VectorXd ab, ap;
-  double lenAb, lenProjected;
+  double   lenAb, lenProjected;
 
   // constant per edge
-  ab = edgeB - edgeA;
+  ab    = edgeB - edgeA;
   lenAb = sqrt(ab.dot(ab));
 
   // varying per point
-  ap = location - edgeA;
+  ap           = location - edgeA;
   lenProjected = ap.dot(ab / lenAb);
-  
+
   barycentricCoords(1) = lenProjected / lenAb;
   barycentricCoords(0) = 1 - barycentricCoords(1);
 
@@ -56,12 +56,12 @@ Eigen::Vector3d calcBarycentricCoordsForTriangle(
   PRECICE_ASSERT(dimensions == location.size(), "A and the location need to have the same dimensions.", dimensions, location.size());
 
   Vector3d ab, ac, ap, n, barycentricCoords;
-  double scaleFactor;
+  double   scaleFactor;
 
   // constant per triangle
-  ab = b - a;
-  ac = c - a;
-  n = ab.cross(ac);
+  ab          = b - a;
+  ac          = c - a;
+  n           = ab.cross(ac);
   scaleFactor = 1.0 / n.dot(n);
 
   // varying per point
