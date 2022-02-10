@@ -11,16 +11,16 @@ namespace math {
 namespace barycenter {
 
 Eigen::Vector2d calcBarycentricCoordsForEdge(
-    const Eigen::VectorXd &edgeA,
-    const Eigen::VectorXd &edgeB,
-    const Eigen::VectorXd &location)
+    const Eigen::VectorXd &a,
+    const Eigen::VectorXd &b,
+    const Eigen::VectorXd &p)
 {
   using Eigen::Vector2d;
   using Eigen::VectorXd;
 
-  const int dimensions = edgeA.size();
-  PRECICE_ASSERT(dimensions == edgeB.size(), "A and B need to have the same dimensions.", dimensions, edgeB.size());
-  PRECICE_ASSERT(dimensions == location.size(), "A and the location need to have the same dimensions.", dimensions, location.size());
+  const int dimensions = a.size();
+  PRECICE_ASSERT(dimensions == b.size(), "A and B need to have the same dimensions.", dimensions, b.size());
+  PRECICE_ASSERT(dimensions == p.size(), "A and the point need to have the same dimensions.", dimensions, p.size());
   PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
 
   Vector2d barycentricCoords;
@@ -28,11 +28,11 @@ Eigen::Vector2d calcBarycentricCoordsForEdge(
   double   lenAb, lenProjected;
 
   // constant per edge
-  ab    = edgeB - edgeA;
+  ab    = b - a;
   lenAb = sqrt(ab.dot(ab));
 
   // varying per point
-  ap           = location - edgeA;
+  ap           = p - a;
   lenProjected = ap.dot(ab / lenAb);
 
   barycentricCoords(1) = lenProjected / lenAb;
@@ -45,7 +45,7 @@ Eigen::Vector3d calcBarycentricCoordsForTriangle(
     const Eigen::VectorXd &a,
     const Eigen::VectorXd &b,
     const Eigen::VectorXd &c,
-    const Eigen::VectorXd &location)
+    const Eigen::VectorXd &p)
 {
   using Eigen::Vector3d;
 
@@ -53,7 +53,7 @@ Eigen::Vector3d calcBarycentricCoordsForTriangle(
   PRECICE_ASSERT(dimensions == 3, dimensions);
   PRECICE_ASSERT(dimensions == b.size(), "A and B need to have the same dimensions.", dimensions, b.size());
   PRECICE_ASSERT(dimensions == c.size(), "A and C need to have the same dimensions.", dimensions, c.size());
-  PRECICE_ASSERT(dimensions == location.size(), "A and the location need to have the same dimensions.", dimensions, location.size());
+  PRECICE_ASSERT(dimensions == p.size(), "A and the point need to have the same dimensions.", dimensions, p.size());
 
   Vector3d ab, ac, ap, n, barycentricCoords;
   double   scaleFactor;
@@ -65,7 +65,7 @@ Eigen::Vector3d calcBarycentricCoordsForTriangle(
   scaleFactor = 1.0 / n.dot(n);
 
   // varying per point
-  ap = location - a;
+  ap = p - a;
 
   barycentricCoords(2) = n.dot(ab.cross(ap)) * scaleFactor;
   barycentricCoords(1) = n.dot(ap.cross(ac)) * scaleFactor;
