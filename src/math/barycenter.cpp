@@ -10,127 +10,38 @@ namespace precice {
 namespace math {
 namespace barycenter {
 
-BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
+Eigen::Vector2d calcBarycentricCoordsForEdge(
     const Eigen::VectorXd &edgeA,
     const Eigen::VectorXd &edgeB,
-    const Eigen::VectorXd &edgeNormal,
     const Eigen::VectorXd &location)
 {
   using Eigen::Vector2d;
-  using Eigen::Vector3d;
   using Eigen::VectorXd;
 
   const int dimensions = edgeA.size();
   PRECICE_ASSERT(dimensions == edgeB.size(), "A and B need to have the same dimensions.", dimensions, edgeB.size());
-  PRECICE_ASSERT(dimensions == edgeNormal.size(), "A and the normal need to have the same dimensions.", dimensions, edgeNormal.size());
   PRECICE_ASSERT(dimensions == location.size(), "A and the location need to have the same dimensions.", dimensions, location.size());
   PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
 
   Vector2d barycentricCoords;
-  VectorXd projected = VectorXd::Zero(dimensions);
-  Vector2d a, b, ab, c, d;
-  bool     collinear = false;
+  VectorXd ab, ap;
+  double lenAb, lenProjected;
 
-  if (dimensions == 2) {
-    // Get parameters for parametric edge representation: p(s) = a + s(b-a)
-    a  = edgeA.head<2>();
-    b  = edgeB.head<2>();
-    ab = b;
-    ab -= a;
-    // Same for intersecting normal from searchpoint: q(t) = c + t(d - c)
-    c = location.head<2>();
-    d = location.head<2>();
-    d += edgeNormal;
-    collinear = math::geometry::collinear(a, b, c);
-    if (collinear) {
-      // From p(s) = a + s(b-a) we get: s = (p(s) - a) / (b-a)
-      int iMax;
-      ab.cwiseAbs().maxCoeff(&iMax);
-      PRECICE_ASSERT(!math::equals(ab(iMax), 0.0));
-      barycentricCoords[0] = (location(iMax) - a(iMax)) / ab(iMax);
-      barycentricCoords[1] = 1.0 - barycentricCoords[0];
-      projected            = location.head<2>();
-      std::swap(barycentricCoords(0), barycentricCoords(1));
-      return {barycentricCoords, projected};
-    }
-  } else { // 3D
-    PRECICE_ASSERT(dimensions == 3, dimensions);
-    // Get parameters for parametric triangle representation: p(s) = a + s(b-a)
-    Vector3d a3D  = edgeA;
-    Vector3d b3D  = edgeB;
-    Vector3d c3D  = location;
-    Vector3d ab3D = b3D - a3D;
-    Vector3d ac3D = c3D - a3D;
-    collinear     = math::geometry::collinear(a3D, b3D, c3D);
-    if (collinear) {
-      // From p(s) = a + s(b-a) we get: s = (p(s) - a) / (b-a)
-      int iMax;
-      ab3D.cwiseAbs().maxCoeff(&iMax);
-      PRECICE_ASSERT(!math::equals(ab3D[iMax], 0.0));
-      barycentricCoords[0] =
-          (location(iMax) - edgeA(iMax)) / ab3D(iMax);
-      barycentricCoords[1] = 1.0 - barycentricCoords[0];
-      projected            = location;
-      std::swap(barycentricCoords(0), barycentricCoords(1));
-      return {barycentricCoords, projected};
-    }
-    // Project parameters to 2D, where the projection plane is determined from
-    // the normal direction, in order to prevent "faulty" projections.
-    Vector3d normal;
-    normal = ab3D.cross(ac3D);
-    int indexToRemove;
-    normal.cwiseAbs().maxCoeff(&indexToRemove);
-    int indices[2];
-    if (indexToRemove == 0) {
-      indices[0] = 1;
-      indices[1] = 2;
-    } else if (indexToRemove == 1) {
-      indices[0] = 0;
-      indices[1] = 2;
-    } else {
-      PRECICE_ASSERT(indexToRemove == 2, indexToRemove);
-      indices[0] = 0;
-      indices[1] = 1;
-    }
-    a << a3D[indices[0]], a3D[indices[1]];
-    b << b3D[indices[0]], b3D[indices[1]];
-    ab << ab3D[indices[0]], ab3D[indices[1]];
-    c << c3D[indices[0]], c3D[indices[1]];
-    // 3D normal might be projected out, hence, compute new 2D edge normal
-    Vector2d normal2D(-1.0 * ab(1), ab(0));
-    d = c + normal2D;
-  }
+  // constant per edge
+  ab = edgeB - edgeA;
+  lenAb = sqrt(ab.dot(ab));
 
-  // Compute denominator for solving 2x2 equation system
-  double D = a(0) * (d(1) - c(1)) + b(0) * (c(1) - d(1)) + d(0) * ab(1) - c(0) * ab(1);
-  PRECICE_ASSERT(not math::equals(D, 0.0), a, b, c, d, ab); // D == 0 would imply "normal // edge"
+  // varying per point
+  ap = location - edgeA;
+  lenProjected = ap.dot(ab / lenAb);
+  
+  barycentricCoords(1) = lenProjected / lenAb;
+  barycentricCoords(0) = 1 - barycentricCoords(1);
 
-  // Compute triangle segment parameter s, which is in [0, 1], if the
-  // intersection point is within the triangle.
-  barycentricCoords[0] = (a(0) * (d(1) - c(1)) +
-                          c(0) * (a(1) - d(1)) +
-                          d(0) * (c(1) - a(1))) /
-                         D;
-  barycentricCoords[1] = 1.0 - barycentricCoords[0];
-
-  // Compute coordinates of projected point, which has to be done dimension
-  // dependent again:
-  if (dimensions == 2) {
-    projected = ab;                    // = b - a
-    projected *= barycentricCoords[0]; // = bary0 * (b - a)
-    projected += a;                    // = a + bary0 * (b - a)
-  } else {
-    projected = edgeB;                 // = b
-    projected -= edgeA;                // = b - a
-    projected *= barycentricCoords[0]; // = bary0 * (b - a)
-    projected += edgeA;                // = a + bary0 * (b - a)
-  }
-
-  std::swap(barycentricCoords(0), barycentricCoords(1));
-  return {barycentricCoords, projected};
+  return barycentricCoords;
 }
 
-BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
+Eigen::Vector3d calcBarycentricCoordsForTriangle(
     const Eigen::VectorXd &a,
     const Eigen::VectorXd &b,
     const Eigen::VectorXd &c,
