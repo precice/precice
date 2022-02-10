@@ -6,34 +6,25 @@
 
 namespace precice {
 namespace math {
-/// Provides operations to calculate barycentric coordinates and projection from a point to a primitive.
+/// Provides operations to calculate barycentric coordinates for a point's projection onto a primitive.
 namespace barycenter {
 
-/// The result of calculating the barycentric coordinates.
-struct BarycentricCoordsAndProjected {
-  /// A vector of the n coefficients for n vertices
-  Eigen::VectorXd barycentricCoords;
-  /// The projected location vertex
-  Eigen::VectorXd projected;
-};
-
-/** Takes the corner vertices of an edge and its norm.
- *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
+/** Takes the end vertices of an edge and a point in 2D or 3D space.
+ *  Returns the barycentric coordinates for that point's projection onto the given edge.
  *
- *  @param edgeA point A of the edge AB
- *  @param edgeNormal the normal of the edge
- *  @param location the location to compute the barycentric coordinates for
+ *  @param a point A of the edge AB
+ *  @param b point B of the edge AB
+ *  @param p the point to compute the barycentric coordinates for
  *
- * @note Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
+ * @note Simple scalar projection approach, projected point is not actually calculated.
  */
-BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
-    const Eigen::VectorXd &edgeA,
-    const Eigen::VectorXd &edgeB,
-    const Eigen::VectorXd &edgeNormal,
-    const Eigen::VectorXd &location);
+Eigen::Vector2d calcBarycentricCoordsForEdge(
+    const Eigen::VectorXd &a,
+    const Eigen::VectorXd &b,
+    const Eigen::VectorXd &p);
 
-/** Takes the corner vertices of a triangle and its norm.
- *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
+/** Takes the corner vertices of a triangle and a point in 3D space.
+ *  Returns the barycentric coordinates for that point's projection onto the given triangle.
  *
  *  @param a point A of the triangle ABC
  *  @param b point B of the triangle ABC
