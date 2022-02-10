@@ -365,32 +365,34 @@ void Mesh::tagAll()
   }
 }
 
-void Mesh::addMesh(
-    Mesh &deltaMesh)
+template <typename UnaryPredicate>
+void Mesh::filterAndAddMesh(Mesh const &other, UnaryPredicate filter)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_dimensions == deltaMesh.getDimensions());
+  PRECICE_ASSERT(_dimensions == other.getDimensions());
 
   boost::container::flat_map<VertexID, Vertex *> vertexMap;
-  vertexMap.reserve(deltaMesh.vertices().size());
+  vertexMap.reserve(other.vertices().size());
   Eigen::VectorXd coords(_dimensions);
-  for (const Vertex &vertex : deltaMesh.vertices()) {
-    coords    = vertex.getCoords();
-    Vertex &v = createVertex(coords);
-    v.setGlobalIndex(vertex.getGlobalIndex());
-    if (vertex.isTagged())
-      v.tag();
-    v.setOwner(vertex.isOwner());
-    PRECICE_ASSERT(vertex.getID() >= 0, vertex.getID());
-    vertexMap[vertex.getID()] = &v;
+  for (const Vertex &vertex : other.vertices()) {
+    if (filter(vertex)) {
+      coords    = vertex.getCoords();
+      Vertex &v = createVertex(coords);
+      v.setGlobalIndex(vertex.getGlobalIndex());
+      if (vertex.isTagged())
+        v.tag();
+      v.setOwner(vertex.isOwner());
+      PRECICE_ASSERT(vertex.getID() >= 0, vertex.getID());
+      vertexMap[vertex.getID()] = &v;
+    }
   }
 
   boost::container::flat_map<EdgeID, Edge *> edgeMap;
-  edgeMap.reserve(deltaMesh.edges().size());
+  edgeMap.reserve(other.edges().size());
   // you cannot just take the vertices from the edge and add them,
   // since you need the vertices from the new mesh
   // (which may differ in IDs)
-  for (const Edge &edge : deltaMesh.edges()) {
+  for (const Edge &edge : other.edges()) {
     VertexID vertexIndex1 = edge.vertex(0).getID();
     VertexID vertexIndex2 = edge.vertex(1).getID();
     PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
@@ -400,7 +402,7 @@ void Mesh::addMesh(
   }
 
   if (_dimensions == 3) {
-    for (const Triangle &triangle : deltaMesh.triangles()) {
+    for (const Triangle &triangle : other.triangles()) {
       EdgeID edgeIndex1 = triangle.edge(0).getID();
       EdgeID edgeIndex2 = triangle.edge(1).getID();
       EdgeID edgeIndex3 = triangle.edge(2).getID();
@@ -411,6 +413,11 @@ void Mesh::addMesh(
     }
   }
   meshChanged(*this);
+}
+
+void Mesh::addMesh(Mesh const &other)
+{
+  filterAndAddMesh(other, [](mesh::Vertex const &) { return true; });
 }
 
 const BoundingBox &Mesh::getBoundingBox() const

@@ -218,7 +218,10 @@ public:
     return _communicationMap;
   }
 
-  void addMesh(Mesh &deltaMesh);
+  template <typename UnaryPredicate>
+  void filterAndAddMesh(Mesh const &other, UnaryPredicate filter);
+
+  void addMesh(Mesh const &other);
 
   /**
    * @brief Returns the bounding box of the mesh.
