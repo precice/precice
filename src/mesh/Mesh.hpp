@@ -249,10 +249,11 @@ public:
     for (const Edge &edge : other.edges()) {
       VertexID vertexIndex1 = edge.vertex(0).getID();
       VertexID vertexIndex2 = edge.vertex(1).getID();
-      PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
-                    (vertexMap.count(vertexIndex2) == 1));
-      Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-      edgeMap[edge.getID()] = &e;
+      if (vertexMap.count(vertexIndex1) == 1 &&
+          vertexMap.count(vertexIndex2) == 1) {
+        Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
+        edgeMap[edge.getID()] = &e;
+      }
     }
 
     if (_dimensions == 3) {
@@ -260,10 +261,11 @@ public:
         EdgeID edgeIndex1 = triangle.edge(0).getID();
         EdgeID edgeIndex2 = triangle.edge(1).getID();
         EdgeID edgeIndex3 = triangle.edge(2).getID();
-        PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
-                      (edgeMap.count(edgeIndex2) == 1) &&
-                      (edgeMap.count(edgeIndex3) == 1));
-        createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
+        if (edgeMap.count(edgeIndex1) == 1 &&
+            edgeMap.count(edgeIndex2) == 1 &&
+            edgeMap.count(edgeIndex3) == 1) {
+          createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
+        }
       }
     }
     meshChanged(*this);
