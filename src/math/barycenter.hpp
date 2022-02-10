@@ -29,20 +29,17 @@ Eigen::Vector2d calcBarycentricCoordsForEdge(
  *  @param a point A of the triangle ABC
  *  @param b point B of the triangle ABC
  *  @param c point C of the triangle ABC
- *  @param normal the normal of the triangle
- *  @param location the location to compute the barycentric coordinates for
+ *  @param p the point to compute the barycentric coordinates for
  *
- * @note
- * Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.3
- * with the barycentric coordinates method and real projection into 2D, instead
- * of outprojecting one coordinate
+ * @note This implements the efficient one-step algorithm (no separate projection) presented in 
+ *  _Computing the barycentric coordinates of a projected point_ by W. Heidrich (2005)
+ *
  */
-BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
+Eigen::Vector3d calcBarycentricCoordsForTriangle(
     const Eigen::VectorXd &a,
     const Eigen::VectorXd &b,
     const Eigen::VectorXd &c,
-    const Eigen::VectorXd &normal,
-    const Eigen::VectorXd &location);
+    const Eigen::VectorXd &p);
 
 } // namespace barycenter
 } // namespace math
