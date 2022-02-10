@@ -73,6 +73,18 @@ if(PRECICE_PETScMapping AND NOT PRECICE_MPICommunication)
 endif()
 
 set(PRECICE_CTEST_MPI_FLAGS "" CACHE STRING "Add additional flags to mpiexec for running tests via CTest.")
+set(PRECICE_ASSERTION_POLICY DEBUG CACHE STRING "For which builds to enable assertions (always, debug only, never). Debug only is default.")
+set_property(CACHE PRECICE_ASSERTION_POLICY PROPERTY STRINGS ON DEBUG OFF)
+
+# from CMake 3.12 add_compile_definitions can/should be used here
+# unfortunately the preprocessor is too stupid to use proper strings
+if(PRECICE_ASSERTION_POLICY STREQUAL "ON")
+  add_definitions(-DASSERT_ALWAYS)
+elseif(PRECICE_ASSERTION_POLICY STREQUAL "DEBUG")
+  add_definitions(-DASSERT_DEBUG)
+elseif(PRECICE_ASSERTION_POLICY STREQUAL "OFF")
+  add_definitions(-DASSERT_NEVER)
+endif()
 
 include(XSDKOptions)
 

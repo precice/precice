@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#ifdef NDEBUG
+#if defined(ASSERT_NEVER) || (defined(NDEBUG) && defined(ASSERT_DEBUG))
 
 #define PRECICE_ASSERT(...) \
   {                         \
