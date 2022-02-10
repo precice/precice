@@ -14,7 +14,6 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mesh/BoundingBox.hpp"
-#include "mesh/Filter.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
@@ -104,7 +103,7 @@ void ReceivedPartition::compute()
       // To discuss: maybe check this somewhere in the SolverInterfaceImpl, as we have now a similar check for the parallel case
       PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
       unsigned int nFilteredVertices = 0;
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { if(!_bb.contains(v))
+      filteredMesh.filterAndAddMesh(*_mesh, [&](const mesh::Vertex &v) { if(!_bb.contains(v))
               ++nFilteredVertices;
           return _bb.contains(v); });
 
@@ -158,7 +157,7 @@ void ReceivedPartition::compute()
   PRECICE_INFO("Filter mesh {} by mappings", _mesh->getName());
   Event      e5("partition.filterMeshMappings" + _mesh->getName(), precice::syncMode);
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
-  mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
+  filteredMesh.filterAndAddMesh(*_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
   PRECICE_DEBUG("Mapping filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                 _mesh->vertices().size(), filteredMesh.vertices().size(),
                 _mesh->edges().size(), filteredMesh.edges().size(),
@@ -318,14 +317,14 @@ void ReceivedPartition::filterByBoundingBox()
 
         PRECICE_DEBUG("From slave {}, bounding mesh: {}", rankSlave, slaveBB);
         mesh::Mesh slaveMesh("SlaveMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
-        mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return slaveBB.contains(v); });
+        slaveMesh.filterAndAddMesh(*_mesh, [&slaveBB](const mesh::Vertex &v) { return slaveBB.contains(v); });
         PRECICE_DEBUG("Send filtered mesh to slave: {}", rankSlave);
         com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(slaveMesh, rankSlave);
       }
 
       // Now also filter the remaining master mesh
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
+      filteredMesh.filterAndAddMesh(*_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
       PRECICE_DEBUG("Master mesh, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->vertices().size(), filteredMesh.vertices().size(),
                     _mesh->edges().size(), filteredMesh.edges().size(),
@@ -355,7 +354,7 @@ void ReceivedPartition::filterByBoundingBox()
       Event e("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);
 
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
+      filteredMesh.filterAndAddMesh(*_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
 
       PRECICE_DEBUG("Bounding box filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->vertices().size(), filteredMesh.vertices().size(),

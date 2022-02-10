@@ -7,7 +7,6 @@
 #include "com/Communication.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "mapping/Mapping.hpp"
-#include "mesh/Filter.hpp"
 #include "precice/types.hpp"
 #include "query/Index.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -153,7 +152,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     // Input mesh may have overlaps
     mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-    mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
+    filteredInMesh.filterAndAddMesh(*inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
 
     // Send the mesh
     com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(filteredInMesh, 0);
@@ -168,7 +167,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       {
         // Input mesh may have overlaps
         mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-        mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
+        filteredInMesh.filterAndAddMesh(*inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
         globalInMesh.addMesh(filteredInMesh);
         globalOutMesh.addMesh(*outMesh);
       }
