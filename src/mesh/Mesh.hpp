@@ -50,6 +50,9 @@ public:
   /// A mapping from remote local ranks to the IDs that must be communicated
   using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
 
+  using FilteredVertices = boost::container::flat_map<VertexID, Vertex *>;
+  using FilteredEdges = boost::container::flat_map<EdgeID, Edge *>;
+
   /// Signal is emitted when the mesh is changed
   boost::signals2::signal<void(Mesh &)> meshChanged;
 
@@ -225,53 +228,20 @@ public:
     PRECICE_TRACE();
     PRECICE_ASSERT(_dimensions == other.getDimensions());
 
-    boost::container::flat_map<VertexID, Vertex *> vertexMap;
-    vertexMap.reserve(other.vertices().size());
-    Eigen::VectorXd coords(_dimensions);
-    for (const Vertex &vertex : other.vertices()) {
-      if (filter(vertex)) {
-        coords    = vertex.getCoords();
-        Vertex &v = createVertex(coords);
-        v.setGlobalIndex(vertex.getGlobalIndex());
-        if (vertex.isTagged())
-          v.tag();
-        v.setOwner(vertex.isOwner());
-        PRECICE_ASSERT(vertex.getID() >= 0, vertex.getID());
-        vertexMap[vertex.getID()] = &v;
-      }
-    }
-
-    boost::container::flat_map<EdgeID, Edge *> edgeMap;
-    edgeMap.reserve(other.edges().size());
-    // you cannot just take the vertices from the edge and add them,
-    // since you need the vertices from the new mesh
-    // (which may differ in IDs)
-    for (const Edge &edge : other.edges()) {
-      VertexID vertexIndex1 = edge.vertex(0).getID();
-      VertexID vertexIndex2 = edge.vertex(1).getID();
-      if (vertexMap.count(vertexIndex1) == 1 &&
-          vertexMap.count(vertexIndex2) == 1) {
-        Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-        edgeMap[edge.getID()] = &e;
-      }
-    }
+    FilteredVertices vertexMap = filterAndAddVertices(other, filter);
+    FilteredEdges edgeMap = filterAndAddEdges(other, vertexMap);
 
     if (_dimensions == 3) {
-      for (const Triangle &triangle : other.triangles()) {
-        EdgeID edgeIndex1 = triangle.edge(0).getID();
-        EdgeID edgeIndex2 = triangle.edge(1).getID();
-        EdgeID edgeIndex3 = triangle.edge(2).getID();
-        if (edgeMap.count(edgeIndex1) == 1 &&
-            edgeMap.count(edgeIndex2) == 1 &&
-            edgeMap.count(edgeIndex3) == 1) {
-          createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-        }
-      }
+      filterAndAddTriangles(other, edgeMap);      
     }
+
     meshChanged(*this);
   }
 
-  void addMesh(Mesh const &other);
+  void addMesh(Mesh const &other)
+  {
+    filterAndAddMesh(other, [](mesh::Vertex const &) { return true; });
+  }
 
   /**
    * @brief Returns the bounding box of the mesh.
@@ -287,6 +257,63 @@ public:
   bool operator!=(const Mesh &other) const;
 
 private:
+  /// Add all vertices in mesh _other_ matching a certain filter to this mesh, and return a map of them for use when adding edges.
+  template <typename UnaryPredicate>
+  FilteredVertices filterAndAddVertices(Mesh const &other, UnaryPredicate filter)
+  {
+    FilteredVertices vertexMap;
+    vertexMap.reserve(other.vertices().size());
+    Eigen::VectorXd coords(_dimensions);
+    for (const Vertex &vertex : other.vertices()) {
+      if (filter(vertex)) {
+        coords    = vertex.getCoords();
+        Vertex &v = createVertex(coords);
+        v.setGlobalIndex(vertex.getGlobalIndex());
+        if (vertex.isTagged())
+          v.tag();
+        v.setOwner(vertex.isOwner());
+        PRECICE_ASSERT(vertex.getID() >= 0, vertex.getID());
+        vertexMap[vertex.getID()] = &v;
+      }
+    }
+
+    return vertexMap;
+  }
+
+  /// Add all edges in mesh _other_ that use only the vertices in the given map to this mesh, and return a map of them for use when adding triangles.
+  FilteredEdges filterAndAddEdges(Mesh const &other, FilteredVertices vertexMap) {
+    FilteredEdges edgeMap;
+    edgeMap.reserve(other.edges().size());
+    // you cannot just take the vertices from the edge and add them,
+    // since you need the vertices from the new mesh
+    // (which may differ in IDs)
+    for (const Edge &edge : other.edges()) {
+      VertexID vertexIndex1 = edge.vertex(0).getID();
+      VertexID vertexIndex2 = edge.vertex(1).getID();
+      if (vertexMap.count(vertexIndex1) == 1 &&
+          vertexMap.count(vertexIndex2) == 1) {
+        Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
+        edgeMap[edge.getID()] = &e;
+      }
+    }
+
+    return edgeMap;
+  }
+
+  /// Add all triangles in mesh _other_ that use only the edges in the given map to this mesh.
+  void filterAndAddTriangles(Mesh const &other, FilteredEdges edgeMap) {
+    for (const Triangle &triangle : other.triangles()) {
+        EdgeID edgeIndex1 = triangle.edge(0).getID();
+        EdgeID edgeIndex2 = triangle.edge(1).getID();
+        EdgeID edgeIndex3 = triangle.edge(2).getID();
+        if (edgeMap.count(edgeIndex1) == 1 &&
+            edgeMap.count(edgeIndex2) == 1 &&
+            edgeMap.count(edgeIndex3) == 1) {
+          createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
+        }
+      }
+  }
+
   mutable logging::Logger _log{"mesh::Mesh"};
 
   /// Name of the mesh.

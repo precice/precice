@@ -364,11 +364,6 @@ void Mesh::tagAll()
   }
 }
 
-void Mesh::addMesh(Mesh const &other)
-{
-  filterAndAddMesh(other, [](mesh::Vertex const &) { return true; });
-}
-
 const BoundingBox &Mesh::getBoundingBox() const
 {
   return _boundingBox;
