@@ -78,14 +78,14 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
         PRECICE_INFO("Resetting pre-scaling weights as the value has increased/decreased by more than 1 order of magnitude");
       }
     }
-    
+
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       if (not math::equals(_residualSum[k], 0.0)) {
         // Always adjust pre-scaling weights in the first time window
         if (timeWindowPreconditioner < 1 || resetWeights) {
           for (size_t i = 0; i < _subVectorSizes[k]; i++) {
-              _weights[i + offset]    = 1 / _residualSum[k];
-              _invWeights[i + offset] = _residualSum[k];
+            _weights[i + offset]    = 1 / _residualSum[k];
+            _invWeights[i + offset] = _residualSum[k];
           }
           PRECICE_INFO("preconditioner scaling factor[{}] = {}", k, 1 / _residualSum[k]);
           _previousScalingWeights[k] = 1 / _residualSum[k];
