@@ -51,7 +51,7 @@ public:
   using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
 
   using FilteredVertices = boost::container::flat_map<VertexID, Vertex *>;
-  using FilteredEdges = boost::container::flat_map<EdgeID, Edge *>;
+  using FilteredEdges    = boost::container::flat_map<EdgeID, Edge *>;
 
   /// Signal is emitted when the mesh is changed
   boost::signals2::signal<void(Mesh &)> meshChanged;
@@ -229,10 +229,10 @@ public:
     PRECICE_ASSERT(_dimensions == other.getDimensions());
 
     FilteredVertices vertexMap = filterAndAddVertices(other, filter);
-    FilteredEdges edgeMap = filterAndAddEdges(other, vertexMap);
+    FilteredEdges    edgeMap   = filterAndAddEdges(other, vertexMap);
 
     if (_dimensions == 3) {
-      filterAndAddTriangles(other, edgeMap);      
+      filterAndAddTriangles(other, edgeMap);
     }
 
     meshChanged(*this);
@@ -281,7 +281,8 @@ private:
   }
 
   /// Add all edges in mesh _other_ that use only the vertices in the given map to this mesh, and return a map of them for use when adding triangles.
-  FilteredEdges filterAndAddEdges(Mesh const &other, FilteredVertices vertexMap) {
+  FilteredEdges filterAndAddEdges(Mesh const &other, FilteredVertices vertexMap)
+  {
     FilteredEdges edgeMap;
     edgeMap.reserve(other.edges().size());
     // you cannot just take the vertices from the edge and add them,
@@ -301,17 +302,18 @@ private:
   }
 
   /// Add all triangles in mesh _other_ that use only the edges in the given map to this mesh.
-  void filterAndAddTriangles(Mesh const &other, FilteredEdges edgeMap) {
+  void filterAndAddTriangles(Mesh const &other, FilteredEdges edgeMap)
+  {
     for (const Triangle &triangle : other.triangles()) {
-        EdgeID edgeIndex1 = triangle.edge(0).getID();
-        EdgeID edgeIndex2 = triangle.edge(1).getID();
-        EdgeID edgeIndex3 = triangle.edge(2).getID();
-        if (edgeMap.count(edgeIndex1) == 1 &&
-            edgeMap.count(edgeIndex2) == 1 &&
-            edgeMap.count(edgeIndex3) == 1) {
-          createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-        }
+      EdgeID edgeIndex1 = triangle.edge(0).getID();
+      EdgeID edgeIndex2 = triangle.edge(1).getID();
+      EdgeID edgeIndex3 = triangle.edge(2).getID();
+      if (edgeMap.count(edgeIndex1) == 1 &&
+          edgeMap.count(edgeIndex2) == 1 &&
+          edgeMap.count(edgeIndex3) == 1) {
+        createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
       }
+    }
   }
 
   mutable logging::Logger _log{"mesh::Mesh"};
