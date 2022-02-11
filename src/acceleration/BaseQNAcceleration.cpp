@@ -198,6 +198,9 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   _residuals = _values;
   _residuals -= _oldValues;
 
+  //PRECICE_INFO("_values: {}", _values);
+  //PRECICE_INFO("_residuals: {}", _residuals);
+
   if (math::equals(utils::MasterSlave::l2norm(_residuals), 0.0)) {
     PRECICE_WARN("The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
                  "Maybe you always write the same data or you call advance without "
@@ -308,6 +311,7 @@ void BaseQNAcceleration::performAcceleration(
    */
   updateDifferenceMatrices(cplData);
 
+
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     PRECICE_DEBUG("   Performing underrelaxation");
     _oldXTilde    = _values;    // Store x tilde
@@ -318,6 +322,8 @@ void BaseQNAcceleration::performAcceleration(
     _residuals *= _initialRelaxation;
     _residuals += _oldValues;
     _values = _residuals;
+
+    
 
     computeUnderrelaxationSecondaryData(cplData);
   } else {
@@ -371,17 +377,17 @@ void BaseQNAcceleration::performAcceleration(
 
     // apply the configured filter to the LS system. Automatically delete the first column if a zero vector occurs.
     // Automatic deletion can only occur in the first time window.
-    if (its == 2 && tWindows == 0) {
-      if (_deleteFirstColumn) {
+    //if (its == 2 && tWindows == 0) {
+      //if (_deleteFirstColumn) {
         // Only remove a column if it exists, i.e. at least 2 columns are present
-        if ((_matrixV.cols() - 1) == 1) {
-          PRECICE_DEBUG("  Automatically removing the first column in Matrices V and W due to an initial zero sub-vector.");
-          removeMatrixColumn(_matrixV.cols() - 1);
-          _qrV.deleteColumn(_matrixV.cols() - 1);
-        }
-      }
-      _deleteFirstColumn = false;
-    }
+        //if ((_matrixV.cols() - 1) == 1) {
+          //PRECICE_INFO("  Automatically removing the first column in Matrices V and W due to an initial zero sub-vector.");
+          //removeMatrixColumn(_matrixV.cols() - 1);
+          //_qrV.deleteColumn(_matrixV.cols() - 1);
+        //}
+      //}
+      //_deleteFirstColumn = false;
+    //}
 
     utils::Event applyingFilter("ApplyFilter");
     applyFilter();

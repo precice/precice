@@ -75,26 +75,26 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
       double newScalingWeight = (1 / _residualSum[k]);
       if ((newScalingWeight / _previousScalingWeights[k] > 10) || (newScalingWeight / _previousScalingWeights[k] < 0.1)) {
         resetWeights = true;
-        PRECICE_DEBUG("Resetting pre-scaling weights as the value has increased/decreased by more than 1 order of magnitude");
+        PRECICE_INFO("Resetting pre-scaling weights as the value has increased/decreased by more than 1 order of magnitude");
       }
     }
-
+    
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       if (not math::equals(_residualSum[k], 0.0)) {
         // Always adjust pre-scaling weights in the first time window
         if (timeWindowPreconditioner < 1 || resetWeights) {
           for (size_t i = 0; i < _subVectorSizes[k]; i++) {
-            _weights[i + offset]    = 1 / _residualSum[k];
-            _invWeights[i + offset] = _residualSum[k];
+              _weights[i + offset]    = 1 / _residualSum[k];
+              _invWeights[i + offset] = _residualSum[k];
           }
-          PRECICE_DEBUG("preconditioner scaling factor[{}] = {}", k, 1 / _residualSum[k]);
+          PRECICE_INFO("preconditioner scaling factor[{}] = {}", k, 1 / _residualSum[k]);
           _previousScalingWeights[k] = 1 / _residualSum[k];
           _requireNewQR              = true;
           _areWeightsUpdated         = true;
         }
       }
       //normWeights[k] = 1 / _residualSum[k];
-      PRECICE_DEBUG("Actual Norm of pre-scaling weights in current iteration: {}", _previousScalingWeights[k]);
+      PRECICE_INFO("Actual Norm of pre-scaling weights in current iteration: {}", _previousScalingWeights[k]);
       offset += _subVectorSizes[k];
     }
     resetWeights = false;
