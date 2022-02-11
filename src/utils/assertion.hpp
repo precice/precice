@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 #include "utils/fmt.hpp"
 
 // Assertions are disabled in release (NDEBUG) builds by default.
