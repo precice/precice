@@ -14,14 +14,14 @@ namespace barycenter {
  *
  *  @param a point A of the edge AB
  *  @param b point B of the edge AB
- *  @param p the point to compute the barycentric coordinates for
+ *  @param u the point to compute the barycentric coordinates for
  *
- * @note Simple scalar projection approach, projected point is not actually calculated.
+ * @note Simple scalar projection approach, projected point in Cartesian coordinates is not actually calculated.
  */
 Eigen::Vector2d calcBarycentricCoordsForEdge(
     const Eigen::VectorXd &a,
     const Eigen::VectorXd &b,
-    const Eigen::VectorXd &p);
+    const Eigen::VectorXd &u);
 
 /** Takes the corner vertices of a triangle and a point in 3D space.
  *  Returns the barycentric coordinates for that point's projection onto the given triangle.
@@ -29,7 +29,7 @@ Eigen::Vector2d calcBarycentricCoordsForEdge(
  *  @param a point A of the triangle ABC
  *  @param b point B of the triangle ABC
  *  @param c point C of the triangle ABC
- *  @param p the point to compute the barycentric coordinates for
+ *  @param u the point to compute the barycentric coordinates for
  *
  * @note This implements the efficient one-step algorithm (no separate projection) presented in 
  *  _Computing the barycentric coordinates of a projected point_ by W. Heidrich (2005)
@@ -39,7 +39,7 @@ Eigen::Vector3d calcBarycentricCoordsForTriangle(
     const Eigen::VectorXd &a,
     const Eigen::VectorXd &b,
     const Eigen::VectorXd &c,
-    const Eigen::VectorXd &p);
+    const Eigen::VectorXd &u);
 
 } // namespace barycenter
 } // namespace math
