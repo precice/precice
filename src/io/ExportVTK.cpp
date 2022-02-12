@@ -21,7 +21,7 @@ namespace io {
 void ExportVTK::doExport(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh & mesh)
+    const mesh::Mesh  &mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   PRECICE_ASSERT(name != std::string(""));
@@ -43,7 +43,7 @@ void ExportVTK::doExport(
 }
 
 void ExportVTK::exportMesh(
-    std::ofstream &   outFile,
+    std::ofstream    &outFile,
     const mesh::Mesh &mesh)
 {
   PRECICE_TRACE(mesh.getName());
@@ -104,7 +104,7 @@ void ExportVTK::exportMesh(
 }
 
 void ExportVTK::exportData(
-    std::ofstream &   outFile,
+    std::ofstream    &outFile,
     const mesh::Mesh &mesh)
 {
   outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
@@ -114,11 +114,13 @@ void ExportVTK::exportData(
   std::fill_n(std::ostream_iterator<char const *>(outFile), mesh.vertices().size(), "0 ");
   outFile << "\n\n";
 
+  outFile << "FIELD FieldData " << mesh.data().size() << "\n";
+
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd &values = data->values();
     if (data->getDimensions() > 1) {
       Eigen::VectorXd viewTemp(data->getDimensions());
-      outFile << "VECTORS " << data->getName() << " double\n";
+      outFile << data->getName() << " " << data->getDimensions() << " " << mesh.vertices().size() << " double\n";
       for (const mesh::Vertex &vertex : mesh.vertices()) {
         int offset = vertex.getID() * data->getDimensions();
         for (int i = 0; i < data->getDimensions(); i++) {
@@ -128,15 +130,11 @@ void ExportVTK::exportData(
         for (; i < data->getDimensions(); i++) {
           outFile << viewTemp[i] << ' ';
         }
-        if (i < 3) {
-          outFile << '0';
-        }
         outFile << '\n';
       }
       outFile << '\n';
     } else if (data->getDimensions() == 1) {
-      outFile << "SCALARS " << data->getName() << " double\n";
-      outFile << "LOOKUP_TABLE default\n";
+      outFile << data->getName() << " 1 " << mesh.vertices().size() << " double\n";
       for (const mesh::Vertex &vertex : mesh.vertices()) {
         outFile << values(vertex.getID()) << '\n';
       }
@@ -148,10 +146,10 @@ void ExportVTK::exportData(
 void ExportVTK::initializeWriting(
     std::ofstream &filestream)
 {
-  //size_t pos = fullFilename.rfind(".vtk");
-  //if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
-  //  fullFilename += ".vtk";
-  //}
+  // size_t pos = fullFilename.rfind(".vtk");
+  // if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
+  //   fullFilename += ".vtk";
+  // }
   filestream.setf(std::ios::showpoint);
   filestream.setf(std::ios::scientific);
   filestream << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -167,7 +165,7 @@ void ExportVTK::writeHeader(
 
 void ExportVTK::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+    std::ostream          &outFile)
 {
   if (position.size() == 2) {
     outFile << position(0) << "  " << position(1) << "  " << 0.0 << '\n';
