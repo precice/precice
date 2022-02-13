@@ -23,7 +23,7 @@ namespace io {
 void ExportXML::doExport(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh & mesh)
+    const mesh::Mesh  &mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   processDataNamesAndDimensions(mesh);
@@ -32,7 +32,7 @@ void ExportXML::doExport(
   if (utils::MasterSlave::isMaster()) {
     writeMasterFile(name, location, mesh);
   }
-  if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
+  if (mesh.vertices().size() > 0) { // only procs at the coupling interface should write output (for performance reasons)
     writeSubFile(name, location, mesh);
   }
 }
@@ -56,7 +56,7 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
 void ExportXML::writeMasterFile(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh & mesh) const
+    const mesh::Mesh  &mesh) const
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -83,7 +83,7 @@ void ExportXML::writeMasterFile(
   for (int i = 0; i < utils::MasterSlave::getSize(); i++) {
     auto iter = vertexDistribution.find(i);
     if (iter != vertexDistribution.end() && iter->second.size() > 0) {
-      //only non-empty subfiles
+      // only non-empty subfiles
       outMasterFile << "      <Piece Source=\"" << name << "_" << i << getPieceExtension() << "\"/>\n";
     }
   }
@@ -107,7 +107,7 @@ std::string getPieceSuffix()
 void ExportXML::writeSubFile(
     const std::string &name,
     const std::string &location,
-    const mesh::Mesh & mesh) const
+    const mesh::Mesh  &mesh) const
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -139,7 +139,7 @@ void ExportXML::writeSubFile(
 }
 
 void ExportXML::exportData(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <PointData Scalars=\"Rank ";
@@ -165,8 +165,7 @@ void ExportXML::exportData(
     Eigen::VectorXd &values         = data->values();
     int              dataDimensions = data->getDimensions();
     std::string      dataName(data->getName());
-    int              numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
-    outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
+    outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << "\" NumberOfComponents=\"" << dataDimensions;
     outFile << "\" format=\"ascii\">\n";
     outFile << "               ";
     if (dataDimensions > 1) {
@@ -178,9 +177,6 @@ void ExportXML::exportData(
         }
         for (int i = 0; i < dataDimensions; i++) {
           outFile << viewTemp[i] << ' ';
-        }
-        if (dataDimensions == 2) {
-          outFile << "0.0" << ' '; //2D data needs to be 3D for vtk
         }
         outFile << ' ';
       }
@@ -197,21 +193,21 @@ void ExportXML::exportData(
 
 void ExportXML::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+    std::ostream          &outFile)
 {
   outFile << "               ";
   for (int i = 0; i < position.size(); i++) {
     outFile << position(i) << "  ";
   }
   if (position.size() == 2) {
-    outFile << 0.0 << "  "; //also for 2D scenario, vtk needs 3D data
+    outFile << 0.0 << "  "; // also for 2D scenario, vtk needs 3D data
   }
   outFile << '\n';
 }
 
 void ExportXML::writeTriangle(
     const mesh::Triangle &triangle,
-    std::ostream &        outFile)
+    std::ostream         &outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
@@ -220,14 +216,14 @@ void ExportXML::writeTriangle(
 
 void ExportXML::writeLine(
     const mesh::Edge &edge,
-    std::ostream &    outFile)
+    std::ostream     &outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
   outFile << edge.vertex(1).getID() << "  ";
 }
 
 void ExportXML::exportPoints(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <Points> \n";
