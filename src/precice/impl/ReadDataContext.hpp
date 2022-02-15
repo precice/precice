@@ -30,6 +30,13 @@ public:
       int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
 
   /**
+   * @brief Getter for _interpolationOrder of _providedWaveform
+   * 
+   * @return _interpolationOrder of _providedWaveform
+   */
+  int getInterpolationOrder() const;
+
+  /**
    * @brief Links a MappingContext and the MeshContext required by the read mapping requires to this ReadDataContext.
    * 
    * A read mapping maps _fromData to _providedData. A ReadDataContext already has _providedData, but additionally requires _fromData.

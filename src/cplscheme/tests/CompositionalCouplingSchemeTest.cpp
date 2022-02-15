@@ -18,6 +18,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/ParticipantConfiguration.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "xml/XMLTag.hpp"
@@ -50,8 +51,10 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     dataConfig->setDimensions(3);
     PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
     meshConfig->setDimensions(3);
-    m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-    CouplingSchemeConfiguration          cplSchemeConfig(root, meshConfig, m2nConfig);
+    m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
+    precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+    participantConfig->setDimensions(3);
+    CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
     const xml::ConfigurationContext ccontext{context.name, 0, 1};
     xml::configure(root, ccontext, configFilename);

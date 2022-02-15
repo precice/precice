@@ -26,9 +26,8 @@ namespace config {
 class ParticipantConfiguration : public xml::XMLTag::Listener {
 public:
   ParticipantConfiguration(
-      xml::XMLTag &                         parent,
-      mesh::PtrMeshConfiguration            meshConfiguration,
-      config::SolverInterfaceConfiguration *solverInterfaceConfiguration);
+      xml::XMLTag &              parent,
+      mesh::PtrMeshConfiguration meshConfiguration);
 
   void setDimensions(int dimensions);
 
@@ -110,8 +109,6 @@ private:
 
   mesh::PtrMeshConfiguration _meshConfig;
 
-  SolverInterfaceConfiguration *_solverInterfaceConfig;
-
   mapping::PtrMappingConfiguration _mappingConfig;
 
   action::PtrActionConfiguration _actionConfig;
@@ -147,9 +144,6 @@ private:
   void checkIllDefinedMappings(
       const mapping::MappingConfiguration::ConfiguredMapping &mapping,
       const impl::PtrParticipant &                            participant);
-
-  /// Are experimental API calls allowed?
-  bool _allowsExperimental = false;
 };
 
 } // namespace config

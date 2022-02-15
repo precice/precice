@@ -25,6 +25,11 @@ void ReadDataContext::configureMapping(const MappingContext &mappingContext, con
   PRECICE_ASSERT(hasReadMapping());
 }
 
+int ReadDataContext::getInterpolationOrder() const
+{
+  return _providedWaveform->getInterpolationOrder();
+}
+
 void ReadDataContext::storeDataInWaveformFirstSample()
 {
   _providedWaveform->storeAtFirstSample(_providedData->values()); // store mapped or received _providedData in the _providedWaveform

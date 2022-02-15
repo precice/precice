@@ -15,6 +15,11 @@ Waveform::Waveform(
   PRECICE_ASSERT(0 <= _interpolationOrder && _interpolationOrder <= 2);
 }
 
+int Waveform::getInterpolationOrder() const
+{
+  return _interpolationOrder;
+}
+
 void Waveform::initialize(
     const int valuesSize)
 {

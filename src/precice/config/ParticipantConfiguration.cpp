@@ -40,10 +40,9 @@ namespace precice {
 namespace config {
 
 ParticipantConfiguration::ParticipantConfiguration(
-    xml::XMLTag &                 parent,
-    mesh::PtrMeshConfiguration    meshConfiguration,
-    SolverInterfaceConfiguration *solverInterfaceConfiguration)
-    : _meshConfig(std::move(meshConfiguration)), _solverInterfaceConfig(solverInterfaceConfiguration)
+    xml::XMLTag &              parent,
+    mesh::PtrMeshConfiguration meshConfiguration)
+    : _meshConfig(std::move(meshConfiguration))
 {
   PRECICE_ASSERT(_meshConfig);
   using namespace xml;
@@ -340,9 +339,8 @@ void ParticipantConfiguration::xmlTagCallback(
                   _participants.back()->getName(), meshName, meshName);
     mesh::PtrData data          = getData(mesh, dataName);
     int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
-    if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {
-      _allowsExperimental = _solverInterfaceConfig->allowsExperimental();
-      PRECICE_EXPERIMENTAL_ATTRIBUTE(TAG_READ, ATTR_ORDER);
+    if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {  // @todo better use SolverInterface::allowsExperimental() here? But this is difficult.
+      PRECICE_WARN("You configured the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Use with care.", dataName, waveformOrder); //@todo should use PRECICE_EXPERIMENTAL_ATTRIBUTE?
     }
     _participants.back()->addReadData(data, mesh, waveformOrder);
   } else if (tag.getName() == TAG_WATCH_POINT) {

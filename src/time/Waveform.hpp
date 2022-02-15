@@ -28,6 +28,13 @@ public:
   Waveform(const int interpolationOrder);
 
   /**
+   * @brief Get the _interpolationOrder.
+   * 
+   * @return int _interpolationOrder
+   */
+  int getInterpolationOrder() const;
+
+  /**
    * @brief Used to initialize _timeWindowsStorage according to required size.
    * @param valuesSize Defines how many values one sample in time consists of
    */
