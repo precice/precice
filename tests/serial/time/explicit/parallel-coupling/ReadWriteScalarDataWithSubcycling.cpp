@@ -85,20 +85,17 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   precice.initializeData();
 
   while (precice.isCouplingOngoing()) {
-    double readTime = timewindow * windowDt; // both solvers lags one window behind for parallel-explicit coupling.
+    double readTime = timewindow * windowDt; // both solvers lag one window behind for parallel-explicit coupling.
     BOOST_TEST(readData.size() == n_vertices);
+    if (timestep % nSubsteps == 0) {
+      BOOST_TEST(precice.isReadDataAvailable());
+    } else {
+      BOOST_TEST(!precice.isReadDataAvailable());
+    }
     for (int i = 0; i < n_vertices; i++) {
       oldReadData = readData[i];
       if (precice.isReadDataAvailable()) {
-        precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
-      }
-      if (precice.isTimeWindowComplete() ||
-          (timestep == 0)) {                      // exception: First timestep will also have different data, even though formally no time window is completed.
-        BOOST_TEST((readData[i] != oldReadData)); // ensure that read data changes from one step to the next, if a new window is entered
-      } else if (not precice.isTimeWindowComplete()) {
-        BOOST_TEST((readData[i] == oldReadData)); // ensure that read data stays the same from one step to the next, if not a new window is entered
-      } else {                                    // we should not enter this branch, because this would skip all tests.
-        BOOST_TEST(false);
+        precice.readScalarData(readDataID, vertexIDs[i], readData[i]);
       }
       BOOST_TEST(readData[i] == readFunction(readTime, i));
     }

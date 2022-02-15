@@ -89,21 +89,18 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     if (context.isNamed("SolverOne")) {
       readTime = timewindow * windowDt; // SolverOne lags one window behind SolverTwo for serial-explicit coupling.
     } else {
-      readTime = (timewindow + 1) * windowDt;
+      readTime = (timewindow + 1) * windowDt; // SolverTwo gets result at end of window from SolverOne
     }
     BOOST_TEST(readData.size() == n_vertices);
+    if (timestep % nSubsteps == 0) {
+      BOOST_TEST(precice.isReadDataAvailable());
+    } else {
+      BOOST_TEST(!precice.isReadDataAvailable());
+    }
     for (int i = 0; i < n_vertices; i++) {
       oldReadData = readData[i];
       if (precice.isReadDataAvailable()) {
-        precice.readScalarData(readDataID, vertexIDs[i], currentDt, readData[i]);
-      }
-      if (precice.isTimeWindowComplete() ||
-          (timestep == 0)) {                      // exception: First timestep will also have different data, even though formally no time window is completed.
-        BOOST_TEST((readData[i] != oldReadData)); // ensure that read data changes from one step to the next, if a new window is entered
-      } else if (not precice.isTimeWindowComplete()) {
-        BOOST_TEST((readData[i] == oldReadData)); // ensure that read data stays the same from one step to the next, if not a new window is entered
-      } else {                                    // we should not enter this branch, because this would skip all tests.
-        BOOST_TEST(false);
+        precice.readScalarData(readDataID, vertexIDs[i], readData[i]);
       }
       BOOST_TEST(readData[i] == readFunction(readTime, i));
     }
