@@ -1197,6 +1197,10 @@ void SolverInterfaceImpl::readBlockVectorData(
   PRECICE_REQUIRE_DATA_READ(dataID);
   double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
   bool   checkExperimental         = false;
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
   return readBlockVectorData(dataID, size, valueIndices, relativeTimeWindowEndTime, values, checkExperimental);
 }
 
@@ -1254,6 +1258,10 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_REQUIRE_DATA_READ(dataID);
   double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
   bool   checkExperimental         = false;
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
   return readVectorData(dataID, valueIndex, relativeTimeWindowEndTime, value, checkExperimental);
 }
 
@@ -1307,6 +1315,10 @@ void SolverInterfaceImpl::readBlockScalarData(
   PRECICE_REQUIRE_DATA_READ(dataID);
   double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
   bool   checkExperimental         = false;
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
   return readBlockScalarData(dataID, size, valueIndices, relativeTimeWindowEndTime, values, checkExperimental);
 }
 
@@ -1361,6 +1373,10 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_REQUIRE_DATA_READ(dataID);
   double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
   bool   checkExperimental         = false;
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
   return readScalarData(dataID, valueIndex, relativeTimeWindowEndTime, value, checkExperimental);
 }
 
