@@ -58,6 +58,8 @@ public:
       m2n::M2NConfiguration::SharedPointer m2nConfig,
       config::PtrParticipantConfiguration  participantConfig);
 
+  void setExperimental(bool experimental);
+
   /// Destructor, empty.
   virtual ~CouplingSchemeConfiguration() {}
 
@@ -122,6 +124,8 @@ private:
   const std::string VALUE_MULTI;
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
+
+  bool _experimental = false;
 
   struct ConvergenceMeasureDefintion {
     mesh::PtrData               data;

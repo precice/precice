@@ -265,6 +265,12 @@ void ParticipantConfiguration::setDimensions(
   _dimensions = dimensions;
 }
 
+void ParticipantConfiguration::setExperimental(
+    bool experimental)
+{
+  _experimental = experimental;
+}
+
 void ParticipantConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
     xml::XMLTag &                    tag)
@@ -339,8 +345,11 @@ void ParticipantConfiguration::xmlTagCallback(
                   _participants.back()->getName(), meshName, meshName);
     mesh::PtrData data          = getData(mesh, dataName);
     int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
-    if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {  // @todo better use SolverInterface::allowsExperimental() here? But this is difficult.
-      PRECICE_WARN("You configured the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Use with care.", dataName, waveformOrder); //@todo should use PRECICE_EXPERIMENTAL_ATTRIBUTE?
+    if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {
+      if (!_experimental) {
+        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", dataName, waveformOrder);
+      }
+      PRECICE_WARN("You configured the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Use with care.", dataName, waveformOrder);
     }
     _participants.back()->addReadData(data, mesh, waveformOrder);
   } else if (tag.getName() == TAG_WATCH_POINT) {

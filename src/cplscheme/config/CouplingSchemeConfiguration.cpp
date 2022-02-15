@@ -132,6 +132,12 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
   }
 }
 
+void CouplingSchemeConfiguration::setExperimental(
+    bool experimental)
+{
+  _experimental = experimental;
+}
+
 bool CouplingSchemeConfiguration::hasCouplingScheme(
     const std::string &participantName) const
 {
@@ -296,9 +302,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
-      // @todo better use SolverInterface::allowsExperimental() here? But this is difficult.
-      int allowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
-      checkWaveformOrderReadData(allowedOrder);
+      if (_experimental) {
+        int allowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
+        checkWaveformOrderReadData(allowedOrder);
+      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -309,9 +316,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_PARALLEL_EXPLICIT) {
-      // @todo better use SolverInterface::allowsExperimental() here? But this is difficult.
-      int allowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
-      checkWaveformOrderReadData(allowedOrder);
+      if (_experimental) {
+        int allowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
+        checkWaveformOrderReadData(allowedOrder);
+      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createParallelExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -340,9 +348,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       addCouplingScheme(scheme, accessor);
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
-      // @todo better use SolverInterface::allowsExperimental() here? But this is difficult.
-      int allowedOrder = 0; // multi coupling schemes does not allow waveform iteration
-      checkWaveformOrderReadData(allowedOrder);
+      if (_experimental) {
+        int allowedOrder = 0; // multi coupling schemes does not allow waveform iteration
+        checkWaveformOrderReadData(allowedOrder);
+      }
       PRECICE_CHECK(_config.setController,
                     "One controller per MultiCoupling needs to be defined. "
                     "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
