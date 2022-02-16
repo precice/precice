@@ -66,13 +66,13 @@ private:
   bool exchangeDataAndAccelerate() override;
 
   /**
-   * @brief ParallelCouplingScheme applies acceleration to _allData
+   * @brief ParallelCouplingScheme applies acceleration to all CouplingData
    * @returns DataMap being accelerated
    */
   DataMap &getAccelerationData() override
   {
     PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-    return _allData;
+    return getAllData();
   }
 
   /**

@@ -256,7 +256,7 @@ void BaseCouplingScheme::advance()
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : _allData) {
+  for (DataMap::value_type &pair : getAllData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->storeExtrapolationData();
   }
@@ -449,7 +449,7 @@ void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
-  for (DataMap::value_type &pair : _allData) {
+  for (DataMap::value_type &pair : getAllData()) {
     pair.second->initializeExtrapolation();
   }
   // Reserve storage for acceleration
@@ -482,8 +482,8 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = &(*_allData[dataID]);
+  PRECICE_ASSERT(getAllData().count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = &(*getAllData()[dataID]);
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
@@ -662,8 +662,8 @@ bool BaseCouplingScheme::doImplicitStep()
 void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, DataID dataID)
 {
   PRECICE_TRACE(dataID);
-  DataMap::iterator iter = _allData.find(dataID);
-  PRECICE_ASSERT(iter != _allData.end(), "Given data ID does not exist in _allData!");
+  DataMap::iterator iter = getAllData().find(dataID);
+  PRECICE_ASSERT(iter != getAllData().end(), "Given data ID does not exist in getAllData()!");
   convergenceMeasure->couplingData = &(*(iter->second));
 }
 

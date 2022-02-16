@@ -15,9 +15,6 @@
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
-#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -149,9 +146,6 @@ void MultiCouplingScheme::addDataToSend(
   PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
   DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
   _sendDataVector[to].insert(dataPair);
-  if (!utils::contained(id, _allData)) {
-    _allData.insert(dataPair);
-  }
 }
 
 void MultiCouplingScheme::addDataToReceive(
@@ -165,9 +159,6 @@ void MultiCouplingScheme::addDataToReceive(
   PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
   DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
   _receiveDataVector[from].insert(dataPair);
-  if (!utils::contained(id, _allData)) {
-    _allData.insert(dataPair);
-  }
 }
 
 } // namespace cplscheme

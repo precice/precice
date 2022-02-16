@@ -251,6 +251,12 @@ protected:
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
+   * @brief interface to provide all CouplingData, depending on coupling scheme being used
+   * @return DataMap containing all CouplingData
+   */
+  virtual DataMap &getAllData() = 0;
+
+  /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
    * @returns true, if coupling scheme is explicit
    */
@@ -354,7 +360,7 @@ protected:
   void storeIteration()
   {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-    for (DataMap::value_type &pair : _allData) {
+    for (DataMap::value_type &pair : getAllData()) {
       pair.second->storeIteration();
     }
   }
