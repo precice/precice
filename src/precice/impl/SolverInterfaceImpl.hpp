@@ -517,7 +517,7 @@ public:
    * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
    * the end of the time step.
    * 
-   * @param[in] toDataID          ID of the data to be written.
+   * @param[in] toDataID          ID of the data to be read.
    * @param[in] size              Number of valueIndices, and number of values.
    * @param[in] valueIndices      Indices (from setReadPosition()) of data values.
    * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
