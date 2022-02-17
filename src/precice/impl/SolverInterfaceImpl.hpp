@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <boost/range/adaptor/map.hpp>
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
@@ -14,7 +15,7 @@
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/impl/DataContext.hpp"
+#include "precice/impl/Participant.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/MultiLock.hpp"
@@ -417,16 +418,16 @@ public:
       double value);
 
   /**
-   * @brief Reads vector data values given as block.
+   * @brief Reads vector data values given as block from the interface mesh at the end of the time window.
    *
    * The block contains the vector values in the following form:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param toDataID [IN] ID of the data to be read.
-   * @param size [IN] Number of indices, and number of values * dimensions.
-   * @param valueIndices [IN] Indices (from setReadPosition()) of data values.
-   * @param values [IN] Values of the data to be read.
+   * @param[in] toDataID     ID of the data to be written.
+   * @param[in] size         Number of valueIndices, and number of values.
+   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
+   * @param[out] values      Read data value.
    */
   void readBlockVectorData(
       int        toDataID,
@@ -435,11 +436,38 @@ public:
       double *   values) const;
 
   /**
-   * @brief Reads vector data from the coupling mesh.
+   * @brief Reads vector data values given as block from the interface mesh at arbitrary point in time of the current time window.
    *
-   * @param[in] toDataID ID of the data to be read, e.g. 1 = forces
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be read
-   * @param[out] dataValue Read data value
+   * The block contains the vector values in the following form:
+   * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
+   * the number of vector values. In 2D, the z-components are removed.
+   * 
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
+   * the end of the time step.
+   *
+   * @param[in] toDataID          ID of the data to be written.
+   * @param[in] size              Number of valueIndices, and number of values.
+   * @param[in] valueIndices      Indices (from setReadPosition()) of data values.
+   * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
+   * @param[out] values           Read data value.
+   * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
+   */
+  void readBlockVectorData(
+      int        toDataID,
+      int        size,
+      const int *valueIndices,
+      double     relativeReadTime,
+      double *   values,
+      bool       checkExperimental = true) const;
+
+  /**
+   * @brief Read vector data at a vertex on the interface mesh at the end of the time window.
+   *
+   * @param[in] toDataID   ID of the data to be read, e.g. 1 = forces
+   * @param[in] valueIndex Index (from setReadPosition()) of data value.
+   * @param[out] value     Read data value
    */
   void readVectorData(
       int     toDataID,
@@ -447,11 +475,33 @@ public:
       double *value) const;
 
   /**
-   * @brief Reads scalar data values given as block.
+   * @brief Read vector data at a vertex on the interface mesh at arbitrary point in time of the current time window.
    *
-   * @param[in] toDataID ID of the data to be written.
-   * @param[in] size Number of valueIndices, and number of values.
-   * @param[in] values Values of the data to be written.
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
+   * the end of the time step.
+   * 
+   * @param[in] toDataID          ID of the data to be read, e.g. 1 = forces
+   * @param[in] valueIndex        Index (from setReadPosition()) of data value.
+   * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
+   * @param[out] value            Read data value
+   * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
+   */
+  void readVectorData(
+      int     toDataID,
+      int     valueIndex,
+      double  relativeReadTime,
+      double *value,
+      bool    checkExperimenal = true) const;
+
+  /**
+   * @brief Reads scalar data values given as block from the interface mesh at the end of the time window.
+   *
+   * @param[in] toDataID     ID of the data to be written.
+   * @param[in] size         Number of valueIndices, and number of values.
+   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
+   * @param[out] values      Read data value.
    */
   void readBlockScalarData(
       int        toDataID,
@@ -460,18 +510,60 @@ public:
       double *   values) const;
 
   /**
-   * @brief Read scalar data from the interface mesh.
+   * @brief Reads scalar data values given as block from the interface mesh at arbitrary point in time of the current time window.
    *
-   * The exact mapping and communication must be specified in XYZ.
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
+   * the end of the time step.
+   * 
+   * @param[in] toDataID          ID of the data to be written.
+   * @param[in] size              Number of valueIndices, and number of values.
+   * @param[in] valueIndices      Indices (from setReadPosition()) of data values.
+   * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
+   * @param[out] values           Read data value.
+   * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
+   */
+  void readBlockScalarData(
+      int        toDataID,
+      int        size,
+      const int *valueIndices,
+      double     relativeReadTime,
+      double *   values,
+      bool       checkExperimental = true) const;
+
+  /**
+   * @brief Read scalar data from the interface mesh at the end of the time window.
    *
    * @param[in] toDataID     ID of the data to be read, e.g. 2 = temperatures
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be read
-   * @param[in] dataValue    Read data value
+   * @param[in] valueIndex   Index (from setReadPosition()) of data value.
+   * @param[out] value       Read data value
    */
   void readScalarData(
       int     toDataID,
       int     valueIndex,
       double &value) const;
+
+  /**
+   * @brief Read scalar data from the interface mesh at arbitrary point in time of the current time window.
+   *
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
+   * the end of the time step.
+   * 
+   * @param[in] toDataID          ID of the data to be read, e.g. 2 = temperatures
+   * @param[in] valueIndex        Index (from setReadPosition()) of data value.
+   * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
+   * @param[out] value            Read data value
+   * @param[in] checkExperimental Set false to deactivate checks, if this function is called internally.
+   */
+  void readScalarData(
+      int     toDataID,
+      int     valueIndex,
+      double  relativeReadTime,
+      double &value,
+      bool    checkExperimental = true) const;
 
   /**
    * @copydoc precice::SolverInterface::setMeshAccessRegion()
@@ -571,13 +663,16 @@ private:
     Finalized    // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to State::Finalized; mandatory
   };
 
-  // SolverInterface.initializeData() triggers transition from false to true.
+  /// SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
+
+  /// SolverInterface.initializeReadWaveforms() triggers transition from false to true.
+  bool _hasInitializedReadWaveforms = false;
 
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
-  // setMeshAccessRegion may only be called once
+  /// setMeshAccessRegion may only be called once
   mutable bool _accessRegionDefined = false;
 
   /// The current State of the solverinterface
@@ -649,19 +744,31 @@ private:
   void computePartitions();
 
   /// Helper for mapWrittenData and mapReadData
-  void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
-
-  /// Helper for mapWrittenData and mapReadData
   void mapData(DataContext &context, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
+  void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
+
+  /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
+
+  /**
+   * @brief Check whether mapping has to be performed. 
+   * 
+   * Checks whether a mapping exists for this context and the timing configuration.
+   * 
+   * @return True, if a mapping has to be performed.
+   */
+  bool isMappingRequired(DataContext &context);
 
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();
 
   /// Computes, performs, and resets all suitable read mappings.
   void mapReadData();
+
+  /// Initializes waveforms of read data contexts before mapping.
+  void initializeReadWaveforms();
 
   /**
    * @brief Performs all data actions with given timing.

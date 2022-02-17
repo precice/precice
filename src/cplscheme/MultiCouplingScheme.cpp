@@ -77,7 +77,7 @@ void MultiCouplingScheme::exchangeInitialData()
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
-      checkDataHasBeenReceived();
+      checkInitialDataHasBeenReceived();
     }
     if (sendsInitializedData()) {
       for (auto &sendExchange : _sendDataVector) {
@@ -94,7 +94,7 @@ void MultiCouplingScheme::exchangeInitialData()
       for (auto &receiveExchange : _receiveDataVector) {
         receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
       }
-      checkDataHasBeenReceived();
+      checkInitialDataHasBeenReceived();
     }
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");

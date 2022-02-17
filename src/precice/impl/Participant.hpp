@@ -76,7 +76,8 @@ public:
   /// Adds a configured read \ref Data to the Participant
   void addReadData(
       const mesh::PtrData &data,
-      const mesh::PtrMesh &mesh);
+      const mesh::PtrMesh &mesh,
+      int                  interpolationOrder);
 
   /// Adds a configured read \ref Mapping to the Participant
   void addReadMappingContext(MappingContext *mappingContext);

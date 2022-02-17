@@ -317,6 +317,15 @@ void SolverInterface::getMeshVerticesAndIDs(const int meshID,
   _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }
 
+void SolverInterface::readScalarData(
+    int     dataID,
+    int     valueIndex,
+    double  dt,
+    double &value) const
+{
+  return _impl->readScalarData(dataID, valueIndex, dt, value);
+}
+
 std::string getVersionInformation()
 {
   return {precice::versionInformation};

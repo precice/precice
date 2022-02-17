@@ -4,12 +4,14 @@
 
 #include "DataContext.hpp"
 #include "logging/Logger.hpp"
+#include "time/SharedPointer.hpp"
+#include "time/Time.hpp"
 
 namespace precice {
 namespace impl {
 
 /**
- * @brief Stores one Data object with related mesh. Context stores data to be read from and potentially provides a read mapping.
+ * @brief Stores one Data object with related mesh. Context stores data to be read from and potentially provides a read mapping. Additionally stores Waveform associated with _providedData.
  *
  * Derived from DataContext
  */
@@ -20,10 +22,19 @@ public:
    * 
    * @param data Data associated with this ReadDataContext.
    * @param mesh Mesh associated with this ReadDataContext.
+   * @param interpolationOrder Order of the Waveform stored by this ReadDataContext.
    */
   ReadDataContext(
       mesh::PtrData data,
-      mesh::PtrMesh mesh);
+      mesh::PtrMesh mesh,
+      int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
+
+  /**
+   * @brief Getter for _interpolationOrder of _providedWaveform
+   * 
+   * @return _interpolationOrder of _providedWaveform
+   */
+  int getInterpolationOrder() const;
 
   /**
    * @brief Links a MappingContext and the MeshContext required by the read mapping requires to this ReadDataContext.
@@ -35,8 +46,33 @@ public:
    */
   void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) override;
 
+  /**
+   * @brief Allows to sample data at a given point in time insize of the time window
+   *
+   * @param normalizedDt defines point in time where waveform will be sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the window.
+   */
+  Eigen::VectorXd sampleWaveformAt(double normalizedDt);
+
+  /**
+   * @brief Initializes the _providedWaveform as a constant function with values from _providedData.
+   */
+  void initializeWaveform();
+
+  /**
+   * @brief Updates _providedWaveform when moving to the next time window.
+   */
+  void moveToNextWindow();
+
+  /**
+   * @brief Stores _providedData as first sample of _providedWaveform.
+   */
+  void storeDataInWaveformFirstSample();
+
 private:
   static logging::Logger _log;
+
+  /// Waveform wrapped by this ReadDataContext.
+  time::PtrWaveform _providedWaveform;
 };
 
 } // namespace impl

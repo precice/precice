@@ -43,8 +43,8 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterations(1),
       _localParticipant(std::move(localParticipant)),
-      _extrapolationOrder(extrapolationOrder),
-      _eps(std::pow(10.0, -1 * validDigits))
+      _eps(std::pow(10.0, -1 * validDigits)),
+      _extrapolationOrder(extrapolationOrder)
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
                  "Maximum time has to be larger than zero.");
@@ -310,15 +310,28 @@ bool BaseCouplingScheme::willDataBeExchanged(
   return not math::greater(remainder, 0.0, _eps);
 }
 
+bool BaseCouplingScheme::hasInitialDataBeenReceived() const
+{
+  return _hasInitialDataBeenReceived;
+}
+
 bool BaseCouplingScheme::hasDataBeenReceived() const
 {
   return _hasDataBeenReceived;
 }
 
+void BaseCouplingScheme::checkInitialDataHasBeenReceived()
+{
+  PRECICE_ASSERT(not _hasDataBeenReceived, "checkInitialDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
+  _hasInitialDataBeenReceived = true;
+  checkDataHasBeenReceived();
+}
+
 void BaseCouplingScheme::checkDataHasBeenReceived()
 {
   PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
-  _hasDataBeenReceived = true;
+  _hasDataBeenReceived        = true;
+  _hasInitialDataBeenReceived = true; // If any data has been received, this counts as initial data. Important for waveform relaxation & subcycling.
 }
 
 double BaseCouplingScheme::getTime() const

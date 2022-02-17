@@ -303,6 +303,10 @@ double SolverInterfaceImpl::initialize()
 
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
+  if (not _hasInitializedReadWaveforms) { // always necessary in this case.
+    initializeReadWaveforms();            // sets 0 for all samples
+    _hasInitializedReadWaveforms = true;
+  }
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
@@ -390,6 +394,13 @@ double SolverInterfaceImpl::advance(
   PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.", computedTimestepLength);
   _numberAdvanceCalls++;
 
+  // This is the first time advance is called. Initializes the waveform with data from initializeData or 0, if initializeData was not called.
+  if (_numberAdvanceCalls == 1) {
+    for (auto &context : _accessor->readDataContexts()) {
+      context.moveToNextWindow();
+    }
+  }
+
 #ifndef NDEBUG
   PRECICE_DEBUG("Synchronize timestep length");
   if (utils::MasterSlave::isParallel()) {
@@ -420,6 +431,17 @@ double SolverInterfaceImpl::advance(
 
   PRECICE_DEBUG("Advance coupling scheme");
   _couplingScheme->advance();
+
+  if (_couplingScheme->isTimeWindowComplete()) {
+    for (auto &context : _accessor->readDataContexts()) {
+      context.moveToNextWindow();
+    }
+  }
+
+  if (not _hasInitializedReadWaveforms) { // necessary, if mesh was reset.
+    initializeReadWaveforms();
+    _hasInitializedReadWaveforms = true;
+  }
 
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
@@ -522,7 +544,9 @@ bool SolverInterfaceImpl::isReadDataAvailable() const
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isReadDataAvailable().");
   PRECICE_CHECK(_state != State::Finalized, "isReadDataAvailable() cannot be called after finalize().");
-  return _couplingScheme->hasDataBeenReceived();
+  bool available = _couplingScheme->hasDataBeenReceived();
+  available |= (_allowsExperimental && _couplingScheme->hasInitialDataBeenReceived()); // if waveform relaxation is allowed, we always return true as soon as initialData is available.
+  return available;
 }
 
 bool SolverInterfaceImpl::isWriteDataRequired(
@@ -663,6 +687,8 @@ void SolverInterfaceImpl::resetMesh(
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());
   _meshLock.unlock(meshID);
   context.mesh->clear();
+
+  _hasInitializedReadWaveforms = false; // waveforms must be re-initialized after resetting the mesh.
 }
 
 int SolverInterfaceImpl::setMeshVertex(
@@ -984,7 +1010,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
                 context.mesh->getName());
 
   double time = _couplingScheme->getTime();
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0, 0, 0);
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
   for (impl::MappingContext &mappingContext : context.fromMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
@@ -995,14 +1021,11 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
-      context.resetToData();
-      PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
-      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
+      mapData(context, "write");
     }
     mappingContext.hasMappedData = true;
   }
-  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0, 0, 0);
+  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0.0, 0.0, 0.0);
 }
 
 void SolverInterfaceImpl::mapReadDataTo(
@@ -1017,7 +1040,10 @@ void SolverInterfaceImpl::mapReadDataTo(
                 context.mesh->getName());
 
   double time = _couplingScheme->getTime();
-  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0, 0, 0);
+  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
+
+  // @todo should only initialize waveform for the toMeshID
+  initializeReadWaveforms();
 
   for (impl::MappingContext &mappingContext : context.toMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
@@ -1028,15 +1054,12 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.getMeshID() != toMeshID) {
         continue;
       }
-      context.resetToData();
-      PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
-      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
-      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
+      mapData(context, "read");
+      context.storeDataInWaveformFirstSample();
     }
     mappingContext.hasMappedData = true;
   }
-  performDataActions({action::Action::READ_MAPPING_POST}, time, 0, 0, 0);
+  performDataActions({action::Action::READ_MAPPING_POST}, time, 0.0, 0.0, 0.0);
 }
 
 void SolverInterfaceImpl::writeBlockVectorData(
@@ -1053,15 +1076,14 @@ void SolverInterfaceImpl::writeBlockVectorData(
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockVectorData() was called with values == nullptr");
   WriteDataContext &context = _accessor->writeDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeBlockVectorData on the scalar data type \"{0}\". Use writeBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
   PRECICE_VALIDATE_DATA(values, size * _dimensions);
 
-  mesh::Data &data           = *context.providedData();
-  auto &      valuesInternal = data.values();
-  const auto  vertexCount    = valuesInternal.size() / context.getDataDimensions();
+  PRECICE_ASSERT(context.providedData() != nullptr);
+  auto &     valuesInternal = context.providedData()->values();
+  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1087,15 +1109,14 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
   WriteDataContext &context = _accessor->writeDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeVectorData on the scalar data type \"{0}\". Use writeScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
   PRECICE_VALIDATE_DATA(value, _dimensions);
 
-  mesh::Data &data        = *context.providedData();
-  auto &      values      = data.values();
-  const auto  vertexCount = values.size() / context.getDataDimensions();
+  PRECICE_ASSERT(context.providedData() != nullptr);
+  auto &     values      = context.providedData()->values();
+  const auto vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 context.getDataName(), valueIndex);
@@ -1119,15 +1140,14 @@ void SolverInterfaceImpl::writeBlockScalarData(
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockScalarData() was called with values == nullptr");
   WriteDataContext &context = _accessor->writeDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call writeBlockScalarData on the vector data type \"{}\". Use writeBlockVectorData or change the data type for \"{}\" to scalar.",
                 context.getDataName(), context.getDataName());
   PRECICE_VALIDATE_DATA(values, size);
 
-  mesh::Data &data           = *context.providedData();
-  auto &      valuesInternal = data.values();
-  const auto  vertexCount    = valuesInternal.size() / context.getDataDimensions();
+  PRECICE_ASSERT(context.providedData() != nullptr);
+  auto &     valuesInternal = context.providedData()->values();
+  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1146,7 +1166,6 @@ void SolverInterfaceImpl::writeScalarData(
   PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   WriteDataContext &context = _accessor->writeDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ({}) when writing scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1157,9 +1176,9 @@ void SolverInterfaceImpl::writeScalarData(
                 context.getDataName());
   PRECICE_VALIDATE_DATA(static_cast<double *>(&value), 1);
 
-  mesh::Data &data        = *context.providedData();
-  auto &      values      = data.values();
-  const auto  vertexCount = values.size() / context.getDataDimensions();
+  PRECICE_ASSERT(context.providedData() != nullptr);
+  auto &     values      = context.providedData()->values();
+  const auto vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1176,19 +1195,45 @@ void SolverInterfaceImpl::readBlockVectorData(
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
+  double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  bool   checkExperimental         = false;
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
+  return readBlockVectorData(dataID, size, valueIndices, relativeTimeWindowEndTime, values, checkExperimental);
+}
+
+void SolverInterfaceImpl::readBlockVectorData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     relativeReadTime,
+    double *   values,
+    bool       checkExperimental) const
+{
+  if (checkExperimental) {
+    PRECICE_EXPERIMENTAL_API();
+  }
+  PRECICE_TRACE(dataID, size);
+  PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockVectorData(...) cannot sample data outside of current time window.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double readTime      = timeStepStart + relativeReadTime;
+  PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
-  mesh::Data &data           = *context.providedData();
-  auto &      valuesInternal = data.values();
-  const auto  vertexCount    = valuesInternal.size() / context.getDataDimensions();
+  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  const auto valuesInternal     = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount        = valuesInternal.size() / context.getDataDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1211,8 +1256,33 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
+  double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  bool   checkExperimental         = false;
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
+  return readVectorData(dataID, valueIndex, relativeTimeWindowEndTime, value, checkExperimental);
+}
+
+void SolverInterfaceImpl::readVectorData(
+    int     dataID,
+    int     valueIndex,
+    double  relativeReadTime,
+    double *value,
+    bool    checkExperimental) const
+{
+  if (checkExperimental) {
+    PRECICE_EXPERIMENTAL_API();
+  }
+  PRECICE_TRACE(dataID, valueIndex);
+  PRECICE_CHECK(_state != State::Finalized, "readVectorData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readVectorData(...) cannot sample data outside of current time window.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double readTime      = timeStepStart + relativeReadTime;
+  PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading vector data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1220,9 +1290,9 @@ void SolverInterfaceImpl::readVectorData(
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
-  mesh::Data &data        = *context.providedData();
-  auto &      values      = data.values();
-  const auto  vertexCount = values.size() / context.getDataDimensions();
+  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  const auto values             = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount        = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1243,19 +1313,45 @@ void SolverInterfaceImpl::readBlockScalarData(
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
+  double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  bool   checkExperimental         = false;
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
+  return readBlockScalarData(dataID, size, valueIndices, relativeTimeWindowEndTime, values, checkExperimental);
+}
+
+void SolverInterfaceImpl::readBlockScalarData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     relativeReadTime,
+    double *   values,
+    bool       checkExperimental) const
+{
+  if (checkExperimental) {
+    PRECICE_EXPERIMENTAL_API();
+  }
+  PRECICE_TRACE(dataID, size);
+  PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readBlockScalarData(...) cannot sample data outside of current time window.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double readTime      = timeStepStart + relativeReadTime;
+  PRECICE_REQUIRE_DATA_READ(dataID);
   if (size == 0)
     return;
   PRECICE_CHECK(valueIndices != nullptr, "readBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
-  mesh::Data &data           = *context.providedData();
-  auto &      valuesInternal = data.values();
-  const auto  vertexCount    = valuesInternal.size();
+  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  const auto valuesInternal     = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount        = valuesInternal.size();
 
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
@@ -1275,8 +1371,33 @@ void SolverInterfaceImpl::readScalarData(
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
+  double relativeTimeWindowEndTime = _couplingScheme->getThisTimeWindowRemainder(); // samples at end of time window
+  bool   checkExperimental         = false;
+  if (_accessor->readDataContext(dataID).getInterpolationOrder() != 0) {
+    PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
+                 _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+  }
+  return readScalarData(dataID, valueIndex, relativeTimeWindowEndTime, value, checkExperimental);
+}
+
+void SolverInterfaceImpl::readScalarData(
+    int     dataID,
+    int     valueIndex,
+    double  relativeReadTime,
+    double &value,
+    bool    checkExperimental) const
+{
+  if (checkExperimental) {
+    PRECICE_EXPERIMENTAL_API();
+  }
+  PRECICE_TRACE(dataID, valueIndex, value);
+  PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
+  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(), "readScalarData(...) cannot sample data outside of current time window.");
+  double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getThisTimeWindowRemainder();
+  double readTime      = timeStepStart + relativeReadTime;
+  PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(context.providedData() != nullptr);
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1285,9 +1406,9 @@ void SolverInterfaceImpl::readScalarData(
                 "You cannot call readScalarData on the vector data type \"{}\". "
                 "Use readVectorData or change the data type for \"{}\" to scalar.",
                 context.getDataName());
-  mesh::Data &data        = *context.providedData();
-  auto &      values      = data.values();
-  const auto  vertexCount = values.size();
+  const auto normalizedReadTime = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
+  const auto values             = context.sampleWaveformAt(normalizedReadTime);
+  const auto vertexCount        = values.size();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
@@ -1559,31 +1680,13 @@ void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext
 
 void SolverInterfaceImpl::mapData(DataContext &context, const std::string &mappingType)
 {
-  PRECICE_TRACE();
-  using namespace mapping;
-  MappingConfiguration::Timing timing;
-
-  if (not context.hasMapping()) {
-    return;
-  }
-
-  timing         = context.mappingContext().timing;
-  bool hasMapped = context.mappingContext().hasMappedData;
-  bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
-  mapNow |= timing == MappingConfiguration::INITIAL;
-
-  if ((not mapNow) || hasMapped) {
-    return;
-  }
-
-  int inDataID  = context.getFromDataID();
-  int outDataID = context.getToDataID();
+  int fromDataID = context.getFromDataID();
+  int toDataID   = context.getToDataID();
   PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
                 mappingType, context.getDataName(), context.getMeshName());
   context.resetToData();
-  PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
-  context.mappingContext().mapping->map(inDataID, outDataID);
-  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
+  PRECICE_DEBUG("Map from dataID {} to dataID: {}", fromDataID, toDataID);
+  context.mappingContext().mapping->map(fromDataID, toDataID);
 }
 
 void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contexts)
@@ -1600,12 +1703,30 @@ void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contex
   }
 }
 
+bool SolverInterfaceImpl::isMappingRequired(DataContext &context)
+{
+  // check whether mapping exists
+  if (not context.hasMapping()) {
+    return false;
+  }
+  // if mapping exists, check whether it has already been performed
+  if (context.mappingContext().hasMappedData) {
+    return false;
+  }
+  // finally, check whether timing asks to map now
+  bool mapOnAdvance = (context.mappingContext().timing == mapping::MappingConfiguration::ON_ADVANCE);
+  bool mapInitial   = (context.mappingContext().timing == mapping::MappingConfiguration::INITIAL);
+  return (mapOnAdvance || mapInitial);
+}
+
 void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
-    mapData(context, "write");
+    if (isMappingRequired(context)) {
+      mapData(context, "write");
+    }
   }
   clearMappings(_accessor->writeMappingContexts());
 }
@@ -1613,11 +1734,23 @@ void SolverInterfaceImpl::mapWrittenData()
 void SolverInterfaceImpl::mapReadData()
 {
   PRECICE_TRACE();
+  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
-    mapData(context, "read");
+    if (isMappingRequired(context)) {
+      mapData(context, "read");
+    }
+    context.storeDataInWaveformFirstSample();
   }
   clearMappings(_accessor->readMappingContexts());
+}
+
+void SolverInterfaceImpl::initializeReadWaveforms()
+{
+  PRECICE_TRACE();
+  for (auto &context : _accessor->readDataContexts()) {
+    context.initializeWaveform();
+  }
 }
 
 void SolverInterfaceImpl::performDataActions(

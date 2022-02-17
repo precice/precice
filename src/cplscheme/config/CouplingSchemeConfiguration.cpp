@@ -27,6 +27,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/ParticipantConfiguration.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/Helpers.hpp"
@@ -38,12 +39,11 @@
 namespace precice {
 namespace cplscheme {
 
-using precice::impl::PtrParticipant;
-
 CouplingSchemeConfiguration::CouplingSchemeConfiguration(
     xml::XMLTag &                        parent,
     mesh::PtrMeshConfiguration           meshConfig,
-    m2n::M2NConfiguration::SharedPointer m2nConfig)
+    m2n::M2NConfiguration::SharedPointer m2nConfig,
+    config::PtrParticipantConfiguration  participantConfig)
     : TAG("coupling-scheme"),
       TAG_PARTICIPANTS("participants"),
       TAG_PARTICIPANT("participant"),
@@ -85,6 +85,7 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       _config(),
       _meshConfig(std::move(meshConfig)),
       _m2nConfig(std::move(m2nConfig)),
+      _participantConfig(participantConfig),
       _couplingSchemes(),
       _couplingSchemeCompositions()
 {
@@ -129,6 +130,12 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
   for (XMLTag &tag : tags) {
     parent.addSubtag(tag);
   }
+}
+
+void CouplingSchemeConfiguration::setExperimental(
+    bool experimental)
+{
+  _experimental = experimental;
 }
 
 bool CouplingSchemeConfiguration::hasCouplingScheme(
@@ -295,6 +302,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
+      if (_experimental) {
+        int allowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
+        checkWaveformOrderReadData(allowedOrder);
+      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -305,6 +316,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_PARALLEL_EXPLICIT) {
+      if (_experimental) {
+        int allowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
+        checkWaveformOrderReadData(allowedOrder);
+      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createParallelExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -315,6 +330,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_SERIAL_IMPLICIT) {
+      if (_experimental) {
+        int allowedOrder = 0; // serial implicit coupling does not allow waveform iteration yet (see https://github.com/precice/precice/issues/1174#issuecomment-1042823430)
+        checkWaveformOrderReadData(allowedOrder);
+      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialImplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -333,6 +352,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       addCouplingScheme(scheme, accessor);
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
+      if (_experimental) {
+        int allowedOrder = 0; // multi coupling scheme does not allow waveform iteration
+        checkWaveformOrderReadData(allowedOrder);
+      }
       PRECICE_CHECK(_config.setController,
                     "One controller per MultiCoupling needs to be defined. "
                     "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
@@ -1022,6 +1045,24 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration acceleration. "
                 "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
                 dataName);
+}
+
+void CouplingSchemeConfiguration::checkWaveformOrderReadData(
+    int allowedOrder) const
+{
+  int usedOrder = -1;
+  for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
+    for (auto &dataContext : participant->readDataContexts()) {
+      int usedOrder = dataContext.getInterpolationOrder();
+      if (usedOrder > allowedOrder) {
+        PRECICE_ERROR(
+            "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
+            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, allowedOrder);
+      }
+      PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
+      usedOrder = -1;                 // reset usedOrder for next iteration
+    }
+  }
 }
 
 void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(

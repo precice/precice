@@ -49,12 +49,16 @@ public:
    *
    * @param[in] parent  Used to add subtags to hierarchical XML structure.
    * @param[in] meshConfig For checking if a used mesh is defined.
-   * @param[in] comConfig For checking if a communication between participants to be coupled is defined.
+   * @param[in] m2nConfig For checking if a communication between participants to be coupled is defined.
+   * @param[in] participantConfig For checking waveform order.
    */
   CouplingSchemeConfiguration(
       xml::XMLTag &                        parent,
       mesh::PtrMeshConfiguration           meshConfig,
-      m2n::M2NConfiguration::SharedPointer m2nConfig);
+      m2n::M2NConfiguration::SharedPointer m2nConfig,
+      config::PtrParticipantConfiguration  participantConfig);
+
+  void setExperimental(bool experimental);
 
   /// Destructor, empty.
   virtual ~CouplingSchemeConfiguration() {}
@@ -121,6 +125,8 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
+  bool _experimental = false;
+
   struct ConvergenceMeasureDefintion {
     mesh::PtrData               data;
     bool                        suffices;
@@ -160,6 +166,8 @@ private:
   m2n::M2NConfiguration::SharedPointer _m2nConfig;
 
   acceleration::PtrAccelerationConfiguration _accelerationConfig;
+
+  precice::config::PtrParticipantConfiguration _participantConfig;
 
   /// Map from participant name to coupling scheme (composition).
   std::map<std::string, PtrCouplingScheme> _couplingSchemes;
@@ -261,6 +269,9 @@ private:
 
   void checkIfDataIsExchanged(
       DataID dataID) const;
+
+  void checkWaveformOrderReadData(
+      int allowedOrder) const;
 
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;
