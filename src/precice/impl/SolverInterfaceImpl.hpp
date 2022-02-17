@@ -198,6 +198,7 @@ public:
    */
   bool isTimeWindowComplete() const;
 
+  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation
    *        It does not automatically imply, that the solver does not have to evaluate the
@@ -205,6 +206,7 @@ public:
    */
   bool hasToEvaluateSurrogateModel() const;
 
+  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
   /**
    * @brief Returns whether the solver has to evaluate the fine model representation
    *        It does not automatically imply, that the solver does not have to evaluate the
@@ -393,9 +395,9 @@ public:
   /**
    * @brief Writes scalar data values given as block.
    *
-   * @param fromDataID [IN] ID of the data to be written.
-   * @param size [IN] Number of valueIndices, and number of values.
-   * @param values [IN] Values of the data to be written.
+   * @param[in] fromDataID ID of the data to be written.
+   * @param[in] size Number of valueIndices, and number of values.
+   * @param[in] values Values of the data to be written.
    */
   void writeBlockScalarData(
       int           fromDataID,
@@ -408,9 +410,9 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param fromDataID       [IN] ID of the data to be written (2 = temperature, e.g.)
-   * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
-   * @param dataValue    [IN] Value of the data to be written
+   * @param[in] fromDataID ID of the data to be written (2 = temperature, e.g.)
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
+   * @param[in] dataValue Value of the data to be written
    */
   void writeScalarData(
       int    fromDataID,
@@ -427,7 +429,7 @@ public:
    * @param[in] toDataID     ID of the data to be written.
    * @param[in] size         Number of valueIndices, and number of values.
    * @param[in] valueIndices Indices (from setReadPosition()) of data values.
-   * @param[out] values      Read data value.
+   * @param[in] values Values of the data to be read.
    */
   void readBlockVectorData(
       int        toDataID,
@@ -517,7 +519,7 @@ public:
    * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
    * the end of the time step.
    * 
-   * @param[in] toDataID          ID of the data to be written.
+   * @param[in] toDataID          ID of the data to be read.
    * @param[in] size              Number of valueIndices, and number of values.
    * @param[in] valueIndices      Indices (from setReadPosition()) of data values.
    * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
@@ -581,16 +583,6 @@ public:
       double *  coordinates) const;
 
   /**
-   * @brief Sets the location for all output of preCICE.
-   *
-   * If done after configuration, this overwrites the output location specified
-   * in the configuration.
-   */
-  //  void setExportLocation (
-  //    const std::string& location,
-  //    int                exportType = io::constants::exportAll() );
-
-  /**
    * @brief Writes a mesh to vtk file.
    *
    * The plotting path has to be specified in the configuration of the
@@ -600,44 +592,11 @@ public:
    */
   void exportMesh(const std::string &filenameSuffix) const;
 
-  /**
-   * @brief Scales data values according to configuration.
-   *
-   * Currently, the only scaling supported is a division of the data values
-   * through the surface area belonging to its "support". This allows to come
-   * from forces to stresses, e.g..
-   */
-  //  void scaleReadData ()
-
-  /// Returns the name of the accessor
-  std::string getAccessorName() const
-  {
-    return _accessorName;
-  }
-
-  /// Returns the rank of the accessor
-  int getAccessorProcessRank() const
-  {
-    return _accessorProcessRank;
-  }
-
-  /// Returns the size of the accessors communicator
-  int getAccessorCommunicatorSize() const
-  {
-    return _accessorCommunicatorSize;
-  }
-
   /// Allows to access a registered mesh
   const mesh::Mesh &mesh(const std::string &meshName) const;
 
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
-
-  std::string _accessorName;
-
-  int _accessorProcessRank;
-
-  int _accessorCommunicatorSize;
 
   impl::PtrParticipant _accessor;
 
@@ -687,7 +646,7 @@ private:
    * Only after the configuration a reasonable state of a SolverInterfaceImpl
    * object is achieved.
    *
-   * @param configurationFileName [IN] Name (with path) of the xml config. file.
+   * @param[in] configurationFileName Name (with path) of the xml config. file.
    */
   void configure(const std::string &configurationFileName);
 
@@ -703,35 +662,6 @@ private:
 
   /// Exports meshes with data and watch point data.
   void handleExports();
-
-  /**
-   * @brief Adds exchanged data ids related to accessor to the coupling scheme.
-   *
-   * From the configuration it is only known which data a participant writes,
-   * which data he receives, and which data is exchanged within the coupling
-   * scheme. The data actually being sent and received in the coupling scheme,
-   * is defined by the intersection of data being written or read by the
-   * accessor and the data exchanged in the coupling scheme, respectively.
-   *
-   * Prerequesits:
-   * - _accessor is valid
-   * - _couplingScheme is valid
-   */
-  void addDataToCouplingScheme(
-      const cplscheme::CouplingSchemeConfiguration &config);
-
-  /**
-   * @brief Configures _couplingScheme to be ready to use.
-   *
-   * @pre _couplingScheme holds a pointer to a valid coupling scheme object
-   * @pre all meshes are created
-   * @pre all data is added to _data
-   * @pre _accessor points to the accessor
-   */
-  void addMeshesToCouplingScheme();
-
-  /// Returns true, if the accessor uses the mesh with given name.
-  bool isUsingMesh(const std::string &meshName) const;
 
   /// Determines participants providing meshes to other participants.
   void configurePartitions(
@@ -792,15 +722,6 @@ private:
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
       const config::SolverInterfaceConfiguration &config);
-
-  int markedSkip() const
-  {
-    return 0;
-  }
-  int markedQueryDirectly() const
-  {
-    return 1;
-  }
 
   /// Initializes communication between master and slaves.
   void initializeMasterSlaveCommunication();
