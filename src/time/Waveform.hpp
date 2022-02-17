@@ -99,6 +99,18 @@ private:
   void storeAt(const Eigen::VectorXd values, int sampleIndex);
 
   /**
+   * @brief Computes which order may be used for interpolation.
+   * 
+   * Order of interpolation is determined by number of stored samples and maximum order defined by the user.
+   * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
+   *
+   * @param requestedOrder Order requested by the user.
+   * @param numberOfAvailableSamples Samples available for interpolation.
+   * @return Order that may be used.
+   */
+  int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
+
+  /**
    * @brief Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order of this Waveform.
    * @param normalizedDt time where the sampling inside the window happens. 0 refers to the beginning of the window and 1 to the end.
    * @return Interpolated value at time normalizedDt.
