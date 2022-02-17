@@ -598,6 +598,12 @@ public:
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 
+  std::string _accessorName;
+
+  int _accessorProcessRank;
+
+  int _accessorCommunicatorSize;
+
   impl::PtrParticipant _accessor;
 
   /// Spatial dimensions of problem.
