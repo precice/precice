@@ -324,17 +324,17 @@ add_precice_test_run_solverdummies(cpp c)
 add_precice_test_run_solverdummies(cpp fortran)
 add_precice_test_run_solverdummies(c fortran)
 
-# Add tests for binprecice
+# Add tests for precice-tools
 
-function(add_bin_test)
+function(add_tools_test)
   cmake_parse_arguments(PARSE_ARGV 0 PAT "WILL_FAIL" "NAME;MATCH" "COMMAND")
-  set(PAT_FULL_NAME "precice.bin.${PAT_NAME}")
+  set(PAT_FULL_NAME "precice.tools.${PAT_NAME}")
   message(STATUS "Test ${PAT_FULL_NAME}")
   add_test(
     NAME ${PAT_FULL_NAME}
     COMMAND ${PAT_COMMAND}
     )
-  set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT} LABELS "bin")
+  set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT} LABELS "tools;bin")
   if(PAT_WILL_FAIL)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES WILL_FAIL YES)
   endif()
@@ -344,59 +344,59 @@ function(add_bin_test)
 endfunction()
 
 
-add_bin_test(
+add_tools_test(
   NAME noarg
-  COMMAND binprecice
+  COMMAND precice-tools
   WILL_FAIL)
 
-add_bin_test(
+add_tools_test(
   NAME invalidcmd
-  COMMAND binprecice invalidcommand
+  COMMAND precice-tools invalidcommand
   WILL_FAIL)
 
-add_bin_test(
+add_tools_test(
   NAME version
-  COMMAND binprecice version
+  COMMAND precice-tools version
   MATCH "${CMAKE_PROJECT_VERSION}"
   )
 
-add_bin_test(
+add_tools_test(
   NAME versionopt
-  COMMAND binprecice --version
+  COMMAND precice-tools --version
   MATCH "${CMAKE_PROJECT_VERSION}"
   )
 
-add_bin_test(
+add_tools_test(
   NAME markdown
-  COMMAND binprecice md
+  COMMAND precice-tools md
   MATCH "# precice-configuration"
   )
 
-add_bin_test(
+add_tools_test(
   NAME xml
-  COMMAND binprecice xml
+  COMMAND precice-tools xml
   MATCH "<!-- TAG precice-configuration"
   )
 
-add_bin_test(
+add_tools_test(
   NAME dtd
-  COMMAND binprecice dtd
+  COMMAND precice-tools dtd
   MATCH "<!ELEMENT precice-configuration"
   )
 
-add_bin_test(
+add_tools_test(
   NAME check.file
-  COMMAND binprecice check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml
+  COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml
   )
 
-add_bin_test(
+add_tools_test(
   NAME check.file+name
-  COMMAND binprecice check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
+  COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
   )
 
-add_bin_test(
+add_tools_test(
   NAME check.file+name+size
-  COMMAND binprecice check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
+  COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
   )
 
 # Add a separate target to test only the base

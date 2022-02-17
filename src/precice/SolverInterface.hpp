@@ -790,13 +790,18 @@ public:
       double &value) const;
 
   /**
-   * @brief Read scalar data at a vertex on the interface mesh at beginning of time step + dt.
+   * @brief Read scalar data at a vertex on the interface mesh at beginning of time step + relativeReadTime.
    *
-   * This function reads a value of a specified vertex from a dataID.
+   * This function reads a value of a specified vertex from a dataID. 
+   * 
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
+   * the end of the time step.
    *
    * @param[in] dataID ID to read from.
    * @param[in] valueIndex Index of the vertex.
-   * @param[in] dt Point in time where data is sampled relative to the beginning of the current time step.
+   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step
    * @param[out] value Read destination of the value.
    *
    * @pre initialize() has been called

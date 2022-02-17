@@ -1,10 +1,10 @@
-.TH binprecice 1
+.TH precice-tools 1
 
 .SH NAME
-binprecice \- command line utility for preCICE
+precice-tools \- command line utility for preCICE
 
 .SH SYNOPSIS
-.B binprecice xml
+.B precice-tools xml
 |
 .B dtd
 |
@@ -37,7 +37,7 @@ Prints the preCICE version string ( \fIprecice::getVersionInformation()\fR ) to 
 Checks given preCICE configuration \fIfile\fR and prints any errors. Pass the name of a \fIparticipant\fR to fully check its configuration. The optional \fIsize\fR indicates how many ranks run in parallel, which checks custom \fI<master: ... />\fR tags.
 
 .SH EXIT STATUS
-binprecice returns a zero exit status if it succeeds to run the provided command.
+precice-tools returns a zero exit status if it succeeds to run the provided command.
 Non zero is returned in case of failure.
 
 .SH SEE ALSO

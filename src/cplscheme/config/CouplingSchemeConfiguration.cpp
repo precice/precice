@@ -349,7 +349,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
       if (_experimental) {
-        int allowedOrder = 0; // multi coupling schemes does not allow waveform iteration
+        int allowedOrder = 0; // multi coupling scheme does not allow waveform iteration
         checkWaveformOrderReadData(allowedOrder);
       }
       PRECICE_CHECK(_config.setController,

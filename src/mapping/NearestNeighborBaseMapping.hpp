@@ -28,24 +28,21 @@ public:
   bool requireGradient();
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  virtual void computeMapping() override;
+  void computeMapping() override;
 
   /// Returns true, if computeMapping() has been called.
-  virtual bool hasComputedMapping() const override;
+  bool hasComputedMapping() const override;
 
   /// Removes a computed mapping.
-  virtual void clear() override;
+  void clear() override;
 
-  /// Maps input data to output data from input mesh to output mesh.
-  virtual void map(
-      int inputDataID,
-      int outputDataID) = 0;
+  /** Matches the offsets needed for the gradient mapping
+   * Does nothing by default
+   */
+  virtual void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace);
 
-  /// Matches the offsets needed for the gradient mapping
-  virtual void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) = 0;
-
-  virtual void tagMeshFirstRound() override;
-  virtual void tagMeshSecondRound() override;
+  void tagMeshFirstRound() override;
+  void tagMeshSecondRound() override;
 
 protected:
   /// NearestNeighborMapping or NearestNeighborGradientMapping
