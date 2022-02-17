@@ -393,9 +393,9 @@ public:
   /**
    * @brief Writes scalar data values given as block.
    *
-   * @param fromDataID [IN] ID of the data to be written.
-   * @param size [IN] Number of valueIndices, and number of values.
-   * @param values [IN] Values of the data to be written.
+   * @param[in] fromDataID ID of the data to be written.
+   * @param[in] size Number of valueIndices, and number of values.
+   * @param[in] values Values of the data to be written.
    */
   void writeBlockScalarData(
       int           fromDataID,
@@ -408,9 +408,9 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param fromDataID       [IN] ID of the data to be written (2 = temperature, e.g.)
-   * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
-   * @param dataValue    [IN] Value of the data to be written
+   * @param[in] fromDataID ID of the data to be written (2 = temperature, e.g.)
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
+   * @param[in] dataValue Value of the data to be written
    */
   void writeScalarData(
       int    fromDataID,
@@ -427,7 +427,7 @@ public:
    * @param[in] toDataID     ID of the data to be written.
    * @param[in] size         Number of valueIndices, and number of values.
    * @param[in] valueIndices Indices (from setReadPosition()) of data values.
-   * @param[out] values      Read data value.
+   * @param[in] values Values of the data to be read.
    */
   void readBlockVectorData(
       int        toDataID,
@@ -687,7 +687,7 @@ private:
    * Only after the configuration a reasonable state of a SolverInterfaceImpl
    * object is achieved.
    *
-   * @param configurationFileName [IN] Name (with path) of the xml config. file.
+   * @param[in] configurationFileName Name (with path) of the xml config. file.
    */
   void configure(const std::string &configurationFileName);
 
