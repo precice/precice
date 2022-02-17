@@ -984,7 +984,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
                 context.mesh->getName());
 
   double time = _couplingScheme->getTime();
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0, 0, 0);
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
   for (impl::MappingContext &mappingContext : context.fromMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
@@ -1002,7 +1002,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
     }
     mappingContext.hasMappedData = true;
   }
-  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0, 0, 0);
+  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0.0, 0.0, 0.0);
 }
 
 void SolverInterfaceImpl::mapReadDataTo(
@@ -1017,7 +1017,7 @@ void SolverInterfaceImpl::mapReadDataTo(
                 context.mesh->getName());
 
   double time = _couplingScheme->getTime();
-  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0, 0, 0);
+  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
   for (impl::MappingContext &mappingContext : context.toMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
@@ -1036,7 +1036,7 @@ void SolverInterfaceImpl::mapReadDataTo(
     }
     mappingContext.hasMappedData = true;
   }
-  performDataActions({action::Action::READ_MAPPING_POST}, time, 0, 0, 0);
+  performDataActions({action::Action::READ_MAPPING_POST}, time, 0.0, 0.0, 0.0);
 }
 
 void SolverInterfaceImpl::writeBlockVectorData(
