@@ -197,6 +197,7 @@ public:
    */
   bool isTimeWindowComplete() const;
 
+  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation
    *        It does not automatically imply, that the solver does not have to evaluate the
@@ -204,6 +205,7 @@ public:
    */
   bool hasToEvaluateSurrogateModel() const;
 
+  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
   /**
    * @brief Returns whether the solver has to evaluate the fine model representation
    *        It does not automatically imply, that the solver does not have to evaluate the
