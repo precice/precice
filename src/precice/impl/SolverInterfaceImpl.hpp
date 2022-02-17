@@ -581,16 +581,6 @@ public:
       double *  coordinates) const;
 
   /**
-   * @brief Sets the location for all output of preCICE.
-   *
-   * If done after configuration, this overwrites the output location specified
-   * in the configuration.
-   */
-  //  void setExportLocation (
-  //    const std::string& location,
-  //    int                exportType = io::constants::exportAll() );
-
-  /**
    * @brief Writes a mesh to vtk file.
    *
    * The plotting path has to be specified in the configuration of the
@@ -600,44 +590,11 @@ public:
    */
   void exportMesh(const std::string &filenameSuffix) const;
 
-  /**
-   * @brief Scales data values according to configuration.
-   *
-   * Currently, the only scaling supported is a division of the data values
-   * through the surface area belonging to its "support". This allows to come
-   * from forces to stresses, e.g..
-   */
-  //  void scaleReadData ()
-
-  /// Returns the name of the accessor
-  std::string getAccessorName() const
-  {
-    return _accessorName;
-  }
-
-  /// Returns the rank of the accessor
-  int getAccessorProcessRank() const
-  {
-    return _accessorProcessRank;
-  }
-
-  /// Returns the size of the accessors communicator
-  int getAccessorCommunicatorSize() const
-  {
-    return _accessorCommunicatorSize;
-  }
-
   /// Allows to access a registered mesh
   const mesh::Mesh &mesh(const std::string &meshName) const;
 
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
-
-  std::string _accessorName;
-
-  int _accessorProcessRank;
-
-  int _accessorCommunicatorSize;
 
   impl::PtrParticipant _accessor;
 
@@ -704,35 +661,6 @@ private:
   /// Exports meshes with data and watch point data.
   void handleExports();
 
-  /**
-   * @brief Adds exchanged data ids related to accessor to the coupling scheme.
-   *
-   * From the configuration it is only known which data a participant writes,
-   * which data he receives, and which data is exchanged within the coupling
-   * scheme. The data actually being sent and received in the coupling scheme,
-   * is defined by the intersection of data being written or read by the
-   * accessor and the data exchanged in the coupling scheme, respectively.
-   *
-   * Prerequesits:
-   * - _accessor is valid
-   * - _couplingScheme is valid
-   */
-  void addDataToCouplingScheme(
-      const cplscheme::CouplingSchemeConfiguration &config);
-
-  /**
-   * @brief Configures _couplingScheme to be ready to use.
-   *
-   * @pre _couplingScheme holds a pointer to a valid coupling scheme object
-   * @pre all meshes are created
-   * @pre all data is added to _data
-   * @pre _accessor points to the accessor
-   */
-  void addMeshesToCouplingScheme();
-
-  /// Returns true, if the accessor uses the mesh with given name.
-  bool isUsingMesh(const std::string &meshName) const;
-
   /// Determines participants providing meshes to other participants.
   void configurePartitions(
       const m2n::M2NConfiguration::SharedPointer &m2nConfig);
@@ -792,15 +720,6 @@ private:
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
       const config::SolverInterfaceConfiguration &config);
-
-  int markedSkip() const
-  {
-    return 0;
-  }
-  int markedQueryDirectly() const
-  {
-    return 1;
-  }
 
   /// Initializes communication between master and slaves.
   void initializeMasterSlaveCommunication();
