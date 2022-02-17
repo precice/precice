@@ -11,6 +11,7 @@ BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Implicit)
+BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
  * @brief Test to run a simple coupling with subcycling.
@@ -20,6 +21,7 @@ BOOST_AUTO_TEST_SUITE(Implicit)
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+
   SolverInterface precice(context.name, context.config(), 0, 1); // serial coupling, SolverOne first
 
   MeshID meshID;
@@ -93,20 +95,29 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
 
+    if (timestep % nSubsteps == 0) {
+      BOOST_TEST(precice.isReadDataAvailable());
+    } else {
+      BOOST_TEST(!precice.isReadDataAvailable());
+    }
+
     BOOST_TEST(readData.size() == n_vertices);
+    // @todo split in SolverOne and SolverTwo?
     for (int i = 0; i < n_vertices; i++) {
       oldReadData = readData[i];
-      precice.readScalarData(readDataID, vertexIDs[i], readData[i]);
-      if (iterations == 0 && timestep == 0 && context.isNamed("SolverOne")) {                      // special situation: SolverOne in its very first time window, first iteration, first time step
+      if (precice.isReadDataAvailable()) {
+        precice.readScalarData(readDataID, vertexIDs[i], readData[i]);
+      }
+      if (context.isNamed("SolverOne") && iterations == 0 && timestep == 0) {                      // special situation: SolverOne in its very first time window, first iteration, first time step
         BOOST_TEST(readData[i] != oldReadData);                                                    // update from uninitialized to initial data.
         BOOST_TEST(readData[i] == readFunction(startTime, i));                                     // use initial data only.
-      } else if (iterations == 0 && context.isNamed("SolverOne")) {                                // special situation: SolverOne gets the old data its first iteration for all time windows.
+      } else if (context.isNamed("SolverOne") && iterations == 0) {                                // special situation: SolverOne gets the old data its first iteration for all time windows.
         BOOST_TEST(readData[i] == oldReadData);                                                    // ensure that read data stays the same from one step to the next, if not a new window is entered
         BOOST_TEST(readData[i] == readFunction(startTime + (timewindow) *windowDt, i));            // data at end of window was written by other solver.
-      } else if (iterations == 1 && timestep == windowStartStep && context.isNamed("SolverOne")) { // special situation: SolverOne in its second iteration, first timestep of window
+      } else if (context.isNamed("SolverOne") && iterations == 1 && timestep == windowStartStep) { // special situation: SolverOne in its second iteration, first timestep of window
         BOOST_TEST(readData[i] != oldReadData);                                                    // ensure that read data stays the same from one step to the next, if not a new window is entered
         BOOST_TEST(readData[i] == readFunction(startTime + (timewindow + 1) * windowDt, i));       // data at end of window was written by other solver.
-      } else if (iterations == 0 && timestep == 0 && context.isNamed("SolverTwo")) {               // special situation: SolverTwo in its very first time window, first iteration, first time step
+      } else if (context.isNamed("SolverTwo") && iterations == 0 && timestep == 0) {               // special situation: SolverTwo in its very first time window, first iteration, first time step
         BOOST_TEST(readData[i] != oldReadData);                                                    // update from uninitialized to initial data.
         BOOST_TEST(readData[i] == readFunction(startTime + (timewindow + 1) * windowDt, i));       // data at end of window was written by other solver.
       } else if (precice.isTimeWindowComplete()) {                                                 // moving to next window
@@ -123,14 +134,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
-
-    BOOST_TEST(writeData.size() == n_vertices);
-    for (int i = 0; i < n_vertices; i++) {
-      oldWriteData = writeData[i];
-      writeData[i] = writeFunction(time, i);
-      //std::cout << context.name << " at time " << time << " writes " << writeData[i] << " for time window = " << timewindow << ", time step " << timestep << ", it = " << iterations << std::endl;
-      BOOST_TEST(writeData[i] != oldWriteData); // ensure that write data differs from one step to the next
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+    if (precice.isWriteDataRequired(currentDt)) {
+      BOOST_TEST(writeData.size() == n_vertices);
+      for (int i = 0; i < n_vertices; i++) {
+        oldWriteData = writeData[i];
+        writeData[i] = writeFunction(time, i);
+        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+      }
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
@@ -155,5 +165,6 @@ BOOST_AUTO_TEST_SUITE_END() // PreciceTests
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
 BOOST_AUTO_TEST_SUITE_END() // Implicit
+BOOST_AUTO_TEST_SUITE_END() // SerialCoupling
 
 #endif // PRECICE_NO_MPI

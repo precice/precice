@@ -11,6 +11,7 @@ BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
 BOOST_AUTO_TEST_SUITE(Explicit)
+BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
  * @brief Test to run a simple coupling with subcycling.
@@ -88,19 +89,18 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     if (context.isNamed("SolverOne")) {
       readTime = timewindow * windowDt; // SolverOne lags one window behind SolverTwo for serial-explicit coupling.
     } else {
-      readTime = (timewindow + 1) * windowDt;
+      readTime = (timewindow + 1) * windowDt; // SolverTwo gets result at end of window from SolverOne
     }
     BOOST_TEST(readData.size() == n_vertices);
+    if (timestep % nSubsteps == 0) {
+      BOOST_TEST(precice.isReadDataAvailable());
+    } else {
+      BOOST_TEST(!precice.isReadDataAvailable());
+    }
     for (int i = 0; i < n_vertices; i++) {
       oldReadData = readData[i];
-      precice.readScalarData(readDataID, vertexIDs[i], readData[i]);
-      if (precice.isTimeWindowComplete() ||
-          (timestep == 0)) {                      // exception: First timestep will also have different data, even though formally no time window is completed.
-        BOOST_TEST((readData[i] != oldReadData)); // ensure that read data changes from one step to the next, if a new window is entered
-      } else if (not precice.isTimeWindowComplete()) {
-        BOOST_TEST((readData[i] == oldReadData)); // ensure that read data stays the same from one step to the next, if not a new window is entered
-      } else {                                    // we should not enter this branch, because this would skip all tests.
-        BOOST_TEST(false);
+      if (precice.isReadDataAvailable()) {
+        precice.readScalarData(readDataID, vertexIDs[i], readData[i]);
       }
       BOOST_TEST(readData[i] == readFunction(readTime, i));
     }
@@ -109,12 +109,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
 
-    BOOST_TEST(writeData.size() == n_vertices);
-    for (int i = 0; i < n_vertices; i++) {
-      oldWriteData = writeData[i];
-      writeData[i] = writeFunction(time, i);
-      BOOST_TEST(writeData[i] != oldWriteData); // ensure that write data differs from one step to the next
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+    if (precice.isWriteDataRequired(currentDt)) {
+      BOOST_TEST(writeData.size() == n_vertices);
+      for (int i = 0; i < n_vertices; i++) {
+        oldWriteData = writeData[i];
+        writeData[i] = writeFunction(time, i);
+        BOOST_TEST(writeData[i] != oldWriteData); // ensure that write data differs from one step to the next
+        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
+      }
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
@@ -132,5 +134,6 @@ BOOST_AUTO_TEST_SUITE_END() // PreciceTests
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
 BOOST_AUTO_TEST_SUITE_END() // Explicit
+BOOST_AUTO_TEST_SUITE_END() // SerialCoupling
 
 #endif // PRECICE_NO_MPI
