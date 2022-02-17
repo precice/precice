@@ -392,9 +392,9 @@ public:
   /**
    * @brief Writes scalar data values given as block.
    *
-   * @param fromDataID [IN] ID of the data to be written.
-   * @param size [IN] Number of valueIndices, and number of values.
-   * @param values [IN] Values of the data to be written.
+   * @param[in] fromDataID ID of the data to be written.
+   * @param[in] size Number of valueIndices, and number of values.
+   * @param[in] values Values of the data to be written.
    */
   void writeBlockScalarData(
       int           fromDataID,
@@ -407,9 +407,9 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param fromDataID       [IN] ID of the data to be written (2 = temperature, e.g.)
-   * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
-   * @param dataValue    [IN] Value of the data to be written
+   * @param[in] fromDataID ID of the data to be written (2 = temperature, e.g.)
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
+   * @param[in] dataValue Value of the data to be written
    */
   void writeScalarData(
       int    fromDataID,
@@ -423,10 +423,10 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param toDataID [IN] ID of the data to be read.
-   * @param size [IN] Number of indices, and number of values * dimensions.
-   * @param valueIndices [IN] Indices (from setReadPosition()) of data values.
-   * @param values [IN] Values of the data to be read.
+   * @param[in] toDataID ID of the data to be read.
+   * @param[in] size Number of indices, and number of values * dimensions.
+   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
+   * @param[in] values Values of the data to be read.
    */
   void readBlockVectorData(
       int        toDataID,
@@ -571,13 +571,13 @@ private:
     Finalized    // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to State::Finalized; mandatory
   };
 
-  // SolverInterface.initializeData() triggers transition from false to true.
+  /// SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
 
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
-  // setMeshAccessRegion may only be called once
+  /// setMeshAccessRegion may only be called once
   mutable bool _accessRegionDefined = false;
 
   /// The current State of the solverinterface
@@ -592,7 +592,7 @@ private:
    * Only after the configuration a reasonable state of a SolverInterfaceImpl
    * object is achieved.
    *
-   * @param configurationFileName [IN] Name (with path) of the xml config. file.
+   * @param[in] configurationFileName Name (with path) of the xml config. file.
    */
   void configure(const std::string &configurationFileName);
 
