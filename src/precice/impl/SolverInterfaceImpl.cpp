@@ -1282,8 +1282,8 @@ void SolverInterfaceImpl::readScalarData(
                 "Please check the value index for {}",
                 valueIndex, context.getDataName());
   PRECICE_CHECK(context.getDataDimensions() == 1,
-                "You cannot call readScalarData on the vector data type \"{}\". "
-                "Use readVectorData or change the data type for \"{}\" to scalar.",
+                "You cannot call readScalarData on the vector data type \"{0}\". "
+                "Use readVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
   mesh::Data &data        = *context.providedData();
   auto &      values      = data.values();
