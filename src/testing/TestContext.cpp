@@ -47,9 +47,6 @@ TestContext::~TestContext() noexcept
   // Clear caches
   query::clearCache();
 
-  // Reset static ids and counters
-  mesh::Data::resetDataCount();
-
   // Reset communicators
   Par::resetCommState();
   Par::resetManagedMPI();
