@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
   mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
   mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
   mesh->createEdge(v1, v2);
   mesh->createEdge(v2, v3);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityNoScale)
   mesh->createEdge(v1, v2);
   mesh->createEdge(v2, v3);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
   mesh->createEdge(v1, v2);
   mesh->createEdge(v2, v3);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
   mesh->createEdge(v1, v2);
   mesh->createEdge(v2, v3);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
   mesh->createTriangle(e1, e2, e5);
   mesh->createTriangle(e3, e4, e5);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityNoScale)
   mesh->createTriangle(e1, e2, e5);
   mesh->createTriangle(e3, e4, e5);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -609,7 +609,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
   mesh->createTriangle(e1, e2, e5);
   mesh->createTriangle(e3, e4, e5);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
   mesh->createTriangle(e1, e2, e5);
   mesh->createTriangle(e3, e4, e5);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
   mesh->createTriangle(e1, e2, e5);
   mesh->createTriangle(e3, e4, e5);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -823,7 +823,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
   std::string name("rectangle");
   int         dimensions = 2;
   PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
-  PtrData     doubleData   = mesh->createData("DoubleData", 1);
+  PtrData     doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &      doubleValues = doubleData->values();
 
   if (utils::MasterSlave::isMaster()) {
@@ -914,7 +914,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
   std::string name("rectangle");
   int         dimensions = 2;
   PtrMesh     mesh(new Mesh(name, dimensions, testing::nextMeshID()));
-  PtrData     doubleData   = mesh->createData("DoubleData", 2);
+  PtrData     doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &      doubleValues = doubleData->values();
 
   if (utils::MasterSlave::isMaster()) {
@@ -1043,7 +1043,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
     mesh->createEdge(v7, v8);
   }
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -1148,7 +1148,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
     mesh->createEdge(v7, v8);
   }
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -1271,7 +1271,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
     mesh->createTriangle(e3, e4, e5);
   }
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();
@@ -1374,7 +1374,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
     mesh->createTriangle(e3, e4, e5);
   }
 
-  PtrData doubleData   = mesh->createData("DoubleData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 2, 0_dataID);
   auto &  doubleValues = doubleData->values();
 
   mesh->allocateDataValues();

@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(TimeSeries)
   mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
   mesh->createEdge(v1, v2);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
-  PtrData vectorData   = mesh->createData("VectorData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
+  PtrData vectorData   = mesh->createData("VectorData", 2, 1_dataID);
   auto &  doubleValues = doubleData->values();
   auto &  vectorValues = vectorData->values();
   mesh->allocateDataValues();
@@ -170,8 +170,8 @@ BOOST_AUTO_TEST_CASE(Reinitalize)
   mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
   mesh->createEdge(v1, v2);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1);
-  PtrData vectorData   = mesh->createData("VectorData", 2);
+  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
+  PtrData vectorData   = mesh->createData("VectorData", 2, 1_dataID);
   auto &  doubleValues = doubleData->values();
   auto &  vectorValues = vectorData->values();
   mesh->allocateDataValues();
