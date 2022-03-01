@@ -9,8 +9,6 @@
 namespace precice {
 namespace mesh {
 
-size_t Data::_dataCount = 0;
-
 Data::Data()
     : _name(""),
       _id(-1),
@@ -35,12 +33,6 @@ Data::Data(
       _hasGradient(hasGradient)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
-  _dataCount++;
-}
-
-Data::~Data()
-{
-  _dataCount--;
 }
 
 Eigen::VectorXd &Data::values()
@@ -99,16 +91,6 @@ int Data::getDimensions() const
 int Data::getSpacialDimensions() const
 {
   return _spacialDimensions;
-}
-
-size_t Data::getDataCount()
-{
-  return _dataCount;
-}
-
-void Data::resetDataCount()
-{
-  _dataCount = 0;
 }
 
 } // namespace mesh

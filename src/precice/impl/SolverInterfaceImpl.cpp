@@ -187,7 +187,6 @@ void SolverInterfaceImpl::configure(
   Event                    e("configure"); // no precice::syncMode as this is not yet configured here
   utils::ScopedEventPrefix sep("configure/");
 
-  mesh::Data::resetDataCount();
   _meshLock.clear();
 
   _dimensions         = config.getDimensions();
