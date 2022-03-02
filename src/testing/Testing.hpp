@@ -2,8 +2,8 @@
 
 #include <Eigen/Core>
 #include <boost/test/unit_test.hpp>
-#include <string>
 #include <limits>
+#include <string>
 #include <type_traits>
 #include "math/differences.hpp"
 #include "math/math.hpp"
@@ -17,7 +17,7 @@ namespace testing {
 
 namespace bt = boost::unit_test;
 
-constexpr DataID operator"" _dataID ( unsigned long long n )
+constexpr DataID operator"" _dataID(unsigned long long n)
 {
   PRECICE_ASSERT(n >= 0, "DataID must be positive");
   PRECICE_ASSERT(n < std::numeric_limits<DataID>::max(), "DataID is too big");

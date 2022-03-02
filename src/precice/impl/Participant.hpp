@@ -327,7 +327,7 @@ private:
 
   void checkDuplicatedUse(const mesh::PtrMesh &mesh);
 
-  void checkDuplicatedData(const mesh::PtrData &data, const std::string& meshName);
+  void checkDuplicatedData(const mesh::PtrData &data, const std::string &meshName);
 
   /// To allow white box tests.
   friend struct PreciceTests::Serial::TestConfigurationPeano;
