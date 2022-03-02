@@ -226,6 +226,7 @@ void Parallel::finalizeManagedMPI()
 {
   PRECICE_TRACE();
   // Make sure all com states were freed at this point in time
+  // @TODO This breaks the test system if 2 SolverInterfaces get constructed one after the other. Currente workaround is to pass the comm
   resetCommState();
 #ifndef PRECICE_NO_MPI
   PRECICE_ASSERT(_isInitialized, "There is no managed MPI session.");

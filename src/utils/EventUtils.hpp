@@ -199,6 +199,12 @@ private:
 
   /// MPI Communicator
   MPI_Comm comm;
+
+  /// communicator size
+  int size;
+
+  /// communicator rank
+  int rank;
 };
 
 } // namespace utils

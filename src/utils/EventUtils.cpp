@@ -198,9 +198,27 @@ EventRegistry &EventRegistry::instance()
 
 void EventRegistry::initialize(std::string applicationName, std::string runName, MPI_Comm comm)
 {
+  if (initialized && !finalized) {
+    if ((this->applicationName != applicationName) ||
+        (this->runName != runName) ||
+        (this->comm != comm)) {
+      std::cerr << "Cannot reinitialize events with different data";
+      std::abort();
+    }
+  }
+
+  int mpiInit = false;
+  MPI_Initialized(&mpiInit);
+  if (!mpiInit) {
+    std::cerr << "MPI has not yet been initialized.";
+    std::abort();
+  }
+
   this->applicationName = std::move(applicationName);
   this->runName         = std::move(runName);
   this->comm            = comm;
+  MPI_Comm_rank(comm, &this->rank);
+  MPI_Comm_size(comm, &this->size);
 
   localRankData.initialize();
 
@@ -227,6 +245,10 @@ void EventRegistry::finalize()
 
   initialized = false;
   finalized   = true;
+
+  comm = MPI_COMM_NULL;
+  runName.clear();
+  applicationName.clear();
 }
 
 void EventRegistry::clear()
@@ -266,10 +288,7 @@ Event &EventRegistry::getStoredEvent(std::string const &name)
 
 void EventRegistry::printAll() const
 {
-  int myRank;
-  MPI_Comm_rank(comm, &myRank);
-
-  if (myRank != 0)
+  if (rank != 0)
     return;
 
   std::string logFile;
@@ -290,10 +309,6 @@ void EventRegistry::printAll() const
 
 void EventRegistry::writeSummary(std::ostream &out) const
 {
-  int rank, size;
-  MPI_Comm_rank(comm, &rank);
-  MPI_Comm_size(comm, &size);
-
   if (rank == 0) {
     using std::endl;
     { // Print per event stats
@@ -411,12 +426,8 @@ void EventRegistry::collect()
   MPI_Type_create_struct(4, blocklengths, displacements, types, &MPI_EVENTDATA);
   MPI_Type_commit(&MPI_EVENTDATA);
 
-  int rank, MPIsize;
-  MPI_Comm_rank(comm, &rank);
-  MPI_Comm_size(comm, &MPIsize);
-
   std::vector<MPI_Request> requests;
-  std::vector<int>         eventsPerRank(MPIsize);
+  std::vector<int>         eventsPerRank(size);
   size_t                   eventsSize = localRankData.evData.size();
   MPI_Gather(&eventsSize, 1, MPI_INT, eventsPerRank.data(), 1, MPI_INT, 0, comm);
 
@@ -473,7 +484,7 @@ void EventRegistry::collect()
 
   // Receive
   if (rank == 0) {
-    for (int i = 0; i < MPIsize; ++i) {
+    for (int i = 0; i < size; ++i) {
       RankData data;
       // Receive initialized and finalized times
       std::array<long, 2> recvTimes;

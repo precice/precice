@@ -166,6 +166,8 @@ public:
   /// wheather this context is valid or not
   bool invalid = false;
 
+  MPI_Comm comm = MPI_COMM_NULL;
+
   /// @{
   /// @name Construction
 

@@ -124,6 +124,7 @@ void TestContext::setContextFrom(const Participant &p, Rank rank)
   this->rank         = rank;
   this->_initMS      = p.initMS;
   this->_contextComm = utils::Parallel::current();
+  this->comm         = _contextComm->comm;
 }
 
 void TestContext::initialize(const Participants &participants)

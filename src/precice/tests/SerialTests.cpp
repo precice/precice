@@ -227,6 +227,31 @@ BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
   interface.finalize();
 }
 
+BOOST_AUTO_TEST_CASE(ReconstructSameScope)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  SolverInterface interface1(context.name, config, context.rank, context.size, &context.comm);
+  interface1.finalize();
+
+  SolverInterface interface2(context.name, config, context.rank, context.size, &context.comm);
+  interface2.finalize();
+}
+
+BOOST_AUTO_TEST_CASE(ReconstructSeparateScope)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  std::string config = _pathToTests + "lifecycle.xml";
+
+  {
+    SolverInterface interface(context.name, config, context.rank, context.size, &context.comm);
+  }
+  {
+    SolverInterface interface(context.name, config, context.rank, context.size, &context.comm);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /// Test to run simple "do nothing" coupling between two solvers.
