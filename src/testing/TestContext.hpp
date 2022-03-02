@@ -166,7 +166,7 @@ public:
   /// wheather this context is valid or not
   bool invalid = false;
 
-  Parallel::Communicator comm = MPI_COMM_NULL;
+  precice::utils::Parallel::Communicator comm = MPI_COMM_NULL;
 
   /// @{
   /// @name Construction
