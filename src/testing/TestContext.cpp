@@ -40,7 +40,7 @@ TestContext::~TestContext() noexcept
     precice::utils::EventRegistry::instance().finalize();
   }
   if (!invalid && _initMS) {
-    utils::MasterSlave::_communication = nullptr;
+    utils::MasterSlave::getCommunication() = nullptr;
     utils::MasterSlave::reset();
   }
 
@@ -187,7 +187,7 @@ void TestContext::initializeMasterSlave()
 
   // Establish a consistent state for all tests
   utils::MasterSlave::configure(rank, size);
-  utils::MasterSlave::_communication.reset();
+  utils::MasterSlave::getCommunication().reset();
 
   if (!_initMS || hasSize(1))
     return;
@@ -200,7 +200,7 @@ void TestContext::initializeMasterSlave()
 
   masterSlaveCom->connectMasterSlaves(name, "", rank, size);
 
-  utils::MasterSlave::_communication = std::move(masterSlaveCom);
+  utils::MasterSlave::getCommunication() = std::move(masterSlaveCom);
 }
 
 void TestContext::initializeEvents()

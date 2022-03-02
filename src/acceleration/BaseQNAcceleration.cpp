@@ -130,8 +130,8 @@ void BaseQNAcceleration::initialize(
    */
   std::stringstream ss;
   if (utils::MasterSlave::isParallel()) {
-    PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
-    PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
+    PRECICE_ASSERT(utils::MasterSlave::getCommunication() != nullptr);
+    PRECICE_ASSERT(utils::MasterSlave::getCommunication()->isConnected());
 
     if (entries <= 0) {
       _hasNodesOnInterface = false;

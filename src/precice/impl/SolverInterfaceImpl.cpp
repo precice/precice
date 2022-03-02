@@ -479,8 +479,8 @@ void SolverInterfaceImpl::finalize()
   // Close Connections
   PRECICE_DEBUG("Close master-slave communication");
   if (utils::MasterSlave::isParallel()) {
-    utils::MasterSlave::_communication->closeConnection();
-    utils::MasterSlave::_communication = nullptr;
+    utils::MasterSlave::getCommunication()->closeConnection();
+    utils::MasterSlave::getCommunication() = nullptr;
   }
   _m2ns.clear();
 
@@ -1700,7 +1700,7 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   PRECICE_TRACE();
 
   Event e("com.initializeMasterSlaveCom", precice::syncMode);
-  utils::MasterSlave::_communication->connectMasterSlaves(
+  utils::MasterSlave::getCommunication()->connectMasterSlaves(
       _accessorName, "MasterSlaves",
       _accessorProcessRank, _accessorCommunicatorSize);
 }
@@ -1709,12 +1709,12 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 {
   PRECICE_ASSERT(utils::MasterSlave::isParallel());
   if (utils::MasterSlave::isSlave()) {
-    utils::MasterSlave::_communication->send(computedTimestepLength, 0);
+    utils::MasterSlave::getCommunication()->send(computedTimestepLength, 0);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isMaster());
     for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       double dt;
-      utils::MasterSlave::_communication->receive(dt, rankSlave);
+      utils::MasterSlave::getCommunication()->receive(dt, rankSlave);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
                     "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
                     rankSlave, dt, computedTimestepLength);

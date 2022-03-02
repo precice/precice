@@ -168,8 +168,8 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
     // back substitution
     c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
-    PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
+    PRECICE_ASSERT(utils::MasterSlave::getCommunication() != nullptr);
+    PRECICE_ASSERT(utils::MasterSlave::getCommunication()->isConnected());
     if (_hasNodesOnInterface) {
       PRECICE_ASSERT(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
     }
