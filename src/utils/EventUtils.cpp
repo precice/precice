@@ -207,18 +207,23 @@ void EventRegistry::initialize(std::string applicationName, std::string runName,
     }
   }
 
+#ifndef PRECICE_NO_MPI
   int mpiInit = false;
   MPI_Initialized(&mpiInit);
   if (!mpiInit) {
     std::cerr << "MPI has not yet been initialized.";
     std::abort();
   }
+  MPI_Comm_rank(comm, &this->rank);
+  MPI_Comm_size(comm, &this->size);
+#else
+  this->rank = 0;
+  this->size = 1;
+#endif
 
   this->applicationName = std::move(applicationName);
   this->runName         = std::move(runName);
   this->comm            = comm;
-  MPI_Comm_rank(comm, &this->rank);
-  MPI_Comm_size(comm, &this->size);
 
   localRankData.initialize();
 
