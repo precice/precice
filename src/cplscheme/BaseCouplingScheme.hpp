@@ -473,7 +473,7 @@ private:
    * @param doesLogging Whether this measure is logged in the convergence file
    */
   struct ConvergenceMeasureContext {
-    CouplingData *              couplingData;
+    PtrCouplingData             couplingData;
     bool                        suffices;
     bool                        strict;
     impl::PtrConvergenceMeasure measure;

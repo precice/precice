@@ -483,7 +483,7 @@ void BaseCouplingScheme::addConvergenceMeasure(
 {
   ConvergenceMeasureContext convMeasure;
   PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = &(*_allData[dataID]);
+  convMeasure.couplingData = _allData[dataID];
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
@@ -664,7 +664,7 @@ void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContex
   PRECICE_TRACE(dataID);
   DataMap::iterator iter = _allData.find(dataID);
   PRECICE_ASSERT(iter != _allData.end(), "Given data ID does not exist in _allData!");
-  convergenceMeasure->couplingData = &(*(iter->second));
+  convergenceMeasure->couplingData = iter->second;
 }
 
 void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n, bool convergence)
