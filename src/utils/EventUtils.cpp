@@ -252,8 +252,6 @@ void EventRegistry::finalize()
   finalized   = true;
 
   comm = MPI_COMM_NULL;
-  runName.clear();
-  applicationName.clear();
 }
 
 void EventRegistry::clear()
@@ -298,12 +296,16 @@ void EventRegistry::printAll() const
 
   std::string logFile;
   std::string summaryFile;
+  std::string suffix = runName;
+  if (!runName.empty()) {
+    suffix = "-" + suffix;
+  }
   if (applicationName.empty()) {
-    logFile     = "Events.json";
-    summaryFile = "Events-summary.log";
+    logFile     = "Events" + suffix + ".json";
+    summaryFile = "Events" + suffix + "-summary.log";
   } else {
-    logFile     = applicationName + "-events.json";
-    summaryFile = applicationName + "-events-summary.log";
+    logFile     = applicationName + "-events" + suffix + ".json";
+    summaryFile = applicationName + "-events" + suffix + "-summary.log";
   }
 
   std::ofstream summaryFS{summaryFile};

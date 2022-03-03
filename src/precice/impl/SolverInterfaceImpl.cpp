@@ -8,6 +8,7 @@
 #include <memory>
 #include <ostream>
 #include <sstream>
+#include <string>
 #include <tuple>
 #include <utility>
 
@@ -179,6 +180,19 @@ void SolverInterfaceImpl::configure(
   configure(config.getSolverInterfaceConfiguration());
 }
 
+namespace {
+/// Keeps track of SolverInterface initalizations and returns a suffix for the event timings file
+std::string eventSuffix()
+{
+  static int run{0};
+  ++run;
+  if (run == 1) {
+    return "";
+  }
+  return std::to_string(run);
+}
+} // namespace
+
 void SolverInterfaceImpl::configure(
     const config::SolverInterfaceConfiguration &config)
 {
@@ -222,7 +236,7 @@ void SolverInterfaceImpl::configure(
     _meshLock.add(meshContext->mesh->getID(), false);
   }
 
-  utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
+  utils::EventRegistry::instance().initialize("precice-" + _accessorName, eventSuffix(), utils::Parallel::current()->comm);
 
   PRECICE_DEBUG("Initialize master-slave communication");
   if (utils::MasterSlave::isParallel()) {
