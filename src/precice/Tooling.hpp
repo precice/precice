@@ -2,6 +2,7 @@
 
 #include <iosfwd>
 #include <string>
+#include <precice/export.hpp>
 
 namespace precice {
 
@@ -19,7 +20,7 @@ namespace tooling {
 /** The type of reference to generate
  * @see \ref precice::tooling::printConfigReference
  */
-enum struct ConfigReferenceType {
+enum struct PRECICE_API ConfigReferenceType {
   /// XML with inlined help
   XML = 0,
   /// DTD to check an XML
@@ -35,10 +36,10 @@ enum struct ConfigReferenceType {
  *
  * @see \ref precice::tooling::ConfigReferenceType
  */
-void printConfigReference(std::ostream &out, ConfigReferenceType reftype);
+PRECICE_API void printConfigReference(std::ostream &out, ConfigReferenceType reftype);
 
 /// @brief Checks a given configuration
-void checkConfiguration(const std::string &filename, const std::string &participant, int size);
+PRECICE_API void checkConfiguration(const std::string &filename, const std::string &participant, int size);
 
 } // namespace tooling
 
