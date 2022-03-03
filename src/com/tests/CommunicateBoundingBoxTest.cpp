@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
     bbm.emplace(rank, mesh::BoundingBox(bounds));
   }
 
-  CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
+  CommunicateBoundingBox comBB(utils::MasterSlave::getCommunication());
 
   if (context.isMaster()) {
     comBB.broadcastSendBoundingBoxMap(bbm);
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
     fb.clear();
   }
 
-  CommunicateBoundingBox comBB(utils::MasterSlave::_communication);
+  CommunicateBoundingBox comBB(utils::MasterSlave::getCommunication());
 
   if (context.isMaster()) {
     comBB.broadcastSendConnectionMap(fbm);

@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication)
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())
   // In this test you can use a master communication, here is an example how:
   BOOST_TEST(context.hasSize(4));
-  BOOST_TEST(utils::MasterSlave::_communication->isConnected());
+  BOOST_TEST(utils::MasterSlave::getCommunication()->isConnected());
 }
 
 /// Test that requires 2 participants "A" on 1 rank and "B" on 2 ranks

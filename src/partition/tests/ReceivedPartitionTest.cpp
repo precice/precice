@@ -49,11 +49,6 @@ using precice::testing::TestContext;
 BOOST_AUTO_TEST_SUITE(PartitionTests)
 BOOST_AUTO_TEST_SUITE(ReceivedPartitionTests)
 
-void tearDownParallelEnvironment()
-{
-  mesh::Data::resetDataCount();
-}
-
 void createSolidzMesh2D(mesh::PtrMesh pSolidzMesh)
 {
   int dimensions = 2;
@@ -289,8 +284,6 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
       }
     }
   }
-
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
@@ -342,7 +335,6 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
       BOOST_TEST(pSolidzMesh->edges().size() == 1);
     }
   }
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
@@ -395,7 +387,6 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
       }
     }
   }
-  tearDownParallelEnvironment();
 }
 
 #ifndef PRECICE_NO_PETSC
@@ -480,7 +471,6 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
       }
     }
   }
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
@@ -554,7 +544,6 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
       }
     }
   }
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
@@ -634,7 +623,6 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
       }
     }
   }
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
@@ -721,7 +709,6 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
       }
     }
   }
-  tearDownParallelEnvironment();
 }
 
 #endif // PRECICE_NO_PETSC
@@ -776,7 +763,6 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
       BOOST_TEST(pSolidzMesh->triangles().size() == 1);
     }
   }
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
@@ -999,7 +985,6 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     part.addToMapping(boundingToMapping);
     part.compareBoundingBoxes();
   }
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
@@ -1069,7 +1054,6 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
     part.addToMapping(boundingToMapping);
     part.compareBoundingBoxes();
   }
-  tearDownParallelEnvironment();
 }
 
 void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
@@ -1561,8 +1545,6 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
       }
     }
   }
-
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

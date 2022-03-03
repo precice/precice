@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", 1)->getID();
-  const auto    dataID1 = mesh->createData("Data1", 3)->getID();
+  const auto    dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);

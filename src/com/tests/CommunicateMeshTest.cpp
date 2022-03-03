@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh)
   mesh::Triangle &t0 = sendMesh.createTriangle(e0, e1, e2);
 
   // Create mesh communicator
-  CommunicateMesh comMesh(precice::utils::MasterSlave::_communication);
+  CommunicateMesh comMesh(precice::utils::MasterSlave::getCommunication());
 
   if (context.isMaster()) {
     comMesh.broadcastSendMesh(sendMesh);

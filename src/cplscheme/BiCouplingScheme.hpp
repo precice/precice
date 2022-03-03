@@ -8,6 +8,7 @@
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
@@ -82,6 +83,23 @@ protected:
   DataMap &getReceiveData()
   {
     return _receiveData;
+  }
+
+  /**
+   * @brief BiCouplingScheme has _sendData and _receiveData
+   * @returns DataMap with all data
+   */
+  DataMap getAllData() override
+  {
+    DataMap allData;
+    // @todo user C++17 std::map::merge
+    for (auto &pair : _sendData) {
+      allData.emplace(pair);
+    }
+    for (auto &pair : _receiveData) {
+      allData.emplace(pair);
+    }
+    return allData;
   }
 
   /// Sets the values

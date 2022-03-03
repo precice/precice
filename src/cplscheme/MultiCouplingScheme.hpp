@@ -8,6 +8,7 @@
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -93,18 +94,43 @@ private:
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   /**
+   * @brief BiCouplingScheme has _sendData and _receiveData
+   * @returns DataMap with all data
+   */
+  DataMap getAllData() override
+  {
+    DataMap allData;
+    // @todo user C++17 std::map::merge
+    for (auto &sendData : _sendDataVector) {
+      for (auto &dataPair : sendData.second) {
+        if (!utils::contained(dataPair.first, allData)) {
+          allData.emplace(dataPair);
+        }
+      }
+    }
+    for (auto &receiveData : _receiveDataVector) {
+      for (auto &dataPair : receiveData.second) {
+        if (!utils::contained(dataPair.first, allData)) {
+          allData.emplace(dataPair);
+        }
+      }
+    }
+    return allData;
+  }
+
+  /**
    * @brief Exchanges all data between the participants of the MultiCouplingScheme and applies acceleration.
    * @returns true, if iteration converged
    */
   bool exchangeDataAndAccelerate() override;
 
   /**
-   * @brief MultiCouplingScheme applies acceleration to _allData
-   * @returns DataMap bein accelerated
+   * @brief MultiCouplingScheme applies acceleration to all CouplingData
+   * @returns DataMap being accelerated
    */
-  DataMap &getAccelerationData() override
+  DataMap getAccelerationData() override
   {
-    return _allData;
+    return getAllData();
   }
 
   /**

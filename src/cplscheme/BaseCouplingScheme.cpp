@@ -136,11 +136,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
                     "an implicit coupling scheme.");
-      // setup convergence measures
-      for (ConvergenceMeasureContext &convergenceMeasure : _convergenceMeasures) {
-        DataID dataID = convergenceMeasure.couplingData->getDataID();
-        assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
-      }
       // reserve memory and initialize data with zero
       initializeStorages();
     }
@@ -256,7 +251,7 @@ void BaseCouplingScheme::advance()
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : _allData) {
+  for (DataMap::value_type &pair : getAllData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->storeExtrapolationData();
   }
@@ -462,12 +457,13 @@ void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
-  for (DataMap::value_type &pair : _allData) {
+  for (DataMap::value_type &pair : getAllData()) {
     pair.second->initializeExtrapolation();
   }
   // Reserve storage for acceleration
   if (_acceleration) {
-    _acceleration->initialize(getAccelerationData());
+    auto accelerationData = getAccelerationData();
+    _acceleration->initialize(accelerationData);
   }
 }
 
@@ -495,8 +491,8 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = &(*_allData[dataID]);
+  PRECICE_ASSERT(getAllData().count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = getAllData()[dataID];
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
@@ -652,13 +648,15 @@ bool BaseCouplingScheme::doImplicitStep()
   // coupling iteration converged for current time window. Advance in time.
   if (convergence) {
     if (_acceleration) {
-      _acceleration->iterationsConverged(getAccelerationData());
+      auto accelerationData = getAccelerationData();
+      _acceleration->iterationsConverged(accelerationData);
     }
     newConvergenceMeasurements();
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
-      _acceleration->performAcceleration(getAccelerationData());
+      auto accelerationData = getAccelerationData();
+      _acceleration->performAcceleration(accelerationData);
     }
   }
 
@@ -670,14 +668,6 @@ bool BaseCouplingScheme::doImplicitStep()
   storeIteration();
 
   return convergence;
-}
-
-void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, DataID dataID)
-{
-  PRECICE_TRACE(dataID);
-  DataMap::iterator iter = _allData.find(dataID);
-  PRECICE_ASSERT(iter != _allData.end(), "Given data ID does not exist in _allData!");
-  convergenceMeasure->couplingData = &(*(iter->second));
 }
 
 void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n, bool convergence)

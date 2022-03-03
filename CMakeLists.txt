@@ -64,6 +64,10 @@ option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatat
 option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
 option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
 
+option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" OFF)
+option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
+option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
+
 xsdk_tpl_option_override(PRECICE_MPICommunication TPL_ENABLE_MPI)
 xsdk_tpl_option_override(PRECICE_PETScMapping TPL_ENABLE_PETSC)
 xsdk_tpl_option_override(PRECICE_PythonActions TPL_ENABLE_PYTHON)
@@ -270,6 +274,20 @@ set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
   )
+
+# Setup release override options
+if(PRECICE_RELEASE_WITH_DEBUG_LOG)
+  target_compile_definitions(precice PRIVATE PRECICE_RELEASE_WITH_DEBUG_LOG)
+endif()
+
+if(PRECICE_RELEASE_WITH_TRACE_LOG)
+  target_compile_definitions(precice PRIVATE PRECICE_RELEASE_WITH_TRACE_LOG)
+endif()
+
+if(PRECICE_RELEASE_WITH_ASSERTIONS)
+  target_compile_definitions(precice PRIVATE PRECICE_RELEASE_WITH_ASSERTIONS)
+endif()
+
 
 # Setup Boost
 target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)

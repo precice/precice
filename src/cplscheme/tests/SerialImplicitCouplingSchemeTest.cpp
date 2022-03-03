@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   using namespace mesh;
 
   PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  PtrData data   = mesh->createData("MyData", 1);
+  PtrData data   = mesh->createData("MyData", 1, 0_dataID);
   int     dataID = data->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   using namespace mesh;
 
   PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  PtrData data   = mesh->createData("MyData", 1);
+  PtrData data   = mesh->createData("MyData", 1, 0_dataID);
   int     dataID = data->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
@@ -622,8 +622,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions)->getID();
+  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -821,8 +821,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions)->getID();
+  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1063,8 +1063,8 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions)->getID();
+  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1296,8 +1296,8 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("data0", 1);
-  mesh->createData("data1", 3);
+  mesh->createData("data0", 1, 0_dataID);
+  mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1399,8 +1399,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("data0", 1);
-  mesh->createData("data1", 3);
+  mesh->createData("data0", 1, 0_dataID);
+  mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1461,8 +1461,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("data0", 1);
-  mesh->createData("data1", 3);
+  mesh->createData("data0", 1, 0_dataID);
+  mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1526,8 +1526,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", 1)->getID();
-  const auto    dataID1 = mesh->createData("Data1", 3)->getID();
+  const auto    dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
