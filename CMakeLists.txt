@@ -256,8 +256,8 @@ print_section("TARGETS & PACKAGES")
 
 
 # Add precice as an empty target
-add_library(precice OBJECT)
-set_target_properties(precice PROPERTIES
+add_library(preciceInternal OBJECT)
+set_target_properties(preciceInternal PROPERTIES
   # precice is a C++17 project
   CXX_STANDARD 17
   CXX_STANDARD_REQUIRED Yes
@@ -267,21 +267,21 @@ set_target_properties(precice PROPERTIES
 
 # Setup release override options
 if(PRECICE_RELEASE_WITH_DEBUG_LOG)
-  target_compile_definitions(precice PRIVATE PRECICE_RELEASE_WITH_DEBUG_LOG)
+  target_compile_definitions(preciceInternal PRIVATE PRECICE_RELEASE_WITH_DEBUG_LOG)
 endif()
 
 if(PRECICE_RELEASE_WITH_TRACE_LOG)
-  target_compile_definitions(precice PRIVATE PRECICE_RELEASE_WITH_TRACE_LOG)
+  target_compile_definitions(preciceInternal PRIVATE PRECICE_RELEASE_WITH_TRACE_LOG)
 endif()
 
 if(PRECICE_RELEASE_WITH_ASSERTIONS)
-  target_compile_definitions(precice PRIVATE PRECICE_RELEASE_WITH_ASSERTIONS)
+  target_compile_definitions(preciceInternal PRIVATE PRECICE_RELEASE_WITH_ASSERTIONS)
 endif()
 
 
 # Setup Boost
-target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
-target_link_libraries(precice PUBLIC
+target_compile_definitions(preciceInternal PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
+target_link_libraries(preciceInternal PUBLIC
   Boost::boost
   Boost::filesystem
   Boost::log
@@ -292,40 +292,40 @@ target_link_libraries(precice PUBLIC
   Boost::unit_test_framework
   )
 if(UNIX OR APPLE OR MINGW)
-  target_compile_definitions(precice PUBLIC _GNU_SOURCE)
-  target_link_libraries(precice PUBLIC ${CMAKE_DL_LIBS})
+  target_compile_definitions(preciceInternal PUBLIC _GNU_SOURCE)
+  target_link_libraries(preciceInternal PUBLIC ${CMAKE_DL_LIBS})
 endif()
 
 # Setup Eigen3
-target_link_libraries(precice PUBLIC Eigen3::Eigen)
-target_compile_definitions(precice PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
+target_link_libraries(preciceInternal PUBLIC Eigen3::Eigen)
+target_compile_definitions(preciceInternal PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
 
 # Setup LIBXML2
-target_link_libraries(precice PRIVATE LibXml2::LibXml2)
+target_link_libraries(preciceInternal PRIVATE LibXml2::LibXml2)
 
 # Setup JSON
-target_link_libraries(precice PUBLIC JSON fmt-header-only)
+target_link_libraries(preciceInternal PUBLIC JSON fmt-header-only)
 
 # Setup MPI
 if (PRECICE_MPICommunication)
-  target_link_libraries(precice PUBLIC MPI::MPI_CXX)
+  target_link_libraries(preciceInternal PUBLIC MPI::MPI_CXX)
 else()
-  target_compile_definitions(precice PUBLIC PRECICE_NO_MPI)
+  target_compile_definitions(preciceInternal PUBLIC PRECICE_NO_MPI)
 endif()
 
 # Setup PETSC
 if (PRECICE_PETScMapping AND PRECICE_MPICommunication)
-  target_link_libraries(precice PUBLIC PETSc::PETSc)
+  target_link_libraries(preciceInternal PUBLIC PETSc::PETSc)
 else()
-  target_compile_definitions(precice PUBLIC PRECICE_NO_PETSC)
+  target_compile_definitions(preciceInternal PUBLIC PRECICE_NO_PETSC)
 endif()
 
 # Option Python
 if (PRECICE_PythonActions)
-  target_link_libraries(precice PRIVATE Python3::NumPy Python3::Python)
-  target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
+  target_link_libraries(preciceInternal PRIVATE Python3::NumPy Python3::Python)
+  target_compile_definitions(preciceInternal PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 else()
-  target_compile_definitions(precice PUBLIC PRECICE_NO_PYTHON)
+  target_compile_definitions(preciceInternal PUBLIC PRECICE_NO_PYTHON)
 endif()
 
 
@@ -336,25 +336,29 @@ configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJE
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/Version.h.in" "${PROJECT_BINARY_DIR}/src/precice/Version.h" @ONLY)
 
 # Includes Configuration
-target_include_directories(precice PUBLIC
+target_include_directories(preciceInternal PUBLIC
   $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
   $<INSTALL_INTERFACE:include>
   )
 
-# Sources Configuration
-include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
+#
+# Add actual precice library
+#
 
-add_library(precicelib)
-target_link_libraries(precicelib
+add_library(precice)
+target_link_libraries(precice
   PRIVATE
-  precice
+  preciceInternal
   )
-set_target_properties(precicelib PROPERTIES
+set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
-  OUTPUT_NAME libprecice
   )
+copy_target_property(preciceInternal precice INTERFACE_INCLUDE_DIRECTORIES)
+
+# Sources Configuration
+include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 
 #
 # Configuration of Target precice-tools
@@ -363,7 +367,7 @@ if (PRECICE_BUILD_TOOLS)
   add_executable(precice-tools "src/drivers/main.cpp")
   target_link_libraries(precice-tools
     PRIVATE
-   precice
+    preciceInternal
    )
   set_target_properties(precice-tools PROPERTIES
     # precice is a C++17 project
@@ -391,7 +395,7 @@ IF (BUILD_TESTING)
   add_executable(testprecice "src/testing/main.cpp")
   target_link_libraries(testprecice
     PRIVATE
-    precice
+    preciceInternal
     )
   set_target_properties(testprecice PROPERTIES
     # precice is a C++17 project

@@ -2,7 +2,7 @@
 # This file lists all sources that will be compiles into the precice library
 #
 
-target_sources(precice
+target_sources(preciceInternal
     PRIVATE
     ${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp
     ${CMAKE_BINARY_DIR}/src/precice/impl/versions.hpp
