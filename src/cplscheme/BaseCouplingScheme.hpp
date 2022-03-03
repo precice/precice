@@ -570,15 +570,6 @@ private:
   void newConvergenceMeasurements();
 
   /**
-   * @brief Needed for setting up convergence measures, implemented in child class
-   * @param convMeasure Convergence measure to which the data field is assigned to
-   * @param dataID Data field to be assigned
-   */
-  void assignDataToConvergenceMeasure(
-      ConvergenceMeasureContext *convMeasure,
-      int                        dataID);
-
-  /**
    * @brief Checks whether any CouplingData in dataMap requires initialization
    * @param dataMap map containing CouplingData
    * @return true, if any CouplingData in dataMap requires initialization
