@@ -1046,17 +1046,15 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(
     int allowedOrder) const
 {
-  int usedOrder = -1;
   for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
     for (auto &dataContext : participant->readDataContexts()) {
       int usedOrder = dataContext.getInterpolationOrder();
+      PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
       if (usedOrder > allowedOrder) {
         PRECICE_ERROR(
             "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
             dataContext.getDataName(), dataContext.getMeshName(), usedOrder, allowedOrder);
       }
-      PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
-      usedOrder = -1;                 // reset usedOrder for next iteration
     }
   }
 }
