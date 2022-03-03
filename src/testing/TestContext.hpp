@@ -166,6 +166,7 @@ public:
   /// wheather this context is valid or not
   bool invalid = false;
 
+  /// communicator of the current participant
   precice::utils::Parallel::Communicator comm = MPI_COMM_NULL;
 
   /// @{
