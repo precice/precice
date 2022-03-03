@@ -81,7 +81,7 @@ private:
     // create a copy of send data for read-only access.
     DataMap accelerationData;
     for (auto &dataPair : getSendData()) {
-        accelerationData.emplace(dataPair);
+      accelerationData.emplace(dataPair);
     }
     return accelerationData;
   }
