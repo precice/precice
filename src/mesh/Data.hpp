@@ -38,20 +38,6 @@ public:
   //static const std::string TYPE_NAME_VECTOR;
 
   /**
-   * @brief Returns the number of created (and still existing) Data objects.
-   *
-   * Used to give Data objects unique IDs.
-   */
-  static size_t getDataCount();
-
-  /**
-   * @brief Sets the data counter to zero.
-   *
-   * Used in test cases where multiple scenarios with data are run.
-   */
-  static void resetDataCount();
-
-  /**
    * @brief Do not use this constructor! Only there for compatibility with std::map.
    */
   Data();
@@ -65,9 +51,6 @@ public:
       int         dimension,
       int         spacialDimensions = -1,
       bool        hasGradient       = false);
-
-  /// Destructor, decrements data count.
-  ~Data();
 
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
@@ -101,9 +84,6 @@ public:
 
 private:
   logging::Logger _log{"mesh::Data"};
-
-  /// Counter for existing Data objects.
-  static size_t _dataCount;
 
   Eigen::VectorXd _values;
 

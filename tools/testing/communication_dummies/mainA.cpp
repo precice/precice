@@ -98,18 +98,18 @@ int main(int argc, char **argv)
     utils::Parallel::splitCommunicator("Slave");
   }
 
-  utils::MasterSlave::_communication =
+  utils::MasterSlave::getCommunication() =
       com::PtrCommunication(new com::MPIDirectCommunication);
 
   int rankOffset = 1;
 
   if (utils::MasterSlave::isMaster()) {
-    utils::MasterSlave::_communication->acceptConnection(
+    utils::MasterSlave::getCommunication()->acceptConnection(
         "Master", "Slave", utils::MasterSlave::getRank(), 1);
-    utils::MasterSlave::_communication->setRankOffset(rankOffset);
+    utils::MasterSlave::getCommunication()->setRankOffset(rankOffset);
   } else {
     assertion(utils::MasterSlave::isSlave());
-    utils::MasterSlave::_communication->requestConnection(
+    utils::MasterSlave::getCommunication()->requestConnection(
         "Master",
         "Slave",
         utils::MasterSlave::getRank() - rankOffset,
@@ -166,7 +166,7 @@ int main(int argc, char **argv)
     cout << "----------\n";
   }
 
-  utils::MasterSlave::_communication.reset();
+  utils::MasterSlave::getCommunication().reset();
 
   MPI_Finalize();
 

@@ -4,6 +4,7 @@
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
+#include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
@@ -15,11 +16,6 @@ public:
   struct ConfiguredData {
     std::string name;
     int         dimensions;
-
-    ConfiguredData(
-        const std::string &name,
-        int                dimensions)
-        : name(name), dimensions(dimensions) {}
   };
 
   DataConfiguration(xml::XMLTag &parent);

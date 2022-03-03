@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     retCode = EXIT_SUCCESS;
   }
 
-  utils::MasterSlave::_communication = nullptr;
+  utils::MasterSlave::getCommunication() = nullptr;
   utils::Parallel::finalizeMPI();
   return retCode;
 }

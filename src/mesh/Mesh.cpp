@@ -129,7 +129,8 @@ Triangle &Mesh::createTriangle(
 
 PtrData &Mesh::createData(
     const std::string &name,
-    int                dimension)
+    int                dimension,
+    DataID             id)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -138,7 +139,6 @@ PtrData &Mesh::createData(
                   "Please rename or remove one of the use-data tags with name \"{}\".",
                   name, _name, name);
   }
-  int     id = Data::getDataCount();
   PtrData data(new Data(name, id, dimension));
   _data.push_back(data);
   return _data.back();
@@ -186,7 +186,8 @@ const PtrData &Mesh::data(const std::string &dataName) const
 PtrData &Mesh::createDataWithGradient(
     const std::string &name,
     int                dimension,
-    int                meshDimensions)
+    int                meshDimensions,
+    DataID             id)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -195,7 +196,6 @@ PtrData &Mesh::createDataWithGradient(
                   "Please rename or remove one of the use-data tags with name \"{}\".",
                   name, _name, name);
   }
-  int id = Data::getDataCount();
 
   //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
   PtrData data(new Data(name, id, dimension, meshDimensions, true));
