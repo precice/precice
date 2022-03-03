@@ -136,11 +136,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
                     "an implicit coupling scheme.");
-      // setup convergence measures
-      for (ConvergenceMeasureContext &convergenceMeasure : _convergenceMeasures) {
-        DataID dataID = convergenceMeasure.couplingData->getDataID();
-        assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
-      }
       // reserve memory and initialize data with zero
       initializeStorages();
     }
@@ -657,14 +652,6 @@ bool BaseCouplingScheme::doImplicitStep()
   storeIteration();
 
   return convergence;
-}
-
-void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, DataID dataID)
-{
-  PRECICE_TRACE(dataID);
-  DataMap::iterator iter = getAllData().find(dataID);
-  PRECICE_ASSERT(iter != getAllData().end(), "Given data ID does not exist in getAllData()!");
-  convergenceMeasure->couplingData = iter->second;
 }
 
 void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n, bool convergence)
