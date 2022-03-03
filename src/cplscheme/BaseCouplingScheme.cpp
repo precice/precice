@@ -449,7 +449,8 @@ void BaseCouplingScheme::initializeStorages()
   }
   // Reserve storage for acceleration
   if (_acceleration) {
-    _acceleration->initialize(getAccelerationData());
+    auto accelerationData = getAccelerationData();
+    _acceleration->initialize(accelerationData);
   }
 }
 
@@ -634,13 +635,15 @@ bool BaseCouplingScheme::doImplicitStep()
   // coupling iteration converged for current time window. Advance in time.
   if (convergence) {
     if (_acceleration) {
-      _acceleration->iterationsConverged(getAccelerationData());
+      auto accelerationData = getAccelerationData();
+      _acceleration->iterationsConverged(accelerationData);
     }
     newConvergenceMeasurements();
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
-      _acceleration->performAcceleration(getAccelerationData());
+      auto accelerationData = getAccelerationData();
+      _acceleration->performAcceleration(accelerationData);
     }
   }
 

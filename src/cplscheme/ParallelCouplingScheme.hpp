@@ -69,7 +69,7 @@ private:
    * @brief ParallelCouplingScheme applies acceleration to all CouplingData
    * @returns DataMap being accelerated
    */
-  DataMap &getAccelerationData() override
+  DataMap getAccelerationData() override
   {
     PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
     return getAllData();

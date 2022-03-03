@@ -97,24 +97,25 @@ private:
    * @brief BiCouplingScheme has _sendData and _receiveData
    * @returns DataMap with all data
    */
-  DataMap &getAllData() override
+  DataMap getAllData() override
   {
+    DataMap allData;
     // @todo user C++17 std::map::merge
     for (auto &sendData : _sendDataVector) {
       for (auto &dataPair : sendData.second) {
-        if (!utils::contained(dataPair.first, _allData)) {
-          _allData.emplace(dataPair);
+        if (!utils::contained(dataPair.first, allData)) {
+          allData.emplace(dataPair);
         }
       }
     }
     for (auto &receiveData : _receiveDataVector) {
       for (auto &dataPair : receiveData.second) {
-        if (!utils::contained(dataPair.first, _allData)) {
-          _allData.emplace(dataPair);
+        if (!utils::contained(dataPair.first, allData)) {
+          allData.emplace(dataPair);
         }
       }
     }
-    return _allData;
+    return allData;
   }
 
   /**
@@ -124,10 +125,10 @@ private:
   bool exchangeDataAndAccelerate() override;
 
   /**
-   * @brief MultiCouplingScheme applies acceleration to _allData
-   * @returns DataMap bein accelerated
+   * @brief MultiCouplingScheme applies acceleration to all CouplingData
+   * @returns DataMap being accelerated
    */
-  DataMap &getAccelerationData() override
+  DataMap getAccelerationData() override
   {
     return getAllData();
   }

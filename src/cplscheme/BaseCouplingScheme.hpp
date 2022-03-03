@@ -241,9 +241,6 @@ protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
 
-  /// Map from data ID -> all data (receive and send) with that ID
-  DataMap _allData;
-
   /// Sends data sendDataIDs given in mapCouplingData with communication.
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
@@ -254,7 +251,7 @@ protected:
    * @brief interface to provide all CouplingData, depending on coupling scheme being used
    * @return DataMap containing all CouplingData
    */
-  virtual DataMap &getAllData() = 0;
+  virtual DataMap getAllData() = 0;
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -525,7 +522,7 @@ private:
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
    */
-  virtual DataMap &getAccelerationData() = 0;
+  virtual DataMap getAccelerationData() = 0;
 
   /**
    * @brief If any required actions are open, an error message is issued.
