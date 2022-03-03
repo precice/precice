@@ -92,7 +92,7 @@ protected:
   DataMap getAllData() override
   {
     DataMap allData;
-    // @todo user C++17 std::map::merge
+    // @todo use C++17 std::map::merge
     for (auto &pair : _sendData) {
       allData.emplace(pair);
     }
