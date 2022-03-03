@@ -168,11 +168,24 @@ void SolverInterfaceImpl::configure(
   if (_accessorProcessRank == 0) {
     PRECICE_INFO("This is preCICE version {}", PRECICE_VERSION);
     PRECICE_INFO("Revision info: {}", precice::preciceRevision);
+    PRECICE_INFO("Build type: "
 #ifndef NDEBUG
-    PRECICE_INFO("Configuration: Debug");
+                 "Debug"
+#else // NDEBUG
+                 "Release"
+#ifndef PRECICE_NO_DEBUG_LOG
+                 " + debug log"
 #else
-    PRECICE_INFO("Configuration: Release (Debug and Trace log unavailable)");
+                 " (without debug log)"
 #endif
+#ifndef PRECICE_NO_TRACE_LOG
+                 " + trace log"
+#endif
+#ifndef PRECICE_NO_ASSERTIONS
+                 " + assertions"
+#endif
+#endif // NDEBUG
+    );
     PRECICE_INFO("Configuring preCICE with configuration \"{}\"", configurationFileName);
     PRECICE_INFO("I am participant \"{}\"", _accessorName);
   }
