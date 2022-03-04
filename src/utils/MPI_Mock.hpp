@@ -6,6 +6,9 @@
  * Inlines because of getting multiple definitons from the compiler otherwise.
  */
 
+#include <algorithm>
+#include <cstddef>
+
 using MPI_Comm     = std::nullptr_t;
 using MPI_Op       = std::nullptr_t;
 using MPI_Datatype = std::nullptr_t;
