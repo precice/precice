@@ -11,6 +11,7 @@ using MPI_Op       = std::nullptr_t;
 using MPI_Datatype = std::nullptr_t;
 
 static MPI_Comm MPI_COMM_WORLD = nullptr;
+static MPI_Comm MPI_COMM_NULL  = nullptr;
 
 const MPI_Datatype MPI_LONG = nullptr;
 const MPI_Op       MPI_MIN  = nullptr;
