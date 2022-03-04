@@ -278,12 +278,33 @@ void SolverInterface::readBlockVectorData(
   _impl->readBlockVectorData(dataID, size, valueIndices, values);
 }
 
+void SolverInterface::readBlockVectorData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     relativeReadTime,
+    double *   values) const
+{
+  // @todo: needs testing!
+  _impl->readBlockVectorData(dataID, size, valueIndices, relativeReadTime, values);
+}
+
 void SolverInterface::readVectorData(
     int     dataID,
     int     valueIndex,
     double *value) const
 {
-  return _impl->readVectorData(dataID, valueIndex, value);
+  _impl->readVectorData(dataID, valueIndex, value);
+}
+
+void SolverInterface::readVectorData(
+    int     dataID,
+    int     valueIndex,
+    double  relativeReadTime,
+    double *value) const
+{
+  // @todo: needs testing!
+  _impl->readVectorData(dataID, valueIndex, relativeReadTime, value);
 }
 
 void SolverInterface::readBlockScalarData(
@@ -295,12 +316,32 @@ void SolverInterface::readBlockScalarData(
   _impl->readBlockScalarData(dataID, size, valueIndices, values);
 }
 
+void SolverInterface::readBlockScalarData(
+    int        dataID,
+    int        size,
+    const int *valueIndices,
+    double     relativeReadTime,
+    double *   values) const
+{
+  // @todo: needs testing!
+  _impl->readBlockScalarData(dataID, size, valueIndices, values);
+}
+
 void SolverInterface::readScalarData(
     int     dataID,
     int     valueIndex,
     double &value) const
 {
-  return _impl->readScalarData(dataID, valueIndex, value);
+  _impl->readScalarData(dataID, valueIndex, value);
+}
+
+void SolverInterface::readScalarData(
+    int     dataID,
+    int     valueIndex,
+    double  relativeReadTime,
+    double &value) const
+{
+  _impl->readScalarData(dataID, valueIndex, relativeReadTime, value);
 }
 
 void SolverInterface::setMeshAccessRegion(const int     meshID,
@@ -315,15 +356,6 @@ void SolverInterface::getMeshVerticesAndIDs(const int meshID,
                                             double *  coordinates) const
 {
   _impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
-}
-
-void SolverInterface::readScalarData(
-    int     dataID,
-    int     valueIndex,
-    double  dt,
-    double &value) const
-{
-  return _impl->readScalarData(dataID, valueIndex, dt, value);
 }
 
 std::string getVersionInformation()
