@@ -10,9 +10,7 @@
 
 #ifndef PRECICE_NO_MPI
 #include <mpi.h>
-#else // not PRECICE_NO_MPI
-#define MPI_COMM_NULL nullptr
-#endif // not PRECICE_NO_MPI
+#endif // no PRECICE_NO_MPI
 
 namespace precice {
 namespace logging {
@@ -52,7 +50,7 @@ public:
     std::vector<AccessorGroup> groups;
 
     /// The native communicator that represents this state
-    Communicator comm = MPI_COMM_NULL;
+    Communicator comm;
 
     /// A shared pointer to the parent CommState
     CommStatePtr parent = nullptr;
