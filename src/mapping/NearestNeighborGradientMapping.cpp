@@ -20,6 +20,8 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
     int        dimensions)
     : NearestNeighborBaseMapping(constraint, dimensions, true, "NearestNeighborGradientMapping", "nng")
 {
+  PRECICE_CHECK(!hasConstraint(CONSERVATIVE), "Nearest Neighbor Gradient is not defined for conservative mapping");
+
   if (hasConstraint(SCALEDCONSISTENT)) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
@@ -41,12 +43,8 @@ void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, me
     const auto &matchedVertexCoords = searchSpace.get()->vertices()[_vertexIndices[i]].getCoords();
     const auto &sourceVertexCoords  = origins->vertices()[i].getCoords();
 
-    // We calculate the distances uniformly for both mapping constraints as the difference (input - output)
-    if (hasConstraint(CONSERVATIVE)) {
-      _offsetsMatched[i] = sourceVertexCoords - matchedVertexCoords;
-    } else {
-      _offsetsMatched[i] = matchedVertexCoords - sourceVertexCoords;
-    }
+    // We calculate the distances uniformly for consistent mapping constraint as the difference (output - input)
+    _offsetsMatched[i] = sourceVertexCoords - matchedVertexCoords;
   }
 };
 
@@ -79,42 +77,27 @@ void NearestNeighborGradientMapping::map(
   PRECICE_ASSERT(outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size()),
                  outputValues.size(), valueDimensions, output()->vertices().size());
 
-  if (hasConstraint(CONSERVATIVE)) {
-    PRECICE_DEBUG("Map conservative");
-    size_t const inSize = input()->vertices().size();
+  //Consistent mapping
+  PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
+  size_t const outSize = output()->vertices().size();
 
-    for (size_t i = 0; i < inSize; i++) {
-      int const outputIndex = _vertexIndices[i] * valueDimensions;
+  for (size_t i = 0; i < outSize; i++) {
+    int inputIndex = _vertexIndices[i] * valueDimensions;
 
-      for (int dim = 0; dim < valueDimensions; dim++) {
+    for (int dim = 0; dim < valueDimensions; dim++) {
 
-        const int mapOutputIndex = outputIndex + dim;
-        const int mapInputIndex  = (i * valueDimensions) + dim;
+      const int mapOutputIndex = (i * valueDimensions) + dim;
+      const int mapInputIndex  = inputIndex + dim;
 
-        outputValues(mapOutputIndex) += inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
-      }
+      outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
     }
-  } else {
-    PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
-    size_t const outSize = output()->vertices().size();
-
-    for (size_t i = 0; i < outSize; i++) {
-      int inputIndex = _vertexIndices[i] * valueDimensions;
-
-      for (int dim = 0; dim < valueDimensions; dim++) {
-
-        const int mapOutputIndex = (i * valueDimensions) + dim;
-        const int mapInputIndex  = inputIndex + dim;
-
-        outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
-      }
-    }
-    if (hasConstraint(SCALEDCONSISTENT)) {
-      scaleConsistentMapping(inputDataID, outputDataID);
-    }
-
-    PRECICE_DEBUG("Mapped values (with gradient) = {}", utils::previewRange(3, outputValues));
   }
+
+  if (hasConstraint(SCALEDCONSISTENT)) {
+    scaleConsistentMapping(inputDataID, outputDataID);
+  }
+
+  PRECICE_DEBUG("Mapped values (with gradient) = {}", utils::previewRange(3, outputValues));
 }
 
 } // namespace mapping
