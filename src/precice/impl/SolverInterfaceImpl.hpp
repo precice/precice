@@ -197,6 +197,7 @@ public:
    */
   bool isTimeWindowComplete() const;
 
+  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation
    *        It does not automatically imply, that the solver does not have to evaluate the
@@ -204,6 +205,7 @@ public:
    */
   bool hasToEvaluateSurrogateModel() const;
 
+  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
   /**
    * @brief Returns whether the solver has to evaluate the fine model representation
    *        It does not automatically imply, that the solver does not have to evaluate the
@@ -459,9 +461,9 @@ public:
   /**
    * @brief Writes scalar data values given as block.
    *
-   * @param fromDataID [IN] ID of the data to be written.
-   * @param size [IN] Number of valueIndices, and number of values.
-   * @param values [IN] Values of the data to be written.
+   * @param[in] fromDataID ID of the data to be written.
+   * @param[in] size Number of valueIndices, and number of values.
+   * @param[in] values Values of the data to be written.
    */
   void writeBlockScalarData(
       int           fromDataID,
@@ -493,10 +495,10 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param toDataID [IN] ID of the data to be read.
-   * @param size [IN] Number of indices, and number of values * dimensions.
-   * @param valueIndices [IN] Indices (from setReadPosition()) of data values.
-   * @param values [IN] Values of the data to be read.
+   * @param[in] toDataID ID of the data to be read.
+   * @param[in] size Number of indices, and number of values * dimensions.
+   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
+   * @param[in] values Values of the data to be read.
    */
   void readBlockVectorData(
       int        toDataID,
@@ -559,16 +561,6 @@ public:
       double *  coordinates) const;
 
   /**
-   * @brief Sets the location for all output of preCICE.
-   *
-   * If done after configuration, this overwrites the output location specified
-   * in the configuration.
-   */
-  //  void setExportLocation (
-  //    const std::string& location,
-  //    int                exportType = io::constants::exportAll() );
-
-  /**
    * @brief Writes a mesh to vtk file.
    *
    * The plotting path has to be specified in the configuration of the
@@ -577,33 +569,6 @@ public:
    * @param[in] filenameSuffix Suffix of all plotted files
    */
   void exportMesh(const std::string &filenameSuffix) const;
-
-  /**
-   * @brief Scales data values according to configuration.
-   *
-   * Currently, the only scaling supported is a division of the data values
-   * through the surface area belonging to its "support". This allows to come
-   * from forces to stresses, e.g..
-   */
-  //  void scaleReadData ()
-
-  /// Returns the name of the accessor
-  std::string getAccessorName() const
-  {
-    return _accessorName;
-  }
-
-  /// Returns the rank of the accessor
-  int getAccessorProcessRank() const
-  {
-    return _accessorProcessRank;
-  }
-
-  /// Returns the size of the accessors communicator
-  int getAccessorCommunicatorSize() const
-  {
-    return _accessorCommunicatorSize;
-  }
 
   /// Allows to access a registered mesh
   const mesh::Mesh &mesh(const std::string &meshName) const;
@@ -641,13 +606,13 @@ private:
     Finalized    // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to State::Finalized; mandatory
   };
 
-  // SolverInterface.initializeData() triggers transition from false to true.
+  /// SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
 
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
-  // setMeshAccessRegion may only be called once
+  /// setMeshAccessRegion may only be called once
   mutable bool _accessRegionDefined = false;
 
   /// The current State of the solverinterface
@@ -662,7 +627,7 @@ private:
    * Only after the configuration a reasonable state of a SolverInterfaceImpl
    * object is achieved.
    *
-   * @param configurationFileName [IN] Name (with path) of the xml config. file.
+   * @param[in] configurationFileName Name (with path) of the xml config. file.
    */
   void configure(const std::string &configurationFileName);
 
@@ -679,35 +644,6 @@ private:
   /// Exports meshes with data and watch point data.
   void handleExports();
 
-  /**
-   * @brief Adds exchanged data ids related to accessor to the coupling scheme.
-   *
-   * From the configuration it is only known which data a participant writes,
-   * which data he receives, and which data is exchanged within the coupling
-   * scheme. The data actually being sent and received in the coupling scheme,
-   * is defined by the intersection of data being written or read by the
-   * accessor and the data exchanged in the coupling scheme, respectively.
-   *
-   * Prerequesits:
-   * - _accessor is valid
-   * - _couplingScheme is valid
-   */
-  void addDataToCouplingScheme(
-      const cplscheme::CouplingSchemeConfiguration &config);
-
-  /**
-   * @brief Configures _couplingScheme to be ready to use.
-   *
-   * @pre _couplingScheme holds a pointer to a valid coupling scheme object
-   * @pre all meshes are created
-   * @pre all data is added to _data
-   * @pre _accessor points to the accessor
-   */
-  void addMeshesToCouplingScheme();
-
-  /// Returns true, if the accessor uses the mesh with given name.
-  bool isUsingMesh(const std::string &meshName) const;
-
   /// Determines participants providing meshes to other participants.
   void configurePartitions(
       const m2n::M2NConfiguration::SharedPointer &m2nConfig);
@@ -722,7 +658,7 @@ private:
   void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
-  void mapData(const utils::ptr_vector<DataContext> &contexts, const std::string &mappingType);
+  void mapData(DataContext &context, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
@@ -755,15 +691,6 @@ private:
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
       const config::SolverInterfaceConfiguration &config);
-
-  int markedSkip() const
-  {
-    return 0;
-  }
-  int markedQueryDirectly() const
-  {
-    return 1;
-  }
 
   /// Initializes communication between master and slaves.
   void initializeMasterSlaveCommunication();

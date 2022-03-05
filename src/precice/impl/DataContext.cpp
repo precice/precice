@@ -1,10 +1,10 @@
 #include "precice/impl/DataContext.hpp"
 #include <memory>
-#include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
 
 namespace precice {
 namespace impl {
+
+logging::Logger DataContext::_log{"impl::DataContext"};
 
 DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 {
@@ -40,6 +40,7 @@ int DataContext::getProvidedDataID() const
 
 int DataContext::getFromDataID() const
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   PRECICE_ASSERT(_fromData);
   return _fromData->getID();
@@ -47,19 +48,29 @@ int DataContext::getFromDataID() const
 
 void DataContext::resetProvidedData()
 {
+  PRECICE_TRACE();
   _providedData->toZero();
 }
 
 void DataContext::resetToData()
 {
+  PRECICE_TRACE();
   _toData->toZero();
 }
 
 int DataContext::getToDataID() const
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   PRECICE_ASSERT(_toData);
   return _toData->getID();
+}
+
+int DataContext::getDataDimensions() const
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_providedData);
+  return _providedData->getDimensions();
 }
 
 std::string DataContext::getMeshName() const
@@ -80,30 +91,12 @@ void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromDa
   PRECICE_ASSERT(fromData);
   PRECICE_ASSERT(toData);
   _mappingContext = mappingContext;
-  PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal provided data.");
+  PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal _providedData.");
   PRECICE_ASSERT(fromData->getName() == getDataName());
   _fromData = fromData;
   PRECICE_ASSERT(toData->getName() == getDataName());
   _toData = toData;
   PRECICE_ASSERT(_toData != _fromData);
-}
-
-void DataContext::configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext)
-{
-  PRECICE_ASSERT(fromMeshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData fromData = fromMeshContext.mesh->data(getDataName());
-  PRECICE_ASSERT(fromData != _providedData);
-  this->setMapping(mappingContext, fromData, _providedData);
-  PRECICE_ASSERT(hasReadMapping());
-}
-
-void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext)
-{
-  PRECICE_ASSERT(toMeshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData toData = toMeshContext.mesh->data(getDataName());
-  PRECICE_ASSERT(toData != _providedData);
-  this->setMapping(mappingContext, _providedData, toData);
-  PRECICE_ASSERT(hasWriteMapping());
 }
 
 bool DataContext::hasMapping() const

@@ -27,7 +27,7 @@ The following components currently exist:
 - \ref precice::action "action" contains actions that can be executed to modify the exchanged data, can be written in Python.
 - \ref precice::com "com" defines a data communication abstraction layer and implementations.
 - \ref precice::cplscheme "cplscheme" takes coupling data and communication objects and implements coupling schemes for coupled simulations.
-- \ref src/drivers "drivers" holds the main function for building the ```binprecice``` executable.
+- \ref src/drivers "drivers" holds the main function for building the ```precice-tools``` executable.
 - \ref precice::io "io" implements import and export of the coupling mesh and data.
 - \ref precice::logging "logging" contains the code for the logging framework, based on boost logging.
 - \ref precice::m2n "m2n" defines the logical part of the parallel communication between participants.

@@ -91,12 +91,12 @@ void ProvidedPartition::communicate()
           PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
           for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-            com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh(globalMesh, rankSlave);
+            com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(globalMesh, rankSlave);
             PRECICE_DEBUG("Received sub-mesh, from slave: {}, global vertexCount: {}", rankSlave, globalMesh.vertices().size());
           }
         }
         if (utils::MasterSlave::isSlave()) {
-          com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh(*_mesh, 0);
+          com::CommunicateMesh(utils::MasterSlave::getCommunication()).sendMesh(*_mesh, 0);
         }
         hasMeshBeenGathered = true;
       }
@@ -138,20 +138,20 @@ void ProvidedPartition::prepare()
     // receive number of slave vertices and fill vertex offsets
     for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       int numberOfSlaveVertices = -1;
-      utils::MasterSlave::_communication->receive(numberOfSlaveVertices, rankSlave);
+      utils::MasterSlave::getCommunication()->receive(numberOfSlaveVertices, rankSlave);
       _mesh->getVertexOffsets()[rankSlave] = numberOfSlaveVertices + _mesh->getVertexOffsets()[rankSlave - 1];
-      utils::MasterSlave::_communication->send(globalNumberOfVertices, rankSlave);
+      utils::MasterSlave::getCommunication()->send(globalNumberOfVertices, rankSlave);
       globalNumberOfVertices += numberOfSlaveVertices;
     }
 
     // set and broadcast global number of vertices
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
     PRECICE_DEBUG("Broadcast global number of vertices: {}", globalNumberOfVertices);
-    utils::MasterSlave::_communication->broadcast(globalNumberOfVertices);
+    utils::MasterSlave::getCommunication()->broadcast(globalNumberOfVertices);
 
     // broadcast vertex offsets
     PRECICE_DEBUG("My vertex offsets: {}", _mesh->getVertexOffsets());
-    utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets());
+    utils::MasterSlave::getCommunication()->broadcast(_mesh->getVertexOffsets());
 
     // fill vertex distribution
     if (std::any_of(_m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); })) {
@@ -175,11 +175,11 @@ void ProvidedPartition::prepare()
 
     // send number of own vertices
     PRECICE_DEBUG("Send number of vertices: {}", numberOfVertices);
-    utils::MasterSlave::_communication->send(numberOfVertices, 0);
+    utils::MasterSlave::getCommunication()->send(numberOfVertices, 0);
 
     // set global IDs
     int globalVertexCounter = -1;
-    utils::MasterSlave::_communication->receive(globalVertexCounter, 0);
+    utils::MasterSlave::getCommunication()->receive(globalVertexCounter, 0);
     PRECICE_DEBUG("Set global vertex indices");
     for (int i = 0; i < numberOfVertices; i++) {
       _mesh->vertices()[i].setGlobalIndex(globalVertexCounter + i);
@@ -187,12 +187,12 @@ void ProvidedPartition::prepare()
 
     // set global number of vertices
     int globalNumberOfVertices = -1;
-    utils::MasterSlave::_communication->broadcast(globalNumberOfVertices, 0);
+    utils::MasterSlave::getCommunication()->broadcast(globalNumberOfVertices, 0);
     PRECICE_ASSERT(globalNumberOfVertices != -1);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
 
     // set vertex offsets
-    utils::MasterSlave::_communication->broadcast(_mesh->getVertexOffsets(), 0);
+    utils::MasterSlave::getCommunication()->broadcast(_mesh->getVertexOffsets(), 0);
     PRECICE_DEBUG("My vertex offsets: {}", _mesh->getVertexOffsets());
 
   } else { // Coupling mode
@@ -241,7 +241,7 @@ void ProvidedPartition::compareBoundingBoxes()
   // each rank sends its bb to master
   if (utils::MasterSlave::isSlave()) { //slave
     PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
-    com::CommunicateBoundingBox(utils::MasterSlave::_communication).sendBoundingBox(_mesh->getBoundingBox(), 0);
+    com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
@@ -257,7 +257,7 @@ void ProvidedPartition::compareBoundingBoxes()
     for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       // initialize bbm
       bbm.emplace(rankSlave, bb);
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).receiveBoundingBox(bbm.at(rankSlave), rankSlave);
+      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).receiveBoundingBox(bbm.at(rankSlave), rankSlave);
     }
 
     // master sends number of ranks and bbm to the other master
@@ -286,9 +286,9 @@ void ProvidedPartition::compareBoundingBoxes()
     }
 
     // broadcast the received feedbackMap
-    utils::MasterSlave::_communication->broadcast(connectedRanksList);
+    utils::MasterSlave::getCommunication()->broadcast(connectedRanksList);
     if (remoteConnectionMapSize != 0) {
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastSendConnectionMap(remoteConnectionMap);
+      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastSendConnectionMap(remoteConnectionMap);
     }
 
     // master checks which ranks are connected to it
@@ -303,13 +303,13 @@ void ProvidedPartition::compareBoundingBoxes()
 
   } else { // Slave
 
-    utils::MasterSlave::_communication->broadcast(connectedRanksList, 0);
+    utils::MasterSlave::getCommunication()->broadcast(connectedRanksList, 0);
 
     if (!connectedRanksList.empty()) {
       for (Rank rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
       }
-      com::CommunicateBoundingBox(utils::MasterSlave::_communication).broadcastReceiveConnectionMap(remoteConnectionMap);
+      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastReceiveConnectionMap(remoteConnectionMap);
     }
 
     _mesh->getConnectedRanks().clear();

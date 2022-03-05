@@ -1,4 +1,7 @@
 name: coverity-scan
+# Runs the coverity-scan tool on the develop branch at a fixed schedule.
+#
+# See https://scan.coverity.com/projects/precice-precice
 on:
   workflow_dispatch:
   schedule:

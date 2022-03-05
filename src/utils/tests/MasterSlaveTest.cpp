@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(SerialConfig)
     BOOST_TEST((slaves.begin() == slaves.end()));
   }
 
-  BOOST_TEST(!static_cast<bool>(utils::MasterSlave::_communication));
+  BOOST_TEST(!static_cast<bool>(utils::MasterSlave::getCommunication()));
 }
 
 BOOST_AUTO_TEST_CASE(ParallelConfig)
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(ParallelConfig)
     BOOST_TEST(ranks == expected, boost::test_tools::per_element());
   }
 
-  BOOST_TEST(static_cast<bool>(utils::MasterSlave::_communication));
+  BOOST_TEST(static_cast<bool>(utils::MasterSlave::getCommunication()));
 }
 
 BOOST_AUTO_TEST_CASE(Parallell2norm)

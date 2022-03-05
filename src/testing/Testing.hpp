@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <boost/test/unit_test.hpp>
+#include <limits>
 #include <string>
 #include <type_traits>
 #include "math/differences.hpp"
@@ -9,17 +10,26 @@
 #include "testing/TestContext.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace testing {
 
 namespace bt = boost::unit_test;
 
+constexpr DataID operator"" _dataID(unsigned long long n)
+{
+  PRECICE_ASSERT(n >= 0, "DataID must be positive");
+  PRECICE_ASSERT(n < std::numeric_limits<DataID>::max(), "DataID is too big");
+  return static_cast<DataID>(n);
+}
+
 namespace inject {
 using precice::testing::Require;
 using precice::testing::operator""_rank;
 using precice::testing::operator""_ranks;
 using precice::testing::operator""_on;
+using precice::testing::operator""_dataID;
 } // namespace inject
 
 #define PRECICE_TEST(...)                             \

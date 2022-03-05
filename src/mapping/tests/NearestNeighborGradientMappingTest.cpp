@@ -167,6 +167,5 @@ BOOST_AUTO_TEST_CASE(ConsistentGradientNotConstant)
   const Eigen::VectorXd &outValuesVector = outDataVector->values();
   BOOST_CHECK(equals(expected, outValuesVector));
 }
-
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

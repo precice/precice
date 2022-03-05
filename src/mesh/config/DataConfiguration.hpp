@@ -4,6 +4,7 @@
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/Data.hpp"
+#include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {

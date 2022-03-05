@@ -610,7 +610,7 @@ public:
    * @param[in] dataID ID to write to.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
-   * @param[in] values pointer to the vector values.
+   * @param[in] values Pointer to the vector values.
    *
    * @pre count of available elements at values matches the configured dimension * size
    * @pre count of available elements at valueIndices matches the given size
@@ -666,7 +666,7 @@ public:
    *
    * @param[in] dataID ID to write to.
    * @param[in] valueIndex Index of the vertex.
-   * @param[in] value pointer to the vector value.
+   * @param[in] value Pointer to the vector value.
    *
    * @pre count of available elements at value matches the configured dimension
    * @pre initialize() has been called
@@ -688,7 +688,7 @@ public:
    * @param[in] dataID ID to write to.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
-   * @param[in] values pointer to the values.
+   * @param[in] values Pointer to the values.
    *
    * @pre count of available elements at values matches the given size
    * @pre count of available elements at valueIndices matches the given size
@@ -737,7 +737,7 @@ public:
    *
    * @param[in] dataID ID to write to.
    * @param[in] valueIndex Index of the vertex.
-   * @param[in] value the value to write.
+   * @param[in] value The value to write.
    *
    * @pre initialize() has been called
    *
@@ -814,7 +814,7 @@ public:
    * @param[in] dataID ID to read from.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
-   * @param[out] values pointer to read destination.
+   * @param[out] values Pointer to read destination.
    *
    * @pre count of available elements at values matches the configured dimension * size
    * @pre count of available elements at valueIndices matches the given size
@@ -841,7 +841,7 @@ public:
    *
    * @param[in] dataID ID to read from.
    * @param[in] valueIndex Index of the vertex.
-   * @param[out] value pointer to the vector value.
+   * @param[out] value Pointer to the vector value.
    *
    * @pre count of available elements at value matches the configured dimension
    * @pre initialize() has been called
@@ -865,7 +865,7 @@ public:
    * @param[in] dataID ID to read from.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
-   * @param[out] values pointer to the read destination.
+   * @param[out] values Pointer to the read destination.
    *
    * @pre count of available elements at values matches the given size
    * @pre count of available elements at valueIndices matches the given size
@@ -888,7 +888,7 @@ public:
    *
    * @param[in] dataID ID to read from.
    * @param[in] valueIndex Index of the vertex.
-   * @param[out] value read destination of the value.
+   * @param[out] value Read destination of the value.
    *
    * @pre initialize() has been called
    *
