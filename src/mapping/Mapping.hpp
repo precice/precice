@@ -43,9 +43,7 @@ public:
     /// Vertices only.
     VERTEX = 1,
     /// Full mesh.
-    FULL = 2,
-    /// Gradient data available.
-    GRADIENT = 3
+    FULL = 2
   };
 
   /// Constructor, takes mapping constraint.
