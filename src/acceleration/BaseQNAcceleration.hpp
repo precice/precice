@@ -96,14 +96,14 @@ public:
   /**
     * @brief Initializes the acceleration.
     */
-  virtual void initialize(DataMap &cplData);
+  virtual void initialize(const DataMap &cplData);
 
   /**
     * @brief Performs one acceleration step.
     *
     * Has to be called after every implicit coupling iteration.
     */
-  virtual void performAcceleration(DataMap &cplData);
+  virtual void performAcceleration(const DataMap &cplData);
 
   /**
     * @brief Marks a iteration sequence as converged.
@@ -111,7 +111,7 @@ public:
     * Since convergence measurements are done outside the acceleration, this
     * method has to be used to signalize convergence to the acceleration.
     */
-  virtual void iterationsConverged(DataMap &cplData);
+  virtual void iterationsConverged(const DataMap &cplData);
 
   /**
     * @brief Exports the current state of the acceleration to a file.
@@ -242,25 +242,25 @@ protected:
      * called by the iterationsConverged() method in the BaseQNAcceleration class
      * handles the acceleration sepcific action after the convergence of one iteration
      */
-  virtual void specializedIterationsConverged(DataMap &cplData) = 0;
+  virtual void specializedIterationsConverged(const DataMap &cplData) = 0;
 
   /// Updates the V, W matrices (as well as the matrices for the secondary data)
-  virtual void updateDifferenceMatrices(DataMap &cplData);
+  virtual void updateDifferenceMatrices(const DataMap &cplData);
 
   /// Concatenates all coupling data involved in the QN system in a single vector
-  virtual void concatenateCouplingData(DataMap &cplData);
+  virtual void concatenateCouplingData(const DataMap &cplData);
 
   /// Splits up QN system vector back into the coupling data
-  virtual void splitCouplingData(DataMap &cplData);
+  virtual void splitCouplingData(const DataMap &cplData);
 
   /// Applies the filter method for the least-squares system, defined in the configuration
   virtual void applyFilter();
 
   /// Computes underrelaxation for the secondary data
-  virtual void computeUnderrelaxationSecondaryData(DataMap &cplData) = 0;
+  virtual void computeUnderrelaxationSecondaryData(const DataMap &cplData) = 0;
 
   /// Computes the quasi-Newton update using the specified pp scheme (MVQN, IQNILS)
-  virtual void computeQNUpdate(DataMap &cplData, Eigen::VectorXd &xUpdate) = 0;
+  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate) = 0;
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);

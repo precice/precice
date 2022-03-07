@@ -75,41 +75,21 @@ BaseQNAcceleration::BaseQNAcceleration(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::initialize(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE(cplData.size());
-  for (DataMap::value_type &pair : cplData) {
+  for (const DataMap::value_type &pair : cplData) {
     PRECICE_ASSERT(pair.second->values().size() == pair.second->previousIteration().size(), "current and previousIteration have to be initialized and of identical size.",
                    pair.second->values().size(), pair.second->previousIteration().size());
   }
 
   checkDataIDs(cplData);
-
-  /*
-  std::stringstream sss;
-  sss<<"debugOutput-rank-"<<utils::MasterSlave::getRank();
-  _debugOut.open(sss.str(), std::ios_base::out);
-  _debugOut << std::setprecision(16);
-
-  Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-
-  _debugOut<<"initialization:\n";
-  for (int id : _dataIDs) {
-      const auto& values = *cplData[id]->values;
-      const auto& oldValues = cplData[id]->oldValues.col(0);
-
-      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<"     values: "<<values.format(CommaInitFmt)<<'\n';
-      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<" old values: "<<oldValues.format(CommaInitFmt)<<'\n';
-    }
-  _debugOut<<"\n";
-  */
-
   size_t              entries = 0;
   std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   for (auto &elem : _dataIDs) {
-    entries += cplData[elem]->values().size();
-    subVectorSizes.push_back(cplData[elem]->values().size());
+    entries += cplData.at(elem)->values().size();
+    subVectorSizes.push_back(cplData.at(elem)->values().size());
   }
 
   _matrixCols.push_front(0);
@@ -144,14 +124,11 @@ void BaseQNAcceleration::initialize(
      */
     _dimOffsets.resize(utils::MasterSlave::getSize() + 1);
     _dimOffsets[0] = 0;
-    //for (auto & elem : _dataIDs) {
-    //	std::cout<<" Offsets:(vertex) \n"<<cplData[elem]->mesh->getVertexOffsets()<<'\n';
-    //}
     for (size_t i = 0; i < _dimOffsets.size() - 1; i++) {
       int accumulatedNumberOfUnknowns = 0;
       for (auto &elem : _dataIDs) {
-        const auto &offsets = cplData[elem]->getVertexOffsets();
-        accumulatedNumberOfUnknowns += offsets[i] * cplData[elem]->getDimensions();
+        const auto &offsets = cplData.at(elem)->getVertexOffsets();
+        accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions();
       }
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
@@ -171,7 +148,7 @@ void BaseQNAcceleration::initialize(
   _qrV.setGlobalRows(getLSSystemRows());
 
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
-  for (DataMap::value_type &pair : cplData) {
+  for (const DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _dataIDs)) {
       _secondaryDataIDs.push_back(pair.first);
       int secondaryEntries            = pair.second->values().size();
@@ -190,7 +167,7 @@ void BaseQNAcceleration::initialize(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::updateDifferenceMatrices(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 
@@ -285,7 +262,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::performAcceleration(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE(_dataIDs.size(), cplData.size());
 
@@ -420,19 +397,6 @@ void BaseQNAcceleration::performAcceleration(
   }
 
   splitCouplingData(cplData);
-
-  /*
-  _debugOut<<"finished update: \n";
-  for (int id : _dataIDs) {
-      const auto& values = *cplData[id]->values;
-      const auto& oldValues = cplData[id]->oldValues.col(0);
-
-      _debugOut<<"id: "<<id<<"norm: "<<values.norm()<<"     values: "<<values.format(CommaInitFmt)<<'\n';
-      _debugOut<<"id: "<<id<<"norm: "<<oldValues.norm()<<" old values: "<<oldValues.format(CommaInitFmt)<<'\n';
-    }
-  _debugOut<<"\n";
-  */
-
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
@@ -461,15 +425,15 @@ void BaseQNAcceleration::applyFilter()
 }
 
 void BaseQNAcceleration::concatenateCouplingData(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 
   int offset = 0;
   for (int id : _dataIDs) {
-    int         size      = cplData[id]->values().size();
-    auto &      values    = cplData[id]->values();
-    const auto &oldValues = cplData[id]->previousIteration();
+    int         size      = cplData.at(id)->values().size();
+    auto &      values    = cplData.at(id)->values();
+    const auto &oldValues = cplData.at(id)->previousIteration();
     for (int i = 0; i < size; i++) {
       _values(i + offset)    = values(i);
       _oldValues(i + offset) = oldValues(i);
@@ -479,14 +443,14 @@ void BaseQNAcceleration::concatenateCouplingData(
 }
 
 void BaseQNAcceleration::splitCouplingData(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 
   int offset = 0;
   for (int id : _dataIDs) {
-    int   size       = cplData[id]->values().size();
-    auto &valuesPart = cplData[id]->values();
+    int   size       = cplData.at(id)->values().size();
+    auto &valuesPart = cplData.at(id)->values();
     for (int i = 0; i < size; i++) {
       valuesPart(i) = _values(i + offset);
     }
@@ -503,7 +467,7 @@ void BaseQNAcceleration::splitCouplingData(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::iterationsConverged(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 

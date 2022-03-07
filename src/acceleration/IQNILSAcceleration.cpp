@@ -40,13 +40,13 @@ IQNILSAcceleration::IQNILSAcceleration(
 }
 
 void IQNILSAcceleration::initialize(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   // do common QN acceleration initialization
   BaseQNAcceleration::initialize(cplData);
 
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
-  for (DataMap::value_type &pair : cplData) {
+  for (const DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _dataIDs)) {
       int secondaryEntries = pair.second->values().size();
       utils::append(_secondaryOldXTildes[pair.first], Eigen::VectorXd(Eigen::VectorXd::Zero(secondaryEntries)));
@@ -55,12 +55,12 @@ void IQNILSAcceleration::initialize(
 }
 
 void IQNILSAcceleration::updateDifferenceMatrices(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   // Compute residuals of secondary data
   for (int id : _secondaryDataIDs) {
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
-    PtrCouplingData  data         = cplData[id];
+    PtrCouplingData  data         = cplData.at(id);
     PRECICE_ASSERT(secResiduals.size() == data->values().size(),
                    secResiduals.size(), data->values().size());
     secResiduals = data->values();
@@ -89,17 +89,17 @@ void IQNILSAcceleration::updateDifferenceMatrices(
       // Compute delta_x_tilde for secondary data
       for (int id : _secondaryDataIDs) {
         Eigen::MatrixXd &secW = _secondaryMatricesW[id];
-        PRECICE_ASSERT(secW.rows() == cplData[id]->values().size(), secW.rows(), cplData[id]->values().size());
-        secW.col(0) = cplData[id]->values();
+        PRECICE_ASSERT(secW.rows() == cplData.at(id)->values().size(), secW.rows(), cplData.at(id)->values().size());
+        secW.col(0) = cplData.at(id)->values();
         secW.col(0) -= _secondaryOldXTildes[id];
       }
     }
 
     // Store x_tildes for secondary data
     for (int id : _secondaryDataIDs) {
-      PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values().size(),
-                     _secondaryOldXTildes[id].size(), cplData[id]->values().size());
-      _secondaryOldXTildes[id] = cplData[id]->values();
+      PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData.at(id)->values().size(),
+                     _secondaryOldXTildes[id].size(), cplData.at(id)->values().size());
+      _secondaryOldXTildes[id] = cplData.at(id)->values();
     }
   }
 
@@ -108,18 +108,18 @@ void IQNILSAcceleration::updateDifferenceMatrices(
 }
 
 void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   //Store x_tildes for secondary data
   for (int id : _secondaryDataIDs) {
-    PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData[id]->values().size(),
-                   _secondaryOldXTildes[id].size(), cplData[id]->values().size());
-    _secondaryOldXTildes[id] = cplData[id]->values();
+    PRECICE_ASSERT(_secondaryOldXTildes.at(id).size() == cplData.at(id)->values().size(),
+                   _secondaryOldXTildes.at(id).size(), cplData.at(id)->values().size());
+    _secondaryOldXTildes[id] = cplData.at(id)->values();
   }
 
   // Perform underrelaxation with initial relaxation factor for secondary data
   for (int id : _secondaryDataIDs) {
-    PtrCouplingData  data   = cplData[id];
+    PtrCouplingData  data   = cplData.at(id);
     Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
@@ -129,7 +129,7 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
   }
 }
 
-void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::VectorXd &xUpdate)
+void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
   PRECICE_DEBUG("   Compute Newton factors");
@@ -196,8 +196,6 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
   // compute x updates from W and coefficients c, i.e, xUpdate = c*W
   xUpdate = _matrixW * c;
 
-  //PRECICE_DEBUG("c = " << c);
-
   /**
      *  perform QN-Update step for the secondary Data
      */
@@ -211,7 +209,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
 
   // Perform QN relaxation for secondary data
   for (int id : _secondaryDataIDs) {
-    PtrCouplingData data   = cplData[id];
+    PtrCouplingData data   = cplData.at(id);
     auto &          values = data->values();
     PRECICE_ASSERT(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
     values = _secondaryMatricesW[id] * c;
@@ -235,7 +233,7 @@ void IQNILSAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::
 }
 
 void IQNILSAcceleration::specializedIterationsConverged(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
   if (_matrixCols.front() == 0) { // Did only one iteration
