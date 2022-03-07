@@ -251,7 +251,7 @@ void BaseCouplingScheme::advance()
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : getAllData()) {
+  for (auto &pair : getAllData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->storeExtrapolationData();
   }
@@ -260,7 +260,7 @@ void BaseCouplingScheme::storeExtrapolationData()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (const DataMap::value_type &pair : getAccelerationData()) {
+  for (auto &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->moveToNextWindow();
   }
@@ -444,7 +444,7 @@ void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
-  for (DataMap::value_type &pair : getAllData()) {
+  for (auto &pair : getAllData()) {
     pair.second->initializeExtrapolation();
   }
   // Reserve storage for acceleration
@@ -478,7 +478,7 @@ void BaseCouplingScheme::addConvergenceMeasure(
 {
   ConvergenceMeasureContext convMeasure;
   PRECICE_ASSERT(getAllData().count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = getAllData()[dataID];
+  convMeasure.couplingData = getAllData().at(dataID);
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
