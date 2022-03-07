@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
   <solver-interface dimensions="3">
-    <data:vector name="DataOne" />
-    <data:vector name="DataTwo" gradient="on" />
+    <data:scalar name="DataOne" gradient="on" />
+    <data:scalar name="DataTwo" />
 
     <mesh name="MeshOne">
       <use-data name="DataOne" />
@@ -23,13 +23,13 @@
     <participant name="SolverTwo">
       <use-mesh name="MeshOne" from="SolverOne" />
       <use-mesh name="MeshTwo" provide="on" />
-      <mapping:nearest-neighbor-gradient
+      <mapping:nearest-neighbor
         direction="write"
         from="MeshTwo"
         to="MeshOne"
-        constraint="conservative"
+        constraint="consistent"
         timing="initial" />
-      <mapping:nearest-neighbor
+      <mapping:nearest-neighbor-gradient
         direction="read"
         from="MeshOne"
         to="MeshTwo"

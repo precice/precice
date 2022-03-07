@@ -2,7 +2,7 @@
 <precice-configuration>
   <solver-interface dimensions="3">
     <data:vector name="DataOne" />
-    <data:scalar name="DataTwo" gradient="on" />
+    <data:vector name="DataTwo" gradient="on" />
 
     <mesh name="MeshOne">
       <use-data name="DataOne" />
@@ -27,7 +27,7 @@
         direction="write"
         from="MeshTwo"
         to="MeshOne"
-        constraint="conservative"
+        constraint="consistent"
         timing="initial" />
       <mapping:nearest-neighbor
         direction="read"

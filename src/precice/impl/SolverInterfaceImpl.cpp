@@ -1193,7 +1193,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
   PRECICE_CHECK(_state != State::Finalized, "writeVectorGradientData(...) cannot be called before finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
-  DataContext &context = _accessor->dataContext(dataID);
+  WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
 
@@ -1250,7 +1250,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
   }
 
   // Get the data
-  DataContext &context = _accessor->dataContext(dataID);
+  WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == 1,
@@ -1287,7 +1287,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
   PRECICE_CHECK(_state != State::Finalized, "writeVectorGradientData(...) cannot be called before finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
-  DataContext &context = _accessor->dataContext(dataID);
+  WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
 
@@ -1341,7 +1341,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
   PRECICE_CHECK(valuesdY != nullptr, "writeBlockVectorGradientData() was called with values dY == nullptr");
 
   // Get the data
-  DataContext &context = _accessor->dataContext(dataID);
+  WriteDataContext &context = _accessor->writeDataContext(dataID);
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
   PRECICE_CHECK(data.getDimensions() == _dimensions,

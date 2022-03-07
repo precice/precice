@@ -41,16 +41,16 @@ BOOST_AUTO_TEST_SUITE(GradientMappingTests)
 BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
 
 // Unidirectional Nearest Neighbor Gradient Read Mapping
-BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Serial_Read_Only)
+BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Read_Only)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank))
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, pathToTests + "nng-unidirectional-serial.xml", 0, 1);
+  SolverInterface cplInterface(context.name, pathToTests + "nng-unidirectional.xml", 0, 1);
   if (context.isNamed("A")) {
 
     int      meshOneID = cplInterface.getMeshID("MeshA");
-    Vector3d posOne    = Vector3d::Constant(0.1);
+    Vector3d posOne    = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshOneID, posOne.data());
     int dataID = cplInterface.getDataID("DataA", meshOneID);
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Serial_Read_Only)
   } else {
     BOOST_TEST(context.isNamed("B"));
     int      meshTwoID = cplInterface.getMeshID("MeshB");
-    Vector3d pos       = Vector3d::Constant(0.0);
+    Vector3d pos       = Vector3d::Constant(0.1);
     cplInterface.setMeshVertex(meshTwoID, pos.data());
 
     double maxDt = cplInterface.initialize();
@@ -89,93 +89,18 @@ BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Serial_Read_Only)
   }
 }
 
-// Serial coupling, Bidirectional test : Read: Vector & NN - Write: Vector & NNG
-BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Serial_Write_Vector)
-{
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
-
-  using Eigen::Vector2d;
-  using Eigen::Vector3d;
-
-  SolverInterface cplInterface(context.name, pathToTests + "nng-write-serial-vector.xml", 0, 1);
-  if (context.isNamed("SolverOne")) {
-    int      meshOneID = cplInterface.getMeshID("MeshOne");
-    Vector3d posOne    = Vector3d::Constant(1.0);
-    cplInterface.setMeshVertex(meshOneID, posOne.data());
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
-
-    Vector2d valueDataB;
-
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
-    cplInterface.readVectorData(dataBID, 0, valueDataB.data());
-    Vector2d expected(-1.0, 0.0);
-    BOOST_TEST(valueDataB == expected);
-
-    while (cplInterface.isCouplingOngoing()) {
-      Vector3d valueDataA(1.0, 1.0, 1.0);
-      cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
-
-      maxDt = cplInterface.advance(maxDt);
-
-      cplInterface.readVectorData(dataBID, 0, valueDataB.data());
-      expected << -0.5, 0.5;
-      BOOST_TEST(valueDataB == expected);
-    }
-    cplInterface.finalize();
-
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    int      meshTwoID = cplInterface.getMeshID("MeshTwo");
-    Vector3d pos       = Vector3d::Constant(0.0);
-    cplInterface.setMeshVertex(meshTwoID, pos.data());
-
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
-
-    Vector2d valueDataB(2.0, 3.0);
-    Vector2d gradient(1.0, 1.0);
-    cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
-    cplInterface.writeVectorGradientData(dataBID, 0, gradient.data(), gradient.data(), gradient.data());
-
-    //tell preCICE that data has been written and call initializeData
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
-
-    Vector3d valueDataA;
-    cplInterface.readVectorData(dataAID, 0, valueDataA.data());
-    Vector3d expected(1.0, 1.0, 1.0);
-    BOOST_TEST(valueDataA == expected);
-
-    while (cplInterface.isCouplingOngoing()) {
-
-      valueDataB << 2.5, 3.5;
-      cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
-      cplInterface.writeVectorGradientData(dataBID, 0, gradient.data(), gradient.data(), gradient.data());
-
-      maxDt = cplInterface.advance(maxDt);
-      cplInterface.readVectorData(dataAID, 0, valueDataA.data());
-      BOOST_TEST(valueDataA == expected);
-    }
-    cplInterface.finalize();
-  }
-}
-
-// Serial coupling, Bidirectional test : Read: Vector & NN - Write: Scalar & NNG
-BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Serial_Write_Scalar)
+// Bidirectional test : Read: Vector & NN - Write: Scalar & NNG (Serial coupling)
+BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Write_Scalar)
 {
 
   //precice.isActionRequired(precice::constants::actionWriteInitialData()
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, pathToTests + "nng-write-serial-scalar.xml", 0, 1);
+  SolverInterface cplInterface(context.name, pathToTests + "nng-write-scalar.xml", 0, 1);
   if (context.isNamed("SolverOne")) {
     int      meshOneID = cplInterface.getMeshID("MeshOne");
-    Vector3d vec1      = Vector3d::Constant(0.0);
+    Vector3d vec1      = Vector3d::Constant(0.1);
     cplInterface.setMeshVertex(meshOneID, vec1.data());
     double maxDt   = cplInterface.initialize();
     int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
@@ -199,7 +124,7 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Serial_Write_Scalar)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     int      meshTwoID = cplInterface.getMeshID("MeshTwo");
-    Vector3d vec2      = Vector3d::Constant(0.1);
+    Vector3d vec2      = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshTwoID, vec2.data());
 
     double maxDt   = cplInterface.initialize();
@@ -231,18 +156,97 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Serial_Write_Scalar)
   }
 }
 
-// Serial coupling, Bidirectional test : Read: Vector & NNG - Write: Vector & NN
-BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Serial_Read_Vector)
+// Read : NN & Vector - Write : NNG & Vector (Parallel Coupling Scheme)
+BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Write_Vector)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 
   using Eigen::Vector2d;
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, pathToTests + "nng-read-serial-vector.xml", 0, 1);
+  SolverInterface cplInterface(context.name, pathToTests + "nng-write-vector.xml", 0, 1);
   if (context.isNamed("SolverOne")) {
     int      meshOneID = cplInterface.getMeshID("MeshOne");
-    Vector3d posOne    = Vector3d::Constant(1.0);
+    Vector3d posOne    = Vector3d::Constant(0.0);
+    cplInterface.setMeshVertex(meshOneID, posOne.data());
+    double maxDt   = cplInterface.initialize();
+    int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
+    int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
+
+    Vector3d valueDataA(1.0, 1.0, 1.0);
+    cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
+
+    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
+    cplInterface.initializeData();
+
+    Vector2d valueDataB;
+    cplInterface.readVectorData(dataBID, 0, valueDataB.data());
+    Vector2d expected(-1.0, 0.0);
+    BOOST_TEST(valueDataB == expected);
+
+    while (cplInterface.isCouplingOngoing()) {
+      Vector3d valueDataA(2.0, 2.0, 2.0);
+      cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
+
+      maxDt = cplInterface.advance(maxDt);
+
+      cplInterface.readVectorData(dataBID, 0, valueDataB.data());
+      expected << -0.5, 0.5;
+      BOOST_TEST(valueDataB == expected);
+    }
+    cplInterface.finalize();
+
+  } else {
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    int      meshTwoID = cplInterface.getMeshID("MeshTwo");
+    Vector3d pos       = Vector3d::Constant(1.0);
+    cplInterface.setMeshVertex(meshTwoID, pos.data());
+
+    double maxDt   = cplInterface.initialize();
+    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
+    int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+
+    Vector2d valueDataB(2.0, 3.0);
+    Vector2d gradient(1.0, 1.0);
+    cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
+    cplInterface.writeVectorGradientData(dataBID, 0, gradient.data(), gradient.data(), gradient.data());
+
+    //tell preCICE that data has been written and call initializeData
+    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
+    cplInterface.initializeData();
+
+    Vector3d valueDataA;
+    cplInterface.readVectorData(dataAID, 0, valueDataA.data());
+    Vector3d expected(1.0, 1.0, 1.0);
+    BOOST_TEST(valueDataA == expected);
+
+    while (cplInterface.isCouplingOngoing()) {
+
+      valueDataB << 2.5, 3.5;
+      cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
+      cplInterface.writeVectorGradientData(dataBID, 0, gradient.data(), gradient.data(), gradient.data());
+
+      maxDt = cplInterface.advance(maxDt);
+      cplInterface.readVectorData(dataAID, 0, valueDataA.data());
+      expected << 2.0, 2.0, 2.0;
+      BOOST_TEST(valueDataA == expected);
+    }
+    cplInterface.finalize();
+  }
+}
+
+// Bidirectional test : Read: Vector & NNG - Write: Vector & NN (Serial coupling)
+BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Vector)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
+
+  using Eigen::Vector2d;
+  using Eigen::Vector3d;
+
+  SolverInterface cplInterface(context.name, pathToTests + "nng-read-vector.xml", 0, 1);
+  if (context.isNamed("SolverOne")) {
+    int      meshOneID = cplInterface.getMeshID("MeshOne");
+    Vector3d posOne    = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshOneID, posOne.data());
     double maxDt   = cplInterface.initialize();
     int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
@@ -273,7 +277,7 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Serial_Read_Vector)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     int      meshTwoID = cplInterface.getMeshID("MeshTwo");
-    Vector3d pos       = Vector3d::Constant(0.0);
+    Vector3d pos       = Vector3d::Constant(1.0);
     cplInterface.setMeshVertex(meshTwoID, pos.data());
 
     double maxDt   = cplInterface.initialize();
@@ -305,18 +309,18 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Serial_Read_Vector)
   }
 }
 
-// Serial coupling, Bidirectional test : Read: Vector & NN - Write: Scalar & NNG
-BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Serial_Read_Scalar)
+// Bidirectional test : Read: Vector & NN - Write: Scalar & NNG (Serial coupling)
+BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
 {
 
   //precice.isActionRequired(precice::constants::actionWriteInitialData()
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, pathToTests + "nng-read-serial-scalar.xml", 0, 1);
+  SolverInterface cplInterface(context.name, pathToTests + "nng-read-scalar.xml", 0, 1);
   if (context.isNamed("SolverOne")) {
     int      meshOneID = cplInterface.getMeshID("MeshOne");
-    Vector3d vec1      = Vector3d::Constant(0.0);
+    Vector3d vec1      = Vector3d::Constant(0.1);
     cplInterface.setMeshVertex(meshOneID, vec1.data());
     double maxDt   = cplInterface.initialize();
     int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
@@ -342,7 +346,7 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Serial_Read_Scalar)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     int      meshTwoID = cplInterface.getMeshID("MeshTwo");
-    Vector3d vec2      = Vector3d::Constant(0.1);
+    Vector3d vec2      = Vector3d::Constant(0.0);
     cplInterface.setMeshVertex(meshTwoID, vec2.data());
 
     double maxDt   = cplInterface.initialize();
@@ -369,162 +373,9 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Serial_Read_Scalar)
   }
 }
 
-// Parallel Coupling Scheme : Read : NN & Vector - Write : NNG & Vector
-BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Parallel_Explicit_Vector)
-{
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
-
-  using Eigen::Vector2d;
-  using Eigen::Vector3d;
-
-  SolverInterface cplInterface(context.name, pathToTests + "nng-write-parallel-vector.xml", 0, 1);
-  if (context.isNamed("SolverOne")) {
-    int      meshOneID = cplInterface.getMeshID("MeshOne");
-    Vector3d posOne    = Vector3d::Constant(1.0);
-    cplInterface.setMeshVertex(meshOneID, posOne.data());
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
-
-    Vector3d valueDataA(1.0, 1.0, 1.0);
-    cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
-
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
-
-    Vector2d valueDataB;
-    cplInterface.readVectorData(dataBID, 0, valueDataB.data());
-    Vector2d expected(-1.0, 0.0);
-    BOOST_TEST(valueDataB == expected);
-
-    while (cplInterface.isCouplingOngoing()) {
-      Vector3d valueDataA(2.0, 2.0, 2.0);
-      cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
-
-      maxDt = cplInterface.advance(maxDt);
-
-      cplInterface.readVectorData(dataBID, 0, valueDataB.data());
-      expected << -0.5, 0.5;
-      BOOST_TEST(valueDataB == expected);
-    }
-    cplInterface.finalize();
-
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    int      meshTwoID = cplInterface.getMeshID("MeshTwo");
-    Vector3d pos       = Vector3d::Constant(0.0);
-    cplInterface.setMeshVertex(meshTwoID, pos.data());
-
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
-
-    Vector2d valueDataB(2.0, 3.0);
-    Vector2d gradient(1.0, 1.0);
-    cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
-    cplInterface.writeVectorGradientData(dataBID, 0, gradient.data(), gradient.data(), gradient.data());
-
-    //tell preCICE that data has been written and call initializeData
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
-
-    Vector3d valueDataA;
-    cplInterface.readVectorData(dataAID, 0, valueDataA.data());
-    Vector3d expected(1.0, 1.0, 1.0);
-    BOOST_TEST(valueDataA == expected);
-
-    while (cplInterface.isCouplingOngoing()) {
-
-      valueDataB << 2.5, 3.5;
-      cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
-      cplInterface.writeVectorGradientData(dataBID, 0, gradient.data(), gradient.data(), gradient.data());
-
-      maxDt = cplInterface.advance(maxDt);
-      cplInterface.readVectorData(dataAID, 0, valueDataA.data());
-      expected << 2.0, 2.0, 2.0;
-      BOOST_TEST(valueDataA == expected);
-    }
-    cplInterface.finalize();
-  }
-}
-
-// Parallel Coupling Scheme : Read : NN & Vector - Write : NNG & Scalar
-BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Parallel_Explicit_Scalar)
-{
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  using Eigen::Vector3d;
-
-  SolverInterface cplInterface(context.name, pathToTests + "nng-write-parallel-scalar.xml", 0, 1);
-  if (context.isNamed("SolverOne")) {
-    int      meshOneID = cplInterface.getMeshID("MeshOne");
-    Vector3d vec1      = Vector3d::Constant(0.0);
-    cplInterface.setMeshVertex(meshOneID, vec1.data());
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshOneID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshOneID);
-
-    Vector3d valueDataA(1.0, 1.0, 1.0);
-    cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
-
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
-
-    double valueDataB = 0.0;
-    cplInterface.readScalarData(dataBID, 0, valueDataB);
-    BOOST_TEST(1.3 == valueDataB);
-
-    while (cplInterface.isCouplingOngoing()) {
-      Vector3d valueDataA(2.0, 2.0, 2.0);
-      cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
-
-      maxDt = cplInterface.advance(maxDt);
-
-      cplInterface.readScalarData(dataBID, 0, valueDataB);
-      BOOST_TEST(1.8 == valueDataB);
-    }
-    cplInterface.finalize();
-
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    int      meshTwoID = cplInterface.getMeshID("MeshTwo");
-    Vector3d vec2      = Vector3d::Constant(0.1);
-    cplInterface.setMeshVertex(meshTwoID, vec2.data());
-
-    double maxDt   = cplInterface.initialize();
-    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
-
-    double valueDataB = 1.0;
-    cplInterface.writeScalarData(dataBID, 0, valueDataB);
-    cplInterface.writeScalarGradientData(dataBID, 0, 1.0, 1.0, 1.0);
-
-    //tell preCICE that data has been written and call initializeData
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    cplInterface.initializeData();
-
-    Vector3d valueDataA;
-    cplInterface.readVectorData(dataAID, 0, valueDataA.data());
-    Vector3d expected(1.0, 1.0, 1.0); //MUST ADD INITIALIZE TO EXCHANGE DATA (OTHERWISE DOESNT WORK)
-    BOOST_TEST(valueDataA == expected);
-
-    while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(dataBID, 0, 1.5);
-      cplInterface.writeScalarGradientData(dataBID, 0, 1.0, 1.0, 1.0);
-
-      maxDt = cplInterface.advance(maxDt);
-      cplInterface.readVectorData(dataAID, 0, valueDataA.data());
-      expected << 2.0, 2.0, 2.0;
-      BOOST_TEST(valueDataA == expected);
-    }
-    cplInterface.finalize();
-  }
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(ParallelGradientMappingTests)
-
-//TODO: FIX COMMUNICATION !!
 
 // In order to test enforced gather scatter communication with an empty master rank (see below)
 void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::string configFile)
@@ -629,114 +480,6 @@ BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyMaster)
   // Provided master partition is empty and received master partition is empty
   runTestEnforceGatherScatter(std::vector<double>{}, pathToTests + "nng-enforce-gather-scatter.xml");
 }
-
-/*
-// ! No gradient data send is zero !
-
-
-void runTestDistributedCommunication(std::string const &config, TestContext const &context)
-{
-  std::string meshName;
-  int         i1 = -1, i2 = -1; //indices for data and positions
-
-  std::vector<Eigen::VectorXd> positions;
-  std::vector<Eigen::VectorXd> data;
-  std::vector<Eigen::VectorXd> expectedData;
-  std::vector<Eigen::VectorXd> gradientData;
-
-  Eigen::Vector3d position;
-  Eigen::Vector3d datum;
-
-  for (int i = 0; i < 4; i++) {
-    position[0] = i * 1.0;
-    position[1] = 0.0;
-    position[2] = 0.0;
-    positions.push_back(position);
-    datum[0] = i * 1.0;
-    datum[1] = i * 1.0;
-    datum[2] = 0.0;
-    data.push_back(datum);
-    datum[0] = i * 2.0 + 1.0;
-    datum[1] = i * 2.0 + 1.0;
-    datum[2] = 1.0;
-    expectedData.push_back(datum);
-
-    //gradient
-    //datum[0] = 0.0;
-    //datum[1] = 0.0;
-    //datum[2] = 0.0;
-    //gradientData.push_back(datum);
-  }
-
-  if (context.isNamed("Fluid")) {
-    meshName = "FluidMesh";
-    if (context.isMaster()) {
-      i1 = 0;
-      i2 = 2;
-    } else {
-      i1 = 2;
-      i2 = 4;
-    }
-  } else {
-    meshName = "StructureMesh";
-    if (context.isMaster()) {
-      i1 = 0;
-      i2 = 1;
-    } else {
-      i1 = 1;
-      i2 = 4;
-    }
-  }
-
-  SolverInterface precice(context.name, config, context.rank, context.size);
-  int             meshID   = precice.getMeshID(meshName);
-  int             forcesID = precice.getDataID("Forces", meshID);
-  int             velocID  = precice.getDataID("Velocities", meshID);
-
-  std::vector<int> vertexIDs;
-  for (int i = i1; i < i2; i++) {
-    VertexID vertexID = precice.setMeshVertex(meshID, positions[i].data());
-    vertexIDs.push_back(vertexID);
-  }
-
-  precice.initialize();
-
-  if (context.isNamed("Fluid")) { //Fluid
-    for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
-      precice.writeVectorGradientData(forcesID, vertexIDs[i], gradientData[i + i1].data(), gradientData[i + i1].data(), gradientData[i + i1].data());
-    }
-  } else {
-    BOOST_TEST(context.isNamed("Structure"));
-    for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.readVectorData(forcesID, vertexIDs[i], data[i].data());
-      data[i] = (data[i] * 2).array() + 1.0;
-      precice.writeVectorData(velocID, vertexIDs[i], data[i].data());
-      //precice.writeVectorGradientData(velocID, vertexIDs[i], gradientData[i].data(), gradientData[i].data(), gradientData[i].data());
-    }
-  }
-
-  precice.advance(1.0);
-
-  if (context.isNamed("Fluid")) { //Fluid
-    for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.readVectorData(velocID, vertexIDs[i], data[i + i1].data());
-      for (size_t d = 0; d < 3; d++) {
-        BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
-      }
-    }
-  }
-
-  precice.finalize();
-}
-
-BOOST_AUTO_TEST_CASE(TestDistributedCommunicationP2PMPI)
-{
-  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
-  std::string config = pathToTests + "nng-parallel-read-write-point-to-point-mpi.xml";
-  runTestDistributedCommunication(config, context);
-}
- */
 
 BOOST_AUTO_TEST_SUITE_END()
 
