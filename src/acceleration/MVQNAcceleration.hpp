@@ -18,10 +18,10 @@ namespace precice {
 namespace acceleration {
 
 /**
- * @brief Multi vector quasi-Newton update scheme 
+ * @brief Multi vector quasi-Newton update scheme
  *
  * Performs a multi vector quasi-Newton to accelerate the convergence of implicit coupling
- * iterations. A multi Broyden update, together with the reuse of the approximate inverse 
+ * iterations. A multi Broyden update, together with the reuse of the approximate inverse
  * Jacobian from the old time window are used to approximate the inverse Jacobian. After every
  * coupling iteration, the data values used are enhanced by the new coupling iterates.
  *
@@ -64,7 +64,7 @@ public:
   /**
     * @brief Initializes the acceleration.
     */
-  virtual void initialize(DataMap &cplData);
+  virtual void initialize(const DataMap &cplData);
 
   /**
     * @brief Marks a iteration sequence as converged.
@@ -72,7 +72,7 @@ public:
     * called by the iterationsConverged() method in the BaseQNAcceleration class
     * handles the acceleration sepcific action after the convergence of one iteration
     */
-  virtual void specializedIterationsConverged(DataMap &cplData);
+  virtual void specializedIterationsConverged(const DataMap &cplData);
 
 private:
   /// @brief stores the approximation of the inverse Jacobian of the system at current time window.
@@ -144,13 +144,13 @@ private:
   /** @brief: comptes the MVQN update using QR decomposition of V,
     *        furthermore it updates the inverse of the system jacobian
     */
-  virtual void computeQNUpdate(DataMap &cplData, Eigen::VectorXd &xUpdate);
+  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate);
 
   /// @brief: updates the V, W matrices (as well as the matrices for the secondary data)
-  virtual void updateDifferenceMatrices(DataMap &cplData);
+  virtual void updateDifferenceMatrices(const DataMap &cplData);
 
   /// @brief: computes underrelaxation for the secondary data
-  virtual void computeUnderrelaxationSecondaryData(DataMap &cplData);
+  virtual void computeUnderrelaxationSecondaryData(const DataMap &cplData);
 
   /** @brief: computes the quasi-Newton update vector based on the matrices V and W using a QR
     *  decomposition of V. The decomposition is not re-computed en-block in every iteration
@@ -159,7 +159,7 @@ private:
     *  This method rebuilds the Jacobian matrix and the matrix W_til in each iteration
     *  which is not necessary and thus inefficient.
     */
-  void computeNewtonUpdate(DataMap &cplData, Eigen::VectorXd &update);
+  void computeNewtonUpdate(const DataMap &cplData, Eigen::VectorXd &update);
 
   /** @brief: computes the quasi-Newton update vector based on the same numerics as above.
     *  However, it exploits the fact that the matrix W_til can be updated according to V and W
@@ -169,7 +169,7 @@ private:
     *  The Jacobian matrix only needs to be set up in the very last iteration of one time window, i.e.
     *  in iterationsConverged.
     */
-  void computeNewtonUpdateEfficient(DataMap &cplData, Eigen::VectorXd &update);
+  void computeNewtonUpdateEfficient(const DataMap &cplData, Eigen::VectorXd &update);
 
   /** @brief: computes the pseudo inverse of V multiplied with V^T, i.e., Z = (V^TV)^-1V^T via QR-dec
     */

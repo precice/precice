@@ -23,11 +23,11 @@ public:
     return _dataIDs;
   }
 
-  virtual void initialize(DataMap &cplData);
+  virtual void initialize(const DataMap &cplData);
 
-  virtual void performAcceleration(DataMap &cplData);
+  virtual void performAcceleration(const DataMap &cplData);
 
-  virtual void iterationsConverged(DataMap &cplData)
+  virtual void iterationsConverged(const DataMap &cplData)
   {
   }
 

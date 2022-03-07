@@ -89,16 +89,10 @@ protected:
    * @brief BiCouplingScheme has _sendData and _receiveData
    * @returns DataMap with all data
    */
-  DataMap getAllData() override
+  const DataMap getAllData() override
   {
-    DataMap allData;
-    // @todo user C++17 std::map::merge
-    for (auto &pair : _sendData) {
-      allData.emplace(pair);
-    }
-    for (auto &pair : _receiveData) {
-      allData.emplace(pair);
-    }
+    DataMap allData{_sendData};
+    allData.insert(_receiveData.begin(), _receiveData.end());
     return allData;
   }
 
