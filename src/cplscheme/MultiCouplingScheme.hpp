@@ -128,7 +128,7 @@ private:
    * @brief MultiCouplingScheme applies acceleration to all CouplingData
    * @returns DataMap being accelerated
    */
-  DataMap getAccelerationData() override
+  const DataMap getAccelerationData() override
   {
     return getAllData();
   }

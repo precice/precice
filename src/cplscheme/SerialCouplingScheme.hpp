@@ -76,7 +76,7 @@ private:
    * @brief SerialCouplingSchemes applies acceleration to send data
    * @returns DataMap being accelerated
    */
-  DataMap getAccelerationData() override
+  const DataMap getAccelerationData() override
   {
     return getSendData();
   }

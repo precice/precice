@@ -260,7 +260,7 @@ void BaseCouplingScheme::storeExtrapolationData()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : getAccelerationData()) {
+  for (const DataMap::value_type &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->moveToNextWindow();
   }
