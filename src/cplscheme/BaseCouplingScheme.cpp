@@ -477,7 +477,7 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  auto allData = getAllData();
+  auto                      allData = getAllData();
   PRECICE_ASSERT(allData.count(dataID) == 1, "Data with given data ID must exist!");
   convMeasure.couplingData = allData.at(dataID);
   convMeasure.suffices     = suffices;
