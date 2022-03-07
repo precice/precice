@@ -477,8 +477,9 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  PRECICE_ASSERT(getAllData().count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = getAllData().at(dataID);
+  auto allData = getAllData();
+  PRECICE_ASSERT(allData.count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = allData.at(dataID);
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
