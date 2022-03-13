@@ -31,16 +31,25 @@ NearestProjectionMapping::NearestProjectionMapping(
     int        dimensions)
     : Mapping(constraint, dimensions)
 {
+
+  Mapping::MeshRequirement required;
+  if (dimensions() == 2) {
+    required = Mapping::MeshRequirement::EDGE;
+  }
+  else {
+    required = Mapping::MeshRequirement::SURFACE;
+  }
+
   if (constraint == CONSISTENT) {
-    setInputRequirement(Mapping::MeshRequirement::FULL);
+    setInputRequirement(required);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   } else if (constraint == CONSERVATIVE) {
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
-    setOutputRequirement(Mapping::MeshRequirement::FULL);
+    setOutputRequirement(required);
   } else {
     PRECICE_ASSERT(constraint == SCALEDCONSISTENT, constraint);
-    setInputRequirement(Mapping::MeshRequirement::FULL);
-    setOutputRequirement(Mapping::MeshRequirement::FULL);
+    setInputRequirement(required);
+    setOutputRequirement(required);
   }
 }
 
