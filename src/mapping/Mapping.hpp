@@ -42,8 +42,14 @@ public:
     UNDEFINED = 0,
     /// Vertices only.
     VERTEX = 1,
+    // Edges also required (e.g. surface coupling in 2D nearest projection)
+    EDGE = 2,
+    // Surfaces required (e.g. surface coupling in 3D nearest projection, or volumetric NP in 2D)
+    SURFACE = 3,
+    // Volume data required (e.g. volumetric 3D coupling)
+    VOLUME = 4,
     /// Full mesh.
-    FULL = 2
+    FULL = 5
   };
 
   /// Constructor, takes mapping constraint.

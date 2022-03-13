@@ -130,14 +130,7 @@ bool Mapping::hasConstraint(const Constraint &constraint) const
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)
 {
-  switch (lhs) {
-  case (Mapping::MeshRequirement::UNDEFINED):
-    return rhs != Mapping::MeshRequirement::UNDEFINED;
-  case (Mapping::MeshRequirement::VERTEX):
-    return rhs == Mapping::MeshRequirement::FULL;
-  case (Mapping::MeshRequirement::FULL):
-    return false;
-  };
+  return int(lhs) < int(rhs);
   BOOST_UNREACHABLE_RETURN(false);
 }
 
@@ -149,6 +142,15 @@ std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val)
     break;
   case (Mapping::MeshRequirement::VERTEX):
     out << "VERTEX";
+    break;
+  case (Mapping::MeshRequirement::EDGE):
+    out << "EDGE";
+    break;
+  case (Mapping::MeshRequirement::SURFACE):
+    out << "SURFACE";
+    break;
+  case (Mapping::MeshRequirement::VOLUME):
+    out << "VOLUME";
     break;
   case (Mapping::MeshRequirement::FULL):
     out << "FULL";

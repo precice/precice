@@ -20,11 +20,14 @@ NearestNeighborMapping::NearestNeighborMapping(
     : NearestNeighborBaseMapping(constraint, dimensions, false, "NearestNeighborMapping", "nn")
 {
   if (hasConstraint(SCALEDCONSISTENT)) {
-    setInputRequirement(Mapping::MeshRequirement::FULL);
-    setOutputRequirement(Mapping::MeshRequirement::FULL);
-  } else {
-    setInputRequirement(Mapping::MeshRequirement::VERTEX);
-    setOutputRequirement(Mapping::MeshRequirement::VERTEX);
+    // Full requirements for surface integrals: edges in 2D, surfaces in 3D
+    if (getDimensions() == 2) {
+      setInputRequirement(Mapping::MeshRequirement::EDGE);
+      setOutputRequirement(Mapping::MeshRequirement::EDGE);
+    } else {
+      setInputRequirement(Mapping::MeshRequirement::SURFACE);
+      setOutputRequirement(Mapping::MeshRequirement::SURFACE);
+    }
   }
 }
 

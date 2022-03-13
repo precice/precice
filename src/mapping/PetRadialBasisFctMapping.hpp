@@ -210,9 +210,16 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
       _preallocation(preallocation),
       _commState(utils::Parallel::current())
 {
-  if (constraint == SCALEDCONSISTENT) {
-    setInputRequirement(Mapping::MeshRequirement::FULL);
-    setOutputRequirement(Mapping::MeshRequirement::FULL);
+
+  if (hasConstraint(SCALEDCONSISTENT)) {
+    // Full requirements for surface integrals: edges in 2D, surfaces in 3D
+    if (getDimensions() == 2) {
+      setInputRequirement(Mapping::MeshRequirement::EDGE);
+      setOutputRequirement(Mapping::MeshRequirement::EDGE);
+    } else {
+      setInputRequirement(Mapping::MeshRequirement::SURFACE);
+      setOutputRequirement(Mapping::MeshRequirement::SURFACE);
+    }
   } else {
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
