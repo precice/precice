@@ -35,8 +35,7 @@ NearestProjectionMapping::NearestProjectionMapping(
   Mapping::MeshRequirement required;
   if (dimensions() == 2) {
     required = Mapping::MeshRequirement::EDGE;
-  }
-  else {
+  } else {
     required = Mapping::MeshRequirement::SURFACE;
   }
 
