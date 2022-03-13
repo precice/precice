@@ -638,7 +638,7 @@ bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
 {
   PRECICE_VALIDATE_MESH_ID(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
-  return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
+  return context.meshRequirement > mapping::Mapping::MeshRequirement::VERTEX;
 }
 
 int SolverInterfaceImpl::getMeshVertexSize(
@@ -781,7 +781,7 @@ int SolverInterfaceImpl::setMeshEdge(
   PRECICE_TRACE(meshID, firstVertexID, secondVertexID);
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
+  if (context.meshRequirement >= mapping::Mapping::MeshRequirement::EDGE) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
     PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
@@ -805,7 +805,7 @@ void SolverInterfaceImpl::setMeshTriangle(
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
+  if (context.meshRequirement >= mapping::Mapping::MeshRequirement::SURFACE) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidEdgeID;
     PRECICE_CHECK(mesh->isValidEdgeID(firstEdgeID), errorInvalidEdgeID(firstEdgeID));
@@ -836,7 +836,7 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
+  if (context.meshRequirement >= mapping::Mapping::MeshRequirement::SURFACE) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
     PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
@@ -875,7 +875,7 @@ void SolverInterfaceImpl::setMeshQuad(
                                   "Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
+  if (context.meshRequirement >= mapping::Mapping::MeshRequirement::SURFACE) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidEdgeID;
     PRECICE_CHECK(mesh->isValidEdgeID(firstEdgeID), errorInvalidEdgeID(firstEdgeID));
@@ -935,7 +935,7 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
                                   " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
+  if (context.meshRequirement >= mapping::Mapping::MeshRequirement::FULL) {
     PRECICE_ASSERT(context.mesh);
     mesh::Mesh &mesh = *(context.mesh);
     using impl::errorInvalidVertexID;
