@@ -32,6 +32,7 @@ target_sources(testprecice
     tests/serial/mesh-requirements/NearestNeighborB.cpp
     tests/serial/mesh-requirements/NearestProjection2DA.cpp
     tests/serial/mesh-requirements/NearestProjection2DB.cpp
+    tests/serial/multi-coupling/MultiCoupling.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers2.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers1.cpp
