@@ -6,6 +6,7 @@ target_sources(testprecice
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/LocalRBFPartitioning.cpp
+    tests/parallel/TestBoundingBoxInitialization.cpp
     tests/parallel/TestFinalize.cpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
