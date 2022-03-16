@@ -1,9 +1,9 @@
 #ifndef PRECICE_NO_MPI
 
+#include <fstream>
+#include <string>
+#include "helpers.hpp"
 #include "testing/Testing.hpp"
-
-#include <precice/SolverInterface.hpp>
-#include <vector>
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Serial)
@@ -15,8 +15,8 @@ BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers1)
   multiCouplingThreeSolvers(configFile, context);
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
-BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // MultiCoupling
+BOOST_AUTO_TEST_SUITE_END() // Serial
+BOOST_AUTO_TEST_SUITE_END() // PreciceTests
 
 #endif // PRECICE_NO_MPI
