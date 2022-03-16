@@ -4,6 +4,7 @@
 target_sources(testprecice
     PRIVATE
     tests/parallel/GlobalRBFPartitioning.cpp
+    tests/parallel/LocalRBFPartitioning.cpp
     tests/parallel/TestFinalize.cpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
