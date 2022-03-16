@@ -24,6 +24,10 @@ target_sources(testprecice
     tests/serial/initialize-data/WriteMapping.cpp
     tests/serial/initialize-data/helpers.cpp
     tests/serial/initialize-data/helpers.hpp
+    tests/serial/lifecycle/ConstructAndExplicitFinalize.cpp
+    tests/serial/lifecycle/ConstructOnly.cpp
+    tests/serial/lifecycle/Full.cpp
+    tests/serial/lifecycle/ImplicitFinalize.cpp
     tests/serial/mesh-requirements/NearestNeighborA.cpp
     tests/serial/mesh-requirements/NearestNeighborB.cpp
     tests/serial/mesh-requirements/NearestProjection2DA.cpp
