@@ -3,6 +3,10 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
+    tests/parallel/lifecycle/ConstructOnly.cpp
+    tests/parallel/lifecycle/Full.cpp
+    tests/parallel/lifecycle/ImplicitFinalize.cpp
     tests/serial/MultiCouplingFourSolvers1.cpp
     tests/serial/MultiCouplingFourSolvers2.cpp
     tests/serial/helpers.cpp
@@ -22,4 +26,4 @@ target_sources(testprecice
     )
 
 # Contains the list of integration test suites
-set(PRECICE_TEST_SUITES Serial)
+set(PRECICE_TEST_SUITES Parallel Serial)
