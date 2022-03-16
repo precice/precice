@@ -48,6 +48,10 @@ target_sources(testprecice
     tests/parallel/quasi-newton/helpers.hpp
     tests/serial/TestExplicitWithDataMultipleReadWrite.cpp
     tests/serial/TestExplicitWithSolverGeometry.cpp
+    tests/serial/access-received-mesh/Explicit.cpp
+    tests/serial/access-received-mesh/ExplicitAndMapping.cpp
+    tests/serial/access-received-mesh/ExplicitRead.cpp
+    tests/serial/access-received-mesh/Implicit.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
     tests/serial/explicit/TestExplicitMPISingle.cpp
     tests/serial/explicit/TestExplicitSockets.cpp

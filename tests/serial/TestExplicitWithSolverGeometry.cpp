@@ -41,12 +41,12 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     precice::MeshID meshID = couplingInterface.getMeshID("SolverGeometry");
-    int    i0     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    int    i1     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    int    i2     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
-    int    e0     = couplingInterface.setMeshEdge(meshID, i0, i1);
-    int    e1     = couplingInterface.setMeshEdge(meshID, i1, i2);
-    int    e2     = couplingInterface.setMeshEdge(meshID, i2, i0);
+    int             i0     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+    int             i1     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+    int             i2     = couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 1.0, 0.0).data());
+    int             e0     = couplingInterface.setMeshEdge(meshID, i0, i1);
+    int             e1     = couplingInterface.setMeshEdge(meshID, i1, i2);
+    int             e2     = couplingInterface.setMeshEdge(meshID, i2, i0);
     couplingInterface.setMeshTriangle(meshID, e0, e1, e2);
     double dt = couplingInterface.initialize();
 
