@@ -5,6 +5,10 @@
 #include <precice/SolverInterface.hpp>
 #include <vector>
 
+// Test case for a direct mesh access on one participant to a mesh defined
+// by another participant (see above). In addition to the direct mesh access
+// and data writing in one direction, an additional mapping (NN) is defined
+// in the other direction.
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(DirectMeshAccess)

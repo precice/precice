@@ -25,6 +25,11 @@ target_sources(testprecice
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/helpers.cpp
     tests/parallel/direct-mesh-access/helpers.hpp
+    tests/parallel/distributed-communication/TestDistributedCommunicationGatherScatterMPI.cpp
+    tests/parallel/distributed-communication/TestDistributedCommunicationP2PMPI.cpp
+    tests/parallel/distributed-communication/TestDistributedCommunicationP2PSockets.cpp
+    tests/parallel/distributed-communication/helpers.cpp
+    tests/parallel/distributed-communication/helpers.hpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
