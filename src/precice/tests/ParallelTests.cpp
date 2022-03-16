@@ -38,31 +38,6 @@ struct ParallelTestFixture : testing::WhiteboxAccessor {
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 
-BOOST_AUTO_TEST_CASE(TestFinalize)
-{
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
-  std::string configFilename = _pathToTests + "config1.xml";
-  if (context.isNamed("SolverOne")) {
-    SolverInterface interface(context.name, configFilename, context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshOne");
-    double          xCoord = 0.0 + context.rank;
-    interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
-    interface.initialize();
-    BOOST_TEST(impl(interface).mesh("MeshOne").vertices().size() == 1);
-    BOOST_TEST(impl(interface).mesh("MeshTwo").vertices().size() == 1);
-    interface.finalize();
-  } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    SolverInterface interface(context.name, configFilename, context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshTwo");
-    double          xCoord = 0.0 + context.rank;
-    interface.setMeshVertex(meshID, Eigen::Vector3d(xCoord, 0.0, 0.0).data());
-    interface.initialize();
-    BOOST_TEST(impl(interface).mesh("MeshTwo").vertices().size() == 1);
-    interface.finalize();
-  }
-}
-
 // In order to test enforced gather scatter communication with an empty master rank (see below)
 void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::string configFile)
 {

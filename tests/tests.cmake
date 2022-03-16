@@ -3,6 +3,7 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/parallel/TestFinalize.cpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
