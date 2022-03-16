@@ -17,6 +17,10 @@ target_sources(testprecice
     tests/serial/initialize-data/WriteMapping.cpp
     tests/serial/initialize-data/helpers.cpp
     tests/serial/initialize-data/helpers.hpp
+    tests/serial/mesh-requirements/NearestNeighborA.cpp
+    tests/serial/mesh-requirements/NearestNeighborB.cpp
+    tests/serial/mesh-requirements/NearestProjection2DA.cpp
+    tests/serial/mesh-requirements/NearestProjection2DB.cpp
     tests/serial/time/explicit/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/ReadWriteScalarDataWithSubcycling.cpp
