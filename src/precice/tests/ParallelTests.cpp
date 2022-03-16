@@ -66,26 +66,17 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 
 
-// Test representing the minimal lifecylce, which consists out of construction only.
-// The destructor has to cleanup correctly.
-BOOST_AUTO_TEST_CASE(ConstructOnly)
-{
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
-  std::string config = _pathToTests + "lifecycle.xml";
-
-  SolverInterface interface(context.name, config, context.rank, context.size);
-}
-
 // Test representing the minimal lifecylce with explicit finalization.
 // This shows how to manually finalize MPI etc without using the SolverInterface.
 BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
 {
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+    PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+
   std::string config = _pathToTests + "lifecycle.xml";
 
   SolverInterface interface(context.name, config, context.rank, context.size);
 
-  interface.finalize();
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
