@@ -63,24 +63,6 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
   }
 }
 
-BOOST_AUTO_TEST_SUITE(Lifecycle)
-
-
-// Test representing the minimal lifecylce with explicit finalization.
-// This shows how to manually finalize MPI etc without using the SolverInterface.
-BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
-{
-    PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
-
-  std::string config = _pathToTests + "lifecycle.xml";
-
-  SolverInterface interface(context.name, config, context.rank, context.size);
-
-
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-
 // In order to test enforced gather scatter communication with an empty master rank (see below)
 void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::string configFile)
 {

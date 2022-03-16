@@ -5,16 +5,18 @@
 #include <precice/SolverInterface.hpp>
 #include <vector>
 
-// Test representing the minimal lifecylce, which consists out of construction only.
-// The destructor has to cleanup correctly.
+// Test representing the minimal lifecylce with explicit finalization.
+// This shows how to manually finalize MPI etc without using the SolverInterface.
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
-BOOST_AUTO_TEST_CASE(ConstructOnly)
+BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
 
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+
+  interface.finalize();
 }
 
 BOOST_AUTO_TEST_SUITE_END() // PreciceTests
