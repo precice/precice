@@ -30,6 +30,10 @@ target_sources(testprecice
     tests/parallel/distributed-communication/TestDistributedCommunicationP2PSockets.cpp
     tests/parallel/distributed-communication/helpers.cpp
     tests/parallel/distributed-communication/helpers.hpp
+    tests/parallel/gather-scatter/EnforceGatherScatterEmptyMaster.cpp
+    tests/parallel/gather-scatter/EnforceGatherScatterEmptyReceivedMaster.cpp
+    tests/parallel/gather-scatter/helpers.cpp
+    tests/parallel/gather-scatter/helpers.hpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
