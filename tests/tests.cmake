@@ -14,6 +14,7 @@ target_sources(testprecice
     tests/parallel/TestFinalize.cpp
     tests/parallel/UserDefinedMPICommunicator.cpp
     tests/parallel/UserDefinedMPICommunicatorPetRBF.cpp
+    tests/parallel/direct-mesh-access/AccessReceivedMeshAndMapping.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshEmptyPartition.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshEmptyPartitionTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshNoOverlap.cpp
