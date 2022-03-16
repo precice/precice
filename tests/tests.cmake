@@ -35,6 +35,7 @@ target_sources(testprecice
     tests/parallel/lifecycle/Full.cpp
     tests/parallel/lifecycle/ImplicitFinalize.cpp
     tests/serial/TestExplicitWithDataMultipleReadWrite.cpp
+    tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
     tests/serial/explicit/TestExplicitMPISingle.cpp
     tests/serial/explicit/TestExplicitSockets.cpp
