@@ -99,40 +99,6 @@ BOOST_AUTO_TEST_CASE(Full)
   interface.finalize();
 }
 
-// Test representing the full lifecycle of a SolverInterface
-// Finalize is not called explicitly here.
-// The destructor has to cleanup.
-BOOST_AUTO_TEST_CASE(ImplicitFinalize)
-{
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
-  std::string config = _pathToTests + "lifecycle.xml";
-
-  SolverInterface interface(context.name, config, context.rank, context.size);
-
-  constexpr double y{0};
-  constexpr double z{0};
-  constexpr double x1{1};
-  constexpr double dx{1};
-
-  if (context.isNamed("SolverOne")) {
-    auto   meshid   = interface.getMeshID("MeshOne");
-    double coords[] = {x1 + dx * context.rank, y, z};
-    auto   vertexid = interface.setMeshVertex(meshid, coords);
-
-    auto   dataid = interface.getDataID("DataOne", meshid);
-    double data[] = {3.4, 4.5, 5.6};
-    interface.writeVectorData(dataid, vertexid, data);
-  } else {
-    auto   meshid   = interface.getMeshID("MeshTwo");
-    double coords[] = {x1 + dx * context.rank, y, z};
-    auto   vertexid = interface.setMeshVertex(meshid, coords);
-
-    auto dataid = interface.getDataID("DataTwo", meshid);
-    interface.writeScalarData(dataid, vertexid, 7.8);
-  }
-  interface.initialize();
-  BOOST_TEST(interface.isCouplingOngoing());
-}
 
 // Test representing the minimal lifecylce, which consists out of construction only.
 // The destructor has to cleanup correctly.
