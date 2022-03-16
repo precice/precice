@@ -38,7 +38,6 @@ struct ParallelTestFixture : testing::WhiteboxAccessor {
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Parallel, ParallelTestFixture)
 
-
 // Simple case of A <==> B <==> C
 void multiCouplingThreeSolversParallelControl(const std::string configFile, const TestContext &context)
 {
