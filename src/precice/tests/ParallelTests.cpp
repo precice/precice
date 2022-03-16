@@ -813,7 +813,6 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
   }
 }
 
-
 // Simple case of A <==> B <==> C
 void multiCouplingThreeSolversParallelControl(const std::string configFile, const TestContext &context)
 {

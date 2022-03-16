@@ -30,6 +30,9 @@ target_sources(testprecice
     tests/serial/mesh-requirements/NearestProjection2DB.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers2.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers1.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers2.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers3.cpp
     tests/serial/multi-coupling/helpers.cpp
     tests/serial/multi-coupling/helpers.hpp
     tests/serial/time/explicit/DoNothingWithSubcycling.cpp
