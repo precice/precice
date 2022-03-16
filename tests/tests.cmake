@@ -4,6 +4,7 @@
 target_sources(testprecice
     PRIVATE
     tests/parallel/CouplingOnLine.cpp
+    tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/LocalRBFPartitioning.cpp
     tests/parallel/MasterSockets.cpp
