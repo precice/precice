@@ -14,10 +14,13 @@ target_sources(testprecice
     tests/parallel/TestFinalize.cpp
     tests/parallel/UserDefinedMPICommunicator.cpp
     tests/parallel/UserDefinedMPICommunicatorPetRBF.cpp
+    tests/parallel/direct-mesh-access/AccessReceivedMeshEmptyPartition.cpp
+    tests/parallel/direct-mesh-access/AccessReceivedMeshEmptyPartitionTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshNoOverlap.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshNoOverlapTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlap.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapNoWrite.cpp
+    tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapNoWriteTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/helpers.cpp
     tests/parallel/direct-mesh-access/helpers.hpp
