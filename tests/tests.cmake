@@ -17,6 +17,7 @@ target_sources(testprecice
     tests/parallel/direct-mesh-access/AccessReceivedMeshNoOverlap.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshNoOverlapTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlap.cpp
+    tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapNoWrite.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/helpers.cpp
     tests/parallel/direct-mesh-access/helpers.hpp
