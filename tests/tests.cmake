@@ -29,6 +29,11 @@ target_sources(testprecice
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
     tests/parallel/lifecycle/ImplicitFinalize.cpp
+    tests/serial/explicit/TestExplicitMPI.cpp
+    tests/serial/explicit/TestExplicitMPISingle.cpp
+    tests/serial/explicit/TestExplicitSockets.cpp
+    tests/serial/explicit/helpers.cpp
+    tests/serial/explicit/helpers.hpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
     tests/serial/initialize-data/ReadMapping.cpp

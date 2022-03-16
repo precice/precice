@@ -59,62 +59,6 @@ std::vector<double> readDoublesFromTXTFile(const std::string &filename, int skip
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_FIXTURE_TEST_SUITE(Serial, SerialTestFixture)
 
-/// Test to run simple "do nothing" coupling between two solvers.
-void runTestExplicit(std::string const &configurationFileName, TestContext const &context)
-{
-  BOOST_TEST_MESSAGE("Config: " << configurationFileName);
-
-  int    timesteps = 0;
-  double time      = 0.0;
-
-  SolverInterface couplingInterface(context.name, configurationFileName, 0, 1);
-
-  //was necessary to replace pre-defined geometries
-  if (context.isNamed("SolverOne") && couplingInterface.hasMesh("MeshOne")) {
-    MeshID meshID = couplingInterface.getMeshID("MeshOne");
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-  }
-  if (context.isNamed("SolverTwo") && couplingInterface.hasMesh("Test-Square")) {
-    MeshID meshID = couplingInterface.getMeshID("Test-Square");
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-  }
-
-  BOOST_TEST(couplingInterface.getDimensions() == 3);
-  double dt = couplingInterface.initialize();
-  while (couplingInterface.isCouplingOngoing()) {
-    time += dt;
-    dt = couplingInterface.advance(dt);
-    timesteps++;
-  }
-  couplingInterface.finalize();
-
-  BOOST_TEST(time == 10.0);
-  BOOST_TEST(timesteps == 10);
-}
-
-BOOST_AUTO_TEST_CASE(TestExplicitMPISingle)
-{
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  std::string config = _pathToTests + "explicit-mpi-single.xml";
-  runTestExplicit(config, context);
-}
-
-BOOST_AUTO_TEST_CASE(TestExplicitMPI)
-{
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  std::string config = _pathToTests + "explicit-mpi.xml";
-  runTestExplicit(config, context);
-}
-
-BOOST_AUTO_TEST_CASE(TestExplicitSockets)
-{
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  std::string config = _pathToTests + "explicit-sockets.xml";
-  runTestExplicit(config, context);
-}
-
 /// One solver uses incremental position set, read/write methods.
 /// @todo This test uses resetmesh. How did this ever work?
 #if 0
