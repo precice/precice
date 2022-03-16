@@ -394,7 +394,6 @@ BOOST_AUTO_TEST_CASE(TestQN3EmptyPartition)
   runTestQNEmptyPartition(config, context);
 }
 
-
 // Simple case of A <==> B <==> C
 void multiCouplingThreeSolversParallelControl(const std::string configFile, const TestContext &context)
 {
