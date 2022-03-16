@@ -813,52 +813,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
   }
 }
 
-BOOST_AUTO_TEST_CASE(MasterSockets)
-{
-  PRECICE_TEST("ParallelSolver"_on(3_ranks), "SerialSolver"_on(1_rank));
-  std::string configFilename = _pathToTests + "master-sockets.xml";
-  std::string myMeshName;
-  if (context.isNamed("ParallelSolver")) {
-    myMeshName = "ParallelMesh";
-  } else {
-    myMeshName = "SerialMesh";
-  }
-  SolverInterface interface(context.name, configFilename, context.rank, context.size);
-  int             meshID      = interface.getMeshID(myMeshName);
-  double          position[2] = {0, 0};
-  interface.setMeshVertex(meshID, position);
-  interface.initialize();
-  interface.advance(1.0);
-  interface.finalize();
-}
 
-// Tests SolverInterface() with a user-defined MPI communicator.
-BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator)
-{
-  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
-  std::string configFilename = _pathToTests + "userDefinedMPICommunicator.xml";
-
-  if (context.isNamed("SolverOne")) {
-    MPI_Comm        myComm = utils::Parallel::current()->comm;
-    SolverInterface interface(context.name, configFilename, context.rank, context.size, &myComm);
-    int             meshID = interface.getMeshID("MeshOne");
-
-    int    vertexIDs[2];
-    double xCoord       = context.rank * 0.4;
-    double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
-    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
-    interface.initialize();
-    interface.finalize();
-  } else {
-    SolverInterface interface(context.name, configFilename, context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshTwo");
-    int             vertexIDs[6];
-    double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
-    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
-    interface.initialize();
-    interface.finalize();
-  }
-}
 
 #ifndef PRECICE_NO_PETSC
 

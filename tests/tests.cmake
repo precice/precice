@@ -6,10 +6,12 @@ target_sources(testprecice
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/LocalRBFPartitioning.cpp
+    tests/parallel/MasterSockets.cpp
     tests/parallel/NearestProjectionRePartitioning.cpp
     tests/parallel/TestBoundingBoxInitialization.cpp
     tests/parallel/TestBoundingBoxInitializationTwoWay.cpp
     tests/parallel/TestFinalize.cpp
+    tests/parallel/UserDefinedMPICommunicator.cpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
