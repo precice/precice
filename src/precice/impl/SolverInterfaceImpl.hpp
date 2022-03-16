@@ -28,8 +28,10 @@ class SolverInterfaceConfiguration;
 // Forward declaration to friend the boost test struct
 namespace PreciceTests {
 namespace Serial {
+namespace Whitebox {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
+} // namespace Whitebox
 } // namespace Serial
 } // namespace PreciceTests
 
@@ -638,8 +640,8 @@ private:
   void closeCommunicationChannels(CloseChannels cc);
 
   /// To allow white box tests.
-  friend struct PreciceTests::Serial::TestConfigurationPeano;
-  friend struct PreciceTests::Serial::TestConfigurationComsol;
+  friend struct PreciceTests::Serial::Whitebox::TestConfigurationPeano;
+  friend struct PreciceTests::Serial::Whitebox::TestConfigurationComsol;
 };
 
 } // namespace impl
