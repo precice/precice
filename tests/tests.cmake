@@ -18,7 +18,6 @@ target_sources(testprecice
     tests/serial/time/implicit/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/whitebox/TestConfigurationComsol.cpp
     tests/serial/whitebox/TestConfigurationPeano.cpp
-    tests/serial/whitebox/helpers.hpp
     )
 
 # Contains the list of integration test suites

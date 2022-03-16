@@ -1,7 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
 #include <vector>
-#include "helpers.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
@@ -13,6 +12,7 @@ using namespace precice;
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Whitebox)
+/// Test reading of a full features coupling configuration file.
 BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
 {
   PRECICE_TEST(1_rank);
