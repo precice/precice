@@ -8,10 +8,6 @@ target_sources(testprecice
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
     tests/parallel/lifecycle/ImplicitFinalize.cpp
-    tests/serial/MultiCouplingFourSolvers1.cpp
-    tests/serial/MultiCouplingFourSolvers2.cpp
-    tests/serial/helpers.cpp
-    tests/serial/helpers.hpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
     tests/serial/initialize-data/ReadMapping.cpp
@@ -22,6 +18,10 @@ target_sources(testprecice
     tests/serial/mesh-requirements/NearestNeighborB.cpp
     tests/serial/mesh-requirements/NearestProjection2DA.cpp
     tests/serial/mesh-requirements/NearestProjection2DB.cpp
+    tests/serial/multi-coupling/MultiCouplingFourSolvers1.cpp
+    tests/serial/multi-coupling/MultiCouplingFourSolvers2.cpp
+    tests/serial/multi-coupling/helpers.cpp
+    tests/serial/multi-coupling/helpers.hpp
     tests/serial/time/explicit/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/ReadWriteScalarDataWithSubcycling.cpp
