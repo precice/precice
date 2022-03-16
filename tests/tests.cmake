@@ -3,6 +3,7 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/parallel/lifecycle/Full.cpp
     tests/parallel/lifecycle/ImplicitFinalize.cpp
     tests/serial/MultiCouplingFourSolvers1.cpp
     tests/serial/MultiCouplingFourSolvers2.cpp
