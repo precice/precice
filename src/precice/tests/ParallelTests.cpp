@@ -140,8 +140,6 @@ BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyReceivedMaster)
   runTestEnforceGatherScatter(std::vector<double>{0.0, 2.0, 0.0, 2.5}, _pathToTests + "enforce-gather-scatter.xml");
 }
 
-
-
 /// tests for different QN settings if correct fixed point is reached
 void runTestQN(std::string const &config, TestContext const &context)
 {
@@ -505,7 +503,6 @@ BOOST_AUTO_TEST_CASE(TestDistributedCommunicationGatherScatterMPI)
   runTestDistributedCommunication(config, context);
 }
 
-
 // StartIndex is here the first index to be used for writing on the slave rank
 void runTestAccessReceivedMesh(const std::string         configName,
                                const std::vector<double> boundingBoxSlave,
@@ -813,174 +810,6 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
       std::vector<double> expectedData = context.isMaster() ? std::vector<double>({15, 16}) : std::vector<double>({22, 6, 7});
       BOOST_TEST(testing::equals(expectedData, readData));
     }
-  }
-}
-
-
-/// This testcase is based on a bug documented in issue #371
-BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
-{
-  PRECICE_TEST("FluidSolver"_on(3_ranks), "SolidSolver"_on(1_rank));
-  std::string configFilename = _pathToTests + "np-repartitioning.xml";
-
-  if (context.isNamed("FluidSolver")) {
-    SolverInterface interface(context.name, configFilename, context.rank, context.size);
-
-    if (context.isMaster()) {
-      interface.initialize();
-      interface.advance(1.0);
-      interface.finalize();
-    } else {
-      const MeshID meshID     = interface.getMeshID("CellCenters");
-      const int    dimensions = 3;
-      BOOST_TEST(interface.getDimensions() == dimensions);
-
-      const int                 numberOfVertices = 65;
-      const double              yCoord           = 0.0;
-      const double              zCoord           = 0.005;
-      const std::vector<double> positions{
-          0.00124795, yCoord, zCoord,
-          0.00375646, yCoord, zCoord,
-          0.00629033, yCoord, zCoord,
-          0.00884982, yCoord, zCoord,
-          0.0114352, yCoord, zCoord,
-          0.0140467, yCoord, zCoord,
-          0.0166846, yCoord, zCoord,
-          0.0193492, yCoord, zCoord,
-          0.0220407, yCoord, zCoord,
-          0.0247594, yCoord, zCoord,
-          0.0275056, yCoord, zCoord,
-          0.0302796, yCoord, zCoord,
-          0.0330816, yCoord, zCoord,
-          0.0359119, yCoord, zCoord,
-          0.0387709, yCoord, zCoord,
-          0.0416588, yCoord, zCoord,
-          0.0445758, yCoord, zCoord,
-          0.0475224, yCoord, zCoord,
-          0.0504987, yCoord, zCoord,
-          0.0535051, yCoord, zCoord,
-          0.0565419, yCoord, zCoord,
-          0.0596095, yCoord, zCoord,
-          0.062708, yCoord, zCoord,
-          0.0658378, yCoord, zCoord,
-          0.0689993, yCoord, zCoord,
-          0.0721928, yCoord, zCoord,
-          0.0754186, yCoord, zCoord,
-          0.0786769, yCoord, zCoord,
-          0.0819682, yCoord, zCoord,
-          0.0852928, yCoord, zCoord,
-          0.088651, yCoord, zCoord,
-          0.0920431, yCoord, zCoord,
-          0.0954695, yCoord, zCoord,
-          0.0989306, yCoord, zCoord,
-          0.102427, yCoord, zCoord,
-          0.105958, yCoord, zCoord,
-          0.109525, yCoord, zCoord,
-          0.113128, yCoord, zCoord,
-          0.116768, yCoord, zCoord,
-          0.120444, yCoord, zCoord,
-          0.124158, yCoord, zCoord,
-          0.127909, yCoord, zCoord,
-          0.131698, yCoord, zCoord,
-          0.135525, yCoord, zCoord,
-          0.139391, yCoord, zCoord,
-          0.143296, yCoord, zCoord,
-          0.147241, yCoord, zCoord,
-          0.151226, yCoord, zCoord,
-          0.15525, yCoord, zCoord,
-          0.159316, yCoord, zCoord,
-          0.163422, yCoord, zCoord,
-          0.16757, yCoord, zCoord,
-          0.17176, yCoord, zCoord,
-          0.175993, yCoord, zCoord,
-          0.180268, yCoord, zCoord,
-          0.184586, yCoord, zCoord,
-          0.188948, yCoord, zCoord,
-          0.193354, yCoord, zCoord,
-          0.197805, yCoord, zCoord,
-          0.202301, yCoord, zCoord,
-          0.206842, yCoord, zCoord,
-          0.211429, yCoord, zCoord,
-          0.216062, yCoord, zCoord,
-          0.220742, yCoord, zCoord,
-          0.22547, yCoord, zCoord};
-      BOOST_TEST(numberOfVertices * dimensions == positions.size());
-      std::vector<int> vertexIDs(numberOfVertices);
-      interface.setMeshVertices(meshID, numberOfVertices, positions.data(), vertexIDs.data());
-      interface.initialize();
-      BOOST_TEST(impl(interface).mesh("Nodes").triangles().size() == 15);
-      interface.advance(1.0);
-      interface.finalize();
-    }
-  } else {
-    BOOST_TEST(context.isNamed("SolidSolver"));
-    SolverInterface interface(context.name, configFilename, context.rank, context.size);
-    const int       meshID     = interface.getMeshID("Nodes");
-    const int       dimensions = 3;
-    BOOST_TEST(interface.getDimensions() == dimensions);
-    const int                 numberOfVertices = 34;
-    const double              yCoord           = 0.0;
-    const double              zCoord1          = 0.0;
-    const double              zCoord2          = 0.01;
-    const std::vector<double> positions{
-        0.0, yCoord, zCoord2,
-        0.0, yCoord, zCoord1,
-        0.03125, yCoord, zCoord2,
-        0.03125, yCoord, zCoord1,
-        0.0625, yCoord, zCoord2,
-        0.0625, yCoord, zCoord1,
-        0.09375, yCoord, zCoord2,
-        0.09375, yCoord, zCoord1,
-        0.125, yCoord, zCoord2,
-        0.125, yCoord, zCoord1,
-        0.15625, yCoord, zCoord2,
-        0.15625, yCoord, zCoord1,
-        0.1875, yCoord, zCoord2,
-        0.1875, yCoord, zCoord1,
-        0.21875, yCoord, zCoord2,
-        0.21875, yCoord, zCoord1,
-        0.25, yCoord, zCoord2,
-        0.25, yCoord, zCoord1,
-        0.28125, yCoord, zCoord2,
-        0.28125, yCoord, zCoord1,
-        0.3125, yCoord, zCoord2,
-        0.3125, yCoord, zCoord1,
-        0.34375, yCoord, zCoord2,
-        0.34375, yCoord, zCoord1,
-        0.375, yCoord, zCoord2,
-        0.375, yCoord, zCoord1,
-        0.40625, yCoord, zCoord2,
-        0.40625, yCoord, zCoord1,
-        0.4375, yCoord, zCoord2,
-        0.4375, yCoord, zCoord1,
-        0.46875, yCoord, zCoord2,
-        0.46875, yCoord, zCoord1,
-        0.5, yCoord, zCoord2,
-        0.5, yCoord, zCoord1};
-    BOOST_TEST(numberOfVertices * dimensions == positions.size());
-    std::vector<int> vertexIDs(numberOfVertices);
-    interface.setMeshVertices(meshID, numberOfVertices, positions.data(), vertexIDs.data());
-
-    const int        numberOfCells = numberOfVertices / 2 - 1;
-    const int        numberOfEdges = numberOfCells * 4 + 1;
-    std::vector<int> edgeIDs(numberOfEdges);
-
-    for (int i = 0; i < numberOfCells; i++) {
-      edgeIDs.at(4 * i)     = interface.setMeshEdge(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 1));     //left
-      edgeIDs.at(4 * i + 1) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 2));     //top
-      edgeIDs.at(4 * i + 2) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2 + 1), vertexIDs.at(i * 2 + 3)); //bottom
-      edgeIDs.at(4 * i + 3) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 3));     //diagonal
-    }
-    edgeIDs.at(numberOfEdges - 1) = interface.setMeshEdge(meshID, vertexIDs.at(numberOfVertices - 2), vertexIDs.at(numberOfVertices - 1)); //very right
-
-    for (int i = 0; i < numberOfCells; i++) {
-      interface.setMeshTriangle(meshID, edgeIDs.at(4 * i), edgeIDs.at(4 * i + 3), edgeIDs.at(4 * i + 2));     //left-diag-bottom
-      interface.setMeshTriangle(meshID, edgeIDs.at(4 * i + 1), edgeIDs.at(4 * i + 3), edgeIDs.at(4 * i + 4)); //top-diag-right
-    }
-
-    interface.initialize();
-    interface.advance(1.0);
-    interface.finalize();
   }
 }
 
