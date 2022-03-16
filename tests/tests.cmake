@@ -3,6 +3,7 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/parallel/CouplingOnLine.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/LocalRBFPartitioning.cpp
     tests/parallel/TestFinalize.cpp
