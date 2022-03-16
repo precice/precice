@@ -12,6 +12,7 @@ target_sources(testprecice
     tests/parallel/TestBoundingBoxInitializationTwoWay.cpp
     tests/parallel/TestFinalize.cpp
     tests/parallel/UserDefinedMPICommunicator.cpp
+    tests/parallel/UserDefinedMPICommunicatorPetRBF.cpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp

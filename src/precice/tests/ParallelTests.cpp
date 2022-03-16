@@ -814,42 +814,6 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 }
 
 
-
-#ifndef PRECICE_NO_PETSC
-
-// Tests SolverInterface() with a user-defined MPI communicator.
-// Since PETSc also uses MPI, we use petrbf mapping here.
-BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
-{
-  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
-  std::string           configFilename = _pathToTests + "userDefinedMPICommunicatorPetRBF.xml";
-  config::Configuration config;
-
-  if (context.isNamed("SolverOne")) {
-    MPI_Comm myComm = utils::Parallel::current()->comm;
-
-    SolverInterface interface(context.name, configFilename, context.rank, context.size, &myComm);
-    int             meshID = interface.getMeshID("MeshOne");
-
-    int    vertexIDs[2];
-    double xCoord       = context.rank * 0.4;
-    double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
-    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
-    interface.initialize();
-    interface.finalize();
-  } else {
-    BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    SolverInterface interface(context.name, configFilename, context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshTwo");
-    int             vertexIDs[6];
-    double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
-    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
-    interface.initialize();
-    interface.finalize();
-  }
-}
-#endif // PRECICE_NO_PETSC
-
 // Simple case of A <==> B <==> C
 void multiCouplingThreeSolversParallelControl(const std::string configFile, const TestContext &context)
 {
