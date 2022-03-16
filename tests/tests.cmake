@@ -34,6 +34,14 @@ target_sources(testprecice
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
     tests/parallel/lifecycle/ImplicitFinalize.cpp
+    tests/parallel/quasi-newton/TestQN1.cpp
+    tests/parallel/quasi-newton/TestQN1EmptyPartition.cpp
+    tests/parallel/quasi-newton/TestQN2.cpp
+    tests/parallel/quasi-newton/TestQN2EmptyPartition.cpp
+    tests/parallel/quasi-newton/TestQN3.cpp
+    tests/parallel/quasi-newton/TestQN3EmptyPartition.cpp
+    tests/parallel/quasi-newton/helpers.cpp
+    tests/parallel/quasi-newton/helpers.hpp
     tests/serial/TestExplicitWithDataMultipleReadWrite.cpp
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
