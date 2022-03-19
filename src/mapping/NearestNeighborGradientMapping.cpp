@@ -20,7 +20,9 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
     int        dimensions)
     : NearestNeighborBaseMapping(constraint, dimensions, true, "NearestNeighborGradientMapping", "nng")
 {
-  PRECICE_CHECK(!hasConstraint(CONSERVATIVE), "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. Please select constraint=\" consistent\" or a different mapping method. Note that the scaled-consistent method reverts to the method implemented for all mappings but hasn't been specifically tested with nearest-neighbor-gradient.");
+  PRECICE_CHECK(!hasConstraint(CONSERVATIVE), "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. Please select constraint=\" consistent\" or a different mapping method.");
+        
+  PRECICE_WARN(!hasConstraint(SCALEDCONSISTENT), "The scaled-consistet mapping hasn't been specifically tested with nearest-neighbor-gradient.");
 
   if (hasConstraint(SCALEDCONSISTENT)) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
