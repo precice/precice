@@ -21,8 +21,8 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
     : NearestNeighborBaseMapping(constraint, dimensions, true, "NearestNeighborGradientMapping", "nng")
 {
   PRECICE_CHECK(!hasConstraint(CONSERVATIVE), "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. Please select constraint=\" consistent\" or a different mapping method.");
-        
-  PRECICE_WARN(!hasConstraint(SCALEDCONSISTENT), "The scaled-consistet mapping hasn't been specifically tested with nearest-neighbor-gradient.");
+
+  PRECICE_WARN(!hasConstraint(SCALEDCONSISTENT), "The scaled-consistent mapping hasn't been specifically tested with nearest-neighbor-gradient. Please avoid using it or chose another mapping method. ");
 
   if (hasConstraint(SCALEDCONSISTENT)) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
