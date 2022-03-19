@@ -26,8 +26,9 @@ extern bool syncMode;
 
 namespace mapping {
 
-BarycentricBaseMapping::BarycentricBaseMapping(Constraint constraint, int dimensions) : Mapping(constraint, dimensions) {
-
+BarycentricBaseMapping::BarycentricBaseMapping(Constraint constraint, int dimensions)
+    : Mapping(constraint, dimensions)
+{
 }
 
 bool BarycentricBaseMapping::hasComputedMapping() const
@@ -96,7 +97,6 @@ void BarycentricBaseMapping::map(
     }
   }
 }
-
 
 } // namespace mapping
 } // namespace precice

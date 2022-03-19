@@ -16,7 +16,6 @@ namespace mapping {
  */
 class BarycentricBaseMapping : public Mapping {
 public:
-
   BarycentricBaseMapping(Constraint constraint, int dimensions);
 
   /// Destructor, empty.
@@ -43,9 +42,8 @@ public:
       int inputDataID,
       int outputDataID) override;
 
-  virtual void tagMeshFirstRound() = 0;
+  virtual void tagMeshFirstRound()  = 0;
   virtual void tagMeshSecondRound() = 0;
-
 
 protected:
   logging::Logger _log{"mapping::NearestProjectionMapping"};

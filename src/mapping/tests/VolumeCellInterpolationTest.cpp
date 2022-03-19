@@ -3,7 +3,7 @@
 #include <memory>
 #include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"
-#include "mapping/NearestNeighborMapping.hpp"
+#include "mapping/VolumeCellInterpolation.hpp"
 #include "math/constants.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::NearestNeighborMapping mapping(mapping::Mapping::CONSISTENT, dimensions);
+  precice::mapping::VolumeCellInterpolation mapping(mapping::Mapping::CONSISTENT, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
   mapping.computeMapping();

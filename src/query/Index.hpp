@@ -85,6 +85,8 @@ public:
   */
   ProjectionMatch findNearestProjection(const Eigen::VectorXd &location, int n);
 
+  ProjectionMatch findNearestVolume(const Eigen::VectorXd &location, int n);
+
 private:
   struct IndexImpl;
   std::unique_ptr<IndexImpl> _pimpl;

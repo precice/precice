@@ -177,6 +177,8 @@ target_sources(precice
     src/mapping/NearestNeighborBaseMapping.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/VolumeCellInterpolation.cpp
+    src/mapping/VolumeCellInterpolation.hpp
     src/mapping/NearestNeighborGradientMapping.cpp
     src/mapping/NearestNeighborGradientMapping.hpp
     src/mapping/NearestNeighborMapping.cpp

@@ -123,6 +123,16 @@ ProjectionMatch Index::findNearestProjection(const Eigen::VectorXd &location, in
   }
 }
 
+ProjectionMatch Index::findNearestVolume(const Eigen::VectorXd &location, int n)
+{
+  if (_mesh->getDimensions() == 2) {
+    return findTriangleProjection(location, n);
+  } else {
+    PRECICE_ASSERT(_mesh->getDimensions() == 3, "Volume coupling 3D not  implemented");
+    return findTriangleProjection(location, n);
+  }
+}
+
 ProjectionMatch Index::findVertexProjection(const Eigen::VectorXd &location)
 {
   auto match = getClosestVertex(location);
