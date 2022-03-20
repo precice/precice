@@ -29,15 +29,15 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   PtrData inDataScalar   = inMesh->createData("InDataScalar", 1, 0_dataID);
   int     inDataScalarID = inDataScalar->getID();
 
-  Vertex &inVertex0 = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
-  Vertex &inVertex1 = inMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
-  Vertex &inVertex2 = inMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+  Vertex &inVertexA = inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  Vertex &inVertexB = inMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  Vertex &inVertexC = inMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
 
   inMesh->allocateDataValues();
 
-  Edge &inEdge0 = inMesh->createEdge(inVertex0, inVertex1);
-  Edge &inEdge1 = inMesh->createEdge(inVertex1, inVertex2);
-  Edge &inEdge2 = inMesh->createEdge(inVertex2, inVertex0);
+  Edge &inEdge0 = inMesh->createEdge(inVertexA, inVertexB);
+  Edge &inEdge1 = inMesh->createEdge(inVertexB, inVertexC);
+  Edge &inEdge2 = inMesh->createEdge(inVertexC, inVertexA);
 
   Triangle &       inTriangle     = inMesh->createTriangle(inEdge0, inEdge1, inEdge2);
   Eigen::VectorXd &inValuesScalar = inDataScalar->values();
@@ -53,7 +53,23 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outDataScalar   = outMesh->createData("OutDataScalar", 1, 2_dataID);
   int     outDataScalarID = outDataScalar->getID();
-  Vertex &outVertex0      = outMesh->createVertex(Eigen::Vector2d::Constant(1.0 / 3.0));
+
+  // All vertices to test
+  // Center of triangle = average
+  Vertex &outMidPoint = outMesh->createVertex(Eigen::Vector2d::Constant(1.0 / 3.0));
+  // Exact mapping if grid is matching
+  Vertex &outA = outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  Vertex &outB = outMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  Vertex &outC = outMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+  // Linear interpolation between  2 vertices on edge
+  // AB: exact middle, BC: 2/3 on side B. CA: check fall-back on edge if out of domain
+  Vertex &outMidAB = outMesh->createVertex(Eigen::Vector2d(0.5, 0.0));
+  Vertex &outBC    = outMesh->createVertex(Eigen::Vector2d(2. / 3, 1. / 3));
+  Vertex &outCA    = outMesh->createVertex(Eigen::Vector2d(-10.0, 0.25));
+  // Check fall back on nearest neighbor
+  Vertex &almostA = outMesh->createVertex(Eigen::Vector2d(-1.0, -0.1));
+  Vertex &almostB = outMesh->createVertex(Eigen::Vector2d(2.5, -1.0));
+  Vertex &almostC = outMesh->createVertex(Eigen::Vector2d(2.5, 10.0));
 
   outMesh->allocateDataValues();
 
@@ -67,8 +83,8 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
   // Check expected
-  Eigen::VectorXd expected(1);
-  expected << 2.0;
+  Eigen::VectorXd expected(outMesh->vertices().size());
+  expected << 2.0, 1.0, 2.0, 3.0, 1.5, ((2. / 3 * 2) + (1. / 3 * 3)), 1.5, 1.0, 2.0, 3.0;
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
 
