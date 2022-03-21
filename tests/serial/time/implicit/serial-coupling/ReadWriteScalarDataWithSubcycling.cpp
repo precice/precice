@@ -28,13 +28,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   DataID writeDataID;
   DataID readDataID;
 
-  typedef double (*DataFunction)(double, int);
+  typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t, int idx) -> double {
-    return (double) (2 + t + idx);
+  DataFunction dataOneFunction = [](double t) -> double {
+    return (double) (2 + t);
   };
-  DataFunction dataTwoFunction = [](double t, int idx) -> double {
-    return (double) (10 + t + idx);
+  DataFunction dataTwoFunction = [](double t) -> double {
+    return (double) (10 + t);
   };
   DataFunction writeFunction;
   DataFunction readFunction;
@@ -54,18 +54,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     readFunction  = dataOneFunction;
   }
 
-  int n_vertices = 1;
+  double   writeData, readData, oldWriteData, oldReadData;
+  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
-  std::vector<VertexID> vertexIDs(n_vertices, 0);
-  std::vector<double>   writeData(n_vertices, 0);
-  std::vector<double>   readData(n_vertices, 0);
-  double                oldWriteData, oldReadData;
-
-  vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-
-  int    nSubsteps       = 4; // perform subcycling on solvers. 4 steps happen in each window.
-  int    nWindows        = 5; // perform 5 windows.
-  double maxDt           = precice.initialize();
+  int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
+  int    nWindows  = 5; // perform 5 windows.
+  double maxDt     = precice.initialize();
+  BOOST_TEST(maxDt == 2.0); // use window size != 1.0 to be able to detect more possible bugs
   double windowDt        = maxDt;
   int    timestep        = 0;
   int    timewindow      = 0;
@@ -73,16 +68,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   double windowStartTime = 0;
   int    windowStartStep = 0;
   int    iterations      = 0;
-  double dt              = windowDt / (nSubsteps - 0.5); // Timestep length desired by solver. E.g. 4 steps with size 4/7. Fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
-  double expectedDts[]   = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0};
-  double currentDt       = dt; // Timestep length used by solver
+  double dt              = windowDt / (nSubsteps - 0.5);                 // Solver always tries to do a timestep of fixed size.
+  double expectedDts[]   = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
+  double currentDt       = dt > maxDt ? maxDt : dt;                      // determine actual timestep length; must fit into remaining time in window
   double time            = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
-    for (int i = 0; i < n_vertices; i++) {
-      writeData[i] = writeFunction(time, i);
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-    }
+    writeData = writeFunction(time);
+    precice.writeScalarData(writeDataID, vertexID, writeData);
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
@@ -101,46 +94,40 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       BOOST_TEST(!precice.isReadDataAvailable());
     }
 
-    BOOST_TEST(readData.size() == n_vertices);
     // @todo split in SolverOne and SolverTwo?
-    for (int i = 0; i < n_vertices; i++) {
-      oldReadData = readData[i];
-      if (precice.isReadDataAvailable()) {
-        precice.readScalarData(readDataID, vertexIDs[i], readData[i]);
-      }
-      if (context.isNamed("SolverOne") && iterations == 0 && timestep == 0) {                      // special situation: SolverOne in its very first time window, first iteration, first time step
-        BOOST_TEST(readData[i] != oldReadData);                                                    // update from uninitialized to initial data.
-        BOOST_TEST(readData[i] == readFunction(startTime, i));                                     // use initial data only.
-      } else if (context.isNamed("SolverOne") && iterations == 0) {                                // special situation: SolverOne gets the old data its first iteration for all time windows.
-        BOOST_TEST(readData[i] == oldReadData);                                                    // ensure that read data stays the same from one step to the next, if not a new window is entered
-        BOOST_TEST(readData[i] == readFunction(startTime + (timewindow) *windowDt, i));            // data at end of window was written by other solver.
-      } else if (context.isNamed("SolverOne") && iterations == 1 && timestep == windowStartStep) { // special situation: SolverOne in its second iteration, first timestep of window
-        BOOST_TEST(readData[i] != oldReadData);                                                    // ensure that read data stays the same from one step to the next, if not a new window is entered
-        BOOST_TEST(readData[i] == readFunction(startTime + (timewindow + 1) * windowDt, i));       // data at end of window was written by other solver.
-      } else if (context.isNamed("SolverTwo") && iterations == 0 && timestep == 0) {               // special situation: SolverTwo in its very first time window, first iteration, first time step
-        BOOST_TEST(readData[i] != oldReadData);                                                    // update from uninitialized to initial data.
-        BOOST_TEST(readData[i] == readFunction(startTime + (timewindow + 1) * windowDt, i));       // data at end of window was written by other solver.
-      } else if (precice.isTimeWindowComplete()) {                                                 // moving to next window
-        BOOST_TEST(readData[i] != oldReadData);                                                    // ensure that read data changes from one step to the next, if a new window is entered
-        BOOST_TEST(readData[i] == readFunction(startTime + (timewindow + 1) * windowDt, i));       // data at end of window was written by other solver.
-      } else if (not precice.isTimeWindowComplete()) {                                             // still iterating in the same window
-        BOOST_TEST(readData[i] == oldReadData);                                                    // ensure that read data stays the same from one step to the next, if not a new window is entered
-        BOOST_TEST(readData[i] == readFunction(startTime + (timewindow + 1) * windowDt, i));       // data at end of window was written by other solver.
-      } else {                                                                                     // we should not enter this branch, because this would skip all tests.
-        BOOST_TEST(false);
-      }
+    oldReadData = readData;
+    if (precice.isReadDataAvailable()) {
+      precice.readScalarData(readDataID, vertexID, readData);
+    }
+    if (context.isNamed("SolverOne") && iterations == 0 && timestep == 0) {                      // special situation: SolverOne in its very first time window, first iteration, first time step
+      BOOST_TEST(readData != oldReadData);                                                       // update from uninitialized to initial data.
+      BOOST_TEST(readData == readFunction(startTime));                                           // use initial data only.
+    } else if (context.isNamed("SolverOne") && iterations == 0) {                                // special situation: SolverOne gets the old data its first iteration for all time windows.
+      BOOST_TEST(readData == oldReadData);                                                       // ensure that read data stays the same from one step to the next, if not a new window is entered
+      BOOST_TEST(readData == readFunction(startTime + (timewindow) *windowDt));                  // data at end of window was written by other solver.
+    } else if (context.isNamed("SolverOne") && iterations == 1 && timestep == windowStartStep) { // special situation: SolverOne in its second iteration, first timestep of window
+      BOOST_TEST(readData != oldReadData);                                                       // ensure that read data stays the same from one step to the next, if not a new window is entered
+      BOOST_TEST(readData == readFunction(startTime + (timewindow + 1) * windowDt));             // data at end of window was written by other solver.
+    } else if (context.isNamed("SolverTwo") && iterations == 0 && timestep == 0) {               // special situation: SolverTwo in its very first time window, first iteration, first time step
+      BOOST_TEST(readData != oldReadData);                                                       // update from uninitialized to initial data.
+      BOOST_TEST(readData == readFunction(startTime + (timewindow + 1) * windowDt));             // data at end of window was written by other solver.
+    } else if (precice.isTimeWindowComplete()) {                                                 // moving to next window
+      BOOST_TEST(readData != oldReadData);                                                       // ensure that read data changes from one step to the next, if a new window is entered
+      BOOST_TEST(readData == readFunction(startTime + (timewindow + 1) * windowDt));             // data at end of window was written by other solver.
+    } else if (not precice.isTimeWindowComplete()) {                                             // still iterating in the same window
+      BOOST_TEST(readData == oldReadData);                                                       // ensure that read data stays the same from one step to the next, if not a new window is entered
+      BOOST_TEST(readData == readFunction(startTime + (timewindow + 1) * windowDt));             // data at end of window was written by other solver.
+    } else {                                                                                     // we should not enter this branch, because this would skip all tests.
+      BOOST_TEST(false);
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
     if (precice.isWriteDataRequired(currentDt)) {
-      BOOST_TEST(writeData.size() == n_vertices);
-      for (int i = 0; i < n_vertices; i++) {
-        oldWriteData = writeData[i];
-        writeData[i] = writeFunction(time, i);
-        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-      }
+      oldWriteData = writeData;
+      writeData    = writeFunction(time);
+      precice.writeScalarData(writeDataID, vertexID, writeData);
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;

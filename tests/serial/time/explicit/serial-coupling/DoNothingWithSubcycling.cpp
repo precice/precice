@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 
 /**
  * @brief Test to run a simple "do nothing" coupling with subcycling solvers.
- * 
+ *
  */
 BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 {
@@ -26,13 +26,15 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
     MeshID meshID = precice.getMeshID("MeshOne");
     precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    double maxDt     = precice.initialize();
+    double maxDt    = precice.initialize();
+    double windowDt = maxDt;
+    BOOST_TEST(windowDt == 1.0);
+    double dt        = windowDt / 2.0;          // Solver tries to do a timestep of half the window size
+    double currentDt = dt > maxDt ? maxDt : dt; // determine actual timestep length; must fit into remaining time in window
     int    timestep  = 0;
-    double dt        = maxDt / 2.0; // Timestep length desired by solver
-    double currentDt = dt;          // Timestep length used by solver
     while (precice.isCouplingOngoing()) {
       maxDt     = precice.advance(currentDt);
-      currentDt = dt > maxDt ? maxDt : dt;
+      currentDt = dt > maxDt ? maxDt : dt; // determine actual timestep length; must fit into remaining time in window
       timestep++;
     }
     precice.finalize();
@@ -42,13 +44,15 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
     MeshID meshID = precice.getMeshID("Test-Square");
     precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
     precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    double maxDt     = precice.initialize();
+    double maxDt    = precice.initialize();
+    double windowDt = maxDt;
+    BOOST_TEST(windowDt == 1.0);
+    double dt        = windowDt / 3;            // Solver tries to do a timestep of one third of the window size
+    double currentDt = dt > maxDt ? maxDt : dt; // determine actual timestep length; must fit into remaining time in window
     int    timestep  = 0;
-    double dt        = maxDt / 3.0; // Timestep length desired by solver
-    double currentDt = dt;          // Timestep length used by solver
     while (precice.isCouplingOngoing()) {
       maxDt     = precice.advance(currentDt);
-      currentDt = dt > maxDt ? maxDt : dt;
+      currentDt = dt > maxDt ? maxDt : dt; // determine actual timestep length; must fit into remaining time in window
       timestep++;
     }
     precice.finalize();
