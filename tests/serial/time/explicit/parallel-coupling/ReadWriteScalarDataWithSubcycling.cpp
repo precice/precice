@@ -16,25 +16,25 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 /**
  * @brief Test to run a simple coupling with subcycling.
  *
- * Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.
+ * Ensures that each time step provides its own data, but preCICE only exchanges data at the end of the window.
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, context.config(), 0, 1); // serial coupling, SolverOne first
+  SolverInterface precice(context.name, context.config(), 0, 1);
 
   MeshID meshID;
   DataID writeDataID;
   DataID readDataID;
 
-  typedef double (*DataFunction)(double, int);
+  typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t, int idx) -> double {
-    return (double) (2 + t + idx);
+  DataFunction dataOneFunction = [](double t) -> double {
+    return (double) (2 + t);
   };
-  DataFunction dataTwoFunction = [](double t, int idx) -> double {
-    return (double) (10 + t + idx);
+  DataFunction dataTwoFunction = [](double t) -> double {
+    return (double) (10 + t);
   };
   DataFunction writeFunction;
   DataFunction readFunction;
@@ -54,31 +54,25 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     readFunction  = dataOneFunction;
   }
 
-  int n_vertices = 1;
+  double writeData, readData;
 
-  std::vector<VertexID> vertexIDs(n_vertices, 0);
-  std::vector<double>   writeData(n_vertices, 0);
-  std::vector<double>   readData(n_vertices, 0);
-  double                oldWriteData, oldReadData;
+  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
-  vertexIDs[0] = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-
-  int    nSubsteps     = 4; // perform subcycling on solvers. 4 steps happen in each window.
-  int    nWindows      = 5; // perform 5 windows.
-  double maxDt         = precice.initialize();
+  int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
+  int    nWindows  = 5; // perform 5 windows.
+  double maxDt     = precice.initialize();
+  BOOST_TEST(maxDt == 2.0); // use window size != 1.0 to be able to detect more possible bugs
   double windowDt      = maxDt;
   int    timestep      = 0;
   int    timewindow    = 0;
-  double dt            = windowDt / (nSubsteps - 0.5); // Timestep length desired by solver. E.g. 4 steps with size 4/7. Fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
-  double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0};
-  double currentDt     = dt; // Timestep length used by solver
+  double dt            = windowDt / (nSubsteps - 0.5);                 // Solver tries to do a timestep of size 4/7
+  double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
+  double currentDt     = dt > maxDt ? maxDt : dt;                      // determine actual timestep length; must fit into remaining time in window
   double time          = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
-    for (int i = 0; i < n_vertices; i++) {
-      writeData[i] = writeFunction(time, i);
-      precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-    }
+    writeData = writeFunction(time);
+    precice.writeScalarData(writeDataID, vertexID, writeData);
     precice.markActionFulfilled(precice::constants::actionWriteInitialData());
   }
 
@@ -86,32 +80,23 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   while (precice.isCouplingOngoing()) {
     double readTime = timewindow * windowDt; // both solvers lag one window behind for parallel-explicit coupling.
-    BOOST_TEST(readData.size() == n_vertices);
     if (timestep % nSubsteps == 0) {
       BOOST_TEST(precice.isReadDataAvailable());
     } else {
       BOOST_TEST(!precice.isReadDataAvailable());
     }
-    for (int i = 0; i < n_vertices; i++) {
-      oldReadData = readData[i];
-      if (precice.isReadDataAvailable()) {
-        precice.readScalarData(readDataID, vertexIDs[i], readData[i]);
-      }
-      BOOST_TEST(readData[i] == readFunction(readTime, i));
+    if (precice.isReadDataAvailable()) {
+      precice.readScalarData(readDataID, vertexID, readData);
     }
+    BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
 
     if (precice.isWriteDataRequired(currentDt)) {
-      BOOST_TEST(writeData.size() == n_vertices);
-      for (int i = 0; i < n_vertices; i++) {
-        oldWriteData = writeData[i];
-        writeData[i] = writeFunction(time, i);
-        BOOST_TEST(writeData[i] != oldWriteData); // ensure that write data differs from one step to the next
-        precice.writeScalarData(writeDataID, vertexIDs[i], writeData[i]);
-      }
+      writeData = writeFunction(time);
+      precice.writeScalarData(writeDataID, vertexID, writeData);
     }
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
