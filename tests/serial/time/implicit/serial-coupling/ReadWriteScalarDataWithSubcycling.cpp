@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 /**
  * @brief Test to run a simple coupling with subcycling.
  *
- *  Ensures that each time step provides its own data, but preCICE will only exchange data at the end of the window.
+ * Ensures that each time step provides its own data, but preCICE only exchanges data at the end of the window.
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
