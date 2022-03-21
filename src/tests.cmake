@@ -68,6 +68,7 @@ target_sources(testprecice
     src/query/tests/RTreeTests.cpp
     src/testing/ExtrapolationFixture.cpp
     src/testing/ExtrapolationFixture.hpp
+    src/testing/GlobalFixtures.cpp
     src/testing/ParallelCouplingSchemeFixture.cpp
     src/testing/ParallelCouplingSchemeFixture.hpp
     src/testing/SerialCouplingSchemeFixture.cpp
