@@ -54,12 +54,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     readFunction  = dataOneFunction;
   }
 
-  double   writeData, readData, oldWriteData, oldReadData;
+  double   writeData, readData;
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
-  int    nSubsteps       = 4; // perform subcycling on solvers. 4 steps happen in each window.
-  int    nWindows        = 5; // perform 5 windows.
-  double maxDt           = precice.initialize();
+  int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
+  int    nWindows  = 5; // perform 5 windows.
+  double maxDt     = precice.initialize();
+  BOOST_TEST(maxDt == 2.0); // use window size != 1.0 to be able to detect more possible bugs
   double windowDt        = maxDt;
   int    timestep        = 0;
   int    timewindow      = 0;
@@ -67,9 +68,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   double windowStartTime = 0;
   int    windowStartStep = 0;
   int    iterations      = 0;
-  double dt              = windowDt / (nSubsteps - 0.5); // Timestep length desired by solver. E.g. 4 steps with size 4/7. Fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
-  double expectedDts[]   = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0};
-  double currentDt       = dt; // Timestep length used by solver
+  double dt              = windowDt / (nSubsteps - 0.5);                 // Solver always tries to do a timestep of fixed size.
+  double expectedDts[]   = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
+  double currentDt       = dt > maxDt ? maxDt : dt;                      // determine actual timestep length; must fit into remaining time in window
   double time            = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
@@ -93,15 +94,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       BOOST_TEST(!precice.isReadDataAvailable());
     }
 
-    // @todo split in SolverOne and SolverTwo?
-    oldReadData = readData;
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, readData);
     }
-    if (iterations == 0 && timestep == 0) {                                     // special situation: Both solvers are in their very first time windows, first iteration, first time step
-      BOOST_TEST(readData == readFunction(startTime));                          // use initial data only.
-    } else if (iterations == 0) {                                               // special situation: Both solvers get the old data for all time windows.
-      BOOST_TEST(readData == readFunction(startTime + (timewindow) *windowDt)); // data at end of window was written by other solver.
+    if (iterations == 0 && timestep == 0) {                                    // special situation: Both solvers are in their very first time windows, first iteration, first time step
+      BOOST_TEST(readData == readFunction(startTime));                         // use initial data only.
+    } else if (iterations == 0) {                                              // special situation: Both solvers get the old data for all time windows.
+      BOOST_TEST(readData == readFunction(startTime + timewindow * windowDt)); // data at end of window was written by other solver.
     } else if (iterations > 0) {
       BOOST_TEST(readData == readFunction(startTime + (timewindow + 1) * windowDt));
     } else { // we should not enter this branch, because this would skip all tests.
@@ -112,8 +111,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
     if (precice.isWriteDataRequired(currentDt)) {
-      oldWriteData = writeData;
-      writeData    = writeFunction(time);
+      writeData = writeFunction(time);
       precice.writeScalarData(writeDataID, vertexID, writeData);
     }
     maxDt     = precice.advance(currentDt);

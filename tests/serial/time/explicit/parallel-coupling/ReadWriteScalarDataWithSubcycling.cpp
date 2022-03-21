@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     readFunction  = dataOneFunction;
   }
 
-  double writeData, readData, oldWriteData, oldReadData;
+  double writeData, readData;
 
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
@@ -85,7 +85,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     } else {
       BOOST_TEST(!precice.isReadDataAvailable());
     }
-    oldReadData = readData;
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, readData);
     }
@@ -96,9 +95,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     time += currentDt;
 
     if (precice.isWriteDataRequired(currentDt)) {
-      oldWriteData = writeData;
-      writeData    = writeFunction(time);
-      BOOST_TEST(writeData != oldWriteData); // ensure that write data differs from one step to the next
+      writeData = writeFunction(time);
       precice.writeScalarData(writeDataID, vertexID, writeData);
     }
     maxDt     = precice.advance(currentDt);
