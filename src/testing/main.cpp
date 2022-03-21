@@ -1,3 +1,10 @@
+// Setup boost test
+// Disable the generation of a main
+#define BOOST_TEST_NO_MAIN
+// Disable the legacy API of the init function
+#define BOOST_TEST_ALTERNATIVE_INIT_API
+// BOOST_TEST_MODULE omitted as we define our own init function
+
 #include <boost/test/tree/test_case_counter.hpp>
 #include <boost/test/tree/traverse.hpp>
 #include <boost/test/unit_test.hpp>
@@ -35,7 +42,7 @@ type = enum boost::unit_test::log_level : int {
 }
 \endcode
 **/
-bool init_unit_test()
+bool precice_init_unit_test()
 {
   using namespace boost::unit_test;
   using namespace precice;
@@ -132,7 +139,7 @@ int main(int argc, char *argv[])
 
   std::cout << "This test suite runs on rank " << rank << " of " << size << '\n';
 
-  int       retCode  = boost::unit_test::unit_test_main(&init_unit_test, argc, argv);
+  int       retCode  = boost::unit_test::unit_test_main(&precice_init_unit_test, argc, argv);
   const int testsRan = countEnabledTests();
 
   // Override the return code if the slaves have nothing to test
