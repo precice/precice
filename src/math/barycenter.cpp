@@ -71,6 +71,7 @@ Eigen::Vector3d calcBarycentricCoordsForTriangle(
     ac          = c - a;
     n           = ab.cross(ac);
     scaleFactor = 1.0 / n.dot(n);
+    PRECICE_ASSERT(scaleFactor != 0, "It seems a degenerate triangle was sent.");
 
     // varying per point
     au = u - a;
@@ -88,7 +89,9 @@ Eigen::Vector3d calcBarycentricCoordsForTriangle(
     uc = c - u;
     ua = a - u;
 
-    scaleFactor          = 1.0 / crossProduct2D(ab, ac);
+    auto twiceArea = crossProduct2D(ab, ac);
+    PRECICE_ASSERT(twiceArea != 0, "It seems a degenerate triangle was sent.");
+    scaleFactor          = 1.0 / twiceArea;
     barycentricCoords(0) = crossProduct2D(ub, uc) * scaleFactor;
     barycentricCoords(1) = crossProduct2D(uc, ua) * scaleFactor;
     barycentricCoords(2) = 1 - barycentricCoords(0) - barycentricCoords(1);
