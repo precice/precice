@@ -1,8 +1,8 @@
 #pragma once
 
 #include <iosfwd>
-#include <string>
 #include <precice/export.hpp>
+#include <string>
 
 namespace precice {
 
