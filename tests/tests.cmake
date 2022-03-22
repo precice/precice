@@ -67,6 +67,10 @@ target_sources(testprecice
     tests/serial/lifecycle/ConstructOnly.cpp
     tests/serial/lifecycle/Full.cpp
     tests/serial/lifecycle/ImplicitFinalize.cpp
+    tests/serial/mapping-nearest-projection/MappingNearestProjectionExplicitEdges.cpp
+    tests/serial/mapping-nearest-projection/MappingNearestProjectionImplicitEdges.cpp
+    tests/serial/mapping-nearest-projection/helpers.cpp
+    tests/serial/mapping-nearest-projection/helpers.hpp
     tests/serial/mesh-requirements/NearestNeighborA.cpp
     tests/serial/mesh-requirements/NearestNeighborB.cpp
     tests/serial/mesh-requirements/NearestProjection2DA.cpp
