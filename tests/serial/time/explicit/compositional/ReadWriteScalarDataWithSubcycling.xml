@@ -45,6 +45,7 @@
       <time-window-size value="2.0" />
       <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
     </coupling-scheme:parallel-explicit>
+
     <coupling-scheme:parallel-explicit>
       <participants first="SolverOne" second="SolverTwo" />
       <max-time-windows value="5" />
