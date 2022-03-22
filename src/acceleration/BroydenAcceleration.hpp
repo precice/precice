@@ -13,10 +13,10 @@ namespace precice {
 namespace acceleration {
 
 /**
- * @brief Multi vector quasi-Newton update scheme 
+ * @brief Multi vector quasi-Newton update scheme
  *
  * Performs a multi vector quasi-Newton to accelerate the convergence of implicit coupling
- * iterations. A multi Broyden update, together with the reuse of the approximate inverse 
+ * iterations. A multi Broyden update, together with the reuse of the approximate inverse
  * Jacobian from the old time window are used to approximate the inverse Jacobian. After every
  * coupling iteration, the data values used are enhanced by the new coupling iterates.
  *
@@ -48,7 +48,7 @@ public:
   /**
     * @brief Initializes the acceleration.
     */
-  virtual void initialize(DataMap &cplData);
+  virtual void initialize(const DataMap &cplData);
 
   /**
     * @brief Marks a iteration sequence as converged.
@@ -56,7 +56,7 @@ public:
     * called by the iterationsConverged() method in the BaseQNAcceleration class
     * handles the acceleration sepcific action after the convergence of one iteration
     */
-  virtual void specializedIterationsConverged(DataMap &cplData);
+  virtual void specializedIterationsConverged(const DataMap &cplData);
 
 private:
   // remove this ofter debugging, not useful
@@ -73,14 +73,13 @@ private:
 
   // @brief comptes the MVQN update using QR decomposition of V,
   //        furthermore it updates the inverse of the system jacobian
-  virtual void computeQNUpdate(DataMap &cplData, Eigen::VectorXd &xUpdate);
+  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate);
 
   // @brief updates the V, W matrices (as well as the matrices for the secondary data)
-  virtual void updateDifferenceMatrices(DataMap &cplData);
+  virtual void updateDifferenceMatrices(const DataMap &cplData);
 
   // @brief computes underrelaxation for the secondary data
-  virtual void computeUnderrelaxationSecondaryData(DataMap &cplData);
-  //void computeNewtonFactorsQRDecomposition(DataMap& cplData, Eigen::VectorXd& update);
+  virtual void computeUnderrelaxationSecondaryData(const DataMap &cplData);
 };
 } // namespace acceleration
 } // namespace precice

@@ -289,8 +289,8 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
   dataConfig->addData("Data1", 3);
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("Data0", 1);
-  mesh->createData("Data1", 3);
+  mesh->createData("Data0", 1, 0_dataID);
+  mesh->createData("Data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -605,8 +605,8 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("Data0", 1);
-  mesh->createData("Data1", 3);
+  mesh->createData("Data0", 1, 0_dataID);
+  mesh->createData("Data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);

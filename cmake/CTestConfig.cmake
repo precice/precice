@@ -277,16 +277,6 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
-  NAME serial
-  ARGUMENTS "--run_test=PreciceTests/Serial"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  )
-add_precice_test(
-  NAME parallel
-  ARGUMENTS "--run_test=PreciceTests/Parallel"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  )
-add_precice_test(
   NAME query
   ARGUMENTS "--run_test=QueryTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
@@ -306,6 +296,23 @@ add_precice_test(
   ARGUMENTS "--run_test=XML"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
+
+# Remove the parallel suite once the migration to the new test structure is finished
+add_precice_test(
+  NAME parallel
+  ARGUMENTS "--run_test=PreciceTests/Parallel"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+  )
+
+# Register integration tests from tests/
+# These are defined in tests/tests.cmake
+foreach(testsuite IN LISTS PRECICE_TEST_SUITES)
+  add_precice_test(
+    NAME "integration.${testsuite}"
+    ARGUMENTS "--run_test=PreciceTests/${testsuite}"
+    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+    )
+endforeach()
 
 add_precice_test_build_solverdummy(cpp)
 add_precice_test_build_solverdummy(c)

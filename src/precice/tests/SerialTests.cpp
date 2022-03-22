@@ -36,15 +36,9 @@ struct SerialTestFixture : testing::WhiteboxAccessor {
 
   std::string _pathToTests;
 
-  void reset()
-  {
-    mesh::Data::resetDataCount();
-  }
-
   SerialTestFixture()
   {
     _pathToTests = testing::getPathToSources() + "/precice/tests/";
-    reset();
   }
 };
 

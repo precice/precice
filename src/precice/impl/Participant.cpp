@@ -102,7 +102,7 @@ void Participant::addWriteData(
     const mesh::PtrData &data,
     const mesh::PtrMesh &mesh)
 {
-  checkDuplicatedData(data);
+  checkDuplicatedData(data, mesh->getName());
   _writeDataContexts.emplace(data->getID(), WriteDataContext(data, mesh));
 }
 
@@ -111,8 +111,8 @@ void Participant::addReadData(
     const mesh::PtrMesh &mesh,
     int                  interpolationOrder)
 {
-  checkDuplicatedData(data);
-  _readDataContexts.emplace(data->getID(), ReadDataContext(data, mesh, interpolationOrder));
+  checkDuplicatedData(data, mesh->getName());
+  _readDataContexts.emplace(data->getID(), ReadDataContext(data, mesh), interpolationOrder);
 }
 
 void Participant::addReadMappingContext(
@@ -410,12 +410,12 @@ void Participant::checkDuplicatedUse(const mesh::PtrMesh &mesh)
                 mesh->getName(), _name, mesh->getName());
 }
 
-void Participant::checkDuplicatedData(const mesh::PtrData &data)
+void Participant::checkDuplicatedData(const mesh::PtrData &data, const std::string &meshName)
 {
   PRECICE_CHECK(!isDataWrite(data->getID()) && !isDataRead(data->getID()),
-                "Participant \"{}\" can read/write data \"{}\" only once. "
+                "Participant \"{}\" can read/write data \"{}\" from/to mesh \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
-                _name, data->getName());
+                _name, meshName, data->getName());
 }
 
 } // namespace impl

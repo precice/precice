@@ -368,9 +368,9 @@ void ParticipantConfiguration::xmlTagCallback(
     _watchIntegralConfigs.push_back(config);
   } else if (tag.getNamespace() == TAG_MASTER) {
     com::CommunicationConfiguration comConfig;
-    com::PtrCommunication           com = comConfig.createCommunication(tag);
-    utils::MasterSlave::_communication  = com;
-    _isMasterDefined                    = true;
+    com::PtrCommunication           com    = comConfig.createCommunication(tag);
+    utils::MasterSlave::getCommunication() = com;
+    _isMasterDefined                       = true;
     _participants.back()->setUseMaster(true);
   }
 }
@@ -638,8 +638,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     PRECICE_ERROR("Implicit master communications for parallel participants are only available if preCICE was built with MPI. "
                   "Either explicitly define a master communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
-    com::PtrCommunication com          = std::make_shared<com::MPIDirectCommunication>();
-    utils::MasterSlave::_communication = com;
+    com::PtrCommunication com              = std::make_shared<com::MPIDirectCommunication>();
+    utils::MasterSlave::getCommunication() = com;
     participant->setUseMaster(true);
 #endif
   }

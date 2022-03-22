@@ -200,6 +200,7 @@ def main():
     print("Create test config {}".format(config))
     if not args.dry_run:
         generateTestConfig(args.test.name, args.test.suites, configPath)
+    print("Remember to run tools/building/updateSourceFiles.py or make sourcesIndex")
 
 
 if __name__ == '__main__':

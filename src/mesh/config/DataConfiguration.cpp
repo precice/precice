@@ -75,15 +75,14 @@ void DataConfiguration::addData(
     const std::string &name,
     int                dataDimensions)
 {
-  ConfiguredData data(name, dataDimensions);
-
   // Check if data with same name has been added already
   for (auto &elem : _data) {
-    PRECICE_CHECK(elem.name != data.name,
+    PRECICE_CHECK(elem.name != name,
                   "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
-                  data.name);
+                  name);
   }
-  _data.push_back(data);
+
+  _data.push_back({name, dataDimensions});
 }
 
 int DataConfiguration::getDataDimensions(

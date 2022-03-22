@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   // Create mesh object for from mesh
   int           dimensions  = 3;
   mesh::PtrMesh ptrFromMesh = std::make_shared<mesh::Mesh>("ParticipantMesh", dimensions, testing::nextMeshID());
-  mesh::PtrData ptrFromData = ptrFromMesh->createData("MappedData", dimensions);
+  mesh::PtrData ptrFromData = ptrFromMesh->createData("MappedData", dimensions, 0_dataID);
 
   ptrFromMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   ptrFromMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
 
   // Create mesh object for from mesh
   mesh::PtrMesh ptrToMesh = std::make_shared<mesh::Mesh>("OtherMesh", dimensions, testing::nextMeshID());
-  mesh::PtrData ptrToData = ptrToMesh->createData("MappedData", dimensions);
+  mesh::PtrData ptrToData = ptrToMesh->createData("MappedData", dimensions, 1_dataID);
 
   ptrToMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 0.0));
   ptrToMesh->createVertex(Eigen::Vector3d(1.0, 0.1, 0.0));
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   // Create mesh object
   int           dimensions = 3;
   mesh::PtrMesh ptrToMesh  = std::make_shared<mesh::Mesh>("ParticipantMesh", dimensions, testing::nextMeshID());
-  mesh::PtrData ptrToData  = ptrToMesh->createData("MappedData", dimensions);
+  mesh::PtrData ptrToData  = ptrToMesh->createData("MappedData", dimensions, 0_dataID);
 
   ptrToMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   ptrToMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
 
   // Create mesh object for from mesh
   mesh::PtrMesh ptrFromMesh = std::make_shared<mesh::Mesh>("OtherMesh", dimensions, testing::nextMeshID());
-  mesh::PtrData ptrFromData = ptrFromMesh->createData("MappedData", dimensions);
+  mesh::PtrData ptrFromData = ptrFromMesh->createData("MappedData", dimensions, 1_dataID);
 
   ptrFromMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 0.0));
   ptrFromMesh->createVertex(Eigen::Vector3d(1.0, 0.1, 0.0));

@@ -88,6 +88,8 @@ private:
   std::map<std::string, std::vector<std::string>> _neededMeshes;
 
   std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
+
+  utils::ManageUniqueIDs _dataIDManager;
 };
 
 } // namespace mesh

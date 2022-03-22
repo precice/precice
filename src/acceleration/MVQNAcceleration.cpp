@@ -72,7 +72,7 @@ MVQNAcceleration::~MVQNAcceleration() = default;
 
 // ==================================================================================
 void MVQNAcceleration::initialize(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 
@@ -117,11 +117,11 @@ void MVQNAcceleration::initialize(
 
 // ==================================================================================
 void MVQNAcceleration::computeUnderrelaxationSecondaryData(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   // Perform underrelaxation with initial relaxation factor for secondary data
   for (int id : _secondaryDataIDs) {
-    PtrCouplingData  data   = cplData[id];
+    PtrCouplingData  data   = cplData.at(id);
     Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
@@ -133,7 +133,7 @@ void MVQNAcceleration::computeUnderrelaxationSecondaryData(
 
 // ==================================================================================
 void MVQNAcceleration::updateDifferenceMatrices(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   /**
    *  Matrices and vectors used in this method as well as the result Wtil are
@@ -210,8 +210,8 @@ void MVQNAcceleration::updateDifferenceMatrices(
 
 // ==================================================================================
 void MVQNAcceleration::computeQNUpdate(
-    Acceleration::DataMap &cplData,
-    Eigen::VectorXd &      xUpdate)
+    const DataMap &  cplData,
+    Eigen::VectorXd &xUpdate)
 {
   /**
    * The inverse Jacobian
@@ -357,8 +357,8 @@ void MVQNAcceleration::buildJacobian()
 
 // ==================================================================================
 void MVQNAcceleration::computeNewtonUpdateEfficient(
-    Acceleration::DataMap &cplData,
-    Eigen::VectorXd &      xUpdate)
+    const DataMap &  cplData,
+    Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
 
@@ -456,7 +456,7 @@ void MVQNAcceleration::computeNewtonUpdateEfficient(
 }
 
 // ==================================================================================
-void MVQNAcceleration::computeNewtonUpdate(Acceleration::DataMap &cplData, Eigen::VectorXd &xUpdate)
+void MVQNAcceleration::computeNewtonUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
 
@@ -682,7 +682,7 @@ void MVQNAcceleration::restartIMVJ()
 
 // ==================================================================================
 void MVQNAcceleration::specializedIterationsConverged(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 

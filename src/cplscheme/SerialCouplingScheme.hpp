@@ -18,7 +18,7 @@ namespace cplscheme {
 /**
  * @brief Coupling scheme for serial coupling, i.e. staggered execution of two coupled participants
  *
- * For more information, look into Benjamin's thesis, Section 3.5. 
+ * For more information, look into Benjamin's thesis, Section 3.5.
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class SerialCouplingScheme : public BiCouplingScheme {
@@ -76,7 +76,7 @@ private:
    * @brief SerialCouplingSchemes applies acceleration to send data
    * @returns DataMap being accelerated
    */
-  DataMap &getAccelerationData() override
+  const DataMap getAccelerationData() override
   {
     return getSendData();
   }

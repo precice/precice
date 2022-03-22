@@ -10,8 +10,8 @@ using namespace precice;
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Time)
-BOOST_AUTO_TEST_SUITE(Implicit)
-BOOST_AUTO_TEST_SUITE(SerialCoupling)
+BOOST_AUTO_TEST_SUITE(Explicit)
+BOOST_AUTO_TEST_SUITE(Compositional)
 
 /**
  * @brief Test to run a simple coupling with subcycling.
@@ -54,24 +54,21 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     readFunction  = dataOneFunction;
   }
 
-  double   writeData, readData;
+  double writeData, readData;
+
   VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
 
   int    nSubsteps = 4; // perform subcycling on solvers. 4 steps happen in each window.
   int    nWindows  = 5; // perform 5 windows.
   double maxDt     = precice.initialize();
   BOOST_TEST(maxDt == 2.0); // use window size != 1.0 to be able to detect more possible bugs
-  double windowDt        = maxDt;
-  int    timestep        = 0;
-  int    timewindow      = 0;
-  double startTime       = 0;
-  double windowStartTime = 0;
-  int    windowStartStep = 0;
-  int    iterations      = 0;
-  double dt              = windowDt / (nSubsteps - 0.5);                 // Solver always tries to do a timestep of fixed size.
-  double expectedDts[]   = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
-  double currentDt       = dt > maxDt ? maxDt : dt;                      // determine actual timestep length; must fit into remaining time in window
-  double time            = timestep * dt;
+  double windowDt      = maxDt;
+  int    timestep      = 0;
+  int    timewindow    = 0;
+  double dt            = windowDt / (nSubsteps - 0.5);                 // Solver tries to do a timestep of size 4/7
+  double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
+  double currentDt     = dt > maxDt ? maxDt : dt;                      // determine actual timestep length; must fit into remaining time in window
+  double time          = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);
@@ -82,31 +79,21 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   precice.initializeData();
 
   while (precice.isCouplingOngoing()) {
-    if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-      windowStartTime = time;
-      windowStartStep = timestep;
-      precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
-    }
-
+    double readTime = timewindow * windowDt; // both solvers lag one window behind for parallel-explicit coupling.
     if (timestep % nSubsteps == 0) {
       BOOST_TEST(precice.isReadDataAvailable());
     } else {
       BOOST_TEST(!precice.isReadDataAvailable());
     }
-
-    double oldReadData = readData;
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, readData);
     }
-    if (context.isNamed("SolverOne") && iterations == 0) {                     // special situation for serial coupling: SolverOne gets the old data in its first iteration for all time windows.
-      BOOST_TEST(readData == readFunction(startTime + timewindow * windowDt)); // zeroth window: Initial Data from SolverTwo; following windows: data at end of window was written by SolverTwo.
-    } else {
-      BOOST_TEST(readData == readFunction(startTime + (timewindow + 1) * windowDt));
-    }
+    BOOST_TEST(readData == readFunction(readTime));
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
     BOOST_TEST(currentDt == expectedDts[timestep % nSubsteps]);
     time += currentDt;
+
     if (precice.isWriteDataRequired(currentDt)) {
       writeData = writeFunction(time);
       precice.writeScalarData(writeDataID, vertexID, writeData);
@@ -114,17 +101,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     timestep++;
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
-      iterations++;
-      timestep = windowStartStep;
-      time     = windowStartTime;
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we have to make the action
-    }
     if (precice.isTimeWindowComplete()) {
-      iterations++;
       timewindow++;
-      BOOST_TEST(iterations == 3);
-      iterations = 0;
     }
   }
 
@@ -135,7 +113,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 BOOST_AUTO_TEST_SUITE_END() // PreciceTests
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // Time
-BOOST_AUTO_TEST_SUITE_END() // Implicit
+BOOST_AUTO_TEST_SUITE_END() // Explicit
 BOOST_AUTO_TEST_SUITE_END() // SerialCoupling
 
 #endif // PRECICE_NO_MPI
