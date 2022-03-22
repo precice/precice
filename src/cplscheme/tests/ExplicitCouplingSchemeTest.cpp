@@ -20,6 +20,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/ParticipantConfiguration.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "xml/XMLTag.hpp"
@@ -328,14 +329,17 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling)
   std::string configurationPath(_pathToTests + "explicit-coupling-scheme-1.xml");
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  int         dimensions = 3;
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
-  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  CouplingSchemeConfiguration          cplSchemeConfig(root, meshConfig, m2nConfig);
+  meshConfig->setDimensions(dimensions);
+  m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
+  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  participantConfig->setDimensions(dimensions);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -362,14 +366,17 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
   std::string configurationPath(_pathToTests + "explicit-coupling-scheme-2.xml");
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  int         dimensions = 3;
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
-  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  CouplingSchemeConfiguration          cplSchemeConfig(root, meshConfig, m2nConfig);
+  meshConfig->setDimensions(dimensions);
+  m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
+  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  participantConfig->setDimensions(dimensions);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -444,14 +451,17 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
   std::string configurationPath(_pathToTests + "serial-explicit-coupling-datainit.xml");
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  int         dimensions = 2;
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(2);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(2);
-  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  CouplingSchemeConfiguration          cplSchemeConfig(root, meshConfig, m2nConfig);
+  meshConfig->setDimensions(dimensions);
+  m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
+  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  participantConfig->setDimensions(dimensions);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -512,14 +522,17 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   std::string configurationPath(_pathToTests + "parallel-explicit-coupling-datainit.xml");
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  int         dimensions = 2;
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(2);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(2);
-  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  CouplingSchemeConfiguration          cplSchemeConfig(root, meshConfig, m2nConfig);
+  meshConfig->setDimensions(dimensions);
+  m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
+  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  participantConfig->setDimensions(dimensions);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -631,14 +644,17 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling)
   std::string configurationPath(_pathToTests + "explicit-coupling-scheme-1.xml");
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
+  int         dimensions = 3;
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
-  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  CouplingSchemeConfiguration          cplSchemeConfig(root, meshConfig, m2nConfig);
+  meshConfig->setDimensions(dimensions);
+  m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
+  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  participantConfig->setDimensions(dimensions);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);

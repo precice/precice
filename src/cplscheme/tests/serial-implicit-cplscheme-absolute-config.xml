@@ -10,6 +10,22 @@
 
   <m2n:sockets from="Participant0" to="Participant1" />
 
+  <participant name="Participant0">
+    <use-mesh name="Mesh" provide="on" />
+
+    <write-data name="Data0" mesh="Mesh" />
+
+    <read-data name="Data1" mesh="Mesh" />
+  </participant>
+
+  <participant name="Participant1">
+    <use-mesh name="Mesh" provide="on" />
+
+    <write-data name="Data1" mesh="Mesh" />
+
+    <read-data name="Data0" mesh="Mesh" />
+  </participant>
+
   <coupling-scheme:serial-implicit>
     <participants first="Participant0" second="Participant1" />
 
