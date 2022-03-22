@@ -121,7 +121,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we have to make the action
     }
     if (precice.isTimeWindowComplete()) {
+      iterations++;
       timewindow++;
+      BOOST_TEST(iterations == 3);
       iterations = 0;
     }
   }
