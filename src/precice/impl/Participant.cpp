@@ -112,7 +112,7 @@ void Participant::addReadData(
     int                  interpolationOrder)
 {
   checkDuplicatedData(data, mesh->getName());
-  _readDataContexts.emplace(data->getID(), ReadDataContext(data, mesh), interpolationOrder);
+  _readDataContexts.emplace(data->getID(), ReadDataContext(data, mesh, interpolationOrder));
 }
 
 void Participant::addReadMappingContext(
