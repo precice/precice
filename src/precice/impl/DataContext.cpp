@@ -107,13 +107,11 @@ bool DataContext::hasMapping() const
 bool DataContext::isMappingRequired()
 {
   using namespace mapping;
-  MappingConfiguration::Timing timing;
-
   if (not hasMapping()) {
     return false;
   }
 
-  timing         = mappingContext().timing;
+  auto timing    = mappingContext().timing;
   bool hasMapped = mappingContext().hasMappedData;
   bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
   mapNow |= timing == MappingConfiguration::INITIAL;
