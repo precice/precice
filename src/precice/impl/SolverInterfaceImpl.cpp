@@ -699,8 +699,6 @@ void SolverInterfaceImpl::resetMesh(
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());
   _meshLock.unlock(meshID);
   context.mesh->clear();
-
-  _hasInitializedReadWaveforms = false; // waveforms must be re-initialized after resetting the mesh.
 }
 
 int SolverInterfaceImpl::setMeshVertex(
