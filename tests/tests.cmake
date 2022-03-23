@@ -46,6 +46,7 @@ target_sources(testprecice
     tests/parallel/quasi-newton/TestQN3EmptyPartition.cpp
     tests/parallel/quasi-newton/helpers.cpp
     tests/parallel/quasi-newton/helpers.hpp
+    tests/serial/AitkenAcceleration.cpp
     tests/serial/PreconditionerBug.cpp
     tests/serial/SendMeshToMultipleParticipants.cpp
     tests/serial/TestBug.cpp

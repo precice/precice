@@ -1052,56 +1052,6 @@ BOOST_AUTO_TEST_CASE(testConvergenceMeasures3)
 
 
 
-
-BOOST_AUTO_TEST_CASE(AitkenAcceleration)
-{
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
-
-  using Eigen::Vector2d;
-  using namespace precice::constants;
-
-  const std::string configFile = _pathToTests + "aitken-acceleration.xml";
-
-  SolverInterface interface(context.name, configFile, 0, 1);
-  Vector2d        vertex{0.0, 0.0};
-
-  if (context.isNamed("A")) {
-    const MeshID meshID   = interface.getMeshID("A-Mesh");
-    int          vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int          dataID   = interface.getDataID("Data", meshID);
-
-    double dt    = interface.initialize();
-    double value = 1.0;
-    interface.writeScalarData(dataID, vertexID, value);
-
-    interface.markActionFulfilled(actionWriteIterationCheckpoint());
-    interface.advance(dt);
-    interface.markActionFulfilled(actionReadIterationCheckpoint());
-    interface.advance(dt);
-    BOOST_TEST(not interface.isCouplingOngoing());
-    interface.finalize();
-
-  } else {
-    BOOST_TEST(context.isNamed("B"));
-    const MeshID meshID   = interface.getMeshID("B-Mesh");
-    int          vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int          dataID   = interface.getDataID("Data", meshID);
-
-    double dt = interface.initialize();
-    interface.markActionFulfilled(actionWriteIterationCheckpoint());
-    interface.advance(dt);
-
-    double value = -1.0;
-    interface.readScalarData(dataID, vertexID, value);
-    BOOST_TEST(value == 0.1); // due to initial underrelaxation
-
-    interface.markActionFulfilled(actionReadIterationCheckpoint());
-    interface.advance(dt);
-    BOOST_TEST(not interface.isCouplingOngoing());
-    interface.finalize();
-  }
-}
-
 void testQuadMappingScaledConsistent(const std::string configFile, const TestContext &context)
 {
   using Eigen::Vector3d;
