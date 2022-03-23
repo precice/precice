@@ -1587,33 +1587,12 @@ void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contex
   }
 }
 
-bool SolverInterfaceImpl::isMappingRequired(DataContext &context)
-{
-  using namespace mapping;
-  MappingConfiguration::Timing timing;
-
-  if (not context.hasMapping()) {
-    return false;
-  }
-
-  timing         = context.mappingContext().timing;
-  bool hasMapped = context.mappingContext().hasMappedData;
-  bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
-  mapNow |= timing == MappingConfiguration::INITIAL;
-
-  if ((not mapNow) || hasMapped) {
-    return false;
-  }
-
-  return true;
-}
-
 void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
-    if (isMappingRequired(context)) {
+    if (context.isMappingRequired()) {
       mapData(context, "write");
     }
   }
@@ -1625,7 +1604,7 @@ void SolverInterfaceImpl::mapReadData()
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
-    if (isMappingRequired(context)) {
+    if (context.isMappingRequired()) {
       mapData(context, "read");
     }
   }

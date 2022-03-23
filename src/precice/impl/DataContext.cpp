@@ -104,6 +104,27 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
+bool DataContext::isMappingRequired()
+{
+  using namespace mapping;
+  MappingConfiguration::Timing timing;
+
+  if (not hasMapping()) {
+    return false;
+  }
+
+  timing         = mappingContext().timing;
+  bool hasMapped = mappingContext().hasMappedData;
+  bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
+  mapNow |= timing == MappingConfiguration::INITIAL;
+
+  if ((not mapNow) || hasMapped) {
+    return false;
+  }
+
+  return true;
+}
+
 bool DataContext::hasReadMapping() const
 {
   return _toData == _providedData;

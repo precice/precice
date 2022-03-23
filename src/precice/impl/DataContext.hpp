@@ -26,35 +26,35 @@ class DataContext {
 public:
   /**
    * @brief Get _providedData member.
-   * 
+   *
    * @return mesh::PtrData _providedData.
    */
   mesh::PtrData providedData();
 
   /**
    * @brief Get _toData member.
-   * 
+   *
    * @return mesh::PtrData _toData.
    */
   mesh::PtrData toData();
 
   /**
    * @brief Get the Name of _providedData.
-   * 
+   *
    * @return std::string Name of _providedData.
    */
   std::string getDataName() const;
 
   /**
    * @brief Get the ID of _providedData.
-   * 
+   *
    * @return int ID of _providedData.
    */
   int getProvidedDataID() const;
 
   /**
    * @brief Get the ID of _fromData. Used for performing the mapping outside of this class.
-   * 
+   *
    * @return int ID of _fromData.
    */
   int getFromDataID() const;
@@ -71,63 +71,72 @@ public:
 
   /**
    * @brief Get the ID of _toData. Used for performing the mapping outside of this class.
-   * 
+   *
    * @return int ID of _toData.
    */
   int getToDataID() const;
 
   /**
    * @brief Get the dimensions of _providedData.
-   * 
+   *
    * @return int Dimensions of _providedData.
    */
   int getDataDimensions() const;
 
   /**
    * @brief Get the name of _mesh.
-   * 
+   *
    * @return std::string Name of _mesh.
    */
   std::string getMeshName() const;
 
   /**
    * @brief Get the ID of _mesh.
-   * 
+   *
    * @return int ID of _mesh.
    */
   int getMeshID() const;
 
   /**
    * @brief Informs the user whether this DataContext has a _mappingContext.
-   * 
-   * @return True, if this DataContext is associated with a mapping. False, if not. 
+   *
+   * @return True, if this DataContext is associated with a mapping. False, if not.
    */
   bool hasMapping() const;
 
   /**
+   * @brief Check whether mapping has to be performed.
+   *
+   * Checks whether a mapping exists for this context and the timing configuration.
+   *
+   * @return True, if a mapping has to be performed.
+   */
+  bool isMappingRequired();
+
+  /**
    * @brief Get the _mappingContext associated with this DataContext.
-   * 
+   *
    * @return const MappingContext The _mappingContext of this DataContext.
    */
   const MappingContext mappingContext() const;
 
   /**
    * @brief Informs the user whether this DataContext has a read mapping.
-   * 
+   *
    * @return True, if DataContext has a read mapping.
    */
   bool hasReadMapping() const;
 
   /**
    * @brief Informs the user whether this DataContext has a write mapping.
-   * 
+   *
    * @return True, if DataContext has a write mapping.
    */
   bool hasWriteMapping() const;
 
   /**
    * @brief Links a MappingContext and the MeshContext required by the mapping to this DataContext.
-   * 
+   *
    * A mapping maps the given data from or to _providedData (depending on whether it is a read or write mapping).
    *
    * @param[in] mappingContext Context of the mapping
@@ -138,7 +147,7 @@ public:
 protected:
   /**
    * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.
-   * 
+   *
    * @param data Data associated with this DataContext.
    * @param mesh Mesh associated with this DataContext.
    */
@@ -158,7 +167,7 @@ protected:
 
   /**
    * @brief Helper to set _mappingContext, _fromData and _toData.
-   * 
+   *
    * @param mappingContext MappingContext this DataContext will be associated to.
    * @param fromData Data the mapping maps from.
    * @param toData Data the mapping maps to.
