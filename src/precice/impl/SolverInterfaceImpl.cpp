@@ -1008,7 +1008,8 @@ void SolverInterfaceImpl::mapWriteDataFrom(
         continue;
       }
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      mapData(context, "write");
+      PRECICE_DEBUG("Map write data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
+      mapData(context);
     }
     mappingContext.hasMappedData = true;
   }
@@ -1039,7 +1040,8 @@ void SolverInterfaceImpl::mapReadDataTo(
         continue;
       }
       PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      mapData(context, "read");
+      PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
+      mapData(context);
     }
     mappingContext.hasMappedData = true;
   }
@@ -1564,14 +1566,11 @@ void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext
   }
 }
 
-void SolverInterfaceImpl::mapData(DataContext &context, const std::string &mappingType)
+void SolverInterfaceImpl::mapData(DataContext &context)
 {
   int fromDataID = context.getFromDataID();
   int toDataID   = context.getToDataID();
-  PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
-                mappingType, context.getDataName(), context.getMeshName());
   context.resetToData();
-  PRECICE_DEBUG("Map from dataID {} to dataID: {}", fromDataID, toDataID);
   context.mappingContext().mapping->map(fromDataID, toDataID);
 }
 
@@ -1595,7 +1594,8 @@ void SolverInterfaceImpl::mapWrittenData()
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.isMappingRequired()) {
-      mapData(context, "write");
+      PRECICE_DEBUG("Map write data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
+      mapData(context);
     }
   }
   clearMappings(_accessor->writeMappingContexts());
@@ -1607,7 +1607,8 @@ void SolverInterfaceImpl::mapReadData()
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
     if (context.isMappingRequired()) {
-      mapData(context, "read");
+      PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
+      mapData(context);
     }
   }
   clearMappings(_accessor->readMappingContexts());
