@@ -139,13 +139,6 @@ private:
   static logging::Logger _log;
 
   /**
-   * @brief Get the ID of _providedData.
-   *
-   * @return int ID of _providedData.
-   */
-  int getProvidedDataID() const;
-
-  /**
    * @brief Get the ID of _fromData. Used for performing the mapping outside of this class.
    *
    * @return int ID of _fromData.
@@ -158,23 +151,6 @@ private:
    * @return int ID of _toData.
    */
   int getToDataID() const;
-
-  /**
-   * @brief Purpose unclear. See also https://github.com/precice/precice/issues/1156.
-   */
-  void resetProvidedData();
-
-  /**
-   * @brief Resets _toData to zero. Used before mapping is performed.
-   */
-  void resetToData();
-
-  /**
-   * @brief Get the _mappingContext associated with this DataContext.
-   *
-   * @return const MappingContext The _mappingContext of this DataContext.
-   */
-  const MappingContext mappingContext() const;
 
   /**
    * @brief Informs the user whether this DataContext has a _mappingContext.

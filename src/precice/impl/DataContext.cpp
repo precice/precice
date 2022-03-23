@@ -26,12 +26,6 @@ std::string DataContext::getDataName() const
   return _providedData->getName();
 }
 
-int DataContext::getProvidedDataID() const
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData->getID();
-}
-
 int DataContext::getFromDataID() const
 {
   PRECICE_TRACE();
@@ -42,23 +36,12 @@ int DataContext::getFromDataID() const
 
 void DataContext::resetData()
 {
-  resetProvidedData();
+  // See also https://github.com/precice/precice/issues/1156.
+  _providedData->toZero();
   if (hasMapping()) {
     PRECICE_ASSERT(hasWriteMapping());
-    resetToData();
+    _toData->toZero();
   }
-}
-
-void DataContext::resetProvidedData()
-{
-  PRECICE_TRACE();
-  _providedData->toZero();
-}
-
-void DataContext::resetToData()
-{
-  PRECICE_TRACE();
-  _toData->toZero();
 }
 
 int DataContext::getToDataID() const
@@ -114,8 +97,8 @@ bool DataContext::isMappingRequired()
     return false;
   }
 
-  auto timing    = mappingContext().timing;
-  bool hasMapped = mappingContext().hasMappedData;
+  auto timing    = _mappingContext.timing;
+  bool hasMapped = _mappingContext.hasMappedData;
   bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
   mapNow |= timing == MappingConfiguration::INITIAL;
 
@@ -128,10 +111,11 @@ bool DataContext::isMappingRequired()
 
 void DataContext::mapData()
 {
+  PRECICE_ASSERT(hasMapping());
   int fromDataID = getFromDataID();
   int toDataID   = getToDataID();
-  resetToData();
-  mappingContext().mapping->map(fromDataID, toDataID);
+  _toData->toZero();
+  _mappingContext.mapping->map(fromDataID, toDataID);
 }
 
 bool DataContext::hasReadMapping() const
@@ -142,12 +126,6 @@ bool DataContext::hasReadMapping() const
 bool DataContext::hasWriteMapping() const
 {
   return _fromData == _providedData;
-}
-
-const MappingContext DataContext::mappingContext() const
-{
-  PRECICE_ASSERT(hasMapping());
-  return _mappingContext;
 }
 
 } // namespace impl

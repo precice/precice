@@ -5,12 +5,12 @@ namespace testing {
 
 impl::MappingContext DataContextFixture::mappingContext(precice::impl::DataContext &dataContext)
 {
-  return dataContext.mappingContext();
+  return dataContext._mappingContext;
 }
 
 int DataContextFixture::getProvidedDataID(precice::impl::DataContext &dataContext)
 {
-  return dataContext.getProvidedDataID();
+  return dataContext._providedData->getID();
 }
 
 int DataContextFixture::getFromDataID(precice::impl::DataContext &dataContext)
@@ -20,7 +20,7 @@ int DataContextFixture::getFromDataID(precice::impl::DataContext &dataContext)
 
 int DataContextFixture::getToDataID(precice::impl::DataContext &dataContext)
 {
-    return dataContext.getToDataID();
+  return dataContext.getToDataID();
 }
 
 bool DataContextFixture::hasMapping(precice::impl::DataContext &dataContext)
