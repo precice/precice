@@ -1007,10 +1007,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
-      context.resetToData();
-      PRECICE_DEBUG("Map data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
-      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
+      mapData(context, "write");
     }
     mappingContext.hasMappedData = true;
   }
@@ -1040,11 +1037,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.getMeshID() != toMeshID) {
         continue;
       }
-      context.resetToData();
-      PRECICE_DEBUG("Map data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
-      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
-      mappingContext.mapping->map(context.getFromDataID(), context.getToDataID());
-      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
+      mapData(context, "read");
     }
     mappingContext.hasMappedData = true;
   }
@@ -1571,31 +1564,13 @@ void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext
 
 void SolverInterfaceImpl::mapData(DataContext &context, const std::string &mappingType)
 {
-  PRECICE_TRACE();
-  using namespace mapping;
-  MappingConfiguration::Timing timing;
-
-  if (not context.hasMapping()) {
-    return;
-  }
-
-  timing         = context.mappingContext().timing;
-  bool hasMapped = context.mappingContext().hasMappedData;
-  bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
-  mapNow |= timing == MappingConfiguration::INITIAL;
-
-  if ((not mapNow) || hasMapped) {
-    return;
-  }
-
-  int inDataID  = context.getFromDataID();
-  int outDataID = context.getToDataID();
+  int fromDataID = context.getFromDataID();
+  int toDataID   = context.getToDataID();
   PRECICE_DEBUG("Map \"{}\" data \"{}\" from mesh \"{}\"",
                 mappingType, context.getDataName(), context.getMeshName());
   context.resetToData();
-  PRECICE_DEBUG("Map from dataID {} to dataID: {}", inDataID, outDataID);
-  context.mappingContext().mapping->map(inDataID, outDataID);
-  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
+  PRECICE_DEBUG("Map from dataID {} to dataID: {}", fromDataID, toDataID);
+  context.mappingContext().mapping->map(fromDataID, toDataID);
 }
 
 void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contexts)
@@ -1612,12 +1587,35 @@ void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contex
   }
 }
 
+bool SolverInterfaceImpl::isMappingRequired(DataContext &context)
+{
+  using namespace mapping;
+  MappingConfiguration::Timing timing;
+
+  if (not context.hasMapping()) {
+    return false;
+  }
+
+  timing         = context.mappingContext().timing;
+  bool hasMapped = context.mappingContext().hasMappedData;
+  bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
+  mapNow |= timing == MappingConfiguration::INITIAL;
+
+  if ((not mapNow) || hasMapped) {
+    return false;
+  }
+
+  return true;
+}
+
 void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
-    mapData(context, "write");
+    if (isMappingRequired(context)) {
+      mapData(context, "write");
+    }
   }
   clearMappings(_accessor->writeMappingContexts());
 }
@@ -1627,7 +1625,9 @@ void SolverInterfaceImpl::mapReadData()
   PRECICE_TRACE();
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
-    mapData(context, "read");
+    if (isMappingRequired(context)) {
+      mapData(context, "read");
+    }
   }
   clearMappings(_accessor->readMappingContexts());
 }
