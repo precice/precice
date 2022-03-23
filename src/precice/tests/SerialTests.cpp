@@ -444,50 +444,6 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh3D)
 }
 
 
-/**
- * @brief Tests sending one mesh to multiple participants
- *
- */
-BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
-{
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
-
-  const std::string configFile = _pathToTests + "send-mesh-to-multiple-participants.xml";
-  std::string       meshName;
-
-  Eigen::Vector2d vertex{0.0, 0.0};
-
-  double value = 1.0;
-
-  if (context.isNamed("SolverOne")) {
-    meshName = "MeshA";
-  } else if (context.isNamed("SolverTwo")) {
-    meshName = "MeshB";
-  } else if (context.isNamed("SolverThree")) {
-    meshName = "MeshC";
-  }
-
-  SolverInterface cplInterface(context.name, configFile, 0, 1);
-
-  const MeshID meshID = cplInterface.getMeshID(meshName);
-
-  VertexID vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
-
-  double maxDt = cplInterface.initialize();
-
-  DataID dataID = cplInterface.getDataID("Data", meshID);
-
-  if (context.isNamed("SolverOne")) {
-    cplInterface.writeScalarData(dataID, vertexID, value);
-  } else {
-    double valueReceived = -1.0;
-    cplInterface.readScalarData(dataID, vertexID, valueReceived);
-    BOOST_TEST(valueReceived == value);
-  }
-
-  cplInterface.advance(maxDt);
-  cplInterface.finalize();
-}
 
 /**
  * @brief Test to reproduce the problem of issue 383, https://github.com/precice/precice/issues/383
