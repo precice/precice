@@ -39,35 +39,9 @@ public:
   std::string getDataName() const;
 
   /**
-   * @brief Get the ID of _providedData.
-   *
-   * @return int ID of _providedData.
+   * @brief Resets provided data and (if mapping exists) fromData or toData.
    */
-  int getProvidedDataID() const;
-
-  /**
-   * @brief Get the ID of _fromData. Used for performing the mapping outside of this class.
-   *
-   * @return int ID of _fromData.
-   */
-  int getFromDataID() const;
-
-  /**
-   * @brief Purpose unclear. See also https://github.com/precice/precice/issues/1156.
-   */
-  void resetProvidedData();
-
-  /**
-   * @brief Resets _toData to zero. Used before mapping is performed.
-   */
-  void resetToData();
-
-  /**
-   * @brief Get the ID of _toData. Used for performing the mapping outside of this class.
-   *
-   * @return int ID of _toData.
-   */
-  int getToDataID() const;
+  void resetData();
 
   /**
    * @brief Get the dimensions of _providedData.
@@ -91,13 +65,6 @@ public:
   int getMeshID() const;
 
   /**
-   * @brief Informs the user whether this DataContext has a _mappingContext.
-   *
-   * @return True, if this DataContext is associated with a mapping. False, if not.
-   */
-  bool hasMapping() const;
-
-  /**
    * @brief Check whether mapping has to be performed.
    *
    * Checks whether a mapping exists for this context and the timing configuration.
@@ -110,27 +77,6 @@ public:
    * @brief Perform mapping using mapping context of this data context and from and to data
    */
   void mapData();
-
-  /**
-   * @brief Get the _mappingContext associated with this DataContext.
-   *
-   * @return const MappingContext The _mappingContext of this DataContext.
-   */
-  const MappingContext mappingContext() const;
-
-  /**
-   * @brief Informs the user whether this DataContext has a read mapping.
-   *
-   * @return True, if DataContext has a read mapping.
-   */
-  bool hasReadMapping() const;
-
-  /**
-   * @brief Informs the user whether this DataContext has a write mapping.
-   *
-   * @return True, if DataContext has a write mapping.
-   */
-  bool hasWriteMapping() const;
 
   /**
    * @brief Links a MappingContext and the MeshContext required by the mapping to this DataContext.
@@ -172,11 +118,70 @@ protected:
    */
   void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 
+  /**
+   * @brief Informs the user whether this DataContext has a read mapping.
+   *
+   * @return True, if DataContext has a read mapping.
+   */
+  bool hasReadMapping() const;
+
+  /**
+   * @brief Informs the user whether this DataContext has a write mapping.
+   *
+   * @return True, if DataContext has a write mapping.
+   */
+  bool hasWriteMapping() const;
+
 private:
   /// Mesh associated with _providedData.
   mesh::PtrMesh _mesh;
 
   static logging::Logger _log;
+
+  /**
+   * @brief Get the ID of _providedData.
+   *
+   * @return int ID of _providedData.
+   */
+  int getProvidedDataID() const;
+
+  /**
+   * @brief Get the ID of _fromData. Used for performing the mapping outside of this class.
+   *
+   * @return int ID of _fromData.
+   */
+  int getFromDataID() const;
+
+  /**
+   * @brief Get the ID of _toData. Used for performing the mapping outside of this class.
+   *
+   * @return int ID of _toData.
+   */
+  int getToDataID() const;
+
+  /**
+   * @brief Purpose unclear. See also https://github.com/precice/precice/issues/1156.
+   */
+  void resetProvidedData();
+
+  /**
+   * @brief Resets _toData to zero. Used before mapping is performed.
+   */
+  void resetToData();
+
+  /**
+   * @brief Get the _mappingContext associated with this DataContext.
+   *
+   * @return const MappingContext The _mappingContext of this DataContext.
+   */
+  const MappingContext mappingContext() const;
+
+  /**
+   * @brief Informs the user whether this DataContext has a _mappingContext.
+   *
+   * @return True, if this DataContext is associated with a mapping. False, if not.
+   */
+  bool hasMapping() const;
 };
 
 } // namespace impl

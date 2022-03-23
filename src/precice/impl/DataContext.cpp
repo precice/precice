@@ -40,6 +40,15 @@ int DataContext::getFromDataID() const
   return _fromData->getID();
 }
 
+void DataContext::resetData()
+{
+  resetProvidedData();
+  if (hasMapping()) {
+    PRECICE_ASSERT(hasWriteMapping());
+    resetToData();
+  }
+}
+
 void DataContext::resetProvidedData()
 {
   PRECICE_TRACE();
