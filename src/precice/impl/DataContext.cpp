@@ -117,6 +117,14 @@ bool DataContext::isMappingRequired()
   return true;
 }
 
+void DataContext::mapData()
+{
+  int fromDataID = getFromDataID();
+  int toDataID   = getToDataID();
+  resetToData();
+  mappingContext().mapping->map(fromDataID, toDataID);
+}
+
 bool DataContext::hasReadMapping() const
 {
   return _toData == _providedData;

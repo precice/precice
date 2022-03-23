@@ -107,6 +107,11 @@ public:
   bool isMappingRequired();
 
   /**
+   * @brief Perform mapping using mapping context of this data context and from and to data
+   */
+  void mapData();
+
+  /**
    * @brief Get the _mappingContext associated with this DataContext.
    *
    * @return const MappingContext The _mappingContext of this DataContext.
