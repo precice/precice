@@ -680,22 +680,13 @@ private:
   void computePartitions();
 
   /// Helper for mapWrittenData and mapReadData
-  void mapData(DataContext &context, const std::string &mappingType);
+  void mapData(DataContext &context);
 
   /// Helper for mapWrittenData and mapReadData
   void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
-
-  /**
-   * @brief Check whether mapping has to be performed. 
-   * 
-   * Checks whether a mapping exists for this context and the timing configuration.
-   * 
-   * @return True, if a mapping has to be performed.
-   */
-  bool isMappingRequired(DataContext &context);
 
   /// Computes, performs, and resets all suitable write mappings.
   void mapWrittenData();

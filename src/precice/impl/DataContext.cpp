@@ -90,18 +90,21 @@ bool DataContext::hasMapping() const
 
 bool DataContext::isMappingRequired()
 {
-  // check whether mapping exists
+  using namespace mapping;
   if (not hasMapping()) {
     return false;
   }
-  // if mapping exists, check whether it has already been performed
-  if (mappingContext().hasMappedData) {
+
+  auto timing    = mappingContext().timing;
+  bool hasMapped = mappingContext().hasMappedData;
+  bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
+  mapNow |= timing == MappingConfiguration::INITIAL;
+
+  if ((not mapNow) || hasMapped) {
     return false;
   }
-  // finally, check whether timing asks to map now
-  bool mapOnAdvance = (mappingContext().timing == mapping::MappingConfiguration::ON_ADVANCE);
-  bool mapInitial   = (mappingContext().timing == mapping::MappingConfiguration::INITIAL);
-  return (mapOnAdvance || mapInitial);
+
+  return true;
 }
 
 bool DataContext::hasReadMapping() const
@@ -116,6 +119,7 @@ bool DataContext::hasWriteMapping() const
 
 const MappingContext DataContext::mappingContext() const
 {
+  PRECICE_ASSERT(hasMapping());
   return _mappingContext;
 }
 
