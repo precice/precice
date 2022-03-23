@@ -20,12 +20,6 @@ mesh::PtrData DataContext::providedData()
   return _providedData;
 }
 
-mesh::PtrData DataContext::toData()
-{
-  PRECICE_ASSERT(_toData);
-  return _toData;
-}
-
 std::string DataContext::getDataName() const
 {
   PRECICE_ASSERT(_providedData);
