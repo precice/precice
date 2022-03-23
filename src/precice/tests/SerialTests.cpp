@@ -445,49 +445,6 @@ BOOST_AUTO_TEST_CASE(testStationaryMappingWithSolverMesh3D)
 
 
 
-/**
- * @brief Test to reproduce the problem of issue 383, https://github.com/precice/precice/issues/383
- *
- */
-BOOST_AUTO_TEST_CASE(PreconditionerBug)
-{
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-
-  using Eigen::Vector2d;
-  using namespace precice::constants;
-
-  const std::string configFile = _pathToTests + "preconditioner-bug.xml";
-
-  std::string meshName = context.isNamed("SolverOne") ? "MeshOne" : "MeshTwo";
-
-  SolverInterface cplInterface(context.name, configFile, 0, 1);
-  const int       meshID = cplInterface.getMeshID(meshName);
-
-  Vector2d vertex{0.0, 0.0};
-
-  VertexID vertexID = cplInterface.setMeshVertex(meshID, vertex.data());
-
-  cplInterface.initialize();
-  int numberOfAdvanceCalls = 0;
-
-  while (cplInterface.isCouplingOngoing()) {
-    if (cplInterface.isActionRequired(actionWriteIterationCheckpoint()))
-      cplInterface.markActionFulfilled(actionWriteIterationCheckpoint());
-    if (cplInterface.isActionRequired(actionReadIterationCheckpoint()))
-      cplInterface.markActionFulfilled(actionReadIterationCheckpoint());
-
-    if (context.isNamed("SolverTwo")) {
-      DataID dataID = cplInterface.getDataID("DataOne", meshID);
-      // to get convergence in first timestep (everything 0), but not in second timestep
-      Vector2d value{0.0, 2.0 + numberOfAdvanceCalls * numberOfAdvanceCalls};
-      cplInterface.writeVectorData(dataID, vertexID, value.data());
-    }
-    cplInterface.advance(1.0);
-    ++numberOfAdvanceCalls;
-  }
-  cplInterface.finalize();
-}
-
 void testSummationAction(const std::string &configFile, TestContext const &context)
 {
   using Eigen::Vector3d;
