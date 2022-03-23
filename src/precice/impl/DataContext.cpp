@@ -88,13 +88,6 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
-
-bool SolverInterfaceImpl::isMappingRequired(DataContext &context)
-{
-
-}
-
-
 bool DataContext::isMappingRequired()
 {
   // check whether mapping exists
