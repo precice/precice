@@ -89,6 +89,8 @@ target_sources(testprecice
     tests/serial/multi-coupling/MultiCouplingThreeSolvers3.cpp
     tests/serial/multi-coupling/helpers.cpp
     tests/serial/multi-coupling/helpers.hpp
+    tests/serial/multiple-mappings/MultipleFromMappings.cpp
+    tests/serial/multiple-mappings/MultipleToMappings.cpp
     tests/serial/three-solvers/ThreeSolversExplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversExplicitImplicit.cpp
     tests/serial/three-solvers/ThreeSolversImplicitExplicit.cpp
