@@ -88,6 +88,29 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
+
+bool SolverInterfaceImpl::isMappingRequired(DataContext &context)
+{
+
+}
+
+
+bool DataContext::isMappingRequired()
+{
+  // check whether mapping exists
+  if (not hasMapping()) {
+    return false;
+  }
+  // if mapping exists, check whether it has already been performed
+  if (mappingContext().hasMappedData) {
+    return false;
+  }
+  // finally, check whether timing asks to map now
+  bool mapOnAdvance = (mappingContext().timing == mapping::MappingConfiguration::ON_ADVANCE);
+  bool mapInitial   = (mappingContext().timing == mapping::MappingConfiguration::INITIAL);
+  return (mapOnAdvance || mapInitial);
+}
+
 bool DataContext::hasReadMapping() const
 {
   return _toData == _providedData;

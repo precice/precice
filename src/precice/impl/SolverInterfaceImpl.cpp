@@ -1715,28 +1715,12 @@ void SolverInterfaceImpl::clearMappings(utils::ptr_vector<MappingContext> contex
   }
 }
 
-bool SolverInterfaceImpl::isMappingRequired(DataContext &context)
-{
-  // check whether mapping exists
-  if (not context.hasMapping()) {
-    return false;
-  }
-  // if mapping exists, check whether it has already been performed
-  if (context.mappingContext().hasMappedData) {
-    return false;
-  }
-  // finally, check whether timing asks to map now
-  bool mapOnAdvance = (context.mappingContext().timing == mapping::MappingConfiguration::ON_ADVANCE);
-  bool mapInitial   = (context.mappingContext().timing == mapping::MappingConfiguration::INITIAL);
-  return (mapOnAdvance || mapInitial);
-}
-
 void SolverInterfaceImpl::mapWrittenData()
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
-    if (isMappingRequired(context)) {
+    if (context.isMappingRequired()) {
       mapData(context, "write");
     }
   }
@@ -1749,7 +1733,7 @@ void SolverInterfaceImpl::mapReadData()
   PRECICE_ASSERT(_hasInitializedReadWaveforms);
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
-    if (isMappingRequired(context)) {
+    if (context.isMappingRequired()) {
       mapData(context, "read");
     }
     context.storeDataInWaveformFirstSample();
