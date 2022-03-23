@@ -1007,6 +1007,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
       if (context.getMeshID() != fromMeshID) {
         continue;
       }
+      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       mapData(context, "write");
     }
     mappingContext.hasMappedData = true;
@@ -1037,6 +1038,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       if (context.getMeshID() != toMeshID) {
         continue;
       }
+      PRECICE_ASSERT(mappingContext.mapping == context.mappingContext().mapping);
       mapData(context, "read");
     }
     mappingContext.hasMappedData = true;
