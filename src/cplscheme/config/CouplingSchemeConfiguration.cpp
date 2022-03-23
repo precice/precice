@@ -303,8 +303,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
       if (_experimental) {
-        int allowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
-        checkWaveformOrderReadData(allowedOrder);
+        int maxAllowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
+        checkWaveformOrderReadData(maxAllowedOrder);
       }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
@@ -317,8 +317,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       _config = Config();
     } else if (_config.type == VALUE_PARALLEL_EXPLICIT) {
       if (_experimental) {
-        int allowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
-        checkWaveformOrderReadData(allowedOrder);
+        int maxAllowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
+        checkWaveformOrderReadData(maxAllowedOrder);
       }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createParallelExplicitCouplingScheme(accessor);
@@ -331,8 +331,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       _config = Config();
     } else if (_config.type == VALUE_SERIAL_IMPLICIT) {
       if (_experimental) {
-        int allowedOrder = 0; // serial implicit coupling does not allow waveform iteration yet (see https://github.com/precice/precice/issues/1174#issuecomment-1042823430)
-        checkWaveformOrderReadData(allowedOrder);
+        int maxAllowedOrder = 0; // serial implicit coupling does not allow waveform iteration yet (see https://github.com/precice/precice/issues/1174#issuecomment-1042823430)
+        checkWaveformOrderReadData(maxAllowedOrder);
       }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialImplicitCouplingScheme(accessor);
@@ -353,8 +353,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
       if (_experimental) {
-        int allowedOrder = 0; // multi coupling scheme does not allow waveform iteration
-        checkWaveformOrderReadData(allowedOrder);
+        int maxAllowedOrder = 0; // multi coupling scheme does not allow waveform iteration
+        checkWaveformOrderReadData(maxAllowedOrder);
       }
       PRECICE_CHECK(_config.setController,
                     "One controller per MultiCoupling needs to be defined. "
@@ -1048,16 +1048,16 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
 }
 
 void CouplingSchemeConfiguration::checkWaveformOrderReadData(
-    int allowedOrder) const
+    int maxAllowedOrder) const
 {
   for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
     for (auto &dataContext : participant->readDataContexts()) {
       int usedOrder = dataContext.getInterpolationOrder();
       PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
-      if (usedOrder > allowedOrder) {
+      if (usedOrder > maxAllowedOrder) {
         PRECICE_ERROR(
             "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
-            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, allowedOrder);
+            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
       }
     }
   }

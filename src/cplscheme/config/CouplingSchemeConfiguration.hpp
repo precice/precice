@@ -271,7 +271,7 @@ private:
       DataID dataID) const;
 
   void checkWaveformOrderReadData(
-      int allowedOrder) const;
+      int maxAllowedOrder) const;
 
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;
