@@ -224,10 +224,7 @@ void M2N::send(
       _masterCom->send(ack, 0);
     }
 
-    if (withGradient)
-      Event e("m2n.sendGradientData", precice::syncMode);
-    else
-      Event e("m2n.sendData", precice::syncMode);
+    Event e = withGradient ? Event("m2n.sendGradientData", precice::syncMode) : Event("m2n.sendData", precice::syncMode);
 
     _distComs[meshID]->send(itemsToSend, valueDimension);
   } else {
@@ -302,10 +299,7 @@ void M2N::receive(precice::span<double> itemsToReceive,
       }
     }
 
-    if (withGradient)
-      Event e("m2n.receiveGradientData", precice::syncMode);
-    else
-      Event e("m2n.receiveData", precice::syncMode);
+    Event e = withGradient ? Event("m2n.receiveGradientData", precice::syncMode) : Event("m2n.receiveData", precice::syncMode);
 
     _distComs[meshID]->receive(itemsToReceive, valueDimension);
   } else {
