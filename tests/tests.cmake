@@ -59,6 +59,11 @@ target_sources(testprecice
     tests/serial/access-received-mesh/Implicit.cpp
     tests/serial/action-timings/ActionTimingsExplicit.cpp
     tests/serial/action-timings/ActionTimingsImplicit.cpp
+    tests/serial/convergence-measures/helpers.cpp
+    tests/serial/convergence-measures/helpers.hpp
+    tests/serial/convergence-measures/testConvergenceMeasures1.cpp
+    tests/serial/convergence-measures/testConvergenceMeasures2.cpp
+    tests/serial/convergence-measures/testConvergenceMeasures3.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
     tests/serial/explicit/TestExplicitMPISingle.cpp
     tests/serial/explicit/TestExplicitSockets.cpp
