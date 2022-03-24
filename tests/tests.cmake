@@ -121,6 +121,9 @@ target_sources(testprecice
     tests/serial/time/explicit/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/watch-integral/WatchIntegralScaleAndNoScale.cpp
+    tests/serial/watch-integral/helpers.cpp
+    tests/serial/watch-integral/helpers.hpp
     tests/serial/whitebox/TestConfigurationComsol.cpp
     tests/serial/whitebox/TestConfigurationPeano.cpp
     tests/serial/whitebox/TestExplicitWithDataScaling.cpp
