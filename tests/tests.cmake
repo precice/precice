@@ -78,6 +78,10 @@ target_sources(testprecice
     tests/serial/mapping-nearest-projection/MappingNearestProjectionImplicitEdges.cpp
     tests/serial/mapping-nearest-projection/helpers.cpp
     tests/serial/mapping-nearest-projection/helpers.hpp
+    tests/serial/mapping-scaled-consistent/helpers.cpp
+    tests/serial/mapping-scaled-consistent/helpers.hpp
+    tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnA.cpp
+    tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnB.cpp
     tests/serial/mesh-requirements/NearestNeighborA.cpp
     tests/serial/mesh-requirements/NearestNeighborB.cpp
     tests/serial/mesh-requirements/NearestProjection2DA.cpp
