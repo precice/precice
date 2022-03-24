@@ -41,35 +41,63 @@ Eigen::Vector2d calcBarycentricCoordsForEdge(
   return barycentricCoords;
 }
 
+static double crossProduct2D(const Eigen::Vector2d &u, const Eigen::Vector2d &v)
+{
+  return u(0) * v(1) - u(1) * v(0);
+}
+
 Eigen::Vector3d calcBarycentricCoordsForTriangle(
     const Eigen::VectorXd &a,
     const Eigen::VectorXd &b,
     const Eigen::VectorXd &c,
     const Eigen::VectorXd &u)
 {
+  using Eigen::Vector2d;
   using Eigen::Vector3d;
 
   const int dimensions = a.size();
-  PRECICE_ASSERT(dimensions == 3, dimensions);
   PRECICE_ASSERT(dimensions == b.size(), "A and B need to have the same dimensions.", dimensions, b.size());
   PRECICE_ASSERT(dimensions == c.size(), "A and C need to have the same dimensions.", dimensions, c.size());
   PRECICE_ASSERT(dimensions == u.size(), "A and the point need to have the same dimensions.", dimensions, u.size());
 
-  Vector3d ab, ac, au, n, barycentricCoords;
+  Vector3d barycentricCoords;
   double   scaleFactor;
 
   // constant per triangle
-  ab          = b - a;
-  ac          = c - a;
-  n           = ab.cross(ac);
-  scaleFactor = 1.0 / n.dot(n);
+  if (dimensions == 3) {
+    Vector3d ab, ac, au, n;
 
-  // varying per point
-  au = u - a;
+    ab         = b - a;
+    ac         = c - a;
+    n          = ab.cross(ac);
+    auto nDotN = n.dot(n);
+    PRECICE_ASSERT(nDotN != 0, "It seems a degenerate triangle was sent.");
+    scaleFactor = 1.0 / nDotN;
 
-  barycentricCoords(2) = n.dot(ab.cross(au)) * scaleFactor;
-  barycentricCoords(1) = n.dot(au.cross(ac)) * scaleFactor;
-  barycentricCoords(0) = 1 - barycentricCoords(1) - barycentricCoords(2);
+    // varying per point
+    au = u - a;
+
+    barycentricCoords(2) = n.dot(ab.cross(au)) * scaleFactor;
+    barycentricCoords(1) = n.dot(au.cross(ac)) * scaleFactor;
+    barycentricCoords(0) = 1 - barycentricCoords(1) - barycentricCoords(2);
+
+  } else {
+    // Dimension == 2 => No cross product
+    Vector2d ab, ac, ub, uc, ua;
+    ab = b - a;
+    ac = c - a;
+    ub = b - u;
+    uc = c - u;
+    ua = a - u;
+
+    auto twiceArea = crossProduct2D(ab, ac);
+    PRECICE_ASSERT(twiceArea != 0, "It seems a degenerate triangle was sent.");
+    scaleFactor = 1.0 / twiceArea;
+
+    barycentricCoords(0) = crossProduct2D(ub, uc) * scaleFactor;
+    barycentricCoords(1) = crossProduct2D(uc, ua) * scaleFactor;
+    barycentricCoords(2) = 1 - barycentricCoords(0) - barycentricCoords(1);
+  }
 
   return barycentricCoords;
 }
