@@ -49,6 +49,7 @@ target_sources(testprecice
     tests/serial/AitkenAcceleration.cpp
     tests/serial/PreconditionerBug.cpp
     tests/serial/SendMeshToMultipleParticipants.cpp
+    tests/serial/SummationActionTwoSources.cpp
     tests/serial/TestBug.cpp
     tests/serial/TestExplicitWithDataMultipleReadWrite.cpp
     tests/serial/TestExplicitWithSolverGeometry.cpp
