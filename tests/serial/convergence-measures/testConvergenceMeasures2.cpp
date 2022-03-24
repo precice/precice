@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(ConvergenceMeasures)
 BOOST_AUTO_TEST_CASE(testConvergenceMeasures2)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  std::vector<int>  expectedIterations = {3, 3};
+  std::vector<int> expectedIterations = {3, 3};
   testConvergenceMeasures(context.config(), context, expectedIterations);
 }
 

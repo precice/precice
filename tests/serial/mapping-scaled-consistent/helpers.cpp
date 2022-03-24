@@ -3,9 +3,9 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
+#include "math.h"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.cpp"
-#include "math.h"
 
 void testQuadMappingScaledConsistent(const std::string configFile, const TestContext &context)
 {

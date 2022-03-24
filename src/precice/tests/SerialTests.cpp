@@ -277,10 +277,6 @@ BOOST_AUTO_TEST_CASE(testExplicitWithBlockDataExchange)
 }
 #endif
 
-
-
-
-
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 #endif // PRECICE_NO_MPI
