@@ -83,6 +83,12 @@ target_sources(testprecice
     tests/serial/mapping-nearest-projection/MappingNearestProjectionImplicitEdges.cpp
     tests/serial/mapping-nearest-projection/helpers.cpp
     tests/serial/mapping-nearest-projection/helpers.hpp
+    tests/serial/mapping-nearest-projection/testQuadMappingDiagonalNearestProjectionExplicitEdgesTallKite.cpp
+    tests/serial/mapping-nearest-projection/testQuadMappingDiagonalNearestProjectionExplicitEdgesWideKite.cpp
+    tests/serial/mapping-nearest-projection/testQuadMappingDiagonalNearestProjectionImplicitEdgesTallKite.cpp
+    tests/serial/mapping-nearest-projection/testQuadMappingDiagonalNearestProjectionImplicitEdgesWideKite.cpp
+    tests/serial/mapping-nearest-projection/testQuadMappingNearestProjectionExplicitEdges.cpp
+    tests/serial/mapping-nearest-projection/testQuadMappingNearestProjectionImplicitEdges.cpp
     tests/serial/mapping-scaled-consistent/helpers.cpp
     tests/serial/mapping-scaled-consistent/helpers.hpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnA.cpp
