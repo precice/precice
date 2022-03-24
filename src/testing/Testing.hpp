@@ -38,7 +38,8 @@ using precice::testing::operator""_dataID;
   if (context.invalid) {                              \
     return;                                           \
   }                                                   \
-  BOOST_TEST_MESSAGE(context.describe());
+  BOOST_TEST_MESSAGE(context.describe());             \
+  boost::unit_test::framework::add_context(BOOST_TEST_LAZY_MSG(context.describe()), true);
 
 /// Boost.Test decorator that unconditionally deletes the test.
 class Deleted : public bt::decorator::base {
