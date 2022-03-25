@@ -152,7 +152,7 @@ void testDistributed(const TestContext &    context,
   BOOST_TEST(outData->values().size() == index * valueDimension);
 }
 
-/// Test with a homogenous distribution of mesh amoung ranks
+/// Test with a homogeneous distribution of mesh among ranks
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
                    {-1, 2, {2, 1}, {6}},
                    {-1, 3, {3, 0}, {7}},
                    {-1, 3, {3, 1}, {8}}},
-                  {// The outMesh is local, distributed amoung all ranks
+                  {// The outMesh is local, distributed among all ranks
                    {0, -1, {0, 0}, {0}},
                    {0, -1, {0, 1}, {0}},
                    {1, -1, {1, 0}, {0}},
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
                    {-1, 2, {2, 1}, {6, 9}},
                    {-1, 3, {3, 0}, {7, 10}},
                    {-1, 3, {3, 1}, {8, 11}}},
-                  {// The outMesh is local, distributed amoung all ranks
+                  {// The outMesh is local, distributed among all ranks
                    {0, -1, {0, 0}, {0, 0}},
                    {0, -1, {0, 1}, {0, 0}},
                    {1, -1, {1, 0}, {0, 0}},
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
                    {3, {8, 11}}});
 }
 
-/// Using a more heterogenous distributon of vertices and owner
+/// Using a more heterogeneous distributon of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                    {3, {8}}});
 }
 
-/// Test with a very heterogenous distributed and non-continues ownership
+/// Test with a very heterogeneous distributed and non-continuous ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
                   globalIndexOffsets.at(context.rank));
 }
 
-/// Test with a very heterogenous distributed and non-continues ownership
+/// Test with a very heterogeneous distributed and non-continuous ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                   globalIndexOffsets.at(context.rank));
 }
 
-/// Test with a homogenous distribution of mesh amoung ranks
+/// Test with a homogeneous distribution of mesh among ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
@@ -617,7 +617,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
                   context.rank * 2);
 }
 
-/// Test with a homogenous distribution of mesh amoung ranks
+/// Test with a homogeneous distribution of mesh among ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
@@ -680,7 +680,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                   context.rank * 2);
 }
 
-/// Using a more heterogenous distribution of vertices and owner
+/// Using a more heterogeneous distribution of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())

@@ -58,7 +58,7 @@ public:
    * @brief Sets input and output meshes carrying data to be mapped.
    *
    * @param[in] input Mesh with known data values to be mapped.
-   * @param[in] output Mesh with unknwon data values to be computed from input.
+   * @param[in] output Mesh with unknown data values to be computed from input.
    */
   void setMeshes(
       const mesh::PtrMesh &input,
@@ -140,7 +140,7 @@ protected:
   int getDimensions() const;
 
 private:
-  /// Determines wether mapping is consistent or conservative.
+  /// Determines whether mapping is consistent or conservative.
   Constraint _constraint;
 
   /// Requirement on input mesh.

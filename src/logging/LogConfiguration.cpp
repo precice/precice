@@ -77,7 +77,7 @@ public:
 /**
  * Rationale: The original text_ostream_backend from boost suffered from the great amount of code that lies
  * between the printing of the message and the endline. This leads to high probability that a process switch 
- * occures and the message is severed from the endline.
+ * occurs and the message is severed from the endline.
  */
 class StreamBackend : public boost::log::sinks::text_ostream_backend {
 private:

@@ -1737,7 +1737,7 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 
 void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
 {
-  // Apply some final ping-pong to synch solver that run e.g. with a uni-directional coupling only
+  // Apply some final ping-pong to sync solver that run e.g. with a uni-directional coupling only
   // afterwards close connections
   PRECICE_INFO("Synchronize participants and close {}communication channels",
                (close == CloseChannels::Distributed ? "distributed " : ""));

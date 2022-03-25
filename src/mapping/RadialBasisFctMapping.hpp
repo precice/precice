@@ -445,7 +445,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
       p   = _qr.solve(in);
       out = _matrixA * p;
 
-      // Copy mapped data to ouptut data values
+      // Copy mapped data to output data values
       for (int i = 0; i < out.size(); i++) {
         outputValues[i * valueDim + dim] = out[i];
       }
