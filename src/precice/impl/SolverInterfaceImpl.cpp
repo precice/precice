@@ -1585,6 +1585,7 @@ void SolverInterfaceImpl::mapWrittenData()
     if (context.isMappingRequired()) {
       PRECICE_DEBUG("Map write data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
+      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
     }
   }
   clearMappings(_accessor->writeMappingContexts());
@@ -1598,6 +1599,7 @@ void SolverInterfaceImpl::mapReadData()
     if (context.isMappingRequired()) {
       PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
+      PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData()->values())); // @todo might be better to move this debug message into Mapping::map and remove getter DataContext::toData()
     }
   }
   clearMappings(_accessor->readMappingContexts());
