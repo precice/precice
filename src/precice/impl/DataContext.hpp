@@ -32,13 +32,6 @@ public:
   mesh::PtrData providedData();
 
   /**
-   * @brief Get _toData member.
-   *
-   * @return mesh::PtrData _toData.
-   */
-  mesh::PtrData toData();
-
-  /**
    * @brief Get the Name of _providedData.
    *
    * @return std::string Name of _providedData.

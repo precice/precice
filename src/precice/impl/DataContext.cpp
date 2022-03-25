@@ -1,5 +1,6 @@
 #include "precice/impl/DataContext.hpp"
 #include <memory>
+#include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
 namespace impl {
@@ -18,12 +19,6 @@ mesh::PtrData DataContext::providedData()
 {
   PRECICE_ASSERT(_providedData);
   return _providedData;
-}
-
-mesh::PtrData DataContext::toData()
-{
-  PRECICE_ASSERT(_toData);
-  return _toData;
 }
 
 std::string DataContext::getDataName() const
@@ -122,6 +117,7 @@ void DataContext::mapData()
   int toDataID   = getToDataID();
   _toData->toZero();
   _mappingContext.mapping->map(fromDataID, toDataID);
+  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, _toData->values()));
 }
 
 bool DataContext::hasReadMapping() const
