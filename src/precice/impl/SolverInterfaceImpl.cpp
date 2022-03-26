@@ -984,68 +984,6 @@ void SolverInterfaceImpl::setMeshQuadWithEdges(
   }
 }
 
-void SolverInterfaceImpl::mapWriteDataFrom(
-    int fromMeshID)
-{
-  PRECICE_TRACE(fromMeshID);
-  PRECICE_VALIDATE_MESH_ID(fromMeshID);
-  impl::MeshContext &context = _accessor->usedMeshContext(fromMeshID);
-
-  PRECICE_CHECK(not context.fromMappingContexts.empty(),
-                "You attempt to \"mapWriteDataFrom\" mesh {}, but there is no mapping from this mesh configured. Maybe you don't want to call this function at all or you forgot to configure the mapping.",
-                context.mesh->getName());
-
-  double time = _couplingScheme->getTime();
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
-
-  for (impl::MappingContext &mappingContext : context.fromMappingContexts) {
-    if (not mappingContext.mapping->hasComputedMapping()) {
-      PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
-      mappingContext.mapping->computeMapping();
-    }
-    for (auto &context : _accessor->writeDataContexts()) {
-      if (context.getMeshID() != fromMeshID) {
-        continue;
-      }
-      PRECICE_DEBUG("Map write data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
-      context.mapData();
-    }
-    mappingContext.hasMappedData = true;
-  }
-  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0.0, 0.0, 0.0);
-}
-
-void SolverInterfaceImpl::mapReadDataTo(
-    int toMeshID)
-{
-  PRECICE_TRACE(toMeshID);
-  PRECICE_VALIDATE_MESH_ID(toMeshID);
-  impl::MeshContext &context = _accessor->usedMeshContext(toMeshID);
-
-  PRECICE_CHECK(not context.toMappingContexts.empty(),
-                "You attempt to \"mapReadDataTo\" mesh {}, but there is no mapping to this mesh configured. Maybe you don't want to call this function at all or you forgot to configure the mapping.",
-                context.mesh->getName());
-
-  double time = _couplingScheme->getTime();
-  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
-
-  for (impl::MappingContext &mappingContext : context.toMappingContexts) {
-    if (not mappingContext.mapping->hasComputedMapping()) {
-      PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
-      mappingContext.mapping->computeMapping();
-    }
-    for (auto &context : _accessor->readDataContexts()) {
-      if (context.getMeshID() != toMeshID) {
-        continue;
-      }
-      PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
-      context.mapData();
-    }
-    mappingContext.hasMappedData = true;
-  }
-  performDataActions({action::Action::READ_MAPPING_POST}, time, 0.0, 0.0, 0.0);
-}
-
 void SolverInterfaceImpl::writeBlockVectorData(
     int           dataID,
     int           size,
