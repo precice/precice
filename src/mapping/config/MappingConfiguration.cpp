@@ -82,12 +82,10 @@ MappingConfiguration::MappingConfiguration(
   {
     XMLTag tag(*this, VALUE_RBF_GAUSSIAN, occ, TAG);
     tag.setDocumentation("Local radial-basis-function mapping based on the Gaussian RBF using a cut-off threshold.");
-    tag.addAttribute(makeXMLAttribute<double>(ATTR_SHAPE_PARAM, 0.)
+    tag.addAttribute(makeXMLAttribute<double>(ATTR_SHAPE_PARAM, std::numeric_limits<double>::quiet_NaN())
                          .setDocumentation("Specific shape parameter for RBF basis function."));
-    tag.addAttribute(makeXMLAttribute(ATTR_SUPPORT_RADIUS, 0.)
+    tag.addAttribute(makeXMLAttribute(ATTR_SUPPORT_RADIUS, std::numeric_limits<double>::quiet_NaN())
                          .setDocumentation("Support radius of each RBF basis function (global choice)."));
-    tag.addAttribute(makeXMLAttribute<bool>(ATTR_USE_SHAPE_PARA, true)
-                         .setDocumentation("Select between the shape-parameter and the support-radius in order to determine the local cut-off of the Gaussian RBF."));
     tags.push_back(tag);
   }
   {
@@ -165,16 +163,15 @@ void MappingConfiguration::xmlTagCallback(
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getNamespace() == TAG) {
-    std::string   dir                       = tag.getStringAttributeValue(ATTR_DIRECTION);
-    std::string   fromMesh                  = tag.getStringAttributeValue(ATTR_FROM);
-    std::string   toMesh                    = tag.getStringAttributeValue(ATTR_TO);
-    std::string   type                      = tag.getName();
-    std::string   constraint                = tag.getStringAttributeValue(ATTR_CONSTRAINT);
-    Timing        timing                    = getTiming(tag.getStringAttributeValue(ATTR_TIMING));
-    double        shapeParameter            = 0.0;
-    double        supportRadius             = 0.0;
-    bool          gaussianUseShapeParameter = true;
-    double        solverRtol                = 1e-9;
+    std::string   dir            = tag.getStringAttributeValue(ATTR_DIRECTION);
+    std::string   fromMesh       = tag.getStringAttributeValue(ATTR_FROM);
+    std::string   toMesh         = tag.getStringAttributeValue(ATTR_TO);
+    std::string   type           = tag.getName();
+    std::string   constraint     = tag.getStringAttributeValue(ATTR_CONSTRAINT);
+    Timing        timing         = getTiming(tag.getStringAttributeValue(ATTR_TIMING));
+    double        shapeParameter = 0.0;
+    double        supportRadius  = 0.0;
+    double        solverRtol     = 1e-9;
     bool          xDead = false, yDead = false, zDead = false;
     bool          useLU         = false;
     Polynomial    polynomial    = Polynomial::ON;
@@ -185,9 +182,6 @@ void MappingConfiguration::xmlTagCallback(
     }
     if (tag.hasAttribute(ATTR_SUPPORT_RADIUS)) {
       supportRadius = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS);
-    }
-    if (tag.hasAttribute(ATTR_USE_SHAPE_PARA)) {
-      gaussianUseShapeParameter = tag.getBooleanAttributeValue(ATTR_USE_SHAPE_PARA);
     }
     if (tag.hasAttribute(ATTR_SOLVER_RTOL)) {
       solverRtol = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL);
@@ -230,7 +224,7 @@ void MappingConfiguration::xmlTagCallback(
     ConfiguredMapping configuredMapping = createMapping(context,
                                                         dir, type, constraint,
                                                         fromMesh, toMesh, timing,
-                                                        shapeParameter, supportRadius, gaussianUseShapeParameter, solverRtol,
+                                                        shapeParameter, supportRadius, solverRtol,
                                                         xDead, yDead, zDead,
                                                         useLU,
                                                         polynomial, preallocation);
@@ -259,7 +253,6 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     Timing                           timing,
     double                           shapeParameter,
     double                           supportRadius,
-    bool                             gaussianUseShapeParameter,
     double                           solverRtol,
     bool                             xDead,
     bool                             yDead,
@@ -323,15 +316,18 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   bool    usePETSc        = false;
   RBFType rbfType         = RBFType::EIGEN;
 
+  RBFParameter param;
   // Check valid combinations for the Gaussian RBF input
   if (type == VALUE_RBF_GAUSSIAN) {
-    const bool exactlyOneSet = (supportRadius == 0 && shapeParameter != 0) ||
-                               (supportRadius != 0 && shapeParameter == 0);
-    const bool setShape  = gaussianUseShapeParameter && shapeParameter != 0;
-    const bool setRadius = !gaussianUseShapeParameter && supportRadius != 0;
-    PRECICE_CHECK(exactlyOneSet && (setShape || setRadius), "The specified parameters for the Gaussian RBF are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\" and enable your choice using \"use-shape-parameter=true\" in order to apply the shape-parameter or \"use-shape-parameter=false\" in order to apply the support radius.");
+    const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
+                               (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
+    PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
+    if (std::isfinite(shapeParameter)) {
+      _rbfParameter.type = RBFParameter::Type::ShapeParameter;
+    } else {
+      _rbfParameter.type = RBFParameter::Type::SupportRadius;
+    }
   }
-
 #ifndef PRECICE_NO_PETSC
   // for petsc initialization
   int   argc = 1;
@@ -366,7 +362,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), xDead, yDead, zDead));
     } else if (type == VALUE_RBF_GAUSSIAN) {
-      if (!gaussianUseShapeParameter) {
+      if (_rbfParameter.type == RBFParameter::Type::SupportRadius) {
         // Compute shape parameter from the support radius
         shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
       }
@@ -411,7 +407,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
           new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
                                                       xDead, yDead, zDead, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_GAUSSIAN) {
-      if (!gaussianUseShapeParameter) {
+      if (_rbfParameter.type == RBFParameter::Type::SupportRadius) {
         // Compute shape parameter from the support radius
         shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
       }

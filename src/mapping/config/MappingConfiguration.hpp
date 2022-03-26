@@ -66,6 +66,16 @@ public:
     bool isRBF;
   };
 
+  struct RBFParameter {
+
+    enum struct Type {
+      ShapeParameter,
+      SupportRadius
+    };
+
+    Type type{};
+  };
+
   MappingConfiguration(
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
@@ -109,7 +119,6 @@ private:
   const std::string ATTR_CONSTRAINT     = "constraint";
   const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
-  const std::string ATTR_USE_SHAPE_PARA = "use-shape-parameter";
   const std::string ATTR_SOLVER_RTOL    = "solver-rtol";
   const std::string ATTR_X_DEAD         = "x-dead";
   const std::string ATTR_Y_DEAD         = "y-dead";
@@ -141,6 +150,8 @@ private:
 
   std::vector<ConfiguredMapping> _mappings;
 
+  mutable RBFParameter _rbfParameter;
+
   ConfiguredMapping createMapping(
       const xml::ConfigurationContext &context,
       const std::string &              direction,
@@ -151,7 +162,6 @@ private:
       Timing                           timing,
       double                           shapeParameter,
       double                           supportRadius,
-      bool                             gaussianUseShapeParameter,
       double                           solverRtol,
       bool                             xDead,
       bool                             yDead,
