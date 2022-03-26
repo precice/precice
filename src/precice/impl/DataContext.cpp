@@ -98,10 +98,10 @@ bool DataContext::isMappingRequired()
     return false;
   }
 
-  auto timing    = _mappingContext.timing;
+  auto       timing    = _mappingContext.timing;
   const bool hasMapped = _mappingContext.hasMappedData;
-  const bool mapNow    = (timing == MappingConfiguration::ON_ADVANCE) |= 
-                         (timing == MappingConfiguration::INITIAL);
+  const bool mapNow    = (timing == MappingConfiguration::ON_ADVANCE) |=
+      (timing == MappingConfiguration::INITIAL);
 
   if ((not mapNow) || hasMapped) {
     return false;
