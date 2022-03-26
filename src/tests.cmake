@@ -39,8 +39,8 @@ target_sources(testprecice
     src/m2n/tests/GatherScatterCommunicationTest.cpp
     src/m2n/tests/PointToPointCommunicationTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
-    src/mapping/tests/NearestNeighborMappingTest.cpp
     src/mapping/tests/NearestNeighborGradientMappingTest.cpp
+    src/mapping/tests/NearestNeighborMappingTest.cpp
     src/mapping/tests/NearestProjectionMappingTest.cpp
     src/mapping/tests/PetRadialBasisFctMappingTest.cpp
     src/mapping/tests/PolationTest.cpp
@@ -70,6 +70,7 @@ target_sources(testprecice
     src/testing/DataContextFixture.cpp
     src/testing/ExtrapolationFixture.cpp
     src/testing/ExtrapolationFixture.hpp
+    src/testing/GlobalFixtures.cpp
     src/testing/ParallelCouplingSchemeFixture.cpp
     src/testing/ParallelCouplingSchemeFixture.hpp
     src/testing/SerialCouplingSchemeFixture.cpp

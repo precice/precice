@@ -25,13 +25,13 @@ public:
   }
 
   virtual void initialize(
-      DataMap &cpldata);
+      const DataMap &cpldata);
 
   virtual void performAcceleration(
-      DataMap &cpldata);
+      const DataMap &cpldata);
 
   virtual void iterationsConverged(
-      DataMap &cpldata);
+      const DataMap &cpldata);
 
 private:
   logging::Logger _log{"acceleration::AitkenAcceleration"};

@@ -561,15 +561,15 @@ int QRFactorization::orthogonalize_stable(
         int    rank      = 0;
 
         if (utils::MasterSlave::isSlave()) {
-          utils::MasterSlave::_communication->send(k, 0);
-          utils::MasterSlave::_communication->send(u(k), 0);
+          utils::MasterSlave::getCommunication()->send(k, 0);
+          utils::MasterSlave::getCommunication()->send(u(k), 0);
         }
 
         if (utils::MasterSlave::isMaster()) {
           global_uk = u(k);
           for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-            utils::MasterSlave::_communication->receive(local_k, rankSlave);
-            utils::MasterSlave::_communication->receive(local_uk, rankSlave);
+            utils::MasterSlave::getCommunication()->receive(local_k, rankSlave);
+            utils::MasterSlave::getCommunication()->receive(local_uk, rankSlave);
             if (local_uk < global_uk) {
               rank      = rankSlave;
               global_uk = local_uk;

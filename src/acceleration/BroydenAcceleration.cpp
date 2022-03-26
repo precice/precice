@@ -34,7 +34,7 @@ BroydenAcceleration::BroydenAcceleration(
 }
 
 void BroydenAcceleration::initialize(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   // do common QN acceleration initialization
   BaseQNAcceleration::initialize(cplData);
@@ -46,11 +46,11 @@ void BroydenAcceleration::initialize(
 }
 
 void BroydenAcceleration::computeUnderrelaxationSecondaryData(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   // Perform underrelaxation with initial relaxation factor for secondary data
   for (int id : _secondaryDataIDs) {
-    cplscheme::PtrCouplingData data   = cplData[id];
+    cplscheme::PtrCouplingData data   = cplData.at(id);
     Eigen::VectorXd &          values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
@@ -61,7 +61,7 @@ void BroydenAcceleration::computeUnderrelaxationSecondaryData(
 }
 
 void BroydenAcceleration::updateDifferenceMatrices(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   if (not _firstIteration) {
     _currentColumns++;
@@ -71,7 +71,7 @@ void BroydenAcceleration::updateDifferenceMatrices(
   BaseQNAcceleration::updateDifferenceMatrices(cplData);
 }
 
-void BroydenAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen::VectorXd &xUpdate)
+void BroydenAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
 
@@ -118,7 +118,7 @@ void BroydenAcceleration::computeQNUpdate(Acceleration::DataMap &cplData, Eigen:
 }
 
 void BroydenAcceleration::specializedIterationsConverged(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   _currentColumns = 0;
   // store old Jacobian

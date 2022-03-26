@@ -12,11 +12,6 @@
 namespace precice {
 namespace mesh {
 
-struct ConstEdgeIteratorTypes;
-struct EdgeIteratorTypes;
-template <typename Types>
-class EdgeIterator;
-
 /// Linear edge of a mesh, defined by two Vertex objects.
 class Edge {
 public:
@@ -40,9 +35,6 @@ public:
 
   /// Returns the edge's vertex as const object with index 0 or 1.
   const Vertex &vertex(int i) const;
-
-  /// Computes the normal of the edge
-  Eigen::VectorXd computeNormal() const;
 
   /// Returns the (among edges) unique ID of the edge.
   EdgeID getID() const;

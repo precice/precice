@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     int         dataDimensions = dim;
     // Add a data set to the mesh. Every data value is associated to a vertex in
     // the mesh via the vertex ID.
-    PtrData data = mesh.createData(dataName, dataDimensions);
+    PtrData data = mesh.createData(dataName, dataDimensions, 0_dataID);
 
     // Validate data state
     BOOST_TEST(data->getName() == dataName);
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataGrow)
 {
   PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  const auto &        values = mesh.createData("Data", 1)->values();
+  const auto &        values = mesh.createData("Data", 1, 0_dataID)->values();
 
   // Create mesh
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
 {
   PRECICE_TEST(1_rank);
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  const auto &        values = mesh.createData("Data", 1)->values();
+  const auto &        values = mesh.createData("Data", 1, 0_dataID)->values();
 
   // Create mesh
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(AsChain)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
-  mesh.createData("Data", 1);
+  mesh.createData("Data", 1, 0_dataID);
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(ShareVertex)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
-  mesh.createData("Data", 1);
+  mesh.createData("Data", 1, 0_dataID);
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(VertexPtrsFor)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
-  mesh.createData("Data", 1);
+  mesh.createData("Data", 1, 0_dataID);
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(CoordsForIDs)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
-  mesh.createData("Data", 1);
+  mesh.createData("Data", 1, 0_dataID);
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(CoordsForPtrs)
 {
   PRECICE_TEST(1_rank);
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
-  mesh.createData("Data", 1);
+  mesh.createData("Data", 1, 0_dataID);
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DScalarData)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
-  mesh->createData("Data", 1);
+  mesh->createData("Data", 1, 0_dataID);
 
   auto &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   auto &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 0.5));
@@ -547,7 +547,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DVectorData)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
-  mesh->createData("Data", 2);
+  mesh->createData("Data", 2, 0_dataID);
 
   auto &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   auto &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 0.5));
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DScalarData)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
-  mesh->createData("Data", 1);
+  mesh->createData("Data", 1, 0_dataID);
 
   auto &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   auto &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DVectorData)
 {
   PRECICE_TEST(1_rank);
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
-  mesh->createData("Data", 2);
+  mesh->createData("Data", 2, 0_dataID);
 
   auto &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   auto &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));

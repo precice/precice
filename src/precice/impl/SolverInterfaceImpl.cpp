@@ -168,11 +168,24 @@ void SolverInterfaceImpl::configure(
   if (_accessorProcessRank == 0) {
     PRECICE_INFO("This is preCICE version {}", PRECICE_VERSION);
     PRECICE_INFO("Revision info: {}", precice::preciceRevision);
+    PRECICE_INFO("Build type: "
 #ifndef NDEBUG
-    PRECICE_INFO("Configuration: Debug");
+                 "Debug"
+#else // NDEBUG
+                 "Release"
+#ifndef PRECICE_NO_DEBUG_LOG
+                 " + debug log"
 #else
-    PRECICE_INFO("Configuration: Release (Debug and Trace log unavailable)");
+                 " (without debug log)"
 #endif
+#ifndef PRECICE_NO_TRACE_LOG
+                 " + trace log"
+#endif
+#ifndef PRECICE_NO_ASSERTIONS
+                 " + assertions"
+#endif
+#endif // NDEBUG
+    );
     PRECICE_INFO("Configuring preCICE with configuration \"{}\"", configurationFileName);
     PRECICE_INFO("I am participant \"{}\"", _accessorName);
   }
@@ -187,7 +200,6 @@ void SolverInterfaceImpl::configure(
   Event                    e("configure"); // no precice::syncMode as this is not yet configured here
   utils::ScopedEventPrefix sep("configure/");
 
-  mesh::Data::resetDataCount();
   _meshLock.clear();
 
   _dimensions         = config.getDimensions();
@@ -477,8 +489,8 @@ void SolverInterfaceImpl::finalize()
   // Close Connections
   PRECICE_DEBUG("Close master-slave communication");
   if (utils::MasterSlave::isParallel()) {
-    utils::MasterSlave::_communication->closeConnection();
-    utils::MasterSlave::_communication = nullptr;
+    utils::MasterSlave::getCommunication()->closeConnection();
+    utils::MasterSlave::getCommunication() = nullptr;
   }
   _m2ns.clear();
 
@@ -981,7 +993,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
                 context.mesh->getName());
 
   double time = _couplingScheme->getTime();
-  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0, 0, 0);
+  performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
   for (impl::MappingContext &mappingContext : context.fromMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
@@ -999,7 +1011,7 @@ void SolverInterfaceImpl::mapWriteDataFrom(
     }
     mappingContext.hasMappedData = true;
   }
-  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0, 0, 0);
+  performDataActions({action::Action::WRITE_MAPPING_POST}, time, 0.0, 0.0, 0.0);
 }
 
 void SolverInterfaceImpl::mapReadDataTo(
@@ -1014,7 +1026,7 @@ void SolverInterfaceImpl::mapReadDataTo(
                 context.mesh->getName());
 
   double time = _couplingScheme->getTime();
-  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0, 0, 0);
+  performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
   for (impl::MappingContext &mappingContext : context.toMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
@@ -1033,7 +1045,7 @@ void SolverInterfaceImpl::mapReadDataTo(
     }
     mappingContext.hasMappedData = true;
   }
-  performDataActions({action::Action::READ_MAPPING_POST}, time, 0, 0, 0);
+  performDataActions({action::Action::READ_MAPPING_POST}, time, 0.0, 0.0, 0.0);
 }
 
 void SolverInterfaceImpl::writeBlockVectorData(
@@ -1279,8 +1291,8 @@ void SolverInterfaceImpl::readScalarData(
                 "Please check the value index for {}",
                 valueIndex, context.getDataName());
   PRECICE_CHECK(context.getDataDimensions() == 1,
-                "You cannot call readScalarData on the vector data type \"{}\". "
-                "Use readVectorData or change the data type for \"{}\" to scalar.",
+                "You cannot call readScalarData on the vector data type \"{0}\". "
+                "Use readVectorData or change the data type for \"{0}\" to scalar.",
                 context.getDataName());
   mesh::Data &data        = *context.providedData();
   auto &      values      = data.values();
@@ -1686,7 +1698,7 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   PRECICE_TRACE();
 
   Event e("com.initializeMasterSlaveCom", precice::syncMode);
-  utils::MasterSlave::_communication->connectMasterSlaves(
+  utils::MasterSlave::getCommunication()->connectMasterSlaves(
       _accessorName, "MasterSlaves",
       _accessorProcessRank, _accessorCommunicatorSize);
 }
@@ -1695,12 +1707,12 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 {
   PRECICE_ASSERT(utils::MasterSlave::isParallel());
   if (utils::MasterSlave::isSlave()) {
-    utils::MasterSlave::_communication->send(computedTimestepLength, 0);
+    utils::MasterSlave::getCommunication()->send(computedTimestepLength, 0);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isMaster());
     for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       double dt;
-      utils::MasterSlave::_communication->receive(dt, rankSlave);
+      utils::MasterSlave::getCommunication()->receive(dt, rankSlave);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
                     "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
                     rankSlave, dt, computedTimestepLength);

@@ -1,4 +1,9 @@
 name: Build and Test
+# Builds preCICE inside various docker containers and runs the tests.
+# Ubuntu-based cases additionally build the Debian package and test it using lintian.
+# The debug builds of Ubuntu 18.04 LTS are additionally used for code coverage.
+#
+# See https://github.com/precice/ci-images
 on:
   push:
     branches:
@@ -98,7 +103,7 @@ jobs:
         working-directory: build
         env:
           CXX: ${{ matrix.CXX }}
-          CXXFLAGS: "-Wall ${{ matrix.COVFLAGS }}"
+          CXXFLAGS: "-Wall -Wextra -Wno-unused-parameter ${{ matrix.COVFLAGS }}"
           MPI: ${{ contains(matrix.CONFIG, 'MPI') }}
           PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
         run: |
@@ -119,6 +124,9 @@ jobs:
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands 
           path: build/compile_commands.json
+      - name: Enable compiler annotations
+        uses: electronjoe/gcc-problem-matcher@v1
+        if: ${{ matrix.IMAGE == 'archlinux' }}
       - name: Compile
         working-directory: build
         run: |

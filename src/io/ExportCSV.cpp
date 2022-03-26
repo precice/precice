@@ -76,14 +76,14 @@ void ExportCSV::doExport(
   }
   outFile << ";Rank";
   for (const auto &data : mesh.data()) {
-    auto name = data->getName();
-    auto dim  = data->getDimensions();
+    auto dataName = data->getName();
+    auto dim      = data->getDimensions();
     PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == mesh.vertices().size() * dim);
-    outFile << ';' << name;
+    outFile << ';' << dataName;
     if (dim == 2) {
-      outFile << "X;" << name << 'Y';
+      outFile << "X;" << dataName << 'Y';
     } else if (dim == 3) {
-      outFile << "X;" << name << "Y;" << name << 'Z';
+      outFile << "X;" << dataName << "Y;" << dataName << 'Z';
     }
   }
   outFile << '\n';

@@ -84,13 +84,13 @@ void BoundM2N::waitForSlaves()
   if (utils::MasterSlave::isMaster()) {
     for (Rank rank : utils::MasterSlave::allSlaves()) {
       int item = 0;
-      utils::MasterSlave::_communication->receive(item, rank);
+      utils::MasterSlave::getCommunication()->receive(item, rank);
       PRECICE_ASSERT(item > 0);
     }
   }
   if (utils::MasterSlave::isSlave()) {
     int item = utils::MasterSlave::getRank();
-    utils::MasterSlave::_communication->send(item, 0);
+    utils::MasterSlave::getCommunication()->send(item, 0);
   }
 }
 

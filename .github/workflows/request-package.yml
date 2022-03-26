@@ -1,0 +1,56 @@
+name: Request Package
+# This is a workflow to manually request an ubuntu package for an existing release.
+# To use:
+# - Go to the GitHub repository
+# - Go to the Actions tab
+# - Select the "Request Package" workflow
+# - On the top of the list, select "Run workflow"
+# - Select the release tag to generate the package for. Example: v2.3.0
+# - Select the ubuntu version >18.04 to generate the package for. Example: 21.10
+# - Click "Run Workflow"
+#
+# This workflow uses the official ubuntu docker images.
+on:
+  workflow_dispatch:
+    workflow_dispatch:
+    inputs:
+      ubuntu:
+        description: 'Ubuntu version'
+        required: true
+
+jobs:
+  package:
+    name: 'Package Ubuntu ${{ github.event.inputs.ubuntu }}'
+    runs-on: ubuntu-latest
+    container: 'ubuntu:${{ github.event.inputs.ubuntu }}'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Generate build directory
+        run: mkdir -p build
+      - name: Install common dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          TZ: Europe/Berlin
+        run: |
+          apt update
+          apt -y upgrade
+          apt -y install git build-essential lsb-release cmake libeigen3-dev libxml2-dev libboost-all-dev python3-dev python3-numpy petsc-dev
+      - name: Configure
+        working-directory: build
+        run: |
+          cmake --version
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+      - name: Compile
+        working-directory: build
+        run: make -j $(nproc)
+      - name: Create packages
+        working-directory: build
+        run: cpack
+      - name: Upload debian package
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/libprecice*.deb*
+          file_glob: true
+          overwrite: true
+          tag: ${{ github.ref }}

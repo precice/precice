@@ -33,7 +33,6 @@ BOOST_AUTO_TEST_CASE(Edges)
   BOOST_TEST(edge.getLength() == expectedLenght);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), (coords1 + coords2) / 2));
-  BOOST_TEST(edge.computeNormal().dot(coords1 - coords2) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(Dimensions2D)
@@ -49,7 +48,6 @@ BOOST_AUTO_TEST_CASE(Dimensions2D)
   BOOST_TEST(edge.getLength() == expectedLenght);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector2d{0.5, 0.5}));
-  BOOST_TEST(edge.computeNormal().dot(Vector2d{0.5, 0.5}) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(Dimensions2DX)
@@ -65,7 +63,6 @@ BOOST_AUTO_TEST_CASE(Dimensions2DX)
   BOOST_TEST(edge.getLength() == expectedLenght);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector2d{0.5, 0}));
-  BOOST_TEST(edge.computeNormal().dot(Vector2d{1, 0}) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(Dimensions2DY)
@@ -81,7 +78,6 @@ BOOST_AUTO_TEST_CASE(Dimensions2DY)
   BOOST_TEST(edge.getLength() == expectedLenght);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector2d{0, 0.5}));
-  BOOST_TEST(edge.computeNormal().dot(Vector2d{0, 1}) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(Dimensions3DX)
@@ -97,9 +93,6 @@ BOOST_AUTO_TEST_CASE(Dimensions3DX)
   BOOST_TEST(edge.getLength() == expectedLenght);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d{0.5, 0, 0}));
-  const Vector3d normal = edge.computeNormal();
-  BOOST_TEST(normal.norm() == 1.0);
-  BOOST_TEST(normal.dot(Vector3d{1, 0, 0}) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(Dimensions3DY)
@@ -115,9 +108,6 @@ BOOST_AUTO_TEST_CASE(Dimensions3DY)
   BOOST_TEST(edge.getLength() == expectedLenght);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d{0, 0.5, 0}));
-  const Vector3d normal = edge.computeNormal();
-  BOOST_TEST(normal.norm() == 1.0);
-  BOOST_TEST(normal.dot(Vector3d{0, 1, 0}) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(Dimensions3DZ)
@@ -133,9 +123,6 @@ BOOST_AUTO_TEST_CASE(Dimensions3DZ)
   BOOST_TEST(edge.getLength() == expectedLenght);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d{0, 0, 0.5}));
-  const Vector3d normal = edge.computeNormal();
-  BOOST_TEST(normal.norm() == 1.0);
-  BOOST_TEST(normal.dot(Vector3d{0, 0, 1}) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(Dimensions3D)
@@ -151,7 +138,6 @@ BOOST_AUTO_TEST_CASE(Dimensions3D)
   BOOST_TEST(edge.getLength() == expectedLenght);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d::Constant(0.5)));
-  BOOST_TEST(edge.computeNormal().dot(Vector3d::Constant(0.3333)) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(EdgeEquality)
@@ -167,51 +153,6 @@ BOOST_AUTO_TEST_CASE(EdgeEquality)
   BOOST_TEST(edge1 == edge2);
   BOOST_TEST(edge1 != edge3);
   BOOST_TEST(edge3 == edge4);
-}
-
-BOOST_AUTO_TEST_CASE(ComputeNormal2D_Unit)
-{
-  PRECICE_TEST(1_rank);
-  Vertex v1(Vector2d{0.0, 0.0}, 0);
-  Vertex v2(Vector2d{1.0, 0.0}, 1);
-  Edge   edge(v1, v2, 0);
-
-  auto normal = edge.computeNormal();
-  BOOST_TEST(normal.size() == 2);
-  BOOST_TEST(normal.norm() == 1.0);
-  Vector2d a{0.0, 1.0};
-  Vector2d b{0.0, -1.0};
-  BOOST_TEST((normal == a || normal == b));
-}
-
-BOOST_AUTO_TEST_CASE(ComputeNormal2D)
-{
-  PRECICE_TEST(1_rank);
-  Vector2d a{-0.5, 1.0};
-  Vector2d b{1.25, -1.1};
-  Vertex   v1(a, 0);
-  Vertex   v2(b, 1);
-  Edge     edge(v1, v2, 0);
-
-  auto normal = edge.computeNormal();
-  BOOST_TEST(normal.size() == 2);
-  BOOST_TEST(normal.norm() == 1.0);
-  BOOST_TEST(normal.dot(b - a) == 0.0);
-}
-
-BOOST_AUTO_TEST_CASE(ComputeNormal3D_Unit)
-{
-  PRECICE_TEST(1_rank);
-  Vector3d a{0.0, 0.0, 1.0};
-  Vector3d b{1.0, 0.0, 1.0};
-  Vertex   v1(a, 0);
-  Vertex   v2(b, 1);
-  Edge     edge(v1, v2, 0);
-
-  auto normal = edge.computeNormal();
-  BOOST_TEST(normal.size() == 3);
-  BOOST_TEST(normal.norm() == 1.0);
-  BOOST_TEST(normal.dot(b - a) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(EdgeWKTPrint)

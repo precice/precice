@@ -30,6 +30,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/ParticipantConfiguration.hpp"
 #include "testing/SerialCouplingSchemeFixture.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -408,15 +409,19 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   PRECICE_TEST(1_rank);
   using namespace mesh;
 
+  int dimensions = 3;
+
   std::string path(_pathToTests + "serial-implicit-cplscheme-relax-const-config.xml");
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
+  meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
+  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  participantConfig->setDimensions(dimensions);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, path);
@@ -435,7 +440,7 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   using namespace mesh;
 
   PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  PtrData data   = mesh->createData("MyData", 1);
+  PtrData data   = mesh->createData("MyData", 1, 0_dataID);
   int     dataID = data->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
@@ -512,7 +517,7 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   using namespace mesh;
 
   PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  PtrData data   = mesh->createData("MyData", 1);
+  PtrData data   = mesh->createData("MyData", 1, 0_dataID);
   int     dataID = data->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
@@ -585,15 +590,15 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 {
   /**
    * Perform first order and constant relaxation acceleration
-   * 
-   * Do two time windows with three iterations each. 
-   * 
+   *
+   * Do two time windows with three iterations each.
+   *
    * Each participant writes dummy data to other participant, received data is checked.
-   * 
+   *
    * Make sure that the following happens, if NOT converged (first two iterations):
    * 1. acceleration is performed
    * 2. participants receive correct (accelerated) data
-   * 
+   *
    * Make sure that the following happens, if converged (end of third iteration):
    * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
    * 2. we move to the next window
@@ -619,8 +624,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions)->getID();
+  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -792,11 +797,11 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 {
   /**
    * Perform first order extrapolation and use initialization
-   * 
-   * Do two time windows with three iterations each. 
-   * 
+   *
+   * Do two time windows with three iterations each.
+   *
    * Each participant writes dummy data to other participant, received data is checked.
-   * 
+   *
    **/
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
@@ -818,8 +823,8 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions)->getID();
+  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1026,15 +1031,15 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
 {
   /**
    * Perform second order extrapolation and constant relaxation acceleration
-   * 
-   * Do three time windows with three iterations each. 
-   * 
+   *
+   * Do three time windows with three iterations each.
+   *
    * Each participant writes dummy data to other participant, received data is checked.
-   * 
+   *
    * Make sure that the following happens, if NOT converged (first two iterations):
    * 1. acceleration is performed
    * 2. participants receive correct (accelerated) data
-   * 
+   *
    * Make sure that the following happens, if converged (end of third iteration):
    * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
    * 2. we move to the next window
@@ -1060,8 +1065,8 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions)->getID();
+  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1283,18 +1288,20 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
 
   using namespace mesh;
 
+  int dimensions = 3;
+
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   dataConfig->addData("data0", 1);
   dataConfig->addData("data1", 3);
 
   MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
+  meshConfig.setDimensions(dimensions);
   mesh::PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("data0", 1);
-  mesh->createData("data1", 3);
+  mesh->createData("data0", 1, 0_dataID);
+  mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1343,16 +1350,20 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
 
   using namespace mesh;
 
+  int dimensions = 3;
+
   std::string configurationPath(
       _pathToTests + "serial-implicit-cplscheme-absolute-config.xml");
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
-  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
-  CouplingSchemeConfiguration          cplSchemeConfig(root, meshConfig, m2nConfig);
+  meshConfig->setDimensions(dimensions);
+  m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
+  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  participantConfig->setDimensions(dimensions);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, configurationPath);
   m2n::PtrM2N m2n       = m2nConfig->getM2N("Participant0", "Participant1");
@@ -1394,8 +1405,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("data0", 1);
-  mesh->createData("data1", 3);
+  mesh->createData("data0", 1, 0_dataID);
+  mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1456,8 +1467,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  mesh->createData("data0", 1);
-  mesh->createData("data1", 3);
+  mesh->createData("data0", 1, 0_dataID);
+  mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -1521,8 +1532,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   mesh::MeshConfiguration meshConfig(root, dataConfig);
   meshConfig.setDimensions(3);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", 1)->getID();
-  const auto    dataID1 = mesh->createData("Data1", 3)->getID();
+  const auto    dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);

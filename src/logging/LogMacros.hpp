@@ -23,7 +23,14 @@
     PRECICE_ERROR(__VA_ARGS__);   \
   }
 
-#ifdef NDEBUG
+// Debug logging is disabled in release (NDEBUG) builds by default.
+// To enable it anyhow, enable the CMake option PRECICE_RELEASE_WITH_DEBUG_LOG.
+
+#if defined(NDEBUG) && !defined(PRECICE_RELEASE_WITH_DEBUG_LOG)
+#define PRECICE_NO_DEBUG_LOG
+#endif
+
+#ifdef PRECICE_NO_DEBUG_LOG
 
 #define PRECICE_DEBUG(...) \
   {                        \
@@ -32,16 +39,34 @@
   {                        \
   }
 
-#else // NDEBUG
+#else // PRECICE_NO_DEBUG_LOG
 
-#include "logging/Tracer.hpp"
 #include "utils/ArgumentFormatter.hpp"
 
 #define PRECICE_DEBUG(...) _log.debug(PRECICE_LOG_LOCATION, fmt::format(__VA_ARGS__))
+
+#endif // ! PRECICE_NO_DEBUG_LOG
+
+// Trace logging is disabled in release (NDEBUG) builds by default.
+// To enable it anyhow, enable the CMake option PRECICE_RELEASE_WITH_TRACE_LOG.
+
+#if defined(NDEBUG) && !defined(PRECICE_RELEASE_WITH_TRACE_LOG)
+#define PRECICE_NO_TRACE_LOG
+#endif
+
+#ifdef PRECICE_NO_TRACE_LOG
+
+#define PRECICE_TRACE(...) \
+  {                        \
+  }
+
+#else // PRECICE_NO_TRACE_LOG
+
+#include "logging/Tracer.hpp"
 
 // Do not put do {...} while (false) here, it will destroy the _tracer_ right after creation
 #define PRECICE_TRACE(...)                                       \
   precice::logging::Tracer _tracer_(_log, PRECICE_LOG_LOCATION); \
   _log.trace(PRECICE_LOG_LOCATION, std::string{"Entering "} + __func__ + PRECICE_LOG_ARGUMENTS(__VA_ARGS__))
 
-#endif // ! NDEBUG
+#endif // ! PRECICE_NO_TRACE_LOG
