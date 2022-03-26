@@ -220,7 +220,7 @@ private:
   // are created through the configuration.
   // See e.g. "CplSchemeTests/ExplicitCouplingSchemeTests/testConfiguredSimpleExplicitCoupling"
   // This flag gives a loophole. It is set to false for normal use and modified in the
-  // respective tests through a forward declaration.
+  // respective tests through a friend declaration.
 
   /// between two serial participants, only use the master-master com and no slaves-slaves com
   bool _useOnlyMasterCom = false;
