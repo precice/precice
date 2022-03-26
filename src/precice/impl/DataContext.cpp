@@ -1,5 +1,6 @@
 #include "precice/impl/DataContext.hpp"
 #include <memory>
+#include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
 namespace impl {
@@ -14,16 +15,16 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
   _mesh = mesh;
 }
 
+mesh::PtrData DataContext::providedData()
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData;
+}
+
 std::string DataContext::getDataName() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData->getName();
-}
-
-int DataContext::getProvidedDataID() const
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData->getID();
 }
 
 int DataContext::getFromDataID() const
@@ -33,15 +34,14 @@ int DataContext::getFromDataID() const
   return _fromData->getID();
 }
 
-void DataContext::resetProvidedData()
+void DataContext::resetData()
 {
-  PRECICE_TRACE();
+  // See also https://github.com/precice/precice/issues/1156.
   _providedData->toZero();
-}
-
-void DataContext::resetToData()
-{
-  _toData->toZero();
+  if (hasMapping()) {
+    PRECICE_ASSERT(hasWriteMapping());
+    _toData->toZero();
+  }
 }
 
 int DataContext::getToDataID() const
@@ -95,16 +95,25 @@ bool DataContext::isMappingRequired()
     return false;
   }
 
-  auto timing    = mappingContext().timing;
-  bool hasMapped = mappingContext().hasMappedData;
-  bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
-  mapNow |= timing == MappingConfiguration::INITIAL;
+  auto       timing    = _mappingContext.timing;
+  const bool hasMapped = _mappingContext.hasMappedData;
+  const bool mapNow    = (timing == MappingConfiguration::ON_ADVANCE) || (timing == MappingConfiguration::INITIAL);
 
   if ((not mapNow) || hasMapped) {
     return false;
   }
 
   return true;
+}
+
+void DataContext::mapData()
+{
+  PRECICE_ASSERT(hasMapping());
+  int fromDataID = getFromDataID();
+  int toDataID   = getToDataID();
+  _toData->toZero();
+  _mappingContext.mapping->map(fromDataID, toDataID);
+  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, _toData->values()));
 }
 
 bool DataContext::hasReadMapping() const
@@ -115,12 +124,6 @@ bool DataContext::hasReadMapping() const
 bool DataContext::hasWriteMapping() const
 {
   return _fromData == _providedData;
-}
-
-const MappingContext DataContext::mappingContext() const
-{
-  PRECICE_ASSERT(hasMapping());
-  return _mappingContext;
 }
 
 } // namespace impl

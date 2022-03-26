@@ -15,7 +15,7 @@
 #include "m2n/BoundM2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/SolverInterface.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/MultiLock.hpp"
@@ -426,8 +426,8 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param[in] toDataID     ID of the data to be written.
-   * @param[in] size         Number of valueIndices, and number of values.
+   * @param[in] toDataID ID of the data to be read.
+   * @param[in] size Number of indices, and number of values * dimensions.
    * @param[in] valueIndices Indices (from setReadPosition()) of data values.
    * @param[in] values Values of the data to be read.
    */
@@ -449,7 +449,7 @@ public:
    * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
    * the end of the time step.
    *
-   * @param[in] toDataID          ID of the data to be written.
+   * @param[in] toDataID          ID of the data to be read.
    * @param[in] size              Number of valueIndices, and number of values.
    * @param[in] valueIndices      Indices (from setReadPosition()) of data values.
    * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
@@ -484,7 +484,7 @@ public:
    * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at 
    * the end of the time step.
    * 
-   * @param[in] toDataID          ID of the data to be read, e.g. 1 = forces
+   * @param[in] toDataID          ID of the data to be read.
    * @param[in] valueIndex        Index (from setReadPosition()) of data value.
    * @param[in] relativeReadTime  Point in time where data is read relative to the beginning of the current time step
    * @param[out] value            Read data value
@@ -678,9 +678,6 @@ private:
 
   /// Communicate meshes and create partitions
   void computePartitions();
-
-  /// Helper for mapWrittenData and mapReadData
-  void mapData(DataContext &context);
 
   /// Helper for mapWrittenData and mapReadData
   void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
