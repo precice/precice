@@ -15,12 +15,6 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
   _mesh = mesh;
 }
 
-mesh::PtrData DataContext::providedData()
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData;
-}
-
 std::string DataContext::getDataName() const
 {
   PRECICE_ASSERT(_providedData);
