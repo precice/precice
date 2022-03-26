@@ -99,9 +99,9 @@ bool DataContext::isMappingRequired()
   }
 
   auto timing    = _mappingContext.timing;
-  bool hasMapped = _mappingContext.hasMappedData;
-  bool mapNow    = timing == MappingConfiguration::ON_ADVANCE;
-  mapNow |= timing == MappingConfiguration::INITIAL;
+  const bool hasMapped = _mappingContext.hasMappedData;
+  const bool mapNow    = (timing == MappingConfiguration::ON_ADVANCE) |= 
+                         (timing == MappingConfiguration::INITIAL);
 
   if ((not mapNow) || hasMapped) {
     return false;
