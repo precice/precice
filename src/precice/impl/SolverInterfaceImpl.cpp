@@ -1088,14 +1088,15 @@ void SolverInterfaceImpl::writeBlockVectorData(
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockVectorData() was called with values == nullptr");
   WriteDataContext &context = _accessor->writeDataContext(dataID);
+  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeBlockVectorData on the scalar data type \"{0}\". Use writeBlockScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
   PRECICE_VALIDATE_DATA(values, size * _dimensions);
 
-  PRECICE_ASSERT(context.providedData() != nullptr);
-  auto &     valuesInternal = context.providedData()->values();
-  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions();
+  mesh::Data &data           = *context.providedData();
+  auto &      valuesInternal = data.values();
+  const auto  vertexCount    = valuesInternal.size() / context.getDataDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1121,14 +1122,15 @@ void SolverInterfaceImpl::writeVectorData(
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   PRECICE_DEBUG("value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
   WriteDataContext &context = _accessor->writeDataContext(dataID);
+  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call writeVectorData on the scalar data type \"{0}\". Use writeScalarData or change the data type for \"{0}\" to vector.",
                 context.getDataName());
   PRECICE_VALIDATE_DATA(value, _dimensions);
 
-  PRECICE_ASSERT(context.providedData() != nullptr);
-  auto &     values      = context.providedData()->values();
-  const auto vertexCount = values.size() / context.getDataDimensions();
+  mesh::Data &data        = *context.providedData();
+  auto &      values      = data.values();
+  const auto  vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 context.getDataName(), valueIndex);
@@ -1152,14 +1154,15 @@ void SolverInterfaceImpl::writeBlockScalarData(
   PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "writeBlockScalarData() was called with values == nullptr");
   WriteDataContext &context = _accessor->writeDataContext(dataID);
+  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call writeBlockScalarData on the vector data type \"{}\". Use writeBlockVectorData or change the data type for \"{}\" to scalar.",
                 context.getDataName(), context.getDataName());
   PRECICE_VALIDATE_DATA(values, size);
 
-  PRECICE_ASSERT(context.providedData() != nullptr);
-  auto &     valuesInternal = context.providedData()->values();
-  const auto vertexCount    = valuesInternal.size() / context.getDataDimensions();
+  mesh::Data &data           = *context.providedData();
+  auto &      valuesInternal = data.values();
+  const auto  vertexCount    = valuesInternal.size() / context.getDataDimensions();
   for (int i = 0; i < size; i++) {
     const auto valueIndex = valueIndices[i];
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
@@ -1178,6 +1181,7 @@ void SolverInterfaceImpl::writeScalarData(
   PRECICE_CHECK(_state != State::Finalized, "writeScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   WriteDataContext &context = _accessor->writeDataContext(dataID);
+  PRECICE_ASSERT(context.providedData() != nullptr);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ({}) when writing scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1188,9 +1192,9 @@ void SolverInterfaceImpl::writeScalarData(
                 context.getDataName());
   PRECICE_VALIDATE_DATA(static_cast<double *>(&value), 1);
 
-  PRECICE_ASSERT(context.providedData() != nullptr);
-  auto &     values      = context.providedData()->values();
-  const auto vertexCount = values.size() / context.getDataDimensions();
+  mesh::Data &data        = *context.providedData();
+  auto &      values      = data.values();
+  const auto  vertexCount = values.size() / context.getDataDimensions();
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
