@@ -50,7 +50,6 @@ target_sources(testprecice
     tests/serial/PreconditionerBug.cpp
     tests/serial/SendMeshToMultipleParticipants.cpp
     tests/serial/SummationActionTwoSources.cpp
-    tests/serial/TestBug.cpp
     tests/serial/TestExplicitWithDataMultipleReadWrite.cpp
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/TestImplicit.cpp
@@ -108,10 +107,6 @@ target_sources(testprecice
     tests/serial/multi-coupling/helpers.hpp
     tests/serial/multiple-mappings/MultipleFromMappings.cpp
     tests/serial/multiple-mappings/MultipleToMappings.cpp
-    tests/serial/stationary-mapping-with-solver-mesh/StationaryMappingWithSolverMesh2D.cpp
-    tests/serial/stationary-mapping-with-solver-mesh/StationaryMappingWithSolverMesh3D.cpp
-    tests/serial/stationary-mapping-with-solver-mesh/helpers.cpp
-    tests/serial/stationary-mapping-with-solver-mesh/helpers.hpp
     tests/serial/three-solvers/ThreeSolversExplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversExplicitImplicit.cpp
     tests/serial/three-solvers/ThreeSolversImplicitExplicit.cpp
