@@ -658,9 +658,6 @@ private:
   void computeMappings(const utils::ptr_vector<MappingContext> &contexts, const std::string &mappingType);
 
   /// Helper for mapWrittenData and mapReadData
-  void mapData(DataContext &context, const std::string &mappingType);
-
-  /// Helper for mapWrittenData and mapReadData
   void clearMappings(utils::ptr_vector<MappingContext> contexts);
 
   /// Computes, performs, and resets all suitable write mappings.

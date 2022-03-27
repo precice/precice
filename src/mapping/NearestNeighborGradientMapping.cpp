@@ -20,7 +20,11 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
     int        dimensions)
     : NearestNeighborBaseMapping(constraint, dimensions, true, "NearestNeighborGradientMapping", "nng")
 {
-  PRECICE_CHECK(!hasConstraint(CONSERVATIVE), "Nearest Neighbor Gradient is not defined for conservative mapping");
+  PRECICE_CHECK(!hasConstraint(CONSERVATIVE), "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. Please select constraint=\" consistent\" or a different mapping method.");
+
+  if (hasConstraint(SCALEDCONSISTENT)) {
+    PRECICE_WARN("The scaled-consistent mapping hasn't been specifically tested with nearest-neighbor-gradient. Please avoid using it or choose another mapping method. ");
+  }
 
   if (hasConstraint(SCALEDCONSISTENT)) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
@@ -44,6 +48,8 @@ void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, me
     const auto &sourceVertexCoords  = origins->vertices()[i].getCoords();
 
     // We calculate the distances uniformly for consistent mapping constraint as the difference (output - input)
+    // For consistent mapping: the source is the output vertex and the matched vertex is the input since we iterate over all outputs
+    // and assign each exactly one vertex form the search space, which are our origins vertices.
     _offsetsMatched[i] = sourceVertexCoords - matchedVertexCoords;
   }
 };

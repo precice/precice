@@ -1,5 +1,5 @@
 #
-# This file lists all tests sources that will be compiled into the test executable
+# This file lists all integration test sources and test suites
 #
 target_sources(testprecice
     PRIVATE
@@ -13,7 +13,12 @@ target_sources(testprecice
     tests/serial/initialize-data/WriteMapping.cpp
     tests/serial/initialize-data/helpers.cpp
     tests/serial/initialize-data/helpers.hpp
-    tests/serial/time/explicit/DoNothingWithSubcycling.cpp
-    tests/serial/time/explicit/ReadWriteScalarDataWithSubcycling.cpp
-    tests/serial/time/implicit/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     )
+
+# Contains the list of integration test suites
+set(PRECICE_TEST_SUITES Serial)

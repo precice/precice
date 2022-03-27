@@ -241,14 +241,17 @@ protected:
   /// Map that links DataID to CouplingData
   typedef std::map<int, PtrCouplingData> DataMap;
 
-  /// Map from data ID -> all data (receive and send) with that ID
-  DataMap _allData;
-
   /// Sends data sendDataIDs given in mapCouplingData with communication.
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
   /// Receives data receiveDataIDs given in mapCouplingData with communication.
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+
+  /**
+   * @brief interface to provide all CouplingData, depending on coupling scheme being used
+   * @return DataMap containing all CouplingData
+   */
+  virtual const DataMap getAllData() = 0;
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -354,7 +357,7 @@ protected:
   void storeIteration()
   {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-    for (DataMap::value_type &pair : _allData) {
+    for (const DataMap::value_type &pair : getAllData()) {
       pair.second->storeIteration();
     }
   }
@@ -409,22 +412,6 @@ private:
   /// Number of total iterations performed.
   int _totalIterations = -1;
 
-  /**
-   * Order of predictor of interface values for first participant.
-   *
-   * The first participant in the implicit coupling scheme has to take some
-   * initial guess for the interface values computed by the second participant.
-   * In order to improve this initial guess, an extrapolation from previous
-   * time windows can be performed.
-   *
-   * The standard predictor is of order zero, i.e., simply the converged values
-   * of the last time windows are taken as initial guess for the coupling iterations.
-   * Currently, an order 1 predictor (linear extrapolation) and order 2 predictor
-   * (see https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1 )
-   * is implement besides that.
-   */
-  const int _extrapolationOrder;
-
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;
 
@@ -459,6 +446,22 @@ private:
 
   /// Local participant name.
   std::string _localParticipant = "unknown";
+
+  /**
+   * Order of predictor of interface values for first participant.
+   *
+   * The first participant in the implicit coupling scheme has to take some
+   * initial guess for the interface values computed by the second participant.
+   * In order to improve this initial guess, an extrapolation from previous
+   * time windows can be performed.
+   *
+   * The standard predictor is of order zero, i.e., simply the converged values
+   * of the last time windows are taken as initial guess for the coupling iterations.
+   * Currently, an order 1 predictor (linear extrapolation) and order 2 predictor
+   * (see https://doi.org/10.1016/j.compstruc.2008.11.013, p.796, Algorithm line 1 )
+   * is implement besides that.
+   */
+  const int _extrapolationOrder;
 
   /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
@@ -519,7 +522,7 @@ private:
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
    */
-  virtual DataMap &getAccelerationData() = 0;
+  virtual const DataMap getAccelerationData() = 0;
 
   /**
    * @brief If any required actions are open, an error message is issued.

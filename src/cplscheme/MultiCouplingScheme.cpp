@@ -15,9 +15,6 @@
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
-#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -146,12 +143,8 @@ void MultiCouplingScheme::addDataToSend(
 {
   int id = data->getID();
   PRECICE_DEBUG("Configuring send data to {}", to);
-  PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
-  DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
-  _sendDataVector[to].insert(dataPair);
-  if (!utils::contained(id, _allData)) {
-    _allData.insert(dataPair);
-  }
+  PtrCouplingData ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
+  _sendDataVector[to].emplace(id, ptrCplData);
 }
 
 void MultiCouplingScheme::addDataToReceive(
@@ -162,12 +155,8 @@ void MultiCouplingScheme::addDataToReceive(
 {
   int id = data->getID();
   PRECICE_DEBUG("Configuring receive data from {}", from);
-  PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
-  DataMap::value_type dataPair = std::make_pair(id, ptrCplData);
-  _receiveDataVector[from].insert(dataPair);
-  if (!utils::contained(id, _allData)) {
-    _allData.insert(dataPair);
-  }
+  PtrCouplingData ptrCplData(new CouplingData(data, std::move(mesh), initialize, getExtrapolationOrder()));
+  _receiveDataVector[from].emplace(id, ptrCplData);
 }
 
 } // namespace cplscheme

@@ -5,6 +5,7 @@ import glob
 import sys
 import subprocess
 import collections
+import pathlib
 
 """ Files matching this pattern will be filtered out """
 IGNORE_PATTERNS = ["drivers"]
@@ -82,6 +83,19 @@ def get_file_lists(root):
     return sorted(sources), sorted(public), sorted(utests), sorted(itests)
 
 
+def itest_path_to_suite(path):
+    """
+    Extracts the test suite from a path and translates it to the boost test name
+    """
+    dir = pathlib.PurePath(path).parts[1]
+    parts = map(lambda s: s.capitalize(), dir.split("-"))
+    return "".join(parts)
+
+
+def test_suites_from_files(itests):
+    return sorted(set(map(itest_path_to_suite, itests)))
+
+
 SOURCES_BASE = """#
 # This file lists all sources that will be compiles into the precice library
 #
@@ -107,20 +121,37 @@ target_sources(testprecice
     {}
     )
 """
+ITESTS_BASE = """#
+# This file lists all integration test sources and test suites
+#
+target_sources(testprecice
+    PRIVATE
+    {}
+    )
+
+# Contains the list of integration test suites
+set(PRECICE_TEST_SUITES {})
+"""
 
 
-def generate_cmake_files(sources, public, utests, itests):
-    sources = SOURCES_BASE.format(
+def generate_lib_sources(sources, public):
+    return SOURCES_BASE.format(
         "\n    ".join(sources),
         "\n    ".join(public)
     )
-    utests = TESTS_BASE.format(
+
+
+def generate_unit_tests(utests):
+    return TESTS_BASE.format(
         "\n    ".join(utests)
     )
-    itests = TESTS_BASE.format(
-        "\n    ".join(itests)
+
+
+def generate_integration_tests(itests):
+    return ITESTS_BASE.format(
+        "\n    ".join(itests),
+        " ".join(test_suites_from_files(itests))
     )
-    return sources, utests, itests
 
 
 def main():
@@ -155,7 +186,9 @@ def main():
     print("Generating CMake files")
     # sources_file, tests_file = get_cmake_file_paths(root)
     files = get_cmake_file_paths(root)
-    sources_content, utests_content, itests_content = generate_cmake_files(sources, public, utests, itests)
+    sources_content = generate_lib_sources(sources, public)
+    utests_content = generate_unit_tests(utests)
+    itests_content = generate_integration_tests(itests)
 
     print("Writing Files")
     print(" {}".format(files.sources))
