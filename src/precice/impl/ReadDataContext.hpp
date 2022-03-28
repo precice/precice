@@ -11,7 +11,7 @@ namespace precice {
 namespace impl {
 
 /**
- * @brief Stores one Data object with related mesh. Context stores data to be read from and potentially provides a read mapping. Additionally stores Waveform associated with _providedData.
+ * @brief Stores one Data object with related mesh. Context stores data to be read from and potentially provides a read mapping. Additionally stores Waveform object associated with _providedData.
  *
  * Derived from DataContext
  */
