@@ -192,6 +192,8 @@ public:
   /**
    * @brief Checks if new data to be read is available.
    *
+   * @deprecated Unclear use case and conflicting with waveform relaxation feature.
+   *
    * @returns whether new data is available to be read.
    *
    * Data is classified to be new, if it has been received while calling
@@ -207,10 +209,12 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary reads.
    */
-  bool isReadDataAvailable() const;
+  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/1223 and comment, if you need this function.")]] bool isReadDataAvailable() const;
 
   /**
    * @brief Checks if new data has to be written before calling advance().
+   *
+   * @deprecated Unclear use case and conflicting with waveform relaxation feature.
    *
    * @param[in] computedTimestepLength Length of timestep used by the solver.
    *
@@ -227,7 +231,7 @@ public:
    * This is not recommended due to performance reasons.
    * Use this function to prevent unnecessary writes.
    */
-  bool isWriteDataRequired(double computedTimestepLength) const;
+  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/1223 and comment, if you need this function.")]] bool isWriteDataRequired(double computedTimestepLength) const;
 
   /**
    * @brief Checks if the current coupling window is completed.
