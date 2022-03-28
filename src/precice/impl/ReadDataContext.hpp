@@ -19,7 +19,7 @@ class ReadDataContext : public DataContext {
 public:
   /**
    * @brief Construct a new ReadDataContext object without a mapping.
-   * 
+   *
    * @param data Data associated with this ReadDataContext.
    * @param mesh Mesh associated with this ReadDataContext.
    * @param interpolationOrder Order of the Waveform stored by this ReadDataContext.
@@ -30,15 +30,15 @@ public:
       int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
 
   /**
-   * @brief Gets _interpolationOrder of _providedWaveform
-   * 
-   * @return _interpolationOrder of _providedWaveform
+   * @brief Gets _interpolationOrder of _waveform
+   *
+   * @return _interpolationOrder of _waveform
    */
   int getInterpolationOrder() const;
 
   /**
    * @brief Links a MappingContext and the MeshContext required by the read mapping requires to this ReadDataContext.
-   * 
+   *
    * A read mapping maps _fromData to _providedData. A ReadDataContext already has _providedData, but additionally requires _fromData.
    *
    * @param[in] mappingContext Context of read mapping
@@ -54,25 +54,25 @@ public:
   Eigen::VectorXd sampleWaveformAt(double normalizedDt);
 
   /**
-   * @brief Initializes the _providedWaveform as a constant function with values from _providedData.
+   * @brief Initializes the _waveform as a constant function with values from _providedData.
    */
   void initializeWaveform();
 
   /**
-   * @brief Updates _providedWaveform when moving to the next time window.
+   * @brief Updates _waveform when moving to the next time window.
    */
   void moveToNextWindow();
 
   /**
-   * @brief Stores _providedData as first sample of _providedWaveform.
+   * @brief Stores _providedData as first sample of _waveform.
    */
-  void storeDataInWaveformFirstSample();
+  void storeDataInWaveform();
 
 private:
   static logging::Logger _log;
 
   /// Waveform wrapped by this ReadDataContext.
-  time::PtrWaveform _providedWaveform;
+  time::PtrWaveform _waveform;
 };
 
 } // namespace impl
