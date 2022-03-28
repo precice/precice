@@ -91,8 +91,7 @@ private:
   cplscheme::impl::Extrapolation _extrapolation;
 
   /// Mesh associated with this CouplingData
-  mesh::PtrMesh          _mesh;
-  const Eigen::VectorXd &gradientValuesRow(int i);
+  mesh::PtrMesh _mesh;
 };
 
 } // namespace cplscheme
