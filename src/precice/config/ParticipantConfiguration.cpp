@@ -78,7 +78,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagReadData.addAttribute(attrMesh);
 
   XMLAttribute<int> attrOrder = makeXMLAttribute(ATTR_ORDER, time::Time::DEFAULT_INTERPOLATION_ORDER)
-                                    .setDocumentation("Sets interpolation order used by waveform iteration.");
+                                    .setDocumentation("Interpolation order used by waveform iteration when reading data.");
   tagReadData.addAttribute(attrOrder);
   tag.addSubtag(tagWriteData);
   tag.addSubtag(tagReadData);
