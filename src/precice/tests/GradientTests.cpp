@@ -60,7 +60,10 @@ BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Read_Only)
 
     double valueA = 1.0;
     cplInterface.writeScalarData(dataID, 0, valueA);
-    cplInterface.writeScalarGradientData(dataID, 0, 1.0, 1.0, 1.0);
+
+    Vector3d valueGradDataA(1.0, 1.0, 1.0);
+    cplInterface.writeScalarGradientData(dataID, 0, valueGradDataA.data());
+    //cplInterface.writeScalarGradientData(dataID, 0, 1.0, 1.0, 1.0);
 
     // Participant must make move after writing
     maxDt = cplInterface.advance(maxDt);
@@ -95,6 +98,7 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Write_Scalar)
 
   //precice.isActionRequired(precice::constants::actionWriteInitialData()
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  using Eigen::Vector2d;
   using Eigen::Vector3d;
 
   SolverInterface cplInterface(context.name, pathToTests + "nng-write-scalar.xml", 0, 1);
@@ -131,9 +135,10 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Write_Scalar)
     int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
-    double valueDataB = 1.0;
+    double   valueDataB = 1.0;
+    Vector3d valueGradDataB(1.0, 1.0, 1.0);
     cplInterface.writeScalarData(dataBID, 0, valueDataB);
-    cplInterface.writeScalarGradientData(dataBID, 0, 1.0, 1.0, 1.0);
+    cplInterface.writeScalarGradientData(dataBID, 0, valueGradDataB.data());
 
     //tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
@@ -146,7 +151,8 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Write_Scalar)
 
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(dataBID, 0, 1.5);
-      cplInterface.writeScalarGradientData(dataBID, 0, 1.0, 1.0, 1.0);
+      Vector3d valueGradDataA(1.0, 1.0, 1.0);
+      cplInterface.writeScalarGradientData(dataBID, 0, valueGradDataA.data());
 
       maxDt = cplInterface.advance(maxDt);
       cplInterface.readVectorData(dataAID, 0, valueDataA.data());
@@ -206,10 +212,11 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Write_Vector)
     int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
     int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
-    Vector2d valueDataB(2.0, 3.0);
-    Vector2d gradient(1.0, 1.0);
+    Vector2d                    valueDataB(2.0, 3.0);
+    Eigen::Matrix<double, 3, 3> gradient;
+    gradient << 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0;
     cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
-    cplInterface.writeVectorGradientData(dataBID, 0, gradient.data(), gradient.data(), gradient.data());
+    cplInterface.writeVectorGradientData(dataBID, 0, gradient.data());
 
     //tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
@@ -224,7 +231,7 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Write_Vector)
 
       valueDataB << 2.5, 3.5;
       cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
-      cplInterface.writeVectorGradientData(dataBID, 0, gradient.data(), gradient.data(), gradient.data());
+      cplInterface.writeVectorGradientData(dataBID, 0, gradient.data());
 
       maxDt = cplInterface.advance(maxDt);
       cplInterface.readVectorData(dataAID, 0, valueDataA.data());
@@ -261,10 +268,11 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Vector)
     BOOST_TEST(valueDataB == expected);
 
     while (cplInterface.isCouplingOngoing()) {
-      Vector3d valueDataA(1.0, 1.0, 1.0);
-      Vector3d gradient(1.0, 1.0, 1.0);
+      Vector3d                    valueDataA(1.0, 1.0, 1.0);
+      Eigen::Matrix<double, 3, 3> gradient;
+      gradient << 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0;
       cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
-      cplInterface.writeVectorGradientData(dataAID, 0, gradient.data(), gradient.data(), gradient.data());
+      cplInterface.writeVectorGradientData(dataAID, 0, gradient.data());
 
       maxDt = cplInterface.advance(maxDt);
 
@@ -334,7 +342,8 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
     while (cplInterface.isCouplingOngoing()) {
 
       cplInterface.writeScalarData(dataAID, 0, 3.0);
-      cplInterface.writeScalarGradientData(dataAID, 0, 1.0, 2.0, 3.0);
+      Vector3d valueGradDataA(1.0, 2.0, 3.0);
+      cplInterface.writeScalarGradientData(dataAID, 0, valueGradDataA.data());
 
       maxDt = cplInterface.advance(maxDt);
 
@@ -377,6 +386,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(ParallelGradientMappingTests)
 
+/*
 // In order to test enforced gather scatter communication with an empty master rank (see below)
 void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::string configFile)
 {
@@ -403,12 +413,14 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
     // Initialize the solverinterface
     double dt = interface.initialize();
 
-    // Create some dummy writeData
+    // Create some dummy writeData and writeGradientData
     std::vector<double> writeData;
     std::vector<double> writeGradientData;
-    for (unsigned int i = 0; i < size; ++i) {
-      writeData.emplace_back(i + 1);
-      writeGradientData.emplace_back(0.0);
+    for(int j=0; dim < dim; j++){
+      for (unsigned int i = 0; i < size; ++i) {
+        writeData.emplace_back(i + 1);
+        writeGradientData.emplace_back(0.0);
+      }
     }
 
     // Allocate memory for readData
@@ -418,7 +430,7 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
       interface.writeBlockScalarData(writeDataID, size,
                                      ids.data(), writeData.data());
       interface.writeBlockScalarGradientData(writeDataID, size,
-                                             ids.data(), writeGradientData.data(), writeGradientData.data());
+                                             ids.data(), writeGradientData.data());
 
       dt = interface.advance(dt);
       interface.readBlockScalarData(readDataID, size,
@@ -452,7 +464,7 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
 
     // Somce arbitrary write data
     std::vector<double> writeData{3.4, 5.7, 4.0};
-    std::vector<double> writeGradientData{0.0, 0.0, 0.0};
+    std::vector<double> writeGradientData{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     std::vector<double> readData(size);
 
     // Start the time loop
@@ -461,7 +473,7 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
       interface.writeBlockScalarData(writeDataID, size,
                                      ids.data(), writeData.data());
       interface.writeBlockScalarGradientData(writeDataID, size,
-                                             ids.data(), writeGradientData.data(), writeGradientData.data());
+                                             ids.data(), writeGradientData.data());
       dt = interface.advance(dt);
       interface.readBlockScalarData(readDataID, size,
                                     ids.data(), readData.data());
@@ -473,13 +485,16 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
   }
 }
 
+ */
 // Test case for an enforced gather scatter communication, where the partition
 // on the master rank is empty (recieved and provided). See issue #1013 for details.
+/*
 BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyMaster)
 {
   // Provided master partition is empty and received master partition is empty
   runTestEnforceGatherScatter(std::vector<double>{}, pathToTests + "nng-enforce-gather-scatter.xml");
 }
+ */
 
 BOOST_AUTO_TEST_SUITE_END()
 

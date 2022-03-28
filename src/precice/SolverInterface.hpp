@@ -362,6 +362,19 @@ public:
   bool isMeshConnectivityRequired(int meshID) const;
 
   /**
+   * @brief Checks if the given data set requires gradient data.
+   * We check if the data object has been intialized with the gradient flag.
+   *
+   * preCICE may require gradient data information from the solver and
+   * ignores any API calls regarding gradient data if it is not required.
+   * (When applying a nearest-neighbor-gradient mapping)
+   *
+   * @param[in] dataID the id of the data
+   * @returns whether gradient is required
+   */
+  bool isDataGradientRequired(int dataID) const;
+
+  /**
    * @brief Creates a mesh vertex
    *
    * @param[in] meshID the id of the mesh to add the vertex to.
@@ -637,9 +650,7 @@ public:
    * @param[in] dataID ID to write to.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
-   * @param[in] valuesdX pointer to the vector values derived in X-direction.
-   * @param[in] valuesdY pointer to the vector values derived in Y-direction.
-   * @param[in] valuesdZ pointer to the vector values derived in Z-direction.
+   * @param[in] values pointer to the vector gradient values.
    *
    * @pre count of available elements at gradient values matches the configured dimension * size
    * @pre count of available elements at valueIndices matches the given size
@@ -651,9 +662,8 @@ public:
       int           dataID,
       int           size,
       const int *   valueIndices,
-      const double *valuesdX,
-      const double *valuesdY,
-      const double *valuesdZ = nullptr);
+      const double *values,
+      bool          spacialFirst = false);
 
   /**
    * @brief Writes vector data to a vertex
@@ -712,9 +722,7 @@ public:
    * @param[in] dataID ID to write to.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
-   * @param[in] valuesdX pointer to the values derived in X-direction.
-   * @param[in] valuesdY pointer to the values derived in Y-direction.
-   * @param[in] valuesdZ pointer to the values derived in Z-direction.
+   * @param[in] values pointer to the gradient values.
    *
    * @pre count of available elements at values matches the given size
    * @pre count of available elements at valueIndices matches the given size
@@ -726,9 +734,8 @@ public:
       int           dataID,
       int           size,
       const int *   valueIndices,
-      const double *valuesdX,
-      const double *valuesdY,
-      const double *valuesdZ = nullptr);
+      const double *values,
+      bool          spacialFirst = false);
 
   /**
    * @brief Writes scalar data to a vertex
@@ -759,9 +766,7 @@ public:
    *
    * @param[in] dataID ID to write to.
    * @param[in] valueIndex Index of the vertex.
-   * @param[in] valuedX pointer to the gradient values in X-direction derived.
-   * @param[in] valuedY pointer to the gradient values in Y-direction derived.
-   * @param[in] valuedZ pointer to the gradient values in Z-direction derived (if the space is in 3D).
+   * @param[in] value pointer to the gradient value.
    *
    * @pre count of available elements at value matches the configured dimension
    * @pre initialize() has been called
@@ -772,9 +777,8 @@ public:
   void writeVectorGradientData(
       int           dataID,
       int           valueIndex,
-      const double *valuedX,
-      const double *valuedY,
-      const double *valuedZ = nullptr);
+      const double *value,
+      bool          spacialFirst = false);
 
   /**
    * @brief Writes gradient data to a vertex
@@ -784,9 +788,7 @@ public:
    *
    * @param[in] dataID ID to write to.
    * @param[in] valueIndex Index of the vertex.
-   * @param[in] valuedX gradient value in dX.
-   * @param[in] valuedY gradient value in dY.
-   * @param[in] valuedZ gradient value in dZ.
+   * @param[in] value gradient values
    *
    * @pre count of available elements at value matches the configured dimension
    * @pre initialize() has been called
@@ -795,11 +797,9 @@ public:
    * @see SolverInterface::setMeshVertex()
    */
   void writeScalarGradientData(
-      int          dataID,
-      int          valueIndex,
-      const double valuedX,
-      const double valuedY,
-      const double valuedZ = 0);
+      int           dataID,
+      int           valueIndex,
+      const double *value);
 
   /**
    * @brief Reads vector data into a provided block.

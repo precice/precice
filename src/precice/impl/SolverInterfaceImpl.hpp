@@ -247,6 +247,9 @@ public:
   /// @copydoc SolverInterface::isMeshConnectivityRequired()
   bool isMeshConnectivityRequired(int meshID) const;
 
+  /// @copydoc SolverInterface::isDataGradientRequired()
+  bool isDataGradientRequired(int dataID) const;
+
   /// Returns true, if the data with given name is used in the given mesh.
   bool hasData(const std::string &dataName, MeshID meshID) const;
 
@@ -380,15 +383,14 @@ public:
    * The exact mapping and communication must be specified in XYZ.
    *
    * @param[in] dataID ID of the data to be written, e.g. 1 = forces
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
-   * @param[in] dataValue Value of the gradient data to be written
+   * @param[in] valueIndex Index of the vertex where gradient data is written
+   * @param[in] value Value of the gradient data to be written
    */
   void writeVectorGradientData(
       int           fromDataID,
       int           valueIndex,
-      const double *valuedX,
-      const double *valuedY,
-      const double *valuedZ = nullptr);
+      const double *value,
+      bool          spacialFirst = false);
 
   /**
    * @brief Writes vector data values given as block.
@@ -424,9 +426,8 @@ public:
       int           fromDataID,
       int           size,
       const int *   valueIndices,
-      const double *valuesdX,
-      const double *valuesdY,
-      const double *valuesdZ = nullptr);
+      const double *values,
+      bool          spacialFirst = false);
 
   /**
    * @brief Write scalar data to the interface mesh
@@ -448,15 +449,13 @@ public:
    * The exact mapping and communication must be specified in XYZ.
    *
    * @param[in] fromDataID ID of the data to be written, e.g. 1 = forces
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
-   * @param[in] dataValue Value of the gradient data to be written
+   * @param[in] valueIndex Index of the vertex where data is written
+   * @param[in] value Value of the gradient data to be written
    */
   void writeScalarGradientData(
-      int          fromDataID,
-      int          valueIndex,
-      const double valuedX,
-      const double valuedY,
-      const double valuedZ = 0);
+      int           fromDataID,
+      int           valueIndex,
+      const double *value);
 
   /**
    * @brief Writes scalar data values given as block.
@@ -474,19 +473,20 @@ public:
   /**
    * @brief Writes scalar gradient data values given as block.
    *
-   * @param fromDataID [IN] ID of the data to be written.
-   * @param size [IN] Number of valueIndices, and number of values.
-   * @param valuesX [IN] Values of the data dX to be written.
-   * @param valuesY [IN] Values of the data dY to be written.
-   * @param valuesZ [IN] Values of the data dZ to be written (if the space is in 3D).
+   * The block contains the gradient values in the following form:
+   * gradientValues = (v0_dx, v0_dy, v0_dz, v1_dx, v1_dy, v1_dz, ...., vn_dx, vn_dy, vn_dz), where n is
+   * the number of vector values. In 2D, the z-components are removed.
+   * @param fromDataID ID of the data to be written.
+   * @param size Number of valueIndices, and number of values.
+   * @param valueIndices Indices (from setReadPosition()) of data values.
+   * @param values Values of the gradient data to be written.
    */
   void writeBlockScalarGradientData(
       int           fromDataID,
       int           size,
       const int *   valueIndices,
-      const double *valuesdX,
-      const double *valuesdY,
-      const double *valuesdZ = nullptr);
+      const double *values,
+      bool          spacialFirst = false);
 
   /**
    * @brief Reads vector data values given as block.
@@ -585,6 +585,7 @@ private:
   impl::PtrParticipant _accessor;
 
   /// Spatial dimensions of problem.
+  /// TODO: Sure this is the spatial dimensions of the mesh and not the dimensions of the data ?
   int _dimensions = 0;
 
   utils::MultiLock<int> _meshLock;
