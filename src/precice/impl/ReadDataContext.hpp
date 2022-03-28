@@ -47,7 +47,7 @@ public:
   void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) override;
 
   /**
-   * @brief Allows to sample data at a given point in time insize of the time window
+   * @brief Samples data at a given point in time within the current time window
    *
    * @param normalizedDt defines point in time where waveform will be sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the window.
    */
