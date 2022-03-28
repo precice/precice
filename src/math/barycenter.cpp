@@ -25,17 +25,15 @@ Eigen::Vector2d calcBarycentricCoordsForEdge(
 
   Vector2d barycentricCoords;
   VectorXd ab, au;
-  double   lenAb, lenProjected;
 
-  // constant per edge
-  ab    = b - a;
-  lenAb = sqrt(ab.dot(ab));
+  // Let AB be the edge and U the input point. We compute the projection P of U on the edge.
+  // To find P, start from A and move from dot(AU, AB) / |AB| along the AB direction.
+  // Divide again by |AB| to find the barycentric coordinate of P relative to U
+  // This means we just need to compute dot(AU, AB) / dot(AB, AB)
+  ab = b - a;
+  au = u - a;
 
-  // varying per point
-  au           = u - a;
-  lenProjected = au.dot(ab / lenAb);
-
-  barycentricCoords(1) = lenProjected / lenAb;
+  barycentricCoords(1) = au.dot(ab) / ab.dot(ab);
   barycentricCoords(0) = 1 - barycentricCoords(1);
 
   return barycentricCoords;
