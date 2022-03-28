@@ -49,7 +49,7 @@ public:
   /**
    * @brief Samples data at a given point in time within the current time window
    *
-   * @param normalizedDt defines point in time where waveform will be sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the window.
+   * @param normalizedDt Point in time where waveform is sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the current time window.
    */
   Eigen::VectorXd sampleWaveformAt(double normalizedDt);
 
