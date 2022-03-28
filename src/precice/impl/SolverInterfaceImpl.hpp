@@ -49,7 +49,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * A solver that wants to use the SolverInterfaceImpl must instatiate an object
+   * A solver that wants to use the SolverInterfaceImpl must instantiate an object
    * of this class. The object has to be configured by one of the configure
    * methods before it has a reasonable state and can be used.
    *
@@ -79,7 +79,7 @@ public:
   /**
    * @brief Constructor with support for custom MPI_COMM_WORLD.
    *
-   * A solver that wants to use the SolverInterfaceImpl must instatiate an object
+   * A solver that wants to use the SolverInterfaceImpl must instantiate an object
    * of this class. The object has to be configured by one of the configure
    * methods before it has a reasonable state and can be used.
    *
@@ -146,7 +146,7 @@ public:
    *
    * If initialize() has been called:
    *
-   * - Synchronizes with remote partiticipants
+   * - Synchronizes with remote participants
    * - handles final exports
    * - cleans up general state
    *
@@ -177,7 +177,7 @@ public:
    * @brief Returns true, if the coupled simulation is still ongoing.
    *
    * The information to decide about the continuation of the coupled simulation
-   * is retreived in the function initializeCoupling and updated in the
+   * is retrieved in the function initializeCoupling and updated in the
    * function exchangeData.
    */
   bool isCouplingOngoing() const;

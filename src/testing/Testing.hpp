@@ -131,7 +131,7 @@ std::string getPathToTests();
 /// Returns the name of the current test.
 std::string getTestName();
 
-/// Returns the full path to the file containting the current test.
+/// Returns the full path to the file containing the current test.
 std::string getTestPath();
 
 /** Generates a new mesh id for use in tests.

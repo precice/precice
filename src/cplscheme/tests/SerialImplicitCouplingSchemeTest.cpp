@@ -908,7 +908,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
     BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
     BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 0.0));
   } else {
-    // second participant receives initial data written by first participant in it's first window = 1 (see below)
+    // second participant receives initial data written by first participant in its first window = 1 (see below)
     BOOST_TEST(context.isNamed(second));
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);

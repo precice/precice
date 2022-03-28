@@ -197,7 +197,7 @@ public:
    * Data is classified to be new, if it has been received while calling
    * initialize() and before calling advance(), or in the last call of advance().
    * This is always true, if a participant does not make use of subcycling, i.e.
-   * choosing smaller timesteps than the limits returned in intitialize() and
+   * choosing smaller timesteps than the limits returned in initialize() and
    * advance().
    *
    * @pre initialize() has been called successfully.
@@ -217,7 +217,7 @@ public:
    * @return whether new data has to be written.
    *
    * This is always true, if a participant does not make use of subcycling, i.e.
-   * choosing smaller timesteps than the limits returned in intitialize() and
+   * choosing smaller timesteps than the limits returned in initialize() and
    * advance().
    *
    * @pre initialize() has been called successfully.

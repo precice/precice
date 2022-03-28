@@ -461,7 +461,7 @@ void BaseQNAcceleration::splitCouplingData(
 /** ---------------------------------------------------------------------------------------------
  *         iterationsConverged()
  *
- * @brief: Is called when the convergence criterion for the coupling is fullfilled and finalizes
+ * @brief: Is called when the convergence criterion for the coupling is fulfilled and finalizes
  *         the quasi Newton acceleration. Stores new differences in F and C, clears or
  *         updates F and C according to the number of reused time windows
  *  ---------------------------------------------------------------------------------------------

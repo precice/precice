@@ -161,7 +161,7 @@ struct indexed_access<pm::Edge, Index, Dimension> {
 
 /** @brief Provides the necessary template specialisations to adapt precice's Triangle to boost.geometry
 *
-* This adapts every Triangle to the ring concept (filled planar polygone) of boost.geometry.
+* This adapts every Triangle to the ring concept (filled planar polygon) of boost.geometry.
 * Include impl/RangeAdapter.hpp for full support.
 */
 template <>

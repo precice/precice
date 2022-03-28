@@ -646,7 +646,7 @@ void ReceivedPartition::createOwnerInformation()
       neighborRanksVertexCount.emplace(neighborRank.first, 0);
     }
 
-    // Asynchronous recieve number of owned vertices from neighbor ranks
+    // Asynchronous receive number of owned vertices from neighbor ranks
     for (auto &neighborRank : localConnectedBBMap) {
       auto request = utils::MasterSlave::getCommunication()->aReceive(neighborRanksVertexCount.at(neighborRank.first), neighborRank.first);
       vertexNumberRequests.push_back(request);

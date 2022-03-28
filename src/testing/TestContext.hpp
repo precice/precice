@@ -43,7 +43,7 @@ inline constexpr Ranks operator""_rank(unsigned long long value)
   return (value == 1) ? Ranks{1} : throw std::runtime_error{"Cannot create multiple ranks with _rank()! Use _ranks() instead!"};
 }
 
-/// Represents a Partiticipant in a test
+/// Represents a Participant in a test
 struct Participant {
   /// the name of the participant
   std::string name;
@@ -51,7 +51,7 @@ struct Participant {
   /// the amount of ranks this participant runs on
   int size = 1;
 
-  /// wheather to initialize a master-slave communication for this participant
+  /// whether to initialize a master-slave communication for this participant
   bool initMS = false;
 
   /// Constructs a serial participant with a given name
@@ -72,7 +72,7 @@ struct Participant {
     return *this;
   }
 
-  /** Marks that this Partiticipant should initialize a master-slave connection.
+  /** Marks that this Participant should initialize a master-slave connection.
    *
    * @returns A reference to the Participant allowing for chaining.
    */
@@ -121,12 +121,12 @@ enum struct ConnectionType {
 struct ConnectionOptions {
   ConnectionOptions() = default;
 
-  /** Wheather to use only the Master-Master connection
+  /** Whether to use only the Master-Master connection
    * @see M2N::M2N()
    */
   bool useOnlyMasterCom = false;
 
-  /** Wheather to enable the two-level initialization
+  /** Whether to enable the two-level initialization
    * @see M2N::M2N()
    */
   bool useTwoLevelInit = false;
@@ -163,7 +163,7 @@ public:
   /// the size of the Communicator of the current participant
   int size = 1;
 
-  /// wheather this context is valid or not
+  /// whether this context is valid or not
   bool invalid = false;
 
   /// @{
@@ -177,7 +177,7 @@ public:
    * @note You need to construct a Participant if you require initializing
    * a master-slave connection `"Serial"_on(3_ranks).setupMasterSlaves()`
    *
-   * @attention This call synchonizes all ranks
+   * @attention This call synchronizes all ranks
    *
    */
   template <class... T>
@@ -193,7 +193,7 @@ public:
    * @note You need to construct a Participant if you require initializing
    * a master-slave connection `"Serial"_on(3_ranks).setupMasterSlaves()`
    *
-   * @attention This call synchonizes all ranks
+   * @attention This call synchronizes all ranks
    *
    * @see Require
    */
@@ -208,7 +208,7 @@ public:
 
   /** Create a context representing one or more participants
    *
-   * @attention This call synchonizes all ranks
+   * @attention This call synchronizes all ranks
    *
    * @see Require
    */
@@ -222,8 +222,8 @@ public:
 
   /// @}
 
-  /** Cleans-up all initialized parts and synchonizes all ranks
-   * @attention This call synchonizes all ranks
+  /** Cleans-up all initialized parts and synchronizes all ranks
+   * @attention This call synchronizes all ranks
    */
   ~TestContext() noexcept;
 
@@ -251,7 +251,7 @@ public:
   /// Check wheater this context has a given name
   bool isNamed(const std::string &name) const;
 
-  /// Check wheater this context has a given rank inside the Partiticipant
+  /// Check wheater this context has a given rank inside the Participant
   bool isRank(Rank rank) const;
 
   /** Check wheater this context is the master of a Participants

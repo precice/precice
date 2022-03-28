@@ -31,7 +31,7 @@ namespace impl {
 
 /**
  * @brief Class that provides functionality to maintain a SVD decomposition of a matrix
- * via succesive rank-1 updates and truncation with respect to the truncation threshold eps.
+ * via successive rank-1 updates and truncation with respect to the truncation threshold eps.
  */
 class SVDFactorization {
 public:

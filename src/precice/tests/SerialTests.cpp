@@ -891,7 +891,7 @@ BOOST_AUTO_TEST_CASE(testExplicitWithDataScaling)
 }
 
 // Test case for a direct mesh access on one participant to a mesh defined
-// by another participant. The region of interest is defined thorugh a
+// by another participant. The region of interest is defined through a
 // boundingBox. The test case here is the most basic variant in order
 // use such a feature. SolverTwo defines the mesh whereas SolverOne writes
 // directly on this mesh.
@@ -965,7 +965,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshExplicit)
 }
 
 // Test case for a direct mesh access on one participant to a mesh defined
-// by another participant. The region of interest is defined thorugh a
+// by another participant. The region of interest is defined through a
 // boundingBox. The test case here is the most basic variant in order
 // use such a feature. SolverTwo defines the mesh whereas SolverOne reads
 // directly from this mesh.
@@ -1133,7 +1133,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 }
 
 // Test case for a direct mesh access on one participant to a mesh defined
-// by another participant. The region of interest is defined thorugh a
+// by another participant. The region of interest is defined through a
 // boundingBox. As opposed to the 'boundingBoxExplicit' test case, this
 // test case uses the same feature in an implicit setup.
 

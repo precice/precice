@@ -473,7 +473,7 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                     "- `RS-SVD`:     IMVJ runs in restart mode. After M time windows a truncated SVD of the Jacobian is updated.\n"
                                     "- `RS-SLIDE`:   IMVJ runs in sliding window restart mode.\n");
     auto attrChunkSize = makeXMLAttribute(ATTR_IMVJCHUNKSIZE, 8)
-                             .setDocumentation("Specifies the number of time windows M after which the IMVJ restarts, if run in restart-mode. Defaul value is M=8.");
+                             .setDocumentation("Specifies the number of time windows M after which the IMVJ restarts, if run in restart-mode. Default value is M=8.");
     auto attrReusedTimeWindowsAtRestart = makeXMLAttribute(ATTR_RSLS_REUSED_TIME_WINDOWS, 8)
                                               .setDocumentation("If IMVJ restart-mode=RS-LS, the number of reused time windows at restart can be specified.");
     auto attrRSSVD_truncationEps = makeXMLAttribute(ATTR_RSSVD_TRUNCATIONEPS, 1e-4)

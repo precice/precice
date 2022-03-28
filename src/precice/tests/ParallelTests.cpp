@@ -247,7 +247,7 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::strin
   }
 }
 // Test case for an enforced gather scatter communication, where the partition
-// on the master rank is empty (recieved and provided). See issue #1013 for details.
+// on the master rank is empty (received and provided). See issue #1013 for details.
 BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyMaster)
 {
   // Provided master partition is empty and received master partition is empty
@@ -777,7 +777,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitialization)
     }
   } else {
     BOOST_TEST(context.isNamed("Structure"));
-    // This partiticipant starts with negated data
+    // This participant starts with negated data
     for (int i = 0; i < 4; i++) {
       data[i] = -data[i];
     }

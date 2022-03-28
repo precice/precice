@@ -1,5 +1,5 @@
 /** @file
- * This file contains all requried headers to consistently use fmtlib in preCICE.
+ * This file contains all required headers to consistently use fmtlib in preCICE.
  * Use this is you want to format anything in preCICE.
  */
 
