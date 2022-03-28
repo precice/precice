@@ -53,7 +53,7 @@ public:
   void storeAtAllSamples(const Eigen::VectorXd values);
 
   /**
-   * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Usually called, when moving to the next time window.
+   * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.
    */
   void moveToNextWindow();
 
