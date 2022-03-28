@@ -1234,7 +1234,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     int           size,
     const int *   valueIndices,
     const double *values,
-    bool          spacialFirst)
+    bool          rowMajor)
 {
 
   // Asserts and checks
@@ -1274,7 +1274,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                     context.getDataName(), valueIndex);
 
-      if (spacialFirst) {
+      if (rowMajor) {
         const int offset                        = dim * size;
         gradientValuesInternal(dim, valueIndex) = values[offset + i];
       } else {
@@ -1291,7 +1291,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
     int           dataID,
     int           valueIndex,
     const double *value,
-    bool          spacialFirst)
+    bool          rowMajor)
 {
 
   PRECICE_TRACE(dataID, valueIndex);
@@ -1328,7 +1328,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
 
       const int offsetInternal = valueIndex * _dimensions;
 
-      if (spacialFirst) {
+      if (rowMajor) {
         const int offset                                           = dimData * _dimensions;
         gradientValuesInternal(dimSpace, offsetInternal + dimData) = value[offset + dimSpace];
       } else {
@@ -1346,7 +1346,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     int           size,
     const int *   valueIndices,
     const double *values,
-    bool          spacialFirst)
+    bool          rowMajor)
 {
 
   // Asserts and checks
@@ -1391,7 +1391,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 
         const int offsetInternal = valueIndex * _dimensions;
 
-        if (spacialFirst) {
+        if (rowMajor) {
           const int offsetOut                                = i * _dimensions * _dimensions;
           const int offsetIn                                 = dimData * _dimensions;
           gradientValues(dimSpace, offsetInternal + dimData) = values[offsetOut + offsetIn + dimSpace];

@@ -663,7 +663,7 @@ public:
       int           size,
       const int *   valueIndices,
       const double *values,
-      bool          spacialFirst = false);
+      bool          rowMajor = false);
 
   /**
    * @brief Writes vector data to a vertex
@@ -735,7 +735,7 @@ public:
       int           size,
       const int *   valueIndices,
       const double *values,
-      bool          spacialFirst = false);
+      bool          rowMajor = false);
 
   /**
    * @brief Writes scalar data to a vertex
@@ -778,7 +778,7 @@ public:
       int           dataID,
       int           valueIndex,
       const double *value,
-      bool          spacialFirst = false);
+      bool          rowMajor = false);
 
   /**
    * @brief Writes gradient data to a vertex

@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(ParallelGradientMappingTests)
+//BOOST_AUTO_TEST_SUITE(ParallelGradientMappingTests)
 
 /*
 // In order to test enforced gather scatter communication with an empty master rank (see below)
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyMaster)
 }
  */
 
-BOOST_AUTO_TEST_SUITE_END()
+//BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
