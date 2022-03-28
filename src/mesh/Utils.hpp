@@ -33,7 +33,7 @@ inline Vertex *sharedVertex(Edge &a, Edge &b)
   return nullptr;
 }
 
-/** Calulates the length of an Edge
+/** Calculates the length of an Edge
  *
  * @param[in] e the edge
  *

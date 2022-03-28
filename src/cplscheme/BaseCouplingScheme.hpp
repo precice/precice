@@ -563,7 +563,7 @@ private:
 
   /**
    * @brief Measure whether coupling scheme has converged or not
-   * @return Whether coupling schem has converged
+   * @return Whether coupling scheme has converged
    */
   bool measureConvergence();
 

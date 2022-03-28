@@ -49,7 +49,7 @@ public:
     return 0;
   }
 
-  /// Returns an abreviation of the name of the measure for the log file headers
+  /// Returns an abbreviation of the name of the measure for the log file headers
   virtual std::string getAbbreviation() const
   {
     return "";

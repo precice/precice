@@ -105,7 +105,7 @@ void setupTestLogging()
 struct PreciceTestLoggingFixture {
   static void setup()
   {
-    std::cerr << "Settup up logging\n";
+    std::cerr << "Setup up logging\n";
     precice::testing::setupTestLogging();
   }
 };

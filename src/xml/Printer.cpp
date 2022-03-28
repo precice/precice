@@ -193,8 +193,8 @@ std::ostream &printDTD(std::ostream &out, const XMLTag &tag, bool start = false)
 
 /** Prints an Example of the given XMLTag at a given level of nesting.
  *
- * For the sake of readability, the example depth is trucated.
- * level is used to trucate and for indentation purposes.
+ * For the sake of readability, the example depth is truncated.
+ * level is used to truncate and for indentation purposes.
  */
 std::ostream &printExample(std::ostream &out, const XMLTag &tag, int level)
 {

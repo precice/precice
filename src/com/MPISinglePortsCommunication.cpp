@@ -155,7 +155,7 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   MPI_Send(&requesterRank, 1, MPI_INT, 0, 42, communicator);
   // Send the rank of this requesters communicator size
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
-  // Recevie the acceptorRank, which should always be 0
+  // Receive the acceptorRank, which should always be 0
   int acceptorRank = -1;
   MPI_Recv(&acceptorRank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
   PRECICE_ASSERT(acceptorRank == 0);

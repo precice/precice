@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   inMesh->allocateDataValues();
   inData->values() << 1.0, 1.0, 1.0, 1.0;
 
-  // Create mesh to map to with one vertex per defined traingle
+  // Create mesh to map to with one vertex per defined triangle
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   PtrData outData = outMesh->createData("OutData", 1, 1_dataID);
   outMesh->createVertex(Eigen::Vector3d{0.33, 0.33, 0});

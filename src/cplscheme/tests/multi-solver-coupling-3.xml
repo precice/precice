@@ -10,6 +10,31 @@
     <use-data name="Data2" />
   </mesh>
 
+  <participant name="Participant0">
+    <use-mesh name="Mesh" provide="on" />
+
+    <write-data name="Data0" mesh="Mesh" />
+
+    <read-data name="Data1" mesh="Mesh" />
+  </participant>
+
+  <participant name="Participant1">
+    <use-mesh name="Mesh" provide="on" />
+
+    <write-data name="Data1" mesh="Mesh" />
+
+    <read-data name="Data0" mesh="Mesh" />
+    <read-data name="Data2" mesh="Mesh" />
+  </participant>
+
+  <participant name="Participant2">
+    <use-mesh name="Mesh" provide="on" />
+
+    <write-data name="Data2" mesh="Mesh" />
+
+    <read-data name="Data1" mesh="Mesh" />
+  </participant>
+
   <m2n:sockets from="Participant0" to="Participant1" />
   <m2n:sockets from="Participant1" to="Participant2" />
 

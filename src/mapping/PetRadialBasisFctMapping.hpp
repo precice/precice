@@ -133,7 +133,7 @@ private:
   /// true if the mapping along some axis should be ignored
   std::vector<bool> _deadAxis;
 
-  /// Toggles the use of the additonal polynomial
+  /// Toggles the use of the additional polynomial
   Polynomial _polynomial;
 
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
@@ -267,7 +267,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PRECICE_DEBUG("Using no polynomial.");
   }
   if (_polynomial == Polynomial::SEPARATE) {
-    PRECICE_DEBUG("Using seperated polynomial.");
+    PRECICE_DEBUG("Using separated polynomial.");
   }
 
   PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
@@ -603,7 +603,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     CHKERRV(ierr);
     ierr = MatMult(_matrixA, rescalingCoeffs, oneInterpolant);
     CHKERRV(ierr); // get the output of g(x) = 1
-    // set values close to zero to exactly 0.0, s.t. PointwiseDevide does not to devision on these entries
+    // set values close to zero to exactly 0.0, s.t. PointwiseDevide doesn't do division on these entries
     ierr = VecChop(oneInterpolant, 1e-6);
     CHKERRV(ierr);
   }
