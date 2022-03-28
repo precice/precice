@@ -30,7 +30,7 @@ public:
       int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
 
   /**
-   * @brief Getter for _interpolationOrder of _providedWaveform
+   * @brief Gets _interpolationOrder of _providedWaveform
    * 
    * @return _interpolationOrder of _providedWaveform
    */
