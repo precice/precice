@@ -1053,7 +1053,7 @@ void SolverInterfaceImpl::mapReadDataTo(
   double time = _couplingScheme->getTime();
   performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
-  // @todo should only initialize waveform for the toMeshID
+  // should only initialize waveform for the toMeshID, but we don't have to optimize this, because method will be removed. See https://github.com/precice/precice/issues/859.
   initializeReadWaveforms();
 
   for (impl::MappingContext &mappingContext : context.toMappingContexts) {
@@ -1067,7 +1067,7 @@ void SolverInterfaceImpl::mapReadDataTo(
       }
       PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
-      context.storeDataInWaveformFirstSample();
+      context.storeDataInWaveform();
     }
     mappingContext.hasMappedData = true;
   }
@@ -1734,7 +1734,7 @@ void SolverInterfaceImpl::mapReadData()
       PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
       context.mapData();
     }
-    context.storeDataInWaveformFirstSample();
+    context.storeDataInWaveform();
   }
   clearMappings(_accessor->readMappingContexts());
 }
