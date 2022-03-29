@@ -10,18 +10,13 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
-#include <fstream>
-#include <memory>
 #include <string>
 
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
-#include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
-#include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
-#include "utils/assertion.hpp"
 
 // ------- CLASS DEFINITION
 
@@ -295,10 +290,6 @@ private:
   bool _initialSVD = false;
 
   bool _applyFilterQR = false;
-
-  /// Optional infostream that writes information to file
-  std::fstream *_infostream;
-  bool          _fstream_set = false;
 };
 
 } // namespace impl
