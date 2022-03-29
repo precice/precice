@@ -882,7 +882,7 @@ std::vector<Interface> detectInterfaces()
     if (socketfd == -1) {
       continue;
     }
-    auto err      = ioctl(socketfd, SIOCGIFADDR, &request);
+    auto err = ioctl(socketfd, SIOCGIFADDR, &request);
     close(socketfd);
     if (err) {
       continue;

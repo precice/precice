@@ -12,10 +12,10 @@
 
 #define PRECICE_INFO(...) _log.info(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
 
-#define PRECICE_ERROR(...)                                      \
-  do {                                                          \
+#define PRECICE_ERROR(...)                                                          \
+  do {                                                                              \
     _log.error(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__)); \
-    std::exit(-1);                                              \
+    std::exit(-1);                                                                  \
   } while (false)
 
 #define PRECICE_CHECK(check, ...) \

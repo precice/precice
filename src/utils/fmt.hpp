@@ -16,7 +16,7 @@ namespace precice {
 namespace utils {
 
 template <class... A>
-std::string format_or_error(A &&...args)
+std::string format_or_error(A &&... args)
 {
   try {
     return fmt::format(std::forward<A>(args)...);
