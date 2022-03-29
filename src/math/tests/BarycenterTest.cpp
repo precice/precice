@@ -289,6 +289,20 @@ BOOST_AUTO_TEST_CASE(BarycenterTetrahedron)
     BOOST_TEST(ret.sum() == 1.0);
     BOOST_TEST(equals(ret, coords));
   }
+  // Is middle of AB?
+  {
+    Vector4d coords(0.5, 0.5, 0.0, 0.0);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, 0.5 * a + 0.5 * b);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // Is middle of ABD?
+  {
+    Vector4d coords(1. / 3, 1. / 3, 0.0, 1. / 3);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, (a + b + d) / 3);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Barycenter
