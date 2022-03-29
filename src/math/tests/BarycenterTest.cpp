@@ -261,6 +261,34 @@ BOOST_AUTO_TEST_CASE(BarycenterTetrahedron)
     BOOST_TEST(ret.sum() == 1.0);
     BOOST_TEST(equals(ret, coords));
   }
+  // Is A?
+  {
+    Vector4d coords(1.0, 0.0, 0.0, 0.0);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, a);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // Is B?
+  {
+    Vector4d coords(0.0, 1.0, 0.0, 0.0);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, b);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // Is C?
+  {
+    Vector4d coords(0.0, 0.0, 1.0, 0.0);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, c);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // Is D?
+  {
+    Vector4d coords(0.0, 0.0, 0.0, 1.0);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, d);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Barycenter

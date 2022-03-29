@@ -112,17 +112,19 @@ Eigen::Vector4d calcBarycentricCoordsForTetrahedron(
 
   const int dimensions = a.size();
   PRECICE_ASSERT(dimensions == 3, dimensions);
-  //TODO add chekcs for D
   PRECICE_ASSERT(dimensions == b.size(), "A and B need to have the same dimensions.", dimensions, b.size());
   PRECICE_ASSERT(dimensions == c.size(), "A and C need to have the same dimensions.", dimensions, c.size());
+  PRECICE_ASSERT(dimensions == d.size(), "A and D need to have the same dimensions.", dimensions, d.size());
   PRECICE_ASSERT(dimensions == u.size(), "A and the point need to have the same dimensions.", dimensions, u.size());
 
   Vector4d barycentricCoords;
 
+  // Varying per poit
   Vector3d au = u - a;
   Vector3d du = u - d;
   Vector3d cu = u - c;
 
+  // Necessary to compute triangles
   Vector3d ab = b - a;
   Vector3d ac = c - a;
   Vector3d ad = d - a;
