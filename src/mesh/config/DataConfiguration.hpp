@@ -37,7 +37,7 @@ public:
   /**
    * @brief Adds data manually.
    *
-   * @param[in] name Unqiue name of the data.
+   * @param[in] name Unique name of the data.
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    */
   void addData(const std::string &name,

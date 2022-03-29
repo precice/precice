@@ -21,7 +21,7 @@ public:
       Timing               timing,
       const mesh::PtrMesh &mesh);
 
-  /// Records the invokation and appends it to the records
+  /// Records the invocation and appends it to the records
   void performAction(
       double time,
       double timeStepSize,

@@ -1217,7 +1217,7 @@ void SolverInterfaceImpl::readScalarData(
     int     valueIndex,
     double &value) const
 {
-  PRECICE_TRACE(dataID, valueIndex, value);
+  PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
@@ -1642,7 +1642,7 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 
 void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
 {
-  // Apply some final ping-pong to synch solver that run e.g. with a uni-directional coupling only
+  // Apply some final ping-pong to sync solver that run e.g. with a uni-directional coupling only
   // afterwards close connections
   PRECICE_INFO("Synchronize participants and close {}communication channels",
                (close == CloseChannels::Distributed ? "distributed " : ""));

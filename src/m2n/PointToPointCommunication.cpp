@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <boost/container/flat_map.hpp>
+#include <boost/io/ios_state.hpp>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -161,6 +162,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       average /= count;
     }
 
+    boost::io::ios_all_saver ias{std::cout};
     std::cout << std::fixed << std::setprecision(3) //
               << "Number of Communication Partners per Interface Process:"
               << "\n"
@@ -218,6 +220,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       average /= count;
     }
 
+    boost::io::ios_all_saver ias{std::cout};
     std::cout << std::fixed << std::setprecision(3) //
               << "Number of LVDIs per Interface Process:"
               << "\n"

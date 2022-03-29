@@ -240,7 +240,7 @@ protected:
      * @brief Marks a iteration sequence as converged.
      *
      * called by the iterationsConverged() method in the BaseQNAcceleration class
-     * handles the acceleration sepcific action after the convergence of one iteration
+     * handles the acceleration specific action after the convergence of one iteration
      */
   virtual void specializedIterationsConverged(const DataMap &cplData) = 0;
 
