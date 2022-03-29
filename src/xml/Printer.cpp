@@ -25,16 +25,22 @@ namespace {
 /// Transforms a given heading into the id of the sanitized GitHub link
 std::string toGHLink(const std::string &heading)
 {
-  std::regex sanitizer{"[^a-zA-Z0-9-]"};
-  std::regex spaces{"\\s"};
+  try {
+    std::regex sanitizer{"[^a-zA-Z0-9-]"};
+    std::regex spaces{"\\s"};
 
-  // sanitize the heading
-  std::string sanitized = std::regex_replace(std::regex_replace(heading, sanitizer, ""), spaces, "-");
+    // sanitize the heading
+    std::string sanitized = std::regex_replace(std::regex_replace(heading, sanitizer, ""), spaces, "-");
 
-  // convert to lowercase
-  std::transform(sanitized.begin(), sanitized.end(), sanitized.begin(),
-                 [](unsigned char c) { return std::tolower(c); });
-  return "#" + sanitized;
+    // convert to lowercase
+    std::transform(sanitized.begin(), sanitized.end(), sanitized.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    return "#" + sanitized;
+
+  } catch (const std::regex_error &e) {
+    std::cerr << "Error sanitizing link: " << e.what() << '\n';
+    std::exit(-1);
+  }
 }
 
 /// Attribute
