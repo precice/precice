@@ -25,7 +25,7 @@ Tetrahedron::Tetrahedron(
     Vertex &      vertexThree,
     Vertex &      vertexFour,
     TetrahedronID id)
-    : _vertices({&vertexOne, &vertexTwo, &vertexThree, vertexFour}),
+    : _vertices({&vertexOne, &vertexTwo, &vertexThree, &vertexFour}),
       _id(id)
 {
   PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(),
