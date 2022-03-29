@@ -872,6 +872,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       // Copy mapped data to output data values
       ierr     = VecGetArrayRead(out, &vecArray);
+      CHKERRV(ierr);
       int size = out.getLocalSize();
       for (int i = 0; i < size; i++) {
         outValues[i * valueDim + dim] = vecArray[i];
