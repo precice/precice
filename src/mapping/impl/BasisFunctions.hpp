@@ -152,12 +152,12 @@ public:
 private:
   logging::Logger _log{"mapping::Gaussian"};
 
-  /// Below that value the function is supposed to be zero. Defines the support radius if not explicitely given
+  /// Below that value the function is supposed to be zero. Defines the support radius if not explicitly given
   double const cutoffThreshold = 1e-9;
 
   double const _shape;
 
-  /// Either explicitely set (from cutoffThreshold) or computed supportRadius
+  /// Either explicitly set (from cutoffThreshold) or computed supportRadius
   double _supportRadius;
 
   double _deltaY = 0;

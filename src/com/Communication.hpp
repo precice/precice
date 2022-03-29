@@ -45,7 +45,7 @@ namespace com {
  *    sending is happening on the background.
  *
  * @attention All receive methods, that accept a raw array, expect it to be
- * sized appropriatly. Asynchronous receive methods also expect the vector
+ * sized appropriately. Asynchronous receive methods also expect the vector
  * be sized correctly.
  */
 class Communication {

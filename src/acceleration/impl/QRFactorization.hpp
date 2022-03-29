@@ -15,7 +15,7 @@ namespace impl {
 /**
  * @brief Class that provides functionality for a dynamic QR-decomposition, that can be updated
  * in O(mn) flops if a column is inserted or deleted.
- * The new colmn is orthogonalized to the existing columns in Q using a modified GramSchmidt algorithm.
+ * The new column is orthogonalized to the existing columns in Q using a modified GramSchmidt algorithm.
  * The zero-elements are generated using suitable givens-roatations.
  * The Interface provides fnctions such as insertColumn, deleteColumn at arbitrary position an push or pull
  * column at front or back, resp.

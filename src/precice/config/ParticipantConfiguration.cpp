@@ -205,15 +205,15 @@ ParticipantConfiguration::ParticipantConfiguration(
     auto attrPort = makeXMLAttribute("port", 0)
                         .setDocumentation(
                             "Port number (16-bit unsigned integer) to be used for socket "
-                            "communiation. The default is \"0\", what means that OS will "
+                            "communication. The default is \"0\", what means that OS will "
                             "dynamically search for a free port (if at least one exists) and "
                             "bind it automatically.");
     tagMaster.addAttribute(attrPort);
 
     auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
                            .setDocumentation(
-                               "Interface name to be used for socket communiation. "
-                               "Default is the cannonical name of the loopback interface of your platform. "
+                               "Interface name to be used for socket communication. "
+                               "Default is the canonical name of the loopback interface of your platform. "
                                "Might be different on supercomputing systems, e.g. \"ib0\" "
                                "for the InfiniBand on SuperMUC. ");
     tagMaster.addAttribute(attrNetwork);

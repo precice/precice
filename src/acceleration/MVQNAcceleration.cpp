@@ -571,7 +571,7 @@ void MVQNAcceleration::restartIMVJ()
     _pseudoInverseChunk.clear();
 
     if (_matrixV_RSLS.cols() > 0) {
-      // avoid that the syste mis getting too squared
+      // avoid that the system is getting too squared
       while (_matrixV_RSLS.cols() * 2 >= getLSSystemRows()) {
         removeMatrixColumnRSLS(_matrixV_RSLS.cols() - 1);
       }
@@ -652,7 +652,7 @@ void MVQNAcceleration::restartIMVJ()
 
   } else if (_imvjRestartType == MVQNAcceleration::RS_SLIDE) {
 
-    // re-compute Wtil -- compensate for dropping of Wtil_0 ond Z_0:
+    // re-compute Wtil -- compensate for dropping of Wtil_0 and Z_0:
     //                    Wtil_q <-- Wtil_q +  Wtil^0 * (Z^0*V_q)
     for (int i = static_cast<int>(_WtilChunk.size()) - 1; i >= 1; i--) {
 

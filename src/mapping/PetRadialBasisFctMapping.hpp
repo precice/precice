@@ -133,7 +133,7 @@ private:
   /// true if the mapping along some axis should be ignored
   std::vector<bool> _deadAxis;
 
-  /// Toggles the use of the additonal polynomial
+  /// Toggles the use of the additional polynomial
   Polynomial _polynomial;
 
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
@@ -241,8 +241,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
     if (_deadAxis[d])
       deadDimensions += 1;
   }
-  polyparams    = (_polynomial == Polynomial::ON) ? 1 + dimensions - deadDimensions : 0;
-  sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
+  polyparams      = (_polynomial == Polynomial::ON) ? 1 + dimensions - deadDimensions : 0;
+  sepPolyparams   = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
+  localPolyparams = (_commState->rank() > 0) ? 0 : polyparams;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -267,7 +268,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PRECICE_DEBUG("Using no polynomial.");
   }
   if (_polynomial == Polynomial::SEPARATE) {
-    PRECICE_DEBUG("Using seperated polynomial.");
+    PRECICE_DEBUG("Using separated polynomial.");
   }
 
   PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
@@ -282,9 +283,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     inMesh  = input();
     outMesh = output();
   }
-
-  // do not put that in the c'tor, getProcessRank always returns 0 there
-  localPolyparams = _commState->rank() > 0 ? 0 : polyparams;
 
   // Indizes that are used to build the Petsc AO mapping
   std::vector<PetscInt> myIndizes;
@@ -603,7 +601,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     CHKERRV(ierr);
     ierr = MatMult(_matrixA, rescalingCoeffs, oneInterpolant);
     CHKERRV(ierr); // get the output of g(x) = 1
-    // set values close to zero to exactly 0.0, s.t. PointwiseDevide does not to devision on these entries
+    // set values close to zero to exactly 0.0, s.t. PointwiseDevide doesn't do division on these entries
     ierr = VecChop(oneInterpolant, 1e-6);
     CHKERRV(ierr);
   }
@@ -873,7 +871,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       VecChop(out, 1e-9);
 
       // Copy mapped data to output data values
-      ierr     = VecGetArrayRead(out, &vecArray);
+      ierr = VecGetArrayRead(out, &vecArray);
+      CHKERRV(ierr);
       int size = out.getLocalSize();
       for (int i = 0; i < size; i++) {
         outValues[i * valueDim + dim] = vecArray[i];

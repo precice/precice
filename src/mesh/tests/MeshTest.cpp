@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(ShareVertex)
   BOOST_TEST(sharedVertex(e2, e3) == v3);
   BOOST_TEST(sharedVertex(e3, e0) == v0);
 
-  // not connnected
+  // not connected
   BOOST_TEST((sharedVertex(e0, e2) == nullptr));
   BOOST_TEST((sharedVertex(e1, e3) == nullptr));
 
