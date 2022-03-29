@@ -1279,7 +1279,7 @@ void SolverInterfaceImpl::readScalarData(
     int     valueIndex,
     double &value) const
 {
-  PRECICE_TRACE(dataID, valueIndex, value);
+  PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "readScalarData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
