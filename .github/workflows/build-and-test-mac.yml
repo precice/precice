@@ -18,7 +18,7 @@ on:
 jobs:
   build:
     name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
-    runs-on: macos-11
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
