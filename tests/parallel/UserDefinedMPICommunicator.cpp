@@ -12,9 +12,10 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator)
 {
   PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
 
+  /// @todo simplify once #1191 is merged
   if (context.isNamed("SolverOne")) {
     MPI_Comm                 myComm = precice::utils::Parallel::current()->comm;
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size, &myComm);
     int                      meshID = interface.getMeshID("MeshOne");
 
     int    vertexIDs[2];
@@ -24,7 +25,8 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator)
     interface.initialize();
     interface.finalize();
   } else {
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    MPI_Comm                 myComm = precice::utils::Parallel::current()->comm;
+    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size, &myComm);
     int                      meshID = interface.getMeshID("MeshTwo");
     int                      vertexIDs[6];
     double                   positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
