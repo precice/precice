@@ -141,7 +141,7 @@ def generateTestSource(name, suite, filepath):
     includes = [
         "<precice/SolverInterface.hpp>", "<vector>", '"testing/Testing.hpp"'
     ]
-    suites = ["PreciceTests"] + suite
+    suites = ["Integration"] + suite
     space = [""]
     lines = ["#ifndef PRECICE_NO_MPI"]
     lines += space

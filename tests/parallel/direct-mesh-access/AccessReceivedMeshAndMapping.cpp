@@ -9,7 +9,7 @@
 // by another participant (see above). In addition to the direct mesh access
 // and data writing in one direction, an additional mapping (NN) is defined
 // in the other direction.
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // DirectMeshAccess
 
