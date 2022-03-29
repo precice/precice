@@ -32,7 +32,8 @@ jobs:
     steps:
     - name: Check out preCICE
       uses: actions/checkout@v3
-      ref: master
+      with:
+        ref: master
     - name: Install preCICE dependencies
       run: brew install cmake eigen libxml2 boost petsc openmpi python3 numpy
     - name: Generate build directory
