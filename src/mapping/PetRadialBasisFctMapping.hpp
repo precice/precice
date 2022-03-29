@@ -241,8 +241,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
     if (_deadAxis[d])
       deadDimensions += 1;
   }
-  polyparams    = (_polynomial == Polynomial::ON) ? 1 + dimensions - deadDimensions : 0;
-  sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
+  polyparams      = (_polynomial == Polynomial::ON) ? 1 + dimensions - deadDimensions : 0;
+  sepPolyparams   = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
+  localPolyparams = (_commState->rank() > 0) ? 0 : polyparams;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -282,9 +283,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     inMesh  = input();
     outMesh = output();
   }
-
-  // do not put that in the c'tor, getProcessRank always returns 0 there
-  localPolyparams = _commState->rank() > 0 ? 0 : polyparams;
 
   // Indizes that are used to build the Petsc AO mapping
   std::vector<PetscInt> myIndizes;
