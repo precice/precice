@@ -12,12 +12,18 @@
 #include "utils/fmtEigen.hpp"
 #include "utils/fmtSTL.hpp"
 
-template<class... A>
-std::string format_or_error(A&&... args)
+namespace precice {
+namespace utils {
+
+template <class... A>
+std::string format_or_error(A &&...args)
 {
   try {
     return fmt::format(std::forward<A>(args)...);
-  } catch (const fmt::format_error& e) {
-    return "fmt_error: " + e.what();
+  } catch (const fmt::format_error &e) {
+    return std::string{"fmt_error: "} + e.what();
   }
 }
+
+} // namespace utils
+} // namespace precice
