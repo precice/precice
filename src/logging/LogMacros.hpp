@@ -8,13 +8,13 @@
     __FILE__, __LINE__, __func__ \
   }
 
-#define PRECICE_WARN(...) _log.warning(PRECICE_LOG_LOCATION, fmt::format(__VA_ARGS__))
+#define PRECICE_WARN(...) _log.warning(PRECICE_LOG_LOCATION, fmt::format_or_error(__VA_ARGS__))
 
-#define PRECICE_INFO(...) _log.info(PRECICE_LOG_LOCATION, fmt::format(__VA_ARGS__))
+#define PRECICE_INFO(...) _log.info(PRECICE_LOG_LOCATION, fmt::format_or_error(__VA_ARGS__))
 
 #define PRECICE_ERROR(...)                                      \
   do {                                                          \
-    _log.error(PRECICE_LOG_LOCATION, fmt::format(__VA_ARGS__)); \
+    _log.error(PRECICE_LOG_LOCATION, fmt::format_or_error(__VA_ARGS__)); \
     std::exit(-1);                                              \
   } while (false)
 
@@ -43,7 +43,7 @@
 
 #include "utils/ArgumentFormatter.hpp"
 
-#define PRECICE_DEBUG(...) _log.debug(PRECICE_LOG_LOCATION, fmt::format(__VA_ARGS__))
+#define PRECICE_DEBUG(...) _log.debug(PRECICE_LOG_LOCATION, fmt::format_or_error(__VA_ARGS__))
 
 #endif // ! PRECICE_NO_DEBUG_LOG
 
