@@ -879,6 +879,9 @@ std::vector<Interface> detectInterfaces()
             IFNAMSIZ - 1); // Copy interface name
 
     auto socketfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketfd == -1) {
+      continue;
+    }
     auto err      = ioctl(socketfd, SIOCGIFADDR, &request);
     close(socketfd);
     if (err) {
