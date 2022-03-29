@@ -17,7 +17,7 @@
  *
  * @todo rename this test and config
  */
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_CASE(TestBug)
 {
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(TestBug)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 
 #endif // PRECICE_NO_MPI
