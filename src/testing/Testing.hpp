@@ -19,7 +19,6 @@ namespace bt = boost::unit_test;
 
 constexpr DataID operator"" _dataID(unsigned long long n)
 {
-  PRECICE_ASSERT(n >= 0, "DataID must be positive");
   PRECICE_ASSERT(n < std::numeric_limits<DataID>::max(), "DataID is too big");
   return static_cast<DataID>(n);
 }
