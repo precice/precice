@@ -1,5 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
+#include <boost/test/tools/old/interface.hpp>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -49,10 +50,12 @@ void runCoupling(
     const mesh::MeshConfiguration &meshConfig,
     const std::vector<int> &       validIterations)
 {
-  BOOST_TEST(meshConfig.meshes().size() == 1);
+  BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
-  BOOST_TEST(mesh->data().size() == 2);
-  BOOST_TEST(mesh->vertices().size() > 0);
+  BOOST_REQUIRE(mesh->data().size() == 2);
+  BOOST_REQUIRE(!mesh->vertices().empty());
+  BOOST_REQUIRE(!validIterations.empty());
+
   mesh::Vertex &  vertex               = mesh->vertices().at(0);
   int             index                = vertex.getID();
   auto &          dataValues0          = mesh->data(0)->values();
@@ -212,10 +215,12 @@ void runCouplingWithSubcycling(
     const mesh::MeshConfiguration &meshConfig,
     const std::vector<int> &       validIterations)
 {
-  BOOST_TEST(meshConfig.meshes().size() == 1);
+  BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
-  BOOST_TEST(mesh->data().size() == 2);
-  BOOST_TEST(mesh->vertices().size() > 0);
+  BOOST_REQUIRE(mesh->data().size() == 2);
+  BOOST_REQUIRE(!mesh->vertices().empty());
+  BOOST_REQUIRE(!validIterations.empty());
+
   double          initialStepsizeData0 = 5.0;
   double          stepsizeData0        = 5.0;
   Eigen::Vector3d initialStepsizeData1 = Eigen::Vector3d::Constant(5.0);
