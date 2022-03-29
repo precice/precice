@@ -7,8 +7,8 @@
 
 #include "math/differences.hpp"
 #include "mesh/Edge.hpp"
-#include "mesh/Triangle.hpp"
 #include "mesh/RangeAccessor.hpp"
+#include "mesh/Triangle.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
 
@@ -42,10 +42,10 @@ public:
 
   /// Constructor, the order of vertices doesn't matter.
   Tetrahedron(
-      Vertex &     vertexOne,
-      Vertex &     vertexTwo,
-      Vertex &     vertexThree,
-      Vertex &     vertexFour,
+      Vertex &      vertexOne,
+      Vertex &      vertexTwo,
+      Vertex &      vertexThree,
+      Vertex &      vertexFour,
       TetrahedronID id);
 
   /// Returns dimensionalty of space the Tetrahedron is embedded in.
@@ -60,7 +60,6 @@ public:
    * @brief Returns const tetrahedron vertex with index 0, 1, 2 or 3.
    */
   const Vertex &vertex(int i) const;
-
 
   ///@name Iterators
   ///@{
@@ -111,7 +110,6 @@ private:
   /// Vertices defining the Tetrahedron.
   std::array<Vertex *, 4> _vertices;
 
-
   /// ID of the Tetrahedron.
   TetrahedronID _id;
 };
@@ -121,15 +119,14 @@ private:
 inline Vertex &Tetrahedron::vertex(int i)
 {
   PRECICE_ASSERT((i >= 0) && (i < 4), i);
-  return _vertices[i];
+  return *_vertices[i];
 }
 
 inline const Vertex &Tetrahedron::vertex(int i) const
 {
   PRECICE_ASSERT((i >= 0) && (i < 4), i);
-  return _vertices[i];
+  return *_vertices[i];
 }
-
 
 inline Tetrahedron::iterator Tetrahedron::begin()
 {

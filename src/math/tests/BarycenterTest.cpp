@@ -237,6 +237,32 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle2D)
   }
 }
 
+BOOST_AUTO_TEST_CASE(BarycenterTetrahedron)
+{
+  PRECICE_TEST(1_rank);
+  using Eigen::Vector3d;
+  using Eigen::Vector4d;
+  using precice::testing::equals;
+  Vector3d a(0.0, 0.0, 0.0);
+  Vector3d b(0.0, 1.0, 0.0);
+  Vector3d c(1.0, 0.0, 0.0);
+  Vector3d d(0.0, 0.0, 1.0);
+  // is center?
+  {
+    Vector4d coords(0.25, 0.25, 0.25, 0.25);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, (a + b + c + d) / 4);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+  // random combination?
+  {
+    Vector4d coords(0.2, 0.3, 0.4, 0.1);
+    auto     ret = calcBarycentricCoordsForTetrahedron(a, b, c, d, 0.2 * a + +0.3 * b + +0.4 * c + +0.1 * d);
+    BOOST_TEST(ret.sum() == 1.0);
+    BOOST_TEST(equals(ret, coords));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Barycenter
 
 BOOST_AUTO_TEST_SUITE_END() // Math
