@@ -66,6 +66,13 @@ BOOST_AUTO_TEST_CASE(TestImplicit)
     BOOST_TEST(computedTimesteps == 4);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
+    int    meshID = interface.getMeshID("SquareTwo");
+    double pos[3];
+    // Set mesh positions
+    pos[0] = 0.0;
+    pos[1] = 0.0;
+    pos[2] = 0.0;
+    interface.setMeshVertex(meshID, pos);
     double maxDt = interface.initialize();
     while (interface.isCouplingOngoing()) {
       if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
