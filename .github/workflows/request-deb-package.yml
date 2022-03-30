@@ -37,7 +37,8 @@ jobs:
     container: '${{ github.event.inputs.distro }}:${{ github.event.inputs.version }}'
     steps:
       - uses: actions/checkout@v2
-        ref: ${{ github.event.inputs.release }}
+        with:
+          ref: ${{ github.event.inputs.release }}
       - name: Generate build directory
         run: mkdir -p build
       - name: Install common dependencies
