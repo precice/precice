@@ -80,6 +80,7 @@ void ExportXML::writeMasterFile(
   writeMasterData(outMasterFile);
 
   const auto &offsets = mesh.getVertexOffsets();
+  PRECICE_ASSERT(offsets.size() > 0);
   if (offsets[0] > 0) {
     outMasterFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
   }
