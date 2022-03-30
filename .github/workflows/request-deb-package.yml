@@ -14,24 +14,30 @@ on:
   workflow_dispatch:
     workflow_dispatch:
     inputs:
+      release:
+        description: 'Release tag'
+        default: "v2.1.0"
+        required: true
+        type: string
       distro:
         description: 'Distribution/Container'
         default: "ubuntu"
         required: true
         type: string
       version:
-        description: 'Version/Tag'
+        description: 'Distribution version'
         default: "20.04"
         required: true
         type: string
 
 jobs:
   package:
-    name: 'Package ${{ github.event.inputs.distro }} ${{ github.event.inputs.version }}'
+    name: 'Package ${{ github.event.inputs.release }} for ${{ github.event.inputs.distro }} ${{ github.event.inputs.version }}'
     runs-on: ubuntu-latest
     container: '${{ github.event.inputs.distro }}:${{ github.event.inputs.version }}'
     steps:
       - uses: actions/checkout@v2
+        ref: ${{ github.event.inputs.release }}
       - name: Generate build directory
         run: mkdir -p build
       - name: Install common dependencies
@@ -60,4 +66,4 @@ jobs:
           file: build/libprecice*.deb*
           file_glob: true
           overwrite: true
-          tag: ${{ github.ref }}
+          tag: ${{ github.event.inputs.release }}
