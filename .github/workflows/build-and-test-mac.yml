@@ -1,14 +1,24 @@
 name: Build and Test macOS
 on:
   push:
-    branches-ignore:
-      - '**'
+    branches:
+      - master
+      - develop
+  pull_request:
+    paths:
+      - 'cmake/**'
+      - 'examples/**'
+      - 'src/**'
+      - 'thirdparty/**'
+      - 'CMakeLists.txt'
+      - 'extras/bindings/**'
+      - '.github/workflows/build-and-test-mac.yml'
   workflow_dispatch:
 
 jobs:
   build:
     name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
@@ -20,6 +30,10 @@ jobs:
             CXX: 'clang++'
             TYPE: Release
     steps:
+    - name: Check out preCICE
+      uses: actions/checkout@v3
+    - name: Install preCICE dependencies
+      run: brew install cmake eigen libxml2 boost petsc openmpi python3 numpy
     - name: Generate build directory
       run: mkdir -p build
     - name: Configure
