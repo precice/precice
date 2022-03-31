@@ -565,9 +565,16 @@ else()
   endif()
 endif()
 
-# Configure a pkg-config file
+# Configure the pkg-config file for the binary directory
 configure_file(
-  "${PROJECT_SOURCE_DIR}/tools/releasing/packaging/debian/precice.pc.in"
+  "${PROJECT_SOURCE_DIR}/cmake/binary.pc.in"
+  "libprecice.pc"
+  @ONLY
+  )
+
+# Configure the pkg-config file for the installation
+configure_file(
+  "${PROJECT_SOURCE_DIR}/cmake/install.pc.in"
   "lib/pkgconfig/libprecice.pc"
   @ONLY
   )
