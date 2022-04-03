@@ -32,11 +32,10 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-std::string pathToTests = testing::getPathToSources() + "/precice/tests/";
+std::string pathToTests = testing::getPathToSources() + "/tests/serial/mapping-nearest-neighbor-gradient/";
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
-
-BOOST_AUTO_TEST_SUITE(GradientMappingTests)
+BOOST_AUTO_TEST_SUITE(Serial)
 
 BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
 
@@ -511,111 +510,6 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
       BOOST_TEST(valueDataA == 2.4);
     }
     cplInterface.finalize();
-  }
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_AUTO_TEST_SUITE(ParallelGradientMappingTests)
-
-// Bidirectional test : Read: Scalar & NNG - Write: Scalar & NN (Parallel Coupling)
-BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
-{
-
-  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
-
-  if (context.isNamed("SolverOne")) {
-    SolverInterface interface(context.name, pathToTests + "nng-parallel-scalar.xml", context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshOne");
-    int             dataID = interface.getDataID("Data2", meshID);
-
-    int    vertexIDs[2];
-    double xCoord       = context.rank * 0.4 + 0.05;
-    double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
-    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
-    interface.initialize();
-    Eigen::Vector2d values;
-    interface.advance(1.0);
-    interface.readBlockScalarData(dataID, 2, vertexIDs, values.data());
-    Eigen::Vector2d expected(context.rank * 2.0 + 1.0 + 0.05, 2.0 * (context.rank + 1) + 0.05);
-    BOOST_TEST(values == expected);
-    interface.finalize();
-  } else {
-    BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    SolverInterface interface(context.name, pathToTests + "nng-parallel-scalar.xml", context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshTwo");
-    int             vertexIDs[6];
-    double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
-    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
-    interface.initialize();
-    int    dataID    = interface.getDataID("Data2", meshID);
-    double values[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-
-    interface.writeBlockScalarData(dataID, 6, vertexIDs, values);
-
-    if (interface.isDataGradientRequired(dataID)) {
-
-      BOOST_TEST(interface.isDataGradientRequired(dataID) == true);
-      double gradientValues[12] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-      interface.writeBlockScalarGradientData(dataID, 6, vertexIDs, gradientValues, true);
-    }
-    interface.advance(1.0);
-    interface.finalize();
-  }
-}
-
-// Bidirectional test : Read: Vector & NNG - Write: Scalar & NN (Parallel Coupling)
-BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Vector)
-{
-
-  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
-
-  if (context.isNamed("SolverOne")) {
-    SolverInterface interface(context.name, pathToTests + "nng-parallel-vector.xml", context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshOne");
-    int             dataID = interface.getDataID("Data2", meshID);
-
-    int    vertexIDs[2];
-    double xCoord       = context.rank * 0.4 + 0.05;
-    double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
-    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
-    interface.initialize();
-    Eigen::Vector4d values;
-    interface.advance(1.0);
-    interface.readBlockVectorData(dataID, 2, vertexIDs, values.data());
-    Eigen::Vector4d expected(context.rank * 2.0 + 1.0 + 0.05, context.rank * 2.0 + 1.0 + 0.05,
-                             2.0 * (context.rank + 1) + 0.05, 2.0 * (context.rank + 1) + 0.05);
-    BOOST_TEST(values == expected);
-    interface.finalize();
-  } else {
-    BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    SolverInterface interface(context.name, pathToTests + "nng-parallel-vector.xml", context.rank, context.size);
-    int             meshID = interface.getMeshID("MeshTwo");
-    int             vertexIDs[6];
-    double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
-    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
-    interface.initialize();
-    int    dataID     = interface.getDataID("Data2", meshID);
-    double values[12] = {1.0, 1.0,
-                         2.0, 2.0,
-                         3.0, 3.0,
-                         4.0, 4.0,
-                         5.0, 5.0,
-                         6.0, 6.0};
-
-    interface.writeBlockVectorData(dataID, 6, vertexIDs, values);
-
-    if (interface.isDataGradientRequired(dataID)) {
-
-      BOOST_TEST(interface.isDataGradientRequired(dataID) == true);
-      double gradientValues[36];
-      for (int i = 0; i < 36; i++) {
-        gradientValues[i] = 1.0;
-      }
-      interface.writeBlockVectorGradientData(dataID, 6, vertexIDs, gradientValues, true);
-    }
-    interface.advance(1.0);
-    interface.finalize();
   }
 }
 
