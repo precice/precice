@@ -32,11 +32,9 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-std::string pathToTests = testing::getPathToSources() + "/tests/serial/mapping-nearest-neighbor-gradient/";
+std::string pathToTests = testing::getPathToSources() + "/tests/serial/parallel-serial-mapping-nearest-neighbor-gradient/";
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
-BOOST_AUTO_TEST_SUITE(Serial)
-
 BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
 
 // Unidirectional Nearest Neighbor Gradient Read Mapping
@@ -512,8 +510,6 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
     cplInterface.finalize();
   }
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

@@ -32,11 +32,9 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-std::string pathToTests = testing::getPathToSources() + "/tests/parallel/mapping-nearest-neighbor-gradient/";
+std::string pathToTests = testing::getPathToSources() + "/tests/parallel/parallel-serial-mapping-nearest-neighbor-gradient/";
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
-BOOST_AUTO_TEST_SUITE(Parallel)
-
 BOOST_AUTO_TEST_SUITE(ParallelGradientMappingTests)
 
 // Bidirectional test : Read: Scalar & NNG - Write: Scalar & NN (Parallel Coupling)
@@ -142,7 +140,6 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Vector)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif // PRECICE_NO_MPI

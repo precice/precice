@@ -38,7 +38,6 @@ target_sources(testprecice
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
     tests/parallel/lifecycle/ImplicitFinalize.cpp
-    tests/parallel/mapping-nearest-neighbor-gradient/GradientTestsParallel.cpp
     tests/parallel/quasi-newton/TestQN1.cpp
     tests/parallel/quasi-newton/TestQN1EmptyPartition.cpp
     tests/parallel/quasi-newton/TestQN2.cpp
@@ -81,7 +80,6 @@ target_sources(testprecice
     tests/serial/lifecycle/ConstructOnly.cpp
     tests/serial/lifecycle/Full.cpp
     tests/serial/lifecycle/ImplicitFinalize.cpp
-    tests/serial/mapping-nearest-neighbor-gradient/GradientTestsSerial.cpp
     tests/serial/mapping-nearest-projection/MappingNearestProjectionExplicitEdges.cpp
     tests/serial/mapping-nearest-projection/MappingNearestProjectionImplicitEdges.cpp
     tests/serial/mapping-nearest-projection/helpers.cpp
