@@ -378,13 +378,7 @@ public:
       const double *value);
 
   /**
-   * @brief Write gradient data to the interface mesh
-   *
-   * The exact mapping and communication must be specified in XYZ.
-   *
-   * @param[in] dataID ID of the data to be written, e.g. 1 = forces
-   * @param[in] valueIndex Index of the vertex where gradient data is written
-   * @param[in] value Value of the gradient data to be written
+   * @copydoc precice::SolverInterface::writeVectorGradientData()
    */
   void writeVectorGradientData(
       int           fromDataID,
@@ -410,17 +404,7 @@ public:
       const double *values);
 
   /**
-   * @brief Writes vector data values given as block.
-   *
-   * The block must contain the vector values in the following form for each direction:
-   * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
-   * the number of vector values. In 2D, the z-components are removed.
-   *
-   * @param[in] fromDataID ID of the data to be written.
-   * @param[in] size Number of valueIndices, and number of values * dimensions.
-   * @param[in] valuesX Values of the data dX (derived in X-direction) to be written.
-   * @param[in] valuesY Values of the data dY (derived in Y-direction) to be written.
-   * @param[in] valuesZ Values of the data dZ (derived in Z-direction) to be written (if the space is in 3D).
+   * @copydoc precice::SolverInterface::writeBlockVectorGradientData()
    */
   void writeBlockVectorGradientData(
       int           fromDataID,
@@ -444,13 +428,7 @@ public:
       double value);
 
   /**
-   * @brief Write gradient data to the interface mesh
-   *
-   * The exact mapping and communication must be specified in XYZ.
-   *
-   * @param[in] fromDataID ID of the data to be written, e.g. 1 = forces
-   * @param[in] valueIndex Index of the vertex where data is written
-   * @param[in] value Value of the gradient data to be written
+   * @copydoc precice::SolverInterface::writeScalarGradientData()
    */
   void writeScalarGradientData(
       int           fromDataID,
@@ -471,15 +449,7 @@ public:
       const double *values);
 
   /**
-   * @brief Writes scalar gradient data values given as block.
-   *
-   * The block contains the gradient values in the following form:
-   * gradientValues = (v0_dx, v0_dy, v0_dz, v1_dx, v1_dy, v1_dz, ...., vn_dx, vn_dy, vn_dz), where n is
-   * the number of vector values. In 2D, the z-components are removed.
-   * @param fromDataID ID of the data to be written.
-   * @param size Number of valueIndices, and number of values.
-   * @param valueIndices Indices (from setReadPosition()) of data values.
-   * @param values Values of the gradient data to be written.
+   * @copydoc precice::SolverInterface::writeBlockScalarGradientData()
    */
   void writeBlockScalarGradientData(
       int           fromDataID,

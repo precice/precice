@@ -1198,6 +1198,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
 
+  //Check if data has been initialized to include gradient data
   PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available! Please turn on the gradient attribute in the configuration file.", data.getName())
 
   // Size of the gradient data input : must be spaceDimensions * dataDimensions -> here spaceDimensions (since for scalar: dataDimensions = 1)
@@ -1206,9 +1207,11 @@ void SolverInterfaceImpl::writeScalarGradientData(
                 _dimensions, context.getDataName());
   PRECICE_VALIDATE_DATA(value, _dimensions);
 
+  // Gets the gradientvalues matrix corresponding to the dataID
   auto &     gradientValues = data.gradientValues();
   const auto vertexCount    = gradientValues.cols() / context.getDataDimensions();
 
+  //Check if the index and dimensions are valid
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ({}) when writing gradient scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1224,6 +1227,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
                 "Use writeVectorGradientData or change the data type for \"{0}\" to scalar.",
                 data.getName());
 
+  // Values are entered derived in the spatial dimensions (#rows = #spatial dimensions)
   for (int i = 0; i < _dimensions; i++) {
     gradientValues(i, valueIndex) = value[i];
   }
@@ -1275,9 +1279,11 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
                     context.getDataName(), valueIndex);
 
       if (rowMajor) {
+        // Values are entered derived in spatial dimensions first
         const int offset                        = dim * size;
         gradientValuesInternal(dim, valueIndex) = values[offset + i];
       } else {
+        // Values are entered components derived first
         const int offset                        = i * _dimensions;
         gradientValuesInternal(dim, valueIndex) = values[offset + dim];
       }
@@ -1304,8 +1310,10 @@ void SolverInterfaceImpl::writeVectorGradientData(
   PRECICE_ASSERT(context.providedData() != nullptr);
   mesh::Data &data = *context.providedData();
 
+  // Check if Data object with ID dataID has been initialized with gradient data
   PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available! Please turn on the gradient attribute in the configuration file.", data.getName())
 
+  // Check if the dimensions match
   PRECICE_CHECK(data.getDimensions() > 1,
                 "You cannot call writeVectorGradientData on the scalar data type \"{}\". Use writeScalarGradientData or change the data type for \"{}\" to vector.",
                 data.getName(), data.getName());
@@ -1319,6 +1327,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
   auto &     gradientValuesInternal = data.gradientValues();
   const auto vertexCount            = gradientValuesInternal.cols() / data.getDimensions();
 
+  // Check if the index is valid
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 data.getName(), valueIndex)
@@ -1329,9 +1338,11 @@ void SolverInterfaceImpl::writeVectorGradientData(
       const int offsetInternal = valueIndex * _dimensions;
 
       if (rowMajor) {
+        // Values are entered derived in spatial dimensions first : gradient matrix read rowwise
         const int offset                                           = dimData * _dimensions;
         gradientValuesInternal(dimSpace, offsetInternal + dimData) = value[offset + dimSpace];
       } else {
+        // Values are entered derived components first : gradient matrix read columnwise
         const int offset                                           = dimSpace * _dimensions;
         gradientValuesInternal(dimSpace, offsetInternal + dimData) = value[offset + dimData];
       }
@@ -1364,8 +1375,10 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 
   mesh::Data &data = *context.providedData();
 
+  // Check if the Data object with ID dataID has been initialized with gradient data
   PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available! Please turn on the gradient attribute in the configuration file.", data.getName())
 
+  // Check if the dimensions match
   PRECICE_CHECK(data.getDimensions() > 1,
                 "You cannot call writeBlockVectorGradientData on the scalar data type \"{}\". Use writeBlockScalarGradientData or change the data type for \"{}\" to vector.",
                 data.getName(), data.getName());
@@ -1392,10 +1405,12 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
         const int offsetInternal = valueIndex * _dimensions;
 
         if (rowMajor) {
+          // Values are entered derived in spatial dimensions first : gradient matrices read rowwise
           const int offsetOut                                = i * _dimensions * _dimensions;
           const int offsetIn                                 = dimData * _dimensions;
           gradientValues(dimSpace, offsetInternal + dimData) = values[offsetOut + offsetIn + dimSpace];
         } else {
+          // Values are entered derived components first : gradient matrices input one after the other (read columnwise)
           const int offsetOut                                = dimSpace * _dimensions * size;
           const int offsetIn                                 = i * _dimensions;
           gradientValues(dimSpace, offsetInternal + dimData) = values[offsetOut + offsetIn + dimData];
