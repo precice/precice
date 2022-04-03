@@ -32,7 +32,7 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-std::string pathToTests = testing::getPathToSources() + "/precice/tests/gradient-tests/";
+std::string pathToTests = testing::getPathToSources() + "/precice/tests/";
 
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 
@@ -61,9 +61,11 @@ BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Read_Only)
     double valueA = 1.0;
     cplInterface.writeScalarData(dataID, 0, valueA);
 
-    Vector3d valueGradDataA(1.0, 1.0, 1.0);
-    cplInterface.writeScalarGradientData(dataID, 0, valueGradDataA.data());
-    //cplInterface.writeScalarGradientData(dataID, 0, 1.0, 1.0, 1.0);
+    if (cplInterface.isDataGradientRequired(dataID)) {
+      BOOST_TEST(cplInterface.isDataGradientRequired(dataID) == true);
+      Vector3d valueGradDataA(1.0, 1.0, 1.0);
+      cplInterface.writeScalarGradientData(dataID, 0, valueGradDataA.data());
+    }
 
     // Participant must make move after writing
     maxDt = cplInterface.advance(maxDt);
@@ -317,11 +319,10 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Vector)
   }
 }
 
-// Bidirectional test : Read: Vector & NN - Write: Scalar & NNG (Serial coupling)
+// Bidirectional test : Read: Vector & NN - Write: Scalar & NNG (Parallel coupling)
 BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
 {
 
-  //precice.isActionRequired(precice::constants::actionWriteInitialData()
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   using Eigen::Vector3d;
 
@@ -337,7 +338,7 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
     double valueDataB = 0.0;
     cplInterface.initializeData();
     cplInterface.readScalarData(dataBID, 0, valueDataB);
-    BOOST_TEST(1.0 == valueDataB);
+    BOOST_TEST(valueDataB == 1.0);
 
     while (cplInterface.isCouplingOngoing()) {
 
@@ -348,7 +349,7 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
       maxDt = cplInterface.advance(maxDt);
 
       cplInterface.readScalarData(dataBID, 0, valueDataB);
-      BOOST_TEST(1.5 == valueDataB);
+      BOOST_TEST(valueDataB == 1.5);
     }
     cplInterface.finalize();
 
@@ -369,14 +370,14 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
 
-    double valueDataA;
-    cplInterface.readScalarData(dataAID, 0, valueDataA);
-    BOOST_TEST(valueDataA == 2.4);
-
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeScalarData(dataBID, 0, 1.5);
 
       maxDt = cplInterface.advance(maxDt);
+
+      double valueDataA;
+      cplInterface.readScalarData(dataAID, 0, valueDataA);
+      BOOST_TEST(valueDataA == 2.4);
     }
     cplInterface.finalize();
   }
@@ -384,119 +385,110 @@ BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-//BOOST_AUTO_TEST_SUITE(ParallelGradientMappingTests)
+BOOST_AUTO_TEST_SUITE(ParallelGradientMappingTests)
 
-/*
-// In order to test enforced gather scatter communication with an empty master rank (see below)
-void runTestEnforceGatherScatter(std::vector<double> masterPartition, std::string configFile)
+// Bidirectional test : Read: Scalar & NNG - Write: Scalar & NN (Parallel Coupling)
+BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Scalar)
 {
-  PRECICE_TEST("ParallelSolver"_on(2_ranks), "SerialSolver"_on(1_rank));
-  std::string configFilename = configFile;
 
-  if (context.isNamed("ParallelSolver")) {
-    // Get mesh and data IDs
-    SolverInterface interface(context.name, configFilename, context.rank, context.size);
-    const int       meshID      = interface.getMeshID("ParallelMesh");
-    const int       writeDataID = interface.getDataID("MyData1", meshID);
-    const int       readDataID  = interface.getDataID("MyData2", meshID);
-    const int       dim         = interface.getDimensions();
-    BOOST_TEST(dim == 2);
+  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
 
-    // Set coordinates, master according to input argument
-    const std::vector<double> coordinates = context.isMaster() ? masterPartition : std::vector<double>{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
-    const unsigned int        size        = coordinates.size() / dim;
-    std::vector<int>          ids(size, 0);
+  if (context.isNamed("SolverOne")) {
+    SolverInterface interface(context.name, pathToTests + "nng-parallel-scalar.xml", context.rank, context.size);
+    int             meshID = interface.getMeshID("MeshOne");
+    int             dataID = interface.getDataID("Data2", meshID);
 
-    // Set mesh vertices
-    interface.setMeshVertices(meshID, size, coordinates.data(), ids.data());
-
-    // Initialize the solverinterface
-    double dt = interface.initialize();
-
-    // Create some dummy writeData and writeGradientData
-    std::vector<double> writeData;
-    std::vector<double> writeGradientData;
-    for(int j=0; dim < dim; j++){
-      for (unsigned int i = 0; i < size; ++i) {
-        writeData.emplace_back(i + 1);
-        writeGradientData.emplace_back(0.0);
-      }
-    }
-
-    // Allocate memory for readData
-    std::vector<double> readData(size);
-    while (interface.isCouplingOngoing()) {
-      // Write data, advance the solverinterface and readData
-      interface.writeBlockScalarData(writeDataID, size,
-                                     ids.data(), writeData.data());
-      interface.writeBlockScalarGradientData(writeDataID, size,
-                                             ids.data(), writeGradientData.data());
-
-      dt = interface.advance(dt);
-      interface.readBlockScalarData(readDataID, size,
-                                    ids.data(), readData.data());
-      // The received data on the slave rank is always the same
-      if (!context.isMaster()) {
-        BOOST_TEST(readData == std::vector<double>({3.4, 5.7, 4.0}));
-      }
-    }
+    int    vertexIDs[2];
+    double xCoord       = context.rank * 0.4 + 0.05;
+    double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
+    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
+    interface.initialize();
+    Eigen::Vector2d values;
+    interface.advance(1.0);
+    interface.readBlockScalarData(dataID, 2, vertexIDs, values.data());
+    Eigen::Vector2d expected(context.rank * 2.0 + 1.0 + 0.05, 2.0 * (context.rank + 1) + 0.05);
+    BOOST_TEST(values == expected);
+    interface.finalize();
   } else {
-    // The serial participant
-    BOOST_REQUIRE(context.isNamed("SerialSolver"));
-    SolverInterface interface(context.name, configFilename, context.rank, context.size);
-    // Get IDs
-    const MeshID meshID      = interface.getMeshID("SerialMesh");
-    const int    writeDataID = interface.getDataID("MyData2", meshID);
-    const int    readDataID  = interface.getDataID("MyData1", meshID);
-    const int    dim         = interface.getDimensions();
-    BOOST_TEST(interface.getDimensions() == 2);
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    SolverInterface interface(context.name, pathToTests + "nng-parallel-scalar.xml", context.rank, context.size);
+    int             meshID = interface.getMeshID("MeshTwo");
+    int             vertexIDs[6];
+    double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
+    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
+    interface.initialize();
+    int    dataID    = interface.getDataID("Data2", meshID);
+    double values[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
 
-    // Define the interface
-    const std::vector<double> coordinates{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
-    const unsigned int        size = coordinates.size() / dim;
-    std::vector<int>          ids(size);
+    interface.writeBlockScalarData(dataID, 6, vertexIDs, values);
 
-    // Set vertices
-    interface.setMeshVertices(meshID, size, coordinates.data(), ids.data());
+    if (interface.isDataGradientRequired(dataID)) {
 
-    // Initialize the solverinterface
-    double dt = interface.initialize();
-
-    // Somce arbitrary write data
-    std::vector<double> writeData{3.4, 5.7, 4.0};
-    std::vector<double> writeGradientData{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    std::vector<double> readData(size);
-
-    // Start the time loop
-    while (interface.isCouplingOngoing()) {
-      // Write data, advance solverinterface and read data
-      interface.writeBlockScalarData(writeDataID, size,
-                                     ids.data(), writeData.data());
-      interface.writeBlockScalarGradientData(writeDataID, size,
-                                             ids.data(), writeGradientData.data());
-      dt = interface.advance(dt);
-      interface.readBlockScalarData(readDataID, size,
-                                    ids.data(), readData.data());
-      // The received data is always the same
-      if (!context.isMaster()) {
-        BOOST_TEST(readData == std::vector<double>({1, 2, 3}));
-      }
+      BOOST_TEST(interface.isDataGradientRequired(dataID) == true);
+      double gradientValues[12] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+      interface.writeBlockScalarGradientData(dataID, 6, vertexIDs, gradientValues, true);
     }
+    interface.advance(1.0);
+    interface.finalize();
   }
 }
 
- */
-// Test case for an enforced gather scatter communication, where the partition
-// on the master rank is empty (recieved and provided). See issue #1013 for details.
-/*
-BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyMaster)
+// Bidirectional test : Read: Vector & NNG - Write: Scalar & NN (Parallel Coupling)
+BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Read_Vector)
 {
-  // Provided master partition is empty and received master partition is empty
-  runTestEnforceGatherScatter(std::vector<double>{}, pathToTests + "nng-enforce-gather-scatter.xml");
-}
- */
 
-//BOOST_AUTO_TEST_SUITE_END()
+  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
+
+  if (context.isNamed("SolverOne")) {
+    SolverInterface interface(context.name, pathToTests + "nng-parallel-vector.xml", context.rank, context.size);
+    int             meshID = interface.getMeshID("MeshOne");
+    int             dataID = interface.getDataID("Data2", meshID);
+
+    int    vertexIDs[2];
+    double xCoord       = context.rank * 0.4 + 0.05;
+    double positions[4] = {xCoord, 0.0, xCoord + 0.2, 0.0};
+    interface.setMeshVertices(meshID, 2, positions, vertexIDs);
+    interface.initialize();
+    Eigen::Vector4d values;
+    interface.advance(1.0);
+    interface.readBlockVectorData(dataID, 2, vertexIDs, values.data());
+    Eigen::Vector4d expected(context.rank * 2.0 + 1.0 + 0.05, context.rank * 2.0 + 1.0 + 0.05,
+                             2.0 * (context.rank + 1) + 0.05, 2.0 * (context.rank + 1) + 0.05);
+    BOOST_TEST(values == expected);
+    interface.finalize();
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    SolverInterface interface(context.name, pathToTests + "nng-parallel-vector.xml", context.rank, context.size);
+    int             meshID = interface.getMeshID("MeshTwo");
+    int             vertexIDs[6];
+    double          positions[12] = {0.0, 0.0, 0.2, 0.0, 0.4, 0.0, 0.6, 0.0, 0.8, 0.0, 1.0, 0.0};
+    interface.setMeshVertices(meshID, 6, positions, vertexIDs);
+    interface.initialize();
+    int    dataID     = interface.getDataID("Data2", meshID);
+    double values[12] = {1.0, 1.0,
+                         2.0, 2.0,
+                         3.0, 3.0,
+                         4.0, 4.0,
+                         5.0, 5.0,
+                         6.0, 6.0};
+
+    interface.writeBlockVectorData(dataID, 6, vertexIDs, values);
+
+    if (interface.isDataGradientRequired(dataID)) {
+
+      BOOST_TEST(interface.isDataGradientRequired(dataID) == true);
+      double gradientValues[36];
+      for (int i = 0; i < 36; i++) {
+        gradientValues[i] = 1.0;
+      }
+      interface.writeBlockVectorGradientData(dataID, 6, vertexIDs, gradientValues, true);
+    }
+    interface.advance(1.0);
+    interface.finalize();
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
