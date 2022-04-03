@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="3">
-    <!--data:scalar name="Data" gradient="on" /-->
+  <solver-interface dimensions="3" experimental="on">
     <data:scalar name="DataA" gradient="on" />
     <data:scalar name="DataB" />
 
