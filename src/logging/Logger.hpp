@@ -13,7 +13,7 @@ struct LogLocation {
   const char *func;
 };
 
-/// This class provides a leightweight logger.
+/// This class provides a lightweight logger.
 class Logger {
 public:
   /** Creates a logger for a given module.

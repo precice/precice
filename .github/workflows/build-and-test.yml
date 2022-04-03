@@ -145,9 +145,9 @@ jobs:
         run: |
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '/usr/*' "/opt/*" --output-file coverage.info # filter system-files and local-dependencies
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v2
         with:
-          file: ./build/coverage.info
+          files: ./build/coverage.info
         if: ${{ matrix.COVFLAGS }} 
       - name: Check packages
         working-directory: build

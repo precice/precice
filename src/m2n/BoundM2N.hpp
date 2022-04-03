@@ -28,7 +28,7 @@ public:
   PtrM2N      m2n;
   std::string localName;
   std::string remoteName;
-  bool        isRequesting;
+  bool        isRequesting = false;
 
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};

@@ -53,7 +53,7 @@ void NearestNeighborBaseMapping::computeMapping()
     searchSpace = input();
   }
 
-  // For log ouputs
+  // For log outputs
   precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
   query::Index          indexTree(searchSpace);
   e2.stop();

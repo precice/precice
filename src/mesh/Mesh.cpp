@@ -293,7 +293,7 @@ void Mesh::clear()
   }
 }
 
-/// @todo this should be handled by the Parition
+/// @todo this should be handled by the Partition
 void Mesh::clearPartitioning()
 {
   _connectedRanks.clear();

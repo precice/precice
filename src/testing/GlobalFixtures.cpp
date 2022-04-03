@@ -37,7 +37,7 @@ boost::unit_test::log_level getBoostTestLogLevel()
   namespace bu = boost::unit_test;
 #if BOOST_VERSION == 106900 || __APPLE__ && __MACH__
   std::cerr << "Boost 1.69 and macOS get log_level is broken, preCICE log level set to debug.\n";
-  return = bu::log_successful_tests;
+  return bu::log_successful_tests;
 #else
   return bu::runtime_config::get<bu::log_level>(bu::runtime_config::btrt_log_level);
 #endif
@@ -105,7 +105,7 @@ void setupTestLogging()
 struct PreciceTestLoggingFixture {
   static void setup()
   {
-    std::cerr << "Settup up logging\n";
+    std::cerr << "Setup up logging\n";
     precice::testing::setupTestLogging();
   }
 };

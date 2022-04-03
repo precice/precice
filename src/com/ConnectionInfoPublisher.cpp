@@ -77,9 +77,13 @@ std::string ConnectionInfoReader::read() const
 ConnectionInfoWriter::~ConnectionInfoWriter()
 {
   namespace fs = boost::filesystem;
-  fs::path p(getFilename());
-  PRECICE_DEBUG("Deleting connection file {}", p.string());
-  fs::remove(p);
+  try {
+    fs::path p(getFilename());
+    PRECICE_DEBUG("Deleting connection file {}", p.string());
+    fs::remove(p);
+  } catch (const fs::filesystem_error &e) {
+    PRECICE_WARN("Unable to delete connection file due to error: {}", e.what());
+  }
 }
 
 void ConnectionInfoWriter::write(std::string const &info) const
