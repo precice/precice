@@ -1406,14 +1406,14 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 
         if (rowMajor) {
           // Values are entered derived in spatial dimensions first : gradient matrices read rowwise
-          const int offsetOut                                = i * _dimensions * _dimensions;
-          const int offsetIn                                 = dimData * _dimensions;
-          gradientValues(dimSpace, offsetInternal + dimData) = values[offsetOut + offsetIn + dimSpace];
-        } else {
-          // Values are entered derived components first : gradient matrices input one after the other (read columnwise)
           const int offsetOut                                = dimSpace * _dimensions * size;
           const int offsetIn                                 = i * _dimensions;
           gradientValues(dimSpace, offsetInternal + dimData) = values[offsetOut + offsetIn + dimData];
+        } else {
+          // Values are entered derived components first : gradient matrices input one after the other (read columnwise)
+          const int offsetOut                                = i * _dimensions * _dimensions;
+          const int offsetIn                                 = dimData * _dimensions;
+          gradientValues(dimSpace, offsetInternal + dimData) = values[offsetOut + offsetIn + dimSpace];
         }
 
         // TODO: Add asserts
