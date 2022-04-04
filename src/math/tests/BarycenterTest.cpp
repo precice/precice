@@ -166,6 +166,7 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle3D)
   }
 }
 
+<<<<<<< HEAD
 BOOST_AUTO_TEST_CASE(BarycenterTriangle2D)
 {
   PRECICE_TEST(1_rank);
@@ -237,6 +238,8 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle2D)
   }
 }
 
+=======
+>>>>>>> a9273df95654aa43ab6ae519d2e044c72f047bfa
 BOOST_AUTO_TEST_CASE(BarycenterTetrahedron)
 {
   PRECICE_TEST(1_rank);
