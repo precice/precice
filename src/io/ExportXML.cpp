@@ -84,11 +84,11 @@ void ExportXML::writeMasterFile(
   if (offsets[0] > 0) {
     outMasterFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
   }
-  for (int i = 1; i < utils::MasterSlave::getSize(); i++) {
-    PRECICE_ASSERT(i < offsets.size());
-    if (offsets[i] - offsets[i - 1] > 0) {
+  for (auto rank : utils::MasterSlave::allSlaves()) {
+    PRECICE_ASSERT(rank < offsets.size());
+    if (offsets[rank] - offsets[rank - 1] > 0) {
       //only non-empty subfiles
-      outMasterFile << "      <Piece Source=\"" << name << "_" << i << getPieceExtension() << "\"/>\n";
+      outMasterFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
     }
   }
 
