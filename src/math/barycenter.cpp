@@ -144,8 +144,6 @@ Eigen::Vector4d calcBarycentricCoordsForTetrahedron(
 
   return barycentricCoords;
 }
-<<<<<<< HEAD
-=======
 
 Eigen::Vector4d calcBarycentricCoordsForTetrahedron(
     const Eigen::VectorXd &a,
@@ -191,7 +189,6 @@ Eigen::Vector4d calcBarycentricCoordsForTetrahedron(
 
   return barycentricCoords;
 }
->>>>>>> a9273df95654aa43ab6ae519d2e044c72f047bfa
 } // namespace barycenter
 } // namespace math
 } // namespace precice
