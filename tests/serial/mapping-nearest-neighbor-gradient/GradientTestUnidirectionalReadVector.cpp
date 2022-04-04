@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
 
 // Unidirectional Nearest Neighbor Gradient Read Mapping
-BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Read_Block_Vector)
+BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadVector)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank))
   using Eigen::Vector3d;

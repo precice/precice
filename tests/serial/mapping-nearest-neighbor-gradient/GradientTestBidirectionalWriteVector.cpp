@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
 
 // Read : NN & Vector - Write : NNG & Vector (Parallel Coupling Scheme)
-BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Write_Vector)
+BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 

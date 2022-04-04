@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
 
 // Bidirectional test : Read: Vector & NN - Write: Scalar & NNG (Serial coupling)
-BOOST_AUTO_TEST_CASE(NNG_Bidirectional_Write_Scalar)
+BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
 {
 
   //precice.isActionRequired(precice::constants::actionWriteInitialData()

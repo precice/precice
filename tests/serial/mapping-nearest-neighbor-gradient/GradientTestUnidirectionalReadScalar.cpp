@@ -37,61 +37,8 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
 
 // Unidirectional Nearest Neighbor Gradient Read Mapping
-BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Read_Only)
-{
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank))
-  using Eigen::Vector3d;
-
-  SolverInterface cplInterface(context.name, context.config(), 0, 1);
-  if (context.isNamed("A")) {
-
-    int      meshOneID = cplInterface.getMeshID("MeshA");
-    Vector3d posOne    = Vector3d::Constant(0.0);
-    cplInterface.setMeshVertex(meshOneID, posOne.data());
-    int dataID = cplInterface.getDataID("DataA", meshOneID);
-
-    // Initialize, thus sending the mesh.
-    double maxDt = cplInterface.initialize();
-    BOOST_TEST(cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
-
-    double valueA = 1.0;
-    cplInterface.writeScalarData(dataID, 0, valueA);
-
-    if (cplInterface.isDataGradientRequired(dataID)) {
-      BOOST_TEST(cplInterface.isDataGradientRequired(dataID) == true);
-      Vector3d valueGradDataA(1.0, 1.0, 1.0);
-      cplInterface.writeScalarGradientData(dataID, 0, valueGradDataA.data());
-    }
-
-    // Participant must make move after writing
-    maxDt = cplInterface.advance(maxDt);
-
-    BOOST_TEST(!cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
-    cplInterface.finalize();
-
-  } else {
-    BOOST_TEST(context.isNamed("B"));
-    int      meshTwoID = cplInterface.getMeshID("MeshB");
-    Vector3d pos       = Vector3d::Constant(0.1);
-    cplInterface.setMeshVertex(meshTwoID, pos.data());
-
-    double maxDt = cplInterface.initialize();
-    BOOST_TEST(cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
-
-    int    dataID = cplInterface.getDataID("DataA", meshTwoID);
-    double valueData;
-    cplInterface.readScalarData(dataID, 0, valueData);
-    BOOST_TEST(valueData == 1.3);
-
-    cplInterface.advance(maxDt);
-    BOOST_TEST(!cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
-
-    cplInterface.finalize();
-  }
-}
-
-// Unidirectional Nearest Neighbor Gradient Read Mapping
-BOOST_AUTO_TEST_CASE(NNG_Unidirectional_Read_Block_Scalar)
+// Also to test writeBlockScalarGradientData method
+BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank))
   using Eigen::Vector3d;
