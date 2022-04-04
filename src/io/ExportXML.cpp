@@ -79,12 +79,16 @@ void ExportXML::writeMasterFile(
 
   writeMasterData(outMasterFile);
 
-  const auto &vertexDistribution = mesh.getVertexDistribution();
-  for (int i = 0; i < utils::MasterSlave::getSize(); i++) {
-    auto iter = vertexDistribution.find(i);
-    if (iter != vertexDistribution.end() && iter->second.size() > 0) {
+  const auto &offsets = mesh.getVertexOffsets();
+  PRECICE_ASSERT(offsets.size() > 0);
+  if (offsets[0] > 0) {
+    outMasterFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
+  }
+  for (auto rank : utils::MasterSlave::allSlaves()) {
+    PRECICE_ASSERT(rank < offsets.size());
+    if (offsets[rank] - offsets[rank - 1] > 0) {
       //only non-empty subfiles
-      outMasterFile << "      <Piece Source=\"" << name << "_" << i << getPieceExtension() << "\"/>\n";
+      outMasterFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
     }
   }
 
