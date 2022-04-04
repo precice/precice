@@ -10,7 +10,7 @@ set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 # Find Mandatory Dependencies
 # Find Configurable Dependencies
 # Configuration of Target precice
-# Configuration of Target binprecice
+# Configuration of Target precice-tools
 # Configuration of Target testprecice
 # Install Targets for precice
 # CPack
@@ -63,6 +63,10 @@ option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 option(PRECICE_ENABLE_C "Enable the native C bindings" ON)
 option(PRECICE_ENABLE_FORTRAN "Enable the native Fortran bindings" ON)
+
+option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" OFF)
+option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
+option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
 
 xsdk_tpl_option_override(PRECICE_MPICommunication TPL_ENABLE_MPI)
 xsdk_tpl_option_override(PRECICE_PETScMapping TPL_ENABLE_PETSC)
@@ -271,6 +275,20 @@ set_target_properties(precice PROPERTIES
   SOVERSION ${preCICE_SOVERSION}
   )
 
+# Setup release override options
+if(PRECICE_RELEASE_WITH_DEBUG_LOG)
+  target_compile_definitions(precice PRIVATE PRECICE_RELEASE_WITH_DEBUG_LOG)
+endif()
+
+if(PRECICE_RELEASE_WITH_TRACE_LOG)
+  target_compile_definitions(precice PRIVATE PRECICE_RELEASE_WITH_TRACE_LOG)
+endif()
+
+if(PRECICE_RELEASE_WITH_ASSERTIONS)
+  target_compile_definitions(precice PRIVATE PRECICE_RELEASE_WITH_ASSERTIONS)
+endif()
+
+
 # Setup Boost
 target_compile_definitions(precice PRIVATE BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
 target_link_libraries(precice PRIVATE
@@ -346,19 +364,30 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 
 
 #
-# Configuration of Target binprecice
+# Configuration of Target precice-tools
 #
 
-add_executable(binprecice "src/drivers/main.cpp")
-target_link_libraries(binprecice
+add_executable(precice-tools "src/drivers/main.cpp")
+target_link_libraries(precice-tools
   PRIVATE
   precice
   )
-set_target_properties(binprecice PROPERTIES
+set_target_properties(precice-tools PROPERTIES
   # precice is a C++14 project
   CXX_STANDARD 14
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
+  )
+
+# Add link for backwards compatibility
+# TODO remove in 3.0.0
+add_custom_target(
+  binprecice
+  ALL
+  COMMAND ${CMAKE_COMMAND} -E create_symlink precice-tools binprecice
+  DEPENDS precice-tools
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  BYPRODUCTS binprecice
   )
 
 #
@@ -429,9 +458,9 @@ endif()
 
 # Setup General Install for:
 # precice - the library
-# binprecice - the precice binary
+# precice-tools - the precice binary
 include(GNUInstallDirs)
-install(TARGETS precice binprecice
+install(TARGETS precice precice-tools
   EXPORT preciceTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -439,6 +468,10 @@ install(TARGETS precice binprecice
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
   )
+
+# Install the binprecice link for backwards compatibility
+# TODO remove in 3.0.0
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/binprecice DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if(BUILD_TESTING AND PRECICE_InstallTest)
   # Install the testprecice target
@@ -504,7 +537,7 @@ mark_as_advanced(PRECICE_PACKAGING_DIR)
 find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
   # Process manpages for binaries
-  file(COPY docs/man/man1/binprecice.1 DESTINATION packaging/man1)
+  file(COPY docs/man/man1/precice-tools.1 DESTINATION packaging/man1)
   if(PRECICE_InstallTest)
     file(COPY docs/man/man1/testprecice.1 DESTINATION packaging/man1)
   endif()

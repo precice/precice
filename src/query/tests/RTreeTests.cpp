@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToVertex)
   BOOST_TEST(match.distance == 1.0);                            // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
-  for (int i = 0; i < match.polation.getWeightedElements().size(); ++i) {
+  for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
     BOOST_TEST(match.polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
     BOOST_TEST(match.polation.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
   }
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToEdge)
   BOOST_TEST(match.distance == 1.0);                            // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
-  for (int i = 0; i < match.polation.getWeightedElements().size(); ++i) {
+  for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
     BOOST_TEST(match.polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
     BOOST_TEST(match.polation.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
   }
@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
   BOOST_TEST(match.distance == 0.0);                            // Check the distance
   BOOST_TEST(match.polation.isInterpolation());
 
-  for (int i = 0; i < match.polation.getWeightedElements().size(); ++i) {
+  for (int i = 0; i < static_cast<int>(match.polation.getWeightedElements().size()); ++i) {
     BOOST_TEST(match.polation.getWeightedElements().at(i).vertexID == expectedIndices.at(i)); // Check index
     BOOST_TEST(match.polation.getWeightedElements().at(i).weight == expectedWeights.at(i));   // Check the weight
   }

@@ -49,7 +49,7 @@ public:
    *
    * @param[in] parent  Used to add subtags to hierarchical XML structure.
    * @param[in] meshConfig For checking if a used mesh is defined.
-   * @param[in] comConfig For checking if a communication between participants to be coupled is defined.
+   * @param[in] m2nConfig For checking if a communication between participants to be coupled is defined.
    */
   CouplingSchemeConfiguration(
       xml::XMLTag &                        parent,

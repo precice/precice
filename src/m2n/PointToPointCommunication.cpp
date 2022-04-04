@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <boost/container/flat_map.hpp>
+#include <boost/io/ios_state.hpp>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -59,7 +60,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
 }
 
 void broadcastSend(mesh::Mesh::VertexDistribution const &m,
-                   const com::PtrCommunication &         communication = utils::MasterSlave::_communication)
+                   const com::PtrCommunication &         communication = utils::MasterSlave::getCommunication())
 {
   communication->broadcast(static_cast<int>(m.size()));
 
@@ -73,7 +74,7 @@ void broadcastSend(mesh::Mesh::VertexDistribution const &m,
 
 void broadcastReceive(mesh::Mesh::VertexDistribution &m,
                       int                             rankBroadcaster,
-                      const com::PtrCommunication &   communication = utils::MasterSlave::_communication)
+                      const com::PtrCommunication &   communication = utils::MasterSlave::getCommunication())
 {
   m.clear();
   int size = 0;
@@ -110,13 +111,13 @@ void print(std::map<int, std::vector<int>> const &m)
   }
 
   if (utils::MasterSlave::isSlave()) {
-    utils::MasterSlave::_communication->send(oss.str(), 0);
+    utils::MasterSlave::getCommunication()->send(oss.str(), 0);
   } else {
 
     std::string s;
 
     for (Rank rank : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::_communication->receive(s, rank);
+      utils::MasterSlave::getCommunication()->receive(s, rank);
 
       oss << s;
     }
@@ -142,7 +143,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
     }
 
     for (Rank rank : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::_communication->receive(size, rank);
+      utils::MasterSlave::getCommunication()->receive(size, rank);
 
       total += size;
 
@@ -161,6 +162,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       average /= count;
     }
 
+    boost::io::ios_all_saver ias{std::cout};
     std::cout << std::fixed << std::setprecision(3) //
               << "Number of Communication Partners per Interface Process:"
               << "\n"
@@ -172,7 +174,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
               << '\n';
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
-    utils::MasterSlave::_communication->send(size, 0);
+    utils::MasterSlave::getCommunication()->send(size, 0);
   }
 }
 
@@ -198,7 +200,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
     }
 
     for (Rank rank : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::_communication->receive(size, rank);
+      utils::MasterSlave::getCommunication()->receive(size, rank);
 
       total += size;
 
@@ -218,6 +220,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       average /= count;
     }
 
+    boost::io::ios_all_saver ias{std::cout};
     std::cout << std::fixed << std::setprecision(3) //
               << "Number of LVDIs per Interface Process:"
               << "\n"
@@ -230,7 +233,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSlave());
 
-    utils::MasterSlave::_communication->send(size, 0);
+    utils::MasterSlave::getCommunication()->send(size, 0);
   }
 }
 

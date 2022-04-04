@@ -31,7 +31,6 @@ Triangle::Triangle(
                  edgeOne.getDimensions(), edgeTwo.getDimensions());
   PRECICE_ASSERT(edgeTwo.getDimensions() == edgeThree.getDimensions(),
                  edgeTwo.getDimensions(), edgeThree.getDimensions());
-  PRECICE_ASSERT(getDimensions() == 3, getDimensions());
 
   // Determine vertex map
   Vertex &v0 = edge(0).vertex(0);

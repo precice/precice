@@ -48,8 +48,8 @@ public:
 
       // if parallel computation on p processors, i.e., master-slave mode
     } else {
-      PRECICE_ASSERT(utils::MasterSlave::_communication.get() != NULL);
-      PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
+      PRECICE_ASSERT(utils::MasterSlave::getCommunication() != NULL);
+      PRECICE_ASSERT(utils::MasterSlave::getCommunication()->isConnected());
 
       // The result matrix is of size (p x r)
       // if p equals r (and p = global_n), we have to perform the
@@ -285,7 +285,7 @@ private:
     // slaves wait to receive their local result
     if (utils::MasterSlave::isSlave()) {
       if (result.size() > 0)
-        utils::MasterSlave::_communication->receive(result, 0);
+        utils::MasterSlave::getCommunication()->receive(result, 0);
     }
 
     // master distributes the sub blocks of the results
@@ -301,7 +301,7 @@ private:
           // necessary to save the matrix-block that is to be sent in a temporary matrix-object
           // otherwise, the send routine walks over the bounds of the block (matrix structure is still from the entire matrix)
           Eigen::MatrixXd sendBlock = summarizedBlocks.block(off, 0, send_rows, r);
-          utils::MasterSlave::_communication->send(sendBlock, rankSlave);
+          utils::MasterSlave::getCommunication()->send(sendBlock, rankSlave);
         }
       }
     }

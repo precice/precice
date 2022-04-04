@@ -66,8 +66,8 @@ void WatchPoint::initialize()
   }
 
   if (utils::MasterSlave::isSlave()) {
-    utils::MasterSlave::_communication->send(_shortestDistance, 0);
-    utils::MasterSlave::_communication->receive(_isClosest, 0);
+    utils::MasterSlave::getCommunication()->send(_shortestDistance, 0);
+    utils::MasterSlave::getCommunication()->receive(_isClosest, 0);
   }
 
   if (utils::MasterSlave::isMaster()) {
@@ -75,7 +75,7 @@ void WatchPoint::initialize()
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal  = std::numeric_limits<double>::max();
     for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::_communication->receive(closestDistanceLocal, rankSlave);
+      utils::MasterSlave::getCommunication()->receive(closestDistanceLocal, rankSlave);
       if (closestDistanceLocal < closestDistanceGlobal) {
         closestDistanceGlobal = closestDistanceLocal;
         closestRank           = rankSlave;
@@ -83,7 +83,7 @@ void WatchPoint::initialize()
     }
     _isClosest = closestRank == 0;
     for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::_communication->send(closestRank == rankSlave, rankSlave);
+      utils::MasterSlave::getCommunication()->send(closestRank == rankSlave, rankSlave);
     }
   }
 

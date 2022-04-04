@@ -69,10 +69,10 @@ private:
   /// Returns whether any mapping is defined
   bool hasAnyMapping() const;
 
-  /// Tag mesh in first round accoring to all mappings
+  /// Tag mesh in first round according to all mappings
   void tagMeshFirstRound();
 
-  /// Tag mesh in second round accoring to all mappings
+  /// Tag mesh in second round according to all mappings
   void tagMeshSecondRound();
 
   void createOwnerInformation();

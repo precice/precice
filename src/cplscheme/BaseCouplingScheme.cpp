@@ -43,8 +43,8 @@ BaseCouplingScheme::BaseCouplingScheme(
       _iterations(1),
       _totalIterations(1),
       _localParticipant(std::move(localParticipant)),
-      _eps(std::pow(10.0, -1 * validDigits)),
-      _extrapolationOrder(extrapolationOrder)
+      _extrapolationOrder(extrapolationOrder),
+      _eps(std::pow(10.0, -1 * validDigits))
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
                  "Maximum time has to be larger than zero.");
@@ -86,7 +86,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n->isConnected());
 
   for (const DataMap::value_type &pair : sendData) {
-    // Data is actually only send if size>0, which is checked in the derived classes implementaiton
+    // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     sentDataIDs.push_back(pair.first);
@@ -136,11 +136,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
       PRECICE_CHECK(not _convergenceMeasures.empty(),
                     "At least one convergence measure has to be defined for "
                     "an implicit coupling scheme.");
-      // setup convergence measures
-      for (ConvergenceMeasureContext &convergenceMeasure : _convergenceMeasures) {
-        DataID dataID = convergenceMeasure.couplingData->getDataID();
-        assignDataToConvergenceMeasure(&convergenceMeasure, dataID);
-      }
       // reserve memory and initialize data with zero
       initializeStorages();
     }
@@ -256,7 +251,7 @@ void BaseCouplingScheme::advance()
 void BaseCouplingScheme::storeExtrapolationData()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : _allData) {
+  for (auto &pair : getAllData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->storeExtrapolationData();
   }
@@ -265,7 +260,7 @@ void BaseCouplingScheme::storeExtrapolationData()
 void BaseCouplingScheme::moveToNextWindow()
 {
   PRECICE_TRACE(_timeWindows);
-  for (DataMap::value_type &pair : getAccelerationData()) {
+  for (auto &pair : getAccelerationData()) {
     PRECICE_DEBUG("Store data: {}", pair.first);
     pair.second->moveToNextWindow();
   }
@@ -449,7 +444,7 @@ void BaseCouplingScheme::initializeStorages()
 {
   PRECICE_TRACE();
   // Reserve storage for all data
-  for (DataMap::value_type &pair : _allData) {
+  for (auto &pair : getAllData()) {
     pair.second->initializeExtrapolation();
   }
   // Reserve storage for acceleration
@@ -482,8 +477,9 @@ void BaseCouplingScheme::addConvergenceMeasure(
     bool                        doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
-  PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
-  convMeasure.couplingData = &(*_allData[dataID]);
+  auto                      allData = getAllData();
+  PRECICE_ASSERT(allData.count(dataID) == 1, "Data with given data ID must exist!");
+  convMeasure.couplingData = allData.at(dataID);
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
@@ -657,14 +653,6 @@ bool BaseCouplingScheme::doImplicitStep()
   storeIteration();
 
   return convergence;
-}
-
-void BaseCouplingScheme::assignDataToConvergenceMeasure(ConvergenceMeasureContext *convergenceMeasure, DataID dataID)
-{
-  PRECICE_TRACE(dataID);
-  DataMap::iterator iter = _allData.find(dataID);
-  PRECICE_ASSERT(iter != _allData.end(), "Given data ID does not exist in _allData!");
-  convergenceMeasure->couplingData = &(*(iter->second));
 }
 
 void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n, bool convergence)

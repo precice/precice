@@ -6,52 +6,40 @@
 
 namespace precice {
 namespace math {
-/// Provides operations to calculate barycentric coordinates and projection from a point to a primitive.
+/// Provides operations to calculate barycentric coordinates for a point's projection onto a primitive.
 namespace barycenter {
 
-/// The result of calculating the barycentric coordinates.
-struct BarycentricCoordsAndProjected {
-  /// A vector of the n coefficients for n vertices
-  Eigen::VectorXd barycentricCoords;
-  /// The projected location vertex
-  Eigen::VectorXd projected;
-};
-
-/** Takes the corner vertices of an edge and its norm.
- *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
+/** Takes the end vertices of an edge and a point in 2D or 3D space.
+ *  Returns the barycentric coordinates for that point's projection onto the given edge.
  *
- *  @param edgeA point A of the edge AB
- *  @param edgeNormal the normal of the edge
- *  @param location the location to compute the barycentric coordinates for
+ *  @param a point A of the edge AB
+ *  @param b point B of the edge AB
+ *  @param u the point to compute the barycentric coordinates for
  *
- * @note Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
+ * @note Simple scalar projection approach, projected point in Cartesian coordinates is not actually calculated.
  */
-BarycentricCoordsAndProjected calcBarycentricCoordsForEdge(
-    const Eigen::VectorXd &edgeA,
-    const Eigen::VectorXd &edgeB,
-    const Eigen::VectorXd &edgeNormal,
-    const Eigen::VectorXd &location);
+Eigen::Vector2d calcBarycentricCoordsForEdge(
+    const Eigen::VectorXd &a,
+    const Eigen::VectorXd &b,
+    const Eigen::VectorXd &u);
 
-/** Takes the corner vertices of a triangle and its norm.
- *  It then calculates the projection of a location vector and generates the barycentric coordinates for the corner points.
+/** Takes the corner vertices of a triangle and a point in 3D space.
+ *  Returns the barycentric coordinates for that point's projection onto the given triangle.
  *
  *  @param a point A of the triangle ABC
  *  @param b point B of the triangle ABC
  *  @param c point C of the triangle ABC
- *  @param normal the normal of the triangle
- *  @param location the location to compute the barycentric coordinates for
+ *  @param u the point to compute the barycentric coordinates for
  *
- * @note
- * Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.3
- * with the barycentric coordinates method and real projection into 2D, instead
- * of outprojecting one coordinate
+ * @note This implements the efficient one-step algorithm (no separate projection) presented in 
+ *  _Computing the barycentric coordinates of a projected point_ by W. Heidrich (2005)
+ *
  */
-BarycentricCoordsAndProjected calcBarycentricCoordsForTriangle(
+Eigen::Vector3d calcBarycentricCoordsForTriangle(
     const Eigen::VectorXd &a,
     const Eigen::VectorXd &b,
     const Eigen::VectorXd &c,
-    const Eigen::VectorXd &normal,
-    const Eigen::VectorXd &location);
+    const Eigen::VectorXd &u);
 
 } // namespace barycenter
 } // namespace math

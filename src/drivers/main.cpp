@@ -8,12 +8,12 @@
 void printUsage()
 {
   std::cerr << "Usage:\n\n";
-  std::cerr << "Print XML reference      :  binprecice xml\n";
-  std::cerr << "Print DTD for XML config :  binprecice dtd\n";
-  std::cerr << "Print Markdown reference :  binprecice md\n";
-  std::cerr << "Print preCICE version    :  binprecice version\n";
-  std::cerr << "                            binprecice --version\n";
-  std::cerr << "Check configuration file :  binprecice check FILE [ PARTICIPANT [ COMMSIZE ] ]\n";
+  std::cerr << "Print XML reference      :  precice-tools xml\n";
+  std::cerr << "Print DTD for XML config :  precice-tools dtd\n";
+  std::cerr << "Print Markdown reference :  precice-tools md\n";
+  std::cerr << "Print preCICE version    :  precice-tools version\n";
+  std::cerr << "                            precice-tools --version\n";
+  std::cerr << "Check configuration file :  precice-tools check FILE [ PARTICIPANT [ COMMSIZE ] ]\n";
 }
 
 int main(int argc, char **argv)

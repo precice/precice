@@ -39,11 +39,6 @@ using precice::testing::TestContext;
 BOOST_AUTO_TEST_SUITE(PartitionTests)
 BOOST_AUTO_TEST_SUITE(ProvidedPartitionTests)
 
-void tearDownParallelEnvironment()
-{
-  mesh::Data::resetDataCount();
-}
-
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 {
   PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupMasterSlaves(), Require::Events);
@@ -113,8 +108,6 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 6);
     }
   }
-
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
@@ -226,8 +219,6 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
       BOOST_TEST(vertices.at(3).isOwner() == true);
     }
   }
-
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
@@ -386,12 +377,12 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
       receivedGlobalBB.emplace(i, localBB);
     }
 
-    // we receive golbal bounding box from othe participant!
+    // we receive global bounding box from other participant!
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
-    // check wether we have received the correct com size
+    // check whether we have received the correct com size
     BOOST_TEST(receivedFeedbackSize == 3);
 
-    //check the validity of received golbal bounding box (globalBB)
+    //check the validity of received global bounding box (globalBB)
     BOOST_TEST(receivedGlobalBB.at(0) == compareBB.at(0));
     BOOST_TEST(receivedGlobalBB.at(1) == compareBB.at(1));
     BOOST_TEST(receivedGlobalBB.at(2) == compareBB.at(2));
@@ -410,8 +401,6 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
   }
-
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
@@ -480,13 +469,13 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
       receivedGlobalBB.emplace(i, localBB);
     }
 
-    // we receive golbal bounding box from othe participant!
+    // we receive global bounding box from other participant!
     com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
 
-    // check wether we have received the correct com size
+    // check whether we have received the correct com size
     BOOST_TEST(remoteParComSize == 3);
 
-    //check the validity of received golbal bounding box (globalBB)
+    //check the validity of received global bounding box (globalBB)
     BOOST_TEST(receivedGlobalBB.at(0) == compareBB.at(0));
     BOOST_TEST(receivedGlobalBB.at(1) == compareBB.at(1));
     BOOST_TEST(receivedGlobalBB.at(2) == compareBB.at(2));
@@ -495,8 +484,6 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
     std::vector<int> connectedRanksList;
     m2n->getMasterCommunication()->send(connectedRanksList, 0);
   }
-
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
@@ -594,8 +581,6 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
       BOOST_TEST(mesh->vertices().at(3).getCoords()(1) == 1.0);
     }
   }
-
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
@@ -734,7 +719,6 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
     part.communicate();
     part.compute();
   }
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
@@ -747,7 +731,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
   mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
-  // create the communicator for m2n mesh and communciation map exchange
+  // create the communicator for m2n mesh and communication map exchange
   testing::ConnectionOptions options;
   options.useOnlyMasterCom = false;
   options.useTwoLevelInit  = true;
@@ -863,7 +847,6 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
     part.communicate();
     part.compute();
   }
-  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

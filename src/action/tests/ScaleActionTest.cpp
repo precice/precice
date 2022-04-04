@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea2D)
   PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 2, testing::nextMeshID()));
-  PtrData data   = mesh->createData("test-data", 1);
+  PtrData data   = mesh->createData("test-data", 1, 0_dataID);
   int     dataID = data->getID();
   Vertex &v0     = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   Vertex &v1     = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea3D)
   PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
-  PtrData data   = mesh->createData("test-data", 1);
+  PtrData data   = mesh->createData("test-data", 1, 0_dataID);
   int     dataID = data->getID();
   Vertex &v0     = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   Vertex &v1     = mesh->createVertex(Eigen::Vector3d(6.0, 2.0, 0.0));
@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(ScaleByTimeStepSizeToTimeWindowSize)
   PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
-  PtrData sourceData   = mesh->createData("SourceData", 1);
-  PtrData targetData   = mesh->createData("TargetData", 1);
+  PtrData sourceData   = mesh->createData("SourceData", 1, 0_dataID);
+  PtrData targetData   = mesh->createData("TargetData", 1, 1_dataID);
   int     sourceDataID = sourceData->getID();
   int     targetDataID = targetData->getID();
   mesh->createVertex(Eigen::Vector3d::Constant(0.0));
@@ -168,8 +168,8 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimeWindowPart)
   PRECICE_TEST(1_rank);
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
-  PtrData sourceData   = mesh->createData("SourceData", 1);
-  PtrData targetData   = mesh->createData("TargetData", 1);
+  PtrData sourceData   = mesh->createData("SourceData", 1, 0_dataID);
+  PtrData targetData   = mesh->createData("TargetData", 1, 1_dataID);
   int     sourceDataID = sourceData->getID();
   int     targetDataID = targetData->getID();
   mesh->createVertex(Eigen::Vector3d::Constant(0.0));

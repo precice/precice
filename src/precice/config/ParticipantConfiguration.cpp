@@ -10,6 +10,7 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
+#include "io/ExportCSV.hpp"
 #include "io/ExportContext.hpp"
 #include "io/ExportVTK.hpp"
 #include "io/ExportVTP.hpp"
@@ -22,7 +23,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "partition/ReceivedPartition.hpp"
-#include "precice/impl/DataContext.hpp"
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
@@ -200,15 +200,15 @@ ParticipantConfiguration::ParticipantConfiguration(
     auto attrPort = makeXMLAttribute("port", 0)
                         .setDocumentation(
                             "Port number (16-bit unsigned integer) to be used for socket "
-                            "communiation. The default is \"0\", what means that OS will "
+                            "communication. The default is \"0\", what means that OS will "
                             "dynamically search for a free port (if at least one exists) and "
                             "bind it automatically.");
     tagMaster.addAttribute(attrPort);
 
     auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
                            .setDocumentation(
-                               "Interface name to be used for socket communiation. "
-                               "Default is the cannonical name of the loopback interface of your platform. "
+                               "Interface name to be used for socket communication. "
+                               "Default is the canonical name of the loopback interface of your platform. "
                                "Might be different on supercomputing systems, e.g. \"ib0\" "
                                "for the InfiniBand on SuperMUC. ");
     tagMaster.addAttribute(attrNetwork);
@@ -350,9 +350,9 @@ void ParticipantConfiguration::xmlTagCallback(
     _watchIntegralConfigs.push_back(config);
   } else if (tag.getNamespace() == TAG_MASTER) {
     com::CommunicationConfiguration comConfig;
-    com::PtrCommunication           com = comConfig.createCommunication(tag);
-    utils::MasterSlave::_communication  = com;
-    _isMasterDefined                    = true;
+    com::PtrCommunication           com    = comConfig.createCommunication(tag);
+    utils::MasterSlave::getCommunication() = com;
+    _isMasterDefined                       = true;
     _participants.back()->setUseMaster(true);
   }
 }
@@ -495,7 +495,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   _mappingConfig->resetMappings();
 
   // Set participant data for data contexts
-  for (impl::DataContext &dataContext : participant->writeDataContexts()) {
+  for (auto &dataContext : participant->writeDataContexts()) {
     int fromMeshID = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(fromMeshID) || participant->isDirectAccessAllowed(fromMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
@@ -509,12 +509,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                       "Mesh \"{}\" needs to use data \"{}\" to allow a write mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
                       meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
-        dataContext.configureForWriteMapping(mappingContext, meshContext);
+        dataContext.configureMapping(mappingContext, meshContext);
       }
     }
   }
 
-  for (impl::DataContext &dataContext : participant->readDataContexts()) {
+  for (auto &dataContext : participant->readDataContexts()) {
     int toMeshID = dataContext.getMeshID();
     PRECICE_CHECK(participant->isMeshProvided(toMeshID) || participant->isDirectAccessAllowed(toMeshID),
                   "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
@@ -528,7 +528,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                       "Mesh \"{}\" needs to use data \"{}\" to allow a read mapping to it. "
                       "Please add a use-data node with name=\"{}\" to this mesh.",
                       meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
-        dataContext.configureForReadMapping(mappingContext, meshContext);
+        dataContext.configureMapping(mappingContext, meshContext);
       }
     }
   }
@@ -566,6 +566,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       exporter = io::PtrExport(new io::ExportVTU());
     } else if (exportContext.type == VALUE_VTP) {
       exporter = io::PtrExport(new io::ExportVTP());
+    } else if (exportContext.type == VALUE_CSV) {
+      exporter = io::PtrExport(new io::ExportCSV());
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
                     _participants.back()->getName(), exportContext.type);
@@ -618,8 +620,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     PRECICE_ERROR("Implicit master communications for parallel participants are only available if preCICE was built with MPI. "
                   "Either explicitly define a master communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
-    com::PtrCommunication com          = std::make_shared<com::MPIDirectCommunication>();
-    utils::MasterSlave::_communication = com;
+    com::PtrCommunication com              = std::make_shared<com::MPIDirectCommunication>();
+    utils::MasterSlave::getCommunication() = com;
     participant->setUseMaster(true);
 #endif
   }
@@ -653,12 +655,12 @@ void ParticipantConfiguration::checkIllDefinedMappings(
           bool sameDirection = false;
 
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
-            for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
+            for (const auto &dataContext : participant->writeDataContexts()) {
               sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
-            for (const impl::DataContext &dataContext : participant->readDataContexts()) {
+            for (const auto &dataContext : participant->readDataContexts()) {
               sameDirection |= data->getName() == dataContext.getDataName();
             }
           }

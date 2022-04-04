@@ -5,7 +5,7 @@
 namespace precice {
 namespace acceleration {
 
-void Acceleration::checkDataIDs(DataMap const &cplData) const
+void Acceleration::checkDataIDs(const DataMap &cplData) const
 {
 #ifndef NDEBUG
   for (int id : getDataIDs()) {

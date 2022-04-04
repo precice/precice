@@ -40,7 +40,7 @@ void CommunicateMesh::sendMesh(
   if (not mesh.vertices().empty()) {
     std::vector<double> coords(static_cast<size_t>(numberOfVertices) * dim);
     std::vector<int>    globalIDs(numberOfVertices);
-    for (int i = 0; i < numberOfVertices; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(numberOfVertices); ++i) {
       std::copy_n(meshVertices[i].rawCoords().begin(), dim, &coords[i * dim]);
       globalIDs[i] = meshVertices[i].getGlobalIndex();
     }
@@ -187,7 +187,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
   if (numberOfVertices > 0) {
     std::vector<double> coords(static_cast<size_t>(numberOfVertices) * dim);
     std::vector<int>    globalIDs(numberOfVertices);
-    for (int i = 0; i < numberOfVertices; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(numberOfVertices); ++i) {
       std::copy_n(meshVertices[i].rawCoords().begin(), dim, &coords[i * dim]);
       globalIDs[i] = meshVertices[i].getGlobalIndex();
     }

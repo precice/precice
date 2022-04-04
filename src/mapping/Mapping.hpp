@@ -47,7 +47,7 @@ public:
   };
 
   /// Constructor, takes mapping constraint.
-  Mapping(Constraint constraint, int dimensions);
+  Mapping(Constraint constraint, int dimensions, bool requireGradient = false);
 
   Mapping &operator=(Mapping &&) = delete;
 
@@ -58,7 +58,7 @@ public:
    * @brief Sets input and output meshes carrying data to be mapped.
    *
    * @param[in] input Mesh with known data values to be mapped.
-   * @param[in] output Mesh with unknwon data values to be computed from input.
+   * @param[in] output Mesh with unknown data values to be computed from input.
    */
   void setMeshes(
       const mesh::PtrMesh &input,
@@ -134,10 +134,13 @@ protected:
   /// Sets the mesh requirement for the output mesh.
   void setOutputRequirement(MeshRequirement requirement);
 
+  /// Returns if the mapping needs gradient data
+  bool requireGradient() const;
+
   int getDimensions() const;
 
 private:
-  /// Determines wether mapping is consistent or conservative.
+  /// Determines whether mapping is consistent or conservative.
   Constraint _constraint;
 
   /// Requirement on input mesh.
@@ -151,6 +154,9 @@ private:
 
   /// Pointer to output mesh.
   mesh::PtrMesh _output;
+
+  /// Flag if gradient data is required for the mapping
+  bool _requireGradient;
 
   int _dimensions;
 };

@@ -31,7 +31,7 @@ namespace mesh {
  * It provides functionality to conveniently create those objects.
  *
  * In addition to creating the topological information of a mesh, the Mesh class
- * can also be used to add data to the vertices of a mesh.
+ * can also be used to add data to the vertices of a mesh, such as function values or also gradient values.
  *
  * Usage example: precice::mesh::tests::MeshTest::testDemonstration()
  */
@@ -128,8 +128,17 @@ public:
       Edge &edgeTwo,
       Edge &edgeThree);
 
+  /// Create only data for vertex
   PtrData &createData(const std::string &name,
-                      int                dimension);
+                      int                dimension,
+                      DataID             id);
+
+  /// Creates data for vertex with additional gradient data
+  PtrData &createDataWithGradient(
+      const std::string &name,
+      int                dimension,
+      int                meshDimensions,
+      DataID             id);
 
   /// Allows access to all data
   const DataContainer &data() const;
@@ -158,7 +167,7 @@ public:
   /// Returns true if the given edgeID is valid
   bool isValidEdgeID(EdgeID edgeID) const;
 
-  /// Allocates memory for the vertex data values.
+  /// Allocates memory for the vertex data values and corresponding gradient values.
   void allocateDataValues();
 
   /// Computes the boundingBox for the vertices.

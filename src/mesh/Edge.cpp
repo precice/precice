@@ -31,24 +31,6 @@ double Edge::getLength() const
   return length;
 }
 
-Eigen::VectorXd Edge::computeNormal() const
-{
-  // Compute normal
-  Eigen::VectorXd edgeVector = vertex(1).getCoords() - vertex(0).getCoords();
-
-  // In 3D, use a normal on the plane z=0
-  Eigen::VectorXd normal = Eigen::VectorXd::Zero(edgeVector.size());
-  normal[0]              = -edgeVector[1];
-  normal[1]              = edgeVector[0];
-
-  // Handle vectors along the z axis
-  if (normal.size() == 3 && normal.isApproxToConstant(0.0)) {
-    normal[0] = 1.0;
-  }
-
-  return normal.normalized();
-}
-
 const Eigen::VectorXd Edge::getCenter() const
 {
   return 0.5 * (_vertices[0]->getCoords() + _vertices[1]->getCoords());

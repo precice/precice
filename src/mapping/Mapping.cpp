@@ -10,13 +10,15 @@ namespace mapping {
 
 Mapping::Mapping(
     Constraint constraint,
-    int        dimensions)
+    int        dimensions,
+    bool       requireGradient)
     : _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
       _input(),
       _output(),
-      _dimensions(dimensions)
+      _dimensions(dimensions),
+      _requireGradient(requireGradient)
 {
 }
 
@@ -78,6 +80,11 @@ void Mapping::setOutputRequirement(
 int Mapping::getDimensions() const
 {
   return _dimensions;
+}
+
+bool Mapping::requireGradient() const
+{
+  return _requireGradient;
 }
 
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const

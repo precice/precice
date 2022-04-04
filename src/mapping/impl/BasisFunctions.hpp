@@ -157,7 +157,7 @@ private:
 
   double const _shape;
 
-  /// Either explicitely set (from cutoffThreshold) or computed supportRadius
+  /// Either explicitly set (from cutoffThreshold) or computed supportRadius
   double _supportRadius;
 
   double _deltaY = 0;
