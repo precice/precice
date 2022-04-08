@@ -1,4 +1,3 @@
-
 #include "NearestNeighborBaseMapping.hpp"
 
 #include <boost/container/flat_set.hpp>
@@ -8,7 +7,6 @@
 #include "mapping/Mapping.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
-#include "query/Index.hpp"
 #include "utils/Event.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Statistics.hpp"
@@ -53,11 +51,6 @@ void NearestNeighborBaseMapping::computeMapping()
     searchSpace = input();
   }
 
-  // For log outputs
-  precice::utils::Event e2(baseEvent + ".getIndexOnVertices", precice::syncMode);
-  query::Index          indexTree(searchSpace);
-  e2.stop();
-
   // Set up of output arrays
   const size_t verticesSize   = origins->vertices().size();
   const auto & sourceVertices = origins->vertices();
@@ -66,8 +59,9 @@ void NearestNeighborBaseMapping::computeMapping()
   // Needed for error calculations
   utils::statistics::DistanceAccumulator distanceStatistics;
 
+  auto &index = searchSpace->index();
   for (size_t i = 0; i < verticesSize; ++i) {
-    const auto &matchedVertex = indexTree.getClosestVertex(sourceVertices[i].getCoords());
+    const auto &matchedVertex = index.getClosestVertex(sourceVertices[i].getCoords());
     _vertexIndices[i]         = matchedVertex.index;
     distanceStatistics(matchedVertex.distance);
   }
