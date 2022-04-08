@@ -102,9 +102,9 @@ void NearestNeighborBaseMapping::clear()
     _offsetsMatched.clear();
 
   if (getConstraint() == CONSISTENT) {
-    query::clearCache(input()->getID());
+    input()->index().clear();
   } else {
-    query::clearCache(output()->getID());
+    output()->index().clear();
   }
 }
 
