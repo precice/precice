@@ -90,7 +90,7 @@ public:
   void clear();
 
 private:
-  struct IndexImpl;
+  class IndexImpl;
   std::unique_ptr<IndexImpl> _pimpl;
 
   /// The indexed Mesh.

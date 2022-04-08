@@ -29,12 +29,16 @@ struct MeshIndices {
   TriangleTraits::Ptr triangleRTree;
 };
 
-struct Index::IndexImpl {
-  MeshIndices indices;
-
+class Index::IndexImpl {
+public:
   VertexTraits::Ptr   getVertexRTree(const mesh::Mesh &mesh);
   EdgeTraits::Ptr     getEdgeRTree(const mesh::Mesh &mesh);
   TriangleTraits::Ptr getTriangleRTree(const mesh::Mesh &mesh);
+
+  void clear();
+
+private:
+  MeshIndices indices;
 };
 
 VertexTraits::Ptr Index::IndexImpl::getVertexRTree(const mesh::Mesh &mesh)
@@ -42,6 +46,8 @@ VertexTraits::Ptr Index::IndexImpl::getVertexRTree(const mesh::Mesh &mesh)
   if (indices.vertexRTree) {
     return indices.vertexRTree;
   }
+
+  precice::utils::Event e("query.index.getVertexIndexTree." + mesh.getName());
 
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do. Even passing an index range instead of calling
@@ -61,6 +67,8 @@ EdgeTraits::Ptr Index::IndexImpl::getEdgeRTree(const mesh::Mesh &mesh)
     return indices.edgeRTree;
   }
 
+  precice::utils::Event e("query.index.getEdgeIndexTree." + mesh.getName());
+
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do. Even passing an index range instead of calling
   // tree->insert repeatedly is about 10x faster.
@@ -79,6 +87,8 @@ TriangleTraits::Ptr Index::IndexImpl::getTriangleRTree(const mesh::Mesh &mesh)
   if (indices.triangleRTree) {
     return indices.triangleRTree;
   }
+
+  precice::utils::Event e("query.index.getTriangleIndexTree." + mesh.getName());
 
   // We first generate the values for the triangle rtree.
   // The resulting vector is a random access range, which can be passed to the
@@ -100,6 +110,17 @@ TriangleTraits::Ptr Index::IndexImpl::getTriangleRTree(const mesh::Mesh &mesh)
   return indices.triangleRTree;
 }
 
+void Index::IndexImpl::clear()
+{
+  indices.vertexRTree.reset();
+  indices.edgeRTree.reset();
+  indices.triangleRTree.reset();
+}
+
+//
+// query::Index
+//
+
 Index::Index(mesh::PtrMesh mesh)
     : _mesh(mesh.get())
 {
@@ -112,38 +133,32 @@ Index::Index(mesh::Mesh &mesh)
   _pimpl = std::make_unique<IndexImpl>(IndexImpl{});
 }
 
+// Required for the pimpl idiom to work with std::unique_ptr
 Index::~Index() = default;
 
 VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
 {
   PRECICE_TRACE();
-  // Add tree to the local cache
-  if (not _pimpl->indices.vertexRTree) {
-    precice::utils::Event e("query.index.getVertexIndexTree." + _mesh->getName());
-    _pimpl->indices.vertexRTree = _pimpl->getVertexRTree(*_mesh);
-  }
 
   PRECICE_ASSERT(not _mesh->vertices().empty(), _mesh->getName());
   VertexMatch match;
-  _pimpl->indices.vertexRTree->query(bgi::nearest(sourceCoord, 1), boost::make_function_output_iterator([&](size_t matchID) {
-                                       match = VertexMatch(bg::distance(sourceCoord, _mesh->vertices()[matchID]), matchID);
-                                     }));
+  const auto &rtree = _pimpl->getVertexRTree(*_mesh);
+  rtree->query(bgi::nearest(sourceCoord, 1), boost::make_function_output_iterator([&](size_t matchID) {
+                 match = VertexMatch(bg::distance(sourceCoord, _mesh->vertices()[matchID]), matchID);
+               }));
   return match;
 }
 
 std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord, int n)
 {
   PRECICE_TRACE();
-  // Add tree to the local cache
-  if (not _pimpl->indices.edgeRTree) {
-    precice::utils::Event e("query.index.getEdgeIndexTree." + _mesh->getName());
-    _pimpl->indices.edgeRTree = _pimpl->getEdgeRTree(*_mesh);
-  }
+
+  const auto &rtree = _pimpl->getEdgeRTree(*_mesh);
 
   std::vector<EdgeMatch> matches;
-  _pimpl->indices.edgeRTree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
-                                     matches.emplace_back(bg::distance(sourceCoord, _mesh->edges()[matchID]), matchID);
-                                   }));
+  rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
+                 matches.emplace_back(bg::distance(sourceCoord, _mesh->edges()[matchID]), matchID);
+               }));
   std::sort(matches.begin(), matches.end());
   return matches;
 }
@@ -151,17 +166,13 @@ std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord
 std::vector<TriangleMatch> Index::getClosestTriangles(const Eigen::VectorXd &sourceCoord, int n)
 {
   PRECICE_TRACE();
-  // Add tree to the local cache
-  if (not _pimpl->indices.triangleRTree) {
-    precice::utils::Event e("query.index.getTriangleIndexTree." + _mesh->getName());
-    _pimpl->indices.triangleRTree = _pimpl->getTriangleRTree(*_mesh);
-  }
+  const auto &rtree = _pimpl->getTriangleRTree(*_mesh);
 
   std::vector<TriangleMatch> matches;
-  _pimpl->indices.triangleRTree->query(bgi::nearest(sourceCoord, n),
-                                       boost::make_function_output_iterator([&](TriangleTraits::IndexType const &match) {
-                                         matches.emplace_back(bg::distance(sourceCoord, _mesh->triangles()[match.second]), match.second);
-                                       }));
+  rtree->query(bgi::nearest(sourceCoord, n),
+               boost::make_function_output_iterator([&](TriangleTraits::IndexType const &match) {
+                 matches.emplace_back(bg::distance(sourceCoord, _mesh->triangles()[match.second]), match.second);
+               }));
   std::sort(matches.begin(), matches.end());
   return matches;
 }
@@ -169,19 +180,15 @@ std::vector<TriangleMatch> Index::getClosestTriangles(const Eigen::VectorXd &sou
 std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius)
 {
   PRECICE_TRACE();
-  // Add tree to the local cache
-  if (_pimpl->indices.vertexRTree == nullptr) {
-    precice::utils::Event e("query.index.getVertexIndexTree." + _mesh->getName());
-    _pimpl->indices.vertexRTree = _pimpl->getVertexRTree(*_mesh);
-  }
 
   // Prepare boost::geometry box
   auto coords    = centerVertex.getCoords();
   auto searchBox = query::makeBox(coords.array() - radius, coords.array() + radius);
 
+  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
-  _pimpl->indices.vertexRTree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
-                                     std::back_inserter(matches));
+  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
+               std::back_inserter(matches));
   return matches;
 }
 
@@ -189,12 +196,9 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
 {
   PRECICE_TRACE();
   // Add tree to the local cache
-  if (not _pimpl->indices.vertexRTree) {
-    precice::utils::Event e("query.index.getVertexIndexTree." + _mesh->getName());
-    _pimpl->indices.vertexRTree = _pimpl->getVertexRTree(*_mesh);
-  }
+  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
-  _pimpl->indices.vertexRTree->query(bgi::intersects(query::makeBox(bb.minCorner(), bb.maxCorner())), std::back_inserter(matches));
+  rtree->query(bgi::intersects(query::makeBox(bb.minCorner(), bb.maxCorner())), std::back_inserter(matches));
   return matches;
 }
 
@@ -242,9 +246,7 @@ ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, i
 
 void Index::clear()
 {
-  _pimpl->indices.vertexRTree.reset();
-  _pimpl->indices.edgeRTree.reset();
-  _pimpl->indices.triangleRTree.reset();
+  _pimpl->clear();
 }
 
 } // namespace query
