@@ -504,7 +504,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
     createNastinMesh2D(pNastinMesh, context.rank);
 
     double            safetyFactor = 20.0;
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::NO_FILTER, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
     part.addM2N(m2n);
     part.addFromMapping(boundingFromMapping);
     part.addToMapping(boundingToMapping);
@@ -763,6 +763,212 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
       BOOST_TEST(pSolidzMesh->triangles().size() == 1);
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(ConnectivityAwareFiltering)
+{
+  PRECICE_TEST("SolverOne"_on(2_ranks).setupMasterSlaves(), "SolverTwo"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  auto m2n = context.connectMasters("SolverOne", "SolverTwo");
+
+  int dimensions = 3;
+
+  Eigen::Vector3d coordOneA{0.0, 0.0, 0.1};
+  Eigen::Vector3d coordOneB{1.2, 0.0, 0.1};
+  Eigen::Vector3d coordOneC{1.3, 1.0, 0.11};
+  Eigen::Vector3d coordOneD{0.0, 1.0, 0.1};
+  Eigen::Vector3d coordOneE{2.1, 0.0, 0.1};
+  Eigen::Vector3d coordOneF{2.3, 1.0, -0.1};
+
+  Eigen::Vector3d coordTwoA{0.0, 0.0, 0.01};
+  Eigen::Vector3d coordTwoB{1.01, 0.0, 0.0};
+  Eigen::Vector3d coordTwoC{1.5, 1.0, 0.01};
+  Eigen::Vector3d coordTwoD{0.0, 1.0, 0.01};
+  Eigen::Vector3d coordTwoE{2.2, 0.0, -0.01};
+  Eigen::Vector3d coordTwoF{2.5, 1.0, 0.01};
+
+  if (context.isNamed("SolverOne")) {
+    mesh::PtrMesh meshOne(new mesh::Mesh("meshOne", dimensions, testing::nextMeshID()));
+    if (context.isMaster()) {
+      auto &vA  = meshOne->createVertex(coordOneA);
+      auto &vB  = meshOne->createVertex(coordOneB);
+      auto &vC  = meshOne->createVertex(coordOneC);
+      auto &vD  = meshOne->createVertex(coordOneD);
+      auto &eAB = meshOne->createEdge(vA, vB);
+      auto &eBC = meshOne->createEdge(vB, vC);
+      auto &eAC = meshOne->createEdge(vA, vC);
+      auto &eCD = meshOne->createEdge(vC, vD);
+      auto &eAD = meshOne->createEdge(vA, vD);
+      meshOne->createTriangle(eAB, eBC, eAC);
+      meshOne->createTriangle(eAD, eAC, eCD);
+    } else {
+      auto &vB  = meshOne->createVertex(coordOneB);
+      auto &vC  = meshOne->createVertex(coordOneC);
+      auto &vE  = meshOne->createVertex(coordOneE);
+      auto &vF  = meshOne->createVertex(coordOneF);
+      auto &eBC = meshOne->createEdge(vB, vC);
+      auto &eBE = meshOne->createEdge(vB, vE);
+      auto &eBF = meshOne->createEdge(vB, vF);
+      auto &eEF = meshOne->createEdge(vE, vF);
+      auto &eFC = meshOne->createEdge(vF, vC);
+      meshOne->createTriangle(eBC, eFC, eBF);
+      meshOne->createTriangle(eBE, eEF, eBF);
+    }
+    meshOne->computeBoundingBox();
+    ProvidedPartition part(meshOne);
+    part.addM2N(m2n);
+    part.communicate();
+  } else {
+    PRECICE_ASSERT(context.isNamed("SolverTwo"));
+    mesh::PtrMesh meshOne(new mesh::Mesh("meshOne", dimensions, testing::nextMeshID()));
+    mesh::PtrMesh meshTwo(new mesh::Mesh("meshTwo", dimensions, testing::nextMeshID()));
+
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
+        new mapping::NearestProjectionMapping(mapping::Mapping::SCALEDCONSISTENT, dimensions));
+    boundingFromMapping->setMeshes(meshOne, meshTwo);
+
+    if (utils::MasterSlave::isMaster()) {
+      auto &vA  = meshTwo->createVertex(coordTwoA);
+      auto &vB  = meshTwo->createVertex(coordTwoB);
+      auto &vC  = meshTwo->createVertex(coordTwoC);
+      auto &vD  = meshTwo->createVertex(coordTwoD);
+      auto &vF  = meshTwo->createVertex(coordTwoF);
+      auto &eAB = meshTwo->createEdge(vA, vB);
+      auto &eBC = meshTwo->createEdge(vB, vC);
+      auto &eAC = meshTwo->createEdge(vA, vC);
+      auto &eCD = meshTwo->createEdge(vC, vD);
+      auto &eAD = meshTwo->createEdge(vA, vD);
+      auto &eBF = meshTwo->createEdge(vB, vF);
+      auto &eFC = meshTwo->createEdge(vF, vC);
+      meshTwo->createTriangle(eAB, eBC, eAC);
+      meshTwo->createTriangle(eAD, eAC, eCD);
+      meshTwo->createTriangle(eBC, eFC, eBF);
+    } else {
+      auto &vB  = meshTwo->createVertex(coordTwoB);
+      auto &vE  = meshTwo->createVertex(coordTwoE);
+      auto &vF  = meshTwo->createVertex(coordTwoF);
+      auto &eBE = meshTwo->createEdge(vB, vE);
+      auto &eBF = meshTwo->createEdge(vB, vF);
+      auto &eEF = meshTwo->createEdge(vE, vF);
+      meshTwo->createTriangle(eBE, eEF, eBF);
+    }
+    meshTwo->computeBoundingBox();
+
+    double            safetyFactor = 0.2;
+    ReceivedPartition part(meshOne, ReceivedPartition::ON_MASTER, safetyFactor);
+    part.addM2N(m2n);
+    part.addFromMapping(boundingFromMapping);
+    part.communicate();
+    part.compute();
+    // check if the sending and filtering worked right
+    if (context.isMaster()) { //Master
+      BOOST_TEST(meshOne->vertices().size() == 8);
+      BOOST_TEST(meshOne->edges().size() == 10);
+      BOOST_TEST(meshOne->triangles().size() == 4);
+    } else if (context.isRank(1)) { //Slave1
+      BOOST_TEST(meshOne->vertices().size() == 8);
+      BOOST_TEST(meshOne->edges().size() == 10);
+      BOOST_TEST(meshOne->triangles().size() == 4);
+    }
+  }
+  tearDownParallelEnvironment();
+}
+
+BOOST_AUTO_TEST_CASE(ConnectivityAwareFilteringSmaller)
+{
+  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(2_ranks).setupMasterSlaves(), Require::Events);
+  auto m2n = context.connectMasters("SolverOne", "SolverTwo");
+
+  int dimensions = 3;
+
+  Eigen::Vector3d coordOneA{0.0, 0.0, 0.1};
+  Eigen::Vector3d coordOneB{1.2, 0.0, 0.1};
+  Eigen::Vector3d coordOneC{1.3, 1.0, 0.11};
+  Eigen::Vector3d coordOneD{0.0, 1.0, 0.1};
+  Eigen::Vector3d coordOneE{2.1, 0.0, 0.1};
+  Eigen::Vector3d coordOneF{2.3, 1.0, -0.1};
+
+  Eigen::Vector3d coordTwoA{0.1, 0.7, 0.01};
+  Eigen::Vector3d coordTwoB{1.1, 1.0, 0.0};
+  Eigen::Vector3d coordTwoC{1.1, 0.9, 0.01};
+  Eigen::Vector3d coordTwoD{0.0, 0.9, 0.01};
+
+  if (context.isNamed("SolverOne")) {
+    mesh::PtrMesh meshOne(new mesh::Mesh("meshOne", dimensions, testing::nextMeshID()));
+    if (context.isMaster()) {
+      auto &vA  = meshOne->createVertex(coordOneA);
+      auto &vB  = meshOne->createVertex(coordOneB);
+      auto &vC  = meshOne->createVertex(coordOneC);
+      auto &vD  = meshOne->createVertex(coordOneD);
+      auto &eAB = meshOne->createEdge(vA, vB);
+      auto &eBC = meshOne->createEdge(vB, vC);
+      auto &eAC = meshOne->createEdge(vA, vC);
+      auto &eCD = meshOne->createEdge(vC, vD);
+      auto &eAD = meshOne->createEdge(vA, vD);
+      meshOne->createTriangle(eAB, eBC, eAC);
+      meshOne->createTriangle(eAD, eAC, eCD);
+    } else {
+      auto &vB  = meshOne->createVertex(coordOneB);
+      auto &vC  = meshOne->createVertex(coordOneC);
+      auto &vE  = meshOne->createVertex(coordOneE);
+      auto &vF  = meshOne->createVertex(coordOneF);
+      auto &eBC = meshOne->createEdge(vB, vC);
+      auto &eBE = meshOne->createEdge(vB, vE);
+      auto &eBF = meshOne->createEdge(vB, vF);
+      auto &eEF = meshOne->createEdge(vE, vF);
+      auto &eFC = meshOne->createEdge(vF, vC);
+      meshOne->createTriangle(eBC, eFC, eBF);
+      meshOne->createTriangle(eBE, eEF, eBF);
+    }
+    meshOne->computeBoundingBox();
+    ProvidedPartition part(meshOne);
+    part.addM2N(m2n);
+    part.communicate();
+  } else {
+    PRECICE_ASSERT(context.isNamed("SolverTwo"));
+    mesh::PtrMesh meshOne(new mesh::Mesh("meshOne", dimensions, testing::nextMeshID()));
+    mesh::PtrMesh meshTwo(new mesh::Mesh("meshTwo", dimensions, testing::nextMeshID()));
+
+    mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(
+        new mapping::NearestNeighborMapping(mapping::Mapping::SCALEDCONSISTENT, dimensions));
+    boundingFromMapping->setMeshes(meshOne, meshTwo);
+
+    if (context.isMaster()) {
+      auto &vA  = meshTwo->createVertex(coordTwoA);
+      auto &vB  = meshTwo->createVertex(coordTwoB);
+      auto &vC  = meshTwo->createVertex(coordTwoC);
+      auto &eAB = meshTwo->createEdge(vA, vB);
+      auto &eBC = meshTwo->createEdge(vB, vC);
+      auto &eAC = meshTwo->createEdge(vA, vC);
+      meshTwo->createTriangle(eAB, eBC, eAC);
+    } else {
+      auto &vA  = meshTwo->createVertex(coordTwoA);
+      auto &vC  = meshTwo->createVertex(coordTwoC);
+      auto &vD  = meshTwo->createVertex(coordTwoD);
+      auto &eAC = meshTwo->createEdge(vA, vC);
+      auto &eCD = meshTwo->createEdge(vC, vD);
+      auto &eAD = meshTwo->createEdge(vA, vD);
+      meshTwo->createTriangle(eAD, eAC, eCD);
+    }
+    meshTwo->computeBoundingBox();
+
+    double            safetyFactor = 0.2;
+    ReceivedPartition part(meshOne, ReceivedPartition::ON_MASTER, safetyFactor);
+    part.addM2N(m2n);
+    part.addFromMapping(boundingFromMapping);
+    part.communicate();
+    part.compute();
+    // check if the sending and filtering worked right
+    if (context.isMaster()) { //Master
+      BOOST_TEST(meshOne->vertices().size() == 4);
+      BOOST_TEST(meshOne->edges().size() == 5);
+      BOOST_TEST(meshOne->triangles().size() == 2);
+    } else if (context.isRank(1)) { //Slave1
+      BOOST_TEST(meshOne->vertices().size() == 4);
+      BOOST_TEST(meshOne->edges().size() == 5);
+      BOOST_TEST(meshOne->triangles().size() == 2);
+    }
+  }
+  tearDownParallelEnvironment();
 }
 
 BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)

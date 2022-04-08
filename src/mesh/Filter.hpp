@@ -8,13 +8,22 @@
 namespace precice {
 namespace mesh {
 
+/// Creates a vertex on the destination mesh and adds it to the map to use it to build other connectivity elements
+void addVertexToMesh(const Vertex &vertex, boost::container::flat_map<VertexID, Vertex *> &vertexMap, Mesh &destination);
+
+/// Creates an edge on the destination mesh. If withConnection option is true, it also creates the missing vertex for an edge
+void addEdgeToMesh(const Edge &edge, boost::container::flat_map<EdgeID, Edge *> &edgeMap, boost::container::flat_map<VertexID, Vertex *> &vertexMap, Mesh &destination, bool withConnection);
+
+/// Creates an face on the destination mesh. If withConnection option is true, it also creates the missing vertices for an edge
+void addTriangleToMesh(const Triangle &triangle, boost::container::flat_map<EdgeID, Edge *> &edgeMap, boost::container::flat_map<VertexID, Vertex *> &vertexMap, Mesh &destination, bool withConnection);
+
 /** filters the source Mesh and adds it to the destination Mesh
  * @param[inout] destination the destination mesh to append the filtered Mesh to
  * @param[in] source the source Mesh to filter
  * @param[in] p the filter as a UnaryPredicate on mesh::Vertex 
  */
 template <typename UnaryPredicate>
-void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
+void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p, bool withConnection = false)
 {
   // Create a flat_map which can contain all vertices of the original mesh.
   // This prevents resizes during the map build-up.
@@ -23,12 +32,7 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
 
   for (const Vertex &vertex : source.vertices()) {
     if (p(vertex)) {
-      Vertex &v = destination.createVertex(vertex.getCoords());
-      v.setGlobalIndex(vertex.getGlobalIndex());
-      if (vertex.isTagged())
-        v.tag();
-      v.setOwner(vertex.isOwner());
-      vertexMap[vertex.getID()] = &v;
+      addVertexToMesh(vertex, vertexMap, destination);
     }
   }
 
@@ -39,26 +43,13 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
 
   // Add all edges formed by the contributing vertices
   for (const Edge &edge : source.edges()) {
-    VertexID vertexIndex1 = edge.vertex(0).getID();
-    VertexID vertexIndex2 = edge.vertex(1).getID();
-    if (vertexMap.count(vertexIndex1) == 1 &&
-        vertexMap.count(vertexIndex2) == 1) {
-      Edge &e               = destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
-      edgeMap[edge.getID()] = &e;
-    }
+    addEdgeToMesh(edge, edgeMap, vertexMap, destination, withConnection);
   }
 
   // Add all triangles formed by the contributing edges
   if (source.getDimensions() == 3) {
     for (const Triangle &triangle : source.triangles()) {
-      EdgeID edgeIndex1 = triangle.edge(0).getID();
-      EdgeID edgeIndex2 = triangle.edge(1).getID();
-      EdgeID edgeIndex3 = triangle.edge(2).getID();
-      if (edgeMap.count(edgeIndex1) == 1 &&
-          edgeMap.count(edgeIndex2) == 1 &&
-          edgeMap.count(edgeIndex3) == 1) {
-        destination.createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-      }
+      addTriangleToMesh(triangle, edgeMap, vertexMap, destination, withConnection);
     }
   }
 }
