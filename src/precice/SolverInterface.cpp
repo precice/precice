@@ -253,10 +253,10 @@ void SolverInterface::writeBlockVectorGradientData(
     int           dataID,
     int           size,
     const int *   valueIndices,
-    const double *values,
+    const double *gradientValues,
     bool          rowsFirst)
 {
-  _impl->writeBlockVectorGradientData(dataID, size, valueIndices, values, rowsFirst);
+  _impl->writeBlockVectorGradientData(dataID, size, valueIndices, gradientValues, rowsFirst);
 }
 
 void SolverInterface::writeVectorData(
@@ -270,10 +270,10 @@ void SolverInterface::writeVectorData(
 void SolverInterface::writeVectorGradientData(
     int           dataID,
     int           valueIndex,
-    const double *value,
+    const double *gradientValue,
     bool          rowsFirst)
 {
-  _impl->writeVectorGradientData(dataID, valueIndex, value, rowsFirst);
+  _impl->writeVectorGradientData(dataID, valueIndex, gradientValue, rowsFirst);
 }
 
 void SolverInterface::writeBlockScalarData(
@@ -289,10 +289,10 @@ void SolverInterface::writeBlockScalarGradientData(
     int           dataID,
     int           size,
     const int *   valueIndices,
-    const double *values,
+    const double *gradientValues,
     bool          rowsFirst)
 {
-  _impl->writeBlockScalarGradientData(dataID, size, valueIndices, values, rowsFirst);
+  _impl->writeBlockScalarGradientData(dataID, size, valueIndices, gradientValues, rowsFirst);
 }
 
 void SolverInterface::writeScalarData(
@@ -306,9 +306,9 @@ void SolverInterface::writeScalarData(
 void SolverInterface::writeScalarGradientData(
     int           dataID,
     int           valueIndex,
-    const double *value)
+    const double *gradientValue)
 {
-  _impl->writeScalarGradientData(dataID, valueIndex, value);
+  _impl->writeScalarGradientData(dataID, valueIndex, gradientValue);
 }
 
 void SolverInterface::readBlockVectorData(

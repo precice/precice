@@ -104,7 +104,6 @@ void DataConfiguration::addData(
 
     _data.push_back({name, dataDimensions});
   }
-
 }
 
 int DataConfiguration::getDataDimensions(

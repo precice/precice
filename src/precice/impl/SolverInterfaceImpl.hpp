@@ -385,7 +385,7 @@ public:
   void writeVectorGradientData(
       int           fromDataID,
       int           valueIndex,
-      const double *value,
+      const double *gradientValue,
       bool          rowsFirst = false);
 
   /**
@@ -412,7 +412,7 @@ public:
       int           fromDataID,
       int           size,
       const int *   valueIndices,
-      const double *values,
+      const double *gradientValues,
       bool          rowsFirst = false);
 
   /**
@@ -435,7 +435,7 @@ public:
   void writeScalarGradientData(
       int           fromDataID,
       int           valueIndex,
-      const double *value);
+      const double *gradientValue);
 
   /**
    * @brief Writes scalar data values given as block.
@@ -457,7 +457,7 @@ public:
       int           fromDataID,
       int           size,
       const int *   valueIndices,
-      const double *values,
+      const double *gradientValues,
       bool          rowsFirst = false);
 
   /**
@@ -557,7 +557,6 @@ private:
   impl::PtrParticipant _accessor;
 
   /// Spatial dimensions of problem.
-  /// TODO: Sure this is the spatial dimensions of the mesh and not the dimensions of the data ?
   int _dimensions = 0;
 
   utils::MultiLock<int> _meshLock;
