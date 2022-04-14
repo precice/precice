@@ -219,8 +219,8 @@ private:
   // and their re-partitioning, which could also not be moved to some fixture as the M2Ns
   // are created through the configuration.
   // See e.g. "CplSchemeTests/ExplicitCouplingSchemeTests/testConfiguredSimpleExplicitCoupling"
-  // This flag gives a loophole. It is set to false for normal use and modfied in the
-  // respective tests through a fried decleration.
+  // This flag gives a loophole. It is set to false for normal use and modified in the
+  // respective tests through a friend declaration.
 
   /// between two serial participants, only use the master-master com and no slaves-slaves com
   bool _useOnlyMasterCom = false;

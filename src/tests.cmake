@@ -60,15 +60,17 @@ target_sources(testprecice
     src/partition/tests/fixtures.hpp
     src/precice/tests/DataContextTest.cpp
     src/precice/tests/ParallelTests.cpp
-    src/precice/tests/SerialTests.cpp
     src/precice/tests/ToolingTests.cpp
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
     src/precice/tests/WatchPointTest.cpp
     src/query/tests/RTreeAdapterTests.cpp
     src/query/tests/RTreeTests.cpp
+    src/testing/DataContextFixture.cpp
+    src/testing/DataContextFixture.hpp
     src/testing/ExtrapolationFixture.cpp
     src/testing/ExtrapolationFixture.hpp
+    src/testing/GlobalFixtures.cpp
     src/testing/ParallelCouplingSchemeFixture.cpp
     src/testing/ParallelCouplingSchemeFixture.hpp
     src/testing/SerialCouplingSchemeFixture.cpp

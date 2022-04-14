@@ -120,7 +120,7 @@ ResultConstants segmentPlaneIntersection(
   double d = pointOnPlane.dot(planeNormal);
 
   // The segment is represented by:
-  // firstPointSegment + (secondPointSegment - firstPointSegement) * t (2)
+  // firstPointSegment + (secondPointSegment - firstPointSegment) * t (2)
   // We insert (2) into (1) and reorder for t. The resulting equations reads
   // t = (d - firstPointSegment dot planeNormal) /
   //     ((secondPointSegment - firstPointSegment) dot planeNormal). (3)

@@ -161,7 +161,7 @@ struct indexed_access<pm::Edge, Index, Dimension> {
 
 /** @brief Provides the necessary template specialisations to adapt precice's Triangle to boost.geometry
 *
-* This adapts every Triangle to the ring concept (filled planar polygone) of boost.geometry.
+* This adapts every Triangle to the ring concept (filled planar polygon) of boost.geometry.
 * Include impl/RangeAdapter.hpp for full support.
 */
 template <>
@@ -198,11 +198,8 @@ inline pm::Vertex::RawCoords eigenToRaw(const Eigen::VectorXd &v)
 {
   const auto size = v.size();
   PRECICE_ASSERT(size == 2 || size == 3, size);
-  pm::Vertex::RawCoords r;
+  pm::Vertex::RawCoords r{0.0, 0.0, 0.0};
   std::copy_n(v.data(), size, r.data());
-  if (size == 2) {
-    r[2] = 0.0;
-  }
   return r;
 }
 

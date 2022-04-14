@@ -1,7 +1,7 @@
 /*
  * Returns pretty type names for various types.
  * Used for generating the XML documentation.
- * They are inlined, so that they don't need to be defined in a seperate cpp file.
+ * They are inlined, so that they don't need to be defined in a separate cpp file.
  */
 
 #pragma once

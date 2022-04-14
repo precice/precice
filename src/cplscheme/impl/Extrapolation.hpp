@@ -58,7 +58,7 @@ private:
   int _extrapolationOrder; // @todo make const! Possible, if extrapolation order is set at configuration of data.
 
   /// number of stored samples in _timeWindowsStorage
-  int _numberOfStoredSamples;
+  int _numberOfStoredSamples = 0;
 
   mutable logging::Logger _log{"cplscheme::Extrapolation"};
 
