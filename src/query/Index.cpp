@@ -127,6 +127,7 @@ ProjectionMatch Index::findNearestVolume(const Eigen::VectorXd &location, int n)
 {
   if (_mesh->getDimensions() == 2) {
     return findTriangleProjection(location, n);
+    // TODO: remove fallback on edge
   } else {
     PRECICE_ASSERT(_mesh->getDimensions() == 3, "Volume coupling 3D not  implemented");
     return findTriangleProjection(location, n);
