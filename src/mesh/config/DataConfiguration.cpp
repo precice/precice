@@ -83,16 +83,28 @@ void DataConfiguration::addData(
     int                dataDimensions,
     bool               hasGradient)
 {
-  //ConfiguredData data(name, dataDimensions, hasGradient);
+  if (hasGradient) {
 
-  // Check if data with same name has been added already
-  for (auto &elem : _data) {
-    PRECICE_CHECK(elem.name != name,
-                  "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
-                  name);
+    ConfiguredData data(name, dataDimensions, hasGradient);
+    // Check if data with same name has been added already
+    for (auto &elem : _data) {
+      PRECICE_CHECK(elem.name != data.name,
+                    "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
+                    data.name);
+    }
+    _data.push_back(data);
+  } else {
+
+    // Check if data with same name has been added already
+    for (auto &elem : _data) {
+      PRECICE_CHECK(elem.name != name,
+                    "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
+                    name);
+    }
+
+    _data.push_back({name, dataDimensions});
   }
-  //_data.push_back(data);
-  _data.push_back({name, dataDimensions});
+
 }
 
 int DataConfiguration::getDataDimensions(
