@@ -655,7 +655,7 @@ public:
    *                            ... ,
    *                            vnx_dx, vnx_dy, vny_dx, vny_dy)
    *
-   * corresponding to the vector data v0 = (v0x, v0y) , v1 = (v1x, v1y), ... , vn = (vnx, vny) derived in spatial directions.
+   * corresponding to the vector data v0 = (v0x, v0y) , v1 = (v1x, v1y), ... , vn = (vnx, vny) differentiated in spatial directions x and y.
    *
    *
    * The 3D-format of value is (v0x_dx, v0x_dy, v0x_dz, v0y_dx, v0y_dy, v0y_dz, v0z_dx, v0z_dy, v0z_dz,
@@ -663,9 +663,9 @@ public:
    *                            ... ,
    *                            vnx_dx, vnx_dy, vnx_dz, vny_dx, vny_dy, vny_dz, vnz_dx, vnz_dy, vnz_dz)
    *
-   * corresponding to the vector data v0 = (v0x, v0y, v0z) , v1 = (v1x, v1y, v1z), ... , vn = (vnx, vny, vnz) derived in spatial directions.
+   * corresponding to the vector data v0 = (v0x, v0y, v0z) , v1 = (v1x, v1y, v1z), ... , vn = (vnx, vny, vnz) differentiated in spatial directions x,y and z.
    *
-   * The optional rowMajor attribute allows to enter the values derived in the spatial directions first:
+   * The optional rowMajor attribute allows to enter the derivatives directions-wise:
    *
    * For the 3D-format as follows: (v0x_dx, v0y_dx, v1x_dx, v1y_dx, ... , vnx_dx, vny_dx,
    *                                v0x_dy, v0y_dy, v1x_dy, v1y_dy, ... , vnx_dy, vny_dy)
@@ -679,7 +679,7 @@ public:
    * @param[in] dataID ID to write to.
    * @param[in] size Number n of vertices.
    * @param[in] values Pointer to the gradient values read columnwise by default.
-   * @param[in] rowMajor Allows to input the data derived in spatial directions first
+   * @param[in] rowMajor Allows to input the derivatives directionwise
    *
    * @pre count of available elements at gradient values matches the configured dimension * size
    * @pre count of available elements at valueIndices matches the given size
@@ -721,10 +721,10 @@ public:
   /**
    * @brief Writes vector gradient data to a vertex
    *
-   * This function writes a the corresponding gradient matrix value of a specified vertex to a dataID.
+   * This function writes the corresponding gradient matrix value of a specified vertex to a dataID.
    * Values are provided as a block of continuous memory.
    *
-   * Per default, the values are passed as following:
+   * By default, the gradients are passed in the following way:
    *
    * The 2D-format of value is (vx_dx, vx_dy, vy_dx, vy_dy) matrix corresponding to the data block v = (vx, vy)
    * derived respectively in x-direction dx and y-direction dy

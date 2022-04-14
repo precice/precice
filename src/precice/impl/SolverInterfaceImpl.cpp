@@ -1190,7 +1190,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
 {
 
   PRECICE_TRACE(dataID, valueIndex);
-  PRECICE_CHECK(_state != State::Finalized, "writeScalarGradientData(...) cannot be called before finalize().")
+  PRECICE_CHECK(_state != State::Finalized, "writeScalarGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
   PRECICE_DEBUG("gradient value = {}", Eigen::Map<const Eigen::VectorXd>(value, _dimensions).format(utils::eigenio::debug()));
 
@@ -1218,7 +1218,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
                 valueIndex, data.getName());
 
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
-                "Cannot write data \"{}\" to invalid Vertex ID ({}). "
+                "Cannot write data \"{}\" to invalid vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                 context.getDataName(), valueIndex);
 
@@ -1279,7 +1279,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
                     context.getDataName(), valueIndex);
 
       if (rowMajor) {
-        // Values are entered derived in spatial dimensions first
+        // Gradients are entered directionswise
         const int offset                        = dim * size;
         gradientValuesInternal(dim, valueIndex) = values[offset + i];
       } else {
@@ -1301,7 +1301,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
 {
 
   PRECICE_TRACE(dataID, valueIndex);
-  PRECICE_CHECK(_state != State::Finalized, "writeVectorGradientData(...) cannot be called before finalize().")
+  PRECICE_CHECK(_state != State::Finalized, "writeVectorGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
   PRECICE_CHECK(value != nullptr, "writeVectorGradientData() was called with values == nullptr");
@@ -1311,7 +1311,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
   mesh::Data &data = *context.providedData();
 
   // Check if Data object with ID dataID has been initialized with gradient data
-  PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available! Please turn on the gradient attribute in the configuration file.", data.getName())
+  PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please turn on the gradient attribute in the configuration file.", data.getName())
 
   // Check if the dimensions match
   PRECICE_CHECK(data.getDimensions() > 1,
