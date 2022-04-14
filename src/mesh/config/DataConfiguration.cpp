@@ -80,20 +80,6 @@ void DataConfiguration::xmlEndTagCallback(
 
 void DataConfiguration::addData(
     const std::string &name,
-    int                dataDimensions)
-{
-  // Check if data with same name has been added already
-  for (auto &elem : _data) {
-    PRECICE_CHECK(elem.name != name,
-                  "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
-                  name);
-  }
-
-  _data.push_back({name, dataDimensions});
-}
-
-void DataConfiguration::addData(
-    const std::string &name,
     int                dataDimensions,
     bool               hasGradient)
 {

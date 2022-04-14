@@ -20,13 +20,8 @@ public:
 
     ConfiguredData(
         const std::string &name,
-        int                dimensions)
-        : name(name), dimensions(dimensions), hasGradient(false) {}
-
-    ConfiguredData(
-        const std::string &name,
         int                dimensions,
-        bool               hasGradient)
+        bool               hasGradient = false)
         : name(name), dimensions(dimensions), hasGradient(hasGradient) {}
   };
 
@@ -53,11 +48,8 @@ public:
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    */
   void addData(const std::string &name,
-               int                dataDimensions);
-
-  void addData(const std::string &name,
                int                dataDimensions,
-               bool               hasGradient);
+               bool               hasGradient = false);
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
