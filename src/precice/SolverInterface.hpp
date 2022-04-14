@@ -665,7 +665,7 @@ public:
    *
    * corresponding to the vector data v0 = (v0x, v0y, v0z) , v1 = (v1x, v1y, v1z), ... , vn = (vnx, vny, vnz) differentiated in spatial directions x,y and z.
    *
-   * The optional rowMajor attribute allows to enter the derivatives directions-wise:
+   * The optional rowsFirst attribute allows to enter the derivatives directions-wise:
    *
    * For the 3D-format as follows: (v0x_dx, v0y_dx, v1x_dx, v1y_dx, ... , vnx_dx, vny_dx,
    *                                v0x_dy, v0y_dy, v1x_dy, v1y_dy, ... , vnx_dy, vny_dy)
@@ -679,7 +679,7 @@ public:
    * @param[in] dataID ID to write to.
    * @param[in] size Number n of vertices.
    * @param[in] values Pointer to the gradient values read columnwise by default.
-   * @param[in] rowMajor Allows to input the derivatives directionwise
+   * @param[in] rowsFirst Allows to input the derivatives directionwise
    *
    * @pre count of available elements at gradient values matches the configured dimension * size
    * @pre count of available elements at valueIndices matches the given size
@@ -693,7 +693,7 @@ public:
       int           size,
       const int *   valueIndices,
       const double *values,
-      bool          rowMajor = false);
+      bool          rowsFirst = false);
 
   /**
    * @brief Writes vector data to a vertex
@@ -732,7 +732,7 @@ public:
    * The 3D-format of value is (vx_dx, vx_dy, vx_dz, vy_dx, vy_dy, vy_dz, vz_dx, vz_dy, vz_dz) matrix
    * corresponding to the data block v = (vx, vy, vz) derived respectively in spatial directions x-direction dx and y-direction dy and z-direction dz
    *
-   * The optional rowMajor attribute allows to enter the values derived in the spatial directions first:
+   * The optional rowsFirst attribute allows to enter the values derived in the spatial directions first:
    *
    * For the 2D-format as follows: (vx_dx, vy_dx, vx_dy, vy_dy)
    * For the 3D-format as follows: (vx_dx, vy_dx, vz_dx, vx_dy, vy_dy, vz_dz, vx_dz, vy_dz, vz_dz)
@@ -740,7 +740,7 @@ public:
    * @param[in] dataID ID to write to.
    * @param[in] valueIndex Index of the vertex.
    * @param[in] value pointer to the gradient value.
-   * @param[in] rowMajor allows to iterate over the matrix rows first. Per default the values are read columnwise.
+   * @param[in] rowsFirst allows to iterate over the matrix rows first. Per default the values are read columnwise.
    *
    * @pre count of available elements at value matches the configured dimension
    * @pre initialize() has been called
@@ -753,7 +753,7 @@ public:
       int           dataID,
       int           valueIndex,
       const double *value,
-      bool          rowMajor = false);
+      bool          rowsFirst = false);
 
   /**
    * @brief Writes scalar data given as block.
@@ -795,7 +795,7 @@ public:
    * The 3D-format of value is (v0_dx, v0_dy, v0_dz, v1_dx, v1_dy, v1_dz, ... , vn_dx, vn_dy, vn_dz)
    * corresponding to the scalar data v0, v1, ... , vn derived in spatial directions.
    *
-   * The optional rowMajor attribute allows to enter the values derived in the spatial directions first:
+   * The optional rowsFirst attribute allows to enter the values derived in the spatial directions first:
    * For the 2D-format as follows: (v0_dx, v1_dx, ... vn_dx, v0_dy, v1_dy, ... , vn_dy)
    * For the 3D-format as follows: (v0_dx, v1_dx, ..., vn_dx, v0_dy, v1_dy, ... , vn_dy, v0_dz, v1_dz, ... , vn_dz)
    *
@@ -803,7 +803,7 @@ public:
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
    * @param[in] values Pointer to the gradient values read columnwise by default.
-   * @param[in] rowMajor Allows to input the data derived in spatial directions first
+   * @param[in] rowsFirst Allows to input the data derived in spatial directions first
    *
    * @pre count of available elements at values matches the given size
    * @pre count of available elements at valueIndices matches the given size
@@ -817,7 +817,7 @@ public:
       int           size,
       const int *   valueIndices,
       const double *values,
-      bool          rowMajor = false);
+      bool          rowsFirst = false);
 
   /**
    * @brief Writes scalar data to a vertex

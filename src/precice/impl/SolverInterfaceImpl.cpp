@@ -1238,7 +1238,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     int           size,
     const int *   valueIndices,
     const double *values,
-    bool          rowMajor)
+    bool          rowsFirst)
 {
 
   // Asserts and checks
@@ -1278,7 +1278,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
                     "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                     context.getDataName(), valueIndex);
 
-      if (rowMajor) {
+      if (rowsFirst) {
         // Gradients are entered directionswise
         const int offset                        = dim * size;
         gradientValuesInternal(dim, valueIndex) = values[offset + i];
@@ -1297,7 +1297,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
     int           dataID,
     int           valueIndex,
     const double *value,
-    bool          rowMajor)
+    bool          rowsFirst)
 {
 
   PRECICE_TRACE(dataID, valueIndex);
@@ -1337,7 +1337,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
 
       const int offsetInternal = valueIndex * _dimensions;
 
-      if (rowMajor) {
+      if (rowsFirst) {
         // Values are entered derived in spatial dimensions first : gradient matrix read rowwise
         const int offset                                           = dimData * _dimensions;
         gradientValuesInternal(dimSpace, offsetInternal + dimData) = value[offset + dimSpace];
@@ -1357,7 +1357,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     int           size,
     const int *   valueIndices,
     const double *values,
-    bool          rowMajor)
+    bool          rowsFirst)
 {
 
   // Asserts and checks
@@ -1404,7 +1404,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 
         const int offsetInternal = valueIndex * _dimensions;
 
-        if (rowMajor) {
+        if (rowsFirst) {
           // Values are entered derived in spatial dimensions first : gradient matrices read rowwise
           const int offsetOut                                = dimSpace * _dimensions * size;
           const int offsetIn                                 = i * _dimensions;

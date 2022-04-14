@@ -386,7 +386,7 @@ public:
       int           fromDataID,
       int           valueIndex,
       const double *value,
-      bool          rowMajor = false);
+      bool          rowsFirst = false);
 
   /**
    * @brief Writes vector data values given as block.
@@ -413,7 +413,7 @@ public:
       int           size,
       const int *   valueIndices,
       const double *values,
-      bool          rowMajor = false);
+      bool          rowsFirst = false);
 
   /**
    * @brief Write scalar data to the interface mesh
@@ -458,7 +458,7 @@ public:
       int           size,
       const int *   valueIndices,
       const double *values,
-      bool          rowMajor = false);
+      bool          rowsFirst = false);
 
   /**
    * @brief Reads vector data values given as block.

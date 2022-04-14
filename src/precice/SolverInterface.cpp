@@ -254,9 +254,9 @@ void SolverInterface::writeBlockVectorGradientData(
     int           size,
     const int *   valueIndices,
     const double *values,
-    bool          rowMajor)
+    bool          rowsFirst)
 {
-  _impl->writeBlockVectorGradientData(dataID, size, valueIndices, values, rowMajor);
+  _impl->writeBlockVectorGradientData(dataID, size, valueIndices, values, rowsFirst);
 }
 
 void SolverInterface::writeVectorData(
@@ -271,9 +271,9 @@ void SolverInterface::writeVectorGradientData(
     int           dataID,
     int           valueIndex,
     const double *value,
-    bool          rowMajor)
+    bool          rowsFirst)
 {
-  _impl->writeVectorGradientData(dataID, valueIndex, value, rowMajor);
+  _impl->writeVectorGradientData(dataID, valueIndex, value, rowsFirst);
 }
 
 void SolverInterface::writeBlockScalarData(
@@ -290,9 +290,9 @@ void SolverInterface::writeBlockScalarGradientData(
     int           size,
     const int *   valueIndices,
     const double *values,
-    bool          rowMajor)
+    bool          rowsFirst)
 {
-  _impl->writeBlockScalarGradientData(dataID, size, valueIndices, values, rowMajor);
+  _impl->writeBlockScalarGradientData(dataID, size, valueIndices, values, rowsFirst);
 }
 
 void SolverInterface::writeScalarData(
