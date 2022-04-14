@@ -801,8 +801,7 @@ void SolverInterfaceImpl::setMeshTriangle(
 {
   PRECICE_TRACE(meshID, firstEdgeID,
                 secondEdgeID, thirdEdgeID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTriangle is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
