@@ -146,6 +146,11 @@ private:
     */
   virtual void computeQNUpdate(DataMap &cplData, Eigen::VectorXd &xUpdate);
 
+  virtual int rsLStimeStepsReused()
+  {
+    return _RSLSreusedTimeWindows;
+  }
+
   /// @brief: updates the V, W matrices (as well as the matrices for the secondary data)
   virtual void updateDifferenceMatrices(DataMap &cplData);
 

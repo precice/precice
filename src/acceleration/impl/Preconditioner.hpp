@@ -114,6 +114,20 @@ public:
     }
   }
 
+    /// To transform physical values to balanced values. Matrix version
+  void applySVD(Eigen::MatrixXd &M)
+  {
+    PRECICE_TRACE();
+    //PRECICE_ASSERT(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
+
+    // scale matrix M
+    for (int i = 0; i < M.cols(); i++) {
+      for (int j = 0; j < M.rows(); j++) {
+        M(j, i) *= _weights_SVD[j];
+      }
+    }
+  }
+
   /// To transform physical values to balanced values. Vector version
   void apply(Eigen::VectorXd &v)
   {
@@ -138,6 +152,21 @@ public:
     for (int i = 0; i < M.cols(); i++) {
       for (int j = 0; j < M.rows(); j++) {
         M(j, i) *= _invWeights[j];
+      }
+    }
+  }
+
+    /// To transform balanced values back to physical values. Matrix version
+  void revertSVD(Eigen::MatrixXd &M)
+  {
+    PRECICE_TRACE();
+
+    //PRECICE_ASSERT(M.rows() == (int) _weights.size());
+
+    // scale matrix M
+    for (int i = 0; i < M.cols(); i++) {
+      for (int j = 0; j < M.rows(); j++) {
+        M(j, i) *= _invWeights_SVD[j];
       }
     }
   }
@@ -204,6 +233,16 @@ public:
     _areWeightsUpdated = false;
   }
 
+  bool svdWeightsSet()
+  {
+    return _resetSVD;
+  }
+
+  void svdReset()
+  {
+    _resetSVD = false;
+  }
+
   std::vector<double> &getWeights()
   {
     return _weights;
@@ -214,12 +253,26 @@ public:
     return _frozen;
   }
 
+  void setSVDWeights()
+  {
+    //PRECICE_TRACE();
+    //PRECICE_INFO(" SVD weights[0] = {}", _weights_SVD[0]);
+    //PRECICE_INFO(" SVD inv_weights[0] = {}", _invWeights_SVD[0]);
+    _weights_SVD = _weights;
+    _invWeights_SVD = _invWeights;
+
+  }
+
 protected:
   /// Weights used to scale the matrix V and the residual
   std::vector<double> _weights;
 
+  std::vector<double> _weights_SVD;
+
   /// Inverse weights (for efficiency reasons)
   std::vector<double> _invWeights;
+
+  std::vector<double> _invWeights_SVD;
 
   /// Sizes of each sub-vector, i.e. each coupling data
   std::vector<size_t> _subVectorSizes;
@@ -237,6 +290,9 @@ protected:
 
   /// @brief True if pre-scaling weights were updated in the iteration, and a QR decomposition is required
   bool _areWeightsUpdated = false;
+
+  /// @brief True if pre-scaling weights were updated in the iteration, and an SVD reset is required
+  bool _resetSVD = false;
 
   /// True if _nbNonConstTimeWindows >= _maxNonConstTimeWindows, i.e., preconditioner is not updated any more.
   bool _frozen = false;

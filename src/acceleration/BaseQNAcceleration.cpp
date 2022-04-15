@@ -421,14 +421,16 @@ void BaseQNAcceleration::performAcceleration(
       // QN-step in the first iteration (idea: rather perform QN-step with information from last converged
       // time window instead of doing a underrelaxation)
       if (not _firstTimeWindow) {
-        _matrixV.resize(0, 0);
-        _matrixW.resize(0, 0);
-        _matrixCols.clear();
-        _matrixCols.push_front(0); // vital after clear()
-        _qrV.reset();
-        // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
-        _qrV.setGlobalRows(getLSSystemRows());
-        _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
+        if ( _matrixCols.size() > 100 ){
+          _matrixV.resize(0, 0);
+          _matrixW.resize(0, 0);
+          _matrixCols.clear();
+          _matrixCols.push_front(0); // vital after clear()
+          _qrV.reset();
+          // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+          _qrV.setGlobalRows(getLSSystemRows());
+          _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
+        }
       }
     }
 
@@ -593,24 +595,39 @@ void BaseQNAcceleration::iterationsConverged(
        */
     }
   } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
-    int toRemove = _matrixCols.back();
-    _nbDropCols += toRemove;
-    PRECICE_ASSERT(toRemove > 0, toRemove);
-    PRECICE_DEBUG("Removing {} cols from least-squares system with {} cols", toRemove, getLSSystemCols());
-    PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
-    PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
+    int rsTSResued = 20;
+    if (_matrixCols.size() > rsTSResued){
+      int toRemove = 0; //_matrixCols.back();
+      PRECICE_INFO("  Mat columns First: {}", _matrixCols);
 
-    // remove columns
-    for (int i = 0; i < toRemove; i++) {
-      utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
-      utils::removeColumnFromMatrix(_matrixW, _matrixW.cols() - 1);
-      // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
-      _qrV.popBack();
+      int tsToKeep = _timeWindowsReused;
+      for (int i = _matrixCols.size() - 1; i > (tsToKeep - 1); i--){
+        toRemove += _matrixCols[i];
+        _matrixCols.pop_back();
+      }
+      PRECICE_INFO("  Mat columns Second: {}", _matrixCols);
+
+      _nbDropCols += toRemove;
+      PRECICE_ASSERT(toRemove > 0, toRemove);
+      PRECICE_DEBUG("Removing {} cols from least-squares system with {} cols", toRemove, getLSSystemCols());
+      PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+      PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
+
+      // remove columns
+      for (int i = 0; i < toRemove; i++) {
+        utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
+        utils::removeColumnFromMatrix(_matrixW, _matrixW.cols() - 1);
+        // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
+        _qrV.popBack();
+      }
+      //for (int i = _matrixCols.size() - 1; i > 0  ; i++){
+      //  _matrixCols.pop_back();
+      //}
     }
-    _matrixCols.pop_back();
+    //_matrixCols.push_front(0);
   }
-
   _matrixCols.push_front(0);
+  PRECICE_INFO("  Mat columns Third: {}", _matrixCols.size());
   _firstIteration = true;
 }
 

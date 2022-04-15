@@ -75,6 +75,7 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
       double newScalingWeight = (1 / _residualSum[k]);
       if ((newScalingWeight / _previousScalingWeights[k] > 10) || (newScalingWeight / _previousScalingWeights[k] < 0.1)) {
         resetWeights = true;
+        _resetSVD    = true;
         PRECICE_INFO("Resetting pre-scaling weights as the value has increased/decreased by more than 1 order of magnitude");
       }
     }

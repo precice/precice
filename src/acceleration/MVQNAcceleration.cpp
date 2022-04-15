@@ -61,7 +61,7 @@ MVQNAcceleration::MVQNAcceleration(
       _imvjRestart(false),
       _chunkSize(chunkSize),
       _RSLSreusedTimeWindows(RSLSreusedTimeWindows),
-      _usedColumnsPerTimeWindow(5),
+      _usedColumnsPerTimeWindow(20),
       _nbRestarts(0),
       _avgRank(0)
 {
@@ -181,11 +181,11 @@ void MVQNAcceleration::updateDifferenceMatrices(
 
           // store columns if restart mode = RS-LS
           if (_imvjRestartType == RS_LS) {
-            if (_matrixCols_RSLS.front() < _usedColumnsPerTimeWindow) {
-              utils::appendFront(_matrixV_RSLS, v);
-              utils::appendFront(_matrixW_RSLS, w);
-              _matrixCols_RSLS.front()++;
-            }
+            //if (_matrixCols_RSLS.front() < _usedColumnsPerTimeWindow) {
+            utils::appendFront(_matrixV_RSLS, v);
+            utils::appendFront(_matrixW_RSLS, w);
+            _matrixCols_RSLS.front()++;
+            //}
           }
 
           // imvj without restart is used, but efficient update, i.e. no Jacobian assembly in each iteration
@@ -518,6 +518,14 @@ void MVQNAcceleration::restartIMVJ()
     // truncated SVD, i.e., Wtil^0 = \phi, Z^0 = S\psi^T, this should not be added to the SVD.
     int q = _svdJ.isSVDinitialized() ? 1 : 0;
 
+    // If the preconditioner weights have been reset, then the old SVD must be discarded as the
+    // new chunk cannot be added to the old chunk
+    if (_preconditioner->svdWeightsSet()){
+      PRECICE_INFO("  Resetting SVD due to pre-scaling weights.");
+      _svdJ.reset();
+      _preconditioner->svdReset();
+    }
+
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
     for (; q < static_cast<int>(_WtilChunk.size()); q++) {
       // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
@@ -556,7 +564,7 @@ void MVQNAcceleration::restartIMVJ()
     _preconditioner->apply(_pseudoInverseChunk.front(), true);
     // |===================                             ==|
 
-    PRECICE_DEBUG("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian {}, new modes: {}, truncated modes: {} avg rank: {}", rankAfter, rankAfter - rankBefore, waste, _avgRank / _nbRestarts);
+    PRECICE_INFO("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian {}, new modes: {}, truncated modes: {} avg rank: {}", rankAfter, rankAfter - rankBefore, waste, _avgRank / _nbRestarts);
 
     //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
     if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
@@ -634,13 +642,20 @@ void MVQNAcceleration::restartIMVJ()
       _preconditioner->revert(_matrixW_RSLS);
       _preconditioner->revert(_matrixV_RSLS);
       // |===================                             ==|
+
+      
+
     }
 
-    PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with {} columns from {} time windows.", _matrixV_RSLS.cols(), _RSLSreusedTimeWindows);
+    PRECICE_INFO("MVJ-RESTART, mode=LS. Restart with {} columns from {} time windows.", _matrixV_RSLS.cols(), _RSLSreusedTimeWindows);
     if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
       _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimeWindows << "\n"
                         << '\n';
     }
+
+    _matrixV_RSLS.resize(0, 0);
+    _matrixW_RSLS.resize(0, 0);
+    _matrixCols_RSLS.clear();
 
     //            ------------ RESTART ZERO ------------
   } else if (_imvjRestartType == MVQNAcceleration::RS_ZERO) {
@@ -691,6 +706,7 @@ void MVQNAcceleration::specializedIterationsConverged(
     if (_matrixCols_RSLS.front() == 0) { // Did only one iteration
       _matrixCols_RSLS.pop_front();
     }
+    /*
     if (_RSLSreusedTimeWindows == 0) {
       _matrixV_RSLS.resize(0, 0);
       _matrixW_RSLS.resize(0, 0);
@@ -709,6 +725,7 @@ void MVQNAcceleration::specializedIterationsConverged(
       }
       _matrixCols_RSLS.pop_back();
     }
+    */
     _matrixCols_RSLS.push_front(0);
   }
 
@@ -738,24 +755,39 @@ void MVQNAcceleration::specializedIterationsConverged(
     //              ------- RESTART/ JACOBIAN ASSEMBLY -------
     if (_imvjRestart) {
 
-      // add the matrices Wtil and Z of the converged configuration to the storage containers
-      Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
-      // compute pseudo inverse using QR factorization and back-substitution
-      // also compensates for the scaling of V, i.e.,
-      // reverts Z' = R^-1 * Q^T * P^-1 as Z := Z' * P
-      pseudoInverse(Z);
+      if (_matrixCols.size() >= _RSLSreusedTimeWindows){
+        
+        if(_timeWindowsReused > 0){
+          if (_nbRestarts == 0){
+            _RSLSreusedTimeWindows += _timeWindowsReused;
+          }
+        }
+        _nbRestarts++;
+        
+        PRECICE_INFO("  Pushing new Chunk into WtilChunk. ");
+        PRECICE_INFO("  Mat columns Zero: {}", _matrixCols);
+        PRECICE_INFO("  _Wtil columns: {}", _Wtil.cols());
+        PRECICE_INFO("  _WtilChunk size: {}", _WtilChunk.size());
+        // add the matrices Wtil and Z of the converged configuration to the storage containers
+        Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
+        // compute pseudo inverse using QR factorization and back-substitution
+        // also compensates for the scaling of V, i.e.,
+        // reverts Z' = R^-1 * Q^T * P^-1 as Z := Z' * P
+        pseudoInverse(Z);
 
-      // push back unscaled pseudo Inverse, Wtil is also unscaled.
-      // all objects in Wtil chunk and Z chunk are NOT PRECONDITIONED
-      _WtilChunk.push_back(_Wtil);
-      _pseudoInverseChunk.push_back(Z);
-
+        // push back unscaled pseudo Inverse, Wtil is also unscaled.
+        // all objects in Wtil chunk and Z chunk are NOT PRECONDITIONED
+        _WtilChunk.push_back(_Wtil);
+        _pseudoInverseChunk.push_back(Z);
+      }
       /**
        *  Restart the IMVJ according to restart type
        */
-      if (static_cast<int>(_WtilChunk.size()) >= _chunkSize + 1) {
-
+      
+      if (static_cast<int>(_matrixCols.size()) >= _chunkSize) {
+      //if ( static_cast<int>(_matrixCols_RSLS.size()) > _chunkSize){
         // < RESTART >
+        
         _nbRestarts++;
         utils::Event restartUpdate("IMVJRestart");
         restartIMVJ();
