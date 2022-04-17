@@ -137,6 +137,9 @@ private:
   /// @brief tracks the number of restarts of IMVJ
   int _nbRestarts;
 
+  /// @brief increments RSLSTimeWindowsReused if timeStepsReused > 0
+  bool incrementRSLSTimeWindows = true;
+
   // DEBUG
   //std::fstream _info2;
   double _avgRank;
@@ -145,11 +148,6 @@ private:
     *        furthermore it updates the inverse of the system jacobian
     */
   virtual void computeQNUpdate(DataMap &cplData, Eigen::VectorXd &xUpdate);
-
-  virtual int rsLStimeStepsReused()
-  {
-    return _RSLSreusedTimeWindows;
-  }
 
   /// @brief: updates the V, W matrices (as well as the matrices for the secondary data)
   virtual void updateDifferenceMatrices(DataMap &cplData);
@@ -201,6 +199,9 @@ private:
 
   /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
   void removeMatrixColumnRSLS(int columnINdex);
+
+  void rsLSTimeStepsReused(int &rstsReused);
+
 };
 } // namespace acceleration
 } // namespace precice

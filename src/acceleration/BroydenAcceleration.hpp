@@ -81,6 +81,9 @@ private:
   // @brief computes underrelaxation for the secondary data
   virtual void computeUnderrelaxationSecondaryData(DataMap &cplData);
   //void computeNewtonFactorsQRDecomposition(DataMap& cplData, Eigen::VectorXd& update);
+
+  void rsLSTimeStepsReused(int &rstsReused);
+  
 };
 } // namespace acceleration
 } // namespace precice

@@ -410,6 +410,7 @@ void BaseQNAcceleration::performAcceleration(
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
     if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
+      //if (_firstIteration && not _forceInitialRelaxation) {
       // save current matrix data in case the coupling for the next time window will terminate
       // after the first iteration (no new data, i.e., V = W = 0)
       if (getLSSystemCols() > 0) {
@@ -421,7 +422,10 @@ void BaseQNAcceleration::performAcceleration(
       // QN-step in the first iteration (idea: rather perform QN-step with information from last converged
       // time window instead of doing a underrelaxation)
       if (not _firstTimeWindow) {
-        if ( _matrixCols.size() > 100 ){
+        
+        rsLSTimeStepsReused(minTS);
+        if ( _matrixCols.size() > minTS ){
+          PRECICE_INFO("  Deleting Mat V and Mat W with: {}", minTS);
           _matrixV.resize(0, 0);
           _matrixW.resize(0, 0);
           _matrixCols.clear();
@@ -595,35 +599,38 @@ void BaseQNAcceleration::iterationsConverged(
        */
     }
   } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
-    int rsTSResued = 20;
-    if (_matrixCols.size() > rsTSResued){
-      int toRemove = 0; //_matrixCols.back();
-      PRECICE_INFO("  Mat columns First: {}", _matrixCols);
+      
+      rsLSTimeStepsReused(minTS);
 
-      int tsToKeep = _timeWindowsReused;
-      for (int i = _matrixCols.size() - 1; i > (tsToKeep - 1); i--){
-        toRemove += _matrixCols[i];
-        _matrixCols.pop_back();
+      if (_matrixCols.size() > (minTS - 1)){
+
+        int toRemove = 0; //_matrixCols.back();
+        PRECICE_INFO("  Mat columns First: {}", _matrixCols);
+
+        int tsToKeep = _timeWindowsReused;
+        for (int i = _matrixCols.size() - 1; i > (tsToKeep - 1); i--){
+          toRemove += _matrixCols[i];
+          _matrixCols.pop_back();
+        }
+        PRECICE_INFO("  Mat columns Second: {}", _matrixCols);
+
+        _nbDropCols += toRemove;
+        PRECICE_ASSERT(toRemove > 0, toRemove);
+        PRECICE_DEBUG("Removing {} cols from least-squares system with {} cols", toRemove, getLSSystemCols());
+        PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+        PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
+
+        // remove columns
+        for (int i = 0; i < toRemove; i++) {
+          utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
+          utils::removeColumnFromMatrix(_matrixW, _matrixW.cols() - 1);
+          // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
+          _qrV.popBack();
+        }
+        //for (int i = _matrixCols.size() - 1; i > 0  ; i++){
+        //  _matrixCols.pop_back();
+        //}
       }
-      PRECICE_INFO("  Mat columns Second: {}", _matrixCols);
-
-      _nbDropCols += toRemove;
-      PRECICE_ASSERT(toRemove > 0, toRemove);
-      PRECICE_DEBUG("Removing {} cols from least-squares system with {} cols", toRemove, getLSSystemCols());
-      PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
-      PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
-
-      // remove columns
-      for (int i = 0; i < toRemove; i++) {
-        utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
-        utils::removeColumnFromMatrix(_matrixW, _matrixW.cols() - 1);
-        // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
-        _qrV.popBack();
-      }
-      //for (int i = _matrixCols.size() - 1; i > 0  ; i++){
-      //  _matrixCols.pop_back();
-      //}
-    }
     //_matrixCols.push_front(0);
   }
   _matrixCols.push_front(0);

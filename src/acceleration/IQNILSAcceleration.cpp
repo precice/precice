@@ -277,5 +277,12 @@ void IQNILSAcceleration::removeMatrixColumn(
 
   BaseQNAcceleration::removeMatrixColumn(columnIndex);
 }
+
+void IQNILSAcceleration::rsLSTimeStepsReused(
+  int & rstsReused)
+{
+  rstsReused = 0;
+}
+
 } // namespace acceleration
 } // namespace precice

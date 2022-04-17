@@ -185,6 +185,8 @@ protected:
     */
   bool _resetLS = false;
 
+  int minTS = 0;
+
   /// @brief Solver output from last iteration.
   Eigen::VectorXd _oldXTilde;
 
@@ -267,6 +269,8 @@ protected:
 
   /// Wwrites info to the _infostream (also in parallel)
   void writeInfo(const std::string &s, bool allProcs = false);
+
+  virtual void rsLSTimeStepsReused(int &minTS) = 0;
 
   int its = 0, tWindows = 0;
 

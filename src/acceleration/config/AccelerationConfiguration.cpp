@@ -225,6 +225,7 @@ void AccelerationConfiguration::xmlTagCallback(
       _config.imvjRestartType            = MVQNAcceleration::RS_LS;
     } else if (f == VALUE_SVD_RESTART) {
       _config.imvjRSSVD_truncationEps = callingTag.getDoubleAttributeValue(ATTR_RSSVD_TRUNCATIONEPS);
+      _config.imvjRSLS_reusedTimeWindows = callingTag.getIntAttributeValue(ATTR_RSLS_REUSED_TIME_WINDOWS);
       _config.imvjRestartType         = MVQNAcceleration::RS_SVD;
     } else if (f == VALUE_SLIDE_RESTART) {
       _config.imvjRestartType = MVQNAcceleration::RS_SLIDE;

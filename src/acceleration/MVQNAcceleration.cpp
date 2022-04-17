@@ -102,9 +102,10 @@ void MVQNAcceleration::initialize(
     _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
   }
   // initialize V, W matrices for the LS restart
+  
+  _matrixV_RSLS = Eigen::MatrixXd::Zero(entries, 0);
   if (_imvjRestartType == RS_LS) {
     _matrixCols_RSLS.push_front(0);
-    _matrixV_RSLS = Eigen::MatrixXd::Zero(entries, 0);
     _matrixW_RSLS = Eigen::MatrixXd::Zero(entries, 0);
   }
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
@@ -186,6 +187,8 @@ void MVQNAcceleration::updateDifferenceMatrices(
             utils::appendFront(_matrixW_RSLS, w);
             _matrixCols_RSLS.front()++;
             //}
+          } else {
+            utils::appendFront(_matrixV_RSLS, v);
           }
 
           // imvj without restart is used, but efficient update, i.e. no Jacobian assembly in each iteration
@@ -285,6 +288,8 @@ void MVQNAcceleration::buildWtil()
   PRECICE_ASSERT(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
   PRECICE_ASSERT(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
+  utils::Event buildWtil("buildWtil");
+    
   _Wtil = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
 
   // imvj restart mode: re-compute Wtil: Wtil = W - sum_q [ Wtil^q * (Z^q*V) ]
@@ -313,6 +318,8 @@ void MVQNAcceleration::buildWtil()
   _Wtil = _Wtil + _matrixW;
 
   _resetLS = false;
+
+  buildWtil.stop();
   //  e.stop(true);
 }
 
@@ -572,6 +579,8 @@ void MVQNAcceleration::restartIMVJ()
                         << '\n';
     }
 
+    _matrixV_RSLS.resize(0, 0);
+
     //        ------------ RESTART LEAST SQUARES ------------
   } else if (_imvjRestartType == MVQNAcceleration::RS_LS) {
     // drop all stored Wtil^q, Z^q matrices
@@ -755,15 +764,15 @@ void MVQNAcceleration::specializedIterationsConverged(
     //              ------- RESTART/ JACOBIAN ASSEMBLY -------
     if (_imvjRestart) {
 
+      if (_nbRestarts == 1 && incrementRSLSTimeWindows){
+        PRECICE_INFO("Incrementing _RSLSreusedTimeWindows");
+        //_RSLSreusedTimeWindows += _timeWindowsReused;
+        incrementRSLSTimeWindows = false;
+      }
+
       if (_matrixCols.size() >= _RSLSreusedTimeWindows){
         
-        if(_timeWindowsReused > 0){
-          if (_nbRestarts == 0){
-            _RSLSreusedTimeWindows += _timeWindowsReused;
-          }
-        }
-        _nbRestarts++;
-        
+        //_nbRestarts++;
         PRECICE_INFO("  Pushing new Chunk into WtilChunk. ");
         PRECICE_INFO("  Mat columns Zero: {}", _matrixCols);
         PRECICE_INFO("  _Wtil columns: {}", _Wtil.cols());
@@ -779,19 +788,29 @@ void MVQNAcceleration::specializedIterationsConverged(
         // all objects in Wtil chunk and Z chunk are NOT PRECONDITIONED
         _WtilChunk.push_back(_Wtil);
         _pseudoInverseChunk.push_back(Z);
+
       }
       /**
        *  Restart the IMVJ according to restart type
        */
+      if (_RSLSreusedTimeWindows == 0)
+        _RSLSreusedTimeWindows = 1;
+      int restartChunkSize = _chunkSize/_RSLSreusedTimeWindows;
       
-      if (static_cast<int>(_matrixCols.size()) >= _chunkSize) {
-      //if ( static_cast<int>(_matrixCols_RSLS.size()) > _chunkSize){
+      if (_nbRestarts > 0){
+        restartChunkSize = (_chunkSize/_RSLSreusedTimeWindows) + 1;
+      }
+
+      if (static_cast<int>(_WtilChunk.size()) >= restartChunkSize) {
+      //if (static_cast<int>(_matrixCols.size()) >= _chunkSize) {
+      //if ( static_cast<int>(_matrixV_RSLS.cols()) > _chunkSize){
         // < RESTART >
         
         _nbRestarts++;
         utils::Event restartUpdate("IMVJRestart");
         restartIMVJ();
         restartUpdate.stop();
+        _resetLS = true;
       }
 
       // only in imvj normal mode with efficient update:
@@ -858,6 +877,13 @@ void MVQNAcceleration::removeMatrixColumnRSLS(
     }
     iter++;
   }
+}
+
+void MVQNAcceleration::rsLSTimeStepsReused(
+  int & rstsReused)
+{
+  PRECICE_INFO("  rsLSTimeStepsReused: {} ", _RSLSreusedTimeWindows);
+  rstsReused = _RSLSreusedTimeWindows;
 }
 
 } // namespace acceleration

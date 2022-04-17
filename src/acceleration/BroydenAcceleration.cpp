@@ -124,5 +124,12 @@ void BroydenAcceleration::specializedIterationsConverged(
   // store old Jacobian
   _oldInvJacobian = _invJacobian;
 }
+
+void BroydenAcceleration::rsLSTimeStepsReused(
+  int & rstsReused)
+{
+  rstsReused = 0;
+}
+
 } // namespace acceleration
 } // namespace precice
