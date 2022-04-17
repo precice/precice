@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
+#include "time/Time.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -12,7 +13,7 @@ Waveform::Waveform(
     : _interpolationOrder(interpolationOrder)
 {
   PRECICE_ASSERT(not _storageIsInitialized);
-  PRECICE_ASSERT(0 <= _interpolationOrder && _interpolationOrder <= 2);
+  PRECICE_ASSERT(Time::MIN_INTERPOLATION_ORDER <= _interpolationOrder && _interpolationOrder <= Time::MAX_INTERPOLATION_ORDER);
 }
 
 int Waveform::getInterpolationOrder() const
@@ -24,7 +25,7 @@ void Waveform::initialize(
     const Eigen::VectorXd &values)
 {
   int storageSize;
-  PRECICE_ASSERT(_interpolationOrder >= 0);
+  PRECICE_ASSERT(_interpolationOrder >= Time::MIN_INTERPOLATION_ORDER);
   storageSize            = _interpolationOrder + 1;
   _timeWindowsStorage    = Eigen::MatrixXd::Zero(values.size(), storageSize);
   _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
