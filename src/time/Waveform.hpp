@@ -35,22 +35,16 @@ public:
   int getInterpolationOrder() const;
 
   /**
-   * @brief Used to initialize _timeWindowsStorage according to required size.
-   * @param valuesSize Defines how many values one sample in time consists of
+   * @brief Used to initialize _timeWindowsStorage according to required size and initializes Waveform as constant with given values.
+   * @param values Defines constant initial value of waveform and its size
    */
-  void initialize(const int valuesSize);
+  void initialize(const Eigen::VectorXd &values);
 
   /**
    * @brief Updates first entry in _timeWindows with given values.
    * @param values Sample for this time window
    */
-  void storeAtFirstSample(const Eigen::VectorXd &values);
-
-  /**
-   * @brief Updates all entries in _timeWindowsStorage with given values. Used to initialize a new Waveform with given data.
-   * @param values Sample used for all time window
-   */
-  void storeAtAllSamples(const Eigen::VectorXd values);
+  void store(const Eigen::VectorXd &values);
 
   /**
    * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.

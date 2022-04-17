@@ -21,19 +21,22 @@ int Waveform::getInterpolationOrder() const
 }
 
 void Waveform::initialize(
-    const int valuesSize)
+    const Eigen::VectorXd &values)
 {
   int storageSize;
   PRECICE_ASSERT(_interpolationOrder >= 0);
   storageSize            = _interpolationOrder + 1;
-  _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, storageSize);
+  _timeWindowsStorage    = Eigen::MatrixXd::Zero(values.size(), storageSize);
   _numberOfStoredSamples = 1; // the first sample is automatically initialized as zero and stored.
   _storageIsInitialized  = true;
   PRECICE_ASSERT(this->maxNumberOfStoredSamples() == storageSize);
-  PRECICE_ASSERT(this->valuesSize() == valuesSize);
+  PRECICE_ASSERT(this->valuesSize() == values.size());
+  for (int sampleIndex = 0; sampleIndex < maxNumberOfStoredSamples(); ++sampleIndex) {
+    this->storeAt(values, sampleIndex);
+  }
 }
 
-void Waveform::storeAtFirstSample(const Eigen::VectorXd &values)
+void Waveform::store(const Eigen::VectorXd &values)
 {
   PRECICE_ASSERT(_storageIsInitialized);
   int sampleIndex = 0;
@@ -45,13 +48,6 @@ void Waveform::storeAt(const Eigen::VectorXd values, int sampleIndex)
   PRECICE_ASSERT(_timeWindowsStorage.cols() > sampleIndex, maxNumberOfStoredSamples(), sampleIndex);
   PRECICE_ASSERT(values.size() == this->valuesSize(), values.size(), this->valuesSize());
   this->_timeWindowsStorage.col(sampleIndex) = values;
-}
-
-void Waveform::storeAtAllSamples(const Eigen::VectorXd values)
-{
-  for (int sampleIndex = 0; sampleIndex < maxNumberOfStoredSamples(); ++sampleIndex) {
-    this->storeAt(values, sampleIndex);
-  }
 }
 
 Eigen::VectorXd Waveform::sample(double normalizedDt)
