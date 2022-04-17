@@ -9,7 +9,7 @@
 /**
  * @brief Test to make sure that actions are called in the right order for explicit coupling via RecorderAction
  */
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(ActionTimings)
 BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(ActionTimingsExplicit)
   interface.finalize();
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 BOOST_AUTO_TEST_SUITE_END() // ActionTimings
 

@@ -1,4 +1,4 @@
-name: Request Package
+name: Request Deb Package
 # This is a workflow to manually request an ubuntu package for an existing release.
 # To use:
 # - Go to the GitHub repository
@@ -14,17 +14,31 @@ on:
   workflow_dispatch:
     workflow_dispatch:
     inputs:
-      ubuntu:
-        description: 'Ubuntu version'
+      release:
+        description: 'Release tag'
+        default: "v2.1.0"
         required: true
+        type: string
+      distro:
+        description: 'Distribution/Container'
+        default: "ubuntu"
+        required: true
+        type: string
+      version:
+        description: 'Distribution version'
+        default: "20.04"
+        required: true
+        type: string
 
 jobs:
   package:
-    name: 'Package Ubuntu ${{ github.event.inputs.ubuntu }}'
+    name: 'Package ${{ github.event.inputs.release }} for ${{ github.event.inputs.distro }} ${{ github.event.inputs.version }}'
     runs-on: ubuntu-latest
-    container: 'ubuntu:${{ github.event.inputs.ubuntu }}'
+    container: '${{ github.event.inputs.distro }}:${{ github.event.inputs.version }}'
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.release }}
       - name: Generate build directory
         run: mkdir -p build
       - name: Install common dependencies
@@ -53,4 +67,4 @@ jobs:
           file: build/libprecice*.deb*
           file_glob: true
           overwrite: true
-          tag: ${{ github.ref }}
+          tag: ${{ github.event.inputs.release }}

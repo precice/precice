@@ -7,7 +7,7 @@
 
 // Test representing the minimal lifecylce with explicit finalization.
 // This shows how to manually finalize MPI etc without using the SolverInterface.
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(ConstructAndExplicitFinalize)
   interface.finalize();
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // Lifecycle
 

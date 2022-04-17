@@ -20,15 +20,15 @@ jobs:
           with:
             draft: True
 
-  package-ubuntu:
+  package-deb:
     needs: release-draft
-    name: 'Package Ubuntu ${{ matrix.UBUNTU }}'
+    name: 'Package ${{ matrix.TARGET }}'
     runs-on: ubuntu-latest
-    container: 'ubuntu:${{ matrix.UBUNTU }}'
+    container: '${{ matrix.TARGET }}'
     strategy:
       fail-fast: true
       matrix:
-        UBUNTU: ["18.04", "20.04", "21.04", "21.10"]
+        TARGET: ["ubuntu:18.04", "ubuntu:20.04", "ubuntu:21.04", "ubuntu:21.10", "debian:11"]
     steps:
       - uses: actions/checkout@v2
       - name: Generate build directory
@@ -42,7 +42,7 @@ jobs:
           apt -y upgrade
           apt -y install git build-essential lsb-release cmake libeigen3-dev libxml2-dev libboost-all-dev python3-dev python3-numpy
       - name: Install PETSc
-        if: ${{ matrix.UBUNTU != '18.04' }}
+        if: ${{ matrix.TARGET != 'ubuntu:18.04' }}
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -50,7 +50,7 @@ jobs:
       - name: Configure
         working-directory: build
         env:
-          PETSc: ${{ matrix.UBUNTU != '18.04' }}
+          PETSc: ${{ matrix.TARGET != 'ubuntu:18.04' }}
         run: |
           cmake --version
           cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_PETScMapping=${{ env.PETSc }} -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..

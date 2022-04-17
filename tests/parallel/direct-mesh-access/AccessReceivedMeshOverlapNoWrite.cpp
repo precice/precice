@@ -6,7 +6,7 @@
 #include <vector>
 #include "helpers.hpp"
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 BOOST_AUTO_TEST_CASE(AccessReceivedMeshOverlapNoWrite)
@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshOverlapNoWrite)
   runTestAccessReceivedMesh(context, boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 1);
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // DirectMeshAccess
 
