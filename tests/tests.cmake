@@ -54,6 +54,7 @@ target_sources(testprecice
     tests/serial/TestExplicitWithDataMultipleReadWrite.cpp
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/TestImplicit.cpp
+    tests/serial/TestReadAPI.cpp
     tests/serial/access-received-mesh/Explicit.cpp
     tests/serial/access-received-mesh/ExplicitAndMapping.cpp
     tests/serial/access-received-mesh/ExplicitRead.cpp
