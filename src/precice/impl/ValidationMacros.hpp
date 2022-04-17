@@ -170,9 +170,3 @@
                                      "You may unlock the full API by specifying <solver-interface experimental=\"true\" ... > in the configuration. " \
                                      "Please be aware that experimental features may change in any future version (even minor or bugfix).",           \
                 __func__)
-
-#define PRECICE_EXPERIMENTAL_ATTRIBUTE(tag_name, attr_name)                                                                                           \
-  PRECICE_CHECK(_allowsExperimental, "You used the configuration \"<{} {}=.../>\". The attribute \"{}\" is part of the experimental API. "            \
-                                     "You may unlock the full API by specifying <solver-interface experimental=\"true\" ... > in the configuration. " \
-                                     "Please be aware that experimental features may change in any future version (even minor or bugfix).",           \
-                tag_name, attr_name, attr_name)

@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/range/adaptor/map.hpp>
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
