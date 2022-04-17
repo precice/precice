@@ -315,10 +315,10 @@ double SolverInterfaceImpl::initialize()
 
   double dt = _couplingScheme->getNextTimestepMaxLength();
 
-  if (not _hasInitializedReadWaveforms) { // always necessary in this case.
-    initializeReadWaveforms();            // sets 0 for all samples
-    _hasInitializedReadWaveforms = true;
+  for (auto &context : _accessor->readDataContexts()) {
+    context.initializeWaveform();
   }
+
   if (_couplingScheme->hasDataBeenReceived()) {
     performDataActions({action::Action::READ_MAPPING_PRIOR}, 0.0, 0.0, 0.0, dt);
     mapReadData();
@@ -448,11 +448,6 @@ double SolverInterfaceImpl::advance(
     for (auto &context : _accessor->readDataContexts()) {
       context.moveToNextWindow();
     }
-  }
-
-  if (not _hasInitializedReadWaveforms) { // necessary, if mesh was reset.
-    initializeReadWaveforms();
-    _hasInitializedReadWaveforms = true;
   }
 
   if (_couplingScheme->hasDataBeenReceived()) {
@@ -1053,9 +1048,6 @@ void SolverInterfaceImpl::mapReadDataTo(
   double time = _couplingScheme->getTime();
   performDataActions({action::Action::READ_MAPPING_PRIOR}, time, 0.0, 0.0, 0.0);
 
-  // should only initialize waveform for the toMeshID, but we don't have to optimize this, because method will be removed. See https://github.com/precice/precice/issues/859.
-  initializeReadWaveforms();
-
   for (impl::MappingContext &mappingContext : context.toMappingContexts) {
     if (not mappingContext.mapping->hasComputedMapping()) {
       PRECICE_DEBUG("Compute mapping from mesh \"{}\"", context.mesh->getName());
@@ -1247,7 +1239,6 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(
   PRECICE_CHECK(valueIndices != nullptr, "readBlockVectorData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockVectorData() was called with values == nullptr");
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readBlockVectorData on the scalar data type \"{0}\". "
                 "Use readBlockScalarData or change the data type for \"{0}\" to vector.",
@@ -1307,7 +1298,6 @@ void SolverInterfaceImpl::readVectorDataImpl(
   double readTime      = timeStepStart + relativeReadTime;
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading vector data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1375,7 +1365,6 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(
   PRECICE_CHECK(valueIndices != nullptr, "readBlockScalarData() was called with valueIndices == nullptr");
   PRECICE_CHECK(values != nullptr, "readBlockScalarData() was called with values == nullptr");
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call readBlockScalarData on the vector data type \"{0}\". "
                 "Use readBlockVectorData or change the data type for \"{0}\" to scalar.",
@@ -1432,7 +1421,6 @@ void SolverInterfaceImpl::readScalarDataImpl(
   double readTime      = timeStepStart + relativeReadTime;
   PRECICE_REQUIRE_DATA_READ(dataID);
   ReadDataContext &context = _accessor->readDataContext(dataID);
-  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
@@ -1742,7 +1730,6 @@ void SolverInterfaceImpl::mapWrittenData()
 void SolverInterfaceImpl::mapReadData()
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_hasInitializedReadWaveforms);
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
     if (context.isMappingRequired()) {
@@ -1752,14 +1739,6 @@ void SolverInterfaceImpl::mapReadData()
     context.storeDataInWaveform();
   }
   clearMappings(_accessor->readMappingContexts());
-}
-
-void SolverInterfaceImpl::initializeReadWaveforms()
-{
-  PRECICE_TRACE();
-  for (auto &context : _accessor->readDataContexts()) {
-    context.initializeWaveform();
-  }
 }
 
 void SolverInterfaceImpl::performDataActions(

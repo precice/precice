@@ -655,9 +655,6 @@ private:
   /// SolverInterface.initializeData() triggers transition from false to true.
   bool _hasInitializedData = false;
 
-  /// SolverInterface.initializeReadWaveforms() triggers transition from false to true.
-  bool _hasInitializedReadWaveforms = false;
-
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
@@ -741,9 +738,6 @@ private:
 
   /// Computes, performs, and resets all suitable read mappings.
   void mapReadData();
-
-  /// Initializes waveforms of read data contexts before mapping.
-  void initializeReadWaveforms();
 
   /**
    * @brief Performs all data actions with given timing.
