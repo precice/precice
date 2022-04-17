@@ -47,7 +47,7 @@ public:
   void storeAtFirstSample(const Eigen::VectorXd &values);
 
   /**
-   * @brief Updates all entries in _timeWindowsStorage with given values. Often used to initialize a new Waveform with given data.
+   * @brief Updates all entries in _timeWindowsStorage with given values. Used to initialize a new Waveform with given data.
    * @param values Sample used for all time window
    */
   void storeAtAllSamples(const Eigen::VectorXd values);
