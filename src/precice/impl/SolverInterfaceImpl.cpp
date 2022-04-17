@@ -1207,7 +1207,7 @@ void SolverInterfaceImpl::readBlockVectorData(
     PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
                  _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
   }
-  return readBlockVectorDataImpl(dataID, size, valueIndices, relativeTimeWindowEndTime, values);
+  readBlockVectorDataImpl(dataID, size, valueIndices, relativeTimeWindowEndTime, values);
 }
 
 void SolverInterfaceImpl::readBlockVectorData(
@@ -1219,7 +1219,7 @@ void SolverInterfaceImpl::readBlockVectorData(
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_EXPERIMENTAL_API();
-  return readBlockVectorDataImpl(dataID, size, valueIndices, relativeReadTime, values);
+  readBlockVectorDataImpl(dataID, size, valueIndices, relativeReadTime, values);
 }
 
 void SolverInterfaceImpl::readBlockVectorDataImpl(
@@ -1272,7 +1272,7 @@ void SolverInterfaceImpl::readVectorData(
     PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
                  _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
   }
-  return readVectorDataImpl(dataID, valueIndex, relativeTimeWindowEndTime, value);
+  readVectorDataImpl(dataID, valueIndex, relativeTimeWindowEndTime, value);
 }
 
 void SolverInterfaceImpl::readVectorData(
@@ -1283,7 +1283,7 @@ void SolverInterfaceImpl::readVectorData(
 {
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_EXPERIMENTAL_API();
-  return readVectorDataImpl(dataID, valueIndex, relativeReadTime, value);
+  readVectorDataImpl(dataID, valueIndex, relativeReadTime, value);
 }
 
 void SolverInterfaceImpl::readVectorDataImpl(
@@ -1333,7 +1333,7 @@ void SolverInterfaceImpl::readBlockScalarData(
     PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
                  _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
   }
-  return readBlockScalarDataImpl(dataID, size, valueIndices, relativeTimeWindowEndTime, values);
+  readBlockScalarDataImpl(dataID, size, valueIndices, relativeTimeWindowEndTime, values);
 }
 
 void SolverInterfaceImpl::readBlockScalarData(
@@ -1345,7 +1345,7 @@ void SolverInterfaceImpl::readBlockScalarData(
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_EXPERIMENTAL_API();
-  return readBlockScalarDataImpl(dataID, size, valueIndices, relativeReadTime, values);
+  readBlockScalarDataImpl(dataID, size, valueIndices, relativeReadTime, values);
 }
 
 void SolverInterfaceImpl::readBlockScalarDataImpl(
@@ -1395,7 +1395,7 @@ void SolverInterfaceImpl::readScalarData(
     PRECICE_WARN("Interpolation order of read data named \"{}\" is set to \"{}\", but you are calling {} without providing a relativeReadTime. This looks like an error. You can fix this by providing a relativeReadTime to {} or by setting interpolation order to 0.",
                  _accessor->readDataContext(dataID).getDataName(), _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
   }
-  return readScalarDataImpl(dataID, valueIndex, relativeTimeWindowEndTime, value);
+  readScalarDataImpl(dataID, valueIndex, relativeTimeWindowEndTime, value);
 }
 
 void SolverInterfaceImpl::readScalarData(
@@ -1406,7 +1406,7 @@ void SolverInterfaceImpl::readScalarData(
 {
   PRECICE_TRACE(dataID, valueIndex, value);
   PRECICE_EXPERIMENTAL_API();
-  return readScalarDataImpl(dataID, valueIndex, relativeReadTime, value);
+  readScalarDataImpl(dataID, valueIndex, relativeReadTime, value);
 }
 
 void SolverInterfaceImpl::readScalarDataImpl(

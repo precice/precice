@@ -285,7 +285,6 @@ void SolverInterface::readBlockVectorData(
     double     relativeReadTime,
     double *   values) const
 {
-  // @todo: needs testing!
   _impl->readBlockVectorData(dataID, size, valueIndices, relativeReadTime, values);
 }
 
@@ -323,8 +322,7 @@ void SolverInterface::readBlockScalarData(
     double     relativeReadTime,
     double *   values) const
 {
-  // @todo: needs testing!
-  _impl->readBlockScalarData(dataID, size, valueIndices, values);
+  _impl->readBlockScalarData(dataID, size, valueIndices, relativeReadTime, values);
 }
 
 void SolverInterface::readScalarData(
