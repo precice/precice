@@ -42,12 +42,14 @@ BOOST_AUTO_TEST_CASE(TestOneTriangle)
     BOOST_REQUIRE(mesh.vertices().size() == 3);
     BOOST_REQUIRE(mesh.edges().size() == 3);
     BOOST_REQUIRE(mesh.triangles().size() == 1);
+
+    BOOST_TEST(equals(mesh.triangles()[0].getArea(), 0.5), "Triangle area must be 0.5");
     
     // Initialize, write data, advance and finalize
     double dt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
-    std::vector<double> values{1.0, 3.0, 7.0};
+    std::vector<double> values{1.0, 100.0, 10.0};
     interface.writeBlockScalarData(dataID, 3, vertexIDs.data(), values.data());
 
     interface.advance(dt);
@@ -73,10 +75,10 @@ BOOST_AUTO_TEST_CASE(TestOneTriangle)
     //Check expected VS read
     Eigen::VectorXd expected(1);
     Eigen::VectorXd readData(1);
-    expected << 11.0 / 3;
+    expected << 111.0 / 3;
 
     interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
-
+    // Current problem: "No triangle found", despite correct triangle set!
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
