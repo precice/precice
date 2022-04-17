@@ -34,31 +34,31 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothOrder)
   waveform.store(value);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 1.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 1.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 1.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 1.0));
 
   value(0) = 2.0;
   waveform.store(value);
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
   waveform.moveToNextWindow();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 2.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
   value(0) = 3.0;
   waveform.store(value);
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 3.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 3.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 3.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 3.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 3.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 3.0));
 }
 
 BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
@@ -85,25 +85,25 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 1.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 1.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 1.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 1.0));
 
   value(0) = 2.0;
   waveform.store(value);
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
   waveform.moveToNextWindow();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 2.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
   value(0) = 3.0;
   waveform.store(value);
@@ -111,9 +111,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 0), 3.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.5));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 3.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.5));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 3.0));
 }
 
 BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
@@ -142,9 +142,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 1.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 1.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 1.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 1.0));
 
   value(0) = 2.0;
   waveform.store(value);
@@ -152,9 +152,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 0.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
   waveform.moveToNextWindow();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
@@ -162,9 +162,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 2.0));
 
   value(0) = 8.0;
   waveform.store(value);
@@ -173,9 +173,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 5.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 8.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 5.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 8.0));
 
   value(0) = 4.0;
   waveform.store(value);
@@ -184,9 +184,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 2.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 0.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 2.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 3.0));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 4.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 2.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 3.0));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 4.0));
 
   waveform.moveToNextWindow();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 3);
@@ -194,9 +194,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 4.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 2.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 4.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 4.25));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 4.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 4.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 4.25));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 4.0));
 
   value(0) = 8.0;
   waveform.store(value);
@@ -205,9 +205,9 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondOrder)
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 1), 4.0));
   BOOST_TEST(testing::equals(fixture.getValue(waveform, 0, 2), 2.0));
 
-  BOOST_TEST(testing::equals(waveform.sample(0.0)(0, 0), 4.0));
-  BOOST_TEST(testing::equals(waveform.sample(0.5)(0, 0), 5.75));
-  BOOST_TEST(testing::equals(waveform.sample(1.0)(0, 0), 8.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.0)(0), 4.0));
+  BOOST_TEST(testing::equals(waveform.sample(0.5)(0), 5.75));
+  BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 8.0));
 }
 
 BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrderVector)
@@ -225,63 +225,63 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstOrderVector)
   BOOST_TEST(fixture.maxNumberOfStoredSamples(waveform) == 2);
   BOOST_TEST(fixture.valuesSize(waveform) == valuesSize);
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 1);
-  for(int i : boost::irange(valuesSize)){
+  for (int i : boost::irange(valuesSize)) {
     BOOST_TEST(testing::equals(fixture.getValue(waveform, i, 0), 0.0));
     BOOST_TEST(testing::equals(fixture.getValue(waveform, i, 1), 0.0));
   }
 
   Eigen::VectorXd value(valuesSize);
-  value << 1,2,3;
+  value << 1, 2, 3;
   waveform.store(value);
-  for(int i : boost::irange(valuesSize)){
+  for (int i : boost::irange(valuesSize)) {
     BOOST_TEST(testing::equals(fixture.getValue(waveform, i, 0), value[i]));
     BOOST_TEST(testing::equals(fixture.getValue(waveform, i, 1), 0.0));
   }
 
-  for(int i : boost::irange(valuesSize)){
-    BOOST_TEST(testing::equals(waveform.sample(0.0)(i, 0), value[i]));
-    BOOST_TEST(testing::equals(waveform.sample(0.5)(i, 0), value[i]));
-    BOOST_TEST(testing::equals(waveform.sample(1.0)(i, 0), value[i]));
+  for (int i : boost::irange(valuesSize)) {
+    BOOST_TEST(testing::equals(waveform.sample(0.0)(i), value[i]));
+    BOOST_TEST(testing::equals(waveform.sample(0.5)(i), value[i]));
+    BOOST_TEST(testing::equals(waveform.sample(1.0)(i), value[i]));
   }
 
-  value << 2,4,2;
+  value << 2, 4, 2;
   waveform.store(value);
-  for(int i : boost::irange(valuesSize)){
+  for (int i : boost::irange(valuesSize)) {
     BOOST_TEST(testing::equals(fixture.getValue(waveform, i, 0), value[i]));
     BOOST_TEST(testing::equals(fixture.getValue(waveform, i, 1), 0.0));
   }
 
-  for(int i : boost::irange(valuesSize)){
-    BOOST_TEST(testing::equals(waveform.sample(0.0)(i, 0), value[i]));
-    BOOST_TEST(testing::equals(waveform.sample(0.5)(i, 0), value[i]));
-    BOOST_TEST(testing::equals(waveform.sample(1.0)(i, 0), value[i]));
+  for (int i : boost::irange(valuesSize)) {
+    BOOST_TEST(testing::equals(waveform.sample(0.0)(i), value[i]));
+    BOOST_TEST(testing::equals(waveform.sample(0.5)(i), value[i]));
+    BOOST_TEST(testing::equals(waveform.sample(1.0)(i), value[i]));
   }
 
   waveform.moveToNextWindow();
   BOOST_TEST(fixture.numberOfStoredSamples(waveform) == 2);
-  for(int i : boost::irange(valuesSize)){
+  for (int i : boost::irange(valuesSize)) {
     BOOST_TEST(testing::equals(fixture.getValue(waveform, i, 0), value[i]));
     BOOST_TEST(testing::equals(fixture.getValue(waveform, i, 1), value[i]));
   }
 
-  for(int i : boost::irange(valuesSize)){
-    BOOST_TEST(testing::equals(waveform.sample(0.0)(i, 0), value[i]));
-    BOOST_TEST(testing::equals(waveform.sample(0.5)(i, 0), value[i]));
-    BOOST_TEST(testing::equals(waveform.sample(1.0)(i, 0), value[i]));
+  for (int i : boost::irange(valuesSize)) {
+    BOOST_TEST(testing::equals(waveform.sample(0.0)(i), value[i]));
+    BOOST_TEST(testing::equals(waveform.sample(0.5)(i), value[i]));
+    BOOST_TEST(testing::equals(waveform.sample(1.0)(i), value[i]));
   }
 
   Eigen::VectorXd value0 = value;
-  value << 1,2,3;
+  value << 1, 2, 3;
   waveform.store(value);
 
-  for(int i : boost::irange(valuesSize)){
+  for (int i : boost::irange(valuesSize)) {
     BOOST_TEST(testing::equals(fixture.getValue(waveform, i, 0), value[i]));
     BOOST_TEST(testing::equals(fixture.getValue(waveform, i, 1), value0[i]));
   }
 
-  for(int i : boost::irange(valuesSize)){
-    BOOST_TEST(testing::equals(waveform.sample(0.0)(i, 0), value0[i]));
-    BOOST_TEST(testing::equals(waveform.sample(0.5)(i, 0), 0.5*value0[i] + 0.5*value[i]));
+  for (int i : boost::irange(valuesSize)) {
+    BOOST_TEST(testing::equals(waveform.sample(0.0)(i), value0[i]));
+    BOOST_TEST(testing::equals(waveform.sample(0.5)(i), 0.5 * value0[i] + 0.5 * value[i]));
   }
 }
 

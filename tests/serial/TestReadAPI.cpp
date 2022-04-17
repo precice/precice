@@ -121,10 +121,10 @@ BOOST_AUTO_TEST_CASE(TestReadAPI)
     Eigen::VectorXd writePositions(size * 3);
     vertexIDs[0] = cplInterface.setMeshVertex(meshTwoID, writePositions.data());
 
-    double maxDt   = cplInterface.initialize();
+    double maxDt = cplInterface.initialize();
 
-    int    dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int    dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
+    int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
+    int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
 
     // writeScalarData
     writeDataB[0] = 3.0;
