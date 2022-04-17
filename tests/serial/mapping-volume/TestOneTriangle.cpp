@@ -3,6 +3,7 @@
 #include "testing/Testing.hpp"
 
 #include <precice/SolverInterface.hpp>
+#include <precice/impl/SolverInterfaceImpl.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -36,6 +37,11 @@ BOOST_AUTO_TEST_CASE(TestOneTriangle)
     interface.setMeshTriangle(meshID, edgeAB, edgeBC, edgeCA);
 
     BOOST_CHECK(interface.getMeshVertexSize(meshID) == 3);
+
+    auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
+    BOOST_REQUIRE(mesh.vertices().size() == 3);
+    BOOST_REQUIRE(mesh.edges().size() == 3);
+    BOOST_REQUIRE(mesh.triangles().size() == 1);
     
     // Initialize, write data, advance and finalize
     double dt = interface.initialize();
