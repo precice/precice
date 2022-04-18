@@ -17,7 +17,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
   
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshInput");
+    auto meshID = interface.getMeshID("MeshOne");
     auto dataID = interface.getDataID("DataOne", meshID);
 
     std::vector<double> coords {0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
@@ -42,7 +42,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
 
     BOOST_CHECK(interface.getMeshVertexSize(meshID) == 3);
 
-    auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshInput");
+    auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
     BOOST_REQUIRE(mesh.vertices().size() == 3);
     BOOST_REQUIRE(mesh.edges().size() == 3);
     BOOST_REQUIRE(mesh.triangles().size() == 1);
