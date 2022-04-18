@@ -16,17 +16,17 @@
       <use-mesh name="MeshTwo" from="SolverTwo" />
       <write-data name="DataOne" mesh="MeshOne" />
       <mapping:volume-cell-interpolation
-        direction="read"
+        direction="write"
         from="MeshOne"
         to="MeshTwo"
         constraint="consistent"
         timing="initial" />
-      <read-data name="DataOne" mesh="MeshTwo" />
+      
     </participant>
 
     <participant name="SolverTwo">
       <use-mesh name="MeshTwo" provide="on" />
-      
+      <read-data name="DataOne" mesh="MeshTwo" />
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />
