@@ -94,7 +94,10 @@ target_sources(testprecice
     tests/serial/mapping-scaled-consistent/helpers.hpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnA.cpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnB.cpp
-    tests/serial/mapping-volume/TestOneTriangle.cpp
+    tests/serial/mapping-volume/TestOneTriangleRead.cpp
+    tests/serial/mapping-volume/TestOneTriangleWrite.cpp
+    tests/serial/mapping-volume/helpers.cpp
+    tests/serial/mapping-volume/helpers.hpp
     tests/serial/mesh-requirements/NearestNeighborA.cpp
     tests/serial/mesh-requirements/NearestNeighborB.cpp
     tests/serial/mesh-requirements/NearestProjection2DA.cpp
