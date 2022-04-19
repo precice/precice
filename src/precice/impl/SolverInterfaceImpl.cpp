@@ -1180,7 +1180,7 @@ void SolverInterfaceImpl::writeScalarData(
                 context.getDataName(), valueIndex);
   values[valueIndex] = value;
 
-  PRECICE_DEBUG("Written Scalar Value = {}", value);
+  PRECICE_DEBUG("Written scalar value = {}", value);
 }
 
 void SolverInterfaceImpl::writeScalarGradientData(
@@ -1194,7 +1194,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
   if (isDataGradientRequired(dataID)) {
-    PRECICE_DEBUG("gradient value = {}", Eigen::Map<const Eigen::VectorXd>(gradientValue, _dimensions).format(utils::eigenio::debug()));
+    PRECICE_DEBUG("Gradient value = {}", Eigen::Map<const Eigen::VectorXd>(gradientValue, _dimensions).format(utils::eigenio::debug()));
     PRECICE_CHECK(gradientValue != nullptr, "writeScalarGradientData() was called with gradientValues == nullptr");
 
     WriteDataContext &context = _accessor->writeDataContext(dataID);
@@ -1202,7 +1202,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
     mesh::Data &data = *context.providedData();
 
     //Check if data has been initialized to include gradient data
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available! Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
 
     // Size of the gradient data input : must be spaceDimensions * dataDimensions -> here spaceDimensions (since for scalar: dataDimensions = 1)
     PRECICE_CHECK(data.getSpacialDimensions() == _dimensions,

@@ -667,7 +667,7 @@ public:
    *
    * The optional \p rowsFirst attribute allows to enter the derivatives directions-wise:
    *
-   * For the 3D-format as follows: (v0x_dx, v0y_dx, v1x_dx, v1y_dx, ... , vnx_dx, vny_dx,
+   * For the 2D-format as follows: (v0x_dx, v0y_dx, v1x_dx, v1y_dx, ... , vnx_dx, vny_dx,
    *                                v0x_dy, v0y_dy, v1x_dy, v1y_dy, ... , vnx_dy, vny_dy)
    *
    *

@@ -147,7 +147,7 @@ public:
   void createDistributedCommunication(const mesh::PtrMesh &mesh);
 
   /// Sends an array of double values from all slaves (different for each slave).
-  /// Setting the flag to true indicates that the data send is gradient data
+  /// Setting the flag "withGradient" to true indicates that the data send is gradient data
   /// The spatial directions have to be added manually as an input in valueDimension
   void send(precice::span<double const> itemsToSend,
             int                         meshID,
