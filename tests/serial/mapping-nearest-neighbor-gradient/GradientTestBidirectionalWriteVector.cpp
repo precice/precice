@@ -32,7 +32,7 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
 

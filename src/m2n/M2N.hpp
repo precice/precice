@@ -148,7 +148,7 @@ public:
 
   /// Sends an array of double values from all slaves (different for each slave).
   /// Setting the flag "withGradient" to true indicates that the data send is gradient data
-  /// The spatial directions have to be added manually as an input in valueDimension
+  /// The parameter "valueDimension" indicates the spatial dimension of the data (1: scalar, 2,3: vector)
   void send(precice::span<double const> itemsToSend,
             int                         meshID,
             int                         valueDimension,
