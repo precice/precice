@@ -82,6 +82,13 @@ public:
   /**
    * @brief Fully initializes preCICE
    *
+   * - Initiates MPI communication, if not done yet.
+   * - Sets up a connection to the other participants of the coupled simulation.
+   * - Creates all meshes, solver meshes need to be submitted before.
+   * - Receives first coupling data, when the solver is not starting the
+   *   coupled simulation.
+   * - Determines length of the first timestep to be computed.
+   *
    * @pre initialize() has not yet bee called.
    *
    * @post Parallel communication to the coupling partner/s is setup.
@@ -124,6 +131,13 @@ public:
   /**
    * @brief Advances preCICE after the solver has computed one timestep.
    *
+   * - Sends and resets coupling data written by solver to coupling partners.
+   * - Receives coupling data read by solver.
+   * - Computes and applied data mappings.
+   * - Computes acceleration of coupling data.
+   * - Exchanges and computes information regarding the state of the coupled
+   *   simulation.
+   *
    * @param[in] computedTimestepLength Length of timestep used by the solver.
    *
    * @pre initialize() has been called successfully.
@@ -147,10 +161,28 @@ public:
   /**
    * @brief Finalizes preCICE.
    *
+   * If initialize() has been called:
+   *
+   * - Synchronizes with remote participants
+   * - handles final exports
+   * - cleans up general state
+   *
+   * Always:
+   *
+   * - flushes and finalizes Events
+   * - finalizes managed PETSc
+   * - finalizes managed MPI
+   *
    * @pre finalize() has not been called.
    *
    * @post Communication channels are closed.
    * @post Meshes and data are deallocated
+   * @post Finalized managed PETSc
+   * @post Finalized managed MPI
+   *
+   * @warning
+   * Finalize is not the inverse of initialize().
+   * Finalize has to be called after construction.
    *
    * @see isCouplingOngoing()
    */
@@ -244,6 +276,7 @@ public:
    */
   bool isTimeWindowComplete() const;
 
+  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
   /**
    * @brief Returns whether the solver has to evaluate the surrogate model representation.
    *
@@ -259,6 +292,7 @@ public:
    */
   [[deprecated("The manifold mapping feature is no longer supported.")]] bool hasToEvaluateSurrogateModel() const;
 
+  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
   /**
    * @brief Checks if the solver has to evaluate the fine model representation.
    *
@@ -333,6 +367,8 @@ public:
 
   /**
    * @brief Returns the ID belonging to the mesh with given name.
+   *
+   * The existing names are determined from the configuration.
    *
    * @param[in] meshName the name of the mesh
    * @returns the id of the corresponding mesh

@@ -83,12 +83,12 @@ namespace impl {
 SolverInterfaceImpl::SolverInterfaceImpl(
     std::string        participantName,
     const std::string &configurationFileName,
-    int                accessorProcessRank,
-    int                accessorCommunicatorSize,
+    int                solverProcessIndex,
+    int                solverProcessSize,
     void *             communicator)
     : _accessorName(std::move(participantName)),
-      _accessorProcessRank(accessorProcessRank),
-      _accessorCommunicatorSize(accessorCommunicatorSize)
+      _accessorProcessRank(solverProcessIndex),
+      _accessorCommunicatorSize(solverProcessSize)
 {
   PRECICE_CHECK(!_accessorName.empty(),
                 "This participant's name is an empty string. "
@@ -140,9 +140,9 @@ SolverInterfaceImpl::SolverInterfaceImpl(
 SolverInterfaceImpl::SolverInterfaceImpl(
     std::string        participantName,
     const std::string &configurationFileName,
-    int                accessorProcessRank,
-    int                accessorCommunicatorSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, nullptr)
+    int                solverProcessIndex,
+    int                solverProcessSize)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, solverProcessIndex, solverProcessSize, nullptr)
 {
 }
 
