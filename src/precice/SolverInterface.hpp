@@ -753,7 +753,7 @@ public:
   void writeVectorGradientData(
       int           dataID,
       int           valueIndex,
-      const double *gradientValue,
+      const double *gradientValues,
       bool          rowsFirst = false);
 
   /**
@@ -858,7 +858,7 @@ public:
   void writeScalarGradientData(
       int           dataID,
       int           valueIndex,
-      const double *gradientValue);
+      const double *gradientValues);
 
   /**
    * @brief Reads vector data into a provided block.

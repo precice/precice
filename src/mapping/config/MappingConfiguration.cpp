@@ -126,7 +126,7 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG);
-    tag.setDocumentation("Nearest-neighbor-gradient mapping which uses a rstar-spacial index tree to index meshes and runs nearest-neighbor queries with an linear approximation using gradient data.");
+    tag.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data.");
     tags.push_back(tag);
   }
 

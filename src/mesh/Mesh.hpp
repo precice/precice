@@ -137,7 +137,7 @@ public:
   PtrData &createDataWithGradient(
       const std::string &name,
       int                dimension,
-      int                spacialDimensions,
+      int                spatialDimensions,
       DataID             id);
 
   /// Allows access to all data

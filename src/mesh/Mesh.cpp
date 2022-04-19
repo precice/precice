@@ -186,7 +186,7 @@ const PtrData &Mesh::data(const std::string &dataName) const
 PtrData &Mesh::createDataWithGradient(
     const std::string &name,
     int                dimension,
-    int                spacialDimensions,
+    int                spatialDimensions,
     DataID             id)
 {
   PRECICE_TRACE(name, dimension);
@@ -198,7 +198,7 @@ PtrData &Mesh::createDataWithGradient(
   }
 
   //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
-  PtrData data(new Data(name, id, dimension, spacialDimensions, true));
+  PtrData data(new Data(name, id, dimension, spatialDimensions, true));
   _data.push_back(data);
   return _data.back();
 }
@@ -246,7 +246,7 @@ void Mesh::allocateDataValues()
 
     // Allocate gradient data values
     if (data->hasGradient()) {
-      const SizeType spaceDimensions = data->getSpacialDimensions();
+      const SizeType spaceDimensions = data->getSpatialDimensions();
 
       const SizeType expectedColumnSize = expectedCount * data->getDimensions();
       const auto     actualColumnSize   = static_cast<SizeType>(data->gradientValues().cols());

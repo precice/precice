@@ -1186,7 +1186,7 @@ void SolverInterfaceImpl::writeScalarData(
 void SolverInterfaceImpl::writeScalarGradientData(
     int           dataID,
     int           valueIndex,
-    const double *gradientValue)
+    const double *gradientValues)
 {
 
   PRECICE_TRACE(dataID, valueIndex);
@@ -1194,8 +1194,8 @@ void SolverInterfaceImpl::writeScalarGradientData(
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
   if (isDataGradientRequired(dataID)) {
-    PRECICE_DEBUG("Gradient value = {}", Eigen::Map<const Eigen::VectorXd>(gradientValue, _dimensions).format(utils::eigenio::debug()));
-    PRECICE_CHECK(gradientValue != nullptr, "writeScalarGradientData() was called with gradientValues == nullptr");
+    PRECICE_DEBUG("Gradient value = {}", Eigen::Map<const Eigen::VectorXd>(gradientValues, _dimensions).format(utils::eigenio::debug()));
+    PRECICE_CHECK(gradientValues != nullptr, "writeScalarGradientData() was called with gradientValues == nullptr");
 
     WriteDataContext &context = _accessor->writeDataContext(dataID);
     PRECICE_ASSERT(context.providedData() != nullptr);
@@ -1205,10 +1205,10 @@ void SolverInterfaceImpl::writeScalarGradientData(
     PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
 
     // Size of the gradient data input : must be spaceDimensions * dataDimensions -> here spaceDimensions (since for scalar: dataDimensions = 1)
-    PRECICE_CHECK(data.getSpacialDimensions() == _dimensions,
-                  "The spatial dimensions of the data object and of the mesh don't match. Please make sure to initialize \"{0}\" space dimensions for the scalar data type \"{1}\".",
-                  _dimensions, context.getDataName());
-    PRECICE_VALIDATE_DATA(gradientValue, _dimensions);
+    PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions,
+                   data.getSpatialDimensions(), _dimensions);
+
+    PRECICE_VALIDATE_DATA(gradientValues, _dimensions);
 
     // Gets the gradientvalues matrix corresponding to the dataID
     auto &     gradientValuesInternal = data.gradientValues();
@@ -1232,7 +1232,7 @@ void SolverInterfaceImpl::writeScalarGradientData(
 
     // Values are entered derived in the spatial dimensions (#rows = #spatial dimensions)
     for (int i = 0; i < _dimensions; i++) {
-      gradientValuesInternal(i, valueIndex) = gradientValue[i];
+      gradientValuesInternal(i, valueIndex) = gradientValues[i];
     }
   }
 }
@@ -1262,15 +1262,15 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     PRECICE_ASSERT(context.providedData() != nullptr);
     mesh::Data &data = *context.providedData();
 
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available! Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
 
     PRECICE_CHECK(data.getDimensions() == 1,
                   "You cannot call writeBlockScalarGradientData on the vector data type \"{}\". Use writeBlockVectorGradientData or change the data type for \"{}\" to scalar.",
                   data.getName(), data.getName());
 
-    PRECICE_CHECK(data.getSpacialDimensions() == _dimensions,
-                  "The spatial dimensions of the data object and of the mesh don't match. Please make sure to initialize {} space dimensions for the scalar data type \"{}\".",
-                  _dimensions, context.getDataName());
+    PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions,
+                   data.getSpatialDimensions(), _dimensions);
+
     PRECICE_VALIDATE_DATA(gradientValues, size * _dimensions);
 
     // Get gradient data and check if initialized
@@ -1310,7 +1310,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
 void SolverInterfaceImpl::writeVectorGradientData(
     int           dataID,
     int           valueIndex,
-    const double *gradientValue,
+    const double *gradientValues,
     bool          rowsFirst)
 {
 
@@ -1320,7 +1320,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
 
   if (isDataGradientRequired(dataID)) {
 
-    PRECICE_CHECK(gradientValue != nullptr, "writeVectorGradientData() was called with gradientValue == nullptr");
+    PRECICE_CHECK(gradientValues != nullptr, "writeVectorGradientData() was called with gradientValue == nullptr");
 
     WriteDataContext &context = _accessor->writeDataContext(dataID);
     PRECICE_ASSERT(context.providedData() != nullptr);
@@ -1334,11 +1334,10 @@ void SolverInterfaceImpl::writeVectorGradientData(
                   "You cannot call writeVectorGradientData on the scalar data type \"{}\". Use writeScalarGradientData or change the data type for \"{}\" to vector.",
                   data.getName(), data.getName());
 
-    PRECICE_CHECK(data.getSpacialDimensions() == _dimensions,
-                  "The spatial dimensions of the data object and of the mesh don't match. Please make sure to initialize {} space dimensions for the scalar data type \"{}\".",
-                  _dimensions, context.getDataName());
+    PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions,
+                   data.getSpatialDimensions(), _dimensions);
 
-    PRECICE_VALIDATE_DATA(gradientValue, _dimensions * _dimensions);
+    PRECICE_VALIDATE_DATA(gradientValues, _dimensions * _dimensions);
 
     auto &     gradientValuesInternal = data.gradientValues();
     const auto vertexCount            = gradientValuesInternal.cols() / data.getDimensions();
@@ -1360,7 +1359,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
           PRECICE_ASSERT(offset + dimSpace < gradientValuesInternal.cols() * _dimensions,
                          offset + dimSpace, gradientValuesInternal.cols() * _dimensions);
 
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValue[offset + dimSpace];
+          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimSpace];
         } else {
           // Values are entered derived components first : gradient matrix read columnwise
           const int offset = dimSpace * _dimensions;
@@ -1368,7 +1367,7 @@ void SolverInterfaceImpl::writeVectorGradientData(
           PRECICE_ASSERT(offset + dimData < gradientValuesInternal.cols() * _dimensions,
                          offset + dimData, gradientValuesInternal.cols() * _dimensions);
 
-          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValue[offset + dimData];
+          gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimData];
         }
       }
     }
@@ -1402,16 +1401,15 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     mesh::Data &data = *context.providedData();
 
     // Check if the Data object with ID dataID has been initialized with gradient data
-    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available! Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
+    PRECICE_CHECK(data.hasGradient(), "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.", data.getName())
 
     // Check if the dimensions match
     PRECICE_CHECK(data.getDimensions() > 1,
                   "You cannot call writeBlockVectorGradientData on the scalar data type \"{}\". Use writeBlockScalarGradientData or change the data type for \"{}\" to vector.",
                   data.getName(), data.getName());
 
-    PRECICE_CHECK(data.getSpacialDimensions() == _dimensions,
-                  "The spatial dimensions of the data object and of the mesh don't match. Please make sure to initialize {} space dimensions for the scalar data type \"{}\".",
-                  _dimensions, context.getDataName());
+    PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions,
+                   data.getSpatialDimensions(), _dimensions);
 
     PRECICE_VALIDATE_DATA(gradientValues, size * _dimensions * _dimensions);
 
