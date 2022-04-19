@@ -8,7 +8,7 @@
 // Test representing the full lifecycle of a SolverInterface
 // Finalize is not called explicitly here.
 // The destructor has to cleanup.
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 BOOST_AUTO_TEST_CASE(ImplicitFinalize)
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(ImplicitFinalize)
   BOOST_TEST(interface.isCouplingOngoing());
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // Lifecycle
 

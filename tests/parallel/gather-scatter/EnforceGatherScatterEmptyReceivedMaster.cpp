@@ -5,7 +5,7 @@
 #include <precice/SolverInterface.hpp>
 #include "helpers.hpp"
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(GatherScatter)
 BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyReceivedMaster)
@@ -15,7 +15,7 @@ BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyReceivedMaster)
   runTestEnforceGatherScatter(std::vector<double>{0.0, 2.0, 0.0, 2.5}, context);
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // GatherScatter
 

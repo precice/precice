@@ -5,7 +5,7 @@
 #include <precice/SolverInterface.hpp>
 #include <vector>
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 /**
   * @brief Runs a coupled simulation where one solver supplies a geometry.
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 
 #endif // PRECICE_NO_MPI

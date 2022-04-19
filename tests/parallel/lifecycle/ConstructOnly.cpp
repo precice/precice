@@ -7,7 +7,7 @@
 
 // Test representing the minimal lifecylce, which consists out of construction only.
 // The destructor has to cleanup correctly.
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 BOOST_AUTO_TEST_CASE(ConstructOnly)
@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(ConstructOnly)
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // Lifecycle
 
