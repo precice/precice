@@ -167,7 +167,6 @@ public:
   /// @copydoc SolverInterface::isMeshConnectivityRequired()
   bool isMeshConnectivityRequired(int meshID) const;
 
-
   /// @copydoc SolverInterface::setMeshVertex(int, double*)
   int setMeshVertex(
       int           meshID,
