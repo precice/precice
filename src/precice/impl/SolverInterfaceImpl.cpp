@@ -553,7 +553,7 @@ bool SolverInterfaceImpl::isReadDataAvailable() const
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isReadDataAvailable().");
   PRECICE_CHECK(_state != State::Finalized, "isReadDataAvailable() cannot be called after finalize().");
   bool available = _couplingScheme->hasDataBeenReceived();
-  available |= (_allowsExperimental && _couplingScheme->hasInitialDataBeenReceived()); // if waveform relaxation is allowed, we always return true as soon as initialData is available. Related to https://github.com/precice/precice/issues/1223.
+  available |= (_couplingScheme->hasInitialDataBeenReceived() && _accessor->maxReadWaveformOrder() > 0); // if any read waveform of this participant has order > 1, we return true. Related to https://github.com/precice/precice/issues/1223.
   return available;
 }
 

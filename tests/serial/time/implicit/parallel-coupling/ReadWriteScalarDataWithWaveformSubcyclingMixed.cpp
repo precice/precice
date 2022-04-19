@@ -16,9 +16,9 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 /**
  * @brief Test to run a simple coupling with zeroth order waveform subcycling.
  *
- * Provides a dt argument to the read function, but since a zeroth order waveform is used the result should be identical to the case without waveform relaxation
+ * Provides a dt argument to the read function, uses zeroth order waveform for SolverOne and a first oder waveform for SolverTwo. See ReadWriteScalarDataWithWaveformSubcyclingZero and ReadWriteScalarDataWithWaveformSubcyclingFirst for details on the non-mixed cases and expected behavior.
  */
-BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
+BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
@@ -86,11 +86,18 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
       precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
     double readTime;
-    readTime = timeCheckpoint + windowDt;
+    if (context.isNamed("SolverOne")) {
+      // zeroth order corresponds to end of window
+      readTime = timeCheckpoint + windowDt;
+    } else {
+      BOOST_TEST(context.isNamed("SolverTwo"));
+      // first order reads from interpolant inside window
+      readTime = time + currentDt;
+    }
 
     bool atWindowBoundary = timestep % nSubsteps == 0;
 
-    if (atWindowBoundary) { // read data is only available at end of window for zeroth order, see also https://github.com/precice/precice/issues/1223
+    if (atWindowBoundary || context.isNamed("SolverTwo")) { // read data is only available at end of window for zeroth order, see also https://github.com/precice/precice/issues/1223
       BOOST_TEST(precice.isReadDataAvailable());
     } else {
       BOOST_TEST(!precice.isReadDataAvailable());
@@ -100,7 +107,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     }
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
-    } else { // in the following iterations, use data at the end of window.
+    } else {
       BOOST_TEST(readData == readFunction(readTime));
     }
     if (precice.isReadDataAvailable()) {
@@ -108,8 +115,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingZero)
     }
     if (iterations == 0) { // in the first iteration of each window, use data from previous window.
       BOOST_TEST(readData == readFunction(timeCheckpoint));
-    } else { // in the following iterations, use data at the end of window.
-      BOOST_TEST(readData == readFunction(readTime));
+    } else {                              // in the following iterations, use data at the end of window.
+      if (context.isNamed("SolverOne")) { // in the following iterations, use data at the end of window.
+        BOOST_TEST(readData == readFunction(readTime));
+      } else { // in the following iterations we have two samples of data. Therefore linear interpolation
+        BOOST_TEST(context.isNamed("SolverTwo"));
+        BOOST_TEST(readData == readFunction(readTime - currentDt / 2));
+      }
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.

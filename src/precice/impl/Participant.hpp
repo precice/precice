@@ -157,6 +157,17 @@ public:
     return _readDataContexts | boost::adaptors::map_values;
   }
 
+  /** @brief Determines and returns the maximum order of all read waveforms of this participant
+   */
+  int maxReadWaveformOrder() const
+  {
+    int maxOrder = -1;
+    for (auto &context : _readDataContexts | boost::adaptors::map_values) {
+      maxOrder = std::max(maxOrder, context.getInterpolationOrder());
+    }
+    return maxOrder;
+  }
+
   /// Is the dataID know to preCICE?
   bool hasData(DataID dataID) const;
 
