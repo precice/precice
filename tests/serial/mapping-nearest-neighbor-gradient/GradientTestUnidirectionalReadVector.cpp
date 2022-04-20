@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadVector)
     double valueData[6];
     int    indices[2] = {0, 1};
     cplInterface.readBlockVectorData(dataID, 2, indices, valueData);
-    double expected[6] = {2.1, 3.5, 4.8, 7.9, 9.2, 10.5};
+    double expected[6] = {2.2, 3.5, 4.8, 7.9, 9.2, 10.5};
     // To test rowsFirst = false parameter
     // double expected[6] = {1.6, 3.5, 5.4, 7.3, 9.2, 11.1};
     BOOST_TEST(valueData == expected);
