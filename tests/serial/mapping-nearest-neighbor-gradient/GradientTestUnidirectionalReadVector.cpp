@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadVector)
 
       double gradientValues[18] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
                                    10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0};
-      cplInterface.writeBlockVectorGradientData(dataID, 2, indices, gradientValues);
+      cplInterface.writeBlockVectorGradientData(dataID, 2, indices, gradientValues, true);
     }
 
     // Participant must make move after writing
@@ -92,8 +92,9 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadVector)
     double valueData[6];
     int    indices[2] = {0, 1};
     cplInterface.readBlockVectorData(dataID, 2, indices, valueData);
-    // To test rowMajor = true parameter : double expected[6] = {3.1, 4.4, 5.7, 7.0, 8.3, 9.6};
-    double expected[6] = {1.6, 3.5, 5.4, 7.3, 9.2, 11.1};
+    double expected[6] = {2.1, 3.5, 4.8, 7.9, 9.2, 10.5};
+    // To test rowsFirst = false parameter
+    // double expected[6] = {1.6, 3.5, 5.4, 7.3, 9.2, 11.1};
     BOOST_TEST(valueData == expected);
 
     cplInterface.advance(maxDt);

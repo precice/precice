@@ -1426,8 +1426,9 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
 
           if (rowsFirst) {
             // Values are entered derived in spatial dimensions first : gradient matrices read rowwise
-            const int offsetOut = dimSpace * _dimensions * size;
-            const int offsetIn  = i * _dimensions;
+
+            const int offsetOut = i * _dimensions * _dimensions;
+            const int offsetIn  = dimSpace * _dimensions;
 
             PRECICE_ASSERT(offsetOut + offsetIn + dimData < gradientValuesInternal.cols() * _dimensions,
                            offsetOut + offsetIn + dimData, gradientValuesInternal.cols() * _dimensions);
