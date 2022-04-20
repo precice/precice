@@ -321,7 +321,6 @@ public:
       int *     ids,
       double *  coordinates) const;
 
-
   ///@}
 
   /**
