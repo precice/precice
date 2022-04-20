@@ -249,8 +249,8 @@ public:
   /// @copydoc SolverInterface::isMeshConnectivityRequired()
   bool isMeshConnectivityRequired(int meshID) const;
 
-  /// @copydoc SolverInterface::isDataGradientRequired()
-  bool isDataGradientRequired(int dataID) const;
+  /// @copydoc SolverInterface::isGradientDataRequired()
+  bool isGradientDataRequired(int dataID) const;
 
   /// Returns true, if the data with given name is used in the given mesh.
   bool hasData(const std::string &dataName, MeshID meshID) const;
@@ -379,9 +379,7 @@ public:
       int           valueIndex,
       const double *value);
 
-  /**
-   * @copydoc precice::SolverInterface::writeVectorGradientData()
-   */
+  /// @copydoc precice::SolverInterface::writeVectorGradientData()
   void writeVectorGradientData(
       int           fromDataID,
       int           valueIndex,
@@ -405,9 +403,7 @@ public:
       const int *   valueIndices,
       const double *values);
 
-  /**
-   * @copydoc precice::SolverInterface::writeBlockVectorGradientData()
-   */
+  /// @copydoc precice::SolverInterface::writeBlockVectorGradientData()
   void writeBlockVectorGradientData(
       int           fromDataID,
       int           size,
@@ -429,9 +425,7 @@ public:
       int    valueIndex,
       double value);
 
-  /**
-   * @copydoc precice::SolverInterface::writeScalarGradientData()
-   */
+  /// @copydoc precice::SolverInterface::writeScalarGradientData()
   void writeScalarGradientData(
       int           fromDataID,
       int           valueIndex,
@@ -450,15 +444,12 @@ public:
       const int *   valueIndices,
       const double *values);
 
-  /**
-   * @copydoc precice::SolverInterface::writeBlockScalarGradientData()
-   */
+  /// @copydoc precice::SolverInterface::writeBlockScalarGradientData()
   void writeBlockScalarGradientData(
       int           fromDataID,
       int           size,
       const int *   valueIndices,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+      const double *gradientValues);
 
   /**
    * @brief Reads vector data values given as block.

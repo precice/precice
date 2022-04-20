@@ -147,12 +147,9 @@ public:
   void createDistributedCommunication(const mesh::PtrMesh &mesh);
 
   /// Sends an array of double values from all slaves (different for each slave).
-  /// Setting the flag "withGradient" to true indicates that the data send is gradient data
-  /// The parameter "valueDimension" indicates the spatial dimension of the data (1: scalar, 2,3: vector)
   void send(precice::span<double const> itemsToSend,
             int                         meshID,
-            int                         valueDimension,
-            bool                        withGradient = false);
+            int                         valueDimension);
 
   /**
    * @brief The master sends a bool to the other master, for performance reasons, we
@@ -180,8 +177,7 @@ public:
   /// Gradient dimension : 0: dx-values, 1: dy-values, 2:dz-values
   void receive(precice::span<double> itemsToReceive,
                int                   meshID,
-               int                   valueDimension,
-               bool                  withGradient = false);
+               int                   valueDimension);
 
   /// All slaves receive a bool (the same for each slave).
   void receive(bool &itemToReceive);

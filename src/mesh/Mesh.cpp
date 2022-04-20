@@ -130,7 +130,8 @@ Triangle &Mesh::createTriangle(
 PtrData &Mesh::createData(
     const std::string &name,
     int                dimension,
-    DataID             id)
+    DataID             id,
+    bool               withGradient)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -139,7 +140,8 @@ PtrData &Mesh::createData(
                   "Please rename or remove one of the use-data tags with name \"{}\".",
                   name, _name, name);
   }
-  PtrData data(new Data(name, id, dimension));
+  //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
+  PtrData data(new Data(name, id, dimension, _dimensions, true));
   _data.push_back(data);
   return _data.back();
 }
@@ -181,26 +183,6 @@ const PtrData &Mesh::data(const std::string &dataName) const
   });
   PRECICE_ASSERT(iter != _data.end(), "Data not found in mesh", dataName, _name);
   return *iter;
-}
-
-PtrData &Mesh::createDataWithGradient(
-    const std::string &name,
-    int                dimension,
-    int                spatialDimensions,
-    DataID             id)
-{
-  PRECICE_TRACE(name, dimension);
-  for (const PtrData &data : _data) {
-    PRECICE_CHECK(data->getName() != name,
-                  "Data \"{}\" cannot be created twice for mesh \"{}\". "
-                  "Please rename or remove one of the use-data tags with name \"{}\".",
-                  name, _name, name);
-  }
-
-  //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
-  PtrData data(new Data(name, id, dimension, spatialDimensions, true));
-  _data.push_back(data);
-  return _data.back();
 }
 
 const std::string &Mesh::getName() const

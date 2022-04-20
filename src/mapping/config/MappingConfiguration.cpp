@@ -312,6 +312,12 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     configuredMapping.isRBF = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {
+
+    // NNG is not applicable with the conservative constraint
+    PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
+                  "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. "
+                  "Please select constraint=\" consistent\" or a different mapping method.");
+
     configuredMapping.mapping = PtrMapping(
         new NearestNeighborGradientMapping(constraintValue, dimensions));
     configuredMapping.isRBF = false;

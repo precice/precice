@@ -372,7 +372,7 @@ public:
    * @param[in] dataID the id of the data
    * @returns whether gradient is required
    */
-  bool isDataGradientRequired(int dataID) const;
+  bool isGradientDataRequired(int dataID) const;
 
   /**
    * @brief Creates a mesh vertex
@@ -817,8 +817,7 @@ public:
       int           dataID,
       int           size,
       const int *   valueIndices,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+      const double *gradientValues);
 
   /**
    * @brief Writes scalar data to a vertex

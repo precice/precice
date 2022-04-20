@@ -91,7 +91,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     if (pair.second->hasGradient()) {
-      m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions(), true);
+      m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
     }
 
     sentDataIDs.push_back(pair.first);
@@ -110,7 +110,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     if (pair.second->hasGradient()) {
-      m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions(), true);
+      m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
     }
 
     receivedDataIDs.push_back(pair.first);

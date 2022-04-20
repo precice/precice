@@ -107,9 +107,9 @@ bool SolverInterface::isMeshConnectivityRequired(int meshID) const
   return _impl->isMeshConnectivityRequired(meshID);
 }
 
-bool SolverInterface::isDataGradientRequired(int dataID) const
+bool SolverInterface::isGradientDataRequired(int dataID) const
 {
-  return _impl->isDataGradientRequired(dataID);
+  return _impl->isGradientDataRequired(dataID);
 }
 
 bool SolverInterface::hasData(
@@ -289,10 +289,9 @@ void SolverInterface::writeBlockScalarGradientData(
     int           dataID,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
-  _impl->writeBlockScalarGradientData(dataID, size, valueIndices, gradientValues, rowsFirst);
+  _impl->writeBlockScalarGradientData(dataID, size, valueIndices, gradientValues);
 }
 
 void SolverInterface::writeScalarData(

@@ -641,7 +641,7 @@ bool SolverInterfaceImpl::isMeshConnectivityRequired(int meshID) const
   return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
 }
 
-bool SolverInterfaceImpl::isDataGradientRequired(int dataID) const
+bool SolverInterfaceImpl::isGradientDataRequired(int dataID) const
 {
   PRECICE_VALIDATE_DATA_ID(dataID);
   WriteDataContext &context = _accessor->writeDataContext(dataID);
@@ -1189,11 +1189,13 @@ void SolverInterfaceImpl::writeScalarGradientData(
     const double *gradientValues)
 {
 
+  PRECICE_EXPERIMENTAL_API();
+
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "writeScalarGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
-  if (isDataGradientRequired(dataID)) {
+  if (isGradientDataRequired(dataID)) {
     PRECICE_DEBUG("Gradient value = {}", Eigen::Map<const Eigen::VectorXd>(gradientValues, _dimensions).format(utils::eigenio::debug()));
     PRECICE_CHECK(gradientValues != nullptr, "writeScalarGradientData() was called with gradientValues == nullptr");
 
@@ -1241,9 +1243,10 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
     int           dataID,
     int           size,
     const int *   valueIndices,
-    const double *gradientValues,
-    bool          rowsFirst)
+    const double *gradientValues)
 {
+
+  PRECICE_EXPERIMENTAL_API();
 
   // Asserts and checks
   PRECICE_TRACE(dataID, size);
@@ -1252,7 +1255,7 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
   if (size == 0)
     return;
 
-  if (isDataGradientRequired(dataID)) {
+  if (isGradientDataRequired(dataID)) {
 
     PRECICE_CHECK(valueIndices != nullptr, "writeBlockScalarGradientData() was called with valueIndices == nullptr");
     PRECICE_CHECK(gradientValues != nullptr, "writeBlockScalarGradientData() was called with gradientValues == nullptr");
@@ -1285,23 +1288,13 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(
                       "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                       context.getDataName(), valueIndex);
 
-        if (rowsFirst) {
-          // Gradients are entered directionswise
-          const int offset = dim * size;
+        // Gradient values are entered components derived first
+        const int offset = i * _dimensions;
 
-          PRECICE_ASSERT(offset + i < gradientValuesInternal.cols() * _dimensions,
-                         offset + i, gradientValuesInternal.cols() * _dimensions);
+        PRECICE_ASSERT(offset + dim < gradientValuesInternal.cols() * _dimensions,
+                       offset + dim, gradientValuesInternal.cols() * _dimensions);
 
-          gradientValuesInternal(dim, valueIndex) = gradientValues[offset + i];
-        } else {
-          // Values are entered components derived first
-          const int offset = i * _dimensions;
-
-          PRECICE_ASSERT(offset + dim < gradientValuesInternal.cols() * _dimensions,
-                         offset + dim, gradientValuesInternal.cols() * _dimensions);
-
-          gradientValuesInternal(dim, valueIndex) = gradientValues[offset + dim];
-        }
+        gradientValuesInternal(dim, valueIndex) = gradientValues[offset + dim];
       }
     }
   }
@@ -1313,12 +1306,13 @@ void SolverInterfaceImpl::writeVectorGradientData(
     const double *gradientValues,
     bool          rowsFirst)
 {
+  PRECICE_EXPERIMENTAL_API();
 
   PRECICE_TRACE(dataID, valueIndex);
   PRECICE_CHECK(_state != State::Finalized, "writeVectorGradientData(...) cannot be called after finalize().")
   PRECICE_REQUIRE_DATA_WRITE(dataID);
 
-  if (isDataGradientRequired(dataID)) {
+  if (isGradientDataRequired(dataID)) {
 
     PRECICE_CHECK(gradientValues != nullptr, "writeVectorGradientData() was called with gradientValue == nullptr");
 
@@ -1382,6 +1376,8 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
     bool          rowsFirst)
 {
 
+  PRECICE_EXPERIMENTAL_API();
+
   // Asserts and checks
   PRECICE_TRACE(dataID, size);
   PRECICE_CHECK(_state != State::Finalized, "writeBlockVectorGradientData(...) cannot be called after finalize().");
@@ -1389,7 +1385,7 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(
   if (size == 0)
     return;
 
-  if (isDataGradientRequired(dataID)) {
+  if (isGradientDataRequired(dataID)) {
 
     PRECICE_CHECK(valueIndices != nullptr, "writeBlockVectorGradientData() was called with valueIndices == nullptr");
     PRECICE_CHECK(gradientValues != nullptr, "writeBlockVectorGradientData() was called with gradientValues == nullptr");

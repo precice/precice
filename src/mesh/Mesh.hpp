@@ -131,14 +131,8 @@ public:
   /// Create only data for vertex
   PtrData &createData(const std::string &name,
                       int                dimension,
-                      DataID             id);
-
-  /// Creates data for vertex with additional gradient data
-  PtrData &createDataWithGradient(
-      const std::string &name,
-      int                dimension,
-      int                spatialDimensions,
-      DataID             id);
+                      DataID             id,
+                      bool               withGradient = false);
 
   /// Allows access to all data
   const DataContainer &data() const;

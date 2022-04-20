@@ -62,11 +62,11 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
     int    indices[2] = {0, 1};
     cplInterface.writeBlockScalarData(dataID, 2, indices, values);
 
-    BOOST_TEST(cplInterface.isDataGradientRequired(dataID) == true);
+    BOOST_TEST(cplInterface.isGradientDataRequired(dataID) == true);
 
-    if (cplInterface.isDataGradientRequired(dataID)) {
+    if (cplInterface.isGradientDataRequired(dataID)) {
       double gradientValues[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-      cplInterface.writeBlockScalarGradientData(dataID, 2, indices, gradientValues, true);
+      cplInterface.writeBlockScalarGradientData(dataID, 2, indices, gradientValues);
     }
 
     // Participant must make move after writing
@@ -91,8 +91,7 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
     double valueData[2];
     int    indices[2] = {0, 1};
     cplInterface.readBlockScalarData(dataID, 2, indices, valueData);
-    double expected[2] = {1.9, 3.2};
-    // without romMajor : double expected[2] = {1.6, 3.5};
+    double expected[2] = {1.6, 3.5};
     BOOST_TEST(valueData == expected);
 
     cplInterface.advance(maxDt);

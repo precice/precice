@@ -209,8 +209,7 @@ void M2N::createDistributedCommunication(const mesh::PtrMesh &mesh)
 void M2N::send(
     precice::span<double const> itemsToSend,
     int                         meshID,
-    int                         valueDimension,
-    bool                        withGradient)
+    int                         valueDimension)
 {
   if (not _useOnlyMasterCom) {
     PRECICE_ASSERT(_areSlavesConnected);
@@ -224,8 +223,7 @@ void M2N::send(
       _masterCom->send(ack, 0);
     }
 
-    std::string name = withGradient ? "m2n.sendGradientData" : "m2n.sendData";
-    Event       e(name, precice::syncMode);
+    Event e("m2n.sendData", precice::syncMode);
 
     _distComs[meshID]->send(itemsToSend, valueDimension);
   } else {
@@ -282,8 +280,7 @@ void M2N::broadcastSend(int &itemToSend, mesh::Mesh &mesh)
 
 void M2N::receive(precice::span<double> itemsToReceive,
                   int                   meshID,
-                  int                   valueDimension,
-                  bool                  withGradient)
+                  int                   valueDimension)
 {
   if (not _useOnlyMasterCom) {
     PRECICE_ASSERT(_areSlavesConnected);
@@ -300,8 +297,7 @@ void M2N::receive(precice::span<double> itemsToReceive,
       }
     }
 
-    std::string name = withGradient ? "m2n.receiveGradientData" : "m2n.receiveData";
-    Event       e(name, precice::syncMode);
+    Event e("m2n.receiveData", precice::syncMode);
 
     _distComs[meshID]->receive(itemsToReceive, valueDimension);
   } else {
