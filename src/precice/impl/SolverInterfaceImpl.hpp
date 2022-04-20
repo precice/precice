@@ -45,11 +45,14 @@ class Mesh;
 
 namespace impl {
 
-/// Implementation of solver interface.
+/// Implementation of SolverInterface. See also pimpl ideom (https://en.cppreference.com/w/cpp/language/pimpl).
 class SolverInterfaceImpl {
 public:
+  ///@name Construction and Configuration
+  ///@{
+
   /**
-   * @copydoc SolverInterface::SolverInterface(std::string, const std::string, int, int)
+   * @copydoc SolverInterface::SolverInterface(const std::string&, const std::string&, int, int)
    */
   SolverInterfaceImpl(
       std::string        participantName,
@@ -57,20 +60,8 @@ public:
       int                solverProcessIndex,
       int                solverProcessSize);
 
-  /// Deleted copy constructor
-  SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
-
-  /// Deleted copy assignment
-  SolverInterfaceImpl &operator=(SolverInterfaceImpl const &) = delete;
-
-  /// Deleted move constructor
-  SolverInterfaceImpl(SolverInterfaceImpl &&) = delete;
-
-  /// Deleted move assignment
-  SolverInterfaceImpl &operator=(SolverInterfaceImpl &&) = delete;
-
   /**
-   * @copydoc SolverInterface::SolverInterface(std::string, const std::string, int, int, void*)
+   * @copydoc SolverInterface::SolverInterface(const std::string&, const std::string&, int, int, void*)
    */
   SolverInterfaceImpl(
       std::string        participantName,
@@ -79,116 +70,140 @@ public:
       int                solverProcessSize,
       void *             communicator);
 
-  /** Ensures that finalize() has been called.
+  /**
+   * @brief Destructor
    *
-   * @see finalize()
+   * Ensures that finalize() has been called.
+   *
+   * @see finalize
    */
   ~SolverInterfaceImpl();
 
-  /// @copydoc SolverInterface::initialize()
+  ///@}
+
+  /// @name Steering Methods
+  ///@{
+
+  /// @copydoc SolverInterface::initialize
   double initialize();
 
-  /// @copydoc SolverInterface::initializeData()
+  /// @copydoc SolverInterface::initializeData
   void initializeData();
 
-  /// @copydoc SolverInterface::advance(double)
+  /// @copydoc SolverInterface::advance
   double advance(double computedTimestepLength);
 
-  /// @copydoc SolverInterface::finalize()
+  /// @copydoc SolverInterface::finalize
   void finalize();
 
-  /// @copydoc SolverInterface::getDimensions()
+  ///@}
+
+  ///@name Status Queries
+  ///@{
+
+  /// @copydoc SolverInterface::getDimensions
   int getDimensions() const;
 
-  /// @copydoc SolverInterface::isCouplingOngoing()
+  /// @copydoc SolverInterface::isCouplingOngoing
   bool isCouplingOngoing() const;
 
-  /// @copydoc SolverInterface::isReadDataAvailable()
+  /// @copydoc SolverInterface::isReadDataAvailable
   bool isReadDataAvailable() const;
 
-  /// @copydoc SolverInterface::isWriteDataRequired(double)
+  /// @copydoc SolverInterface::isWriteDataRequired
   bool isWriteDataRequired(double computedTimestepLength) const;
 
-  /// @copydoc SolverInterface::isTimeWindowComplete()
+  /// @copydoc SolverInterface::isTimeWindowComplete
   bool isTimeWindowComplete() const;
 
-  /// @copydoc SolverInterface::hasToEvaluateSurrogateModel()
+  /// @copydoc SolverInterface::hasToEvaluateSurrogateModel
   bool hasToEvaluateSurrogateModel() const;
 
-  /// @copydoc SolverInterface::hasToEvaluateFineModel()
+  /// @copydoc SolverInterface::hasToEvaluateFineModel
   bool hasToEvaluateFineModel() const;
 
-  /// @copydoc SolverInterface::isActionRequired(std::string)
+  ///@}
+
+  ///@name Action Methods
+  ///@{
+
+  /// @copydoc SolverInterface::isActionRequired
   bool isActionRequired(const std::string &action) const;
 
-  /// @copydoc SolverInterface::markActionFulfilled(std::string)
+  /// @copydoc SolverInterface::markActionFulfilled
   void markActionFulfilled(const std::string &action);
 
-  /// @copydoc SolverInterface::hasMesh(std::string)
-  bool hasMesh(const std::string &meshName) const;
+  ///@}
 
-  /// @copydoc SolverInterface::resetMesh(int)
+  ///@name Mesh Access
+  ///@anchor precice-mesh-access
+  ///@{
+
+  /// @copydoc SolverInterface::resetMesh
   void resetMesh(MeshID meshID);
 
-  /// @copydoc SolverInterface::hasMesh(std::string)
+  /// @copydoc SolverInterface::hasMesh
+  bool hasMesh(const std::string &meshName) const;
+
+  /// @copydoc SolverInterface::hasMesh
   int getMeshID(const std::string &meshName) const;
 
-  /// @copydoc SolverInterface::getMeshIDs()
+  /// @copydoc SolverInterface::getMeshIDs
   std::set<int> getMeshIDs() const;
 
-  /// @copydoc SolverInterface::isMeshConnectivityRequired()
+  /// @copydoc SolverInterface::isMeshConnectivityRequired
   bool isMeshConnectivityRequired(int meshID) const;
 
-  /// @copydoc SolverInterface::setMeshVertex(int, double*)
+  /// @copydoc SolverInterface::setMeshVertex
   int setMeshVertex(
       int           meshID,
       const double *position);
 
-  /// @copydoc SolverInterface::getMeshVertexSize(int)
+  /// @copydoc SolverInterface::getMeshVertexSize
   int getMeshVertexSize(MeshID meshID) const;
 
-  /// @copydoc SolverInterface::setMeshVertices(int, int, double*, int*)
+  /// @copydoc SolverInterface::setMeshVertices
   void setMeshVertices(
       int           meshID,
       int           size,
       const double *positions,
       int *         ids);
 
-  /// @copydoc SolverInterface::getMeshVertices(int, int, int*, double*)
+  /// @copydoc SolverInterface::getMeshVertices
   void getMeshVertices(
       int        meshID,
       size_t     size,
       const int *ids,
       double *   positions) const;
 
-  /// @copydoc SolverInterface::getMeshVertexIDsFromPositions(int, int, double*, int*)
+  /// @copydoc SolverInterface::getMeshVertexIDsFromPositions
   void getMeshVertexIDsFromPositions(
       int           meshID,
       size_t        size,
       const double *positions,
       int *         ids) const;
 
-  /// @copydoc SolverInterface::setMeshEdge(int, int, int)
+  /// @copydoc SolverInterface::setMeshEdge
   int setMeshEdge(
       MeshID meshID,
       int    firstVertexID,
       int    secondVertexID);
 
-  /// @copydoc SolverInterface::setMeshTriangle(int, int, int, int)
+  /// @copydoc SolverInterface::setMeshTriangle
   void setMeshTriangle(
       MeshID meshID,
       int    firstEdgeID,
       int    secondEdgeID,
       int    thirdEdgeID);
 
-  /// @copydoc SolverInterface::setMeshTriangleWithEdges(int, int, int, int)
+  /// @copydoc SolverInterface::setMeshTriangleWithEdges
   void setMeshTriangleWithEdges(
       MeshID meshID,
       int    firstVertexID,
       int    secondVertexID,
       int    thirdVertexID);
 
-  /// @copydoc SolverInterface::setMeshQuad(int, int, int, int, int)
+  /// @copydoc SolverInterface::setMeshQuad
   void setMeshQuad(
       MeshID meshID,
       int    firstEdgeID,
@@ -196,7 +211,7 @@ public:
       int    thirdEdgeID,
       int    fourthEdgeID);
 
-  /// @copydoc SolverInterface::setMeshQuadWithEdges(int, int, int, int, int)
+  /// @copydoc SolverInterface::setMeshQuadWithEdges
   void setMeshQuadWithEdges(
       MeshID meshID,
       int    firstVertexID,
@@ -204,87 +219,124 @@ public:
       int    thirdVertexID,
       int    fourthVertexID);
 
-  /// @copydoc SolverInterface::hasData(std::string, int)
+  ///@}
+
+  ///@name Data Access
+  ///@{
+
+  /// @copydoc SolverInterface::hasData
   bool hasData(const std::string &dataName, MeshID meshID) const;
 
-  /// @copydoc SolverInterface::getDataID(std::string, int)
+  /// @copydoc SolverInterface::getDataID
   int getDataID(const std::string &dataName, MeshID meshID) const;
 
-  /// @copydoc SolverInterface::mapWriteDataFrom(int)
+  /// @copydoc SolverInterface::mapWriteDataFrom
   void mapWriteDataFrom(int fromMeshID);
 
-  /// @copydoc SolverInterface::mapReadDataTo(int)
+  /// @copydoc SolverInterface::mapReadDataTo
   void mapReadDataTo(int toMeshID);
 
-  /// @copydoc SolverInterface::writeBlockVectorData(int, int, const int*, const double*)
+  /// @copydoc SolverInterface::writeBlockVectorData
   void writeBlockVectorData(
       int           fromDataID,
       int           size,
       const int *   valueIndices,
       const double *values);
 
-  /// @copydoc SolverInterface::writeVectorData(int, int, const double*)
+  /// @copydoc SolverInterface::writeVectorData
   void writeVectorData(
       int           fromDataID,
       int           valueIndex,
       const double *value);
 
-  /// @copydoc SolverInterface::writeBlockScalarData(int, int, const int*, const double*)
+  /// @copydoc SolverInterface::writeBlockScalarData
   void writeBlockScalarData(
       int           fromDataID,
       int           size,
       const int *   valueIndices,
       const double *values);
 
-  /// @copydoc SolverInterface::writeScalarData(int, int, double)
+  /// @copydoc SolverInterface::writeScalarData
   void writeScalarData(
       int    fromDataID,
       int    valueIndex,
       double value);
 
-  /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double*)
+  /// @copydoc SolverInterface::readBlockVectorData
   void readBlockVectorData(
       int        toDataID,
       int        size,
       const int *valueIndices,
       double *   values) const;
 
-  /// @copydoc SolverInterface::readVectorData(int, int, double*)
+  /// @copydoc SolverInterface::readVectorData
   void readVectorData(
       int     toDataID,
       int     valueIndex,
       double *value) const;
 
-  /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double*)
+  /// @copydoc SolverInterface::readBlockScalarData
   void readBlockScalarData(
       int        toDataID,
       int        size,
       const int *valueIndices,
       double *   values) const;
 
-  /// @copydoc SolverInterface::readScalarData(int, int, double&)
+  /// @copydoc SolverInterface::readScalarData
   void readScalarData(
       int     toDataID,
       int     valueIndex,
       double &value) const;
 
-  /// @copydoc SolverInterface::setMeshAccessRegion(const int, const double*)
+  ///@}
+
+  /** @name Experimental Data Access
+   * These API functions are \b experimental and may change in future versions.
+   */
+  ///@{
+
+  /// @copydoc SolverInterface::setMeshAccessRegion
   void setMeshAccessRegion(const int     meshID,
                            const double *boundingBox) const;
 
-  /// @copydoc SolverInterface::getMeshVerticesAndIDs(const int, const int, int*, double*)
+  /// @copydoc SolverInterface::getMeshVerticesAndIDs
   void getMeshVerticesAndIDs(
       const int meshID,
       const int size,
       int *     ids,
       double *  coordinates) const;
 
-  /// @copydoc SolverInterface::exportMesh(const std::string)
+
+  ///@}
+
+  /**
+   * @brief Writes a mesh to vtk file.
+   *
+   * The plotting path has to be specified in the configuration of the
+   * accessing participant.
+   *
+   * @param[in] filenameSuffix Suffix of all plotted files
+   */
+  /// @todo make private.
   void exportMesh(const std::string &filenameSuffix) const;
 
-  /// Allows to access a registered mesh
+  /**
+   * @brief Allows to access a registered mesh
+   */
   /// @todo make private and use fixture.
   const mesh::Mesh &mesh(const std::string &meshName) const;
+
+  /// Disable copy construction
+  SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
+
+  /// Disable assignment construction
+  SolverInterfaceImpl &operator=(SolverInterfaceImpl const &) = delete;
+
+  /// Disable move construction
+  SolverInterfaceImpl(SolverInterfaceImpl &&) = delete;
+
+  /// Disable move assignment
+  SolverInterfaceImpl &operator=(SolverInterfaceImpl &&) = delete;
 
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
