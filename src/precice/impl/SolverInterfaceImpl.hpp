@@ -52,7 +52,13 @@ public:
   ///@{
 
   /**
-   * @copydoc SolverInterface::SolverInterface(const std::string&, const std::string&, int, int)
+   * @copybrief SolverInterface::SolverInterface(const std::string&, const std::string&, int, int)
+   *
+   * A solver that wants to use the SolverInterfaceImpl must instantiate an object
+   * of this class. The object has to be configured by one of the configure
+   * methods before it has a reasonable state and can be used.
+   *
+   * @copydetails SolverInterface::SolverInterface(const std::string&, const std::string&, int, int)
    */
   SolverInterfaceImpl(
       std::string        participantName,
@@ -61,7 +67,16 @@ public:
       int                solverProcessSize);
 
   /**
-   * @copydoc SolverInterface::SolverInterface(const std::string&, const std::string&, int, int, void*)
+   * @copybrief SolverInterface::SolverInterface(const std::string&, const std::string&, int, int, void*)
+   *
+   * A solver that wants to use the SolverInterfaceImpl must instantiate an object
+   * of this class. The object has to be configured by one of the configure
+   * methods before it has a reasonable state and can be used.
+   *
+   * Use the parameter communicator to specify a custom global MPI communicator.
+   * Pass a null pointer to signal preCICE to use MPI_COMM_WORLD.
+   *
+   * @copydetails SolverInterface::SolverInterface(const std::string&, const std::string&, int, int, void*)
    */
   SolverInterfaceImpl(
       std::string        participantName,
