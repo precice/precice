@@ -63,7 +63,7 @@ void ExportXML::writeMasterFile(
   outfile = outfile / fs::path(name + getMasterExtension());
   std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outMasterFile, "{} export failed to open master file \"{}\"", getVTKFormat(), outfile);
+  PRECICE_CHECK(outMasterFile, "{} export failed to open primary file \"{}\"", getVTKFormat(), outfile);
 
   const auto formatType = getVTKFormat();
   outMasterFile << "<?xml version=\"1.0\"?>\n";

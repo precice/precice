@@ -102,7 +102,7 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
       }
     }
 
-    // Send data to other master
+    // Send data to other primary
     _com->send(globalItemsToSend, 0);
   }
 }
@@ -113,7 +113,7 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
 
   std::vector<double> globalItemsToReceive;
 
-  // Receive data at master
+  // Receive data at primary
   if (not utils::MasterSlave::isSlave()) {
     int globalSize = _mesh->getGlobalNumberOfVertices() * valueDimension;
     PRECICE_DEBUG("Global Size = {}", globalSize);

@@ -19,7 +19,7 @@ class Mesh;
 
 namespace m2n {
 
-// Forward declaration to friend unit tests which only use the master com
+// Forward declaration to friend unit tests which only use the primary com
 struct WhiteboxAccessor;
 
 /**
@@ -30,7 +30,7 @@ struct WhiteboxAccessor;
  */
 class M2N {
 public:
-  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false, bool useTwoLevelInit = false);
+  M2N(com::PtrCommunication primaryCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false, bool useTwoLevelInit = false);
 
   /// Destructor, empty.
   ~M2N();
@@ -100,7 +100,7 @@ public:
    * @brief prepares to establish the connections
    *
    * This should be called before calling the accept and request methods.
-   * Calling this function forwards the call to the configured master communication.
+   * Calling this function forwards the call to the configured primary communication.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
@@ -115,7 +115,7 @@ public:
    * @brief cleans-up to establish the connections
    *
    * This should be called after calling the accept and request methods.
-   * Calling this function forwards the call to the configured master communication.
+   * Calling this function forwards the call to the configured primary communication.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
@@ -140,7 +140,7 @@ public:
   /// Disconnects all connections of the DistributedCommunication
   void closeDistributedConnections();
 
-  /// Get the basic communication between the 2 masters.
+  /// Get the basic communication between the 2 primarys.
   com::PtrCommunication getMasterCommunication();
 
   /// Creates a new distributes communication for that mesh, stores the pointer in _distComs
@@ -152,13 +152,13 @@ public:
             int                         valueDimension);
 
   /**
-   * @brief The master sends a bool to the other master, for performance reasons, we
+   * @brief The primary sends a bool to the other primary, for performance reasons, we
    * neglect the gathering and checking step.
    */
   void send(bool itemToSend);
 
   /**
-   * @brief The master sends a double to the other master, for performance reasons, we
+   * @brief The primary sends a double to the other primary, for performance reasons, we
    * neglect the gathering and checking step.
    */
   void send(double itemToSend);
@@ -206,7 +206,7 @@ private:
   /// mesh::getID() -> Pointer to distributed communication
   std::map<int, DistributedCommunication::SharedPointer> _distComs;
 
-  com::PtrCommunication _masterCom;
+  com::PtrCommunication _primaryCom;
 
   DistributedComFactory::SharedPointer _distrFactory;
 
@@ -222,7 +222,7 @@ private:
   // This flag gives a loophole. It is set to false for normal use and modified in the
   // respective tests through a friend declaration.
 
-  /// between two serial participants, only use the master-master com and no slaves-slaves com
+  /// between two serial participants, only use the primary-primary com and no slaves-slaves com
   bool _useOnlyMasterCom = false;
 
   /// use the two-level initialization concept

@@ -19,20 +19,20 @@ void Communication::connectMasterSlaves(std::string const &participantName,
   if (size == 1)
     return;
 
-  std::string masterName = participantName + "Master";
+  std::string primaryName = participantName + "Master";
   std::string slaveName  = participantName + "Slave";
 
   constexpr Rank rankOffset = 1;
   int            slavesSize = size - rankOffset;
   if (rank == 0) {
     PRECICE_INFO("Connecting Master to {} Slaves", slavesSize);
-    prepareEstablishment(masterName, slaveName);
-    acceptConnection(masterName, slaveName, tag, rank, rankOffset);
-    cleanupEstablishment(masterName, slaveName);
+    prepareEstablishment(primaryName, slaveName);
+    acceptConnection(primaryName, slaveName, tag, rank, rankOffset);
+    cleanupEstablishment(primaryName, slaveName);
   } else {
     int slaveRank = rank - rankOffset;
     PRECICE_INFO("Connecting Slave #{} to Master", slaveRank);
-    requestConnection(masterName, slaveName, tag, slaveRank, slavesSize);
+    requestConnection(primaryName, slaveName, tag, slaveRank, slavesSize);
   }
 }
 
@@ -116,7 +116,7 @@ void Communication::allreduceSum(precice::span<double const> itemsToSend, precic
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
   reduceSum(itemsToSend, itemsToReceive, rankMaster);
-  // receive reduced data from master
+  // receive reduced data from primary
   receive(itemsToReceive, rankMaster + _rankOffset);
 }
 
@@ -148,7 +148,7 @@ void Communication::allreduceSum(double itemToSend, double &itemsToReceive, Rank
 
   auto request = aSend(itemToSend, rankMaster);
   request->wait();
-  // receive reduced data from master
+  // receive reduced data from primary
   receive(itemsToReceive, rankMaster + _rankOffset);
 }
 
@@ -180,7 +180,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive, Rank rankMa
 
   auto request = aSend(itemToSend, rankMaster);
   request->wait();
-  // receive reduced data from master
+  // receive reduced data from primary
   receive(itemToReceive, rankMaster + _rankOffset);
 }
 

@@ -621,10 +621,10 @@ private:
   impl::PtrParticipant determineAccessingParticipant(
       const config::SolverInterfaceConfiguration &config);
 
-  /// Initializes communication between master and slaves.
+  /// Initializes communication between primary and slaves.
   void initializeMasterSlaveCommunication();
 
-  /// Syncs the timestep between slaves and master (all timesteps should be the same!)
+  /// Syncs the timestep between slaves and primary (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
 
   /// Which channels to close in closeCommunicationChannels()
@@ -633,7 +633,7 @@ private:
     Distributed = true
   };
 
-  /// Syncs the masters of all connected participants
+  /// Syncs the primarys of all connected participants
   void closeCommunicationChannels(CloseChannels cc);
 
   /// To allow white box tests.

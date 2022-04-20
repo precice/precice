@@ -158,11 +158,11 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "If a mesh is received from another partipant (see tag <from>), it needs to be"
                                "decomposed at the receiving participant. To speed up this process, "
                                "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. "
-                               "Two different variants are implemented: a filter \"on-master\" strategy, "
+                               "Two different variants are implemented: a filter \"on-primary\" strategy, "
                                "which is beneficial for a huge mesh and a low number of processors, and a filter "
                                "\"on-slaves\" strategy, which performs better for a very high number of "
                                "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
-                               "\"on-master\" is not supported if you use two-level initialization. "
+                               "\"on-primary\" is not supported if you use two-level initialization. "
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
                            .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER})
                            .setDefaultValue(VALUE_FILTER_ON_SLAVES);
@@ -188,10 +188,10 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagUseMesh.addAttribute(attrProvide);
   tag.addSubtag(tagUseMesh);
 
-  std::list<XMLTag>  masterTags;
-  XMLTag::Occurrence masterOcc = XMLTag::OCCUR_NOT_OR_ONCE;
+  std::list<XMLTag>  primaryTags;
+  XMLTag::Occurrence primaryOcc = XMLTag::OCCUR_NOT_OR_ONCE;
   {
-    XMLTag tagMaster(*this, "sockets", masterOcc, TAG_MASTER);
+    XMLTag tagMaster(*this, "sockets", primaryOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use TCP/IP sockets instead.";
@@ -219,10 +219,10 @@ ParticipantConfiguration::ParticipantConfiguration(
                                          "directory of startup is chosen.");
     tagMaster.addAttribute(attrExchangeDirectory);
 
-    masterTags.push_back(tagMaster);
+    primaryTags.push_back(tagMaster);
   }
   {
-    XMLTag tagMaster(*this, "mpi", masterOcc, TAG_MASTER);
+    XMLTag tagMaster(*this, "mpi", primaryOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use MPI with separated communication spaces instead instead.";
@@ -234,18 +234,18 @@ ParticipantConfiguration::ParticipantConfiguration(
                                          "directory of startup is chosen.");
     tagMaster.addAttribute(attrExchangeDirectory);
 
-    masterTags.push_back(tagMaster);
+    primaryTags.push_back(tagMaster);
   }
   {
-    XMLTag tagMaster(*this, "mpi-single", masterOcc, TAG_MASTER);
+    XMLTag tagMaster(*this, "mpi-single", primaryOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
     doc += "This tag is only used to ensure backwards compatibility.";
     tagMaster.setDocumentation(doc);
 
-    masterTags.push_back(tagMaster);
+    primaryTags.push_back(tagMaster);
   }
-  for (XMLTag &tagMaster : masterTags) {
+  for (XMLTag &tagMaster : primaryTags) {
     tag.addSubtag(tagMaster);
   }
 
@@ -614,11 +614,11 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
   _watchIntegralConfigs.clear();
 
-  // create default master communication if needed
+  // create default primary communication if needed
   if (context.size > 1 && not _isMasterDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
-    PRECICE_ERROR("Implicit master communications for parallel participants are only available if preCICE was built with MPI. "
-                  "Either explicitly define a master communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
+    PRECICE_ERROR("Implicit primary communications for parallel participants are only available if preCICE was built with MPI. "
+                  "Either explicitly define a primary communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com::PtrCommunication com              = std::make_shared<com::MPIDirectCommunication>();
     utils::MasterSlave::getCommunication() = com;

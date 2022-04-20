@@ -13,7 +13,7 @@ namespace m2n {
 
 /**
  * @brief Implements DistributedCommunication by using a gathering/scattering methodology.
- * Arrays of data are always gathered and scattered at the master. No direct communication
+ * Arrays of data are always gathered and scattered at the primary. No direct communication
  * between slaves is used.
  * For more details see m2n/DistributedCommunication.hpp
  */
@@ -111,7 +111,7 @@ public:
 private:
   logging::Logger _log{"m2n::GatherScatterCommunication"};
 
-  /// master to master basic communication
+  /// primary to primary basic communication
   com::PtrCommunication _com;
 
   /// Global communication is set up or not

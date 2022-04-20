@@ -92,8 +92,8 @@ public:
    * Establishes a 1-to-N communication, whereas the acceptor's side is the "1". Contrary to
    * acceptConnectionAsServer(), the other side needs to be a proper communicator with ranks
    * from 0 to N-1. It is not necessary to know this "N" a-priori on the acceptor's side.
-   * This communication is used for the 1:1 communication between two master ranks
-   * and for the master-slave communication. For the last case, setRankOffset() has to be set.
+   * This communication is used for the 1:1 communication between two primary ranks
+   * and for the primary-slave communication. For the last case, setRankOffset() has to be set.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
@@ -133,8 +133,8 @@ public:
    * Establishes a 1-to-N communication, whereas the requestor's side is the "N". Contrary to
    * requestConnectionAsClient(), this side needs to be a proper communicator with ranks
    * from 0 to N-1. All ranks need to call this function.
-   * This communication is used for the 1:1 communication between two master ranks,
-   * and for the master-slave communication.
+   * This communication is used for the 1:1 communication between two primary ranks,
+   * and for the primary-slave communication.
    *
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
@@ -213,7 +213,7 @@ public:
 
   /// Performs a reduce summation on the rank given by rankMaster
   virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster);
-  /// Performs a reduce summation on the master, every other rank has to call reduceSum
+  /// Performs a reduce summation on the primary, every other rank has to call reduceSum
   virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
   virtual void reduceSum(int itemToSend, int &itemToReceive, Rank rankMaster);
@@ -361,7 +361,7 @@ public:
   }
 
 protected:
-  /// Rank offset for masters-slave communication, since ranks are from 0 to size-2
+  /// Rank offset for primarys-slave communication, since ranks are from 0 to size-2
   int _rankOffset = 0;
 
   bool _isConnected = false;

@@ -400,7 +400,7 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
     c.broadcastReceiveAllMesh();
 
     if (context.isMaster()) {
-      // This rank should receive the mesh from rank 0 (fluid master)
+      // This rank should receive the mesh from rank 0 (fluid primary)
       BOOST_TEST(mesh->vertices().size() == 2);
       BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 5.50);
       BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);

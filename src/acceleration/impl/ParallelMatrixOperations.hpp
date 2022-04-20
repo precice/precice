@@ -42,11 +42,11 @@ public:
     PRECICE_ASSERT(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
     PRECICE_ASSERT(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
-    // if serial computation on single processor, i.e, no master-slave mode
+    // if serial computation on single processor, i.e, no primary-slave mode
     if (!utils::MasterSlave::isParallel()) {
       result.noalias() = leftMatrix * rightMatrix;
 
-      // if parallel computation on p processors, i.e., master-slave mode
+      // if parallel computation on p processors, i.e., primary-slave mode
     } else {
       PRECICE_ASSERT(utils::MasterSlave::getCommunication() != NULL);
       PRECICE_ASSERT(utils::MasterSlave::getCommunication()->isConnected());
@@ -102,7 +102,7 @@ public:
     Eigen::MatrixXd localResult(result.rows(), result.cols());
     localResult.noalias() = leftMatrix * rightMatrix;
 
-    // if serial computation on single processor, i.e, no master-slave mode
+    // if serial computation on single processor, i.e, no primary-slave mode
     if (!utils::MasterSlave::isParallel()) {
       result = localResult;
     } else {
@@ -278,8 +278,8 @@ private:
     // Note: if procs have no vertices, the block size remains (n_global x m), however,
     // 	     it must be initialized with zeros, so zeros are added for those procs)
 
-    // sum up blocks in master, reduce
-    Eigen::MatrixXd summarizedBlocks = Eigen::MatrixXd::Zero(p, r); /// @todo: only master should allocate memory.
+    // sum up blocks in primary, reduce
+    Eigen::MatrixXd summarizedBlocks = Eigen::MatrixXd::Zero(p, r); /// @todo: only primary should allocate memory.
     utils::MasterSlave::reduceSum(block, summarizedBlocks);
 
     // slaves wait to receive their local result
@@ -288,7 +288,7 @@ private:
         utils::MasterSlave::getCommunication()->receive(result, 0);
     }
 
-    // master distributes the sub blocks of the results
+    // primary distributes the sub blocks of the results
     if (utils::MasterSlave::isMaster()) {
       // distribute blocks of summarizedBlocks (result of multiplication) to corresponding slaves
       result = summarizedBlocks.block(0, 0, offsets[1], r);

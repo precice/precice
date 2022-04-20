@@ -193,14 +193,14 @@ void TestContext::initializeMasterSlave()
     return;
 
 #ifndef PRECICE_NO_MPI
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  precice::com::PtrCommunication primarySlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
 #else
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
+  precice::com::PtrCommunication primarySlaveCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
 #endif
 
-  masterSlaveCom->connectMasterSlaves(name, "", rank, size);
+  primarySlaveCom->connectMasterSlaves(name, "", rank, size);
 
-  utils::MasterSlave::getCommunication() = std::move(masterSlaveCom);
+  utils::MasterSlave::getCommunication() = std::move(primarySlaveCom);
 }
 
 void TestContext::initializeEvents()

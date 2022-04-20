@@ -311,7 +311,7 @@ void Parallel::splitCommunicator(const std::string &groupName)
 
     // Step 3 send AccessorGroups to Slaves
     for (const AccessorGroup &group : accessorGroups) {
-      // @TODO can we use broadcast as the master sends this to everyone else?
+      // @TODO can we use broadcast as the primary sends this to everyone else?
       for (int i = 1; i < size; i++) {
         com.send(group.name, i);
         com.send(group.leaderRank, i);

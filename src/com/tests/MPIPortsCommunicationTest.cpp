@@ -18,21 +18,21 @@ BOOST_AUTO_TEST_SUITE(MPIPorts,
 BOOST_AUTO_TEST_CASE(SendAndReceiveMM)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  using namespace precice::testing::com::mastermaster;
+  using namespace precice::testing::com::primaryprimary;
   TestSendAndReceive<MPIPortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(SendAndReceiveMS)
 {
   PRECICE_TEST(2_ranks, Require::Events);
-  using namespace precice::testing::com::masterslave;
+  using namespace precice::testing::com::primaryslave;
   TestSendAndReceive<MPIPortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcessesMM)
 {
   PRECICE_TEST("A"_on(2_ranks), "B"_on(2_ranks), Require::Events);
-  using namespace precice::testing::com::mastermaster;
+  using namespace precice::testing::com::primaryprimary;
   TestSendReceiveFourProcesses<MPIPortsCommunication>(context);
 }
 

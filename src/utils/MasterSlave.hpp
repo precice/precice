@@ -18,7 +18,7 @@ namespace utils {
 /// Utility class for managing Master-Slave operations.
 class MasterSlave {
 public:
-  /// Configures the master-slave communication.
+  /// Configures the primary-slave communication.
   static void configure(Rank rank, int size);
 
   /// Current rank
@@ -27,7 +27,7 @@ public:
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int getSize();
 
-  /// Communication between the master and all slaves.
+  /// Communication between the primary and all slaves.
   static com::PtrCommunication &getCommunication()
   {
     return _communication;
@@ -45,7 +45,7 @@ public:
     return boost::irange(0, _size);
   }
 
-  /// True if this process is running the master.
+  /// True if this process is running the primary.
   static bool isMaster();
 
   /// True if this process is running a slave.
@@ -89,13 +89,13 @@ private:
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int _size;
 
-  /// True if this process is running the master.
+  /// True if this process is running the primary.
   static bool _isMaster;
 
   /// True if this process is running a slave.
   static bool _isSlave;
 
-  /// Communication between the master and all slaves.
+  /// Communication between the primary and all slaves.
   static com::PtrCommunication _communication;
 };
 

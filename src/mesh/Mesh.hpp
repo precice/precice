@@ -256,7 +256,7 @@ private:
   DataContainer _data;
 
   /**
-   * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
+   * @brief Vertex distribution for the primary, holding for each slave all vertex IDs it owns.
    *
    * For slaves, this data structure is empty and should not be used.
    */

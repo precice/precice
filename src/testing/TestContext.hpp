@@ -51,7 +51,7 @@ struct Participant {
   /// the amount of ranks this participant runs on
   int size = 1;
 
-  /// whether to initialize a master-slave communication for this participant
+  /// whether to initialize a primary-slave communication for this participant
   bool initMS = false;
 
   /// Constructs a serial participant with a given name
@@ -72,7 +72,7 @@ struct Participant {
     return *this;
   }
 
-  /** Marks that this Participant should initialize a master-slave connection.
+  /** Marks that this Participant should initialize a primary-slave connection.
    *
    * @returns A reference to the Participant allowing for chaining.
    */
@@ -145,7 +145,7 @@ struct ConnectionOptions {
  * 1. making sure that there are enough ranks to run the test on.
  * 2. restricting and splitting the MPI Communicator.
  * 3. handling invalid contexts (such as unneeded ranks)
- * 4. initializing the master-slave communication if requested. initializeMasterSlave()
+ * 4. initializing the primary-slave communication if requested. initializeMasterSlave()
  * 5. handling further requirements @see Require
  * 6. providing a usable context during the test isNamed(), isMaster(), isRank()
  * 7. cleaning up after the test case
@@ -175,7 +175,7 @@ public:
   /** Create a context representing an unnamed Participant running on a given count of Ranks
    *
    * @note You need to construct a Participant if you require initializing
-   * a master-slave connection `"Serial"_on(3_ranks).setupMasterSlaves()`
+   * a primary-slave connection `"Serial"_on(3_ranks).setupMasterSlaves()`
    *
    * @attention This call synchronizes all ranks
    *
@@ -191,7 +191,7 @@ public:
   /** Create a context representing an unnamed Participant running on a given count of Ranks and some requirements
    *
    * @note You need to construct a Participant if you require initializing
-   * a master-slave connection `"Serial"_on(3_ranks).setupMasterSlaves()`
+   * a primary-slave connection `"Serial"_on(3_ranks).setupMasterSlaves()`
    *
    * @attention This call synchronizes all ranks
    *
@@ -254,12 +254,12 @@ public:
   /// Check wheater this context has a given rank inside the Participant
   bool isRank(Rank rank) const;
 
-  /** Check wheater this context is the master of a Participants
+  /** Check wheater this context is the primary of a Participants
    * @note This is equivalent to `isRank(0)`
    */
   bool isMaster() const;
 
-  /** Creates a M2N and establishes a master-master connection between participants
+  /** Creates a M2N and establishes a primary-primary connection between participants
    * @param[in] acceptor the accepting participant
    * @param[in] requestor the requesting participant
    * @param[in] options a set of options concerning the created connection
@@ -283,7 +283,7 @@ private:
   /// wheater this Context was created with a Ranks constructor
   bool _simple = false;
 
-  /// wheater to initialize a master-slave connection
+  /// wheater to initialize a primary-slave connection
   bool _initMS = false;
 
   /// the MPI communicator of the context

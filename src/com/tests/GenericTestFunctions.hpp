@@ -16,7 +16,7 @@ namespace precice {
 namespace testing {
 namespace com {
 
-namespace mastermaster {
+namespace primaryprimary {
 
 ///
 /// Tests for Master-Master Connections
@@ -414,9 +414,9 @@ void TestSendAndReceive(TestContext const &context)
   TestReduceVectors<T>(context);
 }
 
-} // namespace mastermaster
+} // namespace primaryprimary
 
-namespace masterslave {
+namespace primaryslave {
 
 ///
 /// Tests for Master-Slave Connections
@@ -771,7 +771,7 @@ void TestSendAndReceive(TestContext const &context)
   TestReduceVectors<T>(context);
 }
 
-} // namespace masterslave
+} // namespace primaryslave
 
 namespace serverclient {
 

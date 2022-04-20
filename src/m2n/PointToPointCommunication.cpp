@@ -316,9 +316,9 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
   if (not utils::MasterSlave::isSlave()) {
-    PRECICE_DEBUG("Exchange vertex distribution between both masters");
+    PRECICE_DEBUG("Exchange vertex distribution between both primarys");
     Event e0("m2n.exchangeVertexDistribution");
-    // Establish connection between participants' master processes.
+    // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
 
     c->acceptConnection(acceptorName, requesterName, "TMP-MASTERCOM-" + _mesh->getName(), utils::MasterSlave::getRank());
@@ -440,9 +440,9 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
   if (not utils::MasterSlave::isSlave()) {
-    PRECICE_DEBUG("Exchange vertex distribution between both masters");
+    PRECICE_DEBUG("Exchange vertex distribution between both primarys");
     Event e0("m2n.exchangeVertexDistribution");
-    // Establish connection between participants' master processes.
+    // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
     c->requestConnection(acceptorName, requesterName,
                          "TMP-MASTERCOM-" + _mesh->getName(),

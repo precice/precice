@@ -81,16 +81,16 @@ BOOST_AUTO_TEST_CASE(TwoProcTests)
 }
 
 #ifndef PRECICE_NO_MPI
-/// Test that requires 4 processors and a master communication
+/// Test that requires 4 processors and a primary communication
 /*
- * For some master tests, you might need a master communication. This example shows how to set one up.
+ * For some primary tests, you might need a primary communication. This example shows how to set one up.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
 BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication)
 {
   // The short syntax won't work here. You have to name the context
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())
-  // In this test you can use a master communication, here is an example how:
+  // In this test you can use a primary communication, here is an example how:
   BOOST_TEST(context.hasSize(4));
   BOOST_TEST(utils::MasterSlave::getCommunication()->isConnected());
 }
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(NamedContexts)
 
 /// Tests that requires an m2n communication
 /*
- * For some master tests, you might need an m2n communication (e.g. partition or cplscheme).
+ * For some primary tests, you might need an m2n communication (e.g. partition or cplscheme).
  * This example shows how to set up one. Call .connectMaster() on the context and pass the participants to be connected.
  * M2N requires Events, thus you also need to list it as a requirement using Require::Events.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).

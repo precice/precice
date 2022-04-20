@@ -208,11 +208,11 @@ void SolverInterfaceImpl::configure(
   _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useMaster(),
-                 "A parallel participant needs a master communication");
+                 "A parallel participant needs a primary communication");
   PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useMaster()),
-                "You cannot use a master communication with a serial participant. "
-                "If you do not know exactly what a master communication is and why you want to use it "
-                "you probably just want to remove the master tag from the preCICE configuration.");
+                "You cannot use a primary communication with a serial participant. "
+                "If you do not know exactly what a primary communication is and why you want to use it "
+                "you probably just want to remove the primary tag from the preCICE configuration.");
 
   utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
@@ -237,7 +237,7 @@ void SolverInterfaceImpl::configure(
 
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
 
-  PRECICE_DEBUG("Initialize master-slave communication");
+  PRECICE_DEBUG("Initialize primary-secondary communication");
   if (utils::MasterSlave::isParallel()) {
     initializeMasterSlaveCommunication();
   }
@@ -259,17 +259,17 @@ double SolverInterfaceImpl::initialize()
 
   // Setup communication
 
-  PRECICE_INFO("Setting up master communication to coupling partner/s");
+  PRECICE_INFO("Setting up primary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n       = m2nPair.second;
     bool  requesting = bm2n.isRequesting;
     if (bm2n.m2n->isConnected()) {
       PRECICE_DEBUG("Master connection {} {} already connected.", (requesting ? "from" : "to"), bm2n.remoteName);
     } else {
-      PRECICE_DEBUG((requesting ? "Awaiting master connection from {}" : "Establishing master connection to {}"), bm2n.remoteName);
+      PRECICE_DEBUG((requesting ? "Awaiting primary connection from {}" : "Establishing primary connection to {}"), bm2n.remoteName);
       bm2n.prepareEstablishment();
       bm2n.connectMasters();
-      PRECICE_DEBUG("Established master connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
+      PRECICE_DEBUG("Established primary connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
     }
   }
 
@@ -277,7 +277,7 @@ double SolverInterfaceImpl::initialize()
 
   compareBoundingBoxes();
 
-  PRECICE_INFO("Setting up preliminary slaves communication to coupling partner/s");
+  PRECICE_INFO("Setting up preliminary secondarys communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
     bm2n.preConnectSlaves();
@@ -285,11 +285,11 @@ double SolverInterfaceImpl::initialize()
 
   computePartitions();
 
-  PRECICE_INFO("Setting up slaves communication to coupling partner/s");
+  PRECICE_INFO("Setting up secondarys communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
     bm2n.connectSlaves();
-    PRECICE_DEBUG("Established slaves connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
+    PRECICE_DEBUG("Established secondarys connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
   }
   PRECICE_INFO("Slaves are connected");
 
@@ -490,7 +490,7 @@ void SolverInterfaceImpl::finalize()
   _accessor.reset();
 
   // Close Connections
-  PRECICE_DEBUG("Close master-slave communication");
+  PRECICE_DEBUG("Close primary-secondary communication");
   if (utils::MasterSlave::isParallel()) {
     utils::MasterSlave::getCommunication()->closeConnection();
     utils::MasterSlave::getCommunication() = nullptr;

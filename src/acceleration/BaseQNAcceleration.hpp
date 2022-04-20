@@ -133,10 +133,10 @@ public:
 
   /** @brief: computes number of cols in least squares system, i.e, number of cols in
     *  _matrixV, _matrixW, _qrV, etc..
-    *	 This is necessary only for master-slave mode, when some procs do not have
+    *	 This is necessary only for primary-slave mode, when some procs do not have
     *	 any nodes on the coupling interface. In this case, the matrices are not
     *  constructed and we have no information about the number of cols. This info
-    *  is needed for master-slave communication. Number of its =! _cols in general.
+    *  is needed for primary-slave communication. Number of its =! _cols in general.
     */
   virtual int getLSSystemCols() const;
 
@@ -170,7 +170,7 @@ protected:
   bool _firstTimeWindow = true;
 
   /*
-    * @brief If in master-slave mode: True if this process has nodes at the coupling interface
+    * @brief If in primary-slave mode: True if this process has nodes at the coupling interface
     */
   bool _hasNodesOnInterface = true;
 
@@ -225,7 +225,7 @@ protected:
     */
   std::deque<int> _matrixCols;
 
-  /** @brief only needed for the parallel master-slave mode. stores the local dimensions,
+  /** @brief only needed for the parallel primary-slave mode. stores the local dimensions,
     *  i.e., the offsets in _invJacobian for all processors
     */
   std::vector<int> _dimOffsets;
