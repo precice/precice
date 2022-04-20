@@ -26,9 +26,9 @@ BOOST_AUTO_TEST_CASE(SerialConfig)
     BOOST_TEST(ranks.front() == 0);
   }
 
-  { // slaves
-    auto slaves = utils::MasterSlave::allSlaves();
-    BOOST_TEST((slaves.begin() == slaves.end()));
+  { // secondarys
+    auto secondarys = utils::MasterSlave::allSlaves();
+    BOOST_TEST((secondarys.begin() == secondarys.end()));
   }
 
   BOOST_TEST(!static_cast<bool>(utils::MasterSlave::getCommunication()));
@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(ParallelConfig)
     BOOST_TEST(ranks == expected, boost::test_tools::per_element());
   }
 
-  { // slaves
-    auto             slaves = utils::MasterSlave::allSlaves();
-    std::vector<int> ranks(slaves.begin(), slaves.end());
+  { // secondarys
+    auto             secondarys = utils::MasterSlave::allSlaves();
+    std::vector<int> ranks(secondarys.begin(), secondarys.end());
     std::vector<int> expected{1, 2};
     BOOST_TEST(ranks == expected, boost::test_tools::per_element());
   }

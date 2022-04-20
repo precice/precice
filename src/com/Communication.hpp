@@ -93,7 +93,7 @@ public:
    * acceptConnectionAsServer(), the other side needs to be a proper communicator with ranks
    * from 0 to N-1. It is not necessary to know this "N" a-priori on the acceptor's side.
    * This communication is used for the 1:1 communication between two primary ranks
-   * and for the primary-slave communication. For the last case, setRankOffset() has to be set.
+   * and for the primary-secondary communication. For the last case, setRankOffset() has to be set.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
@@ -134,7 +134,7 @@ public:
    * requestConnectionAsClient(), this side needs to be a proper communicator with ranks
    * from 0 to N-1. All ranks need to call this function.
    * This communication is used for the 1:1 communication between two primary ranks,
-   * and for the primary-slave communication.
+   * and for the primary-secondary communication.
    *
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
@@ -361,7 +361,7 @@ public:
   }
 
 protected:
-  /// Rank offset for primarys-slave communication, since ranks are from 0 to size-2
+  /// Rank offset for primarys-secondary communication, since ranks are from 0 to size-2
   int _rankOffset = 0;
 
   bool _isConnected = false;

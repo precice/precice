@@ -93,7 +93,7 @@ private:
   const std::string ATTR_EXCHANGE_DIRECTORY = "exchange-directory";
   const std::string ATTR_SCALE_WITH_CONN    = "scale-with-connectivity";
 
-  const std::string VALUE_FILTER_ON_SLAVES = "on-slaves";
+  const std::string VALUE_FILTER_ON_SLAVES = "on-secondarys";
   const std::string VALUE_FILTER_ON_MASTER = "on-primary";
   const std::string VALUE_NO_FILTER        = "no-filter";
 

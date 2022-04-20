@@ -137,7 +137,7 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
   // Calculate QR decomposition of matrix V and solve Rc = -Qr
   Eigen::VectorXd c;
 
-  // for primary-slave mode and procs with no vertices,
+  // for primary-secondary mode and procs with no vertices,
   // qrV.cols() = getLSSystemCols() and _qrV.rows() = 0
   auto Q = _qrV.matrixQ();
   auto R = _qrV.matrixR();
@@ -188,7 +188,7 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
       c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
     }
 
-    // broadcast coefficients c to all slaves
+    // broadcast coefficients c to all secondarys
     utils::MasterSlave::broadcast(c);
   }
 

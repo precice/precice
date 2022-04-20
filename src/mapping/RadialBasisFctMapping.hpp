@@ -175,13 +175,13 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
       // Receive mesh
       for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-        mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-        com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(slaveInMesh, rankSlave);
-        globalInMesh.addMesh(slaveInMesh);
+        mesh::Mesh secondaryInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+        com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(secondaryInMesh, rankSlave);
+        globalInMesh.addMesh(secondaryInMesh);
 
-        mesh::Mesh slaveOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-        com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(slaveOutMesh, rankSlave);
-        globalOutMesh.addMesh(slaveOutMesh);
+        mesh::Mesh secondaryOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+        com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(secondaryOutMesh, rankSlave);
+        globalOutMesh.addMesh(secondaryOutMesh);
       }
 
     } else { // Serial
@@ -295,14 +295,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     }
 
     {
-      std::vector<double> slaveBuffer;
-      int                 slaveOutputValueSize;
+      std::vector<double> secondaryBuffer;
+      int                 secondaryOutputValueSize;
       for (Rank rank : utils::MasterSlave::allSlaves()) {
-        utils::MasterSlave::getCommunication()->receive(slaveBuffer, rank);
-        globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
+        utils::MasterSlave::getCommunication()->receive(secondaryBuffer, rank);
+        globalInValues.insert(globalInValues.end(), secondaryBuffer.begin(), secondaryBuffer.end());
 
-        utils::MasterSlave::getCommunication()->receive(slaveOutputValueSize, rank);
-        outputValueSizes.push_back(slaveOutputValueSize);
+        utils::MasterSlave::getCommunication()->receive(secondaryOutputValueSize, rank);
+        outputValueSizes.push_back(secondaryOutputValueSize);
       }
     }
 
@@ -331,7 +331,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       }
     }
 
-    // Data scattering to slaves
+    // Data scattering to secondarys
     if (utils::MasterSlave::isMaster()) {
 
       // Filter data
@@ -345,7 +345,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
         }
       }
 
-      // Data scattering to slaves
+      // Data scattering to secondarys
       int beginPoint = outputValueSizes.at(0);
       for (Rank rank : utils::MasterSlave::allSlaves()) {
         precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outputValueSizes.at(rank))};
@@ -405,17 +405,17 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
       outValuesSize.push_back(output()->data(outputDataID)->values().size());
 
       int inputSizeCounter = localInData.size();
-      int slaveOutDataSize{0};
+      int secondaryOutDataSize{0};
 
-      std::vector<double> slaveBuffer;
+      std::vector<double> secondaryBuffer;
 
       for (Rank rank : utils::MasterSlave::allSlaves()) {
-        utils::MasterSlave::getCommunication()->receive(slaveBuffer, rank);
-        std::copy(slaveBuffer.begin(), slaveBuffer.end(), globalInValues.begin() + inputSizeCounter);
-        inputSizeCounter += slaveBuffer.size();
+        utils::MasterSlave::getCommunication()->receive(secondaryBuffer, rank);
+        std::copy(secondaryBuffer.begin(), secondaryBuffer.end(), globalInValues.begin() + inputSizeCounter);
+        inputSizeCounter += secondaryBuffer.size();
 
-        utils::MasterSlave::getCommunication()->receive(slaveOutDataSize, rank);
-        outValuesSize.push_back(slaveOutDataSize);
+        utils::MasterSlave::getCommunication()->receive(secondaryOutDataSize, rank);
+        outValuesSize.push_back(secondaryOutDataSize);
       }
 
     } else { // Serial case
@@ -453,7 +453,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
 
-    // Data scattering to slaves
+    // Data scattering to secondarys
     int beginPoint = outValuesSize.at(0);
 
     if (utils::MasterSlave::isMaster()) {

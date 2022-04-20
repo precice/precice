@@ -20,19 +20,19 @@ void Communication::connectMasterSlaves(std::string const &participantName,
     return;
 
   std::string primaryName = participantName + "Master";
-  std::string slaveName  = participantName + "Slave";
+  std::string secondaryName  = participantName + "Slave";
 
   constexpr Rank rankOffset = 1;
-  int            slavesSize = size - rankOffset;
+  int            secondarysSize = size - rankOffset;
   if (rank == 0) {
-    PRECICE_INFO("Connecting Master to {} Slaves", slavesSize);
-    prepareEstablishment(primaryName, slaveName);
-    acceptConnection(primaryName, slaveName, tag, rank, rankOffset);
-    cleanupEstablishment(primaryName, slaveName);
+    PRECICE_INFO("Connecting Master to {} Slaves", secondarysSize);
+    prepareEstablishment(primaryName, secondaryName);
+    acceptConnection(primaryName, secondaryName, tag, rank, rankOffset);
+    cleanupEstablishment(primaryName, secondaryName);
   } else {
-    int slaveRank = rank - rankOffset;
-    PRECICE_INFO("Connecting Slave #{} to Master", slaveRank);
-    requestConnection(primaryName, slaveName, tag, slaveRank, slavesSize);
+    int secondaryRank = rank - rankOffset;
+    PRECICE_INFO("Connecting Slave #{} to Master", secondaryRank);
+    requestConnection(primaryName, secondaryName, tag, secondaryRank, secondarysSize);
   }
 }
 
@@ -47,7 +47,7 @@ void Communication::reduceSum(precice::span<double const> itemsToSend, precice::
   std::copy(itemsToSend.begin(), itemsToSend.end(), itemsToReceive.begin());
 
   std::vector<double> received(itemsToReceive.size());
-  // receive local results from slaves
+  // receive local results from secondarys
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(received, rank + _rankOffset);
     request->wait();
@@ -72,7 +72,7 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive)
 
   itemToReceive = itemToSend;
 
-  // receive local results from slaves
+  // receive local results from secondarys
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
@@ -98,7 +98,7 @@ void Communication::allreduceSum(precice::span<double const> itemsToSend, precic
 
   reduceSum(itemsToSend, itemsToReceive);
 
-  // send reduced result to all slaves
+  // send reduced result to all secondarys
   std::vector<PtrRequest> requests;
   requests.reserve(getRemoteCommunicatorSize());
   for (Rank rank : remoteCommunicatorRanks()) {
@@ -126,14 +126,14 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
 
   itemToReceive = itemToSend;
 
-  // receive local results from slaves
+  // receive local results from secondarys
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
     itemToReceive += itemToSend;
   }
 
-  // send reduced result to all slaves
+  // send reduced result to all secondarys
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request   = aSend(itemToReceive, rank + _rankOffset);
@@ -158,14 +158,14 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
 
   itemToReceive = itemToSend;
 
-  // receive local results from slaves
+  // receive local results from secondarys
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request = aReceive(itemToSend, rank + _rankOffset);
     request->wait();
     itemToReceive += itemToSend;
   }
 
-  // send reduced result to all slaves
+  // send reduced result to all secondarys
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (Rank rank : remoteCommunicatorRanks()) {
     auto request   = aSend(itemToReceive, rank + _rankOffset);

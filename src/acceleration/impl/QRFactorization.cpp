@@ -545,7 +545,7 @@ int QRFactorization::orthogonalize_stable(
         }
         t = 2;
 
-        // ATTENTION: maybe in the following is something wrong in primary-slave mode
+        // ATTENTION: maybe in the following is something wrong in primary-secondary mode
 
         for (int i = 0; i < _rows; i++) {
           if (u(i) < t) {

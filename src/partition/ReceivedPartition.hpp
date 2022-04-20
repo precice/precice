@@ -19,7 +19,7 @@ namespace partition {
 /**
  * @brief A partition that is computed from a mesh received from another participant.
  *
- * A mesh is received by the primary rank and re-partitioned among all slave ranks.
+ * A mesh is received by the primary rank and re-partitioned among all secondary ranks.
  * Afterwards necessary distribution data structures are set up.
  */
 class ReceivedPartition : public Partition {
@@ -35,7 +35,7 @@ public:
     NO_FILTER,
     /// Filter at primary and communicate only filtered mesh.
     ON_MASTER,
-    /// Filter after communication on all slave ranks
+    /// Filter after communication on all secondary ranks
     ON_SLAVES
   };
 

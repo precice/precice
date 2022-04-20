@@ -256,13 +256,13 @@ private:
   DataContainer _data;
 
   /**
-   * @brief Vertex distribution for the primary, holding for each slave all vertex IDs it owns.
+   * @brief Vertex distribution for the primary, holding for each secondary all vertex IDs it owns.
    *
-   * For slaves, this data structure is empty and should not be used.
+   * For secondarys, this data structure is empty and should not be used.
    */
   VertexDistribution _vertexDistribution;
 
-  /// Holds the index of the last vertex for each slave.
+  /// Holds the index of the last vertex for each secondary.
   /**
    * The last entry holds the total number of vertices.
    * Needed for the matrix-matrix multiplication of the IMVJ acceleration.

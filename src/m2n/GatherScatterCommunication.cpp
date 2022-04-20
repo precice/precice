@@ -89,10 +89,10 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
       PRECICE_ASSERT(utils::MasterSlave::getCommunication() != nullptr);
       PRECICE_ASSERT(utils::MasterSlave::getCommunication()->isConnected());
 
-      int slaveSize = vertexDistribution[rankSlave].size() * valueDimension;
-      PRECICE_DEBUG("Slave Size = {}", slaveSize);
-      if (slaveSize > 0) {
-        std::vector<double> valuesSlave(slaveSize);
+      int secondarySize = vertexDistribution[rankSlave].size() * valueDimension;
+      PRECICE_DEBUG("Slave Size = {}", secondarySize);
+      if (secondarySize > 0) {
+        std::vector<double> valuesSlave(secondarySize);
         utils::MasterSlave::getCommunication()->receive(valuesSlave, rankSlave);
         for (size_t i = 0; i < vertexDistribution[rankSlave].size(); i++) {
           for (int j = 0; j < valueDimension; j++) {
@@ -144,10 +144,10 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
       PRECICE_ASSERT(utils::MasterSlave::getCommunication() != nullptr);
       PRECICE_ASSERT(utils::MasterSlave::getCommunication()->isConnected());
 
-      int slaveSize = vertexDistribution[rankSlave].size() * valueDimension;
-      PRECICE_DEBUG("Slave Size = {}", slaveSize);
-      if (slaveSize > 0) {
-        std::vector<double> valuesSlave(slaveSize);
+      int secondarySize = vertexDistribution[rankSlave].size() * valueDimension;
+      PRECICE_DEBUG("Slave Size = {}", secondarySize);
+      if (secondarySize > 0) {
+        std::vector<double> valuesSlave(secondarySize);
         for (size_t i = 0; i < vertexDistribution[rankSlave].size(); i++) {
           for (int j = 0; j < valueDimension; j++) {
             valuesSlave[i * valueDimension + j] = globalItemsToReceive[vertexDistribution[rankSlave][i] * valueDimension + j];

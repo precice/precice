@@ -92,7 +92,7 @@ void ProvidedPartition::communicate()
 
           for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
             com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(globalMesh, rankSlave);
-            PRECICE_DEBUG("Received sub-mesh, from slave: {}, global vertexCount: {}", rankSlave, globalMesh.vertices().size());
+            PRECICE_DEBUG("Received sub-mesh, from secondary: {}, global vertexCount: {}", rankSlave, globalMesh.vertices().size());
           }
         }
         if (utils::MasterSlave::isSlave()) {
@@ -135,7 +135,7 @@ void ProvidedPartition::prepare()
     _mesh->getVertexOffsets()[0] = numberOfVertices;
     int globalNumberOfVertices   = numberOfVertices;
 
-    // receive number of slave vertices and fill vertex offsets
+    // receive number of secondary vertices and fill vertex offsets
     for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       int numberOfSlaveVertices = -1;
       utils::MasterSlave::getCommunication()->receive(numberOfSlaveVertices, rankSlave);
@@ -162,10 +162,10 @@ void ProvidedPartition::prepare()
           localIds.push_back(i);
         }
         for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-          // This always creates an entry for each slave
-          auto &slaveIds = _mesh->getVertexDistribution()[rankSlave];
+          // This always creates an entry for each secondary
+          auto &secondaryIds = _mesh->getVertexDistribution()[rankSlave];
           for (int i = _mesh->getVertexOffsets()[rankSlave - 1]; i < _mesh->getVertexOffsets()[rankSlave]; i++) {
-            slaveIds.push_back(i);
+            secondaryIds.push_back(i);
           }
         }
         PRECICE_ASSERT(_mesh->getVertexDistribution().size() == static_cast<decltype(_mesh->getVertexDistribution().size())>(utils::MasterSlave::getSize()));
@@ -239,7 +239,7 @@ void ProvidedPartition::compareBoundingBoxes()
     return;
 
   // each rank sends its bb to primary
-  if (utils::MasterSlave::isSlave()) { //slave
+  if (utils::MasterSlave::isSlave()) { //secondary
     PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
     com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
@@ -253,7 +253,7 @@ void ProvidedPartition::compareBoundingBoxes()
     bbm.emplace(0, _mesh->getBoundingBox());
     PRECICE_ASSERT(!bbm.empty(), "The bounding box of the local mesh is invalid!");
 
-    // primary receives bbs from slaves and stores them in bbm
+    // primary receives bbs from secondarys and stores them in bbm
     for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       // initialize bbm
       bbm.emplace(rankSlave, bb);

@@ -195,7 +195,7 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, Rank rank)
     position << -0.75, -0.75, 0.5;
     pNastinMesh->createVertex(position);
   } else if (rank == 1) { //Slave1
-    // slave1 not at interface
+    // secondary1 not at interface
   } else if (rank == 2) { //Slave2
     Eigen::VectorXd position(dimensions);
     position << 0.0, 0.0, -1.0;

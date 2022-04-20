@@ -44,7 +44,7 @@ public:
       std::map<int, std::vector<int>> &fbm,
       int                              rankSender);
 
-  /// This method broadcasts the set of bounding boxes (gathered in the primary rank) to the slaves.
+  /// This method broadcasts the set of bounding boxes (gathered in the primary rank) to the secondarys.
   void broadcastSendBoundingBoxMap(
       mesh::Mesh::BoundingBoxMap &bbm);
 

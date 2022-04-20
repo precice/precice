@@ -152,7 +152,7 @@ public:
   // @brief optional file-stream for logging output
   void setfstream(std::fstream *stream);
 
-  // @brief set number of global rows for the primary-slave case
+  // @brief set number of global rows for the primary-secondary case
   void setGlobalRows(int gr);
 
   // @brief sets the filtering technique to maintain good conditioning of the least squares system

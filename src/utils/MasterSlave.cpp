@@ -80,7 +80,7 @@ double MasterSlave::l2norm(const Eigen::VectorXd &vec)
 
   // localSum is modified, do not use afterwards
   allreduceSum(localSum2, globalSum2);
-  /* old loop over all slaves solution
+  /* old loop over all secondarys solution
   if(_isSlave){
     _communication->send(localSum2, 0);
     _communication->receive(globalSum2, 0);
@@ -120,7 +120,7 @@ double MasterSlave::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2
   // localSum is modified, do not use afterwards
   allreduceSum(localSum, globalSum);
 
-  // old loop over all slaves solution
+  // old loop over all secondarys solution
   /*
   if(_isSlave){
     _communication->send(localSum, 0);
@@ -167,7 +167,7 @@ void MasterSlave::reduceSum(precice::span<const double> sendData, precice::span<
   }
 
   if (_isMaster) {
-    // receive local results from slaves, apply SUM
+    // receive local results from secondarys, apply SUM
     _communication->reduceSum(sendData, rcvData);
   }
 }
@@ -197,7 +197,7 @@ void MasterSlave::reduceSum(const int &sendData, int &rcvData)
   }
 
   if (_isMaster) {
-    // receive local results from slaves, apply SUM
+    // receive local results from secondarys, apply SUM
     _communication->reduceSum(sendData, rcvData);
   }
 }
@@ -220,7 +220,7 @@ void MasterSlave::allreduceSum(precice::span<const double> sendData, precice::sp
   }
 
   if (_isMaster) {
-    // receive local results from slaves, apply SUM, send reduced result to slaves
+    // receive local results from secondarys, apply SUM, send reduced result to secondarys
     _communication->allreduceSum(sendData, rcvData);
   }
 }
@@ -243,7 +243,7 @@ void MasterSlave::allreduceSum(double &sendData, double &rcvData)
   }
 
   if (_isMaster) {
-    // receive local results from slaves, apply SUM, send reduced result to slaves
+    // receive local results from secondarys, apply SUM, send reduced result to secondarys
     _communication->allreduceSum(sendData, rcvData);
   }
 }
@@ -266,7 +266,7 @@ void MasterSlave::allreduceSum(int &sendData, int &rcvData)
   }
 
   if (_isMaster) {
-    // receive local results from slaves, apply SUM, send reduced result to slaves
+    // receive local results from secondarys, apply SUM, send reduced result to secondarys
     _communication->allreduceSum(sendData, rcvData);
   }
 }

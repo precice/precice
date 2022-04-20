@@ -407,7 +407,7 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
       BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.0);
       BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 2.0);
     } else {
-      // This rank should receive the mesh from rank 1 (fluid slave)
+      // This rank should receive the mesh from rank 1 (fluid secondary)
       BOOST_TEST(mesh->vertices().size() == 2);
       BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 1.50);
       BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
