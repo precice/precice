@@ -164,8 +164,8 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
                                "\"on-master\" is not supported if you use two-level initialization. "
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
-                           .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER})
-                           .setDefaultValue(VALUE_FILTER_ON_SLAVES);
+                           .setOptions({VALUE_FILTER_ON_PRIMARY, VALUE_FILTER_ON_SECONDARIES, VALUE_NO_FILTER})
+                           .setDefaultValue(VALUE_FILTER_ON_SECONDARIES);
   tagUseMesh.addAttribute(attrGeoFilter);
 
   auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
@@ -191,7 +191,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   std::list<XMLTag>  masterTags;
   XMLTag::Occurrence masterOcc = XMLTag::OCCUR_NOT_OR_ONCE;
   {
-    XMLTag tagPrimary(*this, "sockets", masterOcc, TAG_MASTER);
+    XMLTag tagPrimary(*this, "sockets", masterOcc, TAG_PRIMARY);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use TCP/IP sockets instead.";
@@ -222,7 +222,7 @@ ParticipantConfiguration::ParticipantConfiguration(
     masterTags.push_back(tagPrimary);
   }
   {
-    XMLTag tagPrimary(*this, "mpi", masterOcc, TAG_MASTER);
+    XMLTag tagPrimary(*this, "mpi", masterOcc, TAG_PRIMARY);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use MPI with separated communication spaces instead instead.";
@@ -237,7 +237,7 @@ ParticipantConfiguration::ParticipantConfiguration(
     masterTags.push_back(tagPrimary);
   }
   {
-    XMLTag tagPrimary(*this, "mpi-single", masterOcc, TAG_MASTER);
+    XMLTag tagPrimary(*this, "mpi-single", masterOcc, TAG_PRIMARY);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
     doc += "This tag is only used to ensure backwards compatibility.";
@@ -301,7 +301,7 @@ void ParticipantConfiguration::xmlTagCallback(
                   "Participant \"{}\" uses mesh \"{}\" which is not defined. "
                   "Please check the use-mesh node with name=\"{}\" or define the mesh.",
                   _participants.back()->getName(), name, name);
-    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SLAVES || safetyFactor != 0.5) && from == "") {
+    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SECONDARIES || safetyFactor != 0.5) && from == "") {
       PRECICE_ERROR(
           "Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a geometric-filter and/or a safety factor defined. "
           "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />",
@@ -348,7 +348,7 @@ void ParticipantConfiguration::xmlTagCallback(
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
     config.isScalingOn = tag.getBooleanAttributeValue(ATTR_SCALE_WITH_CONN);
     _watchIntegralConfigs.push_back(config);
-  } else if (tag.getNamespace() == TAG_MASTER) {
+  } else if (tag.getNamespace() == TAG_PRIMARY) {
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com  = comConfig.createCommunication(tag);
     utils::IntraComm::getCommunication() = com;
@@ -374,10 +374,10 @@ ParticipantConfiguration::getParticipants() const
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
 {
-  if (geoFilter == VALUE_FILTER_ON_MASTER) {
-    return partition::ReceivedPartition::GeometricFilter::ON_MASTER;
-  } else if (geoFilter == VALUE_FILTER_ON_SLAVES) {
-    return partition::ReceivedPartition::GeometricFilter::ON_SLAVES;
+  if (geoFilter == VALUE_FILTER_ON_PRIMARY) {
+    return partition::ReceivedPartition::GeometricFilter::ON_PRIMARY;
+  } else if (geoFilter == VALUE_FILTER_ON_SECONDARIES) {
+    return partition::ReceivedPartition::GeometricFilter::ON_SECONDARIES;
   } else {
     PRECICE_ASSERT(geoFilter == VALUE_NO_FILTER);
     return partition::ReceivedPartition::GeometricFilter::NO_FILTER;

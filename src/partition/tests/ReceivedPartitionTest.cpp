@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_PRIMARY, safetyFactor);
     part.addM2N(m2n);
     part.addFromMapping(boundingFromMapping);
     part.addToMapping(boundingToMapping);
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
 
     double safetyFactor = 0.5;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SECONDARIES, safetyFactor);
     part.addM2N(m2n);
     part.addFromMapping(boundingFromMapping);
     part.addToMapping(boundingToMapping);
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
     createNastinMesh2D(pNastinMesh, context.rank);
 
     double            safetyFactor = 0.1;
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_PRIMARY, safetyFactor);
     part.addM2N(m2n);
     part.addFromMapping(boundingFromMapping);
     part.addToMapping(boundingToMapping);
@@ -741,7 +741,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
     createNastinMesh3D(pNastinMesh, context.rank);
 
     double            safetyFactor = 20.0;
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_PRIMARY, safetyFactor);
     part.addM2N(m2n);
     part.addFromMapping(boundingFromMapping);
     part.addToMapping(boundingToMapping);
@@ -817,7 +817,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
     pOtherMesh->computeBoundingBox();
 
     double            safetyFactor = 20.0;
-    ReceivedPartition part(pMesh, ReceivedPartition::ON_MASTER, safetyFactor);
+    ReceivedPartition part(pMesh, ReceivedPartition::ON_PRIMARY, safetyFactor);
     part.addM2N(m2n);
     part.addFromMapping(boundingFromMapping);
     part.communicate();
@@ -892,7 +892,7 @@ BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
     boundingFromMapping->setMeshes(pSolidzMesh, pOtherMesh);
 
     double            safetyFactor = 0.1;
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_MASTER, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_PRIMARY, safetyFactor);
     part.addFromMapping(boundingFromMapping);
     part.addM2N(m2n);
     part.communicate();
@@ -1076,7 +1076,7 @@ void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
   boundingFromMapping->setMeshes(mesh, mesh);
   boundingToMapping->setMeshes(mesh, mesh);
 
-  ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+  ReceivedPartition part(mesh, ReceivedPartition::ON_SECONDARIES, safetyFactor);
   part.addM2N(m2n);
 
   part.addFromMapping(boundingFromMapping);
@@ -1521,7 +1521,7 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SECONDARIES, safetyFactor);
     part.addM2N(m2n);
     part.addFromMapping(boundingFromMapping1);
     part.addToMapping(boundingToMapping1);

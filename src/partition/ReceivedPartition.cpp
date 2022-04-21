@@ -287,12 +287,12 @@ void ReceivedPartition::filterByBoundingBox()
                       " cannot solely be filtered on the master rank "
                       "(option \"filter-on-master\") if it is communicated by an m2n communication that uses "
                       "two-level initialization. Use \"filter-on-slaves\" or \"no-filter\" instead.";
-    PRECICE_CHECK(_geometricFilter != ON_MASTER, msg);
+    PRECICE_CHECK(_geometricFilter != ON_PRIMARY, msg);
   }
 
   prepareBoundingBox();
 
-  if (_geometricFilter == ON_MASTER) { //filter on master and communicate reduced mesh then
+  if (_geometricFilter == ON_PRIMARY) { //filter on master and communicate reduced mesh then
 
     PRECICE_ASSERT(not m2n().usesTwoLevelInitialization());
     PRECICE_INFO("Pre-filter mesh {} by bounding box on master", _mesh->getName());
@@ -349,7 +349,7 @@ void ReceivedPartition::filterByBoundingBox()
         com::CommunicateMesh(utils::IntraComm::getCommunication()).broadcastSendMesh(*_mesh);
       }
     }
-    if (_geometricFilter == ON_SLAVES) {
+    if (_geometricFilter == ON_SECONDARIES) {
 
       PRECICE_INFO("Filter mesh {} by bounding box on slaves", _mesh->getName());
       Event e("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);

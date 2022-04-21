@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SECONDARIES, safetyFactor);
     part.addM2N(m2n);
     part.communicate();
 
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SECONDARIES, safetyFactor);
     part.addM2N(m2n);
     part.communicate();
 
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
     part.communicate();
   } else {
     m2n->createDistributedCommunication(mesh);
-    ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(mesh, ReceivedPartition::ON_SECONDARIES, safetyFactor);
     m2n->requestSecondariesPreConnection("SolidSecondaries", "FluidSecondaries");
     part.addM2N(m2n);
 
@@ -705,7 +705,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
     boundingFromMapping->setMeshes(receivedMesh, mesh);
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
-    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SECONDARIES, safetyFactor);
 
     part.addM2N(m2n);
 
@@ -834,7 +834,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
     boundingFromMapping->setMeshes(receivedMesh, mesh);
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
-    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SECONDARIES, safetyFactor);
     part.addM2N(m2n);
 
     part.addFromMapping(boundingFromMapping);

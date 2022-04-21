@@ -49,7 +49,7 @@ void M2N::acceptPrimaryConnection(
   if (not utils::IntraComm::isSecondary()) {
     PRECICE_DEBUG("Accept master-master connection");
     PRECICE_ASSERT(_masterCom);
-    _masterCom->acceptConnection(acceptorName, requesterName, "MASTERCOM", utils::IntraComm::getRank());
+    _masterCom->acceptConnection(acceptorName, requesterName, "PRIMARYCOM", utils::IntraComm::getRank());
     _isPrimaryConnected = _masterCom->isConnected();
   }
 
@@ -67,7 +67,7 @@ void M2N::requestPrimaryConnection(
   if (not utils::IntraComm::isSecondary()) {
     PRECICE_ASSERT(_masterCom);
     PRECICE_DEBUG("Request master-master connection");
-    _masterCom->requestConnection(acceptorName, requesterName, "MASTERCOM", 0, 1);
+    _masterCom->requestConnection(acceptorName, requesterName, "PRIMARYCOM", 0, 1);
     _isPrimaryConnected = _masterCom->isConnected();
   }
 
