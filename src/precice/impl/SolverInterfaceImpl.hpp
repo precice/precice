@@ -633,7 +633,7 @@ private:
     Distributed = true
   };
 
-  /// Syncs the primarys of all connected participants
+  /// Syncs the primaries of all connected participants
   void closeCommunicationChannels(CloseChannels cc);
 
   /// To allow white box tests.

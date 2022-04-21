@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(MPIDirect)
 BOOST_AUTO_TEST_CASE(SendAndReceive)
 {
   PRECICE_TEST(2_ranks, Require::Events);
-  testing::com::primarysecondary::TestSendAndReceive<MPIDirectCommunication>(context);
+  testing::com::primariesecondary::TestSendAndReceive<MPIDirectCommunication>(context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // MPIDirectCommunication

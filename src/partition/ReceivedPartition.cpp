@@ -576,7 +576,7 @@ void ReceivedPartition::createOwnerInformation()
 
     if (utils::MasterSlave::isMaster()) {
 
-      // Insert primarys bounding box
+      // Insert primaries bounding box
       localBBMap.at(0) = _bb;
 
       // primary receives local bb from each secondary rank

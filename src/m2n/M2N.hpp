@@ -140,7 +140,7 @@ public:
   /// Disconnects all connections of the DistributedCommunication
   void closeDistributedConnections();
 
-  /// Get the basic communication between the 2 primarys.
+  /// Get the basic communication between the 2 primaries.
   com::PtrCommunication getMasterCommunication();
 
   /// Creates a new distributes communication for that mesh, stores the pointer in _distComs

@@ -361,7 +361,7 @@ public:
   }
 
 protected:
-  /// Rank offset for primarys-secondary communication, since ranks are from 0 to size-2
+  /// Rank offset for primaries-secondary communication, since ranks are from 0 to size-2
   int _rankOffset = 0;
 
   bool _isConnected = false;

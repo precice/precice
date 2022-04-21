@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveMM)
 BOOST_AUTO_TEST_CASE(SendAndReceiveMS)
 {
   PRECICE_TEST(2_ranks, Require::Events);
-  using namespace precice::testing::com::primarysecondary;
+  using namespace precice::testing::com::primariesecondary;
   TestSendAndReceive<MPISinglePortsCommunication>(context);
 }
 
