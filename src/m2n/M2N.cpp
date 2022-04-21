@@ -222,7 +222,9 @@ void M2N::send(
       _primaryCom->receive(ack, 0);
       _primaryCom->send(ack, 0);
     }
+
     Event e("m2n.sendData", precice::syncMode);
+
     _distComs[meshID]->send(itemsToSend, valueDimension);
   } else {
     PRECICE_ASSERT(_isMasterConnected);
@@ -294,7 +296,9 @@ void M2N::receive(precice::span<double> itemsToReceive,
         _primaryCom->receive(ack, 0);
       }
     }
+
     Event e("m2n.receiveData", precice::syncMode);
+
     _distComs[meshID]->receive(itemsToReceive, valueDimension);
   } else {
     PRECICE_ASSERT(_isMasterConnected);
