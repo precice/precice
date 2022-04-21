@@ -21,7 +21,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <primary:sockets />
+      <master:sockets />
       <use-mesh name="MeshOne" from="SolverOne" safety-factor="0.1" />
       <use-mesh name="MeshTwo" provide="yes" />
       <mapping:nearest-neighbor
