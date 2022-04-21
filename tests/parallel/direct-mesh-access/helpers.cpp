@@ -5,7 +5,7 @@
 #include "precice/SolverInterface.hpp"
 #include "testing/Testing.hpp"
 
-// StartIndex is here the first index to be used for writing on the slave rank
+// StartIndex is here the first index to be used for writing on the secondary rank
 void runTestAccessReceivedMesh(const TestContext &       context,
                                const std::vector<double> boundingBoxSlave,
                                const std::vector<double> writeDataSlave,
@@ -29,7 +29,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     // Get relevant size, allocate data structures and retrieve coordinates
     const int meshSize = interface.getMeshVertexSize(dataID);
 
-    // According to the bounding boxes and vertices: the primary rank receives 3 vertices, the slave rank 2
+    // According to the bounding boxes and vertices: the primary rank receives 3 vertices, the secondary rank 2
     const bool expectedSize = (context.isMaster() && meshSize == 3) ||
                               (!context.isMaster() && meshSize == static_cast<int>(expectedPositionSlave.size() / dim));
     BOOST_TEST(expectedSize);

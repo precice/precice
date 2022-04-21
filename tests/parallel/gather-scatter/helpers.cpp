@@ -44,7 +44,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
       dt = interface.advance(dt);
       interface.readBlockScalarData(readDataID, size,
                                     ids.data(), readData.data());
-      // The received data on the slave rank is always the same
+      // The received data on the secondary rank is always the same
       if (!context.isMaster()) {
         BOOST_TEST(readData == std::vector<double>({3.4, 5.7, 4.0}));
       }
