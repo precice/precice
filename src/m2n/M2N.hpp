@@ -173,6 +173,8 @@ public:
   void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
   /// All slaves receive an array of doubles (different for each slave).
+  /// The values received can be gradient data
+  /// Gradient dimension : 0: dx-values, 1: dy-values, 2:dz-values
   void receive(precice::span<double> itemsToReceive,
                int                   meshID,
                int                   valueDimension);

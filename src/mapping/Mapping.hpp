@@ -139,6 +139,9 @@ protected:
 
   int getDimensions() const;
 
+  /// Flag if gradient data is required for the mapping
+  bool _requireGradient;
+
 private:
   /// Determines whether mapping is consistent or conservative.
   Constraint _constraint;
@@ -154,9 +157,6 @@ private:
 
   /// Pointer to output mesh.
   mesh::PtrMesh _output;
-
-  /// Flag if gradient data is required for the mapping
-  bool _requireGradient;
 
   int _dimensions;
 };
