@@ -246,10 +246,10 @@ public:
   /// Returns all mesh IDs (besides sub-ids).
   std::set<int> getMeshIDs() const;
 
-  /// @copydoc SolverInterface::isMeshConnectivityRequired()
+  /// @copydoc SolverInterface::isMeshConnectivityRequired
   bool isMeshConnectivityRequired(int meshID) const;
 
-  /// @copydoc SolverInterface::isGradientDataRequired()
+  /// @copydoc SolverInterface::isGradientDataRequired
   bool isGradientDataRequired(int dataID) const;
 
   /// Returns true, if the data with given name is used in the given mesh.
@@ -366,27 +366,6 @@ public:
   void mapReadDataTo(int toMeshID);
 
   /**
-   * @brief Write vectorial data to the interface mesh
-   *
-   * The exact mapping and communication must be specified in XYZ.
-   *
-   * @param[in] fromDataID ID of the data to be written, e.g. 1 = forces
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
-   * @param[in] dataValue Value of the data to be written
-   */
-  void writeVectorData(
-      int           fromDataID,
-      int           valueIndex,
-      const double *value);
-
-  /// @copydoc precice::SolverInterface::writeVectorGradientData()
-  void writeVectorGradientData(
-      int           fromDataID,
-      int           valueIndex,
-      const double *gradientValues,
-      bool          rowsFirst = false);
-
-  /**
    * @brief Writes vector data values given as block.
    *
    * The block must contain the vector values in the following form:
@@ -403,7 +382,7 @@ public:
       const int *   valueIndices,
       const double *values);
 
-  /// @copydoc precice::SolverInterface::writeBlockVectorGradientData()
+  /// @copydoc precice::SolverInterface::writeBlockVectorGradientData
   void writeBlockVectorGradientData(
       int           fromDataID,
       int           size,
@@ -412,24 +391,25 @@ public:
       bool          rowsFirst = false);
 
   /**
-   * @brief Write scalar data to the interface mesh
+   * @brief Write vectorial data to the interface mesh
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param fromDataID       [IN] ID of the data to be written (2 = temperature, e.g.)
-   * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
-   * @param dataValue    [IN] Value of the data to be written
+   * @param[in] fromDataID ID of the data to be written, e.g. 1 = forces
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
+   * @param[in] dataValue Value of the data to be written
    */
-  void writeScalarData(
-      int    fromDataID,
-      int    valueIndex,
-      double value);
-
-  /// @copydoc precice::SolverInterface::writeScalarGradientData()
-  void writeScalarGradientData(
+  void writeVectorData(
       int           fromDataID,
       int           valueIndex,
-      const double *gradientValues);
+      const double *value);
+
+  /// @copydoc precice::SolverInterface::writeVectorGradientData
+  void writeVectorGradientData(
+      int           fromDataID,
+      int           valueIndex,
+      const double *gradientValues,
+      bool          rowsFirst = false);
 
   /**
    * @brief Writes scalar data values given as block.
@@ -444,11 +424,31 @@ public:
       const int *   valueIndices,
       const double *values);
 
-  /// @copydoc precice::SolverInterface::writeBlockScalarGradientData()
+  /// @copydoc precice::SolverInterface::writeBlockScalarGradientData
   void writeBlockScalarGradientData(
       int           fromDataID,
       int           size,
       const int *   valueIndices,
+      const double *gradientValues);
+
+  /**
+   * @brief Write scalar data to the interface mesh
+   *
+   * The exact mapping and communication must be specified in XYZ.
+   *
+   * @param[in] fromDataID ID of the data to be written (2 = temperature, e.g.)
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
+   * @param[in] dataValue Value of the data to be written
+   */
+  void writeScalarData(
+      int    fromDataID,
+      int    valueIndex,
+      double value);
+
+  /// @copydoc precice::SolverInterface::writeScalarGradientData
+  void writeScalarGradientData(
+      int           fromDataID,
+      int           valueIndex,
       const double *gradientValues);
 
   /**
@@ -508,15 +508,11 @@ public:
       int     valueIndex,
       double &value) const;
 
-  /**
-   * @copydoc precice::SolverInterface::setMeshAccessRegion()
-   */
+  /// @copydoc precice::SolverInterface::setMeshAccessRegion
   void setMeshAccessRegion(const int     meshID,
                            const double *boundingBox) const;
 
-  /**
-   * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
-   */
+  /// @copydoc precice::SolverInterface::getMeshVerticesAndIDs
   void getMeshVerticesAndIDs(
       const int meshID,
       const int size,

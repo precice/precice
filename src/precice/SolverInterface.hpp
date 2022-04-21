@@ -763,7 +763,6 @@ public:
    * Values are provided as a block of continuous memory.
    * valueIndices contains the indices of the vertices
    *
-   *
    * @param[in] dataID ID to write to.
    * @param[in] size Number n of vertices.
    * @param[in] valueIndices Indices of the vertices.
