@@ -77,7 +77,7 @@ public:
   bool hasGradient() const;
 
   /// Returns the mesh dimension (i.e., number of rows) of one gradient data value .
-  int getSpacialDimensions() const;
+  int getSpatialDimensions() const;
 
   /// Returns the dimension (i.e., number of components) of one data value (i.e number of columns of one gradient data value).
   int getDimensions() const;
@@ -96,7 +96,7 @@ private:
   DataID _id;
 
   /// Spacial Dimension of one element -> number of rows (only 2, 3 allowed for 2D, 3D).
-  int _spacialDimensions;
+  int _spatialDimensions;
 
   /// Dimensionality of one data value.
   int _dimensions;

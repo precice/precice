@@ -159,6 +159,9 @@ public:
   /// @copydoc SolverInterface::isMeshConnectivityRequired
   bool isMeshConnectivityRequired(int meshID) const;
 
+  /// @copydoc SolverInterface::isGradientDataRequired
+  bool isGradientDataRequired(int dataID) const;
+
   /// @copydoc SolverInterface::setMeshVertex
   int setMeshVertex(
       int           meshID,
@@ -248,11 +251,26 @@ public:
       const int *   valueIndices,
       const double *values);
 
+  /// @copydoc precice::SolverInterface::writeBlockVectorGradientData
+  void writeBlockVectorGradientData(
+      int           fromDataID,
+      int           size,
+      const int *   valueIndices,
+      const double *gradientValues,
+      bool          rowsFirst = false);
+
   /// @copydoc SolverInterface::writeVectorData
   void writeVectorData(
       int           fromDataID,
       int           valueIndex,
       const double *value);
+
+  /// @copydoc precice::SolverInterface::writeVectorGradientData
+  void writeVectorGradientData(
+      int           fromDataID,
+      int           valueIndex,
+      const double *gradientValues,
+      bool          rowsFirst = false);
 
   /// @copydoc SolverInterface::writeBlockScalarData
   void writeBlockScalarData(
@@ -261,11 +279,24 @@ public:
       const int *   valueIndices,
       const double *values);
 
+  /// @copydoc precice::SolverInterface::writeBlockScalarGradientData
+  void writeBlockScalarGradientData(
+      int           fromDataID,
+      int           size,
+      const int *   valueIndices,
+      const double *gradientValues);
+
   /// @copydoc SolverInterface::writeScalarData
   void writeScalarData(
       int    fromDataID,
       int    valueIndex,
       double value);
+
+  /// @copydoc precice::SolverInterface::writeScalarGradientData
+  void writeScalarGradientData(
+      int           fromDataID,
+      int           valueIndex,
+      const double *gradientValues);
 
   /// @copydoc SolverInterface::readBlockVectorData
   void readBlockVectorData(
