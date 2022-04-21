@@ -416,7 +416,7 @@ void TestSendAndReceive(TestContext const &context)
 
 } // namespace primaryprimary
 
-namespace primariessecondary {
+namespace intracomm {
 
 ///
 /// Tests for Master-Slave Connections
@@ -771,7 +771,7 @@ void TestSendAndReceive(TestContext const &context)
   TestReduceVectors<T>(context);
 }
 
-} // namespace primariessecondary
+} // namespace intracomm
 
 namespace serverclient {
 
