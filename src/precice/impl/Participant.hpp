@@ -20,8 +20,8 @@
 #include "precice/impl/ReadDataContext.hpp"
 #include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
-#include "utils/ManageUniqueIDs.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
 
 namespace precice {

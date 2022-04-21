@@ -98,11 +98,11 @@ int main(int argc, char **argv)
   }
 
   if (utils::IntraComm::getRank() == 0) {
-    utils::IntraComm::isPrimary() = true;
-    utils::IntraComm::isSecondary()  = false;
+    utils::IntraComm::isPrimary()   = true;
+    utils::IntraComm::isSecondary() = false;
   } else {
-    utils::IntraComm::isPrimary() = false;
-    utils::IntraComm::isSecondary()  = true;
+    utils::IntraComm::isPrimary()   = false;
+    utils::IntraComm::isSecondary() = true;
   }
 
   if (utils::IntraComm::isPrimary()) {

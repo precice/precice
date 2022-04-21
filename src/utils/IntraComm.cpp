@@ -17,10 +17,10 @@
 namespace precice {
 namespace utils {
 
-Rank                  IntraComm::_rank     = -1;
-int                   IntraComm::_size     = -1;
-bool                  IntraComm::_isPrimary = false;
-bool                  IntraComm::_isSecondary  = false;
+Rank                  IntraComm::_rank        = -1;
+int                   IntraComm::_size        = -1;
+bool                  IntraComm::_isPrimary   = false;
+bool                  IntraComm::_isSecondary = false;
 com::PtrCommunication IntraComm::_communication;
 
 logging::Logger IntraComm::_log("utils::IntraComm");
@@ -31,8 +31,8 @@ void IntraComm::configure(Rank rank, int size)
   _rank = rank;
   _size = size;
   PRECICE_ASSERT(_rank != -1 && _size != -1);
-  _isPrimary = (rank == 0) && _size != 1;
-  _isSecondary  = (rank != 0);
+  _isPrimary   = (rank == 0) && _size != 1;
+  _isSecondary = (rank != 0);
   PRECICE_DEBUG("isSecondary: {}, isPrimary: {}", _isSecondary, _isPrimary);
 }
 
@@ -143,10 +143,10 @@ double IntraComm::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2)
 void IntraComm::reset()
 {
   PRECICE_TRACE();
-  _isPrimary = false;
-  _isSecondary  = false;
-  _rank     = -1;
-  _size     = -1;
+  _isPrimary   = false;
+  _isSecondary = false;
+  _rank        = -1;
+  _size        = -1;
 }
 
 void IntraComm::reduceSum(precice::span<const double> sendData, precice::span<double> rcvData)

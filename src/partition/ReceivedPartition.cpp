@@ -419,7 +419,7 @@ void ReceivedPartition::compareBoundingBoxes()
   // prepare local bounding box
   prepareBoundingBox();
 
-  if (utils::IntraComm::isPrimary()) {                 // Primary
+  if (utils::IntraComm::isPrimary()) {                  // Primary
     std::map<int, std::vector<int>> connectionMap;      //local ranks -> {remote ranks}
     std::vector<int>                connectedRanksList; // local ranks with any connection
 

@@ -302,8 +302,8 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   PRECICE_TEST("SOLIDZ"_on(3_ranks).setupIntraComms(), "NASTIN"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
-  options.useTwoLevelInit  = true;
-  auto m2n                 = context.connectPrimarys("NASTIN", "SOLIDZ", options);
+  options.useTwoLevelInit   = true;
+  auto m2n                  = context.connectPrimarys("NASTIN", "SOLIDZ", options);
 
   int dimensions = 2;
 
@@ -408,8 +408,8 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
   PRECICE_TEST("SOLIDZ"_on(3_ranks).setupIntraComms(), "NASTIN"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
-  options.useTwoLevelInit  = true;
-  auto m2n                 = context.connectPrimarys("NASTIN", "SOLIDZ", options);
+  options.useTwoLevelInit   = true;
+  auto m2n                  = context.connectPrimarys("NASTIN", "SOLIDZ", options);
 
   int dimensions = 3;
 
@@ -496,9 +496,9 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
 
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
-  options.useTwoLevelInit  = true;
-  options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connectPrimarys("Fluid", "Solid", options);
+  options.useTwoLevelInit   = true;
+  options.type              = testing::ConnectionType::PointToPoint;
+  auto m2n                  = context.connectPrimarys("Fluid", "Solid", options);
 
   if (context.isNamed("Solid")) {
     if (context.isPrimary()) {
@@ -594,9 +594,9 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
 
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
-  options.useTwoLevelInit  = true;
-  options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connectPrimarys("Fluid", "Solid", options);
+  options.useTwoLevelInit   = true;
+  options.type              = testing::ConnectionType::PointToPoint;
+  auto m2n                  = context.connectPrimarys("Fluid", "Solid", options);
 
   if (context.isNamed("Solid")) {
     if (context.isPrimary()) {
@@ -734,9 +734,9 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
   // create the communicator for m2n mesh and communication map exchange
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
-  options.useTwoLevelInit  = true;
-  options.type             = testing::ConnectionType::PointToPoint;
-  auto m2n                 = context.connectPrimarys("Fluid", "Solid", options);
+  options.useTwoLevelInit   = true;
+  options.type              = testing::ConnectionType::PointToPoint;
+  auto m2n                  = context.connectPrimarys("Fluid", "Solid", options);
 
   if (context.isNamed("Solid")) {
     if (context.isPrimary()) {

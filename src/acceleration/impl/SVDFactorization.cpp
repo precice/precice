@@ -115,7 +115,7 @@ void SVDFactorization::computeQRdecomposition(
     Vector u        = Vector::Zero(A.rows()); // sum of projections
     double rho_orth = 0.;
     double rho0     = utils::IntraComm::l2norm(col); // distributed l2norm;
-    double rho00    = rho0;                            // save norm of col for QR2 filter crit.
+    double rho00    = rho0;                          // save norm of col for QR2 filter crit.
 
     int  its            = 0;
     bool termination    = false;
