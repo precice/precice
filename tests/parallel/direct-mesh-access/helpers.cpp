@@ -29,7 +29,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     // Get relevant size, allocate data structures and retrieve coordinates
     const int meshSize = interface.getMeshVertexSize(dataID);
 
-    // According to the bounding boxes and vertices: the master rank receives 3 vertices, the slave rank 2
+    // According to the bounding boxes and vertices: the primary rank receives 3 vertices, the slave rank 2
     const bool expectedSize = (context.isMaster() && meshSize == 3) ||
                               (!context.isMaster() && meshSize == static_cast<int>(expectedPositionSlave.size() / dim));
     BOOST_TEST(expectedSize);

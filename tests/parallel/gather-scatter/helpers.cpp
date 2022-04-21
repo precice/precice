@@ -5,8 +5,8 @@
 #include "precice/SolverInterface.hpp"
 #include "testing/Testing.hpp"
 
-// In order to test enforced gather scatter communication with an empty master rank (see below)
-void runTestEnforceGatherScatter(std::vector<double> masterPartition, const TestContext &context)
+// In order to test enforced gather scatter communication with an empty primary rank (see below)
+void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const TestContext &context)
 {
   if (context.isNamed("ParallelSolver")) {
     // Get mesh and data IDs
@@ -17,8 +17,8 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, const Test
     const int                dim         = interface.getDimensions();
     BOOST_TEST(dim == 2);
 
-    // Set coordinates, master according to input argument
-    const std::vector<double> coordinates = context.isMaster() ? masterPartition : std::vector<double>{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
+    // Set coordinates, primary according to input argument
+    const std::vector<double> coordinates = context.isMaster() ? primaryPartition : std::vector<double>{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
     const unsigned int        size        = coordinates.size() / dim;
     std::vector<int>          ids(size, 0);
 

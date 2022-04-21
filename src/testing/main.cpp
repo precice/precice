@@ -24,7 +24,7 @@ int countEnabledTests()
 {
   using namespace boost::unit_test;
   test_case_counter tcc;
-  traverse_test_tree(framework::primary_test_suite(), tcc, true);
+  traverse_test_tree(framework::master_test_suite(), tcc, true);
   return tcc.p_count;
 }
 
