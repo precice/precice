@@ -19,7 +19,7 @@
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
 #include "utils/Event.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 #include "utils/fmt.hpp"
 
@@ -51,10 +51,10 @@ void ReceivedPartition::communicate()
     PRECICE_INFO("Receive mesh partitions for mesh {}", _mesh->getName());
     Event e("partition.receiveMeshPartitions." + _mesh->getName(), precice::syncMode);
 
-    if (utils::MasterSlave::isMaster()) {
-      // Master receives remote mesh's global number of vertices
+    if (utils::IntraComm::isPrimary()) {
+      // Primary receives remote mesh's global number of vertices
       int globalNumberOfVertices = -1;
-      m2n().getMasterCommunication()->receive(globalNumberOfVertices, 0);
+      m2n().getPrimaryCommunication()->receive(globalNumberOfVertices, 0);
       _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
     }
 
@@ -69,20 +69,20 @@ void ReceivedPartition::communicate()
     PRECICE_INFO("Receive global mesh {}", _mesh->getName());
     Event e("partition.receiveGlobalMesh." + _mesh->getName(), precice::syncMode);
 
-    if (not utils::MasterSlave::isSlave()) {
+    if (not utils::IntraComm::isSecondary()) {
       // a ReceivedPartition can only have one communication, @todo nicer design
-      com::CommunicateMesh(m2n().getMasterCommunication()).receiveMesh(*_mesh, 0);
+      com::CommunicateMesh(m2n().getPrimaryCommunication()).receiveMesh(*_mesh, 0);
       _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
     }
   }
 
   // for both initialization concepts broadcast and set the global number of vertices
-  if (utils::MasterSlave::isMaster()) {
-    utils::MasterSlave::getCommunication()->broadcast(_mesh->getGlobalNumberOfVertices());
+  if (utils::IntraComm::isPrimary()) {
+    utils::IntraComm::getCommunication()->broadcast(_mesh->getGlobalNumberOfVertices());
   }
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::IntraComm::isSecondary()) {
     int globalNumberOfVertices = -1;
-    utils::MasterSlave::getCommunication()->broadcast(globalNumberOfVertices, 0);
+    utils::IntraComm::getCommunication()->broadcast(globalNumberOfVertices, 0);
     PRECICE_ASSERT(globalNumberOfVertices >= 0);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   }
@@ -93,7 +93,7 @@ void ReceivedPartition::compute()
   PRECICE_TRACE();
 
   // handle coupling mode first (i.e. serial participant)
-  if (!utils::MasterSlave::isParallel()) { //coupling mode
+  if (!utils::IntraComm::isParallel()) { //coupling mode
     PRECICE_DEBUG("Handle partition data structures for serial participant");
 
     if (_allowDirectAccess) {
@@ -129,7 +129,7 @@ void ReceivedPartition::compute()
   }
 
   // check to prevent false configuration
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::IntraComm::isSecondary()) {
     PRECICE_CHECK(hasAnyMapping() || _allowDirectAccess,
                   "The received mesh {} needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?",
                   _mesh->getName());
@@ -198,18 +198,18 @@ void ReceivedPartition::compute()
 
     PRECICE_INFO("Feedback distribution for mesh {}", _mesh->getName());
     Event e6("partition.feedbackMesh." + _mesh->getName(), precice::syncMode);
-    if (utils::MasterSlave::isSlave()) {
+    if (utils::IntraComm::isSecondary()) {
       int numberOfVertices = _mesh->vertices().size();
-      utils::MasterSlave::getCommunication()->send(numberOfVertices, 0);
+      utils::IntraComm::getCommunication()->send(numberOfVertices, 0);
       if (numberOfVertices != 0) {
         std::vector<int> vertexIDs(numberOfVertices, -1);
         for (int i = 0; i < numberOfVertices; i++) {
           vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
         }
         PRECICE_DEBUG("Send partition feedback to master");
-        utils::MasterSlave::getCommunication()->send(vertexIDs, 0);
+        utils::IntraComm::getCommunication()->send(vertexIDs, 0);
       }
-    } else { // Master
+    } else { // Primary
       int              numberOfVertices = _mesh->vertices().size();
       std::vector<int> vertexIDs(numberOfVertices, -1);
       for (int i = 0; i < numberOfVertices; i++) {
@@ -217,48 +217,48 @@ void ReceivedPartition::compute()
       }
       _mesh->getVertexDistribution()[0] = std::move(vertexIDs);
 
-      for (int rankSlave : utils::MasterSlave::allSlaves()) {
-        int numberOfSlaveVertices = -1;
-        utils::MasterSlave::getCommunication()->receive(numberOfSlaveVertices, rankSlave);
-        PRECICE_ASSERT(numberOfSlaveVertices >= 0);
-        std::vector<int> slaveVertexIDs(numberOfSlaveVertices, -1);
-        if (numberOfSlaveVertices != 0) {
-          PRECICE_DEBUG("Receive partition feedback from slave rank {}", rankSlave);
-          utils::MasterSlave::getCommunication()->receive(slaveVertexIDs, rankSlave);
+      for (int rankSecondary : utils::IntraComm::allSecondaries()) {
+        int numberOfSecondaryVertices = -1;
+        utils::IntraComm::getCommunication()->receive(numberOfSecondaryVertices, rankSecondary);
+        PRECICE_ASSERT(numberOfSecondaryVertices >= 0);
+        std::vector<int> slaveVertexIDs(numberOfSecondaryVertices, -1);
+        if (numberOfSecondaryVertices != 0) {
+          PRECICE_DEBUG("Receive partition feedback from slave rank {}", rankSecondary);
+          utils::IntraComm::getCommunication()->receive(slaveVertexIDs, rankSecondary);
         }
-        _mesh->getVertexDistribution()[rankSlave] = std::move(slaveVertexIDs);
+        _mesh->getVertexDistribution()[rankSecondary] = std::move(slaveVertexIDs);
       }
     }
   }
 
   // (7) Compute vertex offsets
   PRECICE_DEBUG("Compute vertex offsets");
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::IntraComm::isSecondary()) {
 
     // send number of vertices
     PRECICE_DEBUG("Send number of vertices: {}", _mesh->vertices().size());
     int numberOfVertices = _mesh->vertices().size();
-    utils::MasterSlave::getCommunication()->send(numberOfVertices, 0);
+    utils::IntraComm::getCommunication()->send(numberOfVertices, 0);
 
     // set vertex offsets
-    utils::MasterSlave::getCommunication()->broadcast(_mesh->getVertexOffsets(), 0);
+    utils::IntraComm::getCommunication()->broadcast(_mesh->getVertexOffsets(), 0);
     PRECICE_DEBUG("My vertex offsets: {}", _mesh->getVertexOffsets());
 
-  } else if (utils::MasterSlave::isMaster()) {
+  } else if (utils::IntraComm::isPrimary()) {
 
-    _mesh->getVertexOffsets().resize(utils::MasterSlave::getSize());
+    _mesh->getVertexOffsets().resize(utils::IntraComm::getSize());
     _mesh->getVertexOffsets()[0] = _mesh->vertices().size();
 
     // receive number of slave vertices and fill vertex offsets
-    for (int rankSlave : utils::MasterSlave::allSlaves()) {
-      int numberOfSlaveVertices = -1;
-      utils::MasterSlave::getCommunication()->receive(numberOfSlaveVertices, rankSlave);
-      _mesh->getVertexOffsets()[rankSlave] = numberOfSlaveVertices + _mesh->getVertexOffsets()[rankSlave - 1];
+    for (int rankSecondary : utils::IntraComm::allSecondaries()) {
+      int numberOfSecondaryVertices = -1;
+      utils::IntraComm::getCommunication()->receive(numberOfSecondaryVertices, rankSecondary);
+      _mesh->getVertexOffsets()[rankSecondary] = numberOfSecondaryVertices + _mesh->getVertexOffsets()[rankSecondary - 1];
     }
 
     // broadcast vertex offsets
     PRECICE_DEBUG("My vertex offsets: {}", _mesh->getVertexOffsets());
-    utils::MasterSlave::getCommunication()->broadcast(_mesh->getVertexOffsets());
+    utils::IntraComm::getCommunication()->broadcast(_mesh->getVertexOffsets());
   }
 }
 
@@ -298,35 +298,35 @@ void ReceivedPartition::filterByBoundingBox()
     PRECICE_INFO("Pre-filter mesh {} by bounding box on master", _mesh->getName());
     Event e("partition.preFilterMesh." + _mesh->getName(), precice::syncMode);
 
-    if (utils::MasterSlave::isSlave()) {
+    if (utils::IntraComm::isSecondary()) {
       PRECICE_DEBUG("Send bounding box to master");
-      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).sendBoundingBox(_bb, 0);
+      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).sendBoundingBox(_bb, 0);
       PRECICE_DEBUG("Receive filtered mesh");
-      com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(*_mesh, 0);
+      com::CommunicateMesh(utils::IntraComm::getCommunication()).receiveMesh(*_mesh, 0);
 
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::MasterSlave::getRank()));
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
       }
 
-    } else { // Master
-      PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
-      PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
+    } else { // Primary
+      PRECICE_ASSERT(utils::IntraComm::getRank() == 0);
+      PRECICE_ASSERT(utils::IntraComm::getSize() > 1);
 
-      for (int rankSlave : utils::MasterSlave::allSlaves()) {
+      for (int rankSecondary : utils::IntraComm::allSecondaries()) {
         mesh::BoundingBox slaveBB(_bb.getDimension());
-        com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).receiveBoundingBox(slaveBB, rankSlave);
+        com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).receiveBoundingBox(slaveBB, rankSecondary);
 
-        PRECICE_DEBUG("From slave {}, bounding mesh: {}", rankSlave, slaveBB);
-        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
+        PRECICE_DEBUG("From slave {}, bounding mesh: {}", rankSecondary, slaveBB);
+        mesh::Mesh slaveMesh("SecondaryMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(slaveMesh, *_mesh, [&slaveBB](const mesh::Vertex &v) { return slaveBB.contains(v); });
-        PRECICE_DEBUG("Send filtered mesh to slave: {}", rankSlave);
-        com::CommunicateMesh(utils::MasterSlave::getCommunication()).sendMesh(slaveMesh, rankSlave);
+        PRECICE_DEBUG("Send filtered mesh to slave: {}", rankSecondary);
+        com::CommunicateMesh(utils::IntraComm::getCommunication()).sendMesh(slaveMesh, rankSecondary);
       }
 
       // Now also filter the remaining master mesh
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
-      PRECICE_DEBUG("Master mesh, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
+      PRECICE_DEBUG("Primary mesh, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->vertices().size(), filteredMesh.vertices().size(),
                     _mesh->edges().size(), filteredMesh.edges().size(),
                     _mesh->triangles().size(), filteredMesh.triangles().size());
@@ -334,7 +334,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->addMesh(filteredMesh);
 
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::MasterSlave::getRank()));
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
       }
     }
   } else {
@@ -342,11 +342,11 @@ void ReceivedPartition::filterByBoundingBox()
       PRECICE_INFO("Broadcast mesh {}", _mesh->getName());
       Event e("partition.broadcastMesh." + _mesh->getName(), precice::syncMode);
 
-      if (utils::MasterSlave::isSlave()) {
-        com::CommunicateMesh(utils::MasterSlave::getCommunication()).broadcastReceiveMesh(*_mesh);
-      } else { // Master
-        PRECICE_ASSERT(utils::MasterSlave::isMaster());
-        com::CommunicateMesh(utils::MasterSlave::getCommunication()).broadcastSendMesh(*_mesh);
+      if (utils::IntraComm::isSecondary()) {
+        com::CommunicateMesh(utils::IntraComm::getCommunication()).broadcastReceiveMesh(*_mesh);
+      } else { // Primary
+        PRECICE_ASSERT(utils::IntraComm::isPrimary());
+        com::CommunicateMesh(utils::IntraComm::getCommunication()).broadcastSendMesh(*_mesh);
       }
     }
     if (_geometricFilter == ON_SLAVES) {
@@ -365,7 +365,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::MasterSlave::getRank()));
+        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
       }
     } else {
       PRECICE_ASSERT(_geometricFilter == NO_FILTER);
@@ -391,12 +391,12 @@ void ReceivedPartition::compareBoundingBoxes()
 
   // receive and broadcast number of remote ranks
   int numberOfRemoteRanks = -1;
-  if (utils::MasterSlave::isMaster()) {
-    m2n().getMasterCommunication()->receive(numberOfRemoteRanks, 0);
-    utils::MasterSlave::getCommunication()->broadcast(numberOfRemoteRanks);
+  if (utils::IntraComm::isPrimary()) {
+    m2n().getPrimaryCommunication()->receive(numberOfRemoteRanks, 0);
+    utils::IntraComm::getCommunication()->broadcast(numberOfRemoteRanks);
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
-    utils::MasterSlave::getCommunication()->broadcast(numberOfRemoteRanks, 0);
+    PRECICE_ASSERT(utils::IntraComm::isSecondary());
+    utils::IntraComm::getCommunication()->broadcast(numberOfRemoteRanks, 0);
   }
 
   // define and initialize remote bounding box map
@@ -408,18 +408,18 @@ void ReceivedPartition::compareBoundingBoxes()
   }
 
   // receive and broadcast remote bounding box map
-  if (utils::MasterSlave::isMaster()) {
-    com::CommunicateBoundingBox(m2n().getMasterCommunication()).receiveBoundingBoxMap(remoteBBMap, 0);
-    com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastSendBoundingBoxMap(remoteBBMap);
+  if (utils::IntraComm::isPrimary()) {
+    com::CommunicateBoundingBox(m2n().getPrimaryCommunication()).receiveBoundingBoxMap(remoteBBMap, 0);
+    com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastSendBoundingBoxMap(remoteBBMap);
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
-    com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastReceiveBoundingBoxMap(remoteBBMap);
+    PRECICE_ASSERT(utils::IntraComm::isSecondary());
+    com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastReceiveBoundingBoxMap(remoteBBMap);
   }
 
   // prepare local bounding box
   prepareBoundingBox();
 
-  if (utils::MasterSlave::isMaster()) {                 // Master
+  if (utils::IntraComm::isPrimary()) {                 // Primary
     std::map<int, std::vector<int>> connectionMap;      //local ranks -> {remote ranks}
     std::vector<int>                connectedRanksList; // local ranks with any connection
 
@@ -436,27 +436,27 @@ void ReceivedPartition::compareBoundingBoxes()
     }
 
     // receive connected ranks from slaves and add them to the connection map
-    for (int rank : utils::MasterSlave::allSlaves()) {
+    for (int rank : utils::IntraComm::allSecondaries()) {
       std::vector<int> slaveConnectedRanks;
       int              connectedRanksSize = -1;
-      utils::MasterSlave::getCommunication()->receive(connectedRanksSize, rank);
+      utils::IntraComm::getCommunication()->receive(connectedRanksSize, rank);
       if (connectedRanksSize != 0) {
         connectedRanksList.push_back(rank);
-        utils::MasterSlave::getCommunication()->receive(slaveConnectedRanks, rank);
+        utils::IntraComm::getCommunication()->receive(slaveConnectedRanks, rank);
         connectionMap[rank] = slaveConnectedRanks;
       }
     }
 
     // send connectionMap to other master
-    m2n().getMasterCommunication()->send(connectedRanksList, 0);
+    m2n().getPrimaryCommunication()->send(connectedRanksList, 0);
     PRECICE_CHECK(not connectionMap.empty(),
                   "The mesh \"{}\" of this participant seems to have no partitions at the coupling interface. "
                   "Check that both mapped meshes are describing the same geometry. "
                   "If you deal with very different mesh resolutions, consider increasing the safety-factor in the <use-mesh /> tag.",
                   _mesh->getName());
-    com::CommunicateBoundingBox(m2n().getMasterCommunication()).sendConnectionMap(connectionMap, 0);
+    com::CommunicateBoundingBox(m2n().getPrimaryCommunication()).sendConnectionMap(connectionMap, 0);
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
+    PRECICE_ASSERT(utils::IntraComm::isSecondary());
 
     _mesh->getConnectedRanks().clear();
     for (const auto &remoteBB : remoteBBMap) {
@@ -466,9 +466,9 @@ void ReceivedPartition::compareBoundingBoxes()
     }
 
     // send connected ranks to master
-    utils::MasterSlave::getCommunication()->send(static_cast<int>(_mesh->getConnectedRanks().size()), 0);
+    utils::IntraComm::getCommunication()->send(static_cast<int>(_mesh->getConnectedRanks().size()), 0);
     if (not _mesh->getConnectedRanks().empty()) {
-      utils::MasterSlave::getCommunication()->send(_mesh->getConnectedRanks(), 0);
+      utils::IntraComm::getCommunication()->send(_mesh->getConnectedRanks(), 0);
     }
   }
 }
@@ -510,7 +510,7 @@ void ReceivedPartition::prepareBoundingBox()
     // on the defined access region (setMeshAccessRegion), we raise a warning
     // to inform the user
     const float defaultSafetyFactor = 0.5;
-    if (utils::MasterSlave::isMaster() && !hasAnyMapping() && (_safetyFactor != defaultSafetyFactor)) {
+    if (utils::IntraComm::isPrimary() && !hasAnyMapping() && (_safetyFactor != defaultSafetyFactor)) {
       PRECICE_WARN("The received mesh \"{}\" was entirely partitioned based on the defined access region "
                    "(setMeshAccessRegion) and a safety-factor was defined. However, the safety factor "
                    "will be ignored in this case. You may want to modify the access region by modifying "
@@ -554,7 +554,7 @@ void ReceivedPartition::createOwnerInformation()
     // Define and initialize localBBMap to save local bbs
 
     mesh::Mesh::BoundingBoxMap localBBMap;
-    for (Rank rank = 0; rank < utils::MasterSlave::getSize(); rank++) {
+    for (Rank rank = 0; rank < utils::IntraComm::getSize(); rank++) {
       localBBMap.emplace(rank, mesh::BoundingBox(_dimensions));
     }
 
@@ -574,28 +574,28 @@ void ReceivedPartition::createOwnerInformation()
     // receive list of possible shared vertices from neighboring ranks
     std::map<int, std::vector<int>> sharedVerticesReceiveMap;
 
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
 
       // Insert masters bounding box
       localBBMap.at(0) = _bb;
 
       // master receives local bb from each slave rank
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
-        com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).receiveBoundingBox(localBBMap.at(rankSlave), rankSlave);
+      for (int rankSecondary = 1; rankSecondary < utils::IntraComm::getSize(); rankSecondary++) {
+        com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).receiveBoundingBox(localBBMap.at(rankSecondary), rankSecondary);
       }
 
       // master broadcast localBBMap to all slaves
-      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastSendBoundingBoxMap(localBBMap);
-    } else if (utils::MasterSlave::isSlave()) {
+      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastSendBoundingBoxMap(localBBMap);
+    } else if (utils::IntraComm::isSecondary()) {
       // slaves send local bb to master
-      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).sendBoundingBox(_bb, 0);
+      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).sendBoundingBox(_bb, 0);
       // slaves receive localBBMap from master
-      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastReceiveBoundingBoxMap(localBBMap);
+      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastReceiveBoundingBoxMap(localBBMap);
     }
 
     // #2: filter bb map to keep the connected ranks
     // remove the own bb from the map since we compare the own bb only with other ranks bb.
-    localBBMap.erase(utils::MasterSlave::getRank());
+    localBBMap.erase(utils::IntraComm::getRank());
     // find and store local connected ranks
     for (const auto &localBB : localBBMap) {
       if (_bb.overlapping(localBB.second)) {
@@ -648,13 +648,13 @@ void ReceivedPartition::createOwnerInformation()
 
     // Asynchronous receive number of owned vertices from neighbor ranks
     for (auto &neighborRank : localConnectedBBMap) {
-      auto request = utils::MasterSlave::getCommunication()->aReceive(neighborRanksVertexCount.at(neighborRank.first), neighborRank.first);
+      auto request = utils::IntraComm::getCommunication()->aReceive(neighborRanksVertexCount.at(neighborRank.first), neighborRank.first);
       vertexNumberRequests.push_back(request);
     }
 
     // Synchronous send number of owned vertices to neighbor ranks
     for (auto &neighborRank : localConnectedBBMap) {
-      utils::MasterSlave::getCommunication()->send(ownedVerticesCount, neighborRank.first);
+      utils::IntraComm::getCommunication()->send(ownedVerticesCount, neighborRank.first);
     }
 
     // wait until all aReceives are complete.
@@ -668,20 +668,20 @@ void ReceivedPartition::createOwnerInformation()
 
     for (auto &receivingRank : sharedVerticesSendMap) {
       int  sendSize = receivingRank.second.size();
-      auto request  = utils::MasterSlave::getCommunication()->aSend(sendSize, receivingRank.first);
+      auto request  = utils::IntraComm::getCommunication()->aSend(sendSize, receivingRank.first);
       vertexListRequests.push_back(request);
       if (sendSize != 0) {
-        auto request = utils::MasterSlave::getCommunication()->aSend(receivingRank.second, receivingRank.first);
+        auto request = utils::IntraComm::getCommunication()->aSend(receivingRank.second, receivingRank.first);
         vertexListRequests.push_back(request);
       }
     }
 
     for (auto &neighborRank : sharedVerticesSendMap) {
       int receiveSize = 0;
-      utils::MasterSlave::getCommunication()->receive(receiveSize, neighborRank.first);
+      utils::IntraComm::getCommunication()->receive(receiveSize, neighborRank.first);
       if (receiveSize != 0) {
         std::vector<int> receivedSharedVertices;
-        utils::MasterSlave::getCommunication()->receive(receivedSharedVertices, neighborRank.first);
+        utils::IntraComm::getCommunication()->receive(receivedSharedVertices, neighborRank.first);
         sharedVerticesReceiveMap.insert(std::make_pair(neighborRank.first, receivedSharedVertices));
       }
     }
@@ -705,7 +705,7 @@ void ReceivedPartition::createOwnerInformation()
         std::vector<int> vec = sharingRank.second;
         if (std::find(vec.begin(), vec.end(), sharedVerticesGlobalIDs[i]) != vec.end()) {
           if ((ownedVerticesCount > neighborRanksVertexCount[sharingRank.first]) ||
-              (ownedVerticesCount == neighborRanksVertexCount[sharingRank.first] && utils::MasterSlave::getRank() > sharingRank.first)) {
+              (ownedVerticesCount == neighborRanksVertexCount[sharingRank.first] && utils::IntraComm::getRank() > sharingRank.first)) {
             owned = false;
 
             // // Decide upon owners,
@@ -720,7 +720,7 @@ void ReceivedPartition::createOwnerInformation()
             // PRECICE_ASSERT(ranksAtInterface != 0);
             // int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
             // // First round: every slave gets localGuess vertices
-            // for (Rank rank : utils::MasterSlave::allRanks()) {
+            // for (Rank rank : utils::IntraComm::allRanks()) {
             //   int counter = 0;
             //   for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
             //     // Vertex has no owner yet and rank could be owner
@@ -744,9 +744,9 @@ void ReceivedPartition::createOwnerInformation()
                    filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
     // end of two-level initialization section
   } else {
-    if (utils::MasterSlave::isSlave()) {
+    if (utils::IntraComm::isSecondary()) {
       int numberOfVertices = _mesh->vertices().size();
-      utils::MasterSlave::getCommunication()->send(numberOfVertices, 0);
+      utils::IntraComm::getCommunication()->send(numberOfVertices, 0);
 
       if (numberOfVertices != 0) {
         PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
@@ -765,28 +765,28 @@ void ReceivedPartition::createOwnerInformation()
         PRECICE_DEBUG("My tags: {}", tags);
         PRECICE_DEBUG("My global IDs: {}", globalIDs);
         PRECICE_DEBUG("Send tags and global IDs");
-        utils::MasterSlave::getCommunication()->send(tags, 0);
-        utils::MasterSlave::getCommunication()->send(globalIDs, 0);
-        utils::MasterSlave::getCommunication()->send(atInterface, 0);
+        utils::IntraComm::getCommunication()->send(tags, 0);
+        utils::IntraComm::getCommunication()->send(globalIDs, 0);
+        utils::IntraComm::getCommunication()->send(atInterface, 0);
 
         PRECICE_DEBUG("Receive owner information");
         std::vector<int> ownerVec(numberOfVertices, -1);
-        utils::MasterSlave::getCommunication()->receive(ownerVec, 0);
+        utils::IntraComm::getCommunication()->receive(ownerVec, 0);
         PRECICE_DEBUG("My owner information: {}", ownerVec);
         PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfVertices));
         setOwnerInformation(ownerVec);
       }
     }
 
-    else if (utils::MasterSlave::isMaster()) {
+    else if (utils::IntraComm::isPrimary()) {
       // To temporary store which vertices already have an owner
       std::vector<int> globalOwnerVec(_mesh->getGlobalNumberOfVertices(), 0);
       // The same per rank
-      std::vector<std::vector<int>> slaveOwnerVecs(utils::MasterSlave::getSize());
+      std::vector<std::vector<int>> slaveOwnerVecs(utils::IntraComm::getSize());
       // Global IDs per rank
-      std::vector<std::vector<int>> slaveGlobalIDs(utils::MasterSlave::getSize());
+      std::vector<std::vector<int>> slaveGlobalIDs(utils::IntraComm::getSize());
       // Tag information per rank
-      std::vector<std::vector<int>> slaveTags(utils::MasterSlave::getSize());
+      std::vector<std::vector<int>> slaveTags(utils::IntraComm::getSize());
 
       // Fill master data
       PRECICE_DEBUG("Tag master vertices");
@@ -810,20 +810,20 @@ void ReceivedPartition::createOwnerInformation()
       if (masterAtInterface)
         ranksAtInterface++;
 
-      for (Rank rank : utils::MasterSlave::allSlaves()) {
+      for (Rank rank : utils::IntraComm::allSecondaries()) {
         int localNumberOfVertices = -1;
-        utils::MasterSlave::getCommunication()->receive(localNumberOfVertices, rank);
+        utils::IntraComm::getCommunication()->receive(localNumberOfVertices, rank);
         PRECICE_DEBUG("Rank {} has {} vertices.", rank, localNumberOfVertices);
         slaveOwnerVecs[rank].resize(localNumberOfVertices, 0);
 
         if (localNumberOfVertices != 0) {
           PRECICE_DEBUG("Receive tags from slave rank {}", rank);
-          utils::MasterSlave::getCommunication()->receive(slaveTags[rank], rank);
-          utils::MasterSlave::getCommunication()->receive(slaveGlobalIDs[rank], rank);
+          utils::IntraComm::getCommunication()->receive(slaveTags[rank], rank);
+          utils::IntraComm::getCommunication()->receive(slaveGlobalIDs[rank], rank);
           PRECICE_DEBUG("Rank {} has tags {}", rank, slaveTags[rank]);
           PRECICE_DEBUG("Rank {} has global IDs {}", rank, slaveGlobalIDs[rank]);
           bool atInterface = false;
-          utils::MasterSlave::getCommunication()->receive(atInterface, rank);
+          utils::IntraComm::getCommunication()->receive(atInterface, rank);
           if (atInterface)
             ranksAtInterface++;
         }
@@ -841,7 +841,7 @@ void ReceivedPartition::createOwnerInformation()
       PRECICE_ASSERT(ranksAtInterface != 0);
       int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
       // First round: every slave gets localGuess vertices
-      for (Rank rank : utils::MasterSlave::allRanks()) {
+      for (Rank rank : utils::IntraComm::allRanks()) {
         int counter = 0;
         for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
           // Vertex has no owner yet and rank could be owner
@@ -857,7 +857,7 @@ void ReceivedPartition::createOwnerInformation()
 
       // Second round: distribute all other vertices in a greedy way
       PRECICE_DEBUG("Decide owners, second round in greedy way");
-      for (Rank rank : utils::MasterSlave::allRanks()) {
+      for (Rank rank : utils::IntraComm::allRanks()) {
         for (size_t i = 0; i < slaveOwnerVecs[rank].size(); i++) {
           if (globalOwnerVec[slaveGlobalIDs[rank][i]] == 0 && slaveTags[rank][i] == 1) {
             slaveOwnerVecs[rank][i]                 = 1;
@@ -867,13 +867,13 @@ void ReceivedPartition::createOwnerInformation()
       }
 
       // Send information back to slaves
-      for (Rank rank : utils::MasterSlave::allSlaves()) {
+      for (Rank rank : utils::IntraComm::allSecondaries()) {
         if (not slaveTags[rank].empty()) {
           PRECICE_DEBUG("Send owner information to slave rank {}", rank);
-          utils::MasterSlave::getCommunication()->send(slaveOwnerVecs[rank], rank);
+          utils::IntraComm::getCommunication()->send(slaveOwnerVecs[rank], rank);
         }
       }
-      // Master data
+      // Primary data
       PRECICE_DEBUG("My owner information: {}", slaveOwnerVecs[0]);
       setOwnerInformation(slaveOwnerVecs[0]);
 

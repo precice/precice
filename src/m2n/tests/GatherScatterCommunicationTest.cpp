@@ -18,8 +18,8 @@ using namespace m2n;
 
 BOOST_AUTO_TEST_CASE(GatherScatterTest)
 {
-  PRECICE_TEST("Part1"_on(1_rank), "Part2"_on(3_ranks).setupMasterSlaves(), Require::Events);
-  auto m2n = context.connectMasters("Part1", "Part2");
+  PRECICE_TEST("Part1"_on(1_rank), "Part2"_on(3_ranks).setupIntraComms(), Require::Events);
+  auto m2n = context.connectPrimarys("Part1", "Part2");
 
   int             dimensions       = 2;
   int             numberOfVertices = 6;
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
     pMesh->getVertexDistribution()[0].push_back(4);
     pMesh->getVertexDistribution()[0].push_back(5);
 
-    m2n->acceptSlavesConnection("Part1", "Part2");
+    m2n->acceptSecondariesConnection("Part1", "Part2");
     Eigen::VectorXd values = Eigen::VectorXd::Zero(numberOfVertices);
     values << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
     m2n->send(values, pMesh->getID(), valueDimension);
@@ -54,9 +54,9 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
     BOOST_TEST(context.isNamed("Part2"));
     mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
     m2n->createDistributedCommunication(pMesh);
-    m2n->requestSlavesConnection("Part1", "Part2");
+    m2n->requestSecondariesConnection("Part1", "Part2");
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       pMesh->setGlobalNumberOfVertices(numberOfVertices);
       pMesh->getVertexDistribution()[0].push_back(0);
       pMesh->getVertexDistribution()[0].push_back(1);
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
       BOOST_TEST(values(2) == 4.0);
       values = values * 2;
       m2n->send(values, pMesh->getID(), valueDimension);
-    } else if (context.isRank(1)) { // Slave1
+    } else if (context.isRank(1)) { // Secondary1
       Eigen::VectorXd values;
       m2n->receive({}, pMesh->getID(), valueDimension);
       m2n->send(values, pMesh->getID(), valueDimension);

@@ -13,7 +13,7 @@ std::string ExportVTP::getVTKFormat() const
   return "PolyData";
 }
 
-std::string ExportVTP::getMasterExtension() const
+std::string ExportVTP::getPrimaryExtension() const
 {
   return ".pvtp";
 }
@@ -32,7 +32,7 @@ std::string ExportVTP::getPieceAttributes(const mesh::Mesh &mesh) const
   return oss.str();
 }
 
-void ExportVTP::writeMasterCells(std::ostream &out) const
+void ExportVTP::writePrimaryCells(std::ostream &out) const
 {
   out << "      <PLines>\n";
   out << "         <PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>\n";

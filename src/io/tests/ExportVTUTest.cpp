@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_SUITE(VTUExport)
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
-  PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
+  PRECICE_TEST(""_on(1_rank).setupIntraComms());
   int           dim = 2;
   mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
   int        dim = 2;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
   int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 
 BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
   int        dim = 3;
   mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
 

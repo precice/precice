@@ -194,12 +194,12 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
-    useOnlyMasterCom(communication) = true;
+    useOnlyPrimaryCom(communication) = true;
     if (participant0 == localParticipant) {
-      communication->requestMasterConnection(participant1, participant0);
+      communication->requestPrimaryConnection(participant1, participant0);
     } else {
       BOOST_TEST(participant1 == localParticipant);
-      communication->acceptMasterConnection(participant1, participant0);
+      communication->acceptPrimaryConnection(participant1, participant0);
     }
   }
 };

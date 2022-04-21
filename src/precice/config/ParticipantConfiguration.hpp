@@ -131,7 +131,7 @@ private:
   // Does this participant already define a master tag?
   // This context information is needed in xmlEndTagCallback to create a default
   // master com if required (i.e. no solution yet defined and parallel).
-  bool _isMasterDefined = false;
+  bool _isPrimaryDefined = false;
 
   void finishParticipantConfiguration(
       const xml::ConfigurationContext &context,

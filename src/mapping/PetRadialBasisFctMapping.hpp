@@ -288,7 +288,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   std::vector<PetscInt> myIndizes;
 
   // Indizes for Q^T, holding the polynomial
-  if (_commState->rank() <= 0) // Rank 0 or not in MasterSlave mode
+  if (_commState->rank() <= 0) // Rank 0 or not in IntraComm mode
     for (size_t i = 0; i < polyparams; i++)
       myIndizes.push_back(i); // polyparams reside in the first rows (which are always on rank 0)
 

@@ -72,7 +72,7 @@ public:
       std::string const &requesterName) override;
 
   /// Completes the slaves connections for both acceptor and requester by updating the vertex list in _mappings
-  void completeSlavesConnection() override;
+  void completeSecondariesConnection() override;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.

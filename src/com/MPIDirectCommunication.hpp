@@ -82,23 +82,23 @@ public:
   /// See precice::com::Communication::closeConnection().
   virtual void closeConnection() override;
 
-  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster) override;
+  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankPrimary) override;
 
   virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive) override;
 
-  virtual void reduceSum(int itemToSend, int &itemsToReceive, Rank rankMaster) override;
+  virtual void reduceSum(int itemToSend, int &itemsToReceive, Rank rankPrimary) override;
 
   virtual void reduceSum(int itemToSend, int &itemsToReceive) override;
 
-  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster) override;
+  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankPrimary) override;
 
   virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive) override;
 
-  virtual void allreduceSum(double itemToSend, double &itemsToReceive, Rank rankMaster) override;
+  virtual void allreduceSum(double itemToSend, double &itemsToReceive, Rank rankPrimary) override;
 
   virtual void allreduceSum(double itemToSend, double &itemsToReceive) override;
 
-  virtual void allreduceSum(int itemToSend, int &itemsToReceive, Rank rankMaster) override;
+  virtual void allreduceSum(int itemToSend, int &itemsToReceive, Rank rankPrimary) override;
 
   virtual void allreduceSum(int itemToSend, int &itemsToReceive) override;
 

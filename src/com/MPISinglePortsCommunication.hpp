@@ -89,7 +89,7 @@ private:
    * These direct connections connect MPI_COMM_SELF on both sides.
    * The call to establish such a connection is thus not collective.
    *
-   * These connections are required for the Master-Master and Master-Slaves connections.
+   * These connections are required for the Primary-Primary and Primary-Secondaries connections.
    */
   std::map<int, MPI_Comm> _direct;
 

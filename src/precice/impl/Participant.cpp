@@ -48,9 +48,9 @@ void Participant::addAction(action::PtrAction &&action)
   _actions.push_back(std::move(action));
 }
 
-void Participant::setUseMaster(bool useMaster)
+void Participant::setUsePrimary(bool usePrimary)
 {
-  _useMaster = useMaster;
+  _usePrimary = usePrimary;
 }
 
 void Participant::addWatchPoint(
@@ -388,9 +388,9 @@ std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
   return _watchIntegrals;
 }
 
-bool Participant::useMaster() const
+bool Participant::usePrimary() const
 {
-  return _useMaster;
+  return _usePrimary;
 }
 
 const std::string &Participant::getName() const

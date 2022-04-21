@@ -28,7 +28,7 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
@@ -191,11 +191,11 @@ ParticipantConfiguration::ParticipantConfiguration(
   std::list<XMLTag>  masterTags;
   XMLTag::Occurrence masterOcc = XMLTag::OCCUR_NOT_OR_ONCE;
   {
-    XMLTag tagMaster(*this, "sockets", masterOcc, TAG_MASTER);
+    XMLTag tagPrimary(*this, "sockets", masterOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use TCP/IP sockets instead.";
-    tagMaster.setDocumentation(doc);
+    tagPrimary.setDocumentation(doc);
 
     auto attrPort = makeXMLAttribute("port", 0)
                         .setDocumentation(
@@ -203,7 +203,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                             "communication. The default is \"0\", what means that OS will "
                             "dynamically search for a free port (if at least one exists) and "
                             "bind it automatically.");
-    tagMaster.addAttribute(attrPort);
+    tagPrimary.addAttribute(attrPort);
 
     auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
                            .setDocumentation(
@@ -211,42 +211,42 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "Default is the canonical name of the loopback interface of your platform. "
                                "Might be different on supercomputing systems, e.g. \"ib0\" "
                                "for the InfiniBand on SuperMUC. ");
-    tagMaster.addAttribute(attrNetwork);
+    tagPrimary.addAttribute(attrNetwork);
 
     auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen.");
-    tagMaster.addAttribute(attrExchangeDirectory);
+    tagPrimary.addAttribute(attrExchangeDirectory);
 
-    masterTags.push_back(tagMaster);
+    masterTags.push_back(tagPrimary);
   }
   {
-    XMLTag tagMaster(*this, "mpi", masterOcc, TAG_MASTER);
+    XMLTag tagPrimary(*this, "mpi", masterOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use MPI with separated communication spaces instead instead.";
-    tagMaster.setDocumentation(doc);
+    tagPrimary.setDocumentation(doc);
 
     auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen.");
-    tagMaster.addAttribute(attrExchangeDirectory);
+    tagPrimary.addAttribute(attrExchangeDirectory);
 
-    masterTags.push_back(tagMaster);
+    masterTags.push_back(tagPrimary);
   }
   {
-    XMLTag tagMaster(*this, "mpi-single", masterOcc, TAG_MASTER);
+    XMLTag tagPrimary(*this, "mpi-single", masterOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
     doc += "This tag is only used to ensure backwards compatibility.";
-    tagMaster.setDocumentation(doc);
+    tagPrimary.setDocumentation(doc);
 
-    masterTags.push_back(tagMaster);
+    masterTags.push_back(tagPrimary);
   }
-  for (XMLTag &tagMaster : masterTags) {
-    tag.addSubtag(tagMaster);
+  for (XMLTag &tagPrimary : masterTags) {
+    tag.addSubtag(tagPrimary);
   }
 
   parent.addSubtag(tag);
@@ -351,9 +351,9 @@ void ParticipantConfiguration::xmlTagCallback(
   } else if (tag.getNamespace() == TAG_MASTER) {
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com    = comConfig.createCommunication(tag);
-    utils::MasterSlave::getCommunication() = com;
-    _isMasterDefined                       = true;
-    _participants.back()->setUseMaster(true);
+    utils::IntraComm::getCommunication() = com;
+    _isPrimaryDefined                       = true;
+    _participants.back()->setUsePrimary(true);
   }
 }
 
@@ -615,17 +615,17 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   _watchIntegralConfigs.clear();
 
   // create default master communication if needed
-  if (context.size > 1 && not _isMasterDefined && participant->getName() == context.name) {
+  if (context.size > 1 && not _isPrimaryDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
     PRECICE_ERROR("Implicit master communications for parallel participants are only available if preCICE was built with MPI. "
                   "Either explicitly define a master communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com::PtrCommunication com              = std::make_shared<com::MPIDirectCommunication>();
-    utils::MasterSlave::getCommunication() = com;
-    participant->setUseMaster(true);
+    utils::IntraComm::getCommunication() = com;
+    participant->setUsePrimary(true);
 #endif
   }
-  _isMasterDefined = false; // to not mess up with previous participant
+  _isPrimaryDefined = false; // to not mess up with previous participant
 }
 
 void ParticipantConfiguration::checkIllDefinedMappings(

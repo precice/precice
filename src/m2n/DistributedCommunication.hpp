@@ -96,7 +96,7 @@ public:
    * @pre accept/requestConnection has not been called
    * @post the m2n connection is ready to use
    */
-  virtual void completeSlavesConnection() = 0;
+  virtual void completeSecondariesConnection() = 0;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.

@@ -7,7 +7,7 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
-BOOST_AUTO_TEST_CASE(MasterSockets)
+BOOST_AUTO_TEST_CASE(PrimarySockets)
 {
   PRECICE_TEST("ParallelSolver"_on(3_ranks), "SerialSolver"_on(1_rank));
 

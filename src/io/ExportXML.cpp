@@ -14,7 +14,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -29,8 +29,8 @@ void ExportXML::doExport(
   processDataNamesAndDimensions(mesh);
   if (not location.empty())
     boost::filesystem::create_directories(location);
-  if (utils::MasterSlave::isMaster()) {
-    writeMasterFile(name, location, mesh);
+  if (utils::IntraComm::isPrimary()) {
+    writePrimaryFile(name, location, mesh);
   }
   if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
     writeSubFile(name, location, mesh);
@@ -53,58 +53,58 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
   }
 }
 
-void ExportXML::writeMasterFile(
+void ExportXML::writePrimaryFile(
     const std::string &name,
     const std::string &location,
     const mesh::Mesh & mesh) const
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name + getMasterExtension());
-  std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
+  outfile = outfile / fs::path(name + getPrimaryExtension());
+  std::ofstream outPrimaryFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outMasterFile, "{} export failed to open master file \"{}\"", getVTKFormat(), outfile);
+  PRECICE_CHECK(outPrimaryFile, "{} export failed to open master file \"{}\"", getVTKFormat(), outfile);
 
   const auto formatType = getVTKFormat();
-  outMasterFile << "<?xml version=\"1.0\"?>\n";
-  outMasterFile << "<VTKFile type=\"P" << formatType << "\" version=\"0.1\" byte_order=\"";
-  outMasterFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
-  outMasterFile << "   <P" << formatType << " GhostLevel=\"0\">\n";
+  outPrimaryFile << "<?xml version=\"1.0\"?>\n";
+  outPrimaryFile << "<VTKFile type=\"P" << formatType << "\" version=\"0.1\" byte_order=\"";
+  outPrimaryFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
+  outPrimaryFile << "   <P" << formatType << " GhostLevel=\"0\">\n";
 
-  outMasterFile << "      <PPoints>\n";
-  outMasterFile << "         <PDataArray type=\"Float64\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\"/>\n";
-  outMasterFile << "      </PPoints>\n";
+  outPrimaryFile << "      <PPoints>\n";
+  outPrimaryFile << "         <PDataArray type=\"Float64\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\"/>\n";
+  outPrimaryFile << "      </PPoints>\n";
 
-  writeMasterCells(outMasterFile);
+  writePrimaryCells(outPrimaryFile);
 
-  writeMasterData(outMasterFile);
+  writePrimaryData(outPrimaryFile);
 
   const auto &offsets = mesh.getVertexOffsets();
   PRECICE_ASSERT(offsets.size() > 0);
   if (offsets[0] > 0) {
-    outMasterFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
+    outPrimaryFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
   }
-  for (auto rank : utils::MasterSlave::allSlaves()) {
+  for (auto rank : utils::IntraComm::allSecondaries()) {
     PRECICE_ASSERT(rank < offsets.size());
     if (offsets[rank] - offsets[rank - 1] > 0) {
       //only non-empty subfiles
-      outMasterFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
+      outPrimaryFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
     }
   }
 
-  outMasterFile << "   </P" << formatType << ">\n";
-  outMasterFile << "</VTKFile>\n";
+  outPrimaryFile << "   </P" << formatType << ">\n";
+  outPrimaryFile << "</VTKFile>\n";
 
-  outMasterFile.close();
+  outPrimaryFile.close();
 }
 
 namespace {
 std::string getPieceSuffix()
 {
-  if (!utils::MasterSlave::isParallel()) {
+  if (!utils::IntraComm::isParallel()) {
     return "";
   }
-  return "_" + std::to_string(utils::MasterSlave::getRank());
+  return "_" + std::to_string(utils::IntraComm::getRank());
 }
 } // namespace
 
@@ -159,7 +159,7 @@ void ExportXML::exportData(
   // Export the current rank
   outFile << "            <DataArray type=\"UInt32\" Name=\"Rank\" NumberOfComponents=\"1\" format=\"ascii\">\n";
   outFile << "               ";
-  const auto rank = utils::MasterSlave::getRank();
+  const auto rank = utils::IntraComm::getRank();
   for (size_t count = 0; count < mesh.vertices().size(); ++count) {
     outFile << rank << ' ';
   }
@@ -243,7 +243,7 @@ void ExportXML::exportPoints(
   outFile << "         </Points> \n\n";
 }
 
-void ExportXML::writeMasterData(std::ostream &out) const
+void ExportXML::writePrimaryData(std::ostream &out) const
 {
   // write scalar data names
   out << "      <PPointData Scalars=\"Rank ";

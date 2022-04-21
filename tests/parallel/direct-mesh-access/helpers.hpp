@@ -8,10 +8,10 @@ using namespace precice;
 using precice::testing::TestContext;
 
 void runTestAccessReceivedMesh(const TestContext &       context,
-                               const std::vector<double> boundingBoxSlave,
-                               const std::vector<double> writeDataSlave,
-                               const std::vector<double> expectedPositionSlave,
-                               const std::vector<double> expectedReadDataSlave,
+                               const std::vector<double> boundingBoxSecondary,
+                               const std::vector<double> writeDataSecondary,
+                               const std::vector<double> expectedPositionSecondary,
+                               const std::vector<double> expectedReadDataSecondary,
                                const int                 startIndex);
 
 #endif

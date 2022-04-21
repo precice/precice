@@ -8,7 +8,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(GatherScatter)
-BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyMaster)
+BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyPrimary)
 {
   // Test case for an enforced gather scatter communication, where the partition
   // on the master rank is empty (recieved and provided). See issue #1013 for details.

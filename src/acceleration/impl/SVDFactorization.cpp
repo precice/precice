@@ -5,7 +5,7 @@
 #include <limits>
 #include <utility>
 
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice {
 namespace acceleration {
@@ -114,7 +114,7 @@ void SVDFactorization::computeQRdecomposition(
     Vector s        = Vector::Zero(R.rows()); // gram-schmidt coefficients re-orthogonalization
     Vector u        = Vector::Zero(A.rows()); // sum of projections
     double rho_orth = 0.;
-    double rho0     = utils::MasterSlave::l2norm(col); // distributed l2norm;
+    double rho0     = utils::IntraComm::l2norm(col); // distributed l2norm;
     double rho00    = rho0;                            // save norm of col for QR2 filter crit.
 
     int  its            = 0;
@@ -130,7 +130,7 @@ void SVDFactorization::computeQRdecomposition(
         // dot-product <_Q(:,j), v >
         Vector Qc = Q.col(j);
         // dot product <_Q(:,j), v> =: r_ij
-        double r_ij = utils::MasterSlave::dot(Qc, col);
+        double r_ij = utils::IntraComm::dot(Qc, col);
         // save r_ij in s(j) = column of R
         s(j) = r_ij;
         // u is the sum of projections r_ij * _Q(:,j) =  _Q(:,j) * <_Q(:,j), v>
@@ -142,9 +142,9 @@ void SVDFactorization::computeQRdecomposition(
       col -= u;
 
       // rho1 = norm of orthogonalized new column v_tilde (though not normalized)
-      rho_orth = utils::MasterSlave::l2norm(col);
+      rho_orth = utils::IntraComm::l2norm(col);
       // t = norm of _r(:,j) with j = colNum-1
-      double norm_coefficients = utils::MasterSlave::l2norm(s); // distributed l2norm
+      double norm_coefficients = utils::IntraComm::l2norm(s); // distributed l2norm
 
       its++;
 

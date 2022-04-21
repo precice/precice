@@ -1,7 +1,7 @@
 #ifndef PRECICE_NO_MPI
 
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice {
 namespace acceleration {
@@ -11,7 +11,7 @@ void ParallelMatrixOperations::initialize(const bool needCyclicComm)
 {
   PRECICE_TRACE();
 
-  if (needCyclicComm && utils::MasterSlave::isParallel()) {
+  if (needCyclicComm && utils::IntraComm::isParallel()) {
     _needCyclicComm = true;
     establishCircularCommunication();
   } else {
@@ -37,8 +37,8 @@ void ParallelMatrixOperations::establishCircularCommunication()
   com::PtrCommunication cyclicCommLeft  = com::PtrCommunication(new com::MPIPortsCommunication("."));
   com::PtrCommunication cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication("."));
 
-  const auto size     = utils::MasterSlave::getSize();
-  const auto rank     = utils::MasterSlave::getRank();
+  const auto size     = utils::IntraComm::getSize();
+  const auto rank     = utils::IntraComm::getRank();
   const int  prevProc = (rank - 1 + size) % size;
   const int  nextProc = (rank + 1) % size;
 
@@ -70,7 +70,7 @@ void ParallelMatrixOperations::closeCircularCommunication()
   PRECICE_ASSERT(static_cast<bool>(_cyclicCommLeft) == static_cast<bool>(_cyclicCommRight));
   PRECICE_ASSERT(_needCyclicComm);
 
-  if ((utils::MasterSlave::getRank() % 2) == 0) {
+  if ((utils::IntraComm::getRank() % 2) == 0) {
     _cyclicCommLeft->closeConnection();
     _cyclicCommRight->closeConnection();
   } else {

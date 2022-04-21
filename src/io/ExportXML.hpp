@@ -48,7 +48,7 @@ private:
   std::vector<std::string> _vectorDataNames;
 
   virtual std::string getVTKFormat() const                             = 0;
-  virtual std::string getMasterExtension() const                       = 0;
+  virtual std::string getPrimaryExtension() const                       = 0;
   virtual std::string getPieceExtension() const                        = 0;
   virtual std::string getPieceAttributes(const mesh::Mesh &mesh) const = 0;
 
@@ -61,14 +61,14 @@ private:
   /**
     * @brief Writes the master file (called only by the master rank)
     */
-  void writeMasterFile(
+  void writePrimaryFile(
       const std::string &name,
       const std::string &location,
       const mesh::Mesh & mesh) const;
 
-  virtual void writeMasterCells(std::ostream &out) const = 0;
+  virtual void writePrimaryCells(std::ostream &out) const = 0;
 
-  void writeMasterData(std::ostream &out) const;
+  void writePrimaryData(std::ostream &out) const;
 
   /**
     * @brief Writes the sub file for each rank

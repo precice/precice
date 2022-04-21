@@ -22,7 +22,7 @@
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/EventUtils.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 
@@ -40,8 +40,8 @@ TestContext::~TestContext() noexcept
     precice::utils::EventRegistry::instance().finalize();
   }
   if (!invalid && _initMS) {
-    utils::MasterSlave::getCommunication() = nullptr;
-    utils::MasterSlave::reset();
+    utils::IntraComm::getCommunication() = nullptr;
+    utils::IntraComm::reset();
   }
 
   // Clear caches
@@ -86,7 +86,7 @@ bool TestContext::isRank(Rank rank) const
   return this->rank == rank;
 }
 
-bool TestContext::isMaster() const
+bool TestContext::isPrimary() const
 {
   return isRank(0);
 }
@@ -131,7 +131,7 @@ void TestContext::initialize(const Participants &participants)
   Par::Parallel::CommState::world()->synchronize();
   initializeMPI(participants);
   Par::Parallel::CommState::world()->synchronize();
-  initializeMasterSlave();
+  initializeIntraComm();
   initializeEvents();
   initializePetsc();
 }
@@ -180,27 +180,27 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   }
 }
 
-void TestContext::initializeMasterSlave()
+void TestContext::initializeIntraComm()
 {
   if (invalid)
     return;
 
   // Establish a consistent state for all tests
-  utils::MasterSlave::configure(rank, size);
-  utils::MasterSlave::getCommunication().reset();
+  utils::IntraComm::configure(rank, size);
+  utils::IntraComm::getCommunication().reset();
 
   if (!_initMS || hasSize(1))
     return;
 
 #ifndef PRECICE_NO_MPI
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  precice::com::PtrCommunication masterSecondaryCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
 #else
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
+  precice::com::PtrCommunication masterSecondaryCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
 #endif
 
-  masterSlaveCom->connectMasterSlaves(name, "", rank, size);
+  masterSecondaryCom->connectIntraComms(name, "", rank, size);
 
-  utils::MasterSlave::getCommunication() = std::move(masterSlaveCom);
+  utils::IntraComm::getCommunication() = std::move(masterSecondaryCom);
 }
 
 void TestContext::initializeEvents()
@@ -217,7 +217,7 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
+m2n::PtrM2N TestContext::connectPrimarys(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());
 
@@ -232,7 +232,7 @@ m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::
   default:
     throw std::runtime_error{"ConnectionType unknown"};
   };
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
+  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
 
   if (std::find(_names.begin(), _names.end(), acceptor) == _names.end()) {
     throw std::runtime_error{
@@ -244,9 +244,9 @@ m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::
   }
 
   if (isNamed(acceptor)) {
-    m2n->acceptMasterConnection(acceptor, requestor);
+    m2n->acceptPrimaryConnection(acceptor, requestor);
   } else if (isNamed(requestor)) {
-    m2n->requestMasterConnection(acceptor, requestor);
+    m2n->requestPrimaryConnection(acceptor, requestor);
   } else {
     throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
   }
@@ -270,7 +270,7 @@ std::string TestContext::describe() const
   if (_initMS || _events || _petsc) {
     os << " Initialized: {";
     if (_initMS)
-      os << " MasterSlave Communication ";
+      os << " IntraComm Communication ";
     if (_events)
       os << " Events";
     if (_petsc)

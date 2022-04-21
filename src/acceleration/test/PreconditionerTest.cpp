@@ -259,10 +259,10 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
 #ifndef PRECICE_NO_MPI
 BOOST_AUTO_TEST_CASE(testParallelMatrixScaling)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
   //setup data
   int localN = -1;
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     localN = 2;
   } else if (context.isRank(1)) {
     localN = 1;
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(testParallelMatrixScaling)
   Eigen::MatrixXd M_back(globalN, localN);
   Eigen::VectorXd x_back(localN);
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     V(0, 0) = 1.0;
     V(0, 1) = 2.0;
     V(1, 0) = 3.0;

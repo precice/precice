@@ -8,7 +8,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(GatherScatter)
-BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyReceivedMaster)
+BOOST_AUTO_TEST_CASE(EnforceGatherScatterEmptyReceivedPrimary)
 {
   PRECICE_TEST("ParallelSolver"_on(2_ranks), "SerialSolver"_on(1_rank));
   // Provided master partition is not empty, but received master partitionis empty

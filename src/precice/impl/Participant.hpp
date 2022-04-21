@@ -21,7 +21,7 @@
 #include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/PointerVector.hpp"
 
 namespace precice {
@@ -93,7 +93,7 @@ public:
   void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
 
   /// Sets weather the participant was configured with a master tag
-  void setUseMaster(bool useMaster);
+  void setUsePrimary(bool usePrimary);
 
   /// Sets the manager responsible for providing unique IDs to meshes.
   void setMeshIdManager(std::unique_ptr<utils::ManageUniqueIDs> &&idm)
@@ -264,7 +264,7 @@ public:
   const std::string &getName() const;
 
   /// Returns true, if the participant uses a master tag.
-  bool useMaster() const;
+  bool usePrimary() const;
 
   /// Provided access to all read \ref MappingContext
   const utils::ptr_vector<MappingContext> &readMappingContexts() const;
@@ -318,7 +318,7 @@ private:
 
   std::map<DataID, ReadDataContext> _readDataContexts;
 
-  bool _useMaster = false;
+  bool _usePrimary = false;
 
   std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
 

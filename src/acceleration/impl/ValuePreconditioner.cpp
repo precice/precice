@@ -1,7 +1,7 @@
 #include "acceleration/impl/ValuePreconditioner.hpp"
 #include <cstddef>
 #include <vector>
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -28,7 +28,7 @@ void ValuePreconditioner::_update_(bool                   timeWindowComplete,
       for (size_t i = 0; i < _subVectorSizes[k]; i++) {
         part(i) = oldValues(i + offset);
       }
-      norms[k] = utils::MasterSlave::l2norm(part);
+      norms[k] = utils::IntraComm::l2norm(part);
       offset += _subVectorSizes[k];
       PRECICE_ASSERT(norms[k] > 0.0);
     }

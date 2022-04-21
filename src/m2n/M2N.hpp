@@ -30,7 +30,7 @@ struct WhiteboxAccessor;
  */
 class M2N {
 public:
-  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false, bool useTwoLevelInit = false);
+  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom = false, bool useTwoLevelInit = false);
 
   /// Destructor, empty.
   ~M2N();
@@ -44,7 +44,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptMasterConnection(const std::string &acceptorName,
+  void acceptPrimaryConnection(const std::string &acceptorName,
                               const std::string &requesterName);
 
   /**
@@ -53,7 +53,7 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestMasterConnection(const std::string &acceptorName,
+  void requestPrimaryConnection(const std::string &acceptorName,
                                const std::string &requesterName);
 
   /**
@@ -62,7 +62,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptSlavesConnection(const std::string &acceptorName,
+  void acceptSecondariesConnection(const std::string &acceptorName,
                               const std::string &requesterName);
 
   /**
@@ -71,21 +71,21 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestSlavesConnection(const std::string &acceptorName,
+  void requestSecondariesConnection(const std::string &acceptorName,
                                const std::string &requesterName);
 
   /**
-   * Same as acceptSlavesConnection except this only creates the channels,
+   * Same as acceptSecondariesConnection except this only creates the channels,
    * no vertex list needed!
    */
-  void acceptSlavesPreConnection(const std::string &acceptorName,
+  void acceptSecondariesPreConnection(const std::string &acceptorName,
                                  const std::string &requesterName);
 
   /**
-   * Same as requestSlavesConnection except this only creates the channels,
+   * Same as requestSecondariesConnection except this only creates the channels,
    * no vertex list needed!
    */
-  void requestSlavesPreConnection(const std::string &acceptorName,
+  void requestSecondariesPreConnection(const std::string &acceptorName,
                                   const std::string &requesterName);
 
   /*
@@ -94,7 +94,7 @@ public:
    *        call this function to update and complete the communication
    *        channels for every communicated mesh
    */
-  void completeSlavesConnection();
+  void completeSecondariesConnection();
 
   /**
    * @brief prepares to establish the connections
@@ -129,19 +129,19 @@ public:
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
-   * Calls closeMasterConnection() and closeSlaveConnections()
+   * Calls closePrimaryConnection() and closeSecondaryConnections()
    * This method is called on destruction.
    */
   void closeConnection();
 
-  /// Disconnects the Master-Master connection
-  void closeMasterConnection();
+  /// Disconnects the Primary-Primary connection
+  void closePrimaryConnection();
 
   /// Disconnects all connections of the DistributedCommunication
   void closeDistributedConnections();
 
   /// Get the basic communication between the 2 masters.
-  com::PtrCommunication getMasterCommunication();
+  com::PtrCommunication getPrimaryCommunication();
 
   /// Creates a new distributes communication for that mesh, stores the pointer in _distComs
   void createDistributedCommunication(const mesh::PtrMesh &mesh);
@@ -212,9 +212,9 @@ private:
 
   DistributedComFactory::SharedPointer _distrFactory;
 
-  bool _isMasterConnected = false;
+  bool _isPrimaryConnected = false;
 
-  bool _areSlavesConnected = false;
+  bool _areSecondariesConnected = false;
 
   // The following flag is (solely) needed for unit tests between two serial participants.
   // To also use the slaves-slaves communication would require a lengthy setup of meshes
@@ -225,20 +225,20 @@ private:
   // respective tests through a friend declaration.
 
   /// between two serial participants, only use the master-master com and no slaves-slaves com
-  bool _useOnlyMasterCom = false;
+  bool _useOnlyPrimaryCom = false;
 
   /// use the two-level initialization concept
   bool _useTwoLevelInit = false;
 
-  // @brief To allow access to _useOnlyMasterCom
+  // @brief To allow access to _useOnlyPrimaryCom
   friend struct WhiteboxAccessor;
 };
 
-/// struct giving access _useOnlyMasterCom
+/// struct giving access _useOnlyPrimaryCom
 struct WhiteboxAccessor {
-  static auto useOnlyMasterCom(PtrM2N m2n) -> typename std::add_lvalue_reference<decltype(m2n->_useOnlyMasterCom)>::type
+  static auto useOnlyPrimaryCom(PtrM2N m2n) -> typename std::add_lvalue_reference<decltype(m2n->_useOnlyPrimaryCom)>::type
   {
-    return m2n->_useOnlyMasterCom;
+    return m2n->_useOnlyPrimaryCom;
   }
 };
 

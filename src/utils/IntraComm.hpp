@@ -15,8 +15,8 @@ class Logger;
 
 namespace utils {
 
-/// Utility class for managing Master-Slave operations.
-class MasterSlave {
+/// Utility class for managing Primary-Secondary operations.
+class IntraComm {
 public:
   /// Configures the master-slave communication.
   static void configure(Rank rank, int size);
@@ -34,7 +34,7 @@ public:
   }
 
   /// Returns an iterable range over salve ranks [1, _size)
-  static auto allSlaves()
+  static auto allSecondaries()
   {
     return boost::irange(1, _size);
   }
@@ -46,10 +46,10 @@ public:
   }
 
   /// True if this process is running the master.
-  static bool isMaster();
+  static bool isPrimary();
 
   /// True if this process is running a slave.
-  static bool isSlave();
+  static bool isSecondary();
 
   /// True if this process is running in parallel
   static bool isParallel();
@@ -90,10 +90,10 @@ private:
   static int _size;
 
   /// True if this process is running the master.
-  static bool _isMaster;
+  static bool _isPrimary;
 
   /// True if this process is running a slave.
-  static bool _isSlave;
+  static bool _isSecondary;
 
   /// Communication between the master and all slaves.
   static com::PtrCommunication _communication;
