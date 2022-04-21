@@ -188,7 +188,7 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
       c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
     }
 
-    // broadcast coefficients c to all secondarys
+    // broadcast coefficients c to all secondaries
     utils::MasterSlave::broadcast(c);
   }
 

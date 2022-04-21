@@ -621,10 +621,10 @@ private:
   impl::PtrParticipant determineAccessingParticipant(
       const config::SolverInterfaceConfiguration &config);
 
-  /// Initializes communication between primary and secondarys.
+  /// Initializes communication between primary and secondaries.
   void initializeMasterSlaveCommunication();
 
-  /// Syncs the timestep between secondarys and primary (all timesteps should be the same!)
+  /// Syncs the timestep between secondaries and primary (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
 
   /// Which channels to close in closeCommunicationChannels()

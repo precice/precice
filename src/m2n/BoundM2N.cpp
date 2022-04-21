@@ -35,17 +35,17 @@ void BoundM2N::connectMasters()
 void BoundM2N::connectSlaves()
 {
   if (m2n->usesTwoLevelInitialization()) {
-    PRECICE_DEBUG("Update secondarys connections");
+    PRECICE_DEBUG("Update secondaries connections");
     m2n->completeSlavesConnection();
   } else {
     if (isRequesting) {
-      PRECICE_DEBUG("Awaiting secondarys connection from {}", remoteName);
+      PRECICE_DEBUG("Awaiting secondaries connection from {}", remoteName);
       m2n->requestSlavesConnection(remoteName, localName);
-      PRECICE_DEBUG("Established secondarys connection from {}", remoteName);
+      PRECICE_DEBUG("Established secondaries connection from {}", remoteName);
     } else {
-      PRECICE_DEBUG("Establishing secondarys connection to {}", remoteName);
+      PRECICE_DEBUG("Establishing secondaries connection to {}", remoteName);
       m2n->acceptSlavesConnection(localName, remoteName);
-      PRECICE_DEBUG("Established  secondarys connection to {}", remoteName);
+      PRECICE_DEBUG("Established  secondaries connection to {}", remoteName);
     }
   }
 }
@@ -58,13 +58,13 @@ void BoundM2N::preConnectSlaves()
   PRECICE_WARN("Two-level initialization is still in beta testing. Several edge cases are known to fail. Please report problems nevertheless.");
 
   if (isRequesting) {
-    PRECICE_DEBUG("Awaiting preliminary secondarys connection from {}", remoteName);
+    PRECICE_DEBUG("Awaiting preliminary secondaries connection from {}", remoteName);
     m2n->requestSlavesPreConnection(remoteName, localName);
-    PRECICE_DEBUG("Established preliminary secondarys connection from {}", remoteName);
+    PRECICE_DEBUG("Established preliminary secondaries connection from {}", remoteName);
   } else {
-    PRECICE_DEBUG("Establishing preliminary secondarys connection to {}", remoteName);
+    PRECICE_DEBUG("Establishing preliminary secondaries connection to {}", remoteName);
     m2n->acceptSlavesPreConnection(localName, remoteName);
-    PRECICE_DEBUG("Established preliminary secondarys connection to {}", remoteName);
+    PRECICE_DEBUG("Established preliminary secondaries connection to {}", remoteName);
   }
 }
 

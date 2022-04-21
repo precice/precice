@@ -146,7 +146,7 @@ public:
   /// Creates a new distributes communication for that mesh, stores the pointer in _distComs
   void createDistributedCommunication(const mesh::PtrMesh &mesh);
 
-  /// Sends an array of double values from all secondarys (different for each secondary).
+  /// Sends an array of double values from all secondaries (different for each secondary).
   void send(precice::span<double const> itemsToSend,
             int                         meshID,
             int                         valueDimension);
@@ -172,15 +172,15 @@ public:
   /// Broadcasts an int to connected ranks on remote participant (concerning the given mesh)
   void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
-  /// All secondarys receive an array of doubles (different for each secondary).
+  /// All secondaries receive an array of doubles (different for each secondary).
   void receive(precice::span<double> itemsToReceive,
                int                   meshID,
                int                   valueDimension);
 
-  /// All secondarys receive a bool (the same for each secondary).
+  /// All secondaries receive a bool (the same for each secondary).
   void receive(bool &itemToReceive);
 
-  /// All secondarys receive a double (the same for each secondary).
+  /// All secondaries receive a double (the same for each secondary).
   void receive(double &itemToReceive);
 
   /// Receive mesh partitions per connected rank on remote participant (concerning the given mesh)
@@ -215,14 +215,14 @@ private:
   bool _areSlavesConnected = false;
 
   // The following flag is (solely) needed for unit tests between two serial participants.
-  // To also use the secondarys-secondarys communication would require a lengthy setup of meshes
+  // To also use the secondaries-secondaries communication would require a lengthy setup of meshes
   // and their re-partitioning, which could also not be moved to some fixture as the M2Ns
   // are created through the configuration.
   // See e.g. "CplSchemeTests/ExplicitCouplingSchemeTests/testConfiguredSimpleExplicitCoupling"
   // This flag gives a loophole. It is set to false for normal use and modified in the
   // respective tests through a friend declaration.
 
-  /// between two serial participants, only use the primary-primary com and no secondarys-secondarys com
+  /// between two serial participants, only use the primary-primary com and no secondaries-secondaries com
   bool _useOnlyMasterCom = false;
 
   /// use the two-level initialization concept

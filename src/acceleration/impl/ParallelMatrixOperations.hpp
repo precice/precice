@@ -282,7 +282,7 @@ private:
     Eigen::MatrixXd summarizedBlocks = Eigen::MatrixXd::Zero(p, r); /// @todo: only primary should allocate memory.
     utils::MasterSlave::reduceSum(block, summarizedBlocks);
 
-    // secondarys wait to receive their local result
+    // secondaries wait to receive their local result
     if (utils::MasterSlave::isSlave()) {
       if (result.size() > 0)
         utils::MasterSlave::getCommunication()->receive(result, 0);
@@ -290,7 +290,7 @@ private:
 
     // primary distributes the sub blocks of the results
     if (utils::MasterSlave::isMaster()) {
-      // distribute blocks of summarizedBlocks (result of multiplication) to corresponding secondarys
+      // distribute blocks of summarizedBlocks (result of multiplication) to corresponding secondaries
       result = summarizedBlocks.block(0, 0, offsets[1], r);
 
       for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
@@ -307,24 +307,24 @@ private:
     }
   }
 
-  /// Communication between neighboring secondarys, backwards
+  /// Communication between neighboring secondaries, backwards
   com::PtrCommunication _cyclicCommLeft = nullptr;
 
-  /// Communication between neighboring secondarys, forward
+  /// Communication between neighboring secondaries, forward
   com::PtrCommunication _cyclicCommRight = nullptr;
 
   bool _needCyclicComm = true;
 
-  /** Establishes the circular connection between secondarys
+  /** Establishes the circular connection between secondaries
    *
-   * This creates and connects the secondarys.
+   * This creates and connects the secondaries.
    *
    * @precondition _cyclicCommLeft and _cyclicCommRight must be nullptr
    * @postcondition _cyclicCommLeft, _cyclicCommRight are connected
    */
   void establishCircularCommunication();
 
-  /** Closes the circular connection between secondarys
+  /** Closes the circular connection between secondaries
    *
    * @precondition establishCircularCommunication() was called
    * @postcondition _cyclicCommLeft, _cyclicCommRight are disconnected and set to nullptr
