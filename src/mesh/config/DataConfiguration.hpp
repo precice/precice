@@ -16,6 +16,13 @@ public:
   struct ConfiguredData {
     std::string name;
     int         dimensions;
+    bool        hasGradient;
+
+    ConfiguredData(
+        const std::string &name,
+        int                dimensions,
+        bool               hasGradient = false)
+        : name(name), dimensions(dimensions), hasGradient(hasGradient) {}
   };
 
   DataConfiguration(xml::XMLTag &parent);
@@ -41,15 +48,17 @@ public:
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    */
   void addData(const std::string &name,
-               int                dataDimensions);
+               int                dataDimensions,
+               bool               hasGradient = false);
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
 
-  const std::string TAG          = "data";
-  const std::string ATTR_NAME    = "name";
-  const std::string VALUE_VECTOR = "vector";
-  const std::string VALUE_SCALAR = "scalar";
+  const std::string TAG               = "data";
+  const std::string ATTR_NAME         = "name";
+  const std::string VALUE_VECTOR      = "vector";
+  const std::string VALUE_SCALAR      = "scalar";
+  const std::string ATTR_HAS_GRADIENT = "gradient";
 
   /// Dimension of space.
   int _dimensions = 0;

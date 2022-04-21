@@ -24,9 +24,6 @@ public:
   /// Destructor, empty.
   virtual ~NearestNeighborBaseMapping() = default;
 
-  /// Checks if this is a Nearest Neighbor Gradient mapping.
-  bool requireGradient();
-
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() override;
 
@@ -63,9 +60,6 @@ protected:
 private:
   /// Flag to indicate whether computeMapping() has been called.
   bool _hasComputedMapping = false;
-
-  /// Flag if the mapping is a gradient mapping or not
-  bool _requireGradient;
 };
 
 } // namespace mapping
