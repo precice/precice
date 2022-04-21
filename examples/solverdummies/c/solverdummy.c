@@ -6,50 +6,71 @@
 
 int main(int argc, char **argv)
 {
-  double  dt                 = 0.0;
-  int     solverProcessIndex = 0;
-  int     solverProcessSize  = 1;
-  int     dimensions         = -1;
-  double *vertices;
-  double *readData;
-  double *writeData;
-  int     meshID = -1;
-  int     dataID = -1;
-  int *   vertexIDs;
-  int     numberOfVertices = 3;
-  int     writeDataID      = -1;
-  int     readDataID       = -1;
+  double      dt                 = 0.0;
+  int         solverProcessIndex = 0;
+  int         solverProcessSize  = 1;
+  int         dimensions         = -1;
+  double     *vertices;
+  double     *readData;
+  double     *writeData;
+  int         meshID = -1;
+  int         dataID = -1;
+  int        *vertexIDs;
+  int         numberOfVertices = 3;
+  int         writeDataID      = -1;
+  int         readDataID       = -1;
+  const char *meshName;
 
-  if (argc != 4) {
+  const char *configFileName = argv[1];
+  const char *participantName = argv[2];
+
+  if (argc == 3) {
+    ;
+  }
+  else if (argc == 4) {
+    meshName = argv[3];
+    printf("Warning: Providing the mesh name as an argument is deprecated and will be removed in v3.0.0\n");
+  }
+  else {
     printf("Usage: ./solverdummy configFile solverName meshName\n\n");
     printf("Parameter description\n");
     printf("  configurationFile: Path and filename of preCICE configuration\n");
     printf("  solverName:        SolverDummy participant name in preCICE configuration\n");
-    printf("  meshName:          Mesh in preCICE configuration that carries read and write data\n");
     return 1;
   }
 
-  const char *configFileName  = argv[1];
-  const char *participantName = argv[2];
-  const char *meshName        = argv[3];
-
-  printf("DUMMY: Running solver dummy with preCICE config file \"%s\", participant name \"%s\", and mesh name \"%s\".\n",
-         configFileName, participantName, meshName);
+  printf("DUMMY: Running solver dummy with preCICE config file \"%s\" and participant name \"%s\".\n",
+         configFileName, participantName);
 
   const char *writeItCheckp = precicec_actionWriteIterationCheckpoint();
   const char *readItCheckp  = precicec_actionReadIterationCheckpoint();
 
   precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
+  if (argc == 3) {
+    if (strcmp(participantName, "SolverOne") == 0) {
+    meshName = "MeshOne";
+    }
+    if (strcmp(participantName, "SolverTwo") == 0) {
+    meshName = "MeshTwo";
+    }
+  }
+
   meshID = precicec_getMeshID(meshName);
 
   if (strcmp(participantName, "SolverOne") == 0) {
     writeDataID = precicec_getDataID("dataOne", meshID);
     readDataID  = precicec_getDataID("dataTwo", meshID);
+    if (argc == 3) {
+      meshName = "MeshOne";
+    }
   }
   if (strcmp(participantName, "SolverTwo") == 0) {
     writeDataID = precicec_getDataID("dataTwo", meshID);
     readDataID  = precicec_getDataID("dataOne", meshID);
+    if (argc == 3) {
+      meshName = "MeshTwo";
+    }
   }
 
   dimensions = precicec_getDimensions();
