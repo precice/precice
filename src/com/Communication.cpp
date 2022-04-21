@@ -19,10 +19,10 @@ void Communication::connectMasterSlaves(std::string const &participantName,
   if (size == 1)
     return;
 
-  std::string primaryName = participantName + "Master";
-  std::string secondaryName  = participantName + "Slave";
+  std::string primaryName   = participantName + "Master";
+  std::string secondaryName = participantName + "Slave";
 
-  constexpr Rank rankOffset = 1;
+  constexpr Rank rankOffset      = 1;
   int            secondariesSize = size - rankOffset;
   if (rank == 0) {
     PRECICE_INFO("Connecting Master to {} Slaves", secondariesSize);

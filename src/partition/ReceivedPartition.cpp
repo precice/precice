@@ -797,8 +797,8 @@ void ReceivedPartition::createOwnerInformation()
       for (size_t i = 0; i < _mesh->vertices().size(); i++) {
         secondaryGlobalIDs[0][i] = _mesh->vertices()[i].getGlobalIndex();
         if (_mesh->vertices()[i].isTagged()) {
-          primaryAtInterface = true;
-          secondaryTags[0][i]   = 1;
+          primaryAtInterface  = true;
+          secondaryTags[0][i] = 1;
         } else {
           secondaryTags[0][i] = 0;
         }
