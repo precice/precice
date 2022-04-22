@@ -21,7 +21,7 @@
     </participant>
 
     <participant name="SolverTwo">
-      <!-- <master:mpi-single /> -->
+      <!-- <primary:mpi-single /> -->
       <use-mesh name="MeshOne" from="SolverOne" />
       <use-mesh name="MeshTwo" provide="on" />
       <mapping:nearest-neighbor

@@ -348,7 +348,10 @@ void ParticipantConfiguration::xmlTagCallback(
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
     config.isScalingOn = tag.getBooleanAttributeValue(ATTR_SCALE_WITH_CONN);
     _watchIntegralConfigs.push_back(config);
-  } else if (tag.getNamespace() == TAG_MASTER) {
+  } else if (tag.getNamespace() == TAG_MASTER || tag.getNamespace() == TAG_PRIMARY) {
+    if (tag.getNamespace() == TAG_MASTER) {
+      PRECICE_WARN("<master> tag is deprecated and will be removed in v3.0.0! Please use <primary> tag instead");
+    }
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com    = comConfig.createCommunication(tag);
     utils::MasterSlave::getCommunication() = com;
