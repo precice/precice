@@ -10,28 +10,26 @@ int main(int argc, char **argv)
   int         solverProcessIndex = 0;
   int         solverProcessSize  = 1;
   int         dimensions         = -1;
-  double     *vertices;
-  double     *readData;
-  double     *writeData;
+  double *    vertices;
+  double *    readData;
+  double *    writeData;
   int         meshID = -1;
   int         dataID = -1;
-  int        *vertexIDs;
+  int *       vertexIDs;
   int         numberOfVertices = 3;
   int         writeDataID      = -1;
   int         readDataID       = -1;
   const char *meshName;
 
-  const char *configFileName = argv[1];
+  const char *configFileName  = argv[1];
   const char *participantName = argv[2];
 
   if (argc == 3) {
     ;
-  }
-  else if (argc == 4) {
+  } else if (argc == 4) {
     meshName = argv[3];
     printf("Warning: Providing the mesh name as an argument is deprecated and will be removed in v3.0.0\n");
-  }
-  else {
+  } else {
     printf("Usage: ./solverdummy configFile solverName meshName\n\n");
     printf("Parameter description\n");
     printf("  configurationFile: Path and filename of preCICE configuration\n");
@@ -49,10 +47,10 @@ int main(int argc, char **argv)
 
   if (argc == 3) {
     if (strcmp(participantName, "SolverOne") == 0) {
-    meshName = "MeshOne";
+      meshName = "MeshOne";
     }
     if (strcmp(participantName, "SolverTwo") == 0) {
-    meshName = "MeshTwo";
+      meshName = "MeshTwo";
     }
   }
 

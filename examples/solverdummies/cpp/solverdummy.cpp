@@ -15,12 +15,10 @@ int main(int argc, char **argv)
   std::string meshName;
 
   if (argc == 3) {
-  }
-  else if (argc == 4) {
+  } else if (argc == 4) {
     meshName = argv[3];
     std::cout << "Warning: Providing the mesh name as an argument is deprecated and will be removed in v3.0.0\n";
-  }
-  else {
+  } else {
     std::cout << "Usage: ./solverdummy configFile solverName meshName\n\n";
     std::cout << "Parameter description\n";
     std::cout << "  configurationFile: Path and filename of preCICE configuration\n";
