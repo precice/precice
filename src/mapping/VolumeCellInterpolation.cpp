@@ -42,27 +42,14 @@ VolumeCellInterpolation::VolumeCellInterpolation(
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
+
+  PRECICE_ASSERT(constraint != SCALEDCONSISTENT, "Volume mapping doesn't support scaled-consistent mappings.");
 }
-
-namespace {
-struct MatchType {
-  double distance;
-  int    index;
-
-  MatchType() = default;
-  MatchType(double d, int i)
-      : distance(d), index(i){};
-  constexpr bool operator<(MatchType const &other) const
-  {
-    return distance < other.distance;
-  };
-};
-} // namespace
 
 void VolumeCellInterpolation::computeMapping()
 {
   PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
-  const std::string     baseEvent = "map.np.computeMapping.From" + input()->getName() + "To" + output()->getName();
+  const std::string     baseEvent = "map.vci.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
   PRECICE_ASSERT(getDimensions() == 2, "Volume mapping not available in 3D.");
 
@@ -107,8 +94,7 @@ void VolumeCellInterpolation::computeMapping()
   _interpolations.reserve(fVertices.size());
 
   for (const auto &fVertex : fVertices) {
-    // Nearest projection element is edge for 2d if exists, if not, it is the nearest vertex
-    // Nearest projection element is triangle for 3d if exists, if not the edge and at the worst case it is the nearest vertex
+    // Find tetrahedra (3D) or triangle (2D) or fall-back on a vertex
     auto match = indexTree.findNearestVolume(fVertex.getCoords(), nnearest);
     _interpolations.push_back(std::move(match.polation));
     distanceStatistics(match.distance);
@@ -126,7 +112,7 @@ void VolumeCellInterpolation::computeMapping()
 void VolumeCellInterpolation::tagMeshFirstRound()
 {
   PRECICE_TRACE();
-  precice::utils::Event e("map.np.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event e("map.vci.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
   PRECICE_DEBUG("Compute Mapping for Tagging");
 
   computeMapping();
@@ -171,7 +157,7 @@ void VolumeCellInterpolation::tagMeshFirstRound()
 void VolumeCellInterpolation::tagMeshSecondRound()
 {
   PRECICE_TRACE();
-  // for NP mapping no operation needed here
+  // for VCI mapping no operation needed here
 }
 
 } // namespace mapping
