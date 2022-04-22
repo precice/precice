@@ -163,7 +163,6 @@ void CommunicateMesh::receiveMesh(
     _communication->receive(triangleIDs, rankSender);
 
     for (int i = 0; i < numberOfTriangles; i++) {
-      PRECICE_WARN("Number of triangles received: {}", numberOfTriangles);
       PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3]) == 1);
       PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3 + 1]) == 1);
       PRECICE_ASSERT(edgeMap.count(triangleIDs[i * 3 + 2]) == 1);
@@ -299,8 +298,6 @@ void CommunicateMesh::broadcastReceiveMesh(
 
     std::vector<int> triangleIDs;
     _communication->broadcast(triangleIDs, rankBroadcaster);
-    PRECICE_WARN("Number of triangles received: {}", numberOfTriangles);
-
     for (int i = 0; i < numberOfTriangles; i++) {
       PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3]) != edgeMap.end());
       PRECICE_ASSERT(edgeMap.find(triangleIDs[i * 3 + 1]) != edgeMap.end());
