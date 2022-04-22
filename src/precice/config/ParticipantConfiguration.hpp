@@ -72,7 +72,8 @@ private:
   const std::string TAG_USE_MESH       = "use-mesh";
   const std::string TAG_WATCH_INTEGRAL = "watch-integral";
   const std::string TAG_WATCH_POINT    = "watch-point";
-  const std::string TAG_PRIMARY        = "master";
+  const std::string TAG_MASTER         = "master";
+  const std::string TAG_PRIMARY        = "primary";
 
   const std::string ATTR_NAME               = "name";
   const std::string ATTR_SOURCE_DATA        = "source-data";
