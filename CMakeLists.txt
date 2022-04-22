@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.10.2)
+cmake_minimum_required (VERSION 3.16.3)
 project(preCICE VERSION 2.3.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
@@ -153,7 +153,7 @@ if(TPL_ENABLE_BOOST)
   set(Boost_NO_SYSTEM_PATHS ON CACHE BOOL "" FORCE)
   unset(ENV{BOOST_ROOT})
 endif()
-find_package(Boost 1.65.1 REQUIRED
+find_package(Boost 1.71.0 REQUIRED
   COMPONENTS filesystem log log_setup program_options system thread unit_test_framework
   )
 
