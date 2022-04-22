@@ -527,11 +527,11 @@ void MVQNAcceleration::restartIMVJ()
 
     // If the preconditioner weights have been reset, then the old SVD must be discarded as the
     // new chunk cannot be added to the old chunk
-    if (_preconditioner->svdWeightsSet()){
-      PRECICE_INFO("  Resetting SVD due to pre-scaling weights.");
-      _svdJ.reset();
-      _preconditioner->svdReset();
-    }
+    //if (_preconditioner->svdWeightsSet()){
+    //  PRECICE_INFO("  Resetting SVD due to pre-scaling weights.");
+    //  _svdJ.reset();
+    //  _preconditioner->svdReset();
+    //}
 
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
     for (; q < static_cast<int>(_WtilChunk.size()); q++) {
@@ -587,6 +587,8 @@ void MVQNAcceleration::restartIMVJ()
     _WtilChunk.clear();
     _pseudoInverseChunk.clear();
 
+    PRECICE_INFO("Before restart with {} columns", _matrixV_RSLS.cols());
+
     if (_matrixV_RSLS.cols() > 0) {
       // avoid that the syste mis getting too squared
       while (_matrixV_RSLS.cols() * 2 >= getLSSystemRows()) {
@@ -613,7 +615,7 @@ void MVQNAcceleration::restartIMVJ()
       // apply filter
       if (_filter != Acceleration::NOFILTER) {
         std::vector<int> delIndices(0);
-        qr.applyFilter(_singularityLimit, delIndices, _matrixV_RSLS);
+        qr.applyFilter(2*_singularityLimit, delIndices, _matrixV_RSLS);
         // start with largest index (as V,W matrices are shrinked and shifted
         for (int i = delIndices.size() - 1; i >= 0; i--) {
           removeMatrixColumnRSLS(delIndices[i]);
@@ -672,7 +674,7 @@ void MVQNAcceleration::restartIMVJ()
     _WtilChunk.clear();
     _pseudoInverseChunk.clear();
 
-    PRECICE_DEBUG("MVJ-RESTART, mode=Zero");
+    PRECICE_INFO("MVJ-RESTART, mode=Zero");
 
   } else if (_imvjRestartType == MVQNAcceleration::RS_SLIDE) {
 
@@ -766,13 +768,12 @@ void MVQNAcceleration::specializedIterationsConverged(
 
       if (_nbRestarts == 1 && incrementRSLSTimeWindows){
         PRECICE_INFO("Incrementing _RSLSreusedTimeWindows");
-        //_RSLSreusedTimeWindows += _timeWindowsReused;
+        _RSLSreusedTimeWindows += _timeWindowsReused;
         incrementRSLSTimeWindows = false;
       }
 
       if (_matrixCols.size() >= _RSLSreusedTimeWindows){
         
-        //_nbRestarts++;
         PRECICE_INFO("  Pushing new Chunk into WtilChunk. ");
         PRECICE_INFO("  Mat columns Zero: {}", _matrixCols);
         PRECICE_INFO("  _Wtil columns: {}", _Wtil.cols());
@@ -797,6 +798,9 @@ void MVQNAcceleration::specializedIterationsConverged(
         _RSLSreusedTimeWindows = 1;
       int restartChunkSize = _chunkSize/_RSLSreusedTimeWindows;
       
+      // If a restart has already been performed, incremenet the counter by 1 as one chunk is already 
+      // present after a restart. This ensures that the same number of time windows is performed
+      // between each restart.
       if (_nbRestarts > 0){
         restartChunkSize = (_chunkSize/_RSLSreusedTimeWindows) + 1;
       }

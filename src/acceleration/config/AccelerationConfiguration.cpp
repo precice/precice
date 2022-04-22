@@ -220,6 +220,7 @@ void AccelerationConfiguration::xmlTagCallback(
       _config.imvjRestartType = MVQNAcceleration::NO_RESTART;
     } else if (f == VALUE_ZERO_RESTART) {
       _config.imvjRestartType = MVQNAcceleration::RS_ZERO;
+      _config.imvjRSLS_reusedTimeWindows = callingTag.getIntAttributeValue(ATTR_RSLS_REUSED_TIME_WINDOWS);
     } else if (f == VALUE_LS_RESTART) {
       _config.imvjRSLS_reusedTimeWindows = callingTag.getIntAttributeValue(ATTR_RSLS_REUSED_TIME_WINDOWS);
       _config.imvjRestartType            = MVQNAcceleration::RS_LS;
