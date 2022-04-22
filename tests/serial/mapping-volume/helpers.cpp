@@ -7,20 +7,19 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 
-void testMappingVolumeOneTriangle(const std::string configFile, const TestContext &context) {
-    using precice::testing::equals;
+void testMappingVolumeOneTriangle(const std::string configFile, const TestContext &context)
+{
+  using precice::testing::equals;
 
-  
   precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<precice::VertexID> vertexIDs;
-  
 
   if (context.isNamed("SolverOne")) {
     auto meshID = interface.getMeshID("MeshOne");
     auto dataID = interface.getDataID("DataOne", meshID);
 
-    std::vector<double> coords {0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
+    std::vector<double> coords{0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
     vertexIDs.resize(coords.size() / 2);
 
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
@@ -32,11 +31,10 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     int edgeAB = interface.setMeshEdge(meshID, vertexIDs[0], vertexIDs[1]);
     int edgeBC = interface.setMeshEdge(meshID, vertexIDs[1], vertexIDs[2]);
     int edgeCA = interface.setMeshEdge(meshID, vertexIDs[2], vertexIDs[0]);
-    
+
     BOOST_TEST(edgeAB != -1, "Edge AB is invalid");
     BOOST_TEST(edgeBC != -1, "Edge BC is invalid");
     BOOST_TEST(edgeCA != -1, "Edge CA is invalid");
-
 
     interface.setMeshTriangle(meshID, edgeAB, edgeBC, edgeCA);
 
@@ -48,7 +46,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     BOOST_REQUIRE(mesh.triangles().size() == 1);
 
     BOOST_TEST(equals(mesh.triangles()[0].getArea(), 0.5), "Triangle area must be 0.5");
-    
+
     // Initialize, write data, advance and finalize
     double dt = interface.initialize();
     BOOST_TEST(!mesh.triangles().empty(), "Triangle must still be stored");
@@ -74,6 +72,14 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     double dt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
+    // If "read" mapping, check received mesh
+    if (precice::testing::WhiteboxAccessor::impl(interface).hasMesh("MeshOne")) {
+      auto &mesh = precice::testing::WhiteboxAccessor::impl(interface).mesh("MeshOne");
+      BOOST_REQUIRE(mesh.vertices().size() == 3);
+      BOOST_REQUIRE(mesh.edges().size() == 3);
+      BOOST_REQUIRE(mesh.triangles().size() == 1);
+    }
+
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
 
@@ -87,7 +93,6 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
-
   }
 }
 

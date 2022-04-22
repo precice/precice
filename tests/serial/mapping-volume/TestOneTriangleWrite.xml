@@ -21,7 +21,6 @@
         to="MeshTwo"
         constraint="consistent"
         timing="initial" />
-      
     </participant>
 
     <participant name="SolverTwo">
