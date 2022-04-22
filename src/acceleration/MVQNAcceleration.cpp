@@ -181,11 +181,9 @@ void MVQNAcceleration::updateDifferenceMatrices(
 
           // store columns if restart mode = RS-LS
           if (_imvjRestartType == RS_LS) {
-            if (_matrixCols_RSLS.front() < _usedColumnsPerTimeWindow) {
-              utils::appendFront(_matrixV_RSLS, v);
-              utils::appendFront(_matrixW_RSLS, w);
-              _matrixCols_RSLS.front()++;
-            }
+            utils::appendFront(_matrixV_RSLS, v);
+            utils::appendFront(_matrixW_RSLS, w);
+            _matrixCols_RSLS.front()++;
           }
 
           // imvj without restart is used, but efficient update, i.e. no Jacobian assembly in each iteration
