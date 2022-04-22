@@ -145,7 +145,6 @@ void CommunicateMesh::receiveMesh(
     }
   }
 
-  //if (dim == 3) {
   int numberOfTriangles = 0;
   _communication->receive(numberOfTriangles, rankSender);
   PRECICE_DEBUG("Number of Triangles to receive: {}", numberOfTriangles);
@@ -174,7 +173,6 @@ void CommunicateMesh::receiveMesh(
       mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
     }
   }
-  //}
 }
 
 void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
@@ -216,7 +214,6 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     _communication->broadcast(edgeIDs);
   }
 
-  //if (dim == 3) {
   int numberOfTriangles = mesh.triangles().size();
   _communication->broadcast(numberOfTriangles);
   if (numberOfTriangles > 0) {
@@ -237,7 +234,6 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     }
     _communication->broadcast(triangleIDs);
   }
-  //}
 }
 
 void CommunicateMesh::broadcastReceiveMesh(
@@ -290,7 +286,6 @@ void CommunicateMesh::broadcastReceiveMesh(
     }
   }
 
-  //if (dim == 3) {
   int numberOfTriangles = 0;
   _communication->broadcast(numberOfTriangles, rankBroadcaster);
   if (numberOfTriangles > 0) {
@@ -316,7 +311,6 @@ void CommunicateMesh::broadcastReceiveMesh(
       mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
     }
   }
-  //}
 }
 
 } // namespace com
