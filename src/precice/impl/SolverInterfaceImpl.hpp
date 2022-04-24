@@ -85,9 +85,6 @@ public:
    * of this class. The object has to be configured by one of the configure
    * methods before it has a reasonable state and can be used.
    *
-   * Use the parameter communicator to specify a custom global MPI communicator.
-   * Pass a null pointer to signal preCICE to use MPI_COMM_WORLD.
-   *
    * @param[in] participantName Name of the participant using the interface. Has to
    *                            match the name given for a participant in the
    *                            xml configuration file.
@@ -533,6 +530,23 @@ public:
   const mesh::Mesh &mesh(const std::string &meshName) const;
 
 private:
+  /**
+   * @brief Generic constructor for SolverInterfaceImpl.
+   *
+   * Use the parameter communicator to specify a custom global MPI communicator.
+   * Pass a null pointer to signal preCICE to use MPI_COMM_WORLD.
+   *
+   * @param[in] communicator    A pointer to the MPI_Comm to use.
+   * @param[in] allowNullptr    Accept nullptr for communicator.
+   */
+  SolverInterfaceImpl(
+      std::string        participantName,
+      const std::string &configurationFileName,
+      int                accessorProcessRank,
+      int                accessorCommunicatorSize,
+      void *             communicator,
+      bool               allowNullptr);
+
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 
   std::string _accessorName;

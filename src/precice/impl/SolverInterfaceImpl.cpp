@@ -85,11 +85,16 @@ SolverInterfaceImpl::SolverInterfaceImpl(
     const std::string &configurationFileName,
     int                accessorProcessRank,
     int                accessorCommunicatorSize,
-    void *             communicator)
+    void *             communicator,
+    bool               allowNullptr)
     : _accessorName(std::move(participantName)),
       _accessorProcessRank(accessorProcessRank),
       _accessorCommunicatorSize(accessorCommunicatorSize)
 {
+  if (!allowNullptr) {
+    PRECICE_CHECK(communicator != nullptr,
+                  "Passing \"nullptr\" as \"communicator\" to SolverInterface constructor is not allowed. Please use the SolverInterface constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
+  }
   PRECICE_CHECK(!_accessorName.empty(),
                 "This participant's name is an empty string. "
                 "When constructing a preCICE interface you need to pass the name of the "
@@ -142,7 +147,17 @@ SolverInterfaceImpl::SolverInterfaceImpl(
     const std::string &configurationFileName,
     int                accessorProcessRank,
     int                accessorCommunicatorSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, nullptr)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, nullptr, true)
+{
+}
+
+SolverInterfaceImpl::SolverInterfaceImpl(
+    std::string        participantName,
+    const std::string &configurationFileName,
+    int                accessorProcessRank,
+    int                accessorCommunicatorSize,
+    void *             communicator)
+    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, communicator, false)
 {
 }
 
