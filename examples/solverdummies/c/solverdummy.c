@@ -41,10 +41,10 @@ int main(int argc, char **argv)
   precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
   if (strcmp(participantName, "SolverOne") == 0) {
-      meshName = "MeshOne";
+    meshName = "MeshOne";
   }
   if (strcmp(participantName, "SolverTwo") == 0) {
-      meshName = "MeshTwo";
+    meshName = "MeshTwo";
   }
 
   meshID = precicec_getMeshID(meshName);
