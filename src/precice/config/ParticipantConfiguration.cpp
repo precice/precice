@@ -164,7 +164,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
                                "\"on-master\" is not supported if you use two-level initialization. "
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
-                           .setOptions({VALUE_FILTER_ON_PRIMARY, VALUE_FILTER_ON_SECONDARIES, VALUE_NO_FILTER})
+                           .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_PRIMARY, VALUE_FILTER_ON_SLAVES, VALUE_FILTER_ON_SECONDARIES, VALUE_NO_FILTER})
                            .setDefaultValue(VALUE_FILTER_ON_SECONDARIES);
   tagUseMesh.addAttribute(attrGeoFilter);
 
@@ -202,7 +202,9 @@ ParticipantConfiguration::ParticipantConfiguration(
                             "Port number (16-bit unsigned integer) to be used for socket "
                             "communication. The default is \"0\", what means that OS will "
                             "dynamically search for a free port (if at least one exists) and "
-                            "bind it automatically.");
+                            "bind it automatically.")
+                        .setOptions({TAG_MASTER, TAG_PRIMARY})
+                        .setDefaultValue(TAG_PRIMARY);
     tagPrimary.addAttribute(attrPort);
 
     auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
@@ -377,9 +379,15 @@ ParticipantConfiguration::getParticipants() const
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
 {
-  if (geoFilter == VALUE_FILTER_ON_PRIMARY) {
+  if (geoFilter == VALUE_FILTER_ON_MASTER || geoFilter == VALUE_FILTER_ON_PRIMARY) {
+    if (geoFilter == VALUE_FILTER_ON_MASTER) {
+      PRECICE_WARN("<on-master> tag is deprecated and will be removed in v3.0.0! Please use <on-primary> tag instead");
+    }
     return partition::ReceivedPartition::GeometricFilter::ON_PRIMARY;
-  } else if (geoFilter == VALUE_FILTER_ON_SECONDARIES) {
+  } else if (geoFilter == VALUE_FILTER_ON_SLAVES || geoFilter == VALUE_FILTER_ON_SECONDARIES) {
+    if (geoFilter == VALUE_FILTER_ON_SLAVES) {
+      PRECICE_WARN("<on-slaves> tag is deprecated and will be removed in v3.0.0! Please use <on-secondaries> tag instead");
+    }
     return partition::ReceivedPartition::GeometricFilter::ON_SECONDARIES;
   } else {
     PRECICE_ASSERT(geoFilter == VALUE_NO_FILTER);
