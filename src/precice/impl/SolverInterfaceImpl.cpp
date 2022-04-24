@@ -1958,7 +1958,7 @@ void SolverInterfaceImpl::initializeIntraCommCommunication()
   PRECICE_TRACE();
 
   Event e("com.initializeIntraCommCom", precice::syncMode);
-  utils::IntraComm::getCommunication()->connectIntraComms(
+  utils::IntraComm::getCommunication()->connectIntraComm(
       _accessorName, "IntraComms",
       _accessorProcessRank, _accessorCommunicatorSize);
 }

@@ -176,7 +176,7 @@ public:
    * @param[in] size Total size of the participant
    *
    */
-  void connectIntraComms(std::string const &participantName,
+  void connectIntraComm(std::string const &participantName,
                          std::string const &tag,
                          int                rank,
                          int                size);

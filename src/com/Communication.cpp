@@ -11,7 +11,7 @@
 namespace precice {
 namespace com {
 
-void Communication::connectIntraComms(std::string const &participantName,
+void Communication::connectIntraComm(std::string const &participantName,
                                       std::string const &tag,
                                       int                rank,
                                       int                size)

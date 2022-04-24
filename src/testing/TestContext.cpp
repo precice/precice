@@ -198,7 +198,7 @@ void TestContext::initializeIntraComm()
   precice::com::PtrCommunication masterSecondaryCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
 #endif
 
-  masterSecondaryCom->connectIntraComms(name, "", rank, size);
+  masterSecondaryCom->connectIntraComm(name, "", rank, size);
 
   utils::IntraComm::getCommunication() = std::move(masterSecondaryCom);
 }
