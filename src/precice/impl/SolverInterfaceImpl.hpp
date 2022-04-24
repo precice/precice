@@ -246,8 +246,11 @@ public:
   /// Returns all mesh IDs (besides sub-ids).
   std::set<int> getMeshIDs() const;
 
-  /// @copydoc SolverInterface::isMeshConnectivityRequired()
+  /// @copydoc SolverInterface::isMeshConnectivityRequired
   bool isMeshConnectivityRequired(int meshID) const;
+
+  /// @copydoc SolverInterface::isGradientDataRequired
+  bool isGradientDataRequired(int dataID) const;
 
   /// Returns true, if the data with given name is used in the given mesh.
   bool hasData(const std::string &dataName, MeshID meshID) const;
@@ -379,6 +382,14 @@ public:
       const int *   valueIndices,
       const double *values);
 
+  /// @copydoc precice::SolverInterface::writeBlockVectorGradientData
+  void writeBlockVectorGradientData(
+      int           fromDataID,
+      int           size,
+      const int *   valueIndices,
+      const double *gradientValues,
+      bool          rowsFirst = false);
+
   /**
    * @brief Write vectorial data to the interface mesh
    *
@@ -393,6 +404,13 @@ public:
       int           valueIndex,
       const double *value);
 
+  /// @copydoc precice::SolverInterface::writeVectorGradientData
+  void writeVectorGradientData(
+      int           fromDataID,
+      int           valueIndex,
+      const double *gradientValues,
+      bool          rowsFirst = false);
+
   /**
    * @brief Writes scalar data values given as block.
    *
@@ -405,6 +423,13 @@ public:
       int           size,
       const int *   valueIndices,
       const double *values);
+
+  /// @copydoc precice::SolverInterface::writeBlockScalarGradientData
+  void writeBlockScalarGradientData(
+      int           fromDataID,
+      int           size,
+      const int *   valueIndices,
+      const double *gradientValues);
 
   /**
    * @brief Write scalar data to the interface mesh
@@ -419,6 +444,12 @@ public:
       int    fromDataID,
       int    valueIndex,
       double value);
+
+  /// @copydoc precice::SolverInterface::writeScalarGradientData
+  void writeScalarGradientData(
+      int           fromDataID,
+      int           valueIndex,
+      const double *gradientValues);
 
   /**
    * @brief Reads vector data values given as block from a mesh. Values correspond to the end of the current time window.
@@ -590,15 +621,11 @@ public:
       double  relativeReadTime,
       double &value) const;
 
-  /**
-   * @copydoc precice::SolverInterface::setMeshAccessRegion()
-   */
+  /// @copydoc precice::SolverInterface::setMeshAccessRegion
   void setMeshAccessRegion(const int     meshID,
                            const double *boundingBox) const;
 
-  /**
-   * @copydoc precice::SolverInterface::getMeshVerticesAndIDs()
-   */
+  /// @copydoc precice::SolverInterface::getMeshVerticesAndIDs
   void getMeshVerticesAndIDs(
       const int meshID,
       const int size,

@@ -27,14 +27,8 @@ NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     std::string mappingNameShort)
     : Mapping(constraint, dimensions, requireGradient),
       mappingName(mappingName),
-      mappingNameShort(mappingNameShort),
-      _requireGradient(requireGradient)
+      mappingNameShort(mappingNameShort)
 {
-}
-
-bool NearestNeighborBaseMapping::requireGradient()
-{
-  return _requireGradient;
 }
 
 void NearestNeighborBaseMapping::computeMapping()
