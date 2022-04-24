@@ -58,7 +58,7 @@ public:
       int                solverProcessSize);
 
   /**
-   * @brief Constructor with support for custom MPI_COMM_WORLD.
+   * @brief Constructor with support for custom MPI communicator.
    *
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
@@ -86,7 +86,6 @@ public:
   /**
    * @brief Fully initializes preCICE
    *
-   * - Initiates MPI communication, if not done yet.
    * - Sets up a connection to the other participants of the coupled simulation.
    * - Creates all meshes, solver meshes need to be submitted before.
    * - Receives first coupling data, when the solver is not starting the
@@ -137,7 +136,7 @@ public:
    *
    * - Sends and resets coupling data written by solver to coupling partners.
    * - Receives coupling data read by solver.
-   * - Computes and applied data mappings.
+   * - Computes and applies data mappings.
    * - Computes acceleration of coupling data.
    * - Exchanges and computes information regarding the state of the coupled
    *   simulation.
