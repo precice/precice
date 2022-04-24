@@ -60,7 +60,7 @@ void ExportXML::writePrimaryFile(
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name + getPrimaryExtension());
+  outfile = outfile / fs::path(name + getParallelExtension());
   std::ofstream outPrimaryFile(outfile.string(), std::ios::trunc);
 
   PRECICE_CHECK(outPrimaryFile, "{} export failed to open master file \"{}\"", getVTKFormat(), outfile);

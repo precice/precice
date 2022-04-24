@@ -29,7 +29,7 @@ private:
   mutable logging::Logger _log{"io::ExportVTP"};
 
   std::string getVTKFormat() const override;
-  std::string getPrimaryExtension() const override;
+  std::string getParallelExtension() const override;
   std::string getPieceExtension() const override;
   std::string getPieceAttributes(const mesh::Mesh &mesh) const override;
 

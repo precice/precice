@@ -25,7 +25,7 @@ std::string ExportVTU::getVTKFormat() const
   return "UnstructuredGrid";
 }
 
-std::string ExportVTU::getPrimaryExtension() const
+std::string ExportVTU::getParallelExtension() const
 {
   return ".pvtu";
 }

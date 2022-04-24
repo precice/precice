@@ -13,7 +13,7 @@ std::string ExportVTP::getVTKFormat() const
   return "PolyData";
 }
 
-std::string ExportVTP::getPrimaryExtension() const
+std::string ExportVTP::getParallelExtension() const
 {
   return ".pvtp";
 }
