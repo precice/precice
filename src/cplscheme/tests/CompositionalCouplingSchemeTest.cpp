@@ -55,7 +55,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
     precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
     participantConfig->setDimensions(dimensions);
-    CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+    CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
     const xml::ConfigurationContext ccontext{context.name, 0, 1};
     xml::configure(root, ccontext, configFilename);

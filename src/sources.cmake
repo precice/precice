@@ -261,6 +261,11 @@ target_sources(precice
     src/query/impl/Indexer.cpp
     src/query/impl/Indexer.hpp
     src/query/impl/RTreeAdapter.hpp
+    src/time/SharedPointer.hpp
+    src/time/Time.cpp
+    src/time/Time.hpp
+    src/time/Waveform.cpp
+    src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
