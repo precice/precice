@@ -239,7 +239,7 @@ void SolverInterfaceImpl::configure(
 
   PRECICE_DEBUG("Initialize master-slave communication");
   if (utils::IntraComm::isParallel()) {
-    initializeIntraCommCommunication();
+    initializeIntraCommunication();
   }
 
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
@@ -1953,7 +1953,7 @@ PtrParticipant SolverInterfaceImpl::determineAccessingParticipant(
                 _accessorName);
 }
 
-void SolverInterfaceImpl::initializeIntraCommCommunication()
+void SolverInterfaceImpl::initializeIntraCommunication()
 {
   PRECICE_TRACE();
 

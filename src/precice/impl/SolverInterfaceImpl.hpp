@@ -649,7 +649,7 @@ private:
       const config::SolverInterfaceConfiguration &config);
 
   /// Initializes communication between master and slaves.
-  void initializeIntraCommCommunication();
+  void initializeIntraCommunication();
 
   /// Syncs the timestep between slaves and master (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
