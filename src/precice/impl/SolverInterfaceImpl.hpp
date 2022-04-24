@@ -298,34 +298,14 @@ public:
       int           valueIndex,
       const double *gradientValues);
 
-  /// @copydoc SolverInterface::readBlockVectorData
+  /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double*) const
   void readBlockVectorData(
       int        toDataID,
       int        size,
       const int *valueIndices,
       double *   values) const;
 
-  /**
-   * @brief Reads vector data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads values of specified vertices from a dataID.
-   * Values are read into a block of continuous memory.
-   * valueIndices contains the indices of the vertices.
-   *
-   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
-   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] values Pointer to read destination.
-   */
+  /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double, double*) const
   void readBlockVectorData(
       int        toDataID,
       int        size,
@@ -333,62 +313,27 @@ public:
       double     relativeReadTime,
       double *   values) const;
 
-  /// @copydoc SolverInterface::readVectorData
+  /// @copydoc SolverInterface::readVectorData(int, int, double*) const
   void readVectorData(
       int     toDataID,
       int     valueIndex,
       double *value) const;
 
-  /**
-   * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads a value of a specified vertex from a dataID.
-   * Values are provided as a block of continuous memory.
-   *
-   * The 2D-format of value is (x, y)
-   * The 3D-format of value is (x, y, z)
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] value Pointer to the vector value.
-   */
+  /// @copydoc SolverInterface::readVectorData(int, int, double, double*) const
   void readVectorData(
       int     toDataID,
       int     valueIndex,
       double  relativeReadTime,
       double *value) const;
 
-  /// @copydoc SolverInterface::readBlockScalarData
+  /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double*) const
   void readBlockScalarData(
       int        toDataID,
       int        size,
       const int *valueIndices,
       double *   values) const;
 
-  /**
-   * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads values of specified vertices from a dataID.
-   * Values are provided as a block of continuous memory.
-   * valueIndices contains the indices of the vertices.
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] values Pointer to the read destination.
-   */
+  /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double, double*) const
   void readBlockScalarData(
       int        toDataID,
       int        size,
@@ -396,27 +341,13 @@ public:
       double     relativeReadTime,
       double *   values) const;
 
-  /// @copydoc SolverInterface::readScalarData
+  /// @copydoc SolverInterface::readScalarData(int, int, double&) const
   void readScalarData(
       int     toDataID,
       int     valueIndex,
       double &value) const;
 
-  /**
-   * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads a value of a specified vertex from a dataID.
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step
-   * @param[out] value Read destination of the value.
-   */
+  /// @copydoc SolverInterface::readScalarData(int, int, double, double&) const
   void readScalarData(
       int     toDataID,
       int     valueIndex,
