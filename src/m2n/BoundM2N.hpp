@@ -13,8 +13,8 @@ public:
   /// Prepare to establish the connection
   void prepareEstablishment();
 
-  /// Connect the Primarys of the M2N
-  void connectPrimarys();
+  /// Connect the Primaries of the M2N
+  void connectPrimaries();
 
   /// Connect the Secondaries of the M2N
   void connectSecondaries();

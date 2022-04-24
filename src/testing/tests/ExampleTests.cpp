@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication)
   BOOST_TEST(context.isRank(0));
   BOOST_TEST(context.isPrimary());
 
-  auto m2n = context.connectPrimarys("A", "B");
+  auto m2n = context.connectPrimaries("A", "B");
 
   //This is how you can access the m2n communication
   BOOST_TEST(m2n->getPrimaryCommunication()->isConnected());

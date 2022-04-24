@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(CommunicateBoundingBoxTests)
 BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectPrimarys("A", "B");
+  auto m2n = context.connectPrimaries("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
     std::vector<double> bounds;
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
 BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectPrimarys("A", "B");
+  auto m2n = context.connectPrimaries("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh::BoundingBoxMap bbm;
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
 BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectPrimarys("A", "B");
+  auto m2n = context.connectPrimaries("A", "B");
 
   std::vector<int>                fb;
   std::map<int, std::vector<int>> fbm;

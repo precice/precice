@@ -268,12 +268,12 @@ double SolverInterfaceImpl::initialize()
     } else {
       PRECICE_DEBUG((requesting ? "Awaiting master connection from {}" : "Establishing master connection to {}"), bm2n.remoteName);
       bm2n.prepareEstablishment();
-      bm2n.connectPrimarys();
+      bm2n.connectPrimaries();
       PRECICE_DEBUG("Established master connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
     }
   }
 
-  PRECICE_INFO("Primarys are connected");
+  PRECICE_INFO("Primaries are connected");
 
   compareBoundingBoxes();
 

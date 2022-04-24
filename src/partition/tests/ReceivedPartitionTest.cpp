@@ -234,7 +234,7 @@ void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, Rank rank)
 BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
 {
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComms(), Require::Events);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int             dimensions = 2;
   Eigen::VectorXd offset     = Eigen::VectorXd::Zero(dimensions);
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
 BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
 {
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComms(), Require::Events);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int             dimensions = 2;
   Eigen::VectorXd offset     = Eigen::VectorXd::Zero(dimensions);
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
 BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
 {
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComms(), Require::Events);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int dimensions = 2;
 
@@ -393,7 +393,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
 BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
 {
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComms(), Require::Events, Require::PETSc);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int dimensions = 2;
 
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
 BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
 {
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComms(), Require::Events, Require::PETSc);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int dimensions = 2;
 
@@ -549,7 +549,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
 BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
 {
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComms(), Require::Events, Require::PETSc);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int dimensions = 2;
 
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
 BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
 {
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComms(), Require::Events, Require::PETSc);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int dimensions = 3;
 
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
 BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
 {
   PRECICE_TEST("Fluid"_on(3_ranks).setupIntraComms(), "Solid"_on(1_rank), Require::Events);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int dimensions = 3;
 
@@ -768,7 +768,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
 BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
 {
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComms(), Require::Events);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int dimensions = 2;
 
@@ -853,7 +853,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
 BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
 {
   PRECICE_TEST("Fluid"_on(1_rank), "Solid"_on(1_rank), Require::Events);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int dimensions = 2;
 
@@ -925,7 +925,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit   = true;
-  auto m2n                  = context.connectPrimarys("SOLIDZ", "NASTIN", options);
+  auto m2n                  = context.connectPrimaries("SOLIDZ", "NASTIN", options);
 
   int dimensions = 2;
 
@@ -994,7 +994,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit   = true;
-  auto m2n                  = context.connectPrimarys("SOLIDZ", "NASTIN", options);
+  auto m2n                  = context.connectPrimaries("SOLIDZ", "NASTIN", options);
 
   int dimensions = 3;
 
@@ -1468,7 +1468,7 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationEmptyPartition)
 BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
 {
   PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComms(), Require::Events);
-  auto m2n = context.connectPrimarys("Solid", "Fluid");
+  auto m2n = context.connectPrimaries("Solid", "Fluid");
 
   int             dimensions = 2;
   Eigen::VectorXd offset     = Eigen::VectorXd::Zero(dimensions);

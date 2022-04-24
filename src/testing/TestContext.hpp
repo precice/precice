@@ -115,7 +115,7 @@ enum struct ConnectionType {
 
 /** Type representing options for an inter-participant connection.
  *
- * @see TestContext::connectPrimarys()
+ * @see TestContext::connectPrimaries()
  * @see M2N::M2N()
  */
 struct ConnectionOptions {
@@ -268,7 +268,7 @@ public:
    *
    * @see ConnectionOptions
    */
-  m2n::PtrM2N connectPrimarys(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
+  m2n::PtrM2N connectPrimaries(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
 
   /// Provides a user- and log-friendly description of the current context
   std::string describe() const;

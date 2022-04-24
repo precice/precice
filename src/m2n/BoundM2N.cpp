@@ -21,7 +21,7 @@ void BoundM2N::prepareEstablishment()
   m2n->prepareEstablishment(localName, remoteName);
 }
 
-void BoundM2N::connectPrimarys()
+void BoundM2N::connectPrimaries()
 {
   std::string fullLocalName = localName;
 

@@ -217,7 +217,7 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connectPrimarys(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
+m2n::PtrM2N TestContext::connectPrimaries(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());
 

@@ -177,9 +177,9 @@ public:
    *
    */
   void connectIntraComm(std::string const &participantName,
-                         std::string const &tag,
-                         int                rank,
-                         int                size);
+                        std::string const &tag,
+                        int                rank,
+                        int                size);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
