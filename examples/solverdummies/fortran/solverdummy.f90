@@ -4,7 +4,7 @@ PROGRAM main
   CHARACTER*50                    :: participantName, meshName, writeInitialData, readItCheckp, writeItCheckp
   CHARACTER*50                    :: readDataName, writeDataName
   INTEGER                         :: rank, commsize, ongoing, dimensions, meshID, bool, numberOfVertices, i,j
-  INTEGER                         :: nargs, readDataID, writeDataID
+  INTEGER                         :: readDataID, writeDataID
   DOUBLE PRECISION                :: dt
   DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: vertices, writeData, readData
   INTEGER, DIMENSION(:), ALLOCATABLE :: vertexIDs
@@ -20,32 +20,18 @@ PROGRAM main
 
   WRITE (*,*) 'DUMMY: Starting Fortran solver dummy...'
   
-  nargs = iargc()
-
-  IF(nargs.eq.2) THEN
-    CALL getarg(1, config)
-    CALL getarg(2, participantName)
-  ENDIF
-  IF(nargs.eq.3) THEN
-    CALL getarg(1, config)
-    CALL getarg(2, participantName)
-    CALL getarg(3, meshName)
-    WRITE (*,*) 'Warning: Providing the mesh name as an argument is deprecated and will be removed in v3.0.0'
-  ENDIF
+  CALL getarg(1, config)
+  CALL getarg(2, participantName)
 
   IF(participantName .eq. 'SolverOne') THEN
     writeDataName = 'dataOne'
     readDataName = 'dataTwo'
-    IF(nargs.eq.2) THEN
-      meshName = 'MeshOne'
-    ENDIF
+    meshName = 'MeshOne'
   ENDIF
   IF(participantName .eq. 'SolverTwo') THEN
     writeDataName = 'dataTwo'
     readDataName = 'dataOne'
-    IF(nargs.eq.2) THEN
-      meshName = 'MeshTwo'
-    ENDIF
+    meshName = 'MeshTwo'
   ENDIF
 
   rank = 0

@@ -14,11 +14,7 @@ int main(int argc, char **argv)
   std::string solverName(argv[2]);
   std::string meshName;
 
-  if (argc == 3) {
-  } else if (argc == 4) {
-    meshName = argv[3];
-    std::cout << "Warning: Providing the mesh name as an argument is deprecated and will be removed in v3.0.0\n";
-  } else {
+  if (argc != 3) {
     std::cout << "Usage: ./solverdummy configFile solverName meshName\n\n";
     std::cout << "Parameter description\n";
     std::cout << "  configurationFile: Path and filename of preCICE configuration\n";
@@ -30,13 +26,11 @@ int main(int argc, char **argv)
 
   SolverInterface interface(solverName, configFileName, commRank, commSize);
 
-  if (argc == 3) {
-    if (solverName == "SolverOne") {
-      meshName = "MeshOne";
-    }
-    if (solverName == "SolverTwo") {
-      meshName = "MeshTwo";
-    }
+  if (solverName == "SolverOne") {
+    meshName = "MeshOne";
+  }
+  if (solverName == "SolverTwo") {
+    meshName = "MeshTwo";
   }
 
   int         meshID     = interface.getMeshID(meshName);
