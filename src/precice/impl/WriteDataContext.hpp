@@ -26,6 +26,13 @@ public:
       mesh::PtrMesh mesh);
 
   /**
+   * @brief Get _providedData member.
+   *
+   * @return mesh::PtrData _providedData.
+   */
+  mesh::PtrData providedData();
+
+  /**
    * @brief Links a MappingContext and the MeshContext required by the write to this WriteDataContext.
    *
    * A write mapping maps _providedData to _toData. A WriteDataContext already has _providedData, but additionally requires _toData.
