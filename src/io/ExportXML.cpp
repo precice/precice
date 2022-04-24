@@ -30,7 +30,7 @@ void ExportXML::doExport(
   if (not location.empty())
     boost::filesystem::create_directories(location);
   if (utils::IntraComm::isPrimary()) {
-    writePrimaryFile(name, location, mesh);
+    writeParallelFile(name, location, mesh);
   }
   if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
     writeSubFile(name, location, mesh);
@@ -53,7 +53,7 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
   }
 }
 
-void ExportXML::writePrimaryFile(
+void ExportXML::writeParallelFile(
     const std::string &name,
     const std::string &location,
     const mesh::Mesh & mesh) const

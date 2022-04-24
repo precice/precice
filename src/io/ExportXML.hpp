@@ -61,7 +61,7 @@ private:
   /**
     * @brief Writes the master file (called only by the master rank)
     */
-  void writePrimaryFile(
+  void writeParallelFile(
       const std::string &name,
       const std::string &location,
       const mesh::Mesh & mesh) const;
