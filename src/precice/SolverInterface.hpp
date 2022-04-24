@@ -184,10 +184,6 @@ public:
    * @post Finalized managed PETSc
    * @post Finalized managed MPI
    *
-   * @warning
-   * Finalize is not the inverse of initialize().
-   * Finalize has to be called after construction.
-   *
    * @see isCouplingOngoing()
    */
   void finalize();
