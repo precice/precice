@@ -166,9 +166,6 @@ find_package(Eigen3 3.2 REQUIRED)
 precice_validate_eigen()
 
 # LibXML2
-if(TPL_ENABLE_LIBXML2)
-  xsdk_tpl_require(LIBXML2 LIBXML2_LIBRARIES LIBXML2_INCLUDE_DIRS)
-endif()
 find_package(LibXml2 REQUIRED)
 precice_validate_libxml2()
 
@@ -280,8 +277,7 @@ target_link_libraries(precice PRIVATE Eigen3::Eigen)
 target_compile_definitions(precice PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
 
 # Setup LIBXML2
-target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
-target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
+target_link_libraries(precice PRIVATE LibXml2::LibXml2)
 
 # Setup JSON
 target_link_libraries(precice PRIVATE JSON fmt-header-only)

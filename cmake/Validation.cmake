@@ -82,8 +82,7 @@ macro(precice_validate_libxml2)
   precice_validate_lib(
     "#include <libxml/SAX.h>\nint main() { return 0; } "
   NAME LibXml2
-  COMPILE_DEFINITIONS "-I ${LIBXML2_INCLUDE_DIR}"
-  LINK_LIBRARIES ${LIBXML2_LIBRARIES}
+  LINK_LIBRARIES LibXml2::LibXml2
   )
 endmacro()
 
