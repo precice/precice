@@ -214,7 +214,7 @@ MPI_Comm &MPIDirectCommunication::communicator(Rank rank)
 
 int MPIDirectCommunication::rank(Rank rank)
 {
-  // Correct _rankOffset if we are on primary
+  // Correct _rankOffset if we are on the primary rank
   return rank;
 }
 

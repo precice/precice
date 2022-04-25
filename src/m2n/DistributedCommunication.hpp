@@ -89,7 +89,7 @@ public:
       std::string const &acceptorName,
       std::string const &requesterName) = 0;
 
-  /* @brief Completes the secondary ranks connections for both acceptor and requester by updating
+  /* @brief Completes the secondary connections for both acceptor and requester by updating
    * the vertex list in _mappings.
    *
    * @pre acceptPreConnection or requestPreConnection has been called.
@@ -105,10 +105,10 @@ public:
    */
   virtual void closeConnection() = 0;
 
-  /// Sends an array of double values from all secondary ranks (different for each secondary).
+  /// Sends an array of double values from all ranks (different for each rank).
   virtual void send(precice::span<double const> itemsToSend, int valueDimension) = 0;
 
-  /// All secondary ranks receive an array of doubles (different for each secondary).
+  /// All ranks receive an array of doubles (different for each rank).
   virtual void receive(precice::span<double> itemsToReceive, int valueDimension) = 0;
 
   /*

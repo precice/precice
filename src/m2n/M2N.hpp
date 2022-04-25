@@ -30,7 +30,7 @@ struct WhiteboxAccessor;
  */
 class M2N {
 public:
-  M2N(com::PtrCommunication primaryCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false, bool useTwoLevelInit = false);
+  M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false, bool useTwoLevelInit = false);
 
   /// Destructor, empty.
   ~M2N();
@@ -208,7 +208,7 @@ private:
   /// mesh::getID() -> Pointer to distributed communication
   std::map<int, DistributedCommunication::SharedPointer> _distComs;
 
-  com::PtrCommunication _primaryCom;
+  com::PtrCommunication _intraComm;
 
   DistributedComFactory::SharedPointer _distrFactory;
 

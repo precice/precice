@@ -9,14 +9,14 @@ namespace precice {
 namespace m2n {
 class GatherScatterComFactory : public DistributedComFactory {
 public:
-  GatherScatterComFactory(com::PtrCommunication primaryCom);
+  GatherScatterComFactory(com::PtrCommunication intraComm);
 
   DistributedCommunication::SharedPointer newDistributedCommunication(
       mesh::PtrMesh mesh);
 
 private:
   /// communication between the primary processes
-  com::PtrCommunication _primaryCom;
+  com::PtrCommunication _intraComm;
 };
 } // namespace m2n
 } // namespace precice

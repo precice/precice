@@ -111,7 +111,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
 
   const Rank rank = utils::Parallel::current()->rank();
 
-  if (rank == 0) { // only primary opens a port
+  if (rank == 0) { // only primary rank opens a port
     ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
 
     _portName.reserve(MPI_MAX_PORT_NAME);
