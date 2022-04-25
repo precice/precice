@@ -249,6 +249,14 @@ endif()
 
 
 #
+# Setup miscellaneous features
+#
+
+# Enable glibc++ assertions in debug builds
+add_compile_definitions("$<$<CONFIG:DEBUG>:_GLIBCXX_ASSERTIONS>")
+
+
+#
 # Configuration of Target precice
 #
 
