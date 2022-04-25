@@ -24,11 +24,11 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
   double   valOneD = 7.0;
 
   // MeshTwo
-  Vector3d coordTwoA{0.0, 0.0, z};             // Maps to vertex A
-  Vector3d coordTwoB{0.0, 0.5, z};             // Maps to edge AD
+  Vector3d coordTwoA{0.0, 0.0, z}; // Maps to vertex A
+  Vector3d coordTwoB{0.0, 0.5, z}; // Maps to edge AD
 
-  double   expectedValTwoA = 1.0;
-  double   expectedValTwoB = 4.0;
+  double expectedValTwoA = 1.0;
+  double expectedValTwoB = 4.0;
 
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
