@@ -96,7 +96,6 @@ void WatchPoint::exportPointData(
     return;
   }
 
-  // PRECICE_ASSERT(_vertices.size() == _weights.size());
   _txtWriter.writeData("Time", time);
   // Export watch point coordinates
   Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
