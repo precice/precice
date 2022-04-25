@@ -20,12 +20,14 @@ int main(int argc, char **argv)
   int         writeDataID      = -1;
   int         readDataID       = -1;
   const char *meshName;
+  const char *writeDataName;
+  const char *readDataName;
 
   const char *configFileName  = argv[1];
   const char *participantName = argv[2];
 
   if (argc != 3) {
-    printf("Usage: ./solverdummy configFile solverName meshName\n\n");
+    printf("Usage: ./solverdummy configFile solverName\n\n");
     printf("Parameter description\n");
     printf("  configurationFile: Path and filename of preCICE configuration\n");
     printf("  solverName:        SolverDummy participant name in preCICE configuration\n");
@@ -40,29 +42,20 @@ int main(int argc, char **argv)
 
   precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
-  if (strcmp(participantName, "SolverOne") == 0) {
-    meshName = "MeshOne";
+  if (participantName == "SolverOne") {
+    writeDataName = "dataOne";
+    readDataName  = "dataTwo";
+    meshName      = "MeshOne";
   }
-  if (strcmp(participantName, "SolverTwo") == 0) {
-    meshName = "MeshTwo";
+  if (participantName == "SolverTwo") {
+    writeDataName = "dataTwo";
+    readDataName  = "dataOne";
+    meshName      = "MeshTwo";
   }
 
-  meshID = precicec_getMeshID(meshName);
-
-  if (strcmp(participantName, "SolverOne") == 0) {
-    writeDataID = precicec_getDataID("dataOne", meshID);
-    readDataID  = precicec_getDataID("dataTwo", meshID);
-    if (argc == 3) {
-      meshName = "MeshOne";
-    }
-  }
-  if (strcmp(participantName, "SolverTwo") == 0) {
-    writeDataID = precicec_getDataID("dataTwo", meshID);
-    readDataID  = precicec_getDataID("dataOne", meshID);
-    if (argc == 3) {
-      meshName = "MeshTwo";
-    }
-  }
+  meshID      = precicec_getMeshID(meshName);
+  writeDataID = precicec_getDataID(writeDataName, meshID);
+  readDataID  = precicec_getDataID(readDataName, meshID);
 
   dimensions = precicec_getDimensions();
   vertices   = malloc(numberOfVertices * dimensions * sizeof(double));
