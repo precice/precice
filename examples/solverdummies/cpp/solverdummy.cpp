@@ -10,37 +10,39 @@ int main(int argc, char **argv)
   using namespace precice;
   using namespace precice::constants;
 
-  if (argc != 4) {
-    std::cout << "Usage: ./solverdummy configFile solverName meshName\n\n";
+  std::string configFileName(argv[1]);
+  std::string solverName(argv[2]);
+  std::string meshName;
+  std::string dataWriteName;
+  std::string dataReadName;
+
+  if (argc != 3) {
+    std::cout << "Usage: ./solverdummy configFile solverName\n\n";
     std::cout << "Parameter description\n";
     std::cout << "  configurationFile: Path and filename of preCICE configuration\n";
     std::cout << "  solverName:        SolverDummy participant name in preCICE configuration\n";
-    std::cout << "  meshName:          Mesh in preCICE configuration that carries read and write data\n";
     return 1;
   }
 
-  std::string configFileName(argv[1]);
-  std::string solverName(argv[2]);
-  std::string meshName(argv[3]);
-
-  std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName << "\", participant name \"" << solverName << "\", and mesh name \"" << meshName << "\".\n";
+  std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName << "\" and participant name \"" << solverName << "\".\n";
 
   SolverInterface interface(solverName, configFileName, commRank, commSize);
-
-  int         meshID     = interface.getMeshID(meshName);
-  int         dimensions = interface.getDimensions();
-  std::string dataWriteName;
-  std::string dataReadName;
-  int         numberOfVertices = 3;
 
   if (solverName == "SolverOne") {
     dataWriteName = "dataOne";
     dataReadName  = "dataTwo";
+    meshName      = "MeshOne";
   }
   if (solverName == "SolverTwo") {
     dataReadName  = "dataOne";
     dataWriteName = "dataTwo";
+    meshName      = "MeshTwo";
   }
+
+  int meshID           = interface.getMeshID(meshName);
+  int dimensions       = interface.getDimensions();
+  int numberOfVertices = 3;
+
   const int readDataID  = interface.getDataID(dataReadName, meshID);
   const int writeDataID = interface.getDataID(dataWriteName, meshID);
 
