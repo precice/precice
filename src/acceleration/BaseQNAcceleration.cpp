@@ -635,6 +635,7 @@ void BaseQNAcceleration::iterationsConverged(
   }
   _matrixCols.push_front(0);
   PRECICE_INFO("  Mat columns Third: {}", _matrixCols.size());
+  PRECICE_INFO("  Mat columns _matrixV: {}", _matrixV.cols());
   _firstIteration = true;
 }
 

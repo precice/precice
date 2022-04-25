@@ -615,7 +615,7 @@ void MVQNAcceleration::restartIMVJ()
       // apply filter
       if (_filter != Acceleration::NOFILTER) {
         std::vector<int> delIndices(0);
-        qr.applyFilter(2*_singularityLimit, delIndices, _matrixV_RSLS);
+        qr.applyFilter(_singularityLimit, delIndices, _matrixV_RSLS);
         // start with largest index (as V,W matrices are shrinked and shifted
         for (int i = delIndices.size() - 1; i >= 0; i--) {
           removeMatrixColumnRSLS(delIndices[i]);
@@ -766,11 +766,11 @@ void MVQNAcceleration::specializedIterationsConverged(
     //              ------- RESTART/ JACOBIAN ASSEMBLY -------
     if (_imvjRestart) {
 
-      if (_nbRestarts == 1 && incrementRSLSTimeWindows){
-        PRECICE_INFO("Incrementing _RSLSreusedTimeWindows");
-        _RSLSreusedTimeWindows += _timeWindowsReused;
-        incrementRSLSTimeWindows = false;
-      }
+      //if (_nbRestarts == 1 && incrementRSLSTimeWindows){
+      //  PRECICE_INFO("Incrementing _RSLSreusedTimeWindows");
+      //  _RSLSreusedTimeWindows += _timeWindowsReused;
+      //  incrementRSLSTimeWindows = false;
+      //}
 
       if (_matrixCols.size() >= _RSLSreusedTimeWindows){
         
@@ -794,22 +794,30 @@ void MVQNAcceleration::specializedIterationsConverged(
       /**
        *  Restart the IMVJ according to restart type
        */
-      if (_RSLSreusedTimeWindows == 0)
-        _RSLSreusedTimeWindows = 1;
-      int restartChunkSize = _chunkSize/_RSLSreusedTimeWindows;
+      //if (_RSLSreusedTimeWindows == 0)
+      //  _RSLSreusedTimeWindows = 1;
+      //int restartChunkSize = _chunkSize/_RSLSreusedTimeWindows;
       
       // If a restart has already been performed, incremenet the counter by 1 as one chunk is already 
       // present after a restart. This ensures that the same number of time windows is performed
       // between each restart.
-      if (_nbRestarts > 0){
-        restartChunkSize = (_chunkSize/_RSLSreusedTimeWindows) + 1;
-      }
+      //if (_nbRestarts > 0){
+      //  restartChunkSize = (_chunkSize/_RSLSreusedTimeWindows) + 1;
+      //}
 
-      if (static_cast<int>(_WtilChunk.size()) >= restartChunkSize) {
-      //if (static_cast<int>(_matrixCols.size()) >= _chunkSize) {
+      //if (static_cast<int>(_WtilChunk.size()) >= restartChunkSize) {
+      if (static_cast<int>(_WtilChunk.size()) >= _chunkSize) {
       //if ( static_cast<int>(_matrixV_RSLS.cols()) > _chunkSize){
         // < RESTART >
-        
+
+        // If this is the first restart, increment _chunksize by one as there will always be atleast
+        // 1 previous chunk after each restart. But only do this once.
+        if (_nbRestarts == 0){
+          _chunkSize++;
+        }
+        PRECICE_INFO("  Chunksize = {}", _chunkSize);
+
+
         _nbRestarts++;
         utils::Event restartUpdate("IMVJRestart");
         restartIMVJ();
