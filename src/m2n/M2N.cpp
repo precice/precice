@@ -66,7 +66,7 @@ void M2N::requestMasterConnection(
 
   if (not utils::MasterSlave::isSlave()) {
     PRECICE_ASSERT(_intraComm);
-    PRECICE_DEBUG("Request primary-primary connection");
+    PRECICE_DEBUG("Request primary connection");
     _intraComm->requestConnection(acceptorName, requesterName, "MASTERCOM", 0, 1);
     _isMasterConnected = _intraComm->isConnected();
   }
@@ -84,7 +84,7 @@ void M2N::acceptSlavesConnection(
 
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
-    PRECICE_DEBUG("Accept secondary ranks-secondary ranks connections");
+    PRECICE_DEBUG("Accept secondary connections");
     pair.second->acceptConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
@@ -101,7 +101,7 @@ void M2N::requestSlavesConnection(
 
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
-    PRECICE_DEBUG("Request secondary ranks connections");
+    PRECICE_DEBUG("Request secondary connections");
     pair.second->requestConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }

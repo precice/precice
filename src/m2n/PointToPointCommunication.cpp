@@ -316,7 +316,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
   if (not utils::MasterSlave::isSlave()) {
-    PRECICE_DEBUG("Exchange vertex distribution between both primaries");
+    PRECICE_DEBUG("Exchange vertex distribution between both primary ranks");
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
@@ -440,7 +440,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
   if (not utils::MasterSlave::isSlave()) {
-    PRECICE_DEBUG("Exchange vertex distribution between both primaries");
+    PRECICE_DEBUG("Exchange vertex distribution between both primary ranks");
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();

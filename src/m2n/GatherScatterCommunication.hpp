@@ -71,7 +71,7 @@ public:
       std::string const &acceptorName,
       std::string const &requesterName) override;
 
-  /// Completes the secondary ranks connections for both acceptor and requester by updating the vertex list in _mappings
+  /// Completes the secondary connections for both acceptor and requester by updating the vertex list in _mappings
   void completeSlavesConnection() override;
 
   /**
@@ -81,10 +81,10 @@ public:
    */
   void closeConnection() override;
 
-  /// Sends an array of double values from all secondary ranks (different for each secondary).
+  /// Sends an array of double values from all ranks (different for each rank).
   void send(precice::span<double const> itemsToSend, int valueDimension) override;
 
-  /// All secondary ranks receive an array of doubles (different for each secondary).
+  /// All ranks receive an array of doubles (different for each rank).
   void receive(precice::span<double> itemsToReceive, int valueDimension) override;
 
   /// Broadcasts an int to connected ranks on remote participant. Not available for GatherScatterCommunication.
