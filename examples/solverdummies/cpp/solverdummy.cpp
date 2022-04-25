@@ -13,6 +13,8 @@ int main(int argc, char **argv)
   std::string configFileName(argv[1]);
   std::string solverName(argv[2]);
   std::string meshName;
+  std::string dataWriteName;
+  std::string dataReadName;
 
   if (argc != 3) {
     std::cout << "Usage: ./solverdummy configFile solverName\n\n";
@@ -25,9 +27,6 @@ int main(int argc, char **argv)
   std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName << "\" and participant name \"" << solverName << "\".\n";
 
   SolverInterface interface(solverName, configFileName, commRank, commSize);
-
-  std::string dataWriteName;
-  std::string dataReadName;
 
   if (solverName == "SolverOne") {
     dataWriteName = "dataOne";
