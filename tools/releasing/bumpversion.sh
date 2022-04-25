@@ -49,8 +49,22 @@ echo " - CMake"
 sed "s/\(project(preCICE\s\+VERSION\s\+\)$VERSIONREGEX/\1$VERSION/" -i CMakeLists.txt
 echo " - Changelog"
 CL_FILES=`find docs/changelog -type f -name "*.md"`
+CL_CONTENTS="## $VERSION\n"
 echo "   compressing"
-echo -e "$(head -n4 CHANGELOG.md)\n\n## $VERSION\n\n$(cat $CL_FILES)\n$(tail +6 CHANGELOG.md)" > CHANGELOG.md
+for cl_file in $CL_FILES; do
+  # Extract the PR number from the filename
+  cl_name=$(basename $cl_file .md)
+  # Add the PR number to the end of every line in the file
+  cl_entry=$(sed -s "s/$/ (#$cl_name)/" $cl_file)
+  if [[ -z "$cl_entry" ]]; then
+    echo "WARNING $cl_file is empty"
+  else
+    CL_CONTENTS="$CL_CONTENTS\n$cl_entry"
+  fi
+  unset cl_name cl_entry
+done
+INSERT_LINE=4
+echo -e "$(head -n${INSERT_LINE} CHANGELOG.md)\n\n$CL_CONTENTS\n$(tail +${INSERT_LINE} CHANGELOG.md)" > CHANGELOG.md
 echo "   cleaning"
 rm $CL_FILES
 echo " - Debian Changelog"
