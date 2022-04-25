@@ -252,7 +252,7 @@ private:
   /**
    * @brief Vertex distribution for the primary, holding for each secondary all vertex IDs it owns.
    *
-   * For secondaries, this data structure is empty and should not be used.
+   * For secondary ranks, this data structure is empty and should not be used.
    */
   VertexDistribution _vertexDistribution;
 

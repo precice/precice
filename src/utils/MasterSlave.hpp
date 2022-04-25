@@ -27,7 +27,7 @@ public:
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int getSize();
 
-  /// Communication between the primary and all secondaries.
+  /// Communication between the primary and all secondary ranks.
   static com::PtrCommunication &getCommunication()
   {
     return _communication;
@@ -95,7 +95,7 @@ private:
   /// True if this process is running a secondary.
   static bool _isSlave;
 
-  /// Communication between the primary and all secondaries.
+  /// Communication between the primary and all secondary ranks.
   static com::PtrCommunication _communication;
 };
 

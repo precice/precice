@@ -14,7 +14,7 @@ namespace m2n {
 /**
  * @brief Implements DistributedCommunication by using a gathering/scattering methodology.
  * Arrays of data are always gathered and scattered at the primary. No direct communication
- * between secondaries is used.
+ * between secondary ranks is used.
  * For more details see m2n/DistributedCommunication.hpp
  */
 class GatherScatterCommunication : public DistributedCommunication {
@@ -71,7 +71,7 @@ public:
       std::string const &acceptorName,
       std::string const &requesterName) override;
 
-  /// Completes the secondaries connections for both acceptor and requester by updating the vertex list in _mappings
+  /// Completes the secondary ranks connections for both acceptor and requester by updating the vertex list in _mappings
   void completeSlavesConnection() override;
 
   /**
@@ -81,10 +81,10 @@ public:
    */
   void closeConnection() override;
 
-  /// Sends an array of double values from all secondaries (different for each secondary).
+  /// Sends an array of double values from all secondary ranks (different for each secondary).
   void send(precice::span<double const> itemsToSend, int valueDimension) override;
 
-  /// All secondaries receive an array of doubles (different for each secondary).
+  /// All secondary ranks receive an array of doubles (different for each secondary).
   void receive(precice::span<double> itemsToReceive, int valueDimension) override;
 
   /// Broadcasts an int to connected ranks on remote participant. Not available for GatherScatterCommunication.

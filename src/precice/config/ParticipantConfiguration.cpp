@@ -164,7 +164,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. "
                                "Two different variants are implemented: a filter \"on-primary\" strategy, "
                                "which is beneficial for a huge mesh and a low number of processors, and a filter "
-                               "\"on-secondaries\" strategy, which performs better for a very high number of "
+                               "\"on-secondary ranks\" strategy, which performs better for a very high number of "
                                "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
                                "\"on-primary\" is not supported if you use two-level initialization. "
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")

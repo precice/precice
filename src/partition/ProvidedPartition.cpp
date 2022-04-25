@@ -253,7 +253,7 @@ void ProvidedPartition::compareBoundingBoxes()
     bbm.emplace(0, _mesh->getBoundingBox());
     PRECICE_ASSERT(!bbm.empty(), "The bounding box of the local mesh is invalid!");
 
-    // primary receives bbs from secondaries and stores them in bbm
+    // primary receives bbs from secondary ranks and stores them in bbm
     for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       // initialize bbm
       bbm.emplace(rankSlave, bb);

@@ -277,7 +277,7 @@ double SolverInterfaceImpl::initialize()
 
   compareBoundingBoxes();
 
-  PRECICE_INFO("Setting up preliminary secondaries communication to coupling partner/s");
+  PRECICE_INFO("Setting up preliminary secondary ranks communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
     bm2n.preConnectSlaves();
@@ -285,11 +285,11 @@ double SolverInterfaceImpl::initialize()
 
   computePartitions();
 
-  PRECICE_INFO("Setting up secondaries communication to coupling partner/s");
+  PRECICE_INFO("Setting up secondary ranks communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
     bm2n.connectSlaves();
-    PRECICE_DEBUG("Established secondaries connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
+    PRECICE_DEBUG("Established secondary ranks connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
   }
   PRECICE_INFO("Slaves are connected");
 

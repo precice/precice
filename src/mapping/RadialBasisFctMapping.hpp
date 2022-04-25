@@ -331,7 +331,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       }
     }
 
-    // Data scattering to secondaries
+    // Data scattering to secondary ranks
     if (utils::MasterSlave::isMaster()) {
 
       // Filter data
@@ -345,7 +345,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
         }
       }
 
-      // Data scattering to secondaries
+      // Data scattering to secondary ranks
       int beginPoint = outputValueSizes.at(0);
       for (Rank rank : utils::MasterSlave::allSlaves()) {
         precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outputValueSizes.at(rank))};
@@ -453,7 +453,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
 
-    // Data scattering to secondaries
+    // Data scattering to secondary ranks
     int beginPoint = outValuesSize.at(0);
 
     if (utils::MasterSlave::isMaster()) {

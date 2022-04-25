@@ -84,7 +84,7 @@ void M2N::acceptSlavesConnection(
 
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
-    PRECICE_DEBUG("Accept secondaries-secondaries connections");
+    PRECICE_DEBUG("Accept secondary ranks-secondary ranks connections");
     pair.second->acceptConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
@@ -101,7 +101,7 @@ void M2N::requestSlavesConnection(
 
   _areSlavesConnected = true;
   for (const auto &pair : _distComs) {
-    PRECICE_DEBUG("Request secondaries connections");
+    PRECICE_DEBUG("Request secondary ranks connections");
     pair.second->requestConnection(acceptorName, requesterName);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }

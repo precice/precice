@@ -286,7 +286,7 @@ void ReceivedPartition::filterByBoundingBox()
     std::string msg = "The received mesh " + _mesh->getName() +
                       " cannot solely be filtered on the primary rank "
                       "(option \"filter-on-primary\") if it is communicated by an m2n communication that uses "
-                      "two-level initialization. Use \"filter-on-secondaries\" or \"no-filter\" instead.";
+                      "two-level initialization. Use \"filter-on-secondary ranks\" or \"no-filter\" instead.";
     PRECICE_CHECK(_geometricFilter != ON_MASTER, msg);
   }
 
@@ -351,7 +351,7 @@ void ReceivedPartition::filterByBoundingBox()
     }
     if (_geometricFilter == ON_SLAVES) {
 
-      PRECICE_INFO("Filter mesh {} by bounding box on secondaries", _mesh->getName());
+      PRECICE_INFO("Filter mesh {} by bounding box on secondary ranks", _mesh->getName());
       Event e("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);
 
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
@@ -435,7 +435,7 @@ void ReceivedPartition::compareBoundingBoxes()
       connectedRanksList.push_back(0);
     }
 
-    // receive connected ranks from secondaries and add them to the connection map
+    // receive connected ranks from secondary ranks and add them to the connection map
     for (int rank : utils::MasterSlave::allSlaves()) {
       std::vector<int> secondaryConnectedRanks;
       int              connectedRanksSize = -1;
@@ -584,12 +584,12 @@ void ReceivedPartition::createOwnerInformation()
         com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).receiveBoundingBox(localBBMap.at(rankSlave), rankSlave);
       }
 
-      // primary broadcast localBBMap to all secondaries
+      // primary broadcast localBBMap to all secondary ranks
       com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastSendBoundingBoxMap(localBBMap);
     } else if (utils::MasterSlave::isSlave()) {
-      // secondaries send local bb to primary
+      // secondary ranks send local bb to primary
       com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).sendBoundingBox(_bb, 0);
-      // secondaries receive localBBMap from primary
+      // secondary ranks receive localBBMap from primary
       com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastReceiveBoundingBoxMap(localBBMap);
     }
 
@@ -866,7 +866,7 @@ void ReceivedPartition::createOwnerInformation()
         }
       }
 
-      // Send information back to secondaries
+      // Send information back to secondary ranks
       for (Rank rank : utils::MasterSlave::allSlaves()) {
         if (not secondaryTags[rank].empty()) {
           PRECICE_DEBUG("Send owner information to secondary rank {}", rank);
