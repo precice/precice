@@ -366,7 +366,7 @@ int QRFactorization::orthogonalize(
     k++;
 
     // treat the special case m=n
-    // Attention (Primary-Secondary): Here, we need to compare the global _rows with colNum and NOT the local
+    // Attention (intra-participant communication): Here, we need to compare the global _rows with colNum and NOT the local
     // rows on the processor.
     if (_globalRows == colNum) {
       PRECICE_WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
@@ -490,7 +490,7 @@ int QRFactorization::orthogonalize_stable(
     k++;
 
     // treat the special case m=n
-    // Attention (Primary-Secondary): Here, we need to compare the global _rows with colNum and NOT the local
+    // Attention (intra-participant communication): Here, we need to compare the global _rows with colNum and NOT the local
     // rows on the processor.
     if (_globalRows == colNum) {
       PRECICE_WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");

@@ -15,7 +15,7 @@ class Logger;
 
 namespace utils {
 
-/// Utility class for managing Primary-Secondary operations.
+/// Utility class for managing intra-participant communication operations.
 class IntraComm {
 public:
   /// Configures the master-slave communication.

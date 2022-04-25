@@ -202,9 +202,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                             "Port number (16-bit unsigned integer) to be used for socket "
                             "communication. The default is \"0\", what means that OS will "
                             "dynamically search for a free port (if at least one exists) and "
-                            "bind it automatically.")
-                        .setOptions({TAG_MASTER, TAG_PRIMARY})
-                        .setDefaultValue(TAG_PRIMARY);
+                            "bind it automatically.");
     tagPrimary.addAttribute(attrPort);
 
     auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())

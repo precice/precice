@@ -419,7 +419,7 @@ void TestSendAndReceive(TestContext const &context)
 namespace masterslave {
 
 ///
-/// Tests for Primary-Secondary Connections
+/// Tests for intra-participant communication Connections
 /// Acceptor and Requestor are the same participant
 ///
 

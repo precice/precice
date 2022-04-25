@@ -168,7 +168,7 @@ public:
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) = 0;
 
-  /** Establishes the Primary-Secondary connection.
+  /** Establishes the intra-participant communication connection.
    *
    * @param[in] participantName Name of the calling participant.
    * @param[in] tag Tag for establishing this connection

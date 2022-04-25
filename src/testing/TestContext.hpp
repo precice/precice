@@ -327,7 +327,7 @@ private:
    */
   void initializeMPI(const Participants &participants);
 
-  /// Initialize the Primary-Secondary connection if requested
+  /// Initialize the intra-participant communication connection if requested
   void initializeIntraComm();
 
   /// Initialize PETSc if required
