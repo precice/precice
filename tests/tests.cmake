@@ -90,6 +90,10 @@ target_sources(testprecice
     tests/serial/mapping-nearest-projection/testQuadMappingDiagonalNearestProjectionImplicitEdgesWideKite.cpp
     tests/serial/mapping-nearest-projection/testQuadMappingNearestProjectionExplicitEdges.cpp
     tests/serial/mapping-nearest-projection/testQuadMappingNearestProjectionImplicitEdges.cpp
+    tests/serial/mapping-rbf-gaussian/GaussianShapeParameter.cpp
+    tests/serial/mapping-rbf-gaussian/GaussianSupportRadius.cpp
+    tests/serial/mapping-rbf-gaussian/helpers.cpp
+    tests/serial/mapping-rbf-gaussian/helpers.hpp
     tests/serial/mapping-scaled-consistent/helpers.cpp
     tests/serial/mapping-scaled-consistent/helpers.hpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnA.cpp
