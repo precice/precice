@@ -250,13 +250,13 @@ private:
   DataContainer _data;
 
   /**
-   * @brief Vertex distribution for the primary, holding for each secondary all vertex IDs it owns.
+   * @brief Vertex distribution for the primary rank, holding for each secondary rank all vertex IDs it owns.
    *
    * For secondary ranks, this data structure is empty and should not be used.
    */
   VertexDistribution _vertexDistribution;
 
-  /// Holds the index of the last vertex for each secondary.
+  /// Holds the index of the last vertex for each rank.
   /**
    * The last entry holds the total number of vertices.
    * Needed for the matrix-matrix multiplication of the IMVJ acceleration.

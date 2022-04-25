@@ -65,7 +65,7 @@ void ReceivedPartition::communicate()
     m2n().broadcastReceiveAllMesh(*_mesh);
 
   } else {
-    // for one-level initialization receive complete mesh on primary
+    // for one-level initialization receive complete mesh on primary rank
     PRECICE_INFO("Receive global mesh {}", _mesh->getName());
     Event e("partition.receiveGlobalMesh." + _mesh->getName(), precice::syncMode);
 
@@ -206,7 +206,7 @@ void ReceivedPartition::compute()
         for (int i = 0; i < numberOfVertices; i++) {
           vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
         }
-        PRECICE_DEBUG("Send partition feedback to primary");
+        PRECICE_DEBUG("Send partition feedback to primary rank");
         utils::MasterSlave::getCommunication()->send(vertexIDs, 0);
       }
     } else { // Master
@@ -285,21 +285,21 @@ void ReceivedPartition::filterByBoundingBox()
   if (m2n().usesTwoLevelInitialization()) {
     std::string msg = "The received mesh " + _mesh->getName() +
                       " cannot solely be filtered on the primary rank "
-                      "(option \"filter-on-primary\") if it is communicated by an m2n communication that uses "
-                      "two-level initialization. Use \"filter-on-secondary ranks\" or \"no-filter\" instead.";
+                      "(option \"filter-on-primary-rank\") if it is communicated by an m2n communication that uses "
+                      "two-level initialization. Use \"filter-on-secondary-rank\" or \"no-filter\" instead.";
     PRECICE_CHECK(_geometricFilter != ON_MASTER, msg);
   }
 
   prepareBoundingBox();
 
-  if (_geometricFilter == ON_MASTER) { //filter on primary and communicate reduced mesh then
+  if (_geometricFilter == ON_MASTER) { //filter on primary rank and communicate reduced mesh then
 
     PRECICE_ASSERT(not m2n().usesTwoLevelInitialization());
-    PRECICE_INFO("Pre-filter mesh {} by bounding box on primary", _mesh->getName());
+    PRECICE_INFO("Pre-filter mesh {} by bounding box on primary rank", _mesh->getName());
     Event e("partition.preFilterMesh." + _mesh->getName(), precice::syncMode);
 
     if (utils::MasterSlave::isSlave()) {
-      PRECICE_DEBUG("Send bounding box to primary");
+      PRECICE_DEBUG("Send bounding box to primary rank");
       com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).sendBoundingBox(_bb, 0);
       PRECICE_DEBUG("Receive filtered mesh");
       com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(*_mesh, 0);
@@ -316,10 +316,10 @@ void ReceivedPartition::filterByBoundingBox()
         mesh::BoundingBox secondaryBB(_bb.getDimension());
         com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).receiveBoundingBox(secondaryBB, rankSlave);
 
-        PRECICE_DEBUG("From secondary {}, bounding mesh: {}", rankSlave, secondaryBB);
+        PRECICE_DEBUG("From secondary rank {}, bounding mesh: {}", rankSlave, secondaryBB);
         mesh::Mesh secondaryMesh("SlaveMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(secondaryMesh, *_mesh, [&secondaryBB](const mesh::Vertex &v) { return secondaryBB.contains(v); });
-        PRECICE_DEBUG("Send filtered mesh to secondary: {}", rankSlave);
+        PRECICE_DEBUG("Send filtered mesh to secondary rank: {}", rankSlave);
         com::CommunicateMesh(utils::MasterSlave::getCommunication()).sendMesh(secondaryMesh, rankSlave);
       }
 
@@ -423,7 +423,7 @@ void ReceivedPartition::compareBoundingBoxes()
     std::map<int, std::vector<int>> connectionMap;      //local ranks -> {remote ranks}
     std::vector<int>                connectedRanksList; // local ranks with any connection
 
-    // connected ranks for primary
+    // connected ranks for primary rank
     _mesh->getConnectedRanks().clear();
     for (auto &remoteBB : remoteBBMap) {
       if (_bb.overlapping(remoteBB.second)) {
@@ -447,7 +447,7 @@ void ReceivedPartition::compareBoundingBoxes()
       }
     }
 
-    // send connectionMap to other primary
+    // send connectionMap to other primary rank
     m2n().getMasterCommunication()->send(connectedRanksList, 0);
     PRECICE_CHECK(not connectionMap.empty(),
                   "The mesh \"{}\" of this participant seems to have no partitions at the coupling interface. "
@@ -465,7 +465,7 @@ void ReceivedPartition::compareBoundingBoxes()
       }
     }
 
-    // send connected ranks to primary
+    // send connected ranks to primary rank
     utils::MasterSlave::getCommunication()->send(static_cast<int>(_mesh->getConnectedRanks().size()), 0);
     if (not _mesh->getConnectedRanks().empty()) {
       utils::MasterSlave::getCommunication()->send(_mesh->getConnectedRanks(), 0);
@@ -543,14 +543,14 @@ void ReceivedPartition::createOwnerInformation()
     
     Following steps are taken:
 
-    1- receive local bb map from primary
+    1- receive local bb map from primary rank
     2- filter bb map to keep the connected ranks
     3- own the vertices that only fit into this rank's bb
     4- send number of owned vertices and the list of shared vertices to neighbors
     5- for the remaining vertices: check if we have less vertices -> own it!
     */
 
-    // #1: receive local bb map from primary
+    // #1: receive local bb map from primary rank
     // Define and initialize localBBMap to save local bbs
 
     mesh::Mesh::BoundingBoxMap localBBMap;
@@ -576,20 +576,20 @@ void ReceivedPartition::createOwnerInformation()
 
     if (utils::MasterSlave::isMaster()) {
 
-      // Insert primaries bounding box
+      // Insert bounding box of primary ranks
       localBBMap.at(0) = _bb;
 
-      // primary receives local bb from each secondary rank
+      // primary rank receives local bb from each secondary rank
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::getSize(); rankSlave++) {
         com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).receiveBoundingBox(localBBMap.at(rankSlave), rankSlave);
       }
 
-      // primary broadcast localBBMap to all secondary ranks
+      // primary rank broadcast localBBMap to all secondary ranks
       com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastSendBoundingBoxMap(localBBMap);
     } else if (utils::MasterSlave::isSlave()) {
-      // secondary ranks send local bb to primary
+      // secondary ranks send local bb to primary rank
       com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).sendBoundingBox(_bb, 0);
-      // secondary ranks receive localBBMap from primary
+      // secondary ranks receive localBBMap from primary rank
       com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastReceiveBoundingBoxMap(localBBMap);
     }
 
@@ -719,7 +719,7 @@ void ReceivedPartition::createOwnerInformation()
             //               _mesh->getName());
             // PRECICE_ASSERT(ranksAtInterface != 0);
             // int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
-            // // First round: every secondary gets localGuess vertices
+            // // First round: every secondary rank gets localGuess vertices
             // for (Rank rank : utils::MasterSlave::allRanks()) {
             //   int counter = 0;
             //   for (size_t i = 0; i < secondaryOwnerVecs[rank].size(); i++) {
@@ -789,15 +789,15 @@ void ReceivedPartition::createOwnerInformation()
       std::vector<std::vector<int>> secondaryTags(utils::MasterSlave::getSize());
 
       // Fill primary data
-      PRECICE_DEBUG("Tag primary vertices");
-      bool primaryAtInterface = false;
+      PRECICE_DEBUG("Tag vertices of primary rank");
+      bool primaryRankAtInterface = false;
       secondaryOwnerVecs[0].resize(_mesh->vertices().size());
       secondaryGlobalIDs[0].resize(_mesh->vertices().size());
       secondaryTags[0].resize(_mesh->vertices().size());
       for (size_t i = 0; i < _mesh->vertices().size(); i++) {
         secondaryGlobalIDs[0][i] = _mesh->vertices()[i].getGlobalIndex();
         if (_mesh->vertices()[i].isTagged()) {
-          primaryAtInterface  = true;
+          primaryRankAtInterface  = true;
           secondaryTags[0][i] = 1;
         } else {
           secondaryTags[0][i] = 0;
@@ -807,7 +807,7 @@ void ReceivedPartition::createOwnerInformation()
 
       // receive secondary data
       Rank ranksAtInterface = 0;
-      if (primaryAtInterface)
+      if (primaryRankAtInterface)
         ranksAtInterface++;
 
       for (Rank rank : utils::MasterSlave::allSlaves()) {
@@ -840,7 +840,7 @@ void ReceivedPartition::createOwnerInformation()
                     _mesh->getName());
       PRECICE_ASSERT(ranksAtInterface != 0);
       int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
-      // First round: every secondary gets localGuess vertices
+      // First round: every secondary rank gets localGuess vertices
       for (Rank rank : utils::MasterSlave::allRanks()) {
         int counter = 0;
         for (size_t i = 0; i < secondaryOwnerVecs[rank].size(); i++) {

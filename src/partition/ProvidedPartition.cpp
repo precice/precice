@@ -44,7 +44,7 @@ void ProvidedPartition::communicate()
   if (_m2ns.empty())
     return;
 
-  // Temporary globalMesh such that the primary also keeps his local mesh
+  // Temporary globalMesh such that the primary rank also keeps his local mesh
   mesh::Mesh globalMesh(_mesh->getName(), _mesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   bool       hasMeshBeenGathered = false;
 
@@ -61,7 +61,7 @@ void ProvidedPartition::communicate()
 
       Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);
 
-      // communicate the total number of vertices to the other participants primary
+      // communicate the total number of vertices to the other participants primary rank
       if (utils::MasterSlave::isMaster()) {
         _m2ns[0]->getMasterCommunication()->send(_mesh->getGlobalNumberOfVertices(), 0);
       }
@@ -92,7 +92,7 @@ void ProvidedPartition::communicate()
 
           for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
             com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(globalMesh, rankSlave);
-            PRECICE_DEBUG("Received sub-mesh, from secondary: {}, global vertexCount: {}", rankSlave, globalMesh.vertices().size());
+            PRECICE_DEBUG("Received sub-mesh, from secondary rank: {}, global vertexCount: {}", rankSlave, globalMesh.vertices().size());
           }
         }
         if (utils::MasterSlave::isSlave()) {
@@ -126,7 +126,7 @@ void ProvidedPartition::prepare()
   if (utils::MasterSlave::isMaster()) {
     PRECICE_ASSERT(utils::MasterSlave::getSize() > 1);
 
-    // set globals IDs on primary
+    // set globals IDs on primary rank
     for (int i = 0; i < numberOfVertices; i++) {
       _mesh->vertices()[i].setGlobalIndex(i);
     }
@@ -162,7 +162,7 @@ void ProvidedPartition::prepare()
           localIds.push_back(i);
         }
         for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-          // This always creates an entry for each secondary
+          // This always creates an entry for each secondary rank
           auto &secondaryIds = _mesh->getVertexDistribution()[rankSlave];
           for (int i = _mesh->getVertexOffsets()[rankSlave - 1]; i < _mesh->getVertexOffsets()[rankSlave]; i++) {
             secondaryIds.push_back(i);
@@ -238,7 +238,7 @@ void ProvidedPartition::compareBoundingBoxes()
   if (not _m2ns[0]->usesTwoLevelInitialization())
     return;
 
-  // each rank sends its bb to primary
+  // each secondary rank sends its bb to the primary rank
   if (utils::MasterSlave::isSlave()) { //secondary
     PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
     com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).sendBoundingBox(_mesh->getBoundingBox(), 0);
@@ -253,14 +253,14 @@ void ProvidedPartition::compareBoundingBoxes()
     bbm.emplace(0, _mesh->getBoundingBox());
     PRECICE_ASSERT(!bbm.empty(), "The bounding box of the local mesh is invalid!");
 
-    // primary receives bbs from secondary ranks and stores them in bbm
+    // primary rank receives bbs from secondary ranks and stores them in bbm
     for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
       // initialize bbm
       bbm.emplace(rankSlave, bb);
       com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).receiveBoundingBox(bbm.at(rankSlave), rankSlave);
     }
 
-    // primary sends number of ranks and bbm to the other primary
+    // primary rank sends number of ranks and bbm to the other primary rank
     _m2ns[0]->getMasterCommunication()->send(utils::MasterSlave::getSize(), 0);
     com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
   }
@@ -273,8 +273,8 @@ void ProvidedPartition::compareBoundingBoxes()
 
   if (utils::MasterSlave::isMaster()) {
 
-    // primary receives feedback map (map of other participant ranks -> connected ranks at this participant)
-    // from other participants primary
+    // primary rank receives feedback map (map of other participant ranks -> connected ranks at this participant)
+    // from other participants primary rank
     _m2ns[0]->getMasterCommunication()->receive(connectedRanksList, 0);
     remoteConnectionMapSize = connectedRanksList.size();
 
@@ -291,7 +291,7 @@ void ProvidedPartition::compareBoundingBoxes()
       com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastSendConnectionMap(remoteConnectionMap);
     }
 
-    // primary checks which ranks are connected to it
+    // primary rank checks which ranks are connected to it
     _mesh->getConnectedRanks().clear();
     for (auto &remoteRank : remoteConnectionMap) {
       for (auto &includedRank : remoteRank.second) {

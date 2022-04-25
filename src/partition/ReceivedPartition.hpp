@@ -33,7 +33,7 @@ public:
     UNDEFINED,
     /// No geometric filter used (e.g. for RBF mappings)
     NO_FILTER,
-    /// Filter at primary and communicate only filtered mesh.
+    /// Filter at primary rank and communicate only filtered mesh.
     ON_MASTER,
     /// Filter after communication on all secondary ranks
     ON_SLAVES
