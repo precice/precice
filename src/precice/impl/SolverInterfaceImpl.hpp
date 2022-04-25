@@ -788,10 +788,10 @@ private:
   impl::PtrParticipant determineAccessingParticipant(
       const config::SolverInterfaceConfiguration &config);
 
-  /// Initializes communication between primary and secondary ranks.
+  /// Initializes intra-participant communication.
   void initializeMasterSlaveCommunication();
 
-  /// Syncs the timestep between secondary ranks and primary (all timesteps should be the same!)
+  /// Syncs the timestep between all ranks (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);
 
   /// Which channels to close in closeCommunicationChannels()
@@ -800,7 +800,7 @@ private:
     Distributed = true
   };
 
-  /// Syncs the primaries of all connected participants
+  /// Syncs the primary ranks of all connected participants
   void closeCommunicationChannels(CloseChannels cc);
 
   /// To allow white box tests.

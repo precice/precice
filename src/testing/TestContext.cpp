@@ -39,7 +39,7 @@ TestContext::~TestContext() noexcept
   if (!invalid && _events) {
     precice::utils::EventRegistry::instance().finalize();
   }
-  if (!invalid && _initMS) {
+  if (!invalid && _initIntraComm) {
     utils::MasterSlave::getCommunication() = nullptr;
     utils::MasterSlave::reset();
   }
@@ -122,7 +122,7 @@ void TestContext::setContextFrom(const Participant &p, Rank rank)
   this->name         = p.name;
   this->size         = p.size;
   this->rank         = rank;
-  this->_initMS      = p.initMS;
+  this->_initIntraComm      = p.initIntraComm;
   this->_contextComm = utils::Parallel::current();
 }
 
@@ -189,18 +189,18 @@ void TestContext::initializeMasterSlave()
   utils::MasterSlave::configure(rank, size);
   utils::MasterSlave::getCommunication().reset();
 
-  if (!_initMS || hasSize(1))
+  if (!_initIntraComm || hasSize(1))
     return;
 
 #ifndef PRECICE_NO_MPI
-  precice::com::PtrCommunication primarySlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
 #else
-  precice::com::PtrCommunication primarySlaveCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
+  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::SocketCommunication());
 #endif
 
-  primarySlaveCom->connectMasterSlaves(name, "", rank, size);
+  intraComm->connectMasterSlaves(name, "", rank, size);
 
-  utils::MasterSlave::getCommunication() = std::move(primarySlaveCom);
+  utils::MasterSlave::getCommunication() = std::move(intraComm);
 }
 
 void TestContext::initializeEvents()
@@ -267,9 +267,9 @@ std::string TestContext::describe() const
   }
   os << " and runs on rank " << rank << " out of " << size << '.';
 
-  if (_initMS || _events || _petsc) {
+  if (_initIntraComm || _events || _petsc) {
     os << " Initialized: {";
-    if (_initMS)
+    if (_initIntraComm)
       os << " MasterSlave Communication ";
     if (_events)
       os << " Events";

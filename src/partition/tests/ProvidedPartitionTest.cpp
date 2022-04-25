@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
     part.compute();
 
     BOOST_REQUIRE(pSolidzMesh->getVertexOffsets().size() == 3);
-    if (context.isMaster()) { //primary
+    if (context.isMaster()) {
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 6);
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
     const auto &vertexOffsets      = pSolidzMesh->getVertexOffsets();
     const auto &vertexDistribution = pSolidzMesh->getVertexDistribution();
 
-    if (context.isMaster()) { //primary
+    if (context.isMaster()) {
       BOOST_REQUIRE(vertexOffsets.size() == 3);
       BOOST_TEST(vertexOffsets.at(0) == 2);
       BOOST_TEST(vertexOffsets.at(1) == 2);

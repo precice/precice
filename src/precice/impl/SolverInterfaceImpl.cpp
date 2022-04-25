@@ -208,11 +208,11 @@ void SolverInterfaceImpl::configure(
   _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useMaster(),
-                 "A parallel participant needs a primary communication");
+                 "A parallel participant needs an intra-participant communication");
   PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useMaster()),
-                "You cannot use a primary communication with a serial participant. "
-                "If you do not know exactly what a primary communication is and why you want to use it "
-                "you probably just want to remove the primary tag from the preCICE configuration.");
+                "You cannot use an intra-participant communication with a serial participant. "
+                "If you do not know exactly what an intra-participant communication is and why you want to use it "
+                "you probably just want to remove the intraComm tag from the preCICE configuration.");
 
   utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
@@ -277,7 +277,7 @@ double SolverInterfaceImpl::initialize()
 
   compareBoundingBoxes();
 
-  PRECICE_INFO("Setting up preliminary secondary ranks communication to coupling partner/s");
+  PRECICE_INFO("Setting up preliminary secondary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
     bm2n.preConnectSlaves();
@@ -285,11 +285,11 @@ double SolverInterfaceImpl::initialize()
 
   computePartitions();
 
-  PRECICE_INFO("Setting up secondary ranks communication to coupling partner/s");
+  PRECICE_INFO("Setting up secondary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
     bm2n.connectSlaves();
-    PRECICE_DEBUG("Established secondary ranks connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
+    PRECICE_DEBUG("Established secondary connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
   }
   PRECICE_INFO("Slaves are connected");
 

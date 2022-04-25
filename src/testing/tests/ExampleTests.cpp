@@ -81,16 +81,16 @@ BOOST_AUTO_TEST_CASE(TwoProcTests)
 }
 
 #ifndef PRECICE_NO_MPI
-/// Test that requires 4 processors and a primary communication
+/// Test that requires 4 processors and an intra-participant communication
 /*
- * For some primary tests, you might need a primary communication. This example shows how to set one up.
+ * For some primary tests, you might need an intra-participant communication. This example shows how to set one up.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
 BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication)
 {
   // The short syntax won't work here. You have to name the context
   PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())
-  // In this test you can use a primary communication, here is an example how:
+  // In this test you can use an intra-participant communication, here is an example how:
   BOOST_TEST(context.hasSize(4));
   BOOST_TEST(utils::MasterSlave::getCommunication()->isConnected());
 }

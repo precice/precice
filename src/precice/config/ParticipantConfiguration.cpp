@@ -641,7 +641,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   if (context.size > 1 && not _isMasterDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
     PRECICE_ERROR("Implicit primary communications for parallel participants are only available if preCICE was built with MPI. "
-                  "Either explicitly define a primary communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
+                  "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com::PtrCommunication com              = std::make_shared<com::MPIDirectCommunication>();
     utils::MasterSlave::getCommunication() = com;

@@ -51,8 +51,8 @@ struct Participant {
   /// the amount of ranks this participant runs on
   int size = 1;
 
-  /// whether to initialize a intra-participant communication for this participant
-  bool initMS = false;
+  /// whether to initialize an intra-participant communication for this participant
+  bool initIntraComm = false;
 
   /// Constructs a serial participant with a given name
   explicit Participant(std::string n)
@@ -72,13 +72,13 @@ struct Participant {
     return *this;
   }
 
-  /** Marks that this Participant should initialize a intra-participant connection.
+  /** Marks that this Participant should initialize an intra-participant connection.
    *
    * @returns A reference to the Participant allowing for chaining.
    */
   Participant &setupMasterSlaves()
   {
-    initMS = true;
+    initIntraComm = true;
     return *this;
   }
 };
@@ -175,7 +175,7 @@ public:
   /** Create a context representing an unnamed Participant running on a given count of Ranks
    *
    * @note You need to construct a Participant if you require initializing
-   * a intra-participant connection `"Serial"_on(3_ranks).setupMasterSlaves()`
+   * an intra-participant connection `"Serial"_on(3_ranks).setupMasterSlaves()`
    *
    * @attention This call synchronizes all ranks
    *
@@ -191,7 +191,7 @@ public:
   /** Create a context representing an unnamed Participant running on a given count of Ranks and some requirements
    *
    * @note You need to construct a Participant if you require initializing
-   * a intra-participant connection `"Serial"_on(3_ranks).setupMasterSlaves()`
+   * an intra-participant connection `"Serial"_on(3_ranks).setupMasterSlaves()`
    *
    * @attention This call synchronizes all ranks
    *
@@ -283,8 +283,8 @@ private:
   /// wheater this Context was created with a Ranks constructor
   bool _simple = false;
 
-  /// wheater to initialize a intra-participant connection
-  bool _initMS = false;
+  /// wheater to initialize an intra-participant connection
+  bool _initIntraComm = false;
 
   /// the MPI communicator of the context
   utils::Parallel::CommStatePtr _contextComm;
