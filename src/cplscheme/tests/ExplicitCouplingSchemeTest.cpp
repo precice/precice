@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -654,7 +654,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);

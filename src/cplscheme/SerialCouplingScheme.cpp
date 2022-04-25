@@ -79,7 +79,7 @@ void SerialCouplingScheme::exchangeInitialData()
     PRECICE_ASSERT(not sendsInitializedData(), "First participant cannot send data during initialization.");
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+      checkInitialDataHasBeenReceived();
     }
   } else { // second participant
     PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");
