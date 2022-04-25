@@ -75,6 +75,10 @@ ParticipantConfiguration::ParticipantConfiguration(
                           "meshes, this has to be specified separately for each mesh.");
   tagWriteData.addAttribute(attrMesh);
   tagReadData.addAttribute(attrMesh);
+
+  XMLAttribute<int> attrOrder = makeXMLAttribute(ATTR_ORDER, time::Time::DEFAULT_INTERPOLATION_ORDER)
+                                    .setDocumentation("Interpolation order used by waveform iteration when reading data.");
+  tagReadData.addAttribute(attrOrder);
   tag.addSubtag(tagWriteData);
   tag.addSubtag(tagReadData);
 
@@ -260,6 +264,12 @@ void ParticipantConfiguration::setDimensions(
   _dimensions = dimensions;
 }
 
+void ParticipantConfiguration::setExperimental(
+    bool experimental)
+{
+  _experimental = experimental;
+}
+
 void ParticipantConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
     xml::XMLTag &                    tag)
@@ -281,6 +291,9 @@ void ParticipantConfiguration::xmlTagCallback(
     const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
 
     if (allowDirectAccess) {
+      if (!_experimental) {
+        PRECICE_ERROR("You tried to configure the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
+      }
       PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
     }
 
@@ -332,8 +345,18 @@ void ParticipantConfiguration::xmlTagCallback(
     PRECICE_CHECK(mesh,
                   "Participant \"{}\" has to use mesh \"{}\" in order to read data from it. Please add a use-mesh node with name=\"{}\".",
                   _participants.back()->getName(), meshName, meshName);
-    mesh::PtrData data = getData(mesh, dataName);
-    _participants.back()->addReadData(data, mesh);
+    mesh::PtrData data          = getData(mesh, dataName);
+    int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
+    if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {
+      if (!_experimental) {
+        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", dataName, waveformOrder);
+      }
+      if (waveformOrder < time::Time::MIN_INTERPOLATION_ORDER || waveformOrder > time::Time::MAX_INTERPOLATION_ORDER) {
+        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", but the order must be between \"{}\" and \"{}\". Please use an order in the allowed range.", dataName, waveformOrder, time::Time::MIN_INTERPOLATION_ORDER, time::Time::MAX_INTERPOLATION_ORDER);
+      }
+      PRECICE_WARN("You configured the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Use with care.", dataName, waveformOrder);
+    }
+    _participants.back()->addReadData(data, mesh, waveformOrder);
   } else if (tag.getName() == TAG_WATCH_POINT) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     WatchPointConfig config;

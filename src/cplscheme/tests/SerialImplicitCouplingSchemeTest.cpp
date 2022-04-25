@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
       new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig.getData("Data0", "Mesh") != cplSchemeConfig.getData("Data1", "Mesh"));
@@ -1368,7 +1368,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, configurationPath);
   m2n::PtrM2N m2n       = m2nConfig->getM2N("Participant0", "Participant1");

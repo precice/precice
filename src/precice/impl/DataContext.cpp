@@ -15,12 +15,6 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
   _mesh = mesh;
 }
 
-mesh::PtrData DataContext::providedData()
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData;
-}
-
 std::string DataContext::getDataName() const
 {
   PRECICE_ASSERT(_providedData);
@@ -29,7 +23,6 @@ std::string DataContext::getDataName() const
 
 int DataContext::getFromDataID() const
 {
-  PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   PRECICE_ASSERT(_fromData);
   return _fromData->getID();
@@ -47,7 +40,6 @@ void DataContext::resetData()
 
 int DataContext::getToDataID() const
 {
-  PRECICE_TRACE();
   PRECICE_ASSERT(hasMapping());
   PRECICE_ASSERT(_toData);
   return _toData->getID();
@@ -55,7 +47,6 @@ int DataContext::getToDataID() const
 
 int DataContext::getDataDimensions() const
 {
-  PRECICE_TRACE();
   PRECICE_ASSERT(_providedData);
   return _providedData->getDimensions();
 }
