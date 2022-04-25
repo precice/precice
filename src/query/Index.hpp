@@ -56,6 +56,7 @@ class Index {
 
 public:
   Index(mesh::PtrMesh mesh);
+  Index(mesh::Mesh &mesh);
   ~Index();
 
   /// Get n number of closest vertices to the given vertex
@@ -74,22 +75,27 @@ public:
   std::vector<VertexID> getVerticesInsideBox(const mesh::BoundingBox &bb);
 
   /**
-   * @brief Find the closest interpolation element to the given location. 
+   * @brief Find the closest interpolation element to the given location.
    * If exists, triangle or edge projection element is returned. If not vertex projection element, which is the nearest neighbor is returned.
-   * 
-   * param[in] sourceVertex 
+   *
+   * param[in] sourceVertex
    * param[in] n how many nearest edges/faces are going to be checked
-   * 
+   *
    * param[out] pair of interpolation and the distance to corresponding vertex/edge/triangle
    *
-  */
+   */
   ProjectionMatch findNearestProjection(const Eigen::VectorXd &location, int n);
 
+  /// Clear the index
+  void clear();
+
 private:
-  struct IndexImpl;
+  class IndexImpl;
   std::unique_ptr<IndexImpl> _pimpl;
 
-  const mesh::PtrMesh             _mesh;
+  /// The indexed Mesh.
+  mesh::Mesh *_mesh;
+
   static precice::logging::Logger _log;
 
   /// Closest vertex projection element is always the nearest neighbor
@@ -101,15 +107,6 @@ private:
   /// Find closest face interpolation element. If cannot be found, it falls back to first edge interpolation element, then vertex if necessary
   ProjectionMatch findTriangleProjection(const Eigen::VectorXd &location, int n);
 };
-
-/// Clear all the cache
-void clearCache();
-
-/// Clear the cache of given mesh
-void clearCache(MeshID meshID);
-
-/// Clear the cache of given mesh
-void clearCache(mesh::Mesh &mesh);
 
 } // namespace query
 } // namespace precice

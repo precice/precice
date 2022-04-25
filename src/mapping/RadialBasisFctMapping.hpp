@@ -9,7 +9,6 @@
 #include "mapping/Mapping.hpp"
 #include "mesh/Filter.hpp"
 #include "precice/types.hpp"
-#include "query/Index.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/MasterSlave.hpp"
@@ -496,8 +495,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb = otherMesh->getBoundingBox();
     bb.expandBy(_basisFunction.getSupportRadius());
 
-    query::Index indexTree(filterMesh);
-    auto         vertices = indexTree.getVerticesInsideBox(bb);
+    auto vertices = filterMesh->index().getVerticesInsideBox(bb);
     std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertices()[v].tag(); });
   } else {
     filterMesh->tagAll();
@@ -531,8 +529,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   }
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
-  query::Index indexTree(mesh);
-  auto         vertices = indexTree.getVerticesInsideBox(bb);
+  auto vertices = mesh->index().getVerticesInsideBox(bb);
   std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertices()[v].tag(); });
 }
 
