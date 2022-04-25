@@ -18,7 +18,7 @@ namespace utils {
 /// Utility class for managing Master-Slave operations.
 class MasterSlave {
 public:
-  /// Configures the primary-secondary communication.
+  /// Configures the intra-participant communication.
   static void configure(Rank rank, int size);
 
   /// Current rank

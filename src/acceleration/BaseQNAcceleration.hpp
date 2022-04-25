@@ -136,7 +136,7 @@ public:
     *	 This is only necessary if some procs do not have any nodes on the coupling 
     *  interface. In this case, the matrices are not constructed and we have no 
     *  information about the number of cols. This info is needed for 
-    *  primary-secondary communication. Number of its =! _cols in general.
+    *  intra-participant communication. Number of its =! _cols in general.
     */
   virtual int getLSSystemCols() const;
 

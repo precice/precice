@@ -237,7 +237,7 @@ void SolverInterfaceImpl::configure(
 
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
 
-  PRECICE_DEBUG("Initialize primary-secondary communication");
+  PRECICE_DEBUG("Initialize intra-participant communication");
   if (utils::MasterSlave::isParallel()) {
     initializeMasterSlaveCommunication();
   }
@@ -508,7 +508,7 @@ void SolverInterfaceImpl::finalize()
   _accessor.reset();
 
   // Close Connections
-  PRECICE_DEBUG("Close primary-secondary communication");
+  PRECICE_DEBUG("Close intra-participant communication");
   if (utils::MasterSlave::isParallel()) {
     utils::MasterSlave::getCommunication()->closeConnection();
     utils::MasterSlave::getCommunication() = nullptr;
