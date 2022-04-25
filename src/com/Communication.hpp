@@ -213,7 +213,7 @@ public:
 
   /// Performs a reduce summation on the rank given by rankMaster
   virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster);
-  /// Performs a reduce summation on the primary, every other rank has to call reduceSum
+  /// Performs a reduce summation on the primary rank, every other rank has to call reduceSum
   virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
   virtual void reduceSum(int itemToSend, int &itemToReceive, Rank rankMaster);

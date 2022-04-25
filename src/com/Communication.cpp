@@ -23,16 +23,16 @@ void Communication::connectMasterSlaves(std::string const &participantName,
   std::string secondaryName = participantName + "Slave";
 
   constexpr Rank rankOffset      = 1;
-  int            secondary ranksSize = size - rankOffset;
+  int            secondariesSize = size - rankOffset;
   if (rank == 0) {
-    PRECICE_INFO("Connecting Master to {} Slaves", secondary ranksSize);
+    PRECICE_INFO("Connecting Master to {} Slaves", secondariesSize);
     prepareEstablishment(primaryName, secondaryName);
     acceptConnection(primaryName, secondaryName, tag, rank, rankOffset);
     cleanupEstablishment(primaryName, secondaryName);
   } else {
     int secondaryRank = rank - rankOffset;
     PRECICE_INFO("Connecting Slave #{} to Master", secondaryRank);
-    requestConnection(primaryName, secondaryName, tag, secondaryRank, secondary ranksSize);
+    requestConnection(primaryName, secondaryName, tag, secondaryRank, secondariesSize);
   }
 }
 
@@ -116,7 +116,7 @@ void Communication::allreduceSum(precice::span<double const> itemsToSend, precic
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
   reduceSum(itemsToSend, itemsToReceive, rankMaster);
-  // receive reduced data from primary
+  // receive reduced data from primary rank
   receive(itemsToReceive, rankMaster + _rankOffset);
 }
 
@@ -148,7 +148,7 @@ void Communication::allreduceSum(double itemToSend, double &itemsToReceive, Rank
 
   auto request = aSend(itemToSend, rankMaster);
   request->wait();
-  // receive reduced data from primary
+  // receive reduced data from primary rank
   receive(itemsToReceive, rankMaster + _rankOffset);
 }
 
@@ -180,7 +180,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive, Rank rankMa
 
   auto request = aSend(itemToSend, rankMaster);
   request->wait();
-  // receive reduced data from primary
+  // receive reduced data from primary rank
   receive(itemToReceive, rankMaster + _rankOffset);
 }
 
