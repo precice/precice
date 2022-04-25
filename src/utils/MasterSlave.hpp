@@ -27,7 +27,7 @@ public:
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int getSize();
 
-  /// Communication between the primary and all secondary ranks.
+  /// Intra-participant communication.
   static com::PtrCommunication &getCommunication()
   {
     return _communication;
@@ -45,10 +45,10 @@ public:
     return boost::irange(0, _size);
   }
 
-  /// True if this process is running the primary.
+  /// True if this process is running the primary rank.
   static bool isMaster();
 
-  /// True if this process is running a secondary.
+  /// True if this process is running a secondary rank.
   static bool isSlave();
 
   /// True if this process is running in parallel
@@ -89,13 +89,13 @@ private:
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int _size;
 
-  /// True if this process is running the primary.
+  /// True if this process is running the primary rank.
   static bool _isMaster;
 
-  /// True if this process is running a secondary.
+  /// True if this process is running a secondary rank.
   static bool _isSlave;
 
-  /// Communication between the primary and all secondary ranks.
+  /// Intra-participant communication.
   static com::PtrCommunication _communication;
 };
 

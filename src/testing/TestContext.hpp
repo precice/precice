@@ -245,21 +245,21 @@ public:
    */
   std::string prefix(const std::string &filename) const;
 
-  /// Check wheater this context has a given size
+  /// Check whether this context has a given size
   bool hasSize(int size) const;
 
-  /// Check wheater this context has a given name
+  /// Check whether this context has a given name
   bool isNamed(const std::string &name) const;
 
-  /// Check wheater this context has a given rank inside the Participant
+  /// Check whether this context has a given rank inside the Participant
   bool isRank(Rank rank) const;
 
-  /** Check wheater this context is the primary of a Participants
+  /** Check whether this context is the primary rank of a participant
    * @note This is equivalent to `isRank(0)`
    */
   bool isMaster() const;
 
-  /** Creates a M2N and establishes a primary-primary connection between participants
+  /** Creates a M2N and establishes a primary connection between participants
    * @param[in] acceptor the accepting participant
    * @param[in] requestor the requesting participant
    * @param[in] options a set of options concerning the created connection
@@ -274,16 +274,16 @@ public:
   std::string describe() const;
 
 private:
-  /// wheater to initialize PETSc
+  /// whether to initialize PETSc
   bool _petsc = false;
 
-  /// wheater to initialize events
+  /// whether to initialize events
   bool _events = false;
 
-  /// wheater this Context was created with a Ranks constructor
+  /// whether this Context was created with a Ranks constructor
   bool _simple = false;
 
-  /// wheater to initialize an intra-participant connection
+  /// whether to initialize an intra-participant connection
   bool _initIntraComm = false;
 
   /// the MPI communicator of the context

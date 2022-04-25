@@ -162,7 +162,7 @@ void MasterSlave::reduceSum(precice::span<const double> sendData, precice::span<
   PRECICE_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
-    // send local result to primary
+    // send local result to primary rank
     _communication->reduceSum(sendData, rcvData, 0);
   }
 
@@ -192,7 +192,7 @@ void MasterSlave::reduceSum(const int &sendData, int &rcvData)
   PRECICE_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
-    // send local result to primary
+    // send local result to primary rank
     _communication->reduceSum(sendData, rcvData, 0);
   }
 
@@ -215,7 +215,7 @@ void MasterSlave::allreduceSum(precice::span<const double> sendData, precice::sp
   PRECICE_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
-    // send local result to primary, receive reduced result from primary
+    // send local result to primary rank, receive reduced result from primary rank
     _communication->allreduceSum(sendData, rcvData, 0);
   }
 
@@ -238,7 +238,7 @@ void MasterSlave::allreduceSum(double &sendData, double &rcvData)
   PRECICE_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
-    // send local result to primary, receive reduced result from primary
+    // send local result to primary rank, receive reduced result from primary rank
     _communication->allreduceSum(sendData, rcvData, 0);
   }
 
@@ -261,7 +261,7 @@ void MasterSlave::allreduceSum(int &sendData, int &rcvData)
   PRECICE_ASSERT(_communication->isConnected());
 
   if (_isSlave) {
-    // send local result to primary, receive reduced result from primary
+    // send local result to primary rank, receive reduced result from primary rank
     _communication->allreduceSum(sendData, rcvData, 0);
   }
 
