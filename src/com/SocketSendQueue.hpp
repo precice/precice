@@ -1,6 +1,5 @@
 #pragma once
 
-#include <atomic>
 #include <boost/asio.hpp>
 #include <deque>
 #include <functional>
@@ -27,6 +26,9 @@ public:
   /// Put data in the queue, start processing the queue.
   void dispatch(std::shared_ptr<Socket> sock, boost::asio::const_buffers_1 data, std::function<void()> callback);
 
+  /// Notifies the queue that the last asynchronous send operation has completed.
+  void sendCompleted();
+
 private:
   /// This method can be called arbitrarily many times, but enough times to ensure the queue makes progress.
   void process();
@@ -42,7 +44,7 @@ private:
   /// The mutex protecting access to the queue
   std::mutex _queueMutex;
   /// Is the queue allowed to start another asynchronous send?
-  std::atomic_bool _ready{true};
+  bool _ready = true;
 };
 
 } // namespace com
