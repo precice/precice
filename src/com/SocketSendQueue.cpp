@@ -23,13 +23,16 @@ void SocketSendQueue::dispatch(std::shared_ptr<Socket>      sock,
                                boost::asio::const_buffers_1 data,
                                std::function<void()>        callback)
 {
-  _itemQueue.push_back({std::move(sock), std::move(data), std::move(callback)});
+  {
+    std::lock_guard<std::mutex> lock(_queueMutex);
+    _itemQueue.push_back({std::move(sock), std::move(data), std::move(callback)});
+  }
   process(); // if queue was previously empty, start it now.
 }
 
 void SocketSendQueue::process()
 {
-  std::lock_guard<std::mutex> lock(_sendMutex);
+  std::lock_guard<std::mutex> lock(_queueMutex);
   if (!_ready || _itemQueue.empty())
     return;
   auto item = _itemQueue.front();

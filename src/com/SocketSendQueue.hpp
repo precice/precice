@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <boost/asio.hpp>
 #include <deque>
 #include <functional>
@@ -36,9 +37,12 @@ private:
     std::function<void()>        callback;
   };
 
+  /// The queue, containing items to asynchronously send using boost.asio.
   std::deque<SendItem> _itemQueue;
-  std::mutex           _sendMutex;
-  bool                 _ready = true;
+  /// The mutex protecting access to the queue
+  std::mutex _queueMutex;
+  /// Is the queue allowed to start another asynchronous send?
+  std::atomic_bool _ready{true};
 };
 
 } // namespace com
