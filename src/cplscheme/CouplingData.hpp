@@ -26,6 +26,18 @@ public:
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
 
+  /// Returns a reference to the gradient data values.
+  Eigen::MatrixXd &gradientValues();
+
+  /// Returns a const reference to the gradient data values.
+  const Eigen::MatrixXd &gradientValues() const;
+
+  /// Returns if the data contains gradient data
+  bool hasGradient() const;
+
+  /// Returns the dimensions of the current mesh (2D or 3D)
+  int meshDimensions() const;
+
   /// store _data->values() in read-only variable _previousIteration for convergence checks etc.
   void storeIteration();
 

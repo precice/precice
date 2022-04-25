@@ -6,7 +6,7 @@
 #include <precice/impl/SolverInterfaceImpl.hpp>
 #include <vector>
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_CASE(TestFinalize)
 {
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 
 #endif // PRECICE_NO_MPI

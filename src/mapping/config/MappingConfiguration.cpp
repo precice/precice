@@ -129,7 +129,7 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG);
-    tag.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries with a gradient optimization.");
+    tag.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data.");
     tags.push_back(tag);
   }
 
@@ -315,6 +315,12 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     configuredMapping.isRBF = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {
+
+    // NNG is not applicable with the conservative constraint
+    PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
+                  "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. "
+                  "Please select constraint=\" consistent\" or a different mapping method.");
+
     configuredMapping.mapping = PtrMapping(
         new NearestNeighborGradientMapping(constraintValue, dimensions));
     configuredMapping.isRBF = false;

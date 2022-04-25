@@ -8,7 +8,7 @@
 /**
  * @brief Tests sending one mesh to multiple participants
  */
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
 {
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
   interface.finalize();
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 
 #endif // PRECICE_NO_MPI

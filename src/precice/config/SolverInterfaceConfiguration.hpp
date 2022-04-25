@@ -68,8 +68,7 @@ public:
 
   const PtrParticipantConfiguration &getParticipantConfiguration() const;
 
-  const cplscheme::PtrCouplingSchemeConfiguration
-  getCouplingSchemeConfiguration() const
+  const cplscheme::PtrCouplingSchemeConfiguration getCouplingSchemeConfiguration() const
   {
     return _couplingSchemeConfiguration;
   }

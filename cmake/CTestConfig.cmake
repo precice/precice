@@ -273,7 +273,7 @@ add_precice_test(
   )
 add_precice_test(
   NAME interface
-  ARGUMENTS "--run_test=PreciceTests:\!PreciceTests/Serial:\!PreciceTests/Parallel"
+  ARGUMENTS "--run_test=PreciceTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
@@ -297,19 +297,12 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 
-# Remove the parallel suite once the migration to the new test structure is finished
-add_precice_test(
-  NAME parallel
-  ARGUMENTS "--run_test=PreciceTests/Parallel"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  )
-
 # Register integration tests from tests/
 # These are defined in tests/tests.cmake
 foreach(testsuite IN LISTS PRECICE_TEST_SUITES)
   add_precice_test(
     NAME "integration.${testsuite}"
-    ARGUMENTS "--run_test=PreciceTests/${testsuite}"
+    ARGUMENTS "--run_test=Integration/${testsuite}"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
 endforeach()

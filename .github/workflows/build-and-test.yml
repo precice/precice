@@ -20,6 +20,10 @@ on:
       - '.github/workflows/build-and-test.yml'
   workflow_dispatch:
 
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
 jobs:
   build:
     name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
@@ -32,34 +36,34 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - IMAGE: 'ubuntu-1804'
+          - IMAGE: 'ubuntu-2004'
             CONFIG: Bare
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-1804'
+          - IMAGE: 'ubuntu-2004'
             CONFIG: MPI
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-1804'
+          - IMAGE: 'ubuntu-2004'
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-1804'
+          - IMAGE: 'ubuntu-2004'
             CONFIG: Bare
-            CXX: 'g++'
-            TYPE: Release
-          - IMAGE: 'ubuntu-1804'
-            CONFIG: MPI
-            CXX: 'g++'
-            TYPE: Release
-          - IMAGE: 'ubuntu-1804'
-            CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Release
           - IMAGE: 'ubuntu-2004'
+            CONFIG: MPI
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'ubuntu-2004'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'ubuntu-2204'
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Debug

@@ -43,6 +43,29 @@ const Eigen::VectorXd &CouplingData::values() const
   return _data->values();
 }
 
+Eigen::MatrixXd &CouplingData::gradientValues()
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->gradientValues();
+}
+
+const Eigen::MatrixXd &CouplingData::gradientValues() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->gradientValues();
+}
+
+bool CouplingData::hasGradient() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->hasGradient();
+}
+
+int CouplingData::meshDimensions() const
+{
+  return _mesh->getDimensions();
+}
+
 void CouplingData::storeIteration()
 {
   _previousIteration = this->values();

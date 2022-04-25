@@ -5,7 +5,7 @@
 #include <precice/SolverInterface.hpp>
 #include "helpers.hpp"
 
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(DistributedCommunication)
 BOOST_AUTO_TEST_CASE(TestDistributedCommunicationP2PMPI)
@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(TestDistributedCommunicationP2PMPI)
   runTestDistributedCommunication(context.config(), context);
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // DistributedCommunication
 

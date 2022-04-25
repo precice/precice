@@ -32,14 +32,14 @@ struct MappingContext;
 } // namespace precice
 
 // Forward declaration to friend the boost test struct
-namespace PreciceTests {
+namespace Integration {
 namespace Serial {
 namespace Whitebox {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
 } // namespace Whitebox
 } // namespace Serial
-} // namespace PreciceTests
+} // namespace Integration
 
 namespace precice {
 namespace utils {
@@ -78,7 +78,8 @@ public:
   /// Adds a configured read \ref Data to the Participant
   void addReadData(
       const mesh::PtrData &data,
-      const mesh::PtrMesh &mesh);
+      const mesh::PtrMesh &mesh,
+      int                  interpolationOrder);
 
   /// Adds a configured read \ref Mapping to the Participant
   void addReadMappingContext(MappingContext *mappingContext);
@@ -154,6 +155,17 @@ public:
   auto readDataContexts()
   {
     return _readDataContexts | boost::adaptors::map_values;
+  }
+
+  /** @brief Determines and returns the maximum order of all read waveforms of this participant
+   */
+  int maxReadWaveformOrder() const
+  {
+    int maxOrder = -1;
+    for (auto &context : _readDataContexts | boost::adaptors::map_values) {
+      maxOrder = std::max(maxOrder, context.getInterpolationOrder());
+    }
+    return maxOrder;
   }
 
   /// Is the dataID know to preCICE?
@@ -332,8 +344,8 @@ private:
   void checkDuplicatedData(const mesh::PtrData &data, const std::string &meshName);
 
   /// To allow white box tests.
-  friend struct PreciceTests::Serial::Whitebox::TestConfigurationPeano;
-  friend struct PreciceTests::Serial::Whitebox::TestConfigurationComsol;
+  friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
+  friend struct Integration::Serial::Whitebox::TestConfigurationComsol;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS

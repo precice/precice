@@ -13,7 +13,7 @@ Data::Data()
     : _name(""),
       _id(-1),
       _dimensions(0),
-      _spacialDimensions(-1),
+      _spatialDimensions(-1),
       _hasGradient(false)
 {
   PRECICE_ASSERT(false);
@@ -29,7 +29,7 @@ Data::Data(
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
-      _spacialDimensions(spacialDimensions),
+      _spatialDimensions(spacialDimensions),
       _hasGradient(hasGradient)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
@@ -88,9 +88,9 @@ int Data::getDimensions() const
   return _dimensions;
 }
 
-int Data::getSpacialDimensions() const
+int Data::getSpatialDimensions() const
 {
-  return _spacialDimensions;
+  return _spatialDimensions;
 }
 
 } // namespace mesh

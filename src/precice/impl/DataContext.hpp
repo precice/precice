@@ -25,13 +25,6 @@ class DataContext {
   friend class testing::DataContextFixture; // Make the fixture friend of this class
 public:
   /**
-   * @brief Get _providedData member.
-   *
-   * @return mesh::PtrData _providedData.
-   */
-  mesh::PtrData providedData();
-
-  /**
    * @brief Get the Name of _providedData.
    *
    * @return std::string Name of _providedData.

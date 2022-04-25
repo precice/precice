@@ -6,7 +6,7 @@
 #include <vector>
 
 // Test representing the full explicit lifecycle of a SolverInterface
-BOOST_AUTO_TEST_SUITE(PreciceTests)
+BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 BOOST_AUTO_TEST_CASE(Full)
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(Full)
   interface.finalize();
 }
 
-BOOST_AUTO_TEST_SUITE_END() // PreciceTests
+BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE_END() // Lifecycle
 
