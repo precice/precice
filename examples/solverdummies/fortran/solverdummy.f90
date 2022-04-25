@@ -19,17 +19,19 @@ PROGRAM main
   CALL precicef_action_write_iter_checkp(writeItCheckp)
 
   WRITE (*,*) 'DUMMY: Starting Fortran solver dummy...'
+  
   CALL getarg(1, config)
   CALL getarg(2, participantName)
-  CALL getarg(3, meshName)
 
   IF(participantName .eq. 'SolverOne') THEN
     writeDataName = 'dataOne'
     readDataName = 'dataTwo'
+    meshName = 'MeshOne'
   ENDIF
   IF(participantName .eq. 'SolverTwo') THEN
     writeDataName = 'dataTwo'
     readDataName = 'dataOne'
+    meshName = 'MeshTwo'
   ENDIF
 
   rank = 0
