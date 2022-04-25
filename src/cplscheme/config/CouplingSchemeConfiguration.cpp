@@ -697,6 +697,10 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
                 "Please check the <relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
+  if (math::smallerEquals(limit/10, 0.0)){
+    PRECICE_WARN("Relative convergence limit is too small. This may cause a conflict with "
+                 "the quasi-Newton acceleration scheme if selected. ");
+  }
 
   impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
@@ -722,6 +726,11 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
                 "Please check the <residul-relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
+  if (math::smallerEquals(limit/10, 0.0)){
+    PRECICE_WARN("Residual Relative convergence limit is too small. This may cause a conflict with "
+                 "the quasi-Newton acceleration scheme if selected. ");
+  }
+  
   impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
   convMeasureDef.data        = getData(dataName, meshName);
