@@ -218,29 +218,7 @@ endif()
 
 # Option Python
 if (PRECICE_PythonActions)
-  if (TPL_ENABLE_PYTHON)
-    xsdk_tpl_require(PYTHON PYTHON_LIBRARY PYTHON_INCLUDE_DIR NumPy_INCLUDE_DIR)
-    find_package(PythonLibs REQUIRED)
-
-    # Override NumPy
-    # TODO: Incorporate into the FindNumPy module
-    set(NumPy_FOUND True CACHE BOOL "NumPy found?" FORCE)
-    if(NOT TARGET NumPy::NumPy)
-      add_library(NumPy::NumPy INTERFACE IMPORTED)
-      set_property(TARGET NumPy::NumPy PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NumPy_INCLUDE_DIR}")
-    endif()
-  else()
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.14")
-      find_package(Python3 REQUIRED COMPONENTS Development NumPy)
-    else()
-      # Required for Ubuntu 18.04 LTS
-      find_package(PythonLibs REQUIRED)
-      find_package(NumPy REQUIRED)
-      if(PYTHONLIBS_VERSION_STRING VERSION_LESS 3)
-        message(FATAL_ERROR "Python 2 is not supported (found ${PYTHONLIBS_VERSION_STRING})")
-      endif()
-    endif()
-  endif()
+  find_package(Python3 REQUIRED COMPONENTS Development NumPy)
   precice_validate_libpython()
   precice_validate_numpy()
 else()
@@ -324,14 +302,7 @@ endif()
 
 # Option Python
 if (PRECICE_PythonActions)
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.14")
-    target_link_libraries(precice PRIVATE Python3::NumPy Python3::Python)
-  else()
-    # Required for Ubuntu 18.04 LTS
-    target_link_libraries(precice PRIVATE NumPy::NumPy)
-    target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
-    target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
-  endif()
+  target_link_libraries(precice PRIVATE Python3::NumPy Python3::Python)
   target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PYTHON)
