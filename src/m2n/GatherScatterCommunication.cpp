@@ -93,7 +93,7 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
       PRECICE_DEBUG("Slave Size = {}", slaveSize);
       if (slaveSize > 0) {
         std::vector<double> valuesSlave(slaveSize);
-        utils::MasterSlave::getCommunication()->receive(valuesSlave, rankSlave);
+        utils::MasterSlave::getCommunication()->receive(span<double>{valuesSlave}, rankSlave);
         for (size_t i = 0; i < vertexDistribution[rankSlave].size(); i++) {
           for (int j = 0; j < valueDimension; j++) {
             globalItemsToSend[vertexDistribution[rankSlave][i] * valueDimension + j] += valuesSlave[i * valueDimension + j];
