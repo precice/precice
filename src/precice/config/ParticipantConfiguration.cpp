@@ -519,7 +519,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Iterate over all write mappings
   for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
-    // Check, weather we can find a corresponding write data context
+    // Check, whether we can find a corresponding write data context
     bool dataFound = false;
     for (auto &dataContext : participant->writeDataContexts()) {
       // First we look for the "from" mesh ID
@@ -527,7 +527,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       if (mappingContext.fromMeshID == fromMeshID) {
         // Second we look for the "to" mesh ID
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.toMeshID);
-        // If this is true, we actually found a proper configuraiton
+        // If this is true, we actually found a proper configuration
         // If it is false, we look for another "from" mesh ID, because we might have multiple read and write mappings
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the fromMesh is a provided mesh
