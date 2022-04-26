@@ -58,8 +58,10 @@ void runTestAccessReceivedMesh(const TestContext &       context,
         interface.writeBlockScalarData(dataID, meshSize,
                                        ids.data(), writeData.data());
       } else {
+        // In order to prevent hypothetical index overruns reported by glibcc
+        const int *ids_ptr = startIndex < ids.size() ? &ids[startIndex] : nullptr;
         interface.writeBlockScalarData(dataID, meshSize - startIndex,
-                                       &ids[startIndex], writeData.data());
+                                       ids_ptr, writeData.data());
       }
 
       dt = interface.advance(dt);

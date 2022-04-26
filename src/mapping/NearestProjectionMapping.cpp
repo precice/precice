@@ -99,16 +99,16 @@ void NearestProjectionMapping::computeMapping()
   // @TODO Add a configuration option for this factor
   constexpr int nnearest = 4;
 
-  query::Index                           indexTree(searchSpace);
   utils::statistics::DistanceAccumulator distanceStatistics;
 
   _interpolations.clear();
   _interpolations.reserve(fVertices.size());
 
+  auto &index = searchSpace->index();
   for (const auto &fVertex : fVertices) {
     // Nearest projection element is edge for 2d if exists, if not, it is the nearest vertex
     // Nearest projection element is triangle for 3d if exists, if not the edge and at the worst case it is the nearest vertex
-    auto match = indexTree.findNearestProjection(fVertex.getCoords(), nnearest);
+    auto match = index.findNearestProjection(fVertex.getCoords(), nnearest);
     _interpolations.push_back(std::move(match.polation));
     distanceStatistics(match.distance);
   }
