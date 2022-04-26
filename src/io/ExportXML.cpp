@@ -29,7 +29,7 @@ void ExportXML::doExport(
   processDataNamesAndDimensions(mesh);
   if (not location.empty())
     boost::filesystem::create_directories(location);
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isPrimary()) {
     writeMasterFile(name, location, mesh);
   }
   if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
@@ -84,7 +84,7 @@ void ExportXML::writeMasterFile(
   if (offsets[0] > 0) {
     outMasterFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
   }
-  for (auto rank : utils::MasterSlave::allSlaves()) {
+  for (auto rank : utils::MasterSlave::allSecondaryRanks()) {
     PRECICE_ASSERT(rank < offsets.size());
     if (offsets[rank] - offsets[rank - 1] > 0) {
       //only non-empty subfiles

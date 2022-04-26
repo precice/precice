@@ -123,7 +123,7 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
     MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);
     PRECICE_DEBUG("Accepted connection at {}", _portName);
 
-  } else { // Slaves call simply call accept
+  } else { // Secondary ranks call simply call accept
 
     // The port is only used on the root rank
     MPI_Comm_accept(nullptr, MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);

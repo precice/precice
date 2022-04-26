@@ -46,7 +46,7 @@ void M2N::acceptMasterConnection(
 
   Event e("m2n.acceptMasterConnection", precice::syncMode);
 
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
     PRECICE_DEBUG("Accept primary-primary connection");
     PRECICE_ASSERT(_intraComm);
     _intraComm->acceptConnection(acceptorName, requesterName, "MASTERCOM", utils::MasterSlave::getRank());
@@ -64,7 +64,7 @@ void M2N::requestMasterConnection(
 
   Event e("m2n.requestMasterConnection", precice::syncMode);
 
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
     PRECICE_ASSERT(_intraComm);
     PRECICE_DEBUG("Request primary connection");
     _intraComm->requestConnection(acceptorName, requesterName, "MASTERCOM", 0, 1);
@@ -168,7 +168,7 @@ void M2N::closeConnection()
 void M2N::closeMasterConnection()
 {
   PRECICE_TRACE();
-  if (not utils::MasterSlave::isSlave() && _intraComm->isConnected()) {
+  if (not utils::MasterSlave::isSecondary() && _intraComm->isConnected()) {
     _intraComm->closeConnection();
     _isMasterConnected = false;
   }
@@ -194,7 +194,7 @@ void M2N::closeDistributedConnections()
 
 com::PtrCommunication M2N::getMasterCommunication()
 {
-  PRECICE_ASSERT(not utils::MasterSlave::isSlave());
+  PRECICE_ASSERT(not utils::MasterSlave::isSecondary());
   return _intraComm; /// @todo maybe it would be a nicer design to not offer this
 }
 
@@ -216,7 +216,7 @@ void M2N::send(
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
-    if (precice::syncMode && not utils::MasterSlave::isSlave()) {
+    if (precice::syncMode && not utils::MasterSlave::isSecondary()) {
       bool ack = true;
       _intraComm->send(ack, 0);
       _intraComm->receive(ack, 0);
@@ -235,7 +235,7 @@ void M2N::send(
 void M2N::send(bool itemToSend)
 {
   PRECICE_TRACE(utils::MasterSlave::getRank());
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
     _intraComm->send(itemToSend, 0);
   }
 }
@@ -243,7 +243,7 @@ void M2N::send(bool itemToSend)
 void M2N::send(double itemToSend)
 {
   PRECICE_TRACE(utils::MasterSlave::getRank());
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
     _intraComm->send(itemToSend, 0);
   }
 }
@@ -288,7 +288,7 @@ void M2N::receive(precice::span<double> itemsToReceive,
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
     if (precice::syncMode) {
-      if (not utils::MasterSlave::isSlave()) {
+      if (not utils::MasterSlave::isSecondary()) {
         bool ack;
 
         _intraComm->receive(ack, 0);
@@ -309,7 +309,7 @@ void M2N::receive(precice::span<double> itemsToReceive,
 void M2N::receive(bool &itemToReceive)
 {
   PRECICE_TRACE(utils::MasterSlave::getRank());
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
     _intraComm->receive(itemToReceive, 0);
   }
 
@@ -321,7 +321,7 @@ void M2N::receive(bool &itemToReceive)
 void M2N::receive(double &itemToReceive)
 {
   PRECICE_TRACE(utils::MasterSlave::getRank());
-  if (not utils::MasterSlave::isSlave()) { //coupling mode
+  if (not utils::MasterSlave::isSecondary()) { //coupling mode
     _intraComm->receive(itemToReceive, 0);
   }
 

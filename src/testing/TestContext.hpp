@@ -76,7 +76,7 @@ struct Participant {
    *
    * @returns A reference to the Participant allowing for chaining.
    */
-  Participant &setupMasterSlaves()
+  Participant &setupIntraComm()
   {
     initIntraComm = true;
     return *this;
@@ -115,7 +115,7 @@ enum struct ConnectionType {
 
 /** Type representing options for an inter-participant connection.
  *
- * @see TestContext::connectMasters()
+ * @see TestContext::connectPrimaryRanks()
  * @see M2N::M2N()
  */
 struct ConnectionOptions {
@@ -147,7 +147,7 @@ struct ConnectionOptions {
  * 3. handling invalid contexts (such as unneeded ranks)
  * 4. initializing the intra-participant communication if requested. initializeMasterSlave()
  * 5. handling further requirements @see Require
- * 6. providing a usable context during the test isNamed(), isMaster(), isRank()
+ * 6. providing a usable context during the test isNamed(), isPrimary(), isRank()
  * 7. cleaning up after the test case
  */
 class TestContext {
@@ -175,7 +175,7 @@ public:
   /** Create a context representing an unnamed Participant running on a given count of Ranks
    *
    * @note You need to construct a Participant if you require initializing
-   * an intra-participant connection `"Serial"_on(3_ranks).setupMasterSlaves()`
+   * an intra-participant connection `"Serial"_on(3_ranks).setupIntraComm()`
    *
    * @attention This call synchronizes all ranks
    *
@@ -191,7 +191,7 @@ public:
   /** Create a context representing an unnamed Participant running on a given count of Ranks and some requirements
    *
    * @note You need to construct a Participant if you require initializing
-   * an intra-participant connection `"Serial"_on(3_ranks).setupMasterSlaves()`
+   * an intra-participant connection `"Serial"_on(3_ranks).setupIntraComm()`
    *
    * @attention This call synchronizes all ranks
    *
@@ -257,7 +257,7 @@ public:
   /** Check whether this context is the primary rank of a participant
    * @note This is equivalent to `isRank(0)`
    */
-  bool isMaster() const;
+  bool isPrimary() const;
 
   /** Creates a M2N and establishes a primary connection between participants
    * @param[in] acceptor the accepting participant
@@ -268,7 +268,7 @@ public:
    *
    * @see ConnectionOptions
    */
-  m2n::PtrM2N connectMasters(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
+  m2n::PtrM2N connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
 
   /// Provides a user- and log-friendly description of the current context
   std::string describe() const;
@@ -327,7 +327,7 @@ private:
    */
   void initializeMPI(const Participants &participants);
 
-  /// Initialize the Master-Slave connection if requested
+  /// Initialize the intra-participant communication connection if requested
   void initializeMasterSlave();
 
   /// Initialize PETSc if required

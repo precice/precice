@@ -48,7 +48,7 @@ public:
   void broadcastSendBoundingBoxMap(
       mesh::Mesh::BoundingBoxMap &bbm);
 
-  /// Slaves call this method to receive the set of bounding boxes sent by the primary rank.
+  /// Secondary ranks call this method to receive the set of bounding boxes sent by the primary rank.
   void broadcastReceiveBoundingBoxMap(
       mesh::Mesh::BoundingBoxMap &bbm);
 

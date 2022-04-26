@@ -168,7 +168,7 @@ public:
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) = 0;
 
-  /** Establishes the Master-Slave connection.
+  /** Establishes the intra-participant communication connection.
    *
    * @param[in] participantName Name of the calling participant.
    * @param[in] tag Tag for establishing this connection
@@ -176,7 +176,7 @@ public:
    * @param[in] size Total size of the participant
    *
    */
-  void connectMasterSlaves(std::string const &participantName,
+  void connectIntraComm(std::string const &participantName,
                            std::string const &tag,
                            int                rank,
                            int                size);
@@ -211,21 +211,21 @@ public:
   /// @name Reduction
   /// @{
 
-  /// Performs a reduce summation on the rank given by rankMaster
-  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster);
+  /// Performs a reduce summation on the rank given by primaryRank
+  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank);
   /// Performs a reduce summation on the primary rank, every other rank has to call reduceSum
   virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
-  virtual void reduceSum(int itemToSend, int &itemToReceive, Rank rankMaster);
+  virtual void reduceSum(int itemToSend, int &itemToReceive, Rank primaryRank);
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
-  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster);
+  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank);
   virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
-  virtual void allreduceSum(double itemToSend, double &itemToReceive, Rank rankMaster);
+  virtual void allreduceSum(double itemToSend, double &itemToReceive, Rank primaryRank);
   virtual void allreduceSum(double itemToSend, double &itemToReceive);
 
-  virtual void allreduceSum(int itemToSend, int &itemToReceive, Rank rankMaster);
+  virtual void allreduceSum(int itemToSend, int &itemToReceive, Rank primaryRank);
   virtual void allreduceSum(int itemToSend, int &itemToReceive);
 
   /// @}

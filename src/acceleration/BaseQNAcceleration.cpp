@@ -133,7 +133,7 @@ void BaseQNAcceleration::initialize(
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
     PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::MasterSlave::isPrimary()) {
       _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
     }
 
@@ -471,7 +471,7 @@ void BaseQNAcceleration::iterationsConverged(
 {
   PRECICE_TRACE();
 
-  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel())
+  if (utils::MasterSlave::isPrimary() || !utils::MasterSlave::isParallel())
     _infostringstream << "# time window " << tWindows << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
 
@@ -636,7 +636,7 @@ void BaseQNAcceleration::writeInfo(
     // parallel acceleration
   } else {
     if (not allProcs) {
-      if (utils::MasterSlave::isMaster())
+      if (utils::MasterSlave::isPrimary())
         _infostringstream << s;
     } else {
       _infostringstream << s;

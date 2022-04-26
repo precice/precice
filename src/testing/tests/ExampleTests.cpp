@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(TwoProcTests)
 BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication)
 {
   // The short syntax won't work here. You have to name the context
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm())
   // In this test you can use an intra-participant communication, here is an example how:
   BOOST_TEST(context.hasSize(4));
   BOOST_TEST(utils::MasterSlave::getCommunication()->isConnected());
@@ -121,9 +121,9 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication)
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
   BOOST_TEST(context.hasSize(1));
   BOOST_TEST(context.isRank(0));
-  BOOST_TEST(context.isMaster());
+  BOOST_TEST(context.isPrimary());
 
-  auto m2n = context.connectMasters("A", "B");
+  auto m2n = context.connectPrimaryRanks("A", "B");
 
   //This is how you can access the m2n communication
   BOOST_TEST(m2n->getMasterCommunication()->isConnected());

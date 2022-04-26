@@ -283,25 +283,25 @@ private:
     utils::MasterSlave::reduceSum(block, summarizedBlocks);
 
     // secondary ranks wait to receive their local result
-    if (utils::MasterSlave::isSlave()) {
+    if (utils::MasterSlave::isSecondary()) {
       if (result.size() > 0)
         utils::MasterSlave::getCommunication()->receive(result, 0);
     }
 
     // primary rank distributes the sub blocks of the results
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::MasterSlave::isPrimary()) {
       // distribute blocks of summarizedBlocks (result of multiplication) to corresponding secondary ranks
       result = summarizedBlocks.block(0, 0, offsets[1], r);
 
-      for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-        int off       = offsets[rankSlave];
-        int send_rows = offsets[rankSlave + 1] - offsets[rankSlave];
+      for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
+        int off       = offsets[secondaryRank];
+        int send_rows = offsets[secondaryRank + 1] - offsets[secondaryRank];
 
         if (summarizedBlocks.block(off, 0, send_rows, r).size() > 0) {
           // necessary to save the matrix-block that is to be sent in a temporary matrix-object
           // otherwise, the send routine walks over the bounds of the block (matrix structure is still from the entire matrix)
           Eigen::MatrixXd sendBlock = summarizedBlocks.block(off, 0, send_rows, r);
-          utils::MasterSlave::getCommunication()->send(sendBlock, rankSlave);
+          utils::MasterSlave::getCommunication()->send(sendBlock, secondaryRank);
         }
       }
     }

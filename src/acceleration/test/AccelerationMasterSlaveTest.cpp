@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(AccelerationMasterSlaveTests)
 /// Test that runs on 4 processors.
 BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
   int              timeWindowsReused        = 6;
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
     /**
      * processor with 4 vertices
      */
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
   pp.performAcceleration(data);
 
   Eigen::VectorXd newdvalues;
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
 
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01), data.at(0)->values()(1));
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
   pp.performAcceleration(data);
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
     BOOST_TEST(testing::equals(data.at(0)->values()(0), -1.51483105223442748866e+00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), -2.35405379763935940218e-01), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.04402029270655560822e+00), data.at(0)->values()(2));
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 /// Test that runs on 4 processors.
 BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   double initialRelaxation          = 0.01;
   int    maxIterationsUsed          = 50;
   int    timeWindowsReused          = 6;
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 
   DataMap data;
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
 
     /**
      * processor with 4 vertices
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
   pp.performAcceleration(data);
 
   Eigen::VectorXd newdvalues;
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00000000000000000000e+00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01000000000000000888e+00), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02000000000000001776e+00), data.at(0)->values()(2));
@@ -504,7 +504,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
   data.begin()->second->values() = newdvalues;
   pp.performAcceleration(data);
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
     BOOST_TEST(testing::equals(data.at(0)->values()(0), -1.51483105223442748866e+00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), -2.35405379763935940218e-01), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.04402029270655738458e+00), data.at(0)->values()(2));
@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 /// Test that runs on 4 processors.
 BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   // config:
   double initialRelaxation          = 0.1;
   int    maxIterationsUsed          = 30;
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   PtrCouplingData dpcd;
   PtrCouplingData fpcd;
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
     /**
      * processor with no vertices
      */
@@ -663,7 +663,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   // underrelaxation, first iteration
   pp.performAcceleration(data);
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
 
   } else if (context.isRank(1)) { //Slave1
 
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   // QN- Update, 2. iteration
   pp.performAcceleration(data);
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
 
   } else if (context.isRank(1)) { //Slave1
 
@@ -783,7 +783,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   // QN- Update, 3. iteration
   pp.performAcceleration(data);
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
 
   } else if (context.isRank(1)) { //Slave1
 
@@ -844,7 +844,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   // QN- Update, 4. iteration
   pp.performAcceleration(data);
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
 
   } else if (context.isRank(1)) { //Slave1
 
@@ -905,7 +905,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   // QN- Update, 5. iteration
   pp.performAcceleration(data);
 
-  if (context.isMaster()) { //Master
+  if (context.isPrimary()) { //Master
 
   } else if (context.isRank(1)) { //Slave1
 
@@ -980,7 +980,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 /// Test that runs on 4 processors.
 BOOST_AUTO_TEST_CASE(testColumnsLogging)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   double           initialRelaxation        = 0.1;
   int              maxIterationsUsed        = 3;
   int              timeWindowsReused        = 1;
@@ -1006,7 +1006,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
 
   Eigen::VectorXd insert;
   //init displacements
-  if (context.isMaster()) { // 2 vertices
+  if (context.isPrimary()) { // 2 vertices
     insert.resize(2);
     insert << 0.5, 0.5;
   } else if (context.isRank(1)) { //1 vertex
@@ -1027,7 +1027,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   acc.initialize(data);
 
   //update displacements
-  if (context.isMaster()) { // 2 vertices
+  if (context.isPrimary()) { // 2 vertices
     insert << 1.0, 1.0;
   } else if (context.isRank(1)) { //1 vertex
     insert << 1.0;
@@ -1041,7 +1041,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   acc.performAcceleration(data);
 
   Eigen::VectorXd newdvalues1;
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     utils::append(newdvalues1, 1.1);
     utils::append(newdvalues1, 1.0);
   } else if (context.isRank(1)) {
@@ -1055,7 +1055,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   acc.performAcceleration(data);
 
   Eigen::VectorXd newdvalues2;
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     utils::append(newdvalues2, 1.0);
     utils::append(newdvalues2, 2.0);
   } else if (context.isRank(1)) {
@@ -1073,7 +1073,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   BOOST_TEST(acc.getDroppedColumns() == 0);
 
   Eigen::VectorXd newdvalues3;
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     utils::append(newdvalues3, 1.1);
     utils::append(newdvalues3, 2.0);
   } else if (context.isRank(1)) {
@@ -1087,7 +1087,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   acc.performAcceleration(data);
 
   Eigen::VectorXd newdvalues4;
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     utils::append(newdvalues4, 1.0);
     utils::append(newdvalues4, 1.0);
   } else if (context.isRank(1)) {

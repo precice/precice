@@ -366,7 +366,7 @@ int QRFactorization::orthogonalize(
     k++;
 
     // treat the special case m=n
-    // Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
+    // Attention (intra-participant communication): Here, we need to compare the global _rows with colNum and NOT the local
     // rows on the processor.
     if (_globalRows == colNum) {
       PRECICE_WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
@@ -490,7 +490,7 @@ int QRFactorization::orthogonalize_stable(
     k++;
 
     // treat the special case m=n
-    // Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
+    // Attention (intra-participant communication): Here, we need to compare the global _rows with colNum and NOT the local
     // rows on the processor.
     if (_globalRows == colNum) {
       PRECICE_WARN("The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
@@ -560,18 +560,18 @@ int QRFactorization::orthogonalize_stable(
         double global_uk = 0.;
         int    rank      = 0;
 
-        if (utils::MasterSlave::isSlave()) {
+        if (utils::MasterSlave::isSecondary()) {
           utils::MasterSlave::getCommunication()->send(k, 0);
           utils::MasterSlave::getCommunication()->send(u(k), 0);
         }
 
-        if (utils::MasterSlave::isMaster()) {
+        if (utils::MasterSlave::isPrimary()) {
           global_uk = u(k);
-          for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-            utils::MasterSlave::getCommunication()->receive(local_k, rankSlave);
-            utils::MasterSlave::getCommunication()->receive(local_uk, rankSlave);
+          for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
+            utils::MasterSlave::getCommunication()->receive(local_k, secondaryRank);
+            utils::MasterSlave::getCommunication()->receive(local_uk, secondaryRank);
             if (local_uk < global_uk) {
-              rank      = rankSlave;
+              rank      = secondaryRank;
               global_uk = local_uk;
               global_k  = local_k;
             }

@@ -86,7 +86,7 @@ bool TestContext::isRank(Rank rank) const
   return this->rank == rank;
 }
 
-bool TestContext::isMaster() const
+bool TestContext::isPrimary() const
 {
   return isRank(0);
 }
@@ -198,7 +198,7 @@ void TestContext::initializeMasterSlave()
   precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::SocketCommunication());
 #endif
 
-  intraComm->connectMasterSlaves(name, "", rank, size);
+  intraComm->connectIntraComm(name, "", rank, size);
 
   utils::MasterSlave::getCommunication() = std::move(intraComm);
 }
@@ -217,7 +217,7 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
+m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());
 

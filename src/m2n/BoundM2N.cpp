@@ -21,7 +21,7 @@ void BoundM2N::prepareEstablishment()
   m2n->prepareEstablishment(localName, remoteName);
 }
 
-void BoundM2N::connectMasters()
+void BoundM2N::connectPrimaryRanks()
 {
   std::string fullLocalName = localName;
 
@@ -32,7 +32,7 @@ void BoundM2N::connectMasters()
   }
 }
 
-void BoundM2N::connectSlaves()
+void BoundM2N::connectSecondaryRanks()
 {
   if (m2n->usesTwoLevelInitialization()) {
     PRECICE_DEBUG("Update secondary connections");
@@ -74,21 +74,21 @@ void BoundM2N::cleanupEstablishment()
     return;
   }
   waitForSlaves();
-  if (!utils::MasterSlave::isSlave()) {
+  if (!utils::MasterSlave::isSecondary()) {
     m2n->cleanupEstablishment(localName, remoteName);
   }
 }
 
 void BoundM2N::waitForSlaves()
 {
-  if (utils::MasterSlave::isMaster()) {
-    for (Rank rank : utils::MasterSlave::allSlaves()) {
+  if (utils::MasterSlave::isPrimary()) {
+    for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
       int item = 0;
       utils::MasterSlave::getCommunication()->receive(item, rank);
       PRECICE_ASSERT(item > 0);
     }
   }
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     int item = utils::MasterSlave::getRank();
     utils::MasterSlave::getCommunication()->send(item, 0);
   }

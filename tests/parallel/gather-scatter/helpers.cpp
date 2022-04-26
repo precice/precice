@@ -18,7 +18,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
     BOOST_TEST(dim == 2);
 
     // Set coordinates, primary according to input argument
-    const std::vector<double> coordinates = context.isMaster() ? primaryPartition : std::vector<double>{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
+    const std::vector<double> coordinates = context.isPrimary() ? primaryPartition : std::vector<double>{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
     const unsigned int        size        = coordinates.size() / dim;
     std::vector<int>          ids(size, 0);
 
@@ -45,7 +45,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
       interface.readBlockScalarData(readDataID, size,
                                     ids.data(), readData.data());
       // The received data on the secondary rank is always the same
-      if (!context.isMaster()) {
+      if (!context.isPrimary()) {
         BOOST_TEST(readData == std::vector<double>({3.4, 5.7, 4.0}));
       }
     }
@@ -84,7 +84,7 @@ void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const Tes
       interface.readBlockScalarData(readDataID, size,
                                     ids.data(), readData.data());
       // The received data is always the same
-      if (!context.isMaster()) {
+      if (!context.isPrimary()) {
         BOOST_TEST(readData == std::vector<double>({1, 2, 3}));
       }
     }

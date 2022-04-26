@@ -11,7 +11,7 @@
 namespace precice {
 namespace com {
 
-void Communication::connectMasterSlaves(std::string const &participantName,
+void Communication::connectIntraComm(std::string const &participantName,
                                         std::string const &tag,
                                         int                rank,
                                         int                size)
@@ -57,12 +57,12 @@ void Communication::reduceSum(precice::span<double const> itemsToSend, precice::
   }
 }
 
-void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster)
+void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
-  auto request = aSend(itemsToSend, rankMaster);
+  auto request = aSend(itemsToSend, primaryRank);
   request->wait();
 }
 
@@ -80,11 +80,11 @@ void Communication::reduceSum(int itemToSend, int &itemToReceive)
   }
 }
 
-void Communication::reduceSum(int itemToSend, int &itemToReceive, Rank rankMaster)
+void Communication::reduceSum(int itemToSend, int &itemToReceive, Rank primaryRank)
 {
   PRECICE_TRACE();
 
-  auto request = aSend(itemToSend, rankMaster);
+  auto request = aSend(itemToSend, primaryRank);
   request->wait();
 }
 
@@ -110,14 +110,14 @@ void Communication::allreduceSum(precice::span<double const> itemsToSend, precic
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankMaster)
+void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
 
-  reduceSum(itemsToSend, itemsToReceive, rankMaster);
+  reduceSum(itemsToSend, itemsToReceive, primaryRank);
   // receive reduced data from primary rank
-  receive(itemsToReceive, rankMaster + _rankOffset);
+  receive(itemsToReceive, primaryRank + _rankOffset);
 }
 
 void Communication::allreduceSum(double itemToSend, double &itemToReceive)
@@ -142,14 +142,14 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
   Request::wait(requests);
 }
 
-void Communication::allreduceSum(double itemToSend, double &itemsToReceive, Rank rankMaster)
+void Communication::allreduceSum(double itemToSend, double &itemsToReceive, Rank primaryRank)
 {
   PRECICE_TRACE();
 
-  auto request = aSend(itemToSend, rankMaster);
+  auto request = aSend(itemToSend, primaryRank);
   request->wait();
   // receive reduced data from primary rank
-  receive(itemsToReceive, rankMaster + _rankOffset);
+  receive(itemsToReceive, primaryRank + _rankOffset);
 }
 
 void Communication::allreduceSum(int itemToSend, int &itemToReceive)
@@ -174,14 +174,14 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
   Request::wait(requests);
 }
 
-void Communication::allreduceSum(int itemToSend, int &itemToReceive, Rank rankMaster)
+void Communication::allreduceSum(int itemToSend, int &itemToReceive, Rank primaryRank)
 {
   PRECICE_TRACE();
 
-  auto request = aSend(itemToSend, rankMaster);
+  auto request = aSend(itemToSend, primaryRank);
   request->wait();
   // receive reduced data from primary rank
-  receive(itemToReceive, rankMaster + _rankOffset);
+  receive(itemToReceive, primaryRank + _rankOffset);
 }
 
 void Communication::broadcast(precice::span<const int> itemsToSend)

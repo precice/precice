@@ -119,7 +119,7 @@ All notable changes to this project will be documented in this file. For future 
 - Added tooling to prevent changelog conflicts.
 - Added warning when configuring m2n as mpi when preCICE is compiled with OpenMPI. This is known to cause connection issues.
 - Allowed multiple convergence measures of same coupling data.
-- Changed `com::MPIDirectcommunication` to work only for Master-Slave connections.
+- Changed `com::MPIDirectcommunication` to work only for intra-participant communication connections.
 - Changed test setup to a simpler and consistent version using the new `testing::TestContext`. Tests now require to run on 4 MPI ranks. They will still compile but not run when `MPICommunication=OFF`.
 - Changed the CMake FindNumPy module to only consider information based on the selected python interpreter.
 - Changed the minimum required PETSc version to 3.12, which delivers consistent results across platforms.

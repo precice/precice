@@ -14,12 +14,12 @@ public:
   void prepareEstablishment();
 
   /// Connect the Masters of the M2N
-  void connectMasters();
+  void connectPrimaryRanks();
 
-  /// Connect the Slaves of the M2N
-  void connectSlaves();
+  /// Connect the Secondary ranks of the M2N
+  void connectSecondaryRanks();
 
-  /// pre-connect the Slaves of the M2N
+  /// pre-connect the Secondary ranks of the M2N
   void preConnectSlaves();
 
   /// Cleanup after having established the connection

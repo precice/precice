@@ -46,12 +46,12 @@ int MasterSlave::getSize()
   return _size;
 }
 
-bool MasterSlave::isMaster()
+bool MasterSlave::isPrimary()
 {
   return _isMaster;
 }
 
-bool MasterSlave::isSlave()
+bool MasterSlave::isSecondary()
 {
   return _isSlave;
 }
@@ -87,12 +87,12 @@ double MasterSlave::l2norm(const Eigen::VectorXd &vec)
   }
   if(_isMaster){
     globalSum2 += localSum2;
-    for(Rank rankSlave = 1; rankSlave < _size; rankSlave++){
-      _communication->receive(localSum2, rankSlave);
+    for(Rank secondaryRank = 1; secondaryRank < _size; secondaryRank++){
+      _communication->receive(localSum2, secondaryRank);
       globalSum2 += localSum2;
     }
-    for(Rank rankSlave = 1; rankSlave < _size; rankSlave++){
-      _communication->send(globalSum2, rankSlave);
+    for(Rank secondaryRank = 1; secondaryRank < _size; secondaryRank++){
+      _communication->send(globalSum2, secondaryRank);
     }
   }
   */
@@ -128,12 +128,12 @@ double MasterSlave::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2
   }
   if(_isMaster){
     globalSum += localSum;
-    for(Rank rankSlave = 1; rankSlave < _size; rankSlave++){
-      _communication->receive(localSum, rankSlave);
+    for(Rank secondaryRank = 1; secondaryRank < _size; secondaryRank++){
+      _communication->receive(localSum, secondaryRank);
       globalSum += localSum;
     }
-    for(Rank rankSlave = 1; rankSlave < _size; rankSlave++){
-      _communication->send(globalSum, rankSlave);
+    for(Rank secondaryRank = 1; secondaryRank < _size; secondaryRank++){
+      _communication->send(globalSum, secondaryRank);
     }
   }
   */

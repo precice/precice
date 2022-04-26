@@ -98,18 +98,18 @@ int main(int argc, char **argv)
   }
 
   if (utils::MasterSlave::getRank() == 0) {
-    utils::MasterSlave::isMaster() = true;
-    utils::MasterSlave::isSlave()  = false;
+    utils::MasterSlave::isPrimary() = true;
+    utils::MasterSlave::isSecondary()  = false;
   } else {
-    utils::MasterSlave::isMaster() = false;
-    utils::MasterSlave::isSlave()  = true;
+    utils::MasterSlave::isPrimary() = false;
+    utils::MasterSlave::isSecondary()  = true;
   }
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isPrimary()) {
     utils::Parallel::initializeMPI(NULL, NULL);
     utils::Parallel::splitCommunicator("Master");
   } else {
-    assertion(utils::MasterSlave::isSlave());
+    assertion(utils::MasterSlave::isSecondary());
     utils::Parallel::initializeMPI(NULL, NULL);
     utils::Parallel::splitCommunicator("Slave");
   }
@@ -119,12 +119,12 @@ int main(int argc, char **argv)
 
   int rankOffset = 1;
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isPrimary()) {
     utils::MasterSlave::getCommunication()->acceptConnection(
         "Master", "Slave", utils::MasterSlave::getRank(), 1);
     utils::MasterSlave::getCommunication()->setRankOffset(rankOffset);
   } else {
-    assertion(utils::MasterSlave::isSlave());
+    assertion(utils::MasterSlave::isSecondary());
     utils::MasterSlave::getCommunication()->requestConnection(
         "Master",
         "Slave",
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isPrimary()) {
     mesh->setGlobalNumberOfVertices(10);
 
     mesh->getVertexDistribution()[0].push_back(1);

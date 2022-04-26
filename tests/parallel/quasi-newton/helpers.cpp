@@ -33,14 +33,14 @@ void runTestQN(std::string const &config, TestContext const &context)
   double positions1[8] = {2.0, 0.0, 2.0, 0.5, 2.0, 1.0, 2.0, 1.5};
 
   if (context.isNamed("SolverOne")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
     } else {
       interface.setMeshVertices(meshID, 4, positions1, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
     } else {
       interface.setMeshVertices(meshID, 4, positions1, vertexIDs);
@@ -133,13 +133,13 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
   if (context.isNamed("SolverOne")) {
     // All mesh is on Master
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     // All mesh is on Slave
-    if (not context.isMaster()) {
+    if (not context.isPrimary()) {
       interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
     }
   }
@@ -156,8 +156,8 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
     }
 
     if (interface.isReadDataAvailable())
-      if ((context.isNamed("SolverOne") and context.isMaster()) or
-          (context.isNamed("SolverTwo") and (not context.isMaster()))) {
+      if ((context.isNamed("SolverOne") and context.isPrimary()) or
+          (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
         interface.readBlockScalarData(readDataID, 4, vertexIDs, inValues);
       }
 
@@ -183,8 +183,8 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
       outValues[3] = inValues[3] * inValues[3] - 4.0 + inValues[3];
     }
 
-    if ((context.isNamed("SolverOne") and context.isMaster()) or
-        (context.isNamed("SolverTwo") and (not context.isMaster()))) {
+    if ((context.isNamed("SolverOne") and context.isPrimary()) or
+        (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
       interface.writeBlockScalarData(writeDataID, 4, vertexIDs, outValues);
     }
     interface.advance(1.0);
@@ -198,8 +198,8 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   interface.finalize();
 
   //relative residual in config is 1e-7, so 2 orders of magnitude less strict
-  if ((context.isNamed("SolverOne") and context.isMaster()) or
-      (context.isNamed("SolverTwo") and (not context.isMaster()))) {
+  if ((context.isNamed("SolverOne") and context.isPrimary()) or
+      (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
     BOOST_TEST(outValues[0] == -2.0, boost::test_tools::tolerance(1e-5));
     BOOST_TEST(outValues[1] == 0.0, boost::test_tools::tolerance(1e-5));
     BOOST_TEST(outValues[2] == -2.0, boost::test_tools::tolerance(1e-5));

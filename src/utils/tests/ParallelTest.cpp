@@ -64,13 +64,13 @@ BOOST_AUTO_TEST_CASE(SplitCommTest)
 
 BOOST_AUTO_TEST_CASE(Master1SlaveTest)
 {
-  PRECICE_TEST(""_on(2_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(2_ranks).setupIntraComm());
 
   BOOST_TEST(context.hasSize(2));
   auto &com = precice::utils::MasterSlave::getCommunication();
   BOOST_TEST((com != nullptr));
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     int first = 1001;
     com->send(first, 1);
 
@@ -90,13 +90,13 @@ BOOST_AUTO_TEST_CASE(Master1SlaveTest)
 
 BOOST_AUTO_TEST_CASE(Master2SlaveTest)
 {
-  PRECICE_TEST(""_on(3_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
 
   BOOST_TEST(context.hasSize(3));
   auto &com = precice::utils::MasterSlave::getCommunication();
   BOOST_TEST((com != nullptr));
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     int sum = 1001;
 
     int message = -1;
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(Master2SlaveTest)
 
 BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
 {
-  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupMasterSlaves());
+  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupIntraComm());
 
   if (context.isNamed("Offset"))
     return;
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
   auto &com = precice::utils::MasterSlave::getCommunication();
   BOOST_TEST((com != nullptr));
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     int first = 1001;
 
     com->send(first, 1);
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
 
 BOOST_AUTO_TEST_CASE(OffsetMaster2SlaveTest)
 {
-  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupMasterSlaves());
+  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupIntraComm());
 
   if (context.isNamed("Offset"))
     return;
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(OffsetMaster2SlaveTest)
   auto &com = precice::utils::MasterSlave::getCommunication();
   BOOST_TEST((com != nullptr));
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     int sum = 1001;
 
     int message = -1;

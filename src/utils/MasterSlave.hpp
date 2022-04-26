@@ -15,7 +15,7 @@ class Logger;
 
 namespace utils {
 
-/// Utility class for managing Master-Slave operations.
+/// Utility class for managing intra-participant communication operations.
 class MasterSlave {
 public:
   /// Configures the intra-participant communication.
@@ -34,7 +34,7 @@ public:
   }
 
   /// Returns an iterable range over salve ranks [1, _size)
-  static auto allSlaves()
+  static auto allSecondaryRanks()
   {
     return boost::irange(1, _size);
   }
@@ -46,10 +46,10 @@ public:
   }
 
   /// True if this process is running the primary rank.
-  static bool isMaster();
+  static bool isPrimary();
 
   /// True if this process is running a secondary rank.
-  static bool isSlave();
+  static bool isSecondary();
 
   /// True if this process is running in parallel
   static bool isParallel();

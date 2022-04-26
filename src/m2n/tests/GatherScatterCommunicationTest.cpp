@@ -18,8 +18,8 @@ using namespace m2n;
 
 BOOST_AUTO_TEST_CASE(GatherScatterTest)
 {
-  PRECICE_TEST("Part1"_on(1_rank), "Part2"_on(3_ranks).setupMasterSlaves(), Require::Events);
-  auto m2n = context.connectMasters("Part1", "Part2");
+  PRECICE_TEST("Part1"_on(1_rank), "Part2"_on(3_ranks).setupIntraComm(), Require::Events);
+  auto m2n = context.connectPrimaryRanks("Part1", "Part2");
 
   int             dimensions       = 2;
   int             numberOfVertices = 6;
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
     m2n->createDistributedCommunication(pMesh);
     m2n->requestSlavesConnection("Part1", "Part2");
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       pMesh->setGlobalNumberOfVertices(numberOfVertices);
       pMesh->getVertexDistribution()[0].push_back(0);
       pMesh->getVertexDistribution()[0].push_back(1);

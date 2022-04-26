@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(CommunicateBoundingBoxTests)
 BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectMasters("A", "B");
+  auto m2n = context.connectPrimaryRanks("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
     std::vector<double> bounds;
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
 BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectMasters("A", "B");
+  auto m2n = context.connectPrimaryRanks("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh::BoundingBoxMap bbm;
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 
 BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
 
   // Build BB/BBMap to communicate
   int                        dimension = 3;
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
 
   CommunicateBoundingBox comBB(utils::MasterSlave::getCommunication());
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     comBB.broadcastSendBoundingBoxMap(bbm);
   } else {
 
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
 BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectMasters("A", "B");
+  auto m2n = context.connectPrimaryRanks("A", "B");
 
   std::vector<int>                fb;
   std::map<int, std::vector<int>> fbm;
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
 
 BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves(), Require::Events);
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
 
   std::vector<int>                fb;
   std::map<int, std::vector<int>> fbm;
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
 
   CommunicateBoundingBox comBB(utils::MasterSlave::getCommunication());
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     comBB.broadcastSendConnectionMap(fbm);
   } else {
 

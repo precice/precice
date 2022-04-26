@@ -175,7 +175,7 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
     }
     PRECICE_ASSERT(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::MasterSlave::isPrimary()) {
       PRECICE_ASSERT(_global_b.size() == 0, _global_b.size());
     }
     utils::append(_global_b, Eigen::VectorXd(Eigen::VectorXd::Zero(_local_b.size())));
@@ -184,7 +184,7 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
     utils::MasterSlave::reduceSum(_local_b, _global_b);
 
     // back substitution R*c = b only on the primary rank
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::MasterSlave::isPrimary()) {
       c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
     }
 

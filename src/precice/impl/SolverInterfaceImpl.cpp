@@ -268,7 +268,7 @@ double SolverInterfaceImpl::initialize()
     } else {
       PRECICE_DEBUG((requesting ? "Awaiting primary connection from {}" : "Establishing primary connection to {}"), bm2n.remoteName);
       bm2n.prepareEstablishment();
-      bm2n.connectMasters();
+      bm2n.connectPrimaryRanks();
       PRECICE_DEBUG("Established primary connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
     }
   }
@@ -288,10 +288,10 @@ double SolverInterfaceImpl::initialize()
   PRECICE_INFO("Setting up secondary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    bm2n.connectSlaves();
+    bm2n.connectSecondaryRanks();
     PRECICE_DEBUG("Established secondary connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
   }
-  PRECICE_INFO("Slaves are connected");
+  PRECICE_INFO("Secondary ranks are connected");
 
   for (auto &m2nPair : _m2ns) {
     m2nPair.second.cleanupEstablishment();
@@ -523,7 +523,7 @@ void SolverInterfaceImpl::finalize()
   utils::EventRegistry::instance().finalize();
 
   // Printing requires finalization
-  if (not precice::utils::MasterSlave::isSlave()) {
+  if (not precice::utils::MasterSlave::isSecondary()) {
     utils::EventRegistry::instance().printAll();
   }
 
@@ -2097,7 +2097,7 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   PRECICE_TRACE();
 
   Event e("com.initializeMasterSlaveCom", precice::syncMode);
-  utils::MasterSlave::getCommunication()->connectMasterSlaves(
+  utils::MasterSlave::getCommunication()->connectIntraComm(
       _accessorName, "MasterSlaves",
       _accessorProcessRank, _accessorCommunicatorSize);
 }
@@ -2105,16 +2105,16 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
 void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 {
   PRECICE_ASSERT(utils::MasterSlave::isParallel());
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     utils::MasterSlave::getCommunication()->send(computedTimestepLength, 0);
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::isMaster());
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
+    PRECICE_ASSERT(utils::MasterSlave::isPrimary());
+    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
       double dt;
-      utils::MasterSlave::getCommunication()->receive(dt, rankSlave);
+      utils::MasterSlave::getCommunication()->receive(dt, secondaryRank);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
                     "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
-                    rankSlave, dt, computedTimestepLength);
+                    secondaryRank, dt, computedTimestepLength);
     }
   }
 }
@@ -2129,7 +2129,7 @@ void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
   std::string pong = "pong";
   for (auto &iter : _m2ns) {
     auto bm2n = iter.second;
-    if (not utils::MasterSlave::isSlave()) {
+    if (not utils::MasterSlave::isSecondary()) {
       PRECICE_DEBUG("Synchronizing Master with {}", bm2n.remoteName);
       if (bm2n.isRequesting) {
         bm2n.m2n->getMasterCommunication()->send(ping, 0);
