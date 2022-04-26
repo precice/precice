@@ -22,7 +22,7 @@ void CommunicateBoundingBox::sendBoundingBox(
     int                      rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
-  _communication->send(bb.dataVector(), rankReceiver);
+  _communication->sendRange(bb.dataVector(), rankReceiver);
 }
 
 void CommunicateBoundingBox::receiveBoundingBox(
@@ -30,8 +30,7 @@ void CommunicateBoundingBox::receiveBoundingBox(
     int                rankSender)
 {
   PRECICE_TRACE(rankSender);
-  std::vector<double> receivedData;
-  _communication->receive(receivedData, rankSender);
+  auto receivedData = _communication->receiveRange(rankSender, AsVectorTag<double>{});
   mesh::BoundingBox tempBB(receivedData);
   bb = std::move(tempBB);
 }
@@ -73,7 +72,7 @@ void CommunicateBoundingBox::sendConnectionMap(
 
   for (const auto &vect : fbm) {
     _communication->send(vect.first, rankReceiver);
-    _communication->send(vect.second, rankReceiver);
+    _communication->sendRange(vect.second, rankReceiver);
   }
 }
 
@@ -87,14 +86,10 @@ void CommunicateBoundingBox::receiveConnectionMap(
   _communication->receive(sizeOfReceivingMap, rankSender);
   PRECICE_ASSERT(sizeOfReceivingMap == (int) fbm.size());
 
-  std::vector<int> connected_ranks;
-
   for (size_t i = 0; i < fbm.size(); ++i) {
     Rank rank;
     _communication->receive(rank, rankSender);
-    _communication->receive(connected_ranks, rankSender);
-    fbm[rank] = connected_ranks;
-    connected_ranks.clear();
+    fbm[rank] = _communication->receiveRange(rankSender, AsVectorTag<int>{});
   }
 }
 
