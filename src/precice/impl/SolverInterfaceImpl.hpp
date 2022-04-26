@@ -382,13 +382,13 @@ public:
    *
    * @param[in] filenameSuffix Suffix of all plotted files
    */
-  /// @todo make private.
+  /// @todo make private. See https://github.com/precice/precice/pull/1270
   void exportMesh(const std::string &filenameSuffix) const;
 
   /**
    * @brief Allows to access a registered mesh
    */
-  /// @todo make private and use fixture.
+  /// @todo try to remove or make private. See https://github.com/precice/precice/issues/1269
   const mesh::Mesh &mesh(const std::string &meshName) const;
 
   /// Disable copy construction
