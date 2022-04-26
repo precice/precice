@@ -517,9 +517,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
   _mappingConfig->resetMappings();
 
-  // Iterate over all read mappings
+  // Iterate over all write mappings
   for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
-    // Check, weather we can find a corresponding read data context
+    // Check, weather we can find a corresponding write data context
     bool dataFound = false;
     for (auto &dataContext : participant->writeDataContexts()) {
       // First we look for the "from" mesh ID
