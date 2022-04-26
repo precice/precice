@@ -40,7 +40,7 @@ void send(mesh::Mesh::VertexDistribution const &m,
     auto const &rank    = i.first;
     auto const &indices = i.second;
     communication->send(rank, rankReceiver);
-    communication->send(indices, rankReceiver);
+    communication->sendRange(indices, rankReceiver);
   }
 }
 
@@ -48,6 +48,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
              int                             rankSender,
              const com::PtrCommunication &   communication)
 {
+  using precice::com::AsVectorTag;
   m.clear();
   int size = 0;
   communication->receive(size, rankSender);
@@ -55,7 +56,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
   while (size--) {
     Rank rank = -1;
     communication->receive(rank, rankSender);
-    communication->receive(m[rank], rankSender);
+    m[rank] =  communication->receiveRange(rankSender, AsVectorTag<int>{});
   }
 }
 
@@ -598,7 +599,7 @@ void PointToPointCommunication::send(precice::span<double const> itemsToSend, in
         buffer->push_back(itemsToSend[index * valueDimension + d]);
       }
     }
-    auto request = _communication->aSend(*buffer, mapping.remoteRank);
+    auto request = _communication->aSend(span<const double>{*buffer}, mapping.remoteRank);
     bufferedRequests.emplace_back(request, buffer);
   }
   checkBufferedRequests(false);
@@ -614,7 +615,7 @@ void PointToPointCommunication::receive(precice::span<double> itemsToReceive, in
 
   for (auto &mapping : _mappings) {
     mapping.recvBuffer.resize(mapping.indices.size() * valueDimension);
-    mapping.request = _communication->aReceive(mapping.recvBuffer, mapping.remoteRank);
+    mapping.request = _communication->aReceive(span<double>{mapping.recvBuffer}, mapping.remoteRank);
   }
 
   for (auto &mapping : _mappings) {
@@ -664,14 +665,15 @@ void PointToPointCommunication::broadcastReceiveAllMesh()
 void PointToPointCommunication::scatterAllCommunicationMap(CommunicationMap &localCommunicationMap)
 {
   for (auto &connectionData : _connectionDataVector) {
-    _communication->send(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
+    _communication->sendRange(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
   }
 }
 
 void PointToPointCommunication::gatherAllCommunicationMap(CommunicationMap &localCommunicationMap)
 {
+  using precice::com::AsVectorTag;
   for (auto &connectionData : _connectionDataVector) {
-    _communication->receive(localCommunicationMap[connectionData.remoteRank], connectionData.remoteRank);
+    localCommunicationMap[connectionData.remoteRank] = _communication->receiveRange(connectionData.remoteRank, AsVectorTag<int>{});
   }
 }
 
