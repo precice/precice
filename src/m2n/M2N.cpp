@@ -35,7 +35,7 @@ M2N::~M2N()
 
 bool M2N::isConnected()
 {
-  return _isMasterConnected;
+  return _isPrimaryRankConnected;
 }
 
 void M2N::acceptPrimaryConnection(
@@ -49,11 +49,11 @@ void M2N::acceptPrimaryConnection(
   if (not utils::MasterSlave::isSecondary()) {
     PRECICE_DEBUG("Accept primary-primary connection");
     PRECICE_ASSERT(_intraComm);
-    _intraComm->acceptConnection(acceptorName, requesterName, "MASTERCOM", utils::MasterSlave::getRank());
-    _isMasterConnected = _intraComm->isConnected();
+    _intraComm->acceptConnection(acceptorName, requesterName, "PRIMARYRANKCOM", utils::MasterSlave::getRank());
+    _isPrimaryRankConnected = _intraComm->isConnected();
   }
 
-  utils::MasterSlave::broadcast(_isMasterConnected);
+  utils::MasterSlave::broadcast(_isPrimaryRankConnected);
 }
 
 void M2N::requestPrimaryConnection(
@@ -67,11 +67,11 @@ void M2N::requestPrimaryConnection(
   if (not utils::MasterSlave::isSecondary()) {
     PRECICE_ASSERT(_intraComm);
     PRECICE_DEBUG("Request primary connection");
-    _intraComm->requestConnection(acceptorName, requesterName, "MASTERCOM", 0, 1);
-    _isMasterConnected = _intraComm->isConnected();
+    _intraComm->requestConnection(acceptorName, requesterName, "PRIMARYRANKCOM", 0, 1);
+    _isPrimaryRankConnected = _intraComm->isConnected();
   }
 
-  utils::MasterSlave::broadcast(_isMasterConnected);
+  utils::MasterSlave::broadcast(_isPrimaryRankConnected);
 }
 
 void M2N::acceptSecondaryRanksConnection(
@@ -161,20 +161,20 @@ void M2N::completeSecondaryRanksConnection()
 void M2N::closeConnection()
 {
   PRECICE_TRACE();
-  closeMasterConnection();
+  closePrimaryRankConnection();
   closeDistributedConnections();
 }
 
-void M2N::closeMasterConnection()
+void M2N::closePrimaryRankConnection()
 {
   PRECICE_TRACE();
   if (not utils::MasterSlave::isSecondary() && _intraComm->isConnected()) {
     _intraComm->closeConnection();
-    _isMasterConnected = false;
+    _isPrimaryRankConnected = false;
   }
 
-  utils::MasterSlave::broadcast(_isMasterConnected);
-  PRECICE_ASSERT(not _isMasterConnected);
+  utils::MasterSlave::broadcast(_isPrimaryRankConnected);
+  PRECICE_ASSERT(not _isPrimaryRankConnected);
 }
 
 void M2N::closeDistributedConnections()
@@ -192,7 +192,7 @@ void M2N::closeDistributedConnections()
   PRECICE_ASSERT(not _areSecondaryRanksConnected);
 }
 
-com::PtrCommunication M2N::getMasterCommunication()
+com::PtrCommunication M2N::getPrimaryRankCommunication()
 {
   PRECICE_ASSERT(not utils::MasterSlave::isSecondary());
   return _intraComm; /// @todo maybe it would be a nicer design to not offer this
@@ -227,7 +227,7 @@ void M2N::send(
 
     _distComs[meshID]->send(itemsToSend, valueDimension);
   } else {
-    PRECICE_ASSERT(_isMasterConnected);
+    PRECICE_ASSERT(_isPrimaryRankConnected);
     _intraComm->send(itemsToSend, 0);
   }
 }
@@ -301,7 +301,7 @@ void M2N::receive(precice::span<double> itemsToReceive,
 
     _distComs[meshID]->receive(itemsToReceive, valueDimension);
   } else {
-    PRECICE_ASSERT(_isMasterConnected);
+    PRECICE_ASSERT(_isPrimaryRankConnected);
     _intraComm->receive(itemsToReceive, 0);
   }
 }

@@ -52,9 +52,9 @@ void ReceivedPartition::communicate()
     Event e("partition.receiveMeshPartitions." + _mesh->getName(), precice::syncMode);
 
     if (utils::MasterSlave::isPrimary()) {
-      // Master receives remote mesh's global number of vertices
+      // Primary rank receives remote mesh's global number of vertices
       int globalNumberOfVertices = -1;
-      m2n().getMasterCommunication()->receive(globalNumberOfVertices, 0);
+      m2n().getPrimaryRankCommunication()->receive(globalNumberOfVertices, 0);
       _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
     }
 
@@ -71,7 +71,7 @@ void ReceivedPartition::communicate()
 
     if (not utils::MasterSlave::isSecondary()) {
       // a ReceivedPartition can only have one communication, @todo nicer design
-      com::CommunicateMesh(m2n().getMasterCommunication()).receiveMesh(*_mesh, 0);
+      com::CommunicateMesh(m2n().getPrimaryRankCommunication()).receiveMesh(*_mesh, 0);
       _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
     }
   }
@@ -326,7 +326,7 @@ void ReceivedPartition::filterByBoundingBox()
       // Now also filter the remaining primary mesh
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
-      PRECICE_DEBUG("Master mesh, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
+      PRECICE_DEBUG("Primary rank mesh, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->vertices().size(), filteredMesh.vertices().size(),
                     _mesh->edges().size(), filteredMesh.edges().size(),
                     _mesh->triangles().size(), filteredMesh.triangles().size());
@@ -392,7 +392,7 @@ void ReceivedPartition::compareBoundingBoxes()
   // receive and broadcast number of remote ranks
   int numberOfRemoteRanks = -1;
   if (utils::MasterSlave::isPrimary()) {
-    m2n().getMasterCommunication()->receive(numberOfRemoteRanks, 0);
+    m2n().getPrimaryRankCommunication()->receive(numberOfRemoteRanks, 0);
     utils::MasterSlave::getCommunication()->broadcast(numberOfRemoteRanks);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSecondary());
@@ -409,7 +409,7 @@ void ReceivedPartition::compareBoundingBoxes()
 
   // receive and broadcast remote bounding box map
   if (utils::MasterSlave::isPrimary()) {
-    com::CommunicateBoundingBox(m2n().getMasterCommunication()).receiveBoundingBoxMap(remoteBBMap, 0);
+    com::CommunicateBoundingBox(m2n().getPrimaryRankCommunication()).receiveBoundingBoxMap(remoteBBMap, 0);
     com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastSendBoundingBoxMap(remoteBBMap);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSecondary());
@@ -448,13 +448,13 @@ void ReceivedPartition::compareBoundingBoxes()
     }
 
     // send connectionMap to other primary rank
-    m2n().getMasterCommunication()->send(connectedRanksList, 0);
+    m2n().getPrimaryRankCommunication()->send(connectedRanksList, 0);
     PRECICE_CHECK(not connectionMap.empty(),
                   "The mesh \"{}\" of this participant seems to have no partitions at the coupling interface. "
                   "Check that both mapped meshes are describing the same geometry. "
                   "If you deal with very different mesh resolutions, consider increasing the safety-factor in the <use-mesh /> tag.",
                   _mesh->getName());
-    com::CommunicateBoundingBox(m2n().getMasterCommunication()).sendConnectionMap(connectionMap, 0);
+    com::CommunicateBoundingBox(m2n().getPrimaryRankCommunication()).sendConnectionMap(connectionMap, 0);
   } else {
     PRECICE_ASSERT(utils::MasterSlave::isSecondary());
 
@@ -873,7 +873,7 @@ void ReceivedPartition::createOwnerInformation()
           utils::MasterSlave::getCommunication()->send(secondaryOwnerVecs[rank], rank);
         }
       }
-      // Master data
+      // Primary rank data
       PRECICE_DEBUG("My owner information: {}", secondaryOwnerVecs[0]);
       setOwnerInformation(secondaryOwnerVecs[0]);
 

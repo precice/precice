@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication)
   auto m2n = context.connectPrimaryRanks("A", "B");
 
   //This is how you can access the m2n communication
-  BOOST_TEST(m2n->getMasterCommunication()->isConnected());
+  BOOST_TEST(m2n->getPrimaryRankCommunication()->isConnected());
 
   // Automatically finalizes Events
 }

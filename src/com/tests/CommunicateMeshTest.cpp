@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
     mesh::Edge &  e1 = sendMesh.createEdge(v1, v2);
     mesh::Edge &  e2 = sendMesh.createEdge(v2, v0);
 
-    CommunicateMesh comMesh(m2n->getMasterCommunication());
+    CommunicateMesh comMesh(m2n->getPrimaryRankCommunication());
 
     if (context.isNamed("A")) {
       comMesh.sendMesh(sendMesh, 0);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
   mesh::Triangle &t0 = sendMesh.createTriangle(e0, e1, e2);
 
   // Create mesh communicator
-  CommunicateMesh comMesh(m2n->getMasterCommunication());
+  CommunicateMesh comMesh(m2n->getPrimaryRankCommunication());
 
   if (context.isNamed("A")) {
     comMesh.sendMesh(sendMesh, 0);

@@ -375,8 +375,8 @@ void ParticipantConfiguration::xmlTagCallback(
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com    = comConfig.createCommunication(tag);
     utils::MasterSlave::getCommunication() = com;
-    _isMasterDefined                       = true;
-    _participants.back()->setUseMaster(true);
+    _isPrimaryRankDefined                       = true;
+    _participants.back()->setUsePrimaryRank(true);
   }
 }
 
@@ -638,17 +638,17 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   _watchIntegralConfigs.clear();
 
   // create default primary communication if needed
-  if (context.size > 1 && not _isMasterDefined && participant->getName() == context.name) {
+  if (context.size > 1 && not _isPrimaryRankDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
     PRECICE_ERROR("Implicit primary communications for parallel participants are only available if preCICE was built with MPI. "
                   "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com::PtrCommunication com              = std::make_shared<com::MPIDirectCommunication>();
     utils::MasterSlave::getCommunication() = com;
-    participant->setUseMaster(true);
+    participant->setUsePrimaryRank(true);
 #endif
   }
-  _isMasterDefined = false; // to not mess up with previous participant
+  _isPrimaryRankDefined = false; // to not mess up with previous participant
 }
 
 void ParticipantConfiguration::checkIllDefinedMappings(

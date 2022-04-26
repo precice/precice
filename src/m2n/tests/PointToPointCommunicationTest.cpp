@@ -72,7 +72,7 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
 
       data         = {10, 20, 40, 60, 80};
       expectedData = {10 + 2, 4 * 20 + 3, 40 + 2, 4 * 60 + 3, 80 + 2};
-    } else { // A Slave
+    } else { // A Secondary rank
       data         = {20, 30, 50, 60, 70};
       expectedData = {4 * 20 + 3, 30 + 1, 50 + 2, 4 * 60 + 3, 70 + 1};
     }

@@ -194,7 +194,7 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, Rank rank)
     pNastinMesh->createVertex(position);
     position << -0.75, -0.75, 0.5;
     pNastinMesh->createVertex(position);
-  } else if (rank == 1) { //Slave1
+  } else if (rank == 1) { //SecondaryRank1
     // secondary1 not at interface
   } else if (rank == 2) { //Slave2
     Eigen::VectorXd position(dimensions);
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
       if (context.isPrimary()) { //Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 2);
         BOOST_TEST(pSolidzMesh->edges().size() == 1);
-      } else if (context.isRank(1)) { //Slave1
+      } else if (context.isRank(1)) { //SecondaryRank1
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
       } else if (context.isRank(2)) { //Slave2
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
     if (context.isPrimary()) { //Master
       BOOST_TEST(pSolidzMesh->vertices().size() == 2);
       BOOST_TEST(pSolidzMesh->edges().size() == 1);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_TEST(pSolidzMesh->vertices().size() == 0);
       BOOST_TEST(pSolidzMesh->edges().size() == 0);
     } else if (context.isRank(2)) { //Slave2
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
       if (context.isPrimary()) { //Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 3);
         BOOST_TEST(pSolidzMesh->edges().size() == 2);
-      } else if (context.isRank(1)) { //Slave1
+      } else if (context.isRank(1)) { //SecondaryRank1
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
       } else if (context.isRank(2)) { //Slave2
@@ -753,7 +753,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
       BOOST_TEST(pSolidzMesh->vertices().size() == 2);
       BOOST_TEST(pSolidzMesh->edges().size() == 1);
       BOOST_TEST(pSolidzMesh->triangles().size() == 0);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_TEST(pSolidzMesh->vertices().size() == 0);
       BOOST_TEST(pSolidzMesh->edges().size() == 0);
       BOOST_TEST(pSolidzMesh->triangles().size() == 0);
@@ -945,9 +945,9 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     int                             connectionMapSize = 0;
     std::map<int, std::vector<int>> receivedConnectionMap;
     mesh::PtrMesh                   pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
-    m2n->getMasterCommunication()->send(3, 0);
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
-    m2n->getMasterCommunication()->receive(connectedRanksList, 0);
+    m2n->getPrimaryRankCommunication()->send(3, 0);
+    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
+    m2n->getPrimaryRankCommunication()->receive(connectedRanksList, 0);
     connectionMapSize = connectedRanksList.size();
     BOOST_TEST_REQUIRE(connectionMapSize == 2);
 
@@ -957,7 +957,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
       receivedConnectionMap[rank] = connectedRanks;
     }
 
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveConnectionMap(receivedConnectionMap, 0);
+    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveConnectionMap(receivedConnectionMap, 0);
 
     // test whether we receive correct connection map
     BOOST_TEST(receivedConnectionMap.at(0).at(0) == 2);
@@ -1014,9 +1014,9 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
     int                             connectionMapSize = 0;
     std::map<int, std::vector<int>> receivedConnectionMap;
     mesh::PtrMesh                   pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
-    m2n->getMasterCommunication()->send(3, 0);
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
-    m2n->getMasterCommunication()->receive(connectedRanksList, 0);
+    m2n->getPrimaryRankCommunication()->send(3, 0);
+    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
+    m2n->getPrimaryRankCommunication()->receive(connectedRanksList, 0);
     connectionMapSize = connectedRanksList.size();
     BOOST_TEST(connectionMapSize == 2);
 
@@ -1026,7 +1026,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
       receivedConnectionMap[rank] = connectedRanks;
     }
 
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveConnectionMap(receivedConnectionMap, 0);
+    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveConnectionMap(receivedConnectionMap, 0);
 
     // test whether we receive correct connection map
     BOOST_TEST(receivedConnectionMap.at(0).at(0) == 2);
@@ -1536,7 +1536,7 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
       if (context.isPrimary()) { //Master
         BOOST_TEST(pSolidzMesh->vertices().size() == 2);
         BOOST_TEST(pSolidzMesh->edges().size() == 1);
-      } else if (context.isRank(1)) { //Slave1
+      } else if (context.isRank(1)) { //SecondaryRank1
         BOOST_TEST(pSolidzMesh->vertices().size() == 0);
         BOOST_TEST(pSolidzMesh->edges().size() == 0);
       } else if (context.isRank(2)) { //Slave2

@@ -90,10 +90,10 @@ private:
   static int _size;
 
   /// True if this process is running the primary rank.
-  static bool _isMaster;
+  static bool _isPrimaryRank;
 
   /// True if this process is running a secondary rank.
-  static bool _isSlave;
+  static bool _isSecondaryRank;
 
   /// Intra-participant communication.
   static com::PtrCommunication _communication;

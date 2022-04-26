@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
       BOOST_TEST(values(2) == 4.0);
       values = values * 2;
       m2n->send(values, pMesh->getID(), valueDimension);
-    } else if (context.isRank(1)) { // Slave1
+    } else if (context.isRank(1)) { // Secondary rank1
       Eigen::VectorXd values;
       m2n->receive({}, pMesh->getID(), valueDimension);
       m2n->send(values, pMesh->getID(), valueDimension);

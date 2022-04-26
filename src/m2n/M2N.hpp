@@ -129,19 +129,19 @@ public:
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
-   * Calls closeMasterConnection() and closeSlaveConnections()
+   * Calls closePrimaryRankConnection() and closeSlaveConnections()
    * This method is called on destruction.
    */
   void closeConnection();
 
   /// Disconnects the Primary-Primary connection
-  void closeMasterConnection();
+  void closePrimaryRankConnection();
 
   /// Disconnects all connections of the DistributedCommunication
   void closeDistributedConnections();
 
   /// Get the basic communication between the 2 primary ranks.
-  com::PtrCommunication getMasterCommunication();
+  com::PtrCommunication getPrimaryRankCommunication();
 
   /// Creates a new distributes communication for that mesh, stores the pointer in _distComs
   void createDistributedCommunication(const mesh::PtrMesh &mesh);
@@ -212,7 +212,7 @@ private:
 
   DistributedComFactory::SharedPointer _distrFactory;
 
-  bool _isMasterConnected = false;
+  bool _isPrimaryRankConnected = false;
 
   bool _areSecondaryRanksConnected = false;
 

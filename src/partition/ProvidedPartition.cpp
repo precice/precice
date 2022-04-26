@@ -63,7 +63,7 @@ void ProvidedPartition::communicate()
 
       // communicate the total number of vertices to the other participants primary rank
       if (utils::MasterSlave::isPrimary()) {
-        _m2ns[0]->getMasterCommunication()->send(_mesh->getGlobalNumberOfVertices(), 0);
+        _m2ns[0]->getPrimaryRankCommunication()->send(_mesh->getGlobalNumberOfVertices(), 0);
       }
 
       // the min and max of global vertex IDs of this rank's partition
@@ -109,7 +109,7 @@ void ProvidedPartition::communicate()
         PRECICE_CHECK(globalMesh.vertices().size() > 0,
                       "The provided mesh \"{}\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().",
                       globalMesh.getName());
-        com::CommunicateMesh(m2n->getMasterCommunication()).sendMesh(globalMesh, 0);
+        com::CommunicateMesh(m2n->getPrimaryRankCommunication()).sendMesh(globalMesh, 0);
       }
     }
   }
@@ -261,8 +261,8 @@ void ProvidedPartition::compareBoundingBoxes()
     }
 
     // primary rank sends number of ranks and bbm to the other primary rank
-    _m2ns[0]->getMasterCommunication()->send(utils::MasterSlave::getSize(), 0);
-    com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).sendBoundingBoxMap(bbm, 0);
+    _m2ns[0]->getPrimaryRankCommunication()->send(utils::MasterSlave::getSize(), 0);
+    com::CommunicateBoundingBox(_m2ns[0]->getPrimaryRankCommunication()).sendBoundingBoxMap(bbm, 0);
   }
 
   // size of the feedbackmap
@@ -275,14 +275,14 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // primary rank receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants primary rank
-    _m2ns[0]->getMasterCommunication()->receive(connectedRanksList, 0);
+    _m2ns[0]->getPrimaryRankCommunication()->receive(connectedRanksList, 0);
     remoteConnectionMapSize = connectedRanksList.size();
 
     for (auto &rank : connectedRanksList) {
       remoteConnectionMap[rank] = {-1};
     }
     if (remoteConnectionMapSize != 0) {
-      com::CommunicateBoundingBox(_m2ns[0]->getMasterCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
+      com::CommunicateBoundingBox(_m2ns[0]->getPrimaryRankCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
     }
 
     // broadcast the received feedbackMap
@@ -301,7 +301,7 @@ void ProvidedPartition::compareBoundingBoxes()
       }
     }
 
-  } else { // Slave
+  } else { // Secondary rank
 
     utils::MasterSlave::getCommunication()->broadcast(connectedRanksList, 0);
 

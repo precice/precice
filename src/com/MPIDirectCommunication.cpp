@@ -47,7 +47,7 @@ void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
   _commState   = utils::Parallel::current();
   _isConnected = true;
 
-  PRECICE_ASSERT(acceptorRank == 0, "The Acceptor/Master has to be rank 0!");
+  PRECICE_ASSERT(acceptorRank == 0, "The Acceptor/Primary rank has to be rank 0!");
   PRECICE_ASSERT(_commState->rank() == acceptorRank, "The given acceptor rank does not match the communicator rank!");
 }
 

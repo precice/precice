@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     insert << 0.1, 0.1, 0.1, 0.1;
     forces->values() = insert;
 
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
 
     /**
      * processor with 4 vertices
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
 
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
 
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.04), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.05), data.at(0)->values()(1));
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
     BOOST_TEST(testing::equals(data.at(1)->values()(1), 7.23368584254212854123e-02), data.at(1)->values()(1));
     BOOST_TEST(testing::equals(data.at(1)->values()(2), 7.23368584254212854123e-02), data.at(1)->values()(2));
     BOOST_TEST(testing::equals(data.at(1)->values()(3), 7.23368584254212854123e-02), data.at(1)->values()(3));
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 3.60287163764754048145e+00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 4.88229731011803202989e+00), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 6.16172298258852357833e+00), data.at(0)->values()(2));
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.1), data.at(1)->values()(1));
     BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.1), data.at(1)->values()(2));
     BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.1), data.at(1)->values()(3));
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
 
     /**
      * processor with 4 vertices
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.04000000000000003553e+00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.05000000000000004441e+00), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.06000000000000005329e+00), data.at(0)->values()(2));
@@ -513,7 +513,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
     BOOST_TEST(testing::equals(data.at(1)->values()(1), 7.23368584254213131679e-02), data.at(1)->values()(1));
     BOOST_TEST(testing::equals(data.at(1)->values()(2), 7.23368584254213131679e-02), data.at(1)->values()(2));
     BOOST_TEST(testing::equals(data.at(1)->values()(3), 7.23368584254213131679e-02), data.at(1)->values()(3));
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 3.60287163764754048145e+00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 4.88229731011803202989e+00), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 6.16172298258852446651e+00), data.at(0)->values()(2));
@@ -594,7 +594,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     data.insert(std::pair<int, PtrCouplingData>(5, fpcd));
 
     pp.initialize(data);
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
     /**
      * processor with 4 vertices
      */
@@ -665,7 +665,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
   if (context.isPrimary()) { //Master
 
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
 
     dref = Eigen::VectorXd::Zero(22);
     fref = Eigen::VectorXd::Zero(22);
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     displacements->values() << 1.848184969639987e-06, -1.983566187932991e-07, 1.952383060128974e-06, 1.050101286643166e-07, 2.020975712018586e-06, -9.297459906882382e-08, 2.123910878481957e-06, -3.349554682884977e-08, 0, 0, 0, 0, 7.715047421278781e-07, 2.958323850532032e-07, 6.5137785527863e-07, -3.40165313149562e-07, 1.498023570500414e-06, 2.492038233690158e-07, 1.395223018993416e-06, -3.150663149441921e-07, 1.954718171910318e-06, -3.415637300374603e-08;
     forces->values() << -0.0146558918972568, -0.000267011181975166, 0.05711438744699839, 0.0002383730136872111, -0.0153609861368436, -0.0002852878106683293, 0.05638274862725741, 0.0002839619744993407, -0.00685643232676097, -0.006815594586569211, 0.02901925639144463, -0.02907380943293575, 0.05800715193585099, 9.667375963025685e-05, -0.01376443739049903, -9.547563172575954e-05, 0.05768190366530584, 0.0001311583223016465, -0.01408147425699792, -0.0001216961368213471, -0.01638235080508845, -0.0003874626694560972;
   } else if (context.isRank(3)) { //Slave3
-    // Dummy Slave to be able to reuse the 4 proc Master Slave Fixture
+    // Dummy Secondary rank to be able to reuse the 4 proc Intra-participant communication Fixture
   }
 
   // QN- Update, 2. iteration
@@ -724,7 +724,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
   if (context.isPrimary()) { //Master
 
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
 
     dref = Eigen::VectorXd::Zero(22);
     fref = Eigen::VectorXd::Zero(22);
@@ -777,7 +777,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     displacements->values() << 1.848182952307335e-05, -1.983938722952872e-06, 1.952389995095743e-05, 1.049689886611777e-06, 2.020972044646931e-05, -9.30012125294331e-07, 2.123911759834233e-05, -3.352823479948144e-07, 0, 0, 0, 0, 7.715124780435689e-06, 2.958056858428718e-06, 6.513639301665504e-06, -3.401886529062288e-06, 1.498034283416962e-05, 2.491634858078641e-06, 1.39521486945152e-05, -3.151050708450101e-06, 1.954707223943552e-05, -3.417246252999375e-07;
     forces->values() << -0.01568208277628194, -0.0002595395446636614, 0.0540328986967421, 0.0002362571305830931, -0.01637736854863682, -0.0002699645831085989, 0.05331751790879287, 0.0002707054191427001, -0.007277539612331946, -0.007235194100552225, 0.02757151633202504, -0.02762772092892902, 0.05505877464319012, 0.0001052840945529276, -0.01465499974491537, -0.0001017767294585529, 0.05464614037258596, 0.0001424559420056945, -0.01506072500921042, -0.0001315030046882618, -0.0173164149989076, -0.0003474184175392483;
   } else if (context.isRank(3)) { //Slave3
-    // Dummy Slave to be able to reuse the 4 proc Master Slave Fixture
+    // Dummy Secondary rank to be able to reuse the 4 proc Intra-participant communication Fixture
   }
 
   // QN- Update, 3. iteration
@@ -785,7 +785,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
   if (context.isPrimary()) { //Master
 
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
 
     dref = Eigen::VectorXd::Zero(22);
     fref = Eigen::VectorXd::Zero(22);
@@ -838,7 +838,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     displacements->values() << 1.716650969972045e-05, -1.856138836171773e-06, 1.818701485070425e-05, 9.439657883607802e-07, 1.874709534954619e-05, -8.85448704675396e-07, 1.975527973304359e-05, -3.501096287428596e-07, 0, 0, 0, 0, 7.228951427433641e-06, 2.745909101918556e-06, 6.052367643912141e-06, -3.179587143921995e-06, 1.398276918926419e-05, 2.29762824040882e-06, 1.297587398676e-05, -2.941551341709183e-06, 1.811863361465251e-05, -3.546317448342288e-07;
     forces->values() << -0.09539527385890252, 0.0003208855941258066, -0.1853399184726223, 7.203155656644242e-05, -0.09532865072058605, 0.0009202649288056726, -0.1847925968312873, -0.0007589246108979722, -0.03998875591551594, -0.03982927597079221, -0.08489044889406808, 0.08470593806523596, -0.1739740974580442, 0.0007742373134568178, -0.08383286811708256, -0.0005911288917162662, -0.1811747642897668, 0.001020161732709184, -0.09112767929864005, -0.0008931566039992005, -0.08987332323372975, 0.002763113283891189;
   } else if (context.isRank(3)) { //Slave3
-    // Dummy Slave to be able to reuse the 4 proc Master Slave Fixture
+    // Dummy Secondary rank to be able to reuse the 4 proc Intra-participant communication Fixture
   }
 
   // QN- Update, 4. iteration
@@ -846,7 +846,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
   if (context.isPrimary()) { //Master
 
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
 
     dref = Eigen::VectorXd::Zero(22);
     fref = Eigen::VectorXd::Zero(22);
@@ -899,7 +899,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     displacements->values() << 1.563743909676446e-05, -1.707572586404205e-06, 1.663287551913161e-05, 8.210579991784308e-07, 1.704678071734513e-05, -8.336427145015805e-07, 1.803030552728031e-05, -3.673472962716038e-07, 0, 0, 0, 0, 6.663771864888832e-06, 2.499283366425937e-06, 5.516134032932667e-06, -2.921164340377279e-06, 1.282308279788757e-05, 2.07209067754735e-06, 1.184094543159743e-05, -2.698009821996337e-06, 1.645805878055576e-05, -3.696322259193852e-07;
     forces->values() << -0.09143825207871489, 0.0002922798859936043, -0.1734744585823354, 8.018501629471556e-05, -0.09140909287296797, 0.0008614262538692869, -0.1729893406976169, -0.0007078492982043917, -0.03836482525057584, -0.03821118279703851, -0.07931609050916776, 0.07913795276507131, -0.1626218046186428, 0.0007411076261039719, -0.08039872451576649, -0.0005667402343291361, -0.1694857588798654, 0.0009766586358261331, -0.0873517838382746, -0.0008552683303008771, -0.08627064033821233, 0.002609015553424872;
   } else if (context.isRank(3)) { //Slave3
-    // Dummy Slave to be able to reuse the 4 proc Master Slave Fixture
+    // Dummy Secondary rank to be able to reuse the 4 proc Intra-participant communication Fixture
   }
 
   // QN- Update, 5. iteration
@@ -907,7 +907,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
 
   if (context.isPrimary()) { //Master
 
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
 
     dref = Eigen::VectorXd::Zero(22);
     fref = Eigen::VectorXd::Zero(22);
@@ -973,7 +973,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
     BOOST_TEST(testing::equals(data.at(4)->values().norm(), drefNorm));
     BOOST_TEST(testing::equals(data.at(5)->values().norm(), frefNorm));
   } else if (context.isRank(3)) { //Slave3
-    // Dummy Slave to be able to reuse the 4 proc Master Slave Fixture
+    // Dummy Secondary rank to be able to reuse the 4 proc Intra-participant communication Fixture
   }
 }
 

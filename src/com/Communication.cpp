@@ -25,13 +25,13 @@ void Communication::connectIntraComm(std::string const &participantName,
   constexpr Rank rankOffset      = 1;
   int            secondaryRanksSize = size - rankOffset;
   if (rank == 0) {
-    PRECICE_INFO("Connecting Master to {} SecondaryRanks", secondaryRanksSize);
+    PRECICE_INFO("Connecting Primary rank to {} SecondaryRanks", secondaryRanksSize);
     prepareEstablishment(primaryName, secondaryName);
     acceptConnection(primaryName, secondaryName, tag, rank, rankOffset);
     cleanupEstablishment(primaryName, secondaryName);
   } else {
     int secondaryRank = rank - rankOffset;
-    PRECICE_INFO("Connecting Slave #{} to Master", secondaryRank);
+    PRECICE_INFO("Connecting Secondary rank #{} to Master", secondaryRank);
     requestConnection(primaryName, secondaryName, tag, secondaryRank, secondaryRanksSize);
   }
 }

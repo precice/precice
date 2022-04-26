@@ -66,18 +66,18 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
   PRECICE_TRACE(itemsToSend.size());
 
   // Gather data
-  if (utils::MasterSlave::isSecondary()) { // Slave
+  if (utils::MasterSlave::isSecondary()) { // Secondary rank
     if (!itemsToSend.empty()) {
       utils::MasterSlave::getCommunication()->send(itemsToSend, 0);
     }
-  } else { // Master or coupling mode
+  } else { // Primary rank or coupling mode
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
     mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
     int                             globalSize         = _mesh->getGlobalNumberOfVertices() * valueDimension;
     PRECICE_DEBUG("Global Size = {}", globalSize);
     std::vector<double> globalItemsToSend(globalSize);
 
-    // Master data
+    // Primary rank data
     for (size_t i = 0; i < vertexDistribution[0].size(); i++) {
       for (int j = 0; j < valueDimension; j++) {
         globalItemsToSend[vertexDistribution[0][i] * valueDimension + j] += itemsToSend[i * valueDimension + j];
@@ -122,17 +122,17 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
   }
 
   // Scatter data
-  if (utils::MasterSlave::isSecondary()) { // Slave
+  if (utils::MasterSlave::isSecondary()) { // Secondary rank
     if (!itemsToReceive.empty()) {
       PRECICE_DEBUG("itemsToRec[0] = {}", itemsToReceive[0]);
       utils::MasterSlave::getCommunication()->receive(itemsToReceive, 0);
       PRECICE_DEBUG("itemsToRec[0] = {}", itemsToReceive[0]);
     }
-  } else { // Master or coupling mode
+  } else { // Primary rank or coupling mode
     PRECICE_ASSERT(utils::MasterSlave::getRank() == 0);
     mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
 
-    // Master data
+    // Primary rank data
     for (size_t i = 0; i < vertexDistribution[0].size(); i++) {
       for (int j = 0; j < valueDimension; j++) {
         itemsToReceive[i * valueDimension + j] = globalItemsToReceive[vertexDistribution[0][i] * valueDimension + j];

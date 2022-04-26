@@ -13,7 +13,7 @@ public:
   /// Prepare to establish the connection
   void prepareEstablishment();
 
-  /// Connect the Masters of the M2N
+  /// Connect the Primary Ranks of the M2N
   void connectPrimaryRanks();
 
   /// Connect the Secondary ranks of the M2N
@@ -33,7 +33,7 @@ public:
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 
-  /** Instructs the Master wait for SecondaryRanks.
+  /** Instructs the Primary rank wait for SecondaryRanks.
    *
    * Performs a collective operation which forces every secondary rank to sync with the Master.
    * 

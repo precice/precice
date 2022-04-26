@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
       bounds.push_back(i + 1);
     }
     mesh::BoundingBox      bb(bounds);
-    CommunicateBoundingBox comBB(m2n->getMasterCommunication());
+    CommunicateBoundingBox comBB(m2n->getPrimaryRankCommunication());
 
     if (context.isNamed("A")) {
       comBB.sendBoundingBox(bb, 0);
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
       bbm.emplace(rank, mesh::BoundingBox(bounds));
     }
 
-    CommunicateBoundingBox comBB(m2n->getMasterCommunication());
+    CommunicateBoundingBox comBB(m2n->getPrimaryRankCommunication());
 
     if (context.isNamed("A")) {
       comBB.sendBoundingBoxMap(bbm, 0);
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
     fb.clear();
   }
 
-  CommunicateBoundingBox comBB(m2n->getMasterCommunication());
+  CommunicateBoundingBox comBB(m2n->getPrimaryRankCommunication());
 
   if (context.isNamed("A")) {
     comBB.sendConnectionMap(fbm, 0);

@@ -158,7 +158,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     com::CommunicateMesh(utils::MasterSlave::getCommunication()).sendMesh(filteredInMesh, 0);
     com::CommunicateMesh(utils::MasterSlave::getCommunication()).sendMesh(*outMesh, 0);
 
-  } else { // Parallel Master or Serial
+  } else { // Parallel Primary rank or Serial
 
     mesh::Mesh globalInMesh("globalInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
     mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
@@ -273,7 +273,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     utils::MasterSlave::getCommunication()->send(localInData, 0);
     utils::MasterSlave::getCommunication()->send(localOutputSize, 0);
 
-  } else { // Parallel Master or Serial case
+  } else { // Parallel Primary rank or Serial case
 
     std::vector<double> globalInValues;
     std::vector<double> outputValueSizes;
@@ -389,7 +389,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     utils::MasterSlave::getCommunication()->send(localInDataFiltered, 0);
     utils::MasterSlave::getCommunication()->send(localOutputSize, 0);
 
-  } else { // Master or Serial case
+  } else { // Primary rank or Serial case
 
     int valueDim = output()->data(outputDataID)->getDimensions();
 

@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
       position << 0.0, 1.5;
       mesh::Vertex &v2 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v1, v2);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
     } else if (context.isRank(2)) { //Slave2
       Eigen::VectorXd position(dimensions);
       position << 0.0, 3.5;
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 6);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(0) == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(1) == 2);
       BOOST_TEST(pSolidzMesh->getVertexOffsets().at(2) == 6);
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
       position << 0.0, 1.5, 1.0;
       mesh::Vertex &v2 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v1, v2);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
     } else if (context.isRank(2)) { //Slave2
       Eigen::VectorXd position(dimensions);
       position << 0.0, 3.5, 0.1;
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
       BOOST_TEST(vertexDistribution.at(2).at(1) == 3);
       BOOST_TEST(vertexDistribution.at(2).at(2) == 4);
       BOOST_TEST(vertexDistribution.at(2).at(3) == 5);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_REQUIRE(vertexOffsets.size() == 3);
       BOOST_TEST(vertexOffsets.at(0) == 2);
       BOOST_TEST(vertexOffsets.at(1) == 2);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
     pMesh->createVertex(position);
     position << 1.0, 0.0;
     pMesh->createVertex(position);
-  } else if (context.isRank(1)) { //Slave1
+  } else if (context.isRank(1)) { //SecondaryRank1
     Eigen::VectorXd position(dim);
     position << 2.0, 0.0;
     pMesh->createVertex(position);
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
       BOOST_TEST(pMesh->vertices().at(1).getGlobalIndex() == 1);
       BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
       BOOST_TEST(pMesh->vertices().at(1).isOwner() == true);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
       BOOST_TEST_REQUIRE(pMesh->getVertexOffsets().size() == 4);
       BOOST_TEST(pMesh->getVertexOffsets().at(0) == 2);
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
       pSolidzMesh->createEdge(v1, v2);
     }
 
-    else if (context.isRank(1)) { //Slave1
+    else if (context.isRank(1)) { //SecondaryRank1
       Eigen::VectorXd position(dimensions);
       position << 1.0, 3.5;
       mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
       BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(0) == 1);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(1) == 2);
-    } else if (context.isRank(1)) { //Slave1
+    } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(0) == 0);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(1) == 2);
@@ -371,14 +371,14 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 
     // we receive other participants communicator size
     int receivedFeedbackSize = 3;
-    m2n->getMasterCommunication()->receive(receivedFeedbackSize, 0);
+    m2n->getPrimaryRankCommunication()->receive(receivedFeedbackSize, 0);
 
     for (int i = 0; i < receivedFeedbackSize; i++) {
       receivedGlobalBB.emplace(i, localBB);
     }
 
     // we receive global bounding box from other participant!
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
+    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
     // check whether we have received the correct com size
     BOOST_TEST(receivedFeedbackSize == 3);
 
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     BOOST_TEST(receivedGlobalBB.at(2) == compareBB.at(2));
 
     std::vector<int> connectedRanks = {0, 1, 2};
-    m2n->getMasterCommunication()->send(connectedRanks, 0);
+    m2n->getPrimaryRankCommunication()->send(connectedRanks, 0);
 
     // construct connection map
     std::map<int, std::vector<int>> connectionMap;
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     connectionMap[2].push_back(0);
     connectionMap[2].push_back(1);
 
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).sendConnectionMap(connectionMap, 0);
+    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendConnectionMap(connectionMap, 0);
   }
 }
 
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
       pSolidzMesh->createEdge(v1, v2);
     }
 
-    else if (context.isRank(1)) { //Slave1
+    else if (context.isRank(1)) { //SecondaryRank1
       Eigen::VectorXd position(dimensions);
       position << 1.0, 3.5, 1.0;
       mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
@@ -463,14 +463,14 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 
     // we receive other participants communicator size
     int remoteParComSize = 3;
-    m2n->getMasterCommunication()->receive(remoteParComSize, 0);
+    m2n->getPrimaryRankCommunication()->receive(remoteParComSize, 0);
 
     for (int i = 0; i < remoteParComSize; i++) {
       receivedGlobalBB.emplace(i, localBB);
     }
 
     // we receive global bounding box from other participant!
-    com::CommunicateBoundingBox(m2n->getMasterCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
+    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
 
     // check whether we have received the correct com size
     BOOST_TEST(remoteParComSize == 3);
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 
     //send empty dummy list of connected ranks as feedback
     std::vector<int> connectedRanksList;
-    m2n->getMasterCommunication()->send(connectedRanksList, 0);
+    m2n->getPrimaryRankCommunication()->send(connectedRanksList, 0);
   }
 }
 

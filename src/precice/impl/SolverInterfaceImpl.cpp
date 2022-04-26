@@ -207,9 +207,9 @@ void SolverInterfaceImpl::configure(
   _accessor           = determineAccessingParticipant(config);
   _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
-  PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useMaster(),
+  PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->usePrimaryRank(),
                  "A parallel participant needs an intra-participant communication");
-  PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useMaster()),
+  PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->usePrimaryRank()),
                 "You cannot use an intra-participant communication with a serial participant. "
                 "If you do not know exactly what an intra-participant communication is and why you want to use it "
                 "you probably just want to remove the intraComm tag from the preCICE configuration.");
@@ -264,7 +264,7 @@ double SolverInterfaceImpl::initialize()
     auto &bm2n       = m2nPair.second;
     bool  requesting = bm2n.isRequesting;
     if (bm2n.m2n->isConnected()) {
-      PRECICE_DEBUG("Master connection {} {} already connected.", (requesting ? "from" : "to"), bm2n.remoteName);
+      PRECICE_DEBUG("Primary rank connection {} {} already connected.", (requesting ? "from" : "to"), bm2n.remoteName);
     } else {
       PRECICE_DEBUG((requesting ? "Awaiting primary connection from {}" : "Establishing primary connection to {}"), bm2n.remoteName);
       bm2n.prepareEstablishment();
@@ -273,7 +273,7 @@ double SolverInterfaceImpl::initialize()
     }
   }
 
-  PRECICE_INFO("Masters are connected");
+  PRECICE_INFO("Primary Ranks are connected");
 
   compareBoundingBoxes();
 
@@ -2130,17 +2130,17 @@ void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
   for (auto &iter : _m2ns) {
     auto bm2n = iter.second;
     if (not utils::MasterSlave::isSecondary()) {
-      PRECICE_DEBUG("Synchronizing Master with {}", bm2n.remoteName);
+      PRECICE_DEBUG("Synchronizing Primary rank with {}", bm2n.remoteName);
       if (bm2n.isRequesting) {
-        bm2n.m2n->getMasterCommunication()->send(ping, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->send(ping, 0);
         std::string receive = "init";
-        bm2n.m2n->getMasterCommunication()->receive(receive, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->receive(receive, 0);
         PRECICE_ASSERT(receive == pong);
       } else {
         std::string receive = "init";
-        bm2n.m2n->getMasterCommunication()->receive(receive, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->receive(receive, 0);
         PRECICE_ASSERT(receive == ping);
-        bm2n.m2n->getMasterCommunication()->send(pong, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->send(pong, 0);
       }
     }
     if (close == CloseChannels::Distributed) {
