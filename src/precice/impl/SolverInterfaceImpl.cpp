@@ -280,7 +280,7 @@ double SolverInterfaceImpl::initialize()
   PRECICE_INFO("Setting up preliminary secondary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    bm2n.preConnectSlaves();
+    bm2n.preConnectSecondaryRanks();
   }
 
   computePartitions();
@@ -2098,7 +2098,7 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
 
   Event e("com.initializeMasterSlaveCom", precice::syncMode);
   utils::MasterSlave::getCommunication()->connectIntraComm(
-      _accessorName, "MasterSlaves",
+      _accessorName, "MasterSecondaryRanks",
       _accessorProcessRank, _accessorCommunicatorSize);
 }
 

@@ -559,7 +559,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   _isConnected = true;
 }
 
-void PointToPointCommunication::completeSlavesConnection()
+void PointToPointCommunication::completeSecondaryRanksConnection()
 {
   mesh::Mesh::CommunicationMap localCommunicationMap = _mesh->getCommunicationMap();
 

@@ -19,7 +19,7 @@ namespace com {
 namespace primaryprimary {
 
 ///
-/// Tests for Master-Master Connections
+/// Tests for Primary-Primary Connections
 /// Acceptor and Requestor are different participants
 ///
 

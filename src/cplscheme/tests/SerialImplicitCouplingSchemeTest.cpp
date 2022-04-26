@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
+  options.useOnlyPrimaryCom = true;
   auto m2n                 = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
@@ -811,7 +811,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
+  options.useOnlyPrimaryCom = true;
   auto m2n                 = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
@@ -1053,7 +1053,7 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
 
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
+  options.useOnlyPrimaryCom = true;
   auto m2n                 = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
@@ -1288,7 +1288,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
+  options.useOnlyPrimaryCom = true;
   auto m2n                 = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   using namespace mesh;
@@ -1372,7 +1372,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
 
   xml::configure(root, xml::ConfigurationContext{}, configurationPath);
   m2n::PtrM2N m2n       = m2nConfig->getM2N("Participant0", "Participant1");
-  useOnlyMasterCom(m2n) = true;
+  useOnlyPrimaryCom(m2n) = true;
 
   // some dummy mesh
   meshConfig->meshes().at(0)->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
@@ -1384,9 +1384,9 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   std::vector<int> validIterations = {5, 5, 5};
 
   if (context.isNamed("Participant0")) {
-    m2n->requestMasterConnection("Participant1", "Participant0");
+    m2n->requestPrimaryConnection("Participant1", "Participant0");
   } else {
-    m2n->acceptMasterConnection("Participant1", "Participant0");
+    m2n->acceptPrimaryConnection("Participant1", "Participant0");
   }
 
   runCoupling(*cplSchemeConfig.getCouplingScheme(context.name),
@@ -1397,7 +1397,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
+  options.useOnlyPrimaryCom = true;
   auto m2n                 = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
@@ -1459,7 +1459,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
+  options.useOnlyPrimaryCom = true;
   auto m2n                 = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
@@ -1522,7 +1522,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
+  options.useOnlyPrimaryCom = true;
   auto m2n                 = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();

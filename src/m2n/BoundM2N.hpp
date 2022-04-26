@@ -20,7 +20,7 @@ public:
   void connectSecondaryRanks();
 
   /// pre-connect the Secondary ranks of the M2N
-  void preConnectSlaves();
+  void preConnectSecondaryRanks();
 
   /// Cleanup after having established the connection
   void cleanupEstablishment();
@@ -33,13 +33,13 @@ public:
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 
-  /** Instructs the Master wait for Slaves.
+  /** Instructs the Master wait for SecondaryRanks.
    *
    * Performs a collective operation which forces every secondary rank to sync with the Master.
    * 
    * @note this does nothing if the participant is running serially.
    */
-  void waitForSlaves();
+  void waitForSecondaryRanks();
 };
 
 } // namespace m2n

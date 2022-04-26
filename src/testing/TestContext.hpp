@@ -121,10 +121,10 @@ enum struct ConnectionType {
 struct ConnectionOptions {
   ConnectionOptions() = default;
 
-  /** Whether to use only the Master-Master connection
+  /** Whether to use only the Primary-Primary connection
    * @see M2N::M2N()
    */
-  bool useOnlyMasterCom = false;
+  bool useOnlyPrimaryCom = false;
 
   /** Whether to enable the two-level initialization
    * @see M2N::M2N()

@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 {
   PRECICE_TEST("SOLIDZ"_on(3_ranks).setupIntraComm(), "NASTIN"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
+  options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit  = true;
   auto m2n                 = context.connectPrimaryRanks("NASTIN", "SOLIDZ", options);
 
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 {
   PRECICE_TEST("SOLIDZ"_on(3_ranks).setupIntraComm(), "NASTIN"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
+  options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit  = true;
   auto m2n                 = context.connectPrimaryRanks("NASTIN", "SOLIDZ", options);
 
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
+  options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit  = true;
   options.type             = testing::ConnectionType::PointToPoint;
   auto m2n                 = context.connectPrimaryRanks("Fluid", "Solid", options);
@@ -548,13 +548,13 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
   if (context.isNamed("Solid")) {
     m2n->createDistributedCommunication(mesh);
     ProvidedPartition part(mesh);
-    m2n->acceptSlavesPreConnection("SolidSlaves", "FluidSlaves");
+    m2n->acceptSecondaryRanksPreConnection("SolidSecondaryRanks", "FluidSecondaryRanks");
     part.addM2N(m2n);
     part.communicate();
   } else {
     m2n->createDistributedCommunication(mesh);
     ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
-    m2n->requestSlavesPreConnection("SolidSlaves", "FluidSlaves");
+    m2n->requestSecondaryRanksPreConnection("SolidSecondaryRanks", "FluidSecondaryRanks");
     part.addM2N(m2n);
 
     part.communicate();
@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
   mesh::PtrMesh receivedMesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
 
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
+  options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit  = true;
   options.type             = testing::ConnectionType::PointToPoint;
   auto m2n                 = context.connectPrimaryRanks("Fluid", "Solid", options);
@@ -685,7 +685,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
       BOOST_TEST(mesh->getConnectedRanks().at(1) == 1);
     }
 
-    m2n->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
+    m2n->acceptSecondaryRanksPreConnection("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();
@@ -714,7 +714,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
 
     part.compareBoundingBoxes();
 
-    m2n->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
+    m2n->requestSecondaryRanksPreConnection("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();
@@ -733,7 +733,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
 
   // create the communicator for m2n mesh and communication map exchange
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
+  options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit  = true;
   options.type             = testing::ConnectionType::PointToPoint;
   auto m2n                 = context.connectPrimaryRanks("Fluid", "Solid", options);
@@ -814,7 +814,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
       BOOST_TEST(mesh->getConnectedRanks().at(1) == 1);
     }
 
-    m2n->acceptSlavesPreConnection("FluidSlaves", "SolidSlaves");
+    m2n->acceptSecondaryRanksPreConnection("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();
@@ -842,7 +842,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
 
     part.compareBoundingBoxes();
 
-    m2n->requestSlavesPreConnection("FluidSlaves", "SolidSlaves");
+    m2n->requestSecondaryRanksPreConnection("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();

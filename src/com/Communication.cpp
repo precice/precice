@@ -25,7 +25,7 @@ void Communication::connectIntraComm(std::string const &participantName,
   constexpr Rank rankOffset      = 1;
   int            secondaryRanksSize = size - rankOffset;
   if (rank == 0) {
-    PRECICE_INFO("Connecting Master to {} Slaves", secondaryRanksSize);
+    PRECICE_INFO("Connecting Master to {} SecondaryRanks", secondaryRanksSize);
     prepareEstablishment(primaryName, secondaryName);
     acceptConnection(primaryName, secondaryName, tag, rank, rankOffset);
     cleanupEstablishment(primaryName, secondaryName);

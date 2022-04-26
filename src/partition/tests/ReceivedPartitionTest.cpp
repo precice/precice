@@ -923,7 +923,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   PRECICE_TEST("SOLIDZ"_on(1_rank), "NASTIN"_on(3_ranks).setupIntraComm(), Require::Events);
 
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
+  options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit  = true;
   auto m2n                 = context.connectPrimaryRanks("SOLIDZ", "NASTIN", options);
 
@@ -992,7 +992,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
   PRECICE_TEST("SOLIDZ"_on(1_rank), "NASTIN"_on(3_ranks).setupIntraComm(), Require::Events);
 
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
+  options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit  = true;
   auto m2n                 = context.connectPrimaryRanks("SOLIDZ", "NASTIN", options);
 
@@ -1062,14 +1062,14 @@ void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
   double safetyFactor = 0;
 
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = false;
+  options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit  = true;
   options.type             = testing::ConnectionType::PointToPoint;
 
   auto                                      participantCom = com::PtrCommunication(new com::SocketCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory;
 
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
+  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
 
   mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
   mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));

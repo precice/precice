@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
     pMesh->getVertexDistribution()[0].push_back(4);
     pMesh->getVertexDistribution()[0].push_back(5);
 
-    m2n->acceptSlavesConnection("Part1", "Part2");
+    m2n->acceptSecondaryRanksConnection("Part1", "Part2");
     Eigen::VectorXd values = Eigen::VectorXd::Zero(numberOfVertices);
     values << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
     m2n->send(values, pMesh->getID(), valueDimension);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(GatherScatterTest)
     BOOST_TEST(context.isNamed("Part2"));
     mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, testing::nextMeshID()));
     m2n->createDistributedCommunication(pMesh);
-    m2n->requestSlavesConnection("Part1", "Part2");
+    m2n->requestSecondaryRanksConnection("Part1", "Part2");
 
     if (context.isPrimary()) {
       pMesh->setGlobalNumberOfVertices(numberOfVertices);

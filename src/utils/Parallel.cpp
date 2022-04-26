@@ -309,7 +309,7 @@ void Parallel::splitCommunicator(const std::string &groupName)
     MPI_Bcast(&groupCount, 1, MPI_INT, 0, globalComm);
     PRECICE_ASSERT(groupCount > 1, "Calling split with a single group is not permitted!");
 
-    // Step 3 send AccessorGroups to Slaves
+    // Step 3 send AccessorGroups to SecondaryRanks
     for (const AccessorGroup &group : accessorGroups) {
       // @TODO can we use broadcast as the primary rank sends this to everyone else?
       for (int i = 1; i < size; i++) {

@@ -204,7 +204,7 @@ void GatherScatterCommunication::gatherAllCommunicationMap(CommunicationMap &loc
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::completeSlavesConnection()
+void GatherScatterCommunication::completeSecondaryRanksConnection()
 {
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }

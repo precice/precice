@@ -30,7 +30,7 @@ struct WhiteboxAccessor;
  */
 class M2N {
 public:
-  M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyMasterCom = false, bool useTwoLevelInit = false);
+  M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom = false, bool useTwoLevelInit = false);
 
   /// Destructor, empty.
   ~M2N();
@@ -44,7 +44,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptMasterConnection(const std::string &acceptorName,
+  void acceptPrimaryConnection(const std::string &acceptorName,
                               const std::string &requesterName);
 
   /**
@@ -53,7 +53,7 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestMasterConnection(const std::string &acceptorName,
+  void requestPrimaryConnection(const std::string &acceptorName,
                                const std::string &requesterName);
 
   /**
@@ -62,7 +62,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptSlavesConnection(const std::string &acceptorName,
+  void acceptSecondaryRanksConnection(const std::string &acceptorName,
                               const std::string &requesterName);
 
   /**
@@ -71,21 +71,21 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestSlavesConnection(const std::string &acceptorName,
+  void requestSecondaryRanksConnection(const std::string &acceptorName,
                                const std::string &requesterName);
 
   /**
-   * Same as acceptSlavesConnection except this only creates the channels,
+   * Same as acceptSecondaryRanksConnection except this only creates the channels,
    * no vertex list needed!
    */
-  void acceptSlavesPreConnection(const std::string &acceptorName,
+  void acceptSecondaryRanksPreConnection(const std::string &acceptorName,
                                  const std::string &requesterName);
 
   /**
-   * Same as requestSlavesConnection except this only creates the channels,
+   * Same as requestSecondaryRanksConnection except this only creates the channels,
    * no vertex list needed!
    */
-  void requestSlavesPreConnection(const std::string &acceptorName,
+  void requestSecondaryRanksPreConnection(const std::string &acceptorName,
                                   const std::string &requesterName);
 
   /*
@@ -94,7 +94,7 @@ public:
    *        call this function to update and complete the communication
    *        channels for every communicated mesh
    */
-  void completeSlavesConnection();
+  void completeSecondaryRanksConnection();
 
   /**
    * @brief prepares to establish the connections
@@ -134,7 +134,7 @@ public:
    */
   void closeConnection();
 
-  /// Disconnects the Master-Master connection
+  /// Disconnects the Primary-Primary connection
   void closeMasterConnection();
 
   /// Disconnects all connections of the DistributedCommunication
@@ -214,7 +214,7 @@ private:
 
   bool _isMasterConnected = false;
 
-  bool _areSlavesConnected = false;
+  bool _areSecondaryRanksConnected = false;
 
   // The following flag is (solely) needed for unit tests between two serial participants.
   // To also use the secondary communication would require a lengthy setup of meshes
@@ -225,20 +225,20 @@ private:
   // respective tests through a friend declaration.
 
   /// between two serial participants, only use the primary com and no secondary com
-  bool _useOnlyMasterCom = false;
+  bool _useOnlyPrimaryCom = false;
 
   /// use the two-level initialization concept
   bool _useTwoLevelInit = false;
 
-  // @brief To allow access to _useOnlyMasterCom
+  // @brief To allow access to _useOnlyPrimaryCom
   friend struct WhiteboxAccessor;
 };
 
-/// struct giving access _useOnlyMasterCom
+/// struct giving access _useOnlyPrimaryCom
 struct WhiteboxAccessor {
-  static auto useOnlyMasterCom(PtrM2N m2n) -> typename std::add_lvalue_reference<decltype(m2n->_useOnlyMasterCom)>::type
+  static auto useOnlyPrimaryCom(PtrM2N m2n) -> typename std::add_lvalue_reference<decltype(m2n->_useOnlyPrimaryCom)>::type
   {
-    return m2n->_useOnlyMasterCom;
+    return m2n->_useOnlyPrimaryCom;
   }
 };
 

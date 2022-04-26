@@ -232,7 +232,7 @@ m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const 
   default:
     throw std::runtime_error{"ConnectionType unknown"};
   };
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
+  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
 
   if (std::find(_names.begin(), _names.end(), acceptor) == _names.end()) {
     throw std::runtime_error{
@@ -244,9 +244,9 @@ m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const 
   }
 
   if (isNamed(acceptor)) {
-    m2n->acceptMasterConnection(acceptor, requestor);
+    m2n->acceptPrimaryConnection(acceptor, requestor);
   } else if (isNamed(requestor)) {
-    m2n->requestMasterConnection(acceptor, requestor);
+    m2n->requestPrimaryConnection(acceptor, requestor);
   } else {
     throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
   }

@@ -26,9 +26,9 @@ void BoundM2N::connectPrimaryRanks()
   std::string fullLocalName = localName;
 
   if (isRequesting) {
-    m2n->requestMasterConnection(remoteName, fullLocalName);
+    m2n->requestPrimaryConnection(remoteName, fullLocalName);
   } else {
-    m2n->acceptMasterConnection(fullLocalName, remoteName);
+    m2n->acceptPrimaryConnection(fullLocalName, remoteName);
   }
 }
 
@@ -36,21 +36,21 @@ void BoundM2N::connectSecondaryRanks()
 {
   if (m2n->usesTwoLevelInitialization()) {
     PRECICE_DEBUG("Update secondary connections");
-    m2n->completeSlavesConnection();
+    m2n->completeSecondaryRanksConnection();
   } else {
     if (isRequesting) {
       PRECICE_DEBUG("Awaiting secondary connection from {}", remoteName);
-      m2n->requestSlavesConnection(remoteName, localName);
+      m2n->requestSecondaryRanksConnection(remoteName, localName);
       PRECICE_DEBUG("Established secondary connection from {}", remoteName);
     } else {
       PRECICE_DEBUG("Establishing secondary connection to {}", remoteName);
-      m2n->acceptSlavesConnection(localName, remoteName);
+      m2n->acceptSecondaryRanksConnection(localName, remoteName);
       PRECICE_DEBUG("Established  secondary connection to {}", remoteName);
     }
   }
 }
 
-void BoundM2N::preConnectSlaves()
+void BoundM2N::preConnectSecondaryRanks()
 {
   if (not m2n->usesTwoLevelInitialization())
     return;
@@ -59,11 +59,11 @@ void BoundM2N::preConnectSlaves()
 
   if (isRequesting) {
     PRECICE_DEBUG("Awaiting preliminary secondary connection from {}", remoteName);
-    m2n->requestSlavesPreConnection(remoteName, localName);
+    m2n->requestSecondaryRanksPreConnection(remoteName, localName);
     PRECICE_DEBUG("Established preliminary secondary connection from {}", remoteName);
   } else {
     PRECICE_DEBUG("Establishing preliminary secondary connection to {}", remoteName);
-    m2n->acceptSlavesPreConnection(localName, remoteName);
+    m2n->acceptSecondaryRanksPreConnection(localName, remoteName);
     PRECICE_DEBUG("Established preliminary secondary connection to {}", remoteName);
   }
 }
@@ -73,13 +73,13 @@ void BoundM2N::cleanupEstablishment()
   if (isRequesting) {
     return;
   }
-  waitForSlaves();
+  waitForSecondaryRanks();
   if (!utils::MasterSlave::isSecondary()) {
     m2n->cleanupEstablishment(localName, remoteName);
   }
 }
 
-void BoundM2N::waitForSlaves()
+void BoundM2N::waitForSecondaryRanks()
 {
   if (utils::MasterSlave::isPrimary()) {
     for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
