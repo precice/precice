@@ -45,6 +45,8 @@ public:
   /// Writes one line with data of the watchpoint into the output file.
   void exportPointData(double time);
 
+  bool isClosest() const { return _isClosest; }
+
 private:
   logging::Logger _log{"impl::WatchPoint"};
 
