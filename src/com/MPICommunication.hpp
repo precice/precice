@@ -4,7 +4,6 @@
 
 #include <mpi.h>
 #include <string>
-#include <vector>
 
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
@@ -46,10 +45,6 @@ public:
 
   /// Asynchronously sends an array of double values.
   virtual PtrRequest aSend(precice::span<const double> itemsToSend, Rank rankReceiver) override;
-
-  virtual PtrRequest aSend(std::vector<double> const &itemsToSend, Rank rankReceiver) override;
-
-  virtual PtrRequest aSend(std::vector<int> const &itemsToSend, int rankReceiver) override;
 
   /**
    * @brief Sends a double to process with given rank.
@@ -97,8 +92,6 @@ public:
   /// Asynchronously receives an array of double values.
   virtual PtrRequest aReceive(precice::span<double> itemsToReceive, int rankSender) override;
 
-  virtual PtrRequest aReceive(std::vector<double> &itemsToReceive, Rank rankSender) override;
-
   /**
    * @brief Receives a double from process with given rank.
    *
@@ -128,12 +121,6 @@ public:
 
   /// Asynchronously receives a bool from process with given rank.
   virtual PtrRequest aReceive(bool &itemToReceive, Rank rankSender) override;
-
-  void send(std::vector<int> const &v, Rank rankReceiver) override;
-  void receive(std::vector<int> &v, Rank rankSender) override;
-
-  void send(std::vector<double> const &v, Rank rankReceiver) override;
-  void receive(std::vector<double> &v, Rank rankSender) override;
 
 protected:
   /// Returns the communicator.

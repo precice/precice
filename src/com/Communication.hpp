@@ -288,9 +288,6 @@ public:
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
   virtual PtrRequest aSend(precice::span<const double> itemsToSend, Rank rankReceiver) = 0;
 
-  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
-  virtual PtrRequest aSend(std::vector<double> const &itemsToSend, Rank rankReceiver) = 0;
-
   /// Sends a double to process with given rank.
   virtual void send(double itemToSend, Rank rankReceiver) = 0;
 
@@ -300,9 +297,6 @@ public:
 
   /// Sends an int to process with given rank.
   virtual void send(int itemToSend, Rank rankReceiver) = 0;
-
-  /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
-  virtual PtrRequest aSend(std::vector<int> const &itemsToSend, int rankReceiver) = 0;
 
   /// Asynchronously sends an int to process with given rank.
   /// @attention The caller must guarantee that the lifetime of the item extends to the completion of the request!
@@ -332,12 +326,6 @@ public:
   /// Asynchronously receives an array of double values.
   virtual PtrRequest aReceive(precice::span<double> itemsToReceive, int rankSender) = 0;
 
-  /// Asynchronously receives a vector of double values.
-  /*
-   * @attention All asynchronous receives methods require the vector to be appropriately sized
-   */
-  virtual PtrRequest aReceive(std::vector<double> &itemsToReceive, Rank rankSender) = 0;
-
   /// Receives a double from process with given rank.
   virtual void receive(double &itemToReceive, Rank rankSender) = 0;
 
@@ -355,14 +343,6 @@ public:
 
   /// Asynchronously receives a bool from process with given rank.
   virtual PtrRequest aReceive(bool &itemToReceive, Rank rankSender) = 0;
-
-  virtual void send(std::vector<int> const &v, Rank rankReceiver) = 0;
-  /// Receives an std::vector of ints. The vector will be resized accordingly.
-  virtual void receive(std::vector<int> &v, Rank rankSender) = 0;
-
-  virtual void send(std::vector<double> const &v, Rank rankReceiver) = 0;
-  /// Receives an std::vector of doubles. The vector will be resized accordingly.
-  virtual void receive(std::vector<double> &v, Rank rankSender) = 0;
 
   /// @}
 
