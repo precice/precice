@@ -6,6 +6,7 @@
 #include <vector>
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
+#include "com/Communication.hpp"
 
 /// Generic test function that is called from the tests for
 /// MPIPortsCommunication, MPIDirectCommunication and SocketCommunication
@@ -88,7 +89,7 @@ void TestSendAndReceivePrimitiveTypes(TestContext const &context)
 }
 
 template <typename T>
-void TestSendAndReceiveVectors(TestContext const &context)
+void TestSendAndReceiveEigen(TestContext const &context)
 {
   T com;
 
@@ -108,19 +109,6 @@ void TestSendAndReceiveVectors(TestContext const &context)
       msg = Eigen::Vector4i::Constant(0);
       com.send(msg, 0);
     }
-    {
-      std::vector<int> msg;
-      std::vector<int> recv{1, 2, 3};
-      com.receive(msg, 0);
-      BOOST_TEST(msg == recv);
-      com.send(msg, 0);
-    }
-    {
-      std::vector<double> msg;
-      com.receive(msg, 0);
-      BOOST_TEST(msg == std::vector<double>({1.1, 2.2, 3.3}));
-      com.send(msg, 0);
-    }
     com.closeConnection();
   } else {
     com.requestConnection("process0", "process1", "", 0, 1);
@@ -136,16 +124,42 @@ void TestSendAndReceiveVectors(TestContext const &context)
       com.receive(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Zero()));
     }
+    com.closeConnection();
+  }
+}
+
+template <typename T>
+void TestSendAndReceiveRanges(TestContext const &context)
+{
+  using precice::com::AsVectorTag;
+  T com;
+
+  if (context.isNamed("A")) {
+    com.acceptConnection("process0", "process1", "", 0);
+    {
+      std::vector<int> recv{1, 2, 3};
+      std::vector<int> msg = com.receiveRange(0, AsVectorTag<int>{});
+      BOOST_TEST(msg == recv);
+      com.sendRange(msg, 0);
+    }
+    {
+      std::vector<double> msg = com.receiveRange(0, AsVectorTag<double>{});
+      BOOST_TEST(msg == std::vector<double>({1.1, 2.2, 3.3}));
+      com.sendRange(msg, 0);
+    }
+    com.closeConnection();
+  } else {
+    com.requestConnection("process0", "process1", "", 0, 1);
     {
       std::vector<int> msg{1, 2, 3};
-      com.send(msg, 0);
-      com.receive(msg, 0);
+      com.sendRange(msg, 0);
+      msg = com.receiveRange(0, AsVectorTag<int>{});
       BOOST_CHECK(msg == std::vector<int>({1, 2, 3}));
     }
     {
       std::vector<double> msg{1.1, 2.2, 3.3};
-      com.send(msg, 0);
-      com.receive(msg, 0);
+      com.sendRange(msg, 0);
+      msg = com.receiveRange(0, AsVectorTag<double>{});
       BOOST_CHECK(msg == std::vector<double>({1.1, 2.2, 3.3}));
     }
     com.closeConnection();
@@ -401,8 +415,6 @@ void TestReduceVectors(TestContext const &context)
   }
 }
 
-} // namespace primaryprimary
-
 namespace intracomm {
 
 ///
@@ -477,7 +489,7 @@ void TestSendAndReceivePrimitiveTypes(TestContext const &context)
 }
 
 template <typename T>
-void TestSendAndReceiveVectors(TestContext const &context)
+void TestSendAndReceiveEigen(TestContext const &context)
 {
   T com;
 
@@ -497,19 +509,6 @@ void TestSendAndReceiveVectors(TestContext const &context)
       msg = Eigen::Vector4i::Constant(0);
       com.send(msg, 1);
     }
-    {
-      std::vector<int> msg;
-      std::vector<int> recv{1, 2, 3};
-      com.receive(msg, 1);
-      BOOST_TEST(msg == recv);
-      com.send(msg, 1);
-    }
-    {
-      std::vector<double> msg;
-      com.receive(msg, 1);
-      BOOST_TEST(msg == std::vector<double>({1.1, 2.2, 3.3}));
-      com.send(msg, 1);
-    }
     com.closeConnection();
   } else {
     com.requestConnection("Primary", "Secondary", "", 0, 1);
@@ -525,16 +524,42 @@ void TestSendAndReceiveVectors(TestContext const &context)
       com.receive(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Zero()));
     }
+    com.closeConnection();
+  }
+}
+
+template <typename T>
+void TestSendAndReceiveRanges(TestContext const &context)
+{
+  T com;
+  using precice::com::AsVectorTag;
+
+  if (context.isPrimary()) {
+    com.acceptConnection("Master", "Slave", "", 0, 1);
+    {
+      std::vector<int> recv{1, 2, 3};
+      std::vector<int> msg = com.receiveRange(1, AsVectorTag<int>{});
+      BOOST_TEST(msg == recv);
+      com.sendRange(msg, 1);
+    }
+    {
+      std::vector<double> msg = com.receiveRange(1, AsVectorTag<double>{});
+      BOOST_TEST(msg == std::vector<double>({1.1, 2.2, 3.3}));
+      com.sendRange(msg, 1);
+    }
+    com.closeConnection();
+  } else {
+    com.requestConnection("Master", "Slave", "", 0, 1);
     {
       std::vector<int> msg{1, 2, 3};
-      com.send(msg, 0);
-      com.receive(msg, 0);
+      com.sendRange(msg, 0);
+      msg = com.receiveRange(0, AsVectorTag<int>{});
       BOOST_CHECK(msg == std::vector<int>({1, 2, 3}));
     }
     {
       std::vector<double> msg{1.1, 2.2, 3.3};
-      com.send(msg, 0);
-      com.receive(msg, 0);
+      com.sendRange(msg, 0);
+      msg = com.receiveRange(0, AsVectorTag<double>{});
       BOOST_CHECK(msg == std::vector<double>({1.1, 2.2, 3.3}));
     }
     com.closeConnection();

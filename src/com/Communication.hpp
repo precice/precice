@@ -14,6 +14,18 @@
 
 namespace precice {
 namespace com {
+
+/** Tag used to specify which type of vector to return
+ * @see Communication::receiveRange()
+ */
+template<typename T> struct AsVectorTag {};
+
+/* TODO When moving to C++17 use inline variable:
+ *
+ * template<typename T>
+ * inline constexpr auto asVector = Communication::AsVectorTag<T>{};
+ */
+
 /**
  * @brief Interface for all interprocess communication classes.
  *
@@ -354,6 +366,23 @@ public:
 
   /// @}
 
+  /// @name Range communication
+  /// @{
+
+  /// Sends a range of doubles (size + content)
+  void sendRange(precice::span<const double> itemsToSend, Rank rankReceiver);
+
+  /// Sends a range of ints (size + content)
+  void sendRange(precice::span<const int> itemsToSend, Rank rankReceiver);
+
+  /// Receives a range of ints as a vector<int>
+  std::vector<int> receiveRange(Rank rankSender, AsVectorTag<int>);
+
+  /// Receives a range of doubles as a vector<double>
+  std::vector<double> receiveRange(Rank rankSender, AsVectorTag<double>);
+
+  /// @}
+
   /// Set rank offset.
   void setRankOffset(Rank rankOffset)
   {
@@ -372,5 +401,6 @@ protected:
 private:
   logging::Logger _log{"com::Communication"};
 };
+
 } // namespace com
 } // namespace precice
