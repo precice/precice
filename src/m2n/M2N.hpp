@@ -45,7 +45,7 @@ public:
    * @param[in] requesterName Name of remote participant to connect to.
    */
   void acceptPrimaryConnection(const std::string &acceptorName,
-                              const std::string &requesterName);
+                               const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
@@ -54,7 +54,7 @@ public:
    * @param[in] requesterName Name of calling participant.
    */
   void requestPrimaryConnection(const std::string &acceptorName,
-                               const std::string &requesterName);
+                                const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
@@ -63,7 +63,7 @@ public:
    * @param[in] requesterName Name of remote participant to connect to.
    */
   void acceptSecondaryRanksConnection(const std::string &acceptorName,
-                              const std::string &requesterName);
+                                      const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
@@ -72,21 +72,21 @@ public:
    * @param[in] requesterName Name of calling participant.
    */
   void requestSecondaryRanksConnection(const std::string &acceptorName,
-                               const std::string &requesterName);
+                                       const std::string &requesterName);
 
   /**
    * Same as acceptSecondaryRanksConnection except this only creates the channels,
    * no vertex list needed!
    */
   void acceptSecondaryRanksPreConnection(const std::string &acceptorName,
-                                 const std::string &requesterName);
+                                         const std::string &requesterName);
 
   /**
    * Same as requestSecondaryRanksConnection except this only creates the channels,
    * no vertex list needed!
    */
   void requestSecondaryRanksPreConnection(const std::string &acceptorName,
-                                  const std::string &requesterName);
+                                          const std::string &requesterName);
 
   /*
    * @brief After preliminary communication channels were set up and after

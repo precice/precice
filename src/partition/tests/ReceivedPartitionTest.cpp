@@ -924,8 +924,8 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
-  options.useTwoLevelInit  = true;
-  auto m2n                 = context.connectPrimaryRanks("SOLIDZ", "NASTIN", options);
+  options.useTwoLevelInit   = true;
+  auto m2n                  = context.connectPrimaryRanks("SOLIDZ", "NASTIN", options);
 
   int dimensions = 2;
 
@@ -993,8 +993,8 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
-  options.useTwoLevelInit  = true;
-  auto m2n                 = context.connectPrimaryRanks("SOLIDZ", "NASTIN", options);
+  options.useTwoLevelInit   = true;
+  auto m2n                  = context.connectPrimaryRanks("SOLIDZ", "NASTIN", options);
 
   int dimensions = 3;
 
@@ -1063,8 +1063,8 @@ void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
 
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
-  options.useTwoLevelInit  = true;
-  options.type             = testing::ConnectionType::PointToPoint;
+  options.useTwoLevelInit   = true;
+  options.type              = testing::ConnectionType::PointToPoint;
 
   auto                                      participantCom = com::PtrCommunication(new com::SocketCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory;

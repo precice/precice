@@ -375,7 +375,7 @@ void ParticipantConfiguration::xmlTagCallback(
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com    = comConfig.createCommunication(tag);
     utils::MasterSlave::getCommunication() = com;
-    _isPrimaryRankDefined                       = true;
+    _isPrimaryRankDefined                  = true;
     _participants.back()->setUsePrimaryRank(true);
   }
 }

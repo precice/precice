@@ -12,9 +12,9 @@ namespace precice {
 namespace com {
 
 void Communication::connectIntraComm(std::string const &participantName,
-                                        std::string const &tag,
-                                        int                rank,
-                                        int                size)
+                                     std::string const &tag,
+                                     int                rank,
+                                     int                size)
 {
   if (size == 1)
     return;
@@ -22,7 +22,7 @@ void Communication::connectIntraComm(std::string const &participantName,
   std::string primaryName   = participantName + "Master";
   std::string secondaryName = participantName + "Slave";
 
-  constexpr Rank rankOffset      = 1;
+  constexpr Rank rankOffset         = 1;
   int            secondaryRanksSize = size - rankOffset;
   if (rank == 0) {
     PRECICE_INFO("Connecting Primary rank to {} SecondaryRanks", secondaryRanksSize);

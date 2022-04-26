@@ -48,7 +48,7 @@ private:
   std::vector<std::string> _vectorDataNames;
 
   virtual std::string getVTKFormat() const                             = 0;
-  virtual std::string getParallelExtension() const                       = 0;
+  virtual std::string getParallelExtension() const                     = 0;
   virtual std::string getPieceExtension() const                        = 0;
   virtual std::string getPieceAttributes(const mesh::Mesh &mesh) const = 0;
 

@@ -17,10 +17,10 @@
 namespace precice {
 namespace utils {
 
-Rank                  MasterSlave::_rank     = -1;
-int                   MasterSlave::_size     = -1;
-bool                  MasterSlave::_isPrimaryRank = false;
-bool                  MasterSlave::_isSecondaryRank  = false;
+Rank                  MasterSlave::_rank            = -1;
+int                   MasterSlave::_size            = -1;
+bool                  MasterSlave::_isPrimaryRank   = false;
+bool                  MasterSlave::_isSecondaryRank = false;
 com::PtrCommunication MasterSlave::_communication;
 
 logging::Logger MasterSlave::_log("utils::MasterSlave");
@@ -31,8 +31,8 @@ void MasterSlave::configure(Rank rank, int size)
   _rank = rank;
   _size = size;
   PRECICE_ASSERT(_rank != -1 && _size != -1);
-  _isPrimaryRank = (rank == 0) && _size != 1;
-  _isSecondaryRank  = (rank != 0);
+  _isPrimaryRank   = (rank == 0) && _size != 1;
+  _isSecondaryRank = (rank != 0);
   PRECICE_DEBUG("isSecondaryRank: {}, isPrimaryRank: {}", _isSecondaryRank, _isPrimaryRank);
 }
 
@@ -143,10 +143,10 @@ double MasterSlave::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2
 void MasterSlave::reset()
 {
   PRECICE_TRACE();
-  _isPrimaryRank = false;
-  _isSecondaryRank  = false;
-  _rank     = -1;
-  _size     = -1;
+  _isPrimaryRank   = false;
+  _isSecondaryRank = false;
+  _rank            = -1;
+  _size            = -1;
 }
 
 void MasterSlave::reduceSum(precice::span<const double> sendData, precice::span<double> rcvData)

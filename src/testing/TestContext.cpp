@@ -116,11 +116,11 @@ void TestContext::handleOption(Participants &participants, Participant participa
 
 void TestContext::setContextFrom(const Participant &p, Rank rank)
 {
-  this->name         = p.name;
-  this->size         = p.size;
-  this->rank         = rank;
-  this->_initIntraComm      = p.initIntraComm;
-  this->_contextComm = utils::Parallel::current();
+  this->name           = p.name;
+  this->size           = p.size;
+  this->rank           = rank;
+  this->_initIntraComm = p.initIntraComm;
+  this->_contextComm   = utils::Parallel::current();
 }
 
 void TestContext::initialize(const Participants &participants)

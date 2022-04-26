@@ -98,11 +98,11 @@ int main(int argc, char **argv)
   }
 
   if (utils::MasterSlave::getRank() == 0) {
-    utils::MasterSlave::isPrimary() = true;
-    utils::MasterSlave::isSecondary()  = false;
+    utils::MasterSlave::isPrimary()   = true;
+    utils::MasterSlave::isSecondary() = false;
   } else {
-    utils::MasterSlave::isPrimary() = false;
-    utils::MasterSlave::isSecondary()  = true;
+    utils::MasterSlave::isPrimary()   = false;
+    utils::MasterSlave::isSecondary() = true;
   }
 
   if (utils::MasterSlave::isPrimary()) {

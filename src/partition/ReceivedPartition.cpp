@@ -419,7 +419,7 @@ void ReceivedPartition::compareBoundingBoxes()
   // prepare local bounding box
   prepareBoundingBox();
 
-  if (utils::MasterSlave::isPrimary()) {                 // Master
+  if (utils::MasterSlave::isPrimary()) {                // Master
     std::map<int, std::vector<int>> connectionMap;      //local ranks -> {remote ranks}
     std::vector<int>                connectedRanksList; // local ranks with any connection
 
@@ -797,8 +797,8 @@ void ReceivedPartition::createOwnerInformation()
       for (size_t i = 0; i < _mesh->vertices().size(); i++) {
         secondaryGlobalIDs[0][i] = _mesh->vertices()[i].getGlobalIndex();
         if (_mesh->vertices()[i].isTagged()) {
-          primaryRankAtInterface  = true;
-          secondaryTags[0][i] = 1;
+          primaryRankAtInterface = true;
+          secondaryTags[0][i]    = 1;
         } else {
           secondaryTags[0][i] = 0;
         }
