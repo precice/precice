@@ -632,16 +632,6 @@ public:
       int *     ids,
       double *  coordinates) const;
 
-  /**
-   * @brief Writes a mesh to vtk file.
-   *
-   * The plotting path has to be specified in the configuration of the
-   * accessing participant.
-   *
-   * @param[in] filenameSuffix Suffix of all plotted files
-   */
-  void exportMesh(const std::string &filenameSuffix) const;
-
   /// Allows to access a registered mesh
   const mesh::Mesh &mesh(const std::string &meshName) const;
 
@@ -740,6 +730,17 @@ private:
       double  relativeReadTime,
       double &value) const;
 
+  /**
+   * @brief Writes a mesh to vtk file.
+   *
+   * The plotting path has to be specified in the configuration of the
+   * accessing participant.
+   *
+   * @param[in] filenameSuffix Suffix of all plotted files
+   */
+  void exportMesh(const std::string &filenameSuffix) const;
+
+  /// @todo: handleExports is only called in advance. Why not inline it? Difference between exportMesh and handleExports unclear.
   /// Exports meshes with data and watch point data.
   void handleExports();
 
