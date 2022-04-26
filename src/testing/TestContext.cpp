@@ -44,9 +44,6 @@ TestContext::~TestContext() noexcept
     utils::MasterSlave::reset();
   }
 
-  // Clear caches
-  query::clearCache();
-
   // Reset communicators
   Par::resetCommState();
   Par::resetManagedMPI();

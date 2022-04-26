@@ -29,18 +29,11 @@ Mesh::Mesh(
     : _name(std::move(name)),
       _dimensions(dimensions),
       _id(id),
-      _boundingBox(dimensions)
+      _boundingBox(dimensions),
+      _index(*this)
 {
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
-
-  meshChanged.connect([](Mesh &m) { query::clearCache(m); });
-  meshDestroyed.connect([](Mesh &m) { query::clearCache(m); });
-}
-
-Mesh::~Mesh()
-{
-  meshDestroyed(*this); // emit signal
 }
 
 Mesh::VertexContainer &Mesh::vertices()
@@ -267,8 +260,7 @@ void Mesh::clear()
   _triangles.clear();
   _edges.clear();
   _vertices.clear();
-
-  meshChanged(*this);
+  _index.clear();
 
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
@@ -392,7 +384,7 @@ void Mesh::addMesh(
       createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
     }
   }
-  meshChanged(*this);
+  _index.clear();
 }
 
 const BoundingBox &Mesh::getBoundingBox() const
