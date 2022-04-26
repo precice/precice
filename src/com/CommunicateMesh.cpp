@@ -139,18 +139,18 @@ void CommunicateMesh::receiveMesh(
     }
   }
 
-    int numberOfTriangles = 0;
-    _communication->receive(numberOfTriangles, rankSender);
-    PRECICE_DEBUG("Number of Triangles to receive: {}", numberOfTriangles);
-    PRECICE_DEBUG("Number of Edges: {}", edges.size());
-    if (numberOfTriangles > 0) {
-      PRECICE_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
-      std::vector<int> edgeIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
-      boost::container::flat_map<int, mesh::Edge *> edgeMap;
-      edgeMap.reserve(numberOfEdges);
-      for (int i = 0; i < numberOfEdges; i++) {
-        edgeMap[edgeIDs[i]] = edges[i];
-      }
+  int numberOfTriangles = 0;
+  _communication->receive(numberOfTriangles, rankSender);
+  PRECICE_DEBUG("Number of Triangles to receive: {}", numberOfTriangles);
+  PRECICE_DEBUG("Number of Edges: {}", edges.size());
+  if (numberOfTriangles > 0) {
+    PRECICE_ASSERT((edges.size() > 0) || (numberOfTriangles == 0));
+    std::vector<int>                              edgeIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
+    boost::container::flat_map<int, mesh::Edge *> edgeMap;
+    edgeMap.reserve(numberOfEdges);
+    for (int i = 0; i < numberOfEdges; i++) {
+      edgeMap[edgeIDs[i]] = edges[i];
+    }
 
     std::vector<int> triangleIDs = _communication->receiveRange(rankSender, AsVectorTag<int>{});
 
@@ -197,7 +197,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     _communication->broadcast(vertexIDs);
 
     std::vector<int> edgeIDs(numberOfEdges * 2);
-    const auto      &meshEdges = mesh.edges();
+    const auto &     meshEdges = mesh.edges();
     for (int i = 0; i < numberOfEdges; i++) {
       edgeIDs[i * 2]     = meshEdges[i].vertex(0).getID();
       edgeIDs[i * 2 + 1] = meshEdges[i].vertex(1).getID();
@@ -217,7 +217,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     _communication->broadcast(edgeIDs);
 
     std::vector<int> triangleIDs(numberOfTriangles * 3);
-    const auto      &meshTriangles = mesh.triangles();
+    const auto &     meshTriangles = mesh.triangles();
     for (int i = 0; i < numberOfTriangles; i++) {
       triangleIDs[i * 3]     = meshTriangles[i].edge(0).getID();
       triangleIDs[i * 3 + 1] = meshTriangles[i].edge(1).getID();

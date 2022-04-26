@@ -404,9 +404,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
       std::copy(localInData.data(), localInData.data() + localInData.size(), globalInValues.begin());
       outValuesSize.push_back(output()->data(outputDataID)->values().size());
 
-      int                 inputSizeCounter = localInData.size();
-      int                 secondaryOutDataSize{0};
-
+      int inputSizeCounter = localInData.size();
+      int secondaryOutDataSize{0};
 
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
         std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, AsVectorTag<double>{});
@@ -464,7 +463,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     }
   }
   if (utils::IntraComm::isSecondary()) {
-    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
+    std::vector<double> receivedValues     = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
   if (hasConstraint(SCALEDCONSISTENT)) {

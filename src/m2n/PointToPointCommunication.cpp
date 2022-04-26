@@ -56,7 +56,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
   while (size--) {
     Rank rank = -1;
     communication->receive(rank, rankSender);
-    m[rank] =  communication->receiveRange(rankSender, AsVectorTag<int>{});
+    m[rank] = communication->receiveRange(rankSender, AsVectorTag<int>{});
   }
 }
 

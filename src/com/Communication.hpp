@@ -18,7 +18,9 @@ namespace com {
 /** Tag used to specify which type of vector to return
  * @see Communication::receiveRange()
  */
-template<typename T> struct AsVectorTag {};
+template <typename T>
+struct AsVectorTag {
+};
 
 /* TODO When moving to C++17 use inline variable:
  *

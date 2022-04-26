@@ -947,7 +947,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     m2n->getPrimaryRankCommunication()->send(3, 0);
     com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
     std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
-    connectionMapSize = connectedRanksList.size();
+    connectionMapSize                   = connectedRanksList.size();
     BOOST_TEST_REQUIRE(connectionMapSize == 2);
 
     std::vector<int> connectedRanks;
@@ -1015,7 +1015,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
     m2n->getPrimaryRankCommunication()->send(3, 0);
     com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
     std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
-    connectionMapSize = connectedRanksList.size();
+    connectionMapSize                   = connectedRanksList.size();
     BOOST_TEST(connectionMapSize == 2);
 
     std::vector<int> connectedRanks;

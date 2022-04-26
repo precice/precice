@@ -30,7 +30,7 @@ void CommunicateBoundingBox::receiveBoundingBox(
     int                rankSender)
 {
   PRECICE_TRACE(rankSender);
-  auto receivedData = _communication->receiveRange(rankSender, AsVectorTag<double>{});
+  auto              receivedData = _communication->receiveRange(rankSender, AsVectorTag<double>{});
   mesh::BoundingBox tempBB(receivedData);
   bb = std::move(tempBB);
 }

@@ -4,9 +4,9 @@
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include <vector>
+#include "com/Communication.hpp"
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
-#include "com/Communication.hpp"
 
 /// Generic test function that is called from the tests for
 /// MPIPortsCommunication, MPIDirectCommunication and SocketCommunication
