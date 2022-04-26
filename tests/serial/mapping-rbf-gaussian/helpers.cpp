@@ -65,7 +65,6 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     // Setup receiving mesh.
     int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
     int idB = interface.setMeshVertex(meshTwoID, coordTwoB.data());
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
 
     // Initialize, thus receive the data and map.
     double maxDt = interface.initialize();
@@ -76,7 +75,6 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     double valueA, valueB, valueC;
     interface.readScalarData(dataAID, idA, valueA);
     interface.readScalarData(dataAID, idB, valueB);
-    interface.readScalarData(dataAID, idC, valueC);
 
     BOOST_TEST(valueA == expectedValTwoA);
     BOOST_TEST(valueB == expectedValTwoB);

@@ -73,7 +73,8 @@ public:
       SupportRadius
     };
 
-    Type type{};
+    Type   type{};
+    double value{};
   };
 
   MappingConfiguration(
@@ -152,8 +153,6 @@ private:
 
   std::vector<ConfiguredMapping> _mappings;
 
-  mutable RBFParameter _rbfParameter;
-
   ConfiguredMapping createMapping(
       const xml::ConfigurationContext &context,
       const std::string &              direction,
@@ -162,8 +161,7 @@ private:
       const std::string &              fromMeshName,
       const std::string &              toMeshName,
       Timing                           timing,
-      double                           shapeParameter,
-      double                           supportRadius,
+      const RBFParameter &             rbfParameter,
       double                           solverRtol,
       bool                             xDead,
       bool                             yDead,
