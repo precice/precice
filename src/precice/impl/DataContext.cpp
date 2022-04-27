@@ -69,6 +69,12 @@ void DataContext::appendMapping(MappingContext mappingContext, mesh::PtrData fro
 {
   PRECICE_ASSERT(fromData);
   PRECICE_ASSERT(toData);
+  // Make sure we don't append a mapping twice
+#ifndef NDEBUG
+  for (unsigned int i = 0; i < _mappingContext.size(); ++i) {
+    PRECICE_ASSERT(!((_mappingContext[i].mapping == mappingContext.mapping) && (_fromData[i] == fromData) && (_toData[i] == toData)), "The appended mapping already exists.");
+  }
+#endif
   _mappingContext.emplace_back(mappingContext);
   PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal _providedData.");
   PRECICE_ASSERT(fromData->getName() == getDataName());
@@ -98,13 +104,12 @@ bool DataContext::isMappingRequired()
 void DataContext::mapData()
 {
   PRECICE_ASSERT(hasMapping());
-  // Reset the toData
-  std::for_each(_toData.begin(), _toData.end(), [](auto &data) { data->toZero(); });
-
   // Execute the mapping
   for (unsigned int i = 0; i < _mappingContext.size(); ++i) {
     const DataID fromDataID = getFromDataID(i);
     const DataID toDataID   = getToDataID(i);
+    // Reset the toData before executing the mapping
+    _toData[i]->toZero();
     _mappingContext[i].mapping->map(fromDataID, toDataID);
     PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, _toData[i]->values()));
   }
