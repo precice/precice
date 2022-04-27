@@ -24,9 +24,9 @@ std::string DataContext::getDataName() const
 DataID DataContext::getFromDataID(int dataVectorIndex) const
 {
   PRECICE_ASSERT(hasMapping());
-  PRECICE_ASSERT(dataVectorIndex < _fromDatas.size())
-  PRECICE_ASSERT(_fromDatas[dataVectorIndex]);
-  return _fromDatas[dataVectorIndex]->getID();
+  PRECICE_ASSERT(dataVectorIndex < _fromData.size())
+  PRECICE_ASSERT(_fromData[dataVectorIndex]);
+  return _fromData[dataVectorIndex]->getID();
 }
 
 void DataContext::resetData()
@@ -35,16 +35,16 @@ void DataContext::resetData()
   _providedData->toZero();
   if (hasMapping()) {
     PRECICE_ASSERT(hasWriteMapping());
-    std::for_each(_toDatas.begin(), _toDatas.end(), [](auto &data) { data->toZero(); });
+    std::for_each(_toData.begin(), _toData.end(), [](auto &data) { data->toZero(); });
   }
 }
 
 DataID DataContext::getToDataID(int dataVectorIndex) const
 {
   PRECICE_ASSERT(hasMapping());
-  PRECICE_ASSERT(dataVectorIndex < _toDatas.size())
-  PRECICE_ASSERT(_toDatas[dataVectorIndex]);
-  return _toDatas[dataVectorIndex]->getID();
+  PRECICE_ASSERT(dataVectorIndex < _toData.size())
+  PRECICE_ASSERT(_toData[dataVectorIndex]);
+  return _toData[dataVectorIndex]->getID();
 }
 
 DataID DataContext::getDataDimensions() const
@@ -72,16 +72,16 @@ void DataContext::appendMapping(MappingContext mappingContext, mesh::PtrData fro
   // Make sure we don't append a mapping twice
 #ifndef NDEBUG
   for (unsigned int i = 0; i < _mappingContexts.size(); ++i) {
-    PRECICE_ASSERT(!((_mappingContexts[i].mapping == mappingContext.mapping) && (_fromDatas[i] == fromData) && (_toDatas[i] == toData)), "The appended mapping already exists.");
+    PRECICE_ASSERT(!((_mappingContexts[i].mapping == mappingContext.mapping) && (_fromData[i] == fromData) && (_toData[i] == toData)), "The appended mapping already exists.");
   }
 #endif
   _mappingContexts.emplace_back(mappingContext);
   PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal _providedData.");
   PRECICE_ASSERT(fromData->getName() == getDataName());
-  _fromDatas.emplace_back(fromData);
+  _fromData.emplace_back(fromData);
   PRECICE_ASSERT(toData->getName() == getDataName());
-  _toDatas.emplace_back(toData);
-  PRECICE_ASSERT(_toDatas != _fromDatas);
+  _toData.emplace_back(toData);
+  PRECICE_ASSERT(_toData != _fromData);
 }
 
 bool DataContext::hasMapping() const
@@ -111,20 +111,20 @@ void DataContext::mapData()
     const DataID fromDataID = getFromDataID(i);
     const DataID toDataID   = getToDataID(i);
     // Reset the toData before executing the mapping
-    _toDatas[i]->toZero();
+    _toData[i]->toZero();
     _mappingContexts[i].mapping->map(fromDataID, toDataID);
-    PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, _toDatas[i]->values()));
+    PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, _toData[i]->values()));
   }
 }
 
 bool DataContext::hasReadMapping() const
 {
-  return std::any_of(_toDatas.begin(), _toDatas.end(), [this](auto &data) { return data == _providedData; });
+  return std::any_of(_toData.begin(), _toData.end(), [this](auto &data) { return data == _providedData; });
 }
 
 bool DataContext::hasWriteMapping() const
 {
-  return std::any_of(_fromDatas.begin(), _fromDatas.end(), [this](auto &data) { return data == _providedData; });
+  return std::any_of(_fromData.begin(), _fromData.end(), [this](auto &data) { return data == _providedData; });
 }
 
 } // namespace impl
