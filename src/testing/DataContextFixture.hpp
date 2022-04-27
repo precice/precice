@@ -12,13 +12,13 @@ namespace testing {
  */
 class DataContextFixture {
 public:
-  impl::MappingContext mappingContext(precice::impl::DataContext &dataContext);
+  std::vector<impl::MappingContext> mappingContext(precice::impl::DataContext &dataContext);
 
   int getProvidedDataID(precice::impl::DataContext &dataContext);
 
-  int getFromDataID(precice::impl::DataContext &dataContext);
+  int getFromDataID(precice::impl::DataContext &dataContext, int dataVectorIndex);
 
-  int getToDataID(precice::impl::DataContext &dataContext);
+  int getToDataID(precice::impl::DataContext &dataContext, int dataVectorIndex);
 
   bool hasMapping(precice::impl::DataContext &dataContext);
 
