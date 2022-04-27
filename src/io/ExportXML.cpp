@@ -61,41 +61,41 @@ void ExportXML::writeParallelFile(
   namespace fs = boost::filesystem;
   fs::path outfile(location);
   outfile = outfile / fs::path(name + getParallelExtension());
-  std::ofstream outPrimaryFile(outfile.string(), std::ios::trunc);
+  std::ofstream outParallelFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outPrimaryFile, "{} export failed to open master file \"{}\"", getVTKFormat(), outfile);
+  PRECICE_CHECK(outParallelFile, "{} export failed to open primary file \"{}\"", getVTKFormat(), outfile);
 
   const auto formatType = getVTKFormat();
-  outPrimaryFile << "<?xml version=\"1.0\"?>\n";
-  outPrimaryFile << "<VTKFile type=\"P" << formatType << "\" version=\"0.1\" byte_order=\"";
-  outPrimaryFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
-  outPrimaryFile << "   <P" << formatType << " GhostLevel=\"0\">\n";
+  outParallelFile << "<?xml version=\"1.0\"?>\n";
+  outParallelFile << "<VTKFile type=\"P" << formatType << "\" version=\"0.1\" byte_order=\"";
+  outParallelFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
+  outParallelFile << "   <P" << formatType << " GhostLevel=\"0\">\n";
 
-  outPrimaryFile << "      <PPoints>\n";
-  outPrimaryFile << "         <PDataArray type=\"Float64\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\"/>\n";
-  outPrimaryFile << "      </PPoints>\n";
+  outParallelFile << "      <PPoints>\n";
+  outParallelFile << "         <PDataArray type=\"Float64\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\"/>\n";
+  outParallelFile << "      </PPoints>\n";
 
-  writePrimaryCells(outPrimaryFile);
+  writeParallelCells(outParallelFile);
 
-  writePrimaryData(outPrimaryFile);
+  writeParallelData(outParallelFile);
 
   const auto &offsets = mesh.getVertexOffsets();
   PRECICE_ASSERT(offsets.size() > 0);
   if (offsets[0] > 0) {
-    outPrimaryFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
+    outParallelFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
   }
-  for (auto rank : utils::IntraComm::allSecondaries()) {
+  for (auto rank : utils::IntraComm::allSecondaryRanks()) {
     PRECICE_ASSERT(rank < offsets.size());
     if (offsets[rank] - offsets[rank - 1] > 0) {
       //only non-empty subfiles
-      outPrimaryFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
+      outParallelFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
     }
   }
 
-  outPrimaryFile << "   </P" << formatType << ">\n";
-  outPrimaryFile << "</VTKFile>\n";
+  outParallelFile << "   </P" << formatType << ">\n";
+  outParallelFile << "</VTKFile>\n";
 
-  outPrimaryFile.close();
+  outParallelFile.close();
 }
 
 namespace {
@@ -118,7 +118,7 @@ void ExportXML::writeSubFile(
   outfile /= fs::path(name + getPieceSuffix() + getPieceExtension());
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  PRECICE_CHECK(outSubFile, "{} export failed to open slave file \"{}\"", getVTKFormat(), outfile);
+  PRECICE_CHECK(outSubFile, "{} export failed to open secondary file \"{}\"", getVTKFormat(), outfile);
 
   const auto formatType = getVTKFormat();
   outSubFile << "<?xml version=\"1.0\"?>\n";
@@ -243,7 +243,7 @@ void ExportXML::exportPoints(
   outFile << "         </Points> \n\n";
 }
 
-void ExportXML::writePrimaryData(std::ostream &out) const
+void ExportXML::writeParallelData(std::ostream &out) const
 {
   // write scalar data names
   out << "      <PPointData Scalars=\"Rank ";

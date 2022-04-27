@@ -92,8 +92,8 @@ public:
    * Establishes a 1-to-N communication, whereas the acceptor's side is the "1". Contrary to
    * acceptConnectionAsServer(), the other side needs to be a proper communicator with ranks
    * from 0 to N-1. It is not necessary to know this "N" a-priori on the acceptor's side.
-   * This communication is used for the 1:1 communication between two master ranks
-   * and for the master-slave communication. For the last case, setRankOffset() has to be set.
+   * This communication is used for the 1:1 communication between two primary ranks
+   * and for the intra-participant communication. For the last case, setRankOffset() has to be set.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
@@ -133,8 +133,8 @@ public:
    * Establishes a 1-to-N communication, whereas the requestor's side is the "N". Contrary to
    * requestConnectionAsClient(), this side needs to be a proper communicator with ranks
    * from 0 to N-1. All ranks need to call this function.
-   * This communication is used for the 1:1 communication between two master ranks,
-   * and for the master-slave communication.
+   * This communication is used for the 1:1 communication between two primary ranks,
+   * and for the intra-participant communication.
    *
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
@@ -211,21 +211,21 @@ public:
   /// @name Reduction
   /// @{
 
-  /// Performs a reduce summation on the rank given by rankPrimary
-  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankPrimary);
-  /// Performs a reduce summation on the master, every other rank has to call reduceSum
+  /// Performs a reduce summation on the rank given by primaryRank
+  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank);
+  /// Performs a reduce summation on the primary rank, every other rank has to call reduceSum
   virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
-  virtual void reduceSum(int itemToSend, int &itemToReceive, Rank rankPrimary);
+  virtual void reduceSum(int itemToSend, int &itemToReceive, Rank primaryRank);
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
-  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank rankPrimary);
+  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank);
   virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
-  virtual void allreduceSum(double itemToSend, double &itemToReceive, Rank rankPrimary);
+  virtual void allreduceSum(double itemToSend, double &itemToReceive, Rank primaryRank);
   virtual void allreduceSum(double itemToSend, double &itemToReceive);
 
-  virtual void allreduceSum(int itemToSend, int &itemToReceive, Rank rankPrimary);
+  virtual void allreduceSum(int itemToSend, int &itemToReceive, Rank primaryRank);
   virtual void allreduceSum(int itemToSend, int &itemToReceive);
 
   /// @}
@@ -361,7 +361,7 @@ public:
   }
 
 protected:
-  /// Rank offset for masters-slave communication, since ranks are from 0 to size-2
+  /// Rank offset for primaries-secondary communication, since ranks are from 0 to size-2
   int _rankOffset = 0;
 
   bool _isConnected = false;

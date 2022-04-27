@@ -33,7 +33,7 @@ private:
   std::string getPieceExtension() const override;
   std::string getPieceAttributes(const mesh::Mesh &mesh) const override;
 
-  void writePrimaryCells(std::ostream &out) const override;
+  void writeParallelCells(std::ostream &out) const override;
 
   void exportConnectivity(std::ostream &outFile, const mesh::Mesh &mesh) const override;
 };

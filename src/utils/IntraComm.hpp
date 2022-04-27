@@ -18,7 +18,7 @@ namespace utils {
 /// Utility class for managing intra-participant communication operations.
 class IntraComm {
 public:
-  /// Configures the master-slave communication.
+  /// Configures the intra-participant communication.
   static void configure(Rank rank, int size);
 
   /// Current rank
@@ -27,14 +27,14 @@ public:
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int getSize();
 
-  /// Communication between the master and all slaves.
+  /// Intra-participant communication.
   static com::PtrCommunication &getCommunication()
   {
     return _communication;
   }
 
   /// Returns an iterable range over salve ranks [1, _size)
-  static auto allSecondaries()
+  static auto allSecondaryRanks()
   {
     return boost::irange(1, _size);
   }
@@ -45,10 +45,10 @@ public:
     return boost::irange(0, _size);
   }
 
-  /// True if this process is running the master.
+  /// True if this process is running the primary rank.
   static bool isPrimary();
 
-  /// True if this process is running a slave.
+  /// True if this process is running a secondary rank.
   static bool isSecondary();
 
   /// True if this process is running in parallel
@@ -89,13 +89,13 @@ private:
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int _size;
 
-  /// True if this process is running the master.
-  static bool _isPrimary;
+  /// True if this process is running the primary rank.
+  static bool _isPrimaryRank;
 
-  /// True if this process is running a slave.
-  static bool _isSecondary;
+  /// True if this process is running a secondary rank.
+  static bool _isSecondaryRank;
 
-  /// Communication between the master and all slaves.
+  /// Intra-participant communication.
   static com::PtrCommunication _communication;
 };
 

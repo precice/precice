@@ -132,13 +132,13 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   double positions0[8] = {1.0, 0.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.5};
 
   if (context.isNamed("SolverOne")) {
-    // All mesh is on Primary
+    // All mesh is on the primary rank
     if (context.isPrimary()) {
       interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    // All mesh is on Secondary
+    // All mesh is on the secondary rank
     if (not context.isPrimary()) {
       interface.setMeshVertices(meshID, 4, positions0, vertexIDs);
     }

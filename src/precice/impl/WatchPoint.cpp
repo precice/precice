@@ -60,7 +60,7 @@ void WatchPoint::initialize()
   PRECICE_TRACE();
 
   if (_mesh->vertices().size() > 0) {
-    auto match        = query::Index{_mesh}.findNearestProjection(_point, 4);
+    auto match        = _mesh->index().findNearestProjection(_point, 4);
     _interpolation    = std::make_unique<mapping::Polation>(match.polation);
     _shortestDistance = match.distance;
   }
@@ -75,15 +75,15 @@ void WatchPoint::initialize()
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal  = std::numeric_limits<double>::max();
     for (Rank rankSecondary : utils::IntraComm::allSecondaries()) {
-      utils::IntraComm::getCommunication()->receive(closestDistanceLocal, rankSecondary);
+      utils::IntraComm::getCommunication()->receive(closestDistanceLocal, secondaryRank);
       if (closestDistanceLocal < closestDistanceGlobal) {
         closestDistanceGlobal = closestDistanceLocal;
-        closestRank           = rankSecondary;
+        closestRank           = secondaryRank;
       }
     }
     _isClosest = closestRank == 0;
-    for (Rank rankSecondary : utils::IntraComm::allSecondaries()) {
-      utils::IntraComm::getCommunication()->send(closestRank == rankSecondary, rankSecondary);
+    for (Rank secondaryRank : utils::IntraComm::allSecondaries()) {
+      utils::IntraComm::getCommunication()->send(closestRank == secondaryRank, secondaryRank);
     }
   }
 
@@ -97,7 +97,6 @@ void WatchPoint::exportPointData(
     return;
   }
 
-  //PRECICE_ASSERT(_vertices.size() == _weights.size());
   _txtWriter.writeData("Time", time);
   // Export watch point coordinates
   Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);

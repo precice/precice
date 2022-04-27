@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.10.2)
+cmake_minimum_required (VERSION 3.16.3)
 project(preCICE VERSION 2.3.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
@@ -153,7 +153,7 @@ if(TPL_ENABLE_BOOST)
   set(Boost_NO_SYSTEM_PATHS ON CACHE BOOL "" FORCE)
   unset(ENV{BOOST_ROOT})
 endif()
-find_package(Boost 1.65.1 REQUIRED
+find_package(Boost 1.71.0 REQUIRED
   COMPONENTS filesystem log log_setup program_options system thread unit_test_framework
   )
 
@@ -166,9 +166,6 @@ find_package(Eigen3 3.2 REQUIRED)
 precice_validate_eigen()
 
 # LibXML2
-if(TPL_ENABLE_LIBXML2)
-  xsdk_tpl_require(LIBXML2 LIBXML2_LIBRARIES LIBXML2_INCLUDE_DIRS)
-endif()
 find_package(LibXml2 REQUIRED)
 precice_validate_libxml2()
 
@@ -218,34 +215,20 @@ endif()
 
 # Option Python
 if (PRECICE_PythonActions)
-  if (TPL_ENABLE_PYTHON)
-    xsdk_tpl_require(PYTHON PYTHON_LIBRARY PYTHON_INCLUDE_DIR NumPy_INCLUDE_DIR)
-    find_package(PythonLibs REQUIRED)
-
-    # Override NumPy
-    # TODO: Incorporate into the FindNumPy module
-    set(NumPy_FOUND True CACHE BOOL "NumPy found?" FORCE)
-    if(NOT TARGET NumPy::NumPy)
-      add_library(NumPy::NumPy INTERFACE IMPORTED)
-      set_property(TARGET NumPy::NumPy PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NumPy_INCLUDE_DIR}")
-    endif()
-  else()
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.14")
-      find_package(Python3 REQUIRED COMPONENTS Development NumPy)
-    else()
-      # Required for Ubuntu 18.04 LTS
-      find_package(PythonLibs REQUIRED)
-      find_package(NumPy REQUIRED)
-      if(PYTHONLIBS_VERSION_STRING VERSION_LESS 3)
-        message(FATAL_ERROR "Python 2 is not supported (found ${PYTHONLIBS_VERSION_STRING})")
-      endif()
-    endif()
-  endif()
+  find_package(Python3 REQUIRED COMPONENTS Development NumPy)
   precice_validate_libpython()
   precice_validate_numpy()
 else()
   message(STATUS "Python support disabled")
 endif()
+
+
+#
+# Setup miscellaneous features
+#
+
+# Enable glibc++ assertions in debug builds
+add_compile_definitions("$<$<CONFIG:DEBUG>:_GLIBCXX_ASSERTIONS>")
 
 
 #
@@ -255,17 +238,8 @@ endif()
 print_empty()
 print_section("TARGETS & PACKAGES")
 
-# Add a dummy to silence add_library warning for cmake < 3.11.
-set(preCICE_DUMMY "")
-if(CMAKE_VERSION VERSION_LESS "3.11")
-  set(preCICE_DUMMY "${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp")
-  if(NOT EXISTS "${preCICE_DUMMY}")
-    file(WRITE "${preCICE_DUMMY}" "")
-  endif()
-endif()
-
 # Add precice as an empty target
-add_library(precice ${preCICE_DUMMY})
+add_library(precice)
 set_target_properties(precice PROPERTIES
   # precice is a C++14 project
   CXX_STANDARD 14
@@ -311,8 +285,7 @@ target_link_libraries(precice PRIVATE Eigen3::Eigen)
 target_compile_definitions(precice PRIVATE "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
 
 # Setup LIBXML2
-target_include_directories(precice PRIVATE ${LIBXML2_INCLUDE_DIR})
-target_link_libraries(precice PRIVATE ${LIBXML2_LIBRARIES})
+target_link_libraries(precice PRIVATE LibXml2::LibXml2)
 
 # Setup JSON
 target_link_libraries(precice PRIVATE JSON fmt-header-only)
@@ -333,14 +306,7 @@ endif()
 
 # Option Python
 if (PRECICE_PythonActions)
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.14")
-    target_link_libraries(precice PRIVATE Python3::NumPy Python3::Python)
-  else()
-    # Required for Ubuntu 18.04 LTS
-    target_link_libraries(precice PRIVATE NumPy::NumPy)
-    target_include_directories(precice PRIVATE ${PYTHON_INCLUDE_DIRS})
-    target_link_libraries(precice PRIVATE ${PYTHON_LIBRARIES})
-  endif()
+  target_link_libraries(precice PRIVATE Python3::NumPy Python3::Python)
   target_compile_definitions(precice PRIVATE NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 else()
   target_compile_definitions(precice PRIVATE PRECICE_NO_PYTHON)
@@ -565,9 +531,16 @@ else()
   endif()
 endif()
 
-# Configure a pkg-config file
+# Configure the pkg-config file for the binary directory
 configure_file(
-  "${PROJECT_SOURCE_DIR}/tools/releasing/packaging/debian/precice.pc.in"
+  "${PROJECT_SOURCE_DIR}/cmake/binary.pc.in"
+  "libprecice.pc"
+  @ONLY
+  )
+
+# Configure the pkg-config file for the installation
+configure_file(
+  "${PROJECT_SOURCE_DIR}/cmake/install.pc.in"
   "lib/pkgconfig/libprecice.pc"
   @ONLY
   )

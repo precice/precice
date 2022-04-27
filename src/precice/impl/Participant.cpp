@@ -48,9 +48,9 @@ void Participant::addAction(action::PtrAction &&action)
   _actions.push_back(std::move(action));
 }
 
-void Participant::setUsePrimary(bool usePrimary)
+void Participant::setUsePrimaryRank(bool useIntraComm)
 {
-  _usePrimary = usePrimary;
+  _useIntraComm = useIntraComm;
 }
 
 void Participant::addWatchPoint(
@@ -108,10 +108,11 @@ void Participant::addWriteData(
 
 void Participant::addReadData(
     const mesh::PtrData &data,
-    const mesh::PtrMesh &mesh)
+    const mesh::PtrMesh &mesh,
+    int                  interpolationOrder)
 {
   checkDuplicatedData(data, mesh->getName());
-  _readDataContexts.emplace(data->getID(), ReadDataContext(data, mesh));
+  _readDataContexts.emplace(data->getID(), ReadDataContext(data, mesh, interpolationOrder));
 }
 
 void Participant::addReadMappingContext(
@@ -388,9 +389,9 @@ std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
   return _watchIntegrals;
 }
 
-bool Participant::usePrimary() const
+bool Participant::useIntraComm() const
 {
-  return _usePrimary;
+  return _useIntraComm;
 }
 
 const std::string &Participant::getName() const

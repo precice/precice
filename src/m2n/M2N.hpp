@@ -19,7 +19,7 @@ class Mesh;
 
 namespace m2n {
 
-// Forward declaration to friend unit tests which only use the master com
+// Forward declaration to friend unit tests which only use the primary com
 struct WhiteboxAccessor;
 
 /**
@@ -30,7 +30,7 @@ struct WhiteboxAccessor;
  */
 class M2N {
 public:
-  M2N(com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom = false, bool useTwoLevelInit = false);
+  M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom = false, bool useTwoLevelInit = false);
 
   /// Destructor, empty.
   ~M2N();
@@ -62,8 +62,8 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptSecondariesConnection(const std::string &acceptorName,
-                                   const std::string &requesterName);
+  void acceptSecondaryConnections(const std::string &acceptorName,
+                                  const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
@@ -71,22 +71,22 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestSecondariesConnection(const std::string &acceptorName,
-                                    const std::string &requesterName);
+  void requestSecondaryConnections(const std::string &acceptorName,
+                                   const std::string &requesterName);
 
   /**
-   * Same as acceptSecondariesConnection except this only creates the channels,
+   * Same as acceptSecondaryConnections except this only creates the channels,
    * no vertex list needed!
    */
-  void acceptSecondariesPreConnection(const std::string &acceptorName,
-                                      const std::string &requesterName);
+  void acceptSecondaryPreConnections(const std::string &acceptorName,
+                                     const std::string &requesterName);
 
   /**
-   * Same as requestSecondariesConnection except this only creates the channels,
+   * Same as requestSecondaryConnections except this only creates the channels,
    * no vertex list needed!
    */
-  void requestSecondariesPreConnection(const std::string &acceptorName,
-                                       const std::string &requesterName);
+  void requestSecondaryPreConnections(const std::string &acceptorName,
+                                          const std::string &requesterName);
 
   /*
    * @brief After preliminary communication channels were set up and after
@@ -94,13 +94,13 @@ public:
    *        call this function to update and complete the communication
    *        channels for every communicated mesh
    */
-  void completeSecondariesConnection();
+  void completeSecondaryConnections();
 
   /**
    * @brief prepares to establish the connections
    *
    * This should be called before calling the accept and request methods.
-   * Calling this function forwards the call to the configured master communication.
+   * Calling this function forwards the call to the configured primary communication.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
@@ -115,7 +115,7 @@ public:
    * @brief cleans-up to establish the connections
    *
    * This should be called after calling the accept and request methods.
-   * Calling this function forwards the call to the configured master communication.
+   * Calling this function forwards the call to the configured primary communication.
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
@@ -134,7 +134,7 @@ public:
    */
   void closeConnection();
 
-  /// Disconnects the Primary-Primary connection
+  /// Disconnects the primary connection
   void closePrimaryConnection();
 
   /// Disconnects all connections of the DistributedCommunication
@@ -146,19 +146,19 @@ public:
   /// Creates a new distributes communication for that mesh, stores the pointer in _distComs
   void createDistributedCommunication(const mesh::PtrMesh &mesh);
 
-  /// Sends an array of double values from all slaves (different for each slave).
+  /// Sends an array of double values from all ranks (different for each rank).
   void send(precice::span<double const> itemsToSend,
             int                         meshID,
             int                         valueDimension);
 
   /**
-   * @brief The master sends a bool to the other master, for performance reasons, we
+   * @brief The primary rank sends a bool to the other primary rank, for performance reasons, we
    * neglect the gathering and checking step.
    */
   void send(bool itemToSend);
 
   /**
-   * @brief The master sends a double to the other master, for performance reasons, we
+   * @brief The primary rank sends a double to the other primary rank, for performance reasons, we
    * neglect the gathering and checking step.
    */
   void send(double itemToSend);
@@ -172,17 +172,17 @@ public:
   /// Broadcasts an int to connected ranks on remote participant (concerning the given mesh)
   void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
 
-  /// All slaves receive an array of doubles (different for each slave).
+  /// All ranks receive an array of doubles (different for each rank).
   /// The values received can be gradient data
   /// Gradient dimension : 0: dx-values, 1: dy-values, 2:dz-values
   void receive(precice::span<double> itemsToReceive,
                int                   meshID,
                int                   valueDimension);
 
-  /// All slaves receive a bool (the same for each slave).
+  /// All ranks receive a bool (the same for each rank).
   void receive(bool &itemToReceive);
 
-  /// All slaves receive a double (the same for each slave).
+  /// All ranks receive a double (the same for each rank).
   void receive(double &itemToReceive);
 
   /// Receive mesh partitions per connected rank on remote participant (concerning the given mesh)
@@ -208,23 +208,23 @@ private:
   /// mesh::getID() -> Pointer to distributed communication
   std::map<int, DistributedCommunication::SharedPointer> _distComs;
 
-  com::PtrCommunication _masterCom;
+  com::PtrCommunication _intraComm;
 
   DistributedComFactory::SharedPointer _distrFactory;
 
-  bool _isPrimaryConnected = false;
+  bool _isPrimaryRankConnected = false;
 
-  bool _areSecondariesConnected = false;
+  bool _areSecondaryRanksConnected = false;
 
   // The following flag is (solely) needed for unit tests between two serial participants.
-  // To also use the slaves-slaves communication would require a lengthy setup of meshes
+  // To also use the secondary communication would require a lengthy setup of meshes
   // and their re-partitioning, which could also not be moved to some fixture as the M2Ns
   // are created through the configuration.
   // See e.g. "CplSchemeTests/ExplicitCouplingSchemeTests/testConfiguredSimpleExplicitCoupling"
   // This flag gives a loophole. It is set to false for normal use and modified in the
   // respective tests through a friend declaration.
 
-  /// between two serial participants, only use the master-master com and no slaves-slaves com
+  /// between two serial participants, only use the primary com and no secondary com
   bool _useOnlyPrimaryCom = false;
 
   /// use the two-level initialization concept

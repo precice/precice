@@ -817,7 +817,7 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
 
 BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
@@ -908,7 +908,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
 
 BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
@@ -1015,7 +1015,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
 
 BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
@@ -1120,7 +1120,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
 
 BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
@@ -1241,7 +1241,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
 
 BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");
@@ -1344,7 +1344,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
 
 BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   using namespace mesh;
   // Setup geometry
   std::string name("rectangle");

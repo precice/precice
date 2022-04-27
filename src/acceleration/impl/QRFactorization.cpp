@@ -545,7 +545,7 @@ int QRFactorization::orthogonalize_stable(
         }
         t = 2;
 
-        // ATTENTION: maybe in the following is something wrong in master-slave mode
+        // ATTENTION: maybe in the following is something wrong @todo: fix this comment
 
         for (int i = 0; i < _rows; i++) {
           if (u(i) < t) {
@@ -567,11 +567,11 @@ int QRFactorization::orthogonalize_stable(
 
         if (utils::IntraComm::isPrimary()) {
           global_uk = u(k);
-          for (Rank rankSecondary : utils::IntraComm::allSecondaries()) {
-            utils::IntraComm::getCommunication()->receive(local_k, rankSecondary);
-            utils::IntraComm::getCommunication()->receive(local_uk, rankSecondary);
+          for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+            utils::IntraComm::getCommunication()->receive(local_k, secondaryRank);
+            utils::IntraComm::getCommunication()->receive(local_uk, secondaryRank);
             if (local_uk < global_uk) {
-              rank      = rankSecondary;
+              rank      = secondaryRank;
               global_uk = local_uk;
               global_k  = local_k;
             }

@@ -81,16 +81,16 @@ BOOST_AUTO_TEST_CASE(TwoProcTests)
 }
 
 #ifndef PRECICE_NO_MPI
-/// Test that requires 4 processors and a master communication
+/// Test that requires 4 processors and an intra-participant communication
 /*
- * For some master tests, you might need a master communication. This example shows how to set one up.
+ * For some primary tests, you might need an intra-participant communication. This example shows how to set one up.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
 BOOST_AUTO_TEST_CASE(FourProcTestsWithPrimaryCommmunication)
 {
   // The short syntax won't work here. You have to name the context
-  PRECICE_TEST(""_on(4_ranks).setupIntraComms())
-  // In this test you can use a master communication, here is an example how:
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm())
+  // In this test you can use an intra-participant communication, here is an example how:
   BOOST_TEST(context.hasSize(4));
   BOOST_TEST(utils::IntraComm::getCommunication()->isConnected());
 }
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(NamedContexts)
 
 /// Tests that requires an m2n communication
 /*
- * For some master tests, you might need an m2n communication (e.g. partition or cplscheme).
- * This example shows how to set up one. Call .connectPrimary() on the context and pass the participants to be connected.
+ * For some primary tests, you might need an m2n communication (e.g. partition or cplscheme).
+ * This example shows how to set up one. Call .connectMaster() on the context and pass the participants to be connected.
  * M2N requires Events, thus you also need to list it as a requirement using Require::Events.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
@@ -123,10 +123,10 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication)
   BOOST_TEST(context.isRank(0));
   BOOST_TEST(context.isPrimary());
 
-  auto m2n = context.connectPrimaries("A", "B");
+  auto m2n = context.connectPrimaryRanks("A", "B");
 
   //This is how you can access the m2n communication
-  BOOST_TEST(m2n->getPrimaryCommunication()->isConnected());
+  BOOST_TEST(m2n->getPrimaryRankCommunication()->isConnected());
 
   // Automatically finalizes Events
 }

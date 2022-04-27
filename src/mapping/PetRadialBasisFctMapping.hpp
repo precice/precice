@@ -10,7 +10,6 @@
 #include "impl/BasisFunctions.hpp"
 #include "math/math.hpp"
 #include "precice/impl/versions.hpp"
-#include "query/Index.hpp"
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
 #include "utils/Event.hpp"
@@ -912,7 +911,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb = otherMesh->getBoundingBox();
     bb.expandBy(_basisFunction.getSupportRadius());
 
-    const auto vertices = query::Index{filterMesh}.getVerticesInsideBox(bb);
+    const auto vertices = filterMesh->index().getVerticesInsideBox(bb);
     std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertices()[v].tag(); });
   } else {
     filterMesh->tagAll();
@@ -951,7 +950,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
 
-  auto vertices = query::Index{mesh}.getVerticesInsideBox(bb);
+  auto vertices = mesh->index().getVerticesInsideBox(bb);
   std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertices()[v].tag(); });
 }
 
@@ -1413,7 +1412,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
 
     // -- PREALLOCATES THE COEFFICIENTS --
 
-    for (auto const i : query::Index{inMesh}.getVerticesInsideBox(inVertex, supportRadius)) {
+    for (auto const i : inMesh->index().getVerticesInsideBox(inVertex, supportRadius)) {
       const mesh::Vertex &vj = inMesh->vertices()[i];
 
       PetscInt mappedCol = vj.getGlobalIndex() + polyparams;
@@ -1500,7 +1499,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
     }
 
     // -- PREALLOCATE THE COEFFICIENTS --
-    for (auto i : query::Index{inMesh}.getVerticesInsideBox(oVertex, supportRadius)) {
+    for (auto i : inMesh->index().getVerticesInsideBox(oVertex, supportRadius)) {
       const mesh::Vertex &inVertex = inMesh->vertices()[i];
       distance                     = oVertex.getCoords() - inVertex.getCoords();
 

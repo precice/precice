@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
 #ifndef PRECICE_NO_MPI
 BOOST_AUTO_TEST_CASE(testParallelMatrixScaling)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   //setup data
   int localN = -1;
   if (context.isPrimary()) {

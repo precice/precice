@@ -46,7 +46,7 @@ void validate_result_equals_reference(
 
 BOOST_AUTO_TEST_CASE(ParVectorOperations)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   int              n_global = 10;
   int              n_local;
   double           a = 0;
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
 
 BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
 
   int              n_global = 10, m_global = 5;
   int              n_local;

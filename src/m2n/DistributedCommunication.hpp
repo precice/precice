@@ -89,14 +89,14 @@ public:
       std::string const &acceptorName,
       std::string const &requesterName) = 0;
 
-  /* @brief Completes the slaves connections for both acceptor and requester by updating
+  /* @brief Completes the secondary connections for both acceptor and requester by updating
    * the vertex list in _mappings.
    *
    * @pre acceptPreConnection or requestPreConnection has been called.
    * @pre accept/requestConnection has not been called
    * @post the m2n connection is ready to use
    */
-  virtual void completeSecondariesConnection() = 0;
+  virtual void completeSecondaryConnections() = 0;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -105,10 +105,10 @@ public:
    */
   virtual void closeConnection() = 0;
 
-  /// Sends an array of double values from all slaves (different for each slave).
+  /// Sends an array of double values from all ranks (different for each rank).
   virtual void send(precice::span<double const> itemsToSend, int valueDimension) = 0;
 
-  /// All slaves receive an array of doubles (different for each slave).
+  /// All ranks receive an array of doubles (different for each rank).
   virtual void receive(precice::span<double> itemsToReceive, int valueDimension) = 0;
 
   /*

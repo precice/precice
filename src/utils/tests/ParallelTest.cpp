@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(SplitCommTest)
 
 BOOST_AUTO_TEST_CASE(Primary1SecondaryTest)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(2_ranks).setupIntraComm());
 
   BOOST_TEST(context.hasSize(2));
   auto &com = precice::utils::IntraComm::getCommunication();
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(Primary1SecondaryTest)
 
 BOOST_AUTO_TEST_CASE(Primary2SecondaryTest)
 {
-  PRECICE_TEST(""_on(3_ranks).setupIntraComms());
+  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
 
   BOOST_TEST(context.hasSize(3));
   auto &com = precice::utils::IntraComm::getCommunication();
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(Primary2SecondaryTest)
 
 BOOST_AUTO_TEST_CASE(OffsetPrimary1SecondaryTest)
 {
-  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupIntraComms());
+  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupIntraComm());
 
   if (context.isNamed("Offset"))
     return;
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(OffsetPrimary1SecondaryTest)
 
 BOOST_AUTO_TEST_CASE(OffsetPrimary2SecondaryTest)
 {
-  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupIntraComms());
+  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupIntraComm());
 
   if (context.isNamed("Offset"))
     return;

@@ -5,8 +5,8 @@
 #include "precice/SolverInterface.hpp"
 #include "testing/Testing.hpp"
 
-// In order to test enforced gather scatter communication with an empty master rank (see below)
-void runTestEnforceGatherScatter(std::vector<double> masterPartition, const TestContext &context)
+// In order to test enforced gather scatter communication with an empty primary rank (see below)
+void runTestEnforceGatherScatter(std::vector<double> primaryPartition, const TestContext &context)
 {
   if (context.isNamed("ParallelSolver")) {
     // Get mesh and data IDs
@@ -17,8 +17,8 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, const Test
     const int                dim         = interface.getDimensions();
     BOOST_TEST(dim == 2);
 
-    // Set coordinates, master according to input argument
-    const std::vector<double> coordinates = context.isPrimary() ? masterPartition : std::vector<double>{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
+    // Set coordinates and the primary rank according to input argument
+    const std::vector<double> coordinates = context.isPrimary() ? primaryPartition : std::vector<double>{0.0, 0.5, 0.0, 3.5, 0.0, 5.0};
     const unsigned int        size        = coordinates.size() / dim;
     std::vector<int>          ids(size, 0);
 
@@ -44,7 +44,7 @@ void runTestEnforceGatherScatter(std::vector<double> masterPartition, const Test
       dt = interface.advance(dt);
       interface.readBlockScalarData(readDataID, size,
                                     ids.data(), readData.data());
-      // The received data on the slave rank is always the same
+      // The received data on the secondary rank is always the same
       if (!context.isPrimary()) {
         BOOST_TEST(readData == std::vector<double>({3.4, 5.7, 4.0}));
       }

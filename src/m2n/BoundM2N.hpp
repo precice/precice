@@ -13,14 +13,14 @@ public:
   /// Prepare to establish the connection
   void prepareEstablishment();
 
-  /// Connect the Primaries of the M2N
-  void connectPrimaries();
+  /// Connect the Primary Ranks of the M2N
+  void connectPrimaryRanks();
 
-  /// Connect the Secondaries of the M2N
-  void connectSecondaries();
+  /// Connect the Secondary ranks of the M2N
+  void connectSecondaryRanks();
 
-  /// pre-connect the Secondaries of the M2N
-  void preConnectSecondaries();
+  /// pre-connect the Secondary ranks of the M2N
+  void preConnectSecondaryRanks();
 
   /// Cleanup after having established the connection
   void cleanupEstablishment();
@@ -33,13 +33,13 @@ public:
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
 
-  /** Instructs the Primary wait for Secondaries.
+  /** Instructs the Primary rank wait for SecondaryRanks.
    *
-   * Performs a collective operation which forces every slave to sync with the Primary.
+   * Performs a collective operation which forces every secondary rank to sync with the Master.
    * 
    * @note this does nothing if the participant is running serially.
    */
-  void waitForSecondaries();
+  void waitForSecondaryRanks();
 };
 
 } // namespace m2n

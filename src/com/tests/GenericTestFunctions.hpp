@@ -7,8 +7,6 @@
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
 
-using namespace precice;
-
 /// Generic test function that is called from the tests for
 /// MPIPortsCommunication, MPIDirectCommunication and SocketCommunication
 
@@ -16,10 +14,10 @@ namespace precice {
 namespace testing {
 namespace com {
 
-namespace mastermaster {
+namespace primaryprimary {
 
 ///
-/// Tests for Primary-Primary Connections
+/// Tests for primary connections
 /// Acceptor and Requestor are different participants
 ///
 
@@ -414,9 +412,9 @@ void TestSendAndReceive(TestContext const &context)
   TestReduceVectors<T>(context);
 }
 
-} // namespace mastermaster
+} // namespace primaryprimary
 
-namespace masterslave {
+namespace intracomm {
 
 ///
 /// Tests for intra-participant communication Connections
@@ -771,7 +769,7 @@ void TestSendAndReceive(TestContext const &context)
   TestReduceVectors<T>(context);
 }
 
-} // namespace masterslave
+} // namespace intracomm
 
 namespace serverclient {
 

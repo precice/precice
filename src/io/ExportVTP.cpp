@@ -32,7 +32,7 @@ std::string ExportVTP::getPieceAttributes(const mesh::Mesh &mesh) const
   return oss.str();
 }
 
-void ExportVTP::writePrimaryCells(std::ostream &out) const
+void ExportVTP::writeParallelCells(std::ostream &out) const
 {
   out << "      <PLines>\n";
   out << "         <PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>\n";

@@ -31,9 +31,9 @@ void IntraComm::configure(Rank rank, int size)
   _rank = rank;
   _size = size;
   PRECICE_ASSERT(_rank != -1 && _size != -1);
-  _isPrimary   = (rank == 0) && _size != 1;
-  _isSecondary = (rank != 0);
-  PRECICE_DEBUG("isSecondary: {}, isPrimary: {}", _isSecondary, _isPrimary);
+  _isPrimaryRank   = (rank == 0) && _size != 1;
+  _isSecondaryRank = (rank != 0);
+  PRECICE_DEBUG("isSecondaryRank: {}, isPrimaryRank: {}", _isSecondaryRank, _isPrimaryRank);
 }
 
 Rank IntraComm::getRank()
@@ -48,24 +48,24 @@ int IntraComm::getSize()
 
 bool IntraComm::isPrimary()
 {
-  return _isPrimary;
+  return _isPrimaryRank;
 }
 
 bool IntraComm::isSecondary()
 {
-  return _isSecondary;
+  return _isSecondaryRank;
 }
 
 bool IntraComm::isParallel()
 {
-  return _isPrimary || _isSecondary;
+  return _isPrimaryRank || _isSecondaryRank;
 }
 
 double IntraComm::l2norm(const Eigen::VectorXd &vec)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimary && not _isSecondary) { //old case
+  if (not _isPrimaryRank && not _isSecondaryRank) { //old case
     return vec.norm();
   }
 
@@ -80,19 +80,19 @@ double IntraComm::l2norm(const Eigen::VectorXd &vec)
 
   // localSum is modified, do not use afterwards
   allreduceSum(localSum2, globalSum2);
-  /* old loop over all slaves solution
-  if(_isSecondary){
+  /* old loop over all secondary ranks solution
+  if(_isSecondaryRank){
     _communication->send(localSum2, 0);
     _communication->receive(globalSum2, 0);
   }
-  if(_isPrimary){
+  if(_isPrimaryRank){
     globalSum2 += localSum2;
-    for(Rank rankSecondary = 1; rankSecondary < _size; rankSecondary++){
-      _communication->receive(localSum2, rankSecondary);
+    for(Rank secondaryRank = 1; secondaryRank < _size; secondaryRank++){
+      _communication->receive(localSum2, secondaryRank);
       globalSum2 += localSum2;
     }
-    for(Rank rankSecondary = 1; rankSecondary < _size; rankSecondary++){
-      _communication->send(globalSum2, rankSecondary);
+    for(Rank secondaryRank = 1; secondaryRank < _size; secondaryRank++){
+      _communication->send(globalSum2, secondaryRank);
     }
   }
   */
@@ -103,7 +103,7 @@ double IntraComm::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimary && not _isSecondary) { //old case
+  if (not _isPrimaryRank && not _isSecondaryRank) { //old case
     return vec1.dot(vec2);
   }
 
@@ -120,20 +120,20 @@ double IntraComm::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2)
   // localSum is modified, do not use afterwards
   allreduceSum(localSum, globalSum);
 
-  // old loop over all slaves solution
+  // old loop over all secondary ranks solution
   /*
-  if(_isSecondary){
+  if(_isSecondaryRank){
     _communication->send(localSum, 0);
     _communication->receive(globalSum, 0);
   }
-  if(_isPrimary){
+  if(_isPrimaryRank){
     globalSum += localSum;
-    for(Rank rankSecondary = 1; rankSecondary < _size; rankSecondary++){
-      _communication->receive(localSum, rankSecondary);
+    for(Rank secondaryRank = 1; secondaryRank < _size; secondaryRank++){
+      _communication->receive(localSum, secondaryRank);
       globalSum += localSum;
     }
-    for(Rank rankSecondary = 1; rankSecondary < _size; rankSecondary++){
-      _communication->send(globalSum, rankSecondary);
+    for(Rank secondaryRank = 1; secondaryRank < _size; secondaryRank++){
+      _communication->send(globalSum, secondaryRank);
     }
   }
   */
@@ -143,17 +143,17 @@ double IntraComm::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2)
 void IntraComm::reset()
 {
   PRECICE_TRACE();
-  _isPrimary   = false;
-  _isSecondary = false;
-  _rank        = -1;
-  _size        = -1;
+  _isPrimaryRank   = false;
+  _isSecondaryRank = false;
+  _rank            = -1;
+  _size            = -1;
 }
 
 void IntraComm::reduceSum(precice::span<const double> sendData, precice::span<double> rcvData)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimary && not _isSecondary) {
+  if (not _isPrimaryRank && not _isSecondaryRank) {
     std::copy(sendData.begin(), sendData.end(), rcvData.begin());
     return;
   }
@@ -161,13 +161,13 @@ void IntraComm::reduceSum(precice::span<const double> sendData, precice::span<do
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
 
-  if (_isSecondary) {
-    // send local result to master
+  if (_isSecondaryRank) {
+    // send local result to primary rank
     _communication->reduceSum(sendData, rcvData, 0);
   }
 
-  if (_isPrimary) {
-    // receive local results from slaves, apply SUM
+  if (_isPrimaryRank) {
+    // receive local results from secondary ranks, apply SUM
     _communication->reduceSum(sendData, rcvData);
   }
 }
@@ -183,7 +183,7 @@ void IntraComm::reduceSum(const int &sendData, int &rcvData)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimary && not _isSecondary) {
+  if (not _isPrimaryRank && not _isSecondaryRank) {
     rcvData = sendData;
     return;
   }
@@ -191,13 +191,13 @@ void IntraComm::reduceSum(const int &sendData, int &rcvData)
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
 
-  if (_isSecondary) {
-    // send local result to master
+  if (_isSecondaryRank) {
+    // send local result to primary rank
     _communication->reduceSum(sendData, rcvData, 0);
   }
 
-  if (_isPrimary) {
-    // receive local results from slaves, apply SUM
+  if (_isPrimaryRank) {
+    // receive local results from secondary ranks, apply SUM
     _communication->reduceSum(sendData, rcvData);
   }
 }
@@ -206,7 +206,7 @@ void IntraComm::allreduceSum(precice::span<const double> sendData, precice::span
 {
   PRECICE_TRACE();
 
-  if (not _isPrimary && not _isSecondary) {
+  if (not _isPrimaryRank && not _isSecondaryRank) {
     std::copy(sendData.begin(), sendData.end(), rcvData.begin());
     return;
   }
@@ -214,13 +214,13 @@ void IntraComm::allreduceSum(precice::span<const double> sendData, precice::span
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
 
-  if (_isSecondary) {
-    // send local result to master, receive reduced result from master
+  if (_isSecondaryRank) {
+    // send local result to primary rank, receive reduced result from primary rank
     _communication->allreduceSum(sendData, rcvData, 0);
   }
 
-  if (_isPrimary) {
-    // receive local results from slaves, apply SUM, send reduced result to slaves
+  if (_isPrimaryRank) {
+    // receive local results from secondary ranks, apply SUM, send reduced result to secondary ranks
     _communication->allreduceSum(sendData, rcvData);
   }
 }
@@ -229,7 +229,7 @@ void IntraComm::allreduceSum(double &sendData, double &rcvData)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimary && not _isSecondary) {
+  if (not _isPrimaryRank && not _isSecondaryRank) {
     rcvData = sendData;
     return;
   }
@@ -237,13 +237,13 @@ void IntraComm::allreduceSum(double &sendData, double &rcvData)
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
 
-  if (_isSecondary) {
-    // send local result to master, receive reduced result from master
+  if (_isSecondaryRank) {
+    // send local result to primary rank, receive reduced result from primary rank
     _communication->allreduceSum(sendData, rcvData, 0);
   }
 
-  if (_isPrimary) {
-    // receive local results from slaves, apply SUM, send reduced result to slaves
+  if (_isPrimaryRank) {
+    // receive local results from secondary ranks, apply SUM, send reduced result to secondary ranks
     _communication->allreduceSum(sendData, rcvData);
   }
 }
@@ -252,7 +252,7 @@ void IntraComm::allreduceSum(int &sendData, int &rcvData)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimary && not _isSecondary) {
+  if (not _isPrimaryRank && not _isSecondaryRank) {
     rcvData = sendData;
     return;
   }
@@ -260,13 +260,13 @@ void IntraComm::allreduceSum(int &sendData, int &rcvData)
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
 
-  if (_isSecondary) {
-    // send local result to master, receive reduced result from master
+  if (_isSecondaryRank) {
+    // send local result to primary rank, receive reduced result from primary rank
     _communication->allreduceSum(sendData, rcvData, 0);
   }
 
-  if (_isPrimary) {
-    // receive local results from slaves, apply SUM, send reduced result to slaves
+  if (_isPrimaryRank) {
+    // receive local results from secondary ranks, apply SUM, send reduced result to secondary ranks
     _communication->allreduceSum(sendData, rcvData);
   }
 }
@@ -275,19 +275,19 @@ void IntraComm::broadcast(precice::span<double> values)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimary && not _isSecondary) {
+  if (not _isPrimaryRank && not _isSecondaryRank) {
     return;
   }
 
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
 
-  if (_isPrimary) {
+  if (_isPrimaryRank) {
     // Broadcast (send) value.
     _communication->broadcast(values);
   }
 
-  if (_isSecondary) {
+  if (_isSecondaryRank) {
     // Broadcast (receive) value.
     _communication->broadcast(values, 0);
   }
@@ -297,19 +297,19 @@ void IntraComm::broadcast(bool &value)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimary && not _isSecondary) {
+  if (not _isPrimaryRank && not _isSecondaryRank) {
     return;
   }
 
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
 
-  if (_isPrimary) {
+  if (_isPrimaryRank) {
     // Broadcast (send) value.
     _communication->broadcast(value);
   }
 
-  if (_isSecondary) {
+  if (_isSecondaryRank) {
     // Broadcast (receive) value.
     _communication->broadcast(value, 0);
   }
@@ -319,19 +319,19 @@ void IntraComm::broadcast(double &value)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimary && not _isSecondary) {
+  if (not _isPrimaryRank && not _isSecondaryRank) {
     return;
   }
 
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
 
-  if (_isPrimary) {
+  if (_isPrimaryRank) {
     // Broadcast (send) value.
     _communication->broadcast(value);
   }
 
-  if (_isSecondary) {
+  if (_isSecondaryRank) {
     // Broadcast (receive) value.
     _communication->broadcast(value, 0);
   }

@@ -116,7 +116,7 @@ void print(std::map<int, std::vector<int>> const &m)
 
     std::string s;
 
-    for (Rank rank : utils::IntraComm::allSecondaries()) {
+    for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
       utils::IntraComm::getCommunication()->receive(s, rank);
 
       oss << s;
@@ -142,7 +142,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       count++;
     }
 
-    for (Rank rank : utils::IntraComm::allSecondaries()) {
+    for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
       utils::IntraComm::getCommunication()->receive(size, rank);
 
       total += size;
@@ -199,7 +199,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       count++;
     }
 
-    for (Rank rank : utils::IntraComm::allSecondaries()) {
+    for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
       utils::IntraComm::getCommunication()->receive(size, rank);
 
       total += size;
@@ -318,7 +318,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   if (not utils::IntraComm::isSecondary()) {
     PRECICE_DEBUG("Exchange vertex distribution between both masters");
     Event e0("m2n.exchangeVertexDistribution");
-    // Establish connection between participants' master processes.
+    // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
 
     c->acceptConnection(acceptorName, requesterName, "TMP-PRIMARYCOM-" + _mesh->getName(), utils::IntraComm::getRank());
@@ -440,9 +440,9 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
   if (not utils::IntraComm::isSecondary()) {
-    PRECICE_DEBUG("Exchange vertex distribution between both masters");
+    PRECICE_DEBUG("Exchange vertex distribution between both primary ranks");
     Event e0("m2n.exchangeVertexDistribution");
-    // Establish connection between participants' master processes.
+    // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
     c->requestConnection(acceptorName, requesterName,
                          "TMP-PRIMARYCOM-" + _mesh->getName(),
@@ -559,7 +559,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   _isConnected = true;
 }
 
-void PointToPointCommunication::completeSecondariesConnection()
+void PointToPointCommunication::completeSecondaryRanksConnection()
 {
   mesh::Mesh::CommunicationMap localCommunicationMap = _mesh->getCommunicationMap();
 

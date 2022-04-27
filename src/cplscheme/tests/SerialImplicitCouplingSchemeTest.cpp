@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
       new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig.getData("Data0", "Mesh") != cplSchemeConfig.getData("Data1", "Mesh"));
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaries("Participant0", "Participant1", options);
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -812,7 +812,7 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaries("Participant0", "Participant1", options);
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -1054,7 +1054,7 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaries("Participant0", "Participant1", options);
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
@@ -1289,7 +1289,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaries("Participant0", "Participant1", options);
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   using namespace mesh;
 
@@ -1368,7 +1368,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, configurationPath);
   m2n::PtrM2N m2n        = m2nConfig->getM2N("Participant0", "Participant1");
@@ -1398,7 +1398,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaries("Participant0", "Participant1", options);
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
@@ -1460,7 +1460,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaries("Participant0", "Participant1", options);
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
@@ -1523,7 +1523,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaries("Participant0", "Participant1", options);
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 

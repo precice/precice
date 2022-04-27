@@ -54,21 +54,21 @@ private:
 
   /**
     * @brief Stores scalar and vector data names in string vectors
-    * Needed for writing master file and sub files
+    * Needed for writing primary file and sub files
     */
   void processDataNamesAndDimensions(const mesh::Mesh &mesh);
 
   /**
-    * @brief Writes the master file (called only by the master rank)
+    * @brief Writes the primary file (called only by the primary rank)
     */
   void writeParallelFile(
       const std::string &name,
       const std::string &location,
       const mesh::Mesh & mesh) const;
 
-  virtual void writePrimaryCells(std::ostream &out) const = 0;
+  virtual void writeParallelCells(std::ostream &out) const = 0;
 
-  void writePrimaryData(std::ostream &out) const;
+  void writeParallelData(std::ostream &out) const;
 
   /**
     * @brief Writes the sub file for each rank

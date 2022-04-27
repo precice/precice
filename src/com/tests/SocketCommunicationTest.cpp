@@ -18,21 +18,21 @@ BOOST_AUTO_TEST_SUITE(Socket)
 BOOST_AUTO_TEST_CASE(SendAndReceiveMM)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  using namespace precice::testing::com::mastermaster;
+  using namespace precice::testing::com::primaryprimary;
   TestSendAndReceive<SocketCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(SendAndReceiveMS)
 {
   PRECICE_TEST(2_ranks, Require::Events);
-  using namespace precice::testing::com::masterslave;
+  using namespace precice::testing::com::intracomm;
   TestSendAndReceive<SocketCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(SendReceiveFourProcesses)
 {
   PRECICE_TEST("A"_on(2_ranks), "B"_on(2_ranks), Require::Events);
-  using namespace precice::testing::com::mastermaster;
+  using namespace precice::testing::com::primaryprimary;
   TestSendReceiveFourProcesses<SocketCommunication>(context);
 }
 

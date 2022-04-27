@@ -44,9 +44,6 @@ TestContext::~TestContext() noexcept
     utils::IntraComm::reset();
   }
 
-  // Clear caches
-  query::clearCache();
-
   // Reset communicators
   Par::resetCommState();
   Par::resetManagedMPI();
@@ -119,11 +116,11 @@ void TestContext::handleOption(Participants &participants, Participant participa
 
 void TestContext::setContextFrom(const Participant &p, Rank rank)
 {
-  this->name         = p.name;
-  this->size         = p.size;
-  this->rank         = rank;
-  this->_initMS      = p.initMS;
-  this->_contextComm = utils::Parallel::current();
+  this->name           = p.name;
+  this->size           = p.size;
+  this->rank           = rank;
+  this->_initIntraComm = p.initIntraComm;
+  this->_contextComm   = utils::Parallel::current();
 }
 
 void TestContext::initialize(const Participants &participants)
@@ -189,18 +186,18 @@ void TestContext::initializeIntraComm()
   utils::IntraComm::configure(rank, size);
   utils::IntraComm::getCommunication().reset();
 
-  if (!_initMS || hasSize(1))
+  if (!_initIntraComm || hasSize(1))
     return;
 
 #ifndef PRECICE_NO_MPI
-  precice::com::PtrCommunication masterSecondaryCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
 #else
-  precice::com::PtrCommunication masterSecondaryCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
+  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::SocketCommunication());
 #endif
 
-  masterSecondaryCom->connectIntraComm(name, "", rank, size);
+  intraComm->connectIntraComm(name, "", rank, size);
 
-  utils::IntraComm::getCommunication() = std::move(masterSecondaryCom);
+  utils::MasterSlave::getCommunication() = std::move(intraComm);
 }
 
 void TestContext::initializeEvents()
@@ -217,7 +214,7 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connectPrimaries(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
+m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());
 
@@ -267,10 +264,10 @@ std::string TestContext::describe() const
   }
   os << " and runs on rank " << rank << " out of " << size << '.';
 
-  if (_initMS || _events || _petsc) {
+  if (_initIntraComm || _events || _petsc) {
     os << " Initialized: {";
-    if (_initMS)
-      os << " IntraComm Communication ";
+    if (_initIntraComm)
+      os << " MasterSlave Communication ";
     if (_events)
       os << " Events";
     if (_petsc)

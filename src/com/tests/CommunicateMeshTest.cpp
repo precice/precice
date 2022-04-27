@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectPrimaries("A", "B");
+  auto m2n = context.connectPrimaryRanks("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
     mesh::Mesh    sendMesh("Sent Mesh", dim, testing::nextMeshID());
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
     mesh::Edge &  e1 = sendMesh.createEdge(v1, v2);
     mesh::Edge &  e2 = sendMesh.createEdge(v2, v0);
 
-    CommunicateMesh comMesh(m2n->getPrimaryCommunication());
+    CommunicateMesh comMesh(m2n->getPrimaryRankCommunication());
 
     if (context.isNamed("A")) {
       comMesh.sendMesh(sendMesh, 0);
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
 BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
-  auto m2n = context.connectPrimaries("A", "B");
+  auto m2n = context.connectPrimaryRanks("A", "B");
 
   int             dim = 3;
   mesh::Mesh      sendMesh("Sent Mesh", dim, testing::nextMeshID());
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
   mesh::Triangle &t0 = sendMesh.createTriangle(e0, e1, e2);
 
   // Create mesh communicator
-  CommunicateMesh comMesh(m2n->getPrimaryCommunication());
+  CommunicateMesh comMesh(m2n->getPrimaryRankCommunication());
 
   if (context.isNamed("A")) {
     comMesh.sendMesh(sendMesh, 0);
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
 
 BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComms(), Require::Events);
+  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
 
   int             dim = 3;
   mesh::Mesh      sendMesh("Sent Mesh", dim, testing::nextMeshID());

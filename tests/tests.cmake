@@ -52,10 +52,10 @@ target_sources(testprecice
     tests/serial/PreconditionerBug.cpp
     tests/serial/SendMeshToMultipleParticipants.cpp
     tests/serial/SummationActionTwoSources.cpp
-    tests/serial/TestBug.cpp
     tests/serial/TestExplicitWithDataMultipleReadWrite.cpp
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/TestImplicit.cpp
+    tests/serial/TestReadAPI.cpp
     tests/serial/access-received-mesh/Explicit.cpp
     tests/serial/access-received-mesh/ExplicitAndMapping.cpp
     tests/serial/access-received-mesh/ExplicitRead.cpp
@@ -131,6 +131,12 @@ target_sources(testprecice
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
+    tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingFirstNoInit.cpp
+    tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSamplingZero.cpp
+    tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingFirst.cpp
+    tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
+    tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingZero.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/watch-integral/WatchIntegralScaleAndNoScale.cpp
     tests/serial/watch-integral/helpers.cpp

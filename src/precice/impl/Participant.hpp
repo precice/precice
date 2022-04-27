@@ -78,7 +78,8 @@ public:
   /// Adds a configured read \ref Data to the Participant
   void addReadData(
       const mesh::PtrData &data,
-      const mesh::PtrMesh &mesh);
+      const mesh::PtrMesh &mesh,
+      int                  interpolationOrder);
 
   /// Adds a configured read \ref Mapping to the Participant
   void addReadMappingContext(MappingContext *mappingContext);
@@ -93,7 +94,7 @@ public:
   void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
 
   /// Sets weather the participant was configured with a master tag
-  void setUsePrimary(bool usePrimary);
+  void setUsePrimaryRank(bool useIntraComm);
 
   /// Sets the manager responsible for providing unique IDs to meshes.
   void setMeshIdManager(std::unique_ptr<utils::ManageUniqueIDs> &&idm)
@@ -154,6 +155,17 @@ public:
   auto readDataContexts()
   {
     return _readDataContexts | boost::adaptors::map_values;
+  }
+
+  /** @brief Determines and returns the maximum order of all read waveforms of this participant
+   */
+  int maxReadWaveformOrder() const
+  {
+    int maxOrder = -1;
+    for (auto &context : _readDataContexts | boost::adaptors::map_values) {
+      maxOrder = std::max(maxOrder, context.getInterpolationOrder());
+    }
+    return maxOrder;
   }
 
   /// Is the dataID know to preCICE?
@@ -264,7 +276,7 @@ public:
   const std::string &getName() const;
 
   /// Returns true, if the participant uses a master tag.
-  bool usePrimary() const;
+  bool useIntraComm() const;
 
   /// Provided access to all read \ref MappingContext
   const utils::ptr_vector<MappingContext> &readMappingContexts() const;
@@ -318,7 +330,7 @@ private:
 
   std::map<DataID, ReadDataContext> _readDataContexts;
 
-  bool _usePrimary = false;
+  bool _useIntraComm = false;
 
   std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
 

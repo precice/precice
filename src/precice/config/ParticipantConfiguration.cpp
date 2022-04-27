@@ -75,6 +75,10 @@ ParticipantConfiguration::ParticipantConfiguration(
                           "meshes, this has to be specified separately for each mesh.");
   tagWriteData.addAttribute(attrMesh);
   tagReadData.addAttribute(attrMesh);
+
+  XMLAttribute<int> attrOrder = makeXMLAttribute(ATTR_ORDER, time::Time::DEFAULT_INTERPOLATION_ORDER)
+                                    .setDocumentation("Interpolation order used by waveform iteration when reading data.");
+  tagReadData.addAttribute(attrOrder);
   tag.addSubtag(tagWriteData);
   tag.addSubtag(tagReadData);
 
@@ -188,10 +192,10 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagUseMesh.addAttribute(attrProvide);
   tag.addSubtag(tagUseMesh);
 
-  std::list<XMLTag>  masterTags;
-  XMLTag::Occurrence masterOcc = XMLTag::OCCUR_NOT_OR_ONCE;
+  std::list<XMLTag>  intraCommTags;
+  XMLTag::Occurrence intraCommOcc = XMLTag::OCCUR_NOT_OR_ONCE;
   {
-    XMLTag tagPrimary(*this, "sockets", masterOcc, TAG_PRIMARY);
+    XMLTag tagMaster(*this, "sockets", intraCommOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use TCP/IP sockets instead.";
@@ -219,10 +223,10 @@ ParticipantConfiguration::ParticipantConfiguration(
                                          "directory of startup is chosen.");
     tagPrimary.addAttribute(attrExchangeDirectory);
 
-    masterTags.push_back(tagPrimary);
+    intraCommTags.push_back(tagMaster);
   }
   {
-    XMLTag tagPrimary(*this, "mpi", masterOcc, TAG_PRIMARY);
+    XMLTag tagMaster(*this, "mpi", intraCommOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use MPI with separated communication spaces instead instead.";
@@ -234,19 +238,19 @@ ParticipantConfiguration::ParticipantConfiguration(
                                          "directory of startup is chosen.");
     tagPrimary.addAttribute(attrExchangeDirectory);
 
-    masterTags.push_back(tagPrimary);
+    intraCommTags.push_back(tagMaster);
   }
   {
-    XMLTag tagPrimary(*this, "mpi-single", masterOcc, TAG_PRIMARY);
+    XMLTag tagMaster(*this, "mpi-single", intraCommOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
     doc += "This tag is only used to ensure backwards compatibility.";
     tagPrimary.setDocumentation(doc);
 
-    masterTags.push_back(tagPrimary);
+    intraCommTags.push_back(tagMaster);
   }
-  for (XMLTag &tagPrimary : masterTags) {
-    tag.addSubtag(tagPrimary);
+  for (XMLTag &tagMaster : intraCommTags) {
+    tag.addSubtag(tagMaster);
   }
 
   parent.addSubtag(tag);
@@ -258,6 +262,12 @@ void ParticipantConfiguration::setDimensions(
   PRECICE_TRACE(dimensions);
   PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
+}
+
+void ParticipantConfiguration::setExperimental(
+    bool experimental)
+{
+  _experimental = experimental;
 }
 
 void ParticipantConfiguration::xmlTagCallback(
@@ -281,6 +291,9 @@ void ParticipantConfiguration::xmlTagCallback(
     const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
 
     if (allowDirectAccess) {
+      if (!_experimental) {
+        PRECICE_ERROR("You tried to configure the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
+      }
       PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
     }
 
@@ -301,7 +314,7 @@ void ParticipantConfiguration::xmlTagCallback(
                   "Participant \"{}\" uses mesh \"{}\" which is not defined. "
                   "Please check the use-mesh node with name=\"{}\" or define the mesh.",
                   _participants.back()->getName(), name, name);
-    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SECONDARIES || safetyFactor != 0.5) && from == "") {
+    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SECONDARY_RANKS || safetyFactor != 0.5) && from == "") {
       PRECICE_ERROR(
           "Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a geometric-filter and/or a safety factor defined. "
           "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />",
@@ -332,8 +345,18 @@ void ParticipantConfiguration::xmlTagCallback(
     PRECICE_CHECK(mesh,
                   "Participant \"{}\" has to use mesh \"{}\" in order to read data from it. Please add a use-mesh node with name=\"{}\".",
                   _participants.back()->getName(), meshName, meshName);
-    mesh::PtrData data = getData(mesh, dataName);
-    _participants.back()->addReadData(data, mesh);
+    mesh::PtrData data          = getData(mesh, dataName);
+    int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
+    if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {
+      if (!_experimental) {
+        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", dataName, waveformOrder);
+      }
+      if (waveformOrder < time::Time::MIN_INTERPOLATION_ORDER || waveformOrder > time::Time::MAX_INTERPOLATION_ORDER) {
+        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", but the order must be between \"{}\" and \"{}\". Please use an order in the allowed range.", dataName, waveformOrder, time::Time::MIN_INTERPOLATION_ORDER, time::Time::MAX_INTERPOLATION_ORDER);
+      }
+      PRECICE_WARN("You configured the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Use with care.", dataName, waveformOrder);
+    }
+    _participants.back()->addReadData(data, mesh, waveformOrder);
   } else if (tag.getName() == TAG_WATCH_POINT) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     WatchPointConfig config;
@@ -353,10 +376,10 @@ void ParticipantConfiguration::xmlTagCallback(
       PRECICE_WARN("<master> tag is deprecated and will be removed in v3.0.0! Please use <primary> tag instead");
     }
     com::CommunicationConfiguration comConfig;
-    com::PtrCommunication           com  = comConfig.createCommunication(tag);
+    com::PtrCommunication           com    = comConfig.createCommunication(tag);
     utils::IntraComm::getCommunication() = com;
-    _isPrimaryDefined                    = true;
-    _participants.back()->setUsePrimary(true);
+    _isIntraCommDefined                    = true;
+    _participants.back()->setUsePrimaryRank(true);
   }
 }
 
@@ -381,12 +404,12 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
     if (geoFilter == VALUE_FILTER_ON_MASTER) {
       PRECICE_WARN("<on-master> tag is deprecated and will be removed in v3.0.0! Please use <on-primary> tag instead");
     }
-    return partition::ReceivedPartition::GeometricFilter::ON_PRIMARY;
+    return partition::ReceivedPartition::GeometricFilter::ON_PRIMARY_RANK;
   } else if (geoFilter == VALUE_FILTER_ON_SLAVES || geoFilter == VALUE_FILTER_ON_SECONDARIES) {
     if (geoFilter == VALUE_FILTER_ON_SLAVES) {
       PRECICE_WARN("<on-slaves> tag is deprecated and will be removed in v3.0.0! Please use <on-secondaries> tag instead");
     }
-    return partition::ReceivedPartition::GeometricFilter::ON_SECONDARIES;
+    return partition::ReceivedPartition::GeometricFilter::ON_SECONDARY_RANKS;
   } else {
     PRECICE_ASSERT(geoFilter == VALUE_NO_FILTER);
     return partition::ReceivedPartition::GeometricFilter::NO_FILTER;
@@ -623,18 +646,18 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
   _watchIntegralConfigs.clear();
 
-  // create default master communication if needed
-  if (context.size > 1 && not _isPrimaryDefined && participant->getName() == context.name) {
+  // create default primary communication if needed
+  if (context.size > 1 && not _isIntraCommDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
-    PRECICE_ERROR("Implicit master communications for parallel participants are only available if preCICE was built with MPI. "
-                  "Either explicitly define a master communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
+    PRECICE_ERROR("Implicit intra-participant communications for parallel participants are only available if preCICE was built with MPI. "
+                  "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
-    com::PtrCommunication com            = std::make_shared<com::MPIDirectCommunication>();
-    utils::IntraComm::getCommunication() = com;
-    participant->setUsePrimary(true);
+    com::PtrCommunication com              = std::make_shared<com::MPIDirectCommunication>();
+    utils::MasterSlave::getCommunication() = com;
+    participant->setUsePrimaryRank(true);
 #endif
   }
-  _isPrimaryDefined = false; // to not mess up with previous participant
+  _isIntraCommDefined = false; // to not mess up with previous participant
 }
 
 void ParticipantConfiguration::checkIllDefinedMappings(

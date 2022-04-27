@@ -43,7 +43,7 @@ std::string ExportVTU::getPieceAttributes(const mesh::Mesh &mesh) const
   return oss.str();
 }
 
-void ExportVTU::writePrimaryCells(std::ostream &out) const
+void ExportVTU::writeParallelCells(std::ostream &out) const
 {
   out << "      <PCells>\n";
   out << "         <PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>\n";
