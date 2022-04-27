@@ -31,6 +31,64 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   ptrFromMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
   ptrFromMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
 
+  // Create mesh object for from mesh
+  mesh::PtrMesh ptrToMesh = std::make_shared<mesh::Mesh>("OtherMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData ptrToData = ptrToMesh->createData("MappedData", dimensions, 1_dataID);
+
+  ptrToMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 0.0));
+  ptrToMesh->createVertex(Eigen::Vector3d(1.0, 0.1, 0.0));
+  ptrToMesh->createVertex(Eigen::Vector3d(0.0, 0.1, 1.0));
+
+  MeshContext toMeshContext(dimensions);
+  toMeshContext.mesh = ptrToMesh;
+
+  WriteDataContext dataContext(ptrFromData, ptrFromMesh);
+
+  MappingContext mappingContext;
+  mappingContext.fromMeshID = ptrFromMesh->getID();
+  mappingContext.toMeshID   = ptrToMesh->getID();
+
+  BOOST_TEST(ptrToData->getID() != ptrFromData->getID());
+  BOOST_TEST(ptrToMesh->getID() != ptrFromMesh->getID());
+
+  BOOST_TEST(!fixture.hasMapping(dataContext));
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrFromData->getID());
+  BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
+
+  dataContext.addMappingConfiguration(mappingContext, toMeshContext);
+
+  // mapping is configured. Write mapping, therefore _providedData == _fromData
+  BOOST_TEST(fixture.hasMapping(dataContext));
+  BOOST_TEST(fixture.getFromDataID(dataContext, 0) == ptrFromData->getID());
+  BOOST_TEST(fixture.getToDataID(dataContext, 0) == ptrToData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) != ptrToData->getID());
+  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrFromData->getID());
+  BOOST_TEST(dataContext.getMeshID() != ptrToMesh->getID());
+  BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
+  BOOST_TEST(fixture.hasWriteMapping(dataContext));
+  BOOST_TEST(!fixture.hasReadMapping(dataContext));
+  BOOST_TEST(fixture.mappingContext(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
+  BOOST_TEST(fixture.mappingContext(dataContext)[0].toMeshID == mappingContext.toMeshID);
+  BOOST_TEST(fixture.mappingContext(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
+  BOOST_TEST(fixture.mappingContext(dataContext)[0].mapping == mappingContext.mapping);
+  BOOST_TEST(fixture.mappingContext(dataContext)[0].timing == mappingContext.timing);
+}
+
+BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
+{
+  PRECICE_TEST(1_rank);
+
+  testing::DataContextFixture fixture;
+
+  // Create mesh object for from mesh
+  int           dimensions  = 3;
+  mesh::PtrMesh ptrFromMesh = std::make_shared<mesh::Mesh>("ParticipantMesh", dimensions, testing::nextMeshID());
+  mesh::PtrData ptrFromData = ptrFromMesh->createData("MappedData", dimensions, 0_dataID);
+
+  ptrFromMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  ptrFromMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  ptrFromMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+
   // Create mesh object for to mesh
   mesh::PtrMesh ptrToMesh = std::make_shared<mesh::Mesh>("OtherMesh", dimensions, testing::nextMeshID());
   mesh::PtrData ptrToData = ptrToMesh->createData("MappedData", dimensions, 1_dataID);
@@ -58,25 +116,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   // Add the first mapping we configured for this context
   dataContext.addMappingConfiguration(mappingContext, toMeshContext1);
 
-  // mapping is configured. Write mapping, therefore _providedData == _fromData
-  BOOST_TEST(fixture.hasMapping(dataContext));
-  BOOST_TEST(fixture.getProvidedDataID(dataContext) != ptrToData->getID());
-  BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrFromData->getID());
-  BOOST_TEST(dataContext.getMeshID() != ptrToMesh->getID());
-  BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
-  BOOST_TEST(fixture.hasWriteMapping(dataContext));
-  BOOST_TEST(!fixture.hasReadMapping(dataContext));
-  // Test dedicated content of the first mapping configuration
-  BOOST_TEST(fixture.getFromDataID(dataContext, 0) == ptrFromData->getID());
-  BOOST_TEST(fixture.getToDataID(dataContext, 0) == ptrToData->getID());
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].toMeshID == mappingContext.toMeshID);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].mapping == mappingContext.mapping);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].timing == mappingContext.timing);
-
   // Add a second mapping targeting a different to mesh
-
   // Create the object for to mesh and the data
   mesh::PtrMesh ptrToMesh2 = std::make_shared<mesh::Mesh>("SecondOtherMesh", dimensions, testing::nextMeshID());
   mesh::PtrData ptrToData2 = ptrToMesh2->createData("MappedData", dimensions, 2_dataID);
