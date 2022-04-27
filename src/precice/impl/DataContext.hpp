@@ -20,6 +20,7 @@ namespace impl {
  * - If a DataContext is associated with a mapping, fromData and toData will be set correspondingly.
  *   One of the two must be equal to providedData. fromData and toData must be different.
  * - If a DataContext is not associated with a mapping, fromData and toData will be unset.
+ * - A DataContext can be associated with multiple mappings, fromData and toData
  */
 class DataContext {
   friend class testing::DataContextFixture; // Make the fixture friend of this class
@@ -58,21 +59,21 @@ public:
   MeshID getMeshID() const;
 
   /**
-   * @brief Check whether mapping has to be performed.
+   * @brief Check whether any mapping has to be performed.
    *
-   * Checks whether a mapping exists for this context and the timing configuration.
+   * Checks whether any mapping exists for this context and the corresponding timing configuration.
    *
-   * @return True, if a mapping has to be performed.
+   * @return True, if any mapping has to be performed.
    */
   bool isMappingRequired();
 
   /**
-   * @brief Perform mapping using mapping context of this data context and from and to data
+   * @brief Perform the mapping for all mapping contexts and the corresponding data context (from and to data)
    */
   void mapData();
 
   /**
-   * @brief Links a MappingContext and the MeshContext required by the mapping to this DataContext.
+   * @brief Adds a MappingContext and the MeshContext required by the mapping to the correspnding DataContext data structures.
    *
    * A mapping maps the given data from or to _providedData (depending on whether it is a read or write mapping).
    *
@@ -90,38 +91,40 @@ protected:
    */
   DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
-  /// Defines the mapping associated to this DataContext. A DataContext may also exist without a mapping.
+  /// Defines all mappings associated to this DataContext. A DataContext may also exist without a mapping.
   std::vector<MappingContext> _mappingContexts;
 
   /// Unique data this context is associated with
   mesh::PtrData _providedData;
 
-  /// If a mapping exists, mesh::PtrData the mapping maps from.
+  /// If a mapping exists, collection of mesh::PtrData the mapping maps from.
   std::vector<mesh::PtrData> _fromDatas;
 
-  /// If a mapping exists, mesh::PtrData the mapping maps from.
+  /// If a mapping exists, collection of mesh::PtrData the mapping maps from.
   std::vector<mesh::PtrData> _toDatas;
 
   /**
-   * @brief Helper to add _mappingContext, _fromData and _toData.
+   * @brief Helper to append a _mappingContext, _fromData and _toData to the corresponding data containers
    *
    * @param mappingContext MappingContext this DataContext will be associated to.
    * @param fromData Data the mapping maps from.
    * @param toData Data the mapping maps to.
+   *
+   * @note Only unique mappings may be appended. In case the same mapping is appended twice, an error is raised.
    */
   void appendMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 
   /**
-   * @brief Informs the user whether this DataContext has a read mapping.
+   * @brief Informs the user whether this DataContext has any read mapping.
    *
-   * @return True, if DataContext has a read mapping.
+   * @return True, if DataContext has any read mapping.
    */
   bool hasReadMapping() const;
 
   /**
-   * @brief Informs the user whether this DataContext has a write mapping.
+   * @brief Informs the user whether this DataContext has any write mapping.
    *
-   * @return True, if DataContext has a write mapping.
+   * @return True, if DataContext has any write mapping.
    */
   bool hasWriteMapping() const;
 
@@ -132,25 +135,25 @@ private:
   static logging::Logger _log;
 
   /**
-   * @brief Get the ID of _fromData. Used for performing the mapping outside of this class.
+   * @brief Get the ID of the data in the _fromDatas container. Used for performing the mapping outside of this class.
    *
-   * @param[in] dataVectorIndex Index of the 'fromData' vector this data context holds
+   * @param[in] dataVectorIndex Index of the '_fromDatas' container this data context holds
    *
-   * @return DataID ID of _fromData.
+   * @return DataID ID of _fromDatas.
    */
   DataID getFromDataID(int dataVectorIndex) const;
 
   /**
-   * @brief Get the ID of _toData. Used for performing the mapping outside of this class.
+   * @brief Get the ID of the data in the _toDatas container. Used for performing the mapping outside of this class.
    *
-   * @param[in] dataVectorIndex Index of the 'fromData' vector this data context holds
+   * @param[in] dataVectorIndex Index of the '_toDatas' vector this data context holds
    *
-   * @return DataID ID of _toData.
+   * @return DataID ID of _toDatas.
    */
   DataID getToDataID(int dataVectorIndex) const;
 
   /**
-   * @brief Informs the user whether this DataContext has a _mappingContext.
+   * @brief Informs the user whether this DataContext has any _mappingContext.
    *
    * @return True, if this DataContext is associated with a mapping. False, if not.
    */
