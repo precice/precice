@@ -67,11 +67,11 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
   BOOST_TEST(fixture.hasWriteMapping(dataContext));
   BOOST_TEST(!fixture.hasReadMapping(dataContext));
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].toMeshID == mappingContext.toMeshID);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].mapping == mappingContext.mapping);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].timing == mappingContext.timing);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].toMeshID == mappingContext.toMeshID);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].mapping == mappingContext.mapping);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].timing == mappingContext.timing);
 }
 
 BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
@@ -146,11 +146,11 @@ BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
   // Test dedicated content of the first mapping configuration
   BOOST_TEST(fixture.getFromDataID(dataContext, 0) == ptrFromData->getID());
   BOOST_TEST(fixture.getToDataID(dataContext, 0) == ptrToData->getID());
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].toMeshID == mappingContext.toMeshID);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].mapping == mappingContext.mapping);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].timing == mappingContext.timing);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].toMeshID == mappingContext.toMeshID);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].mapping == mappingContext.mapping);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].timing == mappingContext.timing);
 
   // Now, test the newly added mapping
   BOOST_TEST(fixture.getProvidedDataID(dataContext) != ptrToData2->getID());
@@ -160,11 +160,11 @@ BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
   // Test dedicated content of the first mapping configuration
   BOOST_TEST(fixture.getFromDataID(dataContext, 1) == ptrFromData->getID());
   BOOST_TEST(fixture.getToDataID(dataContext, 1) == ptrToData2->getID());
-  BOOST_TEST(fixture.mappingContext(dataContext)[1].fromMeshID == mappingContext2.fromMeshID);
-  BOOST_TEST(fixture.mappingContext(dataContext)[1].toMeshID == mappingContext2.toMeshID);
-  BOOST_TEST(fixture.mappingContext(dataContext)[1].hasMappedData == mappingContext2.hasMappedData);
-  BOOST_TEST(fixture.mappingContext(dataContext)[1].mapping == mappingContext2.mapping);
-  BOOST_TEST(fixture.mappingContext(dataContext)[1].timing == mappingContext2.timing);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[1].fromMeshID == mappingContext2.fromMeshID);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[1].toMeshID == mappingContext2.toMeshID);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[1].hasMappedData == mappingContext2.hasMappedData);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[1].mapping == mappingContext2.mapping);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[1].timing == mappingContext2.timing);
 }
 
 BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
@@ -220,11 +220,11 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
   BOOST_TEST(dataContext.getMeshID() != ptrFromMesh->getID());
   BOOST_TEST(!fixture.hasWriteMapping(dataContext));
   BOOST_TEST(fixture.hasReadMapping(dataContext));
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].toMeshID == mappingContext.toMeshID);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].mapping == mappingContext.mapping);
-  BOOST_TEST(fixture.mappingContext(dataContext)[0].timing == mappingContext.timing);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].fromMeshID == mappingContext.fromMeshID);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].toMeshID == mappingContext.toMeshID);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].hasMappedData == mappingContext.hasMappedData);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].mapping == mappingContext.mapping);
+  BOOST_TEST(fixture.mappingContexts(dataContext)[0].timing == mappingContext.timing);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
