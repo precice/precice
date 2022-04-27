@@ -535,7 +535,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                         "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
                         "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
-          dataContext.addMappingConfiguration(mappingContext, meshContext);
+          dataContext.appendMappingConfiguration(mappingContext, meshContext);
           dataFound = true;
         }
       }
@@ -565,7 +565,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                         "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
                         "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
-          dataContext.addMappingConfiguration(mappingContext, meshContext);
+          dataContext.appendMappingConfiguration(mappingContext, meshContext);
           dataFound = true;
         }
       }

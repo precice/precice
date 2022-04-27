@@ -80,7 +80,7 @@ public:
    * @param[in] mappingContext Context of the mapping
    * @param[in] meshContext Context of mesh this mapping is mapping from or to
    */
-  virtual void addMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext) = 0;
+  virtual void appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext) = 0;
 
 protected:
   /**

@@ -18,7 +18,7 @@ mesh::PtrData WriteDataContext::providedData()
   return _providedData;
 }
 
-void WriteDataContext::addMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext)
+void WriteDataContext::appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext)
 {
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData data = meshContext.mesh->data(getDataName());

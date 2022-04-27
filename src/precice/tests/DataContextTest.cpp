@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(fixture.getProvidedDataID(dataContext) == ptrFromData->getID());
   BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
 
-  dataContext.addMappingConfiguration(mappingContext, toMeshContext);
+  dataContext.appendMappingConfiguration(mappingContext, toMeshContext);
 
   // mapping is configured. Write mapping, therefore _providedData == _fromData
   BOOST_TEST(fixture.hasMapping(dataContext));
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
   BOOST_TEST(dataContext.getMeshID() == ptrFromMesh->getID());
 
   // Add the first mapping we configured for this context
-  dataContext.addMappingConfiguration(mappingContext, toMeshContext1);
+  dataContext.appendMappingConfiguration(mappingContext, toMeshContext1);
 
   // Add a second mapping targeting a different to mesh
   // Create the object for to mesh and the data
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
   mappingContext2.toMeshID   = ptrToMesh2->getID();
 
   // the mapping configuration
-  dataContext.addMappingConfiguration(mappingContext2, toMeshContext2);
+  dataContext.appendMappingConfiguration(mappingContext2, toMeshContext2);
 
   // First, we repeat the checks from above in order to check that nothing changed
   BOOST_TEST(fixture.hasMapping(dataContext));
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
 
   // Add the mapping we configured for this context
   // For read data contexts, there is only one context allowed
-  dataContext.addMappingConfiguration(mappingContext, fromMeshContext);
+  dataContext.appendMappingConfiguration(mappingContext, fromMeshContext);
 
   // mapping is configured. Write mapping, therefore _providedData == _toData
   BOOST_TEST(fixture.hasMapping(dataContext));

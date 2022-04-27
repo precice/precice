@@ -16,7 +16,7 @@ ReadDataContext::ReadDataContext(
   _waveform = time::PtrWaveform(new time::Waveform(interpolationOrder));
 }
 
-void ReadDataContext::addMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext)
+void ReadDataContext::appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext)
 {
   PRECICE_ASSERT(!hasReadMapping(), "The read data context must be unique. Otherwise we would have an ambiguous read data operation on the user side.")
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
