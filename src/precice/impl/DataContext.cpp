@@ -65,7 +65,7 @@ MeshID DataContext::getMeshID() const
   return _mesh->getID();
 }
 
-void DataContext::addMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData)
+void DataContext::appendMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData)
 {
   PRECICE_ASSERT(fromData);
   PRECICE_ASSERT(toData);

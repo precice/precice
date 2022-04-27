@@ -109,7 +109,7 @@ protected:
    * @param fromData Data the mapping maps from.
    * @param toData Data the mapping maps to.
    */
-  void addMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
+  void appendMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 
   /**
    * @brief Informs the user whether this DataContext has a read mapping.

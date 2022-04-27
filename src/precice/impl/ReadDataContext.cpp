@@ -22,7 +22,7 @@ void ReadDataContext::addMappingConfiguration(const MappingContext &mappingConte
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData data = meshContext.mesh->data(getDataName());
   PRECICE_ASSERT(data != _providedData, "Data the read mapping is mapping from needs to be different from _providedData");
-  addMapping(mappingContext, data, _providedData);
+  appendMapping(mappingContext, data, _providedData);
   PRECICE_ASSERT(hasReadMapping());
 }
 
