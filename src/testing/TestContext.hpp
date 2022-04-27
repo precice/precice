@@ -121,7 +121,7 @@ enum struct ConnectionType {
 struct ConnectionOptions {
   ConnectionOptions() = default;
 
-  /** Whether to use only the Primary-Primary connection
+  /** Whether to use only the primary connection
    * @see M2N::M2N()
    */
   bool useOnlyPrimaryCom = false;

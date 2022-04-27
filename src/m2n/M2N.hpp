@@ -134,7 +134,7 @@ public:
    */
   void closeConnection();
 
-  /// Disconnects the Primary-Primary connection
+  /// Disconnects the primary connection
   void closePrimaryRankConnection();
 
   /// Disconnects all connections of the DistributedCommunication

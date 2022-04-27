@@ -17,7 +17,7 @@ namespace com {
 namespace primaryprimary {
 
 ///
-/// Tests for Primary-Primary Connections
+/// Tests for primary connections
 /// Acceptor and Requestor are different participants
 ///
 
