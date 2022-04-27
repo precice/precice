@@ -138,7 +138,7 @@ private:
   // Does this participant already define a primary tag?
   // This context information is needed in xmlEndTagCallback to create a default
   // primary com if required (i.e. no solution yet defined and parallel).
-  bool _isPrimaryRankDefined = false;
+  bool _isIntraCommDefined = false;
 
   void finishParticipantConfiguration(
       const xml::ConfigurationContext &context,

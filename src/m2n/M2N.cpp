@@ -47,9 +47,9 @@ void M2N::acceptPrimaryConnection(
   Event e("m2n.acceptPrimaryConnection", precice::syncMode);
 
   if (not utils::MasterSlave::isSecondary()) {
-    PRECICE_DEBUG("Accept primary-primary connection");
+    PRECICE_DEBUG("Accept primary connection");
     PRECICE_ASSERT(_intraComm);
-    _intraComm->acceptConnection(acceptorName, requesterName, "PRIMARYRANKCOM", utils::MasterSlave::getRank());
+    _intraComm->acceptConnection(acceptorName, requesterName, "PRIMARYCOM", utils::MasterSlave::getRank());
     _isPrimaryRankConnected = _intraComm->isConnected();
   }
 
@@ -67,20 +67,20 @@ void M2N::requestPrimaryConnection(
   if (not utils::MasterSlave::isSecondary()) {
     PRECICE_ASSERT(_intraComm);
     PRECICE_DEBUG("Request primary connection");
-    _intraComm->requestConnection(acceptorName, requesterName, "PRIMARYRANKCOM", 0, 1);
+    _intraComm->requestConnection(acceptorName, requesterName, "PRIMARYCOM", 0, 1);
     _isPrimaryRankConnected = _intraComm->isConnected();
   }
 
   utils::MasterSlave::broadcast(_isPrimaryRankConnected);
 }
 
-void M2N::acceptSecondaryRanksConnection(
+void M2N::acceptSecondaryConnections(
     const std::string &acceptorName,
     const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
-  Event e("m2n.acceptSecondaryRanksConnection", precice::syncMode);
+  Event e("m2n.acceptSecondaryConnections", precice::syncMode);
 
   _areSecondaryRanksConnected = true;
   for (const auto &pair : _distComs) {
@@ -91,13 +91,13 @@ void M2N::acceptSecondaryRanksConnection(
   PRECICE_ASSERT(_areSecondaryRanksConnected);
 }
 
-void M2N::requestSecondaryRanksConnection(
+void M2N::requestSecondaryConnections(
     const std::string &acceptorName,
     const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
-  Event e("m2n.requestSecondaryRanksConnection", precice::syncMode);
+  Event e("m2n.requestSecondaryConnections", precice::syncMode);
 
   _areSecondaryRanksConnected = true;
   for (const auto &pair : _distComs) {
@@ -122,7 +122,7 @@ void M2N::cleanupEstablishment(const std::string &acceptorName,
   _intraComm->cleanupEstablishment(acceptorName, requesterName);
 }
 
-void M2N::acceptSecondaryRanksPreConnection(
+void M2N::acceptSecondaryPreConnections(
     const std::string &acceptorName,
     const std::string &requesterName)
 {

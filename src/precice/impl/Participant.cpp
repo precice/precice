@@ -48,9 +48,9 @@ void Participant::addAction(action::PtrAction &&action)
   _actions.push_back(std::move(action));
 }
 
-void Participant::setUsePrimaryRank(bool usePrimaryRank)
+void Participant::setUsePrimaryRank(bool useIntraComm)
 {
-  _usePrimaryRank = usePrimaryRank;
+  _useIntraComm = useIntraComm;
 }
 
 void Participant::addWatchPoint(
@@ -389,9 +389,9 @@ std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
   return _watchIntegrals;
 }
 
-bool Participant::usePrimaryRank() const
+bool Participant::useIntraComm() const
 {
-  return _usePrimaryRank;
+  return _useIntraComm;
 }
 
 const std::string &Participant::getName() const

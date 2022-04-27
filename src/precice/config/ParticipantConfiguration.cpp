@@ -192,10 +192,10 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagUseMesh.addAttribute(attrProvide);
   tag.addSubtag(tagUseMesh);
 
-  std::list<XMLTag>  primaryTags;
-  XMLTag::Occurrence primaryOcc = XMLTag::OCCUR_NOT_OR_ONCE;
+  std::list<XMLTag>  intraCommTags;
+  XMLTag::Occurrence intraCommOcc = XMLTag::OCCUR_NOT_OR_ONCE;
   {
-    XMLTag tagMaster(*this, "sockets", primaryOcc, TAG_MASTER);
+    XMLTag tagMaster(*this, "sockets", intraCommOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use TCP/IP sockets instead.";
@@ -223,10 +223,10 @@ ParticipantConfiguration::ParticipantConfiguration(
                                          "directory of startup is chosen.");
     tagMaster.addAttribute(attrExchangeDirectory);
 
-    primaryTags.push_back(tagMaster);
+    intraCommTags.push_back(tagMaster);
   }
   {
-    XMLTag tagMaster(*this, "mpi", primaryOcc, TAG_MASTER);
+    XMLTag tagMaster(*this, "mpi", intraCommOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default, the participant's MPI_COM_WORLD is reused.";
     doc += "Use this tag to use MPI with separated communication spaces instead instead.";
@@ -238,18 +238,18 @@ ParticipantConfiguration::ParticipantConfiguration(
                                          "directory of startup is chosen.");
     tagMaster.addAttribute(attrExchangeDirectory);
 
-    primaryTags.push_back(tagMaster);
+    intraCommTags.push_back(tagMaster);
   }
   {
-    XMLTag tagMaster(*this, "mpi-single", primaryOcc, TAG_MASTER);
+    XMLTag tagMaster(*this, "mpi-single", intraCommOcc, TAG_MASTER);
     doc = "A solver in parallel needs a communication between its ranks. ";
     doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
     doc += "This tag is only used to ensure backwards compatibility.";
     tagMaster.setDocumentation(doc);
 
-    primaryTags.push_back(tagMaster);
+    intraCommTags.push_back(tagMaster);
   }
-  for (XMLTag &tagMaster : primaryTags) {
+  for (XMLTag &tagMaster : intraCommTags) {
     tag.addSubtag(tagMaster);
   }
 
@@ -375,7 +375,7 @@ void ParticipantConfiguration::xmlTagCallback(
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com    = comConfig.createCommunication(tag);
     utils::MasterSlave::getCommunication() = com;
-    _isPrimaryRankDefined                  = true;
+    _isIntraCommDefined                    = true;
     _participants.back()->setUsePrimaryRank(true);
   }
 }
@@ -638,9 +638,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   _watchIntegralConfigs.clear();
 
   // create default primary communication if needed
-  if (context.size > 1 && not _isPrimaryRankDefined && participant->getName() == context.name) {
+  if (context.size > 1 && not _isIntraCommDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
-    PRECICE_ERROR("Implicit primary communications for parallel participants are only available if preCICE was built with MPI. "
+    PRECICE_ERROR("Implicit intra-participant communications for parallel participants are only available if preCICE was built with MPI. "
                   "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com::PtrCommunication com              = std::make_shared<com::MPIDirectCommunication>();
@@ -648,7 +648,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     participant->setUsePrimaryRank(true);
 #endif
   }
-  _isPrimaryRankDefined = false; // to not mess up with previous participant
+  _isIntraCommDefined = false; // to not mess up with previous participant
 }
 
 void ParticipantConfiguration::checkIllDefinedMappings(

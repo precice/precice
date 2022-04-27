@@ -321,7 +321,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(acceptorName, requesterName, "TMP-PRIMARYRANKCOM-" + _mesh->getName(), utils::MasterSlave::getRank());
+    c->acceptConnection(acceptorName, requesterName, "TMP-PRIMARYCOM-" + _mesh->getName(), utils::MasterSlave::getRank());
 
     // Exchange vertex distributions.
     m2n::send(vertexDistribution, 0, c);
@@ -445,7 +445,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
     c->requestConnection(acceptorName, requesterName,
-                         "TMP-PRIMARYRANKCOM-" + _mesh->getName(),
+                         "TMP-PRIMARYCOM-" + _mesh->getName(),
                          0, 1);
 
     // Exchange vertex distributions.

@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
   if (context.isNamed("Solid")) {
     m2n->createDistributedCommunication(mesh);
     ProvidedPartition part(mesh);
-    m2n->acceptSecondaryRanksPreConnection("SolidSecondaryRanks", "FluidSecondaryRanks");
+    m2n->acceptSecondaryPreConnections("SolidSecondaryRanks", "FluidSecondaryRanks");
     part.addM2N(m2n);
     part.communicate();
   } else {
@@ -685,7 +685,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
       BOOST_TEST(mesh->getConnectedRanks().at(1) == 1);
     }
 
-    m2n->acceptSecondaryRanksPreConnection("FluidSecondaryRanks", "SolidSecondaryRanks");
+    m2n->acceptSecondaryPreConnections("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();
@@ -814,7 +814,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
       BOOST_TEST(mesh->getConnectedRanks().at(1) == 1);
     }
 
-    m2n->acceptSecondaryRanksPreConnection("FluidSecondaryRanks", "SolidSecondaryRanks");
+    m2n->acceptSecondaryPreConnections("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();

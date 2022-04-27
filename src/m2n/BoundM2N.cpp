@@ -39,13 +39,13 @@ void BoundM2N::connectSecondaryRanks()
     m2n->completeSecondaryRanksConnection();
   } else {
     if (isRequesting) {
-      PRECICE_DEBUG("Awaiting secondary connection from {}", remoteName);
-      m2n->requestSecondaryRanksConnection(remoteName, localName);
-      PRECICE_DEBUG("Established secondary connection from {}", remoteName);
+      PRECICE_DEBUG("Awaiting secondary connections from {}", remoteName);
+      m2n->requestSecondaryConnections(remoteName, localName);
+      PRECICE_DEBUG("Established secondary connections from {}", remoteName);
     } else {
-      PRECICE_DEBUG("Establishing secondary connection to {}", remoteName);
-      m2n->acceptSecondaryRanksConnection(localName, remoteName);
-      PRECICE_DEBUG("Established  secondary connection to {}", remoteName);
+      PRECICE_DEBUG("Establishing secondary connections to {}", remoteName);
+      m2n->acceptSecondaryConnections(localName, remoteName);
+      PRECICE_DEBUG("Established  secondary connections to {}", remoteName);
     }
   }
 }
@@ -58,13 +58,13 @@ void BoundM2N::preConnectSecondaryRanks()
   PRECICE_WARN("Two-level initialization is still in beta testing. Several edge cases are known to fail. Please report problems nevertheless.");
 
   if (isRequesting) {
-    PRECICE_DEBUG("Awaiting preliminary secondary connection from {}", remoteName);
+    PRECICE_DEBUG("Awaiting preliminary secondary connections from {}", remoteName);
     m2n->requestSecondaryRanksPreConnection(remoteName, localName);
-    PRECICE_DEBUG("Established preliminary secondary connection from {}", remoteName);
+    PRECICE_DEBUG("Established preliminary secondary connections from {}", remoteName);
   } else {
-    PRECICE_DEBUG("Establishing preliminary secondary connection to {}", remoteName);
-    m2n->acceptSecondaryRanksPreConnection(localName, remoteName);
-    PRECICE_DEBUG("Established preliminary secondary connection to {}", remoteName);
+    PRECICE_DEBUG("Establishing preliminary secondary connections to {}", remoteName);
+    m2n->acceptSecondaryPreConnections(localName, remoteName);
+    PRECICE_DEBUG("Established preliminary secondary connections to {}", remoteName);
   }
 }
 

@@ -62,8 +62,8 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptSecondaryRanksConnection(const std::string &acceptorName,
-                                      const std::string &requesterName);
+  void acceptSecondaryConnections(const std::string &acceptorName,
+                                  const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
@@ -71,18 +71,18 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestSecondaryRanksConnection(const std::string &acceptorName,
-                                       const std::string &requesterName);
+  void requestSecondaryConnections(const std::string &acceptorName,
+                                   const std::string &requesterName);
 
   /**
-   * Same as acceptSecondaryRanksConnection except this only creates the channels,
+   * Same as acceptSecondaryConnections except this only creates the channels,
    * no vertex list needed!
    */
-  void acceptSecondaryRanksPreConnection(const std::string &acceptorName,
-                                         const std::string &requesterName);
+  void acceptSecondaryPreConnections(const std::string &acceptorName,
+                                     const std::string &requesterName);
 
   /**
-   * Same as requestSecondaryRanksConnection except this only creates the channels,
+   * Same as requestSecondaryConnections except this only creates the channels,
    * no vertex list needed!
    */
   void requestSecondaryRanksPreConnection(const std::string &acceptorName,
