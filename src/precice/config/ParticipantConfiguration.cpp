@@ -542,7 +542,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     }
     PRECICE_CHECK(dataFound,
                   "Participant \"{}\" defines a write mapping from mesh \"{}\" to mesh \"{}\", "
-                  "but there are no corresponding read data and write data tags.",
+                  "but there is either no corresponding write-data tag or the meshes used "
+                  "by this participant lack the necessary use-data tags.",
                   participant->getName(), mappingContext.mapping->getInputMesh()->getName(), mappingContext.mapping->getOutputMesh()->getName());
   }
 
@@ -571,7 +572,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     }
     PRECICE_CHECK(dataFound,
                   "Participant \"{}\" defines a read mapping from mesh \"{}\" to mesh \"{}\", "
-                  "but there are no corresponding read data and write data tags.",
+                  "but there is either no corresponding read-data tag or the meshes used "
+                  "by this participant lack the necessary use-data tags.",
                   participant->getName(), mappingContext.mapping->getInputMesh()->getName(), mappingContext.mapping->getOutputMesh()->getName());
   }
 
