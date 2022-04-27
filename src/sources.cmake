@@ -258,8 +258,6 @@ target_sources(precice
     src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp
-    src/query/impl/Indexer.cpp
-    src/query/impl/Indexer.hpp
     src/query/impl/RTreeAdapter.hpp
     src/time/SharedPointer.hpp
     src/time/Time.cpp
