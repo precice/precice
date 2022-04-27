@@ -17,8 +17,8 @@ namespace impl {
 /**
  * @brief Stores one Data object with related mesh.
  *
- * - If a DataContext is associated with a mapping, fromData and toData will be set correspondingly.
- *   One of the two must be equal to providedData. fromData and toData must be different.
+ * - For each mapping that is added to the data context fromData and toData will be set correspondingly.
+ *   Either fromData or toData must be equal to providedData. fromData and toData must be different.
  * - If a DataContext is not associated with a mapping, fromData and toData will be unset.
  * - A DataContext can be associated with multiple mappings, fromData and toData
  */
@@ -104,7 +104,7 @@ protected:
   std::vector<mesh::PtrData> _toDatas;
 
   /**
-   * @brief Helper to append a _mappingContext, _fromData and _toData to the corresponding data containers
+   * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
    *
    * @param mappingContext MappingContext this DataContext will be associated to.
    * @param fromData Data the mapping maps from.
