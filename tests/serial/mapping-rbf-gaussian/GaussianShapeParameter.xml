@@ -22,6 +22,7 @@
       <mapping:rbf-gaussian
         solver-rtol="1e-11"
         shape-parameter="2.2761406940777196"
+        polynomial="on"
         direction="read"
         from="MeshOne"
         to="MeshTwo"
