@@ -18,17 +18,27 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
   Vector3d coordOneB{1.0, 0.0, z};
   Vector3d coordOneC{1.0, 1.0, z};
   Vector3d coordOneD{0.0, 1.0, z};
-  double   valOneA = 1.0;
-  double   valOneB = 3.0;
-  double   valOneC = 5.0;
-  double   valOneD = 7.0;
+  Vector3d coordOneE{2.0, 0.0, z};
+  Vector3d coordOneF{3.0, 0.0, z};
+  Vector3d coordOneG{3.0, 1.0, z};
+  Vector3d coordOneH{2.0, 1.0, z};
+  Vector3d coordOneI{4.0, 0.0, z};
+  Vector3d coordOneJ{5.0, 0.0, z};
+  Vector3d coordOneK{5.0, 1.0, z};
+  Vector3d coordOneL{4.0, 1.0, z};
 
+  std::vector<double> values;
+  const unsigned int  nCoords = 12;
+  for (uint i = 0; i < nCoords; ++i)
+    values.emplace_back(std::pow(i + 1, 2));
   // MeshTwo
   Vector3d coordTwoA{0.0, 0.0, z}; // Maps to vertex A
-  Vector3d coordTwoB{0.0, 0.5, z}; // Maps to edge AD
+  Vector3d coordTwoB{0.5, 0.5, z}; // Maps on the left side of the domain
+  Vector3d coordTwoC{3.5, 0.5, z}; // Maps more in the middle of the domain
 
-  double expectedValTwoA = 1.0;
-  double expectedValTwoB = 4.0;
+  double expectedValTwoA = 1.000000008897409;
+  double expectedValTwoB = 7.4949306631817993;
+  double expectedValTwoC = 77.499808821611879;
 
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
@@ -36,10 +46,19 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     const int meshOneID = interface.getMeshID("MeshOne");
 
     // Setup mesh one.
-    int idA = interface.setMeshVertex(meshOneID, coordOneA.data());
-    int idB = interface.setMeshVertex(meshOneID, coordOneB.data());
-    int idC = interface.setMeshVertex(meshOneID, coordOneC.data());
-    int idD = interface.setMeshVertex(meshOneID, coordOneD.data());
+    std::vector<int> ids;
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneA.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneB.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneC.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneD.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneE.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneF.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneG.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneH.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneI.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneJ.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneK.data()));
+    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneL.data()));
 
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
@@ -47,10 +66,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
 
     // Write the data to be send.
     int dataAID = interface.getDataID("DataOne", meshOneID);
-    interface.writeScalarData(dataAID, idA, valOneA);
-    interface.writeScalarData(dataAID, idB, valOneB);
-    interface.writeScalarData(dataAID, idC, valOneC);
-    interface.writeScalarData(dataAID, idD, valOneD);
+    interface.writeBlockScalarData(dataAID, nCoords, ids.data(), values.data());
 
     // Advance, thus send the data to the receiving partner.
     interface.advance(maxDt);
@@ -65,6 +81,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     // Setup receiving mesh.
     int idA = interface.setMeshVertex(meshTwoID, coordTwoA.data());
     int idB = interface.setMeshVertex(meshTwoID, coordTwoB.data());
+    int idC = interface.setMeshVertex(meshTwoID, coordTwoC.data());
 
     // Initialize, thus receive the data and map.
     double maxDt = interface.initialize();
@@ -75,9 +92,11 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     double valueA, valueB, valueC;
     interface.readScalarData(dataAID, idA, valueA);
     interface.readScalarData(dataAID, idB, valueB);
+    interface.readScalarData(dataAID, idC, valueC);
 
     BOOST_TEST(valueA == expectedValTwoA);
     BOOST_TEST(valueB == expectedValTwoB);
+    BOOST_TEST(valueC == expectedValTwoC);
 
     // Verify that there is only one time step necessary.
     interface.advance(maxDt);

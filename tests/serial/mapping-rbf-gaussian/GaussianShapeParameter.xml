@@ -20,7 +20,7 @@
       <use-mesh name="MeshOne" from="SolverOne" />
       <use-mesh name="MeshTwo" provide="on" />
       <mapping:rbf-gaussian
-        shape-parameter="2.276"
+        shape-parameter="2.2761406940777196"
         direction="read"
         from="MeshOne"
         to="MeshTwo"
