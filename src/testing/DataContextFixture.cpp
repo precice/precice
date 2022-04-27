@@ -5,7 +5,7 @@ namespace testing {
 
 std::vector<impl::MappingContext> DataContextFixture::mappingContext(precice::impl::DataContext &dataContext)
 {
-  return dataContext._mappingContext;
+  return dataContext._mappingContexts;
 }
 
 int DataContextFixture::getProvidedDataID(precice::impl::DataContext &dataContext)

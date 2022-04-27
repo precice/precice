@@ -91,7 +91,7 @@ protected:
   DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
   /// Defines the mapping associated to this DataContext. A DataContext may also exist without a mapping.
-  std::vector<MappingContext> _mappingContext;
+  std::vector<MappingContext> _mappingContexts;
 
   /// Unique data this context is associated with
   mesh::PtrData _providedData;

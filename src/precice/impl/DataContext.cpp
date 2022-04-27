@@ -71,11 +71,11 @@ void DataContext::appendMapping(MappingContext mappingContext, mesh::PtrData fro
   PRECICE_ASSERT(toData);
   // Make sure we don't append a mapping twice
 #ifndef NDEBUG
-  for (unsigned int i = 0; i < _mappingContext.size(); ++i) {
-    PRECICE_ASSERT(!((_mappingContext[i].mapping == mappingContext.mapping) && (_fromData[i] == fromData) && (_toData[i] == toData)), "The appended mapping already exists.");
+  for (unsigned int i = 0; i < _mappingContexts.size(); ++i) {
+    PRECICE_ASSERT(!((_mappingContexts[i].mapping == mappingContext.mapping) && (_fromData[i] == fromData) && (_toData[i] == toData)), "The appended mapping already exists.");
   }
 #endif
-  _mappingContext.emplace_back(mappingContext);
+  _mappingContexts.emplace_back(mappingContext);
   PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal _providedData.");
   PRECICE_ASSERT(fromData->getName() == getDataName());
   _fromData.emplace_back(fromData);
@@ -95,7 +95,7 @@ bool DataContext::isMappingRequired()
     return false;
   }
 
-  return std::any_of(_mappingContext.begin(), _mappingContext.end(), [](const auto &context) {
+  return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [](const auto &context) {
                 const auto timing    = context.timing;
                 const bool mapNow    = (timing == mapping::MappingConfiguration::ON_ADVANCE) || (timing == mapping::MappingConfiguration::INITIAL);
                 return (mapNow && !context.hasMappedData); });
@@ -105,12 +105,12 @@ void DataContext::mapData()
 {
   PRECICE_ASSERT(hasMapping());
   // Execute the mapping
-  for (unsigned int i = 0; i < _mappingContext.size(); ++i) {
+  for (unsigned int i = 0; i < _mappingContexts.size(); ++i) {
     const DataID fromDataID = getFromDataID(i);
     const DataID toDataID   = getToDataID(i);
     // Reset the toData before executing the mapping
     _toData[i]->toZero();
-    _mappingContext[i].mapping->map(fromDataID, toDataID);
+    _mappingContexts[i].mapping->map(fromDataID, toDataID);
     PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, _toData[i]->values()));
   }
 }
