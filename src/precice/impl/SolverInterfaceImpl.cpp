@@ -207,12 +207,12 @@ void SolverInterfaceImpl::configure(
   _accessor           = determineAccessingParticipant(config);
   _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
-  PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useMaster(),
-                 "A parallel participant needs a master communication");
-  PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useMaster()),
-                "You cannot use a master communication with a serial participant. "
-                "If you do not know exactly what a master communication is and why you want to use it "
-                "you probably just want to remove the master tag from the preCICE configuration.");
+  PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useIntraComm(),
+                 "A parallel participant needs an intra-participant communication");
+  PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useIntraComm()),
+                "You cannot use an intra-participant communication with a serial participant. "
+                "If you do not know exactly what an intra-participant communication is and why you want to use it "
+                "you probably just want to remove the intraComm tag from the preCICE configuration.");
 
   utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
@@ -237,7 +237,7 @@ void SolverInterfaceImpl::configure(
 
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
 
-  PRECICE_DEBUG("Initialize master-slave communication");
+  PRECICE_DEBUG("Initialize intra-participant communication");
   if (utils::MasterSlave::isParallel()) {
     initializeMasterSlaveCommunication();
   }
@@ -259,39 +259,39 @@ double SolverInterfaceImpl::initialize()
 
   // Setup communication
 
-  PRECICE_INFO("Setting up master communication to coupling partner/s");
+  PRECICE_INFO("Setting up primary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n       = m2nPair.second;
     bool  requesting = bm2n.isRequesting;
     if (bm2n.m2n->isConnected()) {
-      PRECICE_DEBUG("Master connection {} {} already connected.", (requesting ? "from" : "to"), bm2n.remoteName);
+      PRECICE_DEBUG("Primary connection {} {} already connected.", (requesting ? "from" : "to"), bm2n.remoteName);
     } else {
-      PRECICE_DEBUG((requesting ? "Awaiting master connection from {}" : "Establishing master connection to {}"), bm2n.remoteName);
+      PRECICE_DEBUG((requesting ? "Awaiting primary connection from {}" : "Establishing primary connection to {}"), bm2n.remoteName);
       bm2n.prepareEstablishment();
-      bm2n.connectMasters();
-      PRECICE_DEBUG("Established master connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
+      bm2n.connectPrimaryRanks();
+      PRECICE_DEBUG("Established primary connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
     }
   }
 
-  PRECICE_INFO("Masters are connected");
+  PRECICE_INFO("Primary ranks are connected");
 
   compareBoundingBoxes();
 
-  PRECICE_INFO("Setting up preliminary slaves communication to coupling partner/s");
+  PRECICE_INFO("Setting up preliminary secondary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    bm2n.preConnectSlaves();
+    bm2n.preConnectSecondaryRanks();
   }
 
   computePartitions();
 
-  PRECICE_INFO("Setting up slaves communication to coupling partner/s");
+  PRECICE_INFO("Setting up secondary communication to coupling partner/s");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
-    bm2n.connectSlaves();
-    PRECICE_DEBUG("Established slaves connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
+    bm2n.connectSecondaryRanks();
+    PRECICE_DEBUG("Established secondary connection {} {}", (bm2n.isRequesting ? "from " : "to "), bm2n.remoteName);
   }
-  PRECICE_INFO("Slaves are connected");
+  PRECICE_INFO("Secondary ranks are connected");
 
   for (auto &m2nPair : _m2ns) {
     m2nPair.second.cleanupEstablishment();
@@ -508,7 +508,7 @@ void SolverInterfaceImpl::finalize()
   _accessor.reset();
 
   // Close Connections
-  PRECICE_DEBUG("Close master-slave communication");
+  PRECICE_DEBUG("Close intra-participant communication");
   if (utils::MasterSlave::isParallel()) {
     utils::MasterSlave::getCommunication()->closeConnection();
     utils::MasterSlave::getCommunication() = nullptr;
@@ -523,7 +523,7 @@ void SolverInterfaceImpl::finalize()
   utils::EventRegistry::instance().finalize();
 
   // Printing requires finalization
-  if (not precice::utils::MasterSlave::isSlave()) {
+  if (not precice::utils::MasterSlave::isSecondary()) {
     utils::EventRegistry::instance().printAll();
   }
 
@@ -2097,24 +2097,24 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   PRECICE_TRACE();
 
   Event e("com.initializeMasterSlaveCom", precice::syncMode);
-  utils::MasterSlave::getCommunication()->connectMasterSlaves(
-      _accessorName, "MasterSlaves",
+  utils::MasterSlave::getCommunication()->connectIntraComm(
+      _accessorName, "IntraComm",
       _accessorProcessRank, _accessorCommunicatorSize);
 }
 
 void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 {
   PRECICE_ASSERT(utils::MasterSlave::isParallel());
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     utils::MasterSlave::getCommunication()->send(computedTimestepLength, 0);
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::isMaster());
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
+    PRECICE_ASSERT(utils::MasterSlave::isPrimary());
+    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
       double dt;
-      utils::MasterSlave::getCommunication()->receive(dt, rankSlave);
+      utils::MasterSlave::getCommunication()->receive(dt, secondaryRank);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
                     "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
-                    rankSlave, dt, computedTimestepLength);
+                    secondaryRank, dt, computedTimestepLength);
     }
   }
 }
@@ -2129,18 +2129,18 @@ void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
   std::string pong = "pong";
   for (auto &iter : _m2ns) {
     auto bm2n = iter.second;
-    if (not utils::MasterSlave::isSlave()) {
-      PRECICE_DEBUG("Synchronizing Master with {}", bm2n.remoteName);
+    if (not utils::MasterSlave::isSecondary()) {
+      PRECICE_DEBUG("Synchronizing primary rank with {}", bm2n.remoteName);
       if (bm2n.isRequesting) {
-        bm2n.m2n->getMasterCommunication()->send(ping, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->send(ping, 0);
         std::string receive = "init";
-        bm2n.m2n->getMasterCommunication()->receive(receive, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->receive(receive, 0);
         PRECICE_ASSERT(receive == pong);
       } else {
         std::string receive = "init";
-        bm2n.m2n->getMasterCommunication()->receive(receive, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->receive(receive, 0);
         PRECICE_ASSERT(receive == ping);
-        bm2n.m2n->getMasterCommunication()->send(pong, 0);
+        bm2n.m2n->getPrimaryRankCommunication()->send(pong, 0);
       }
     }
     if (close == CloseChannels::Distributed) {

@@ -64,25 +64,25 @@ void WatchPoint::initialize()
     _shortestDistance = match.distance;
   }
 
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     utils::MasterSlave::getCommunication()->send(_shortestDistance, 0);
     utils::MasterSlave::getCommunication()->receive(_isClosest, 0);
   }
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isPrimary()) {
     int    closestRank           = 0;
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal  = std::numeric_limits<double>::max();
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::getCommunication()->receive(closestDistanceLocal, rankSlave);
+    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
+      utils::MasterSlave::getCommunication()->receive(closestDistanceLocal, secondaryRank);
       if (closestDistanceLocal < closestDistanceGlobal) {
         closestDistanceGlobal = closestDistanceLocal;
-        closestRank           = rankSlave;
+        closestRank           = secondaryRank;
       }
     }
     _isClosest = closestRank == 0;
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::getCommunication()->send(closestRank == rankSlave, rankSlave);
+    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
+      utils::MasterSlave::getCommunication()->send(closestRank == secondaryRank, secondaryRank);
     }
   }
 

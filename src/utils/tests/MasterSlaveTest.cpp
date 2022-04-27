@@ -10,10 +10,10 @@ BOOST_AUTO_TEST_SUITE(MasterSlave)
 
 BOOST_AUTO_TEST_CASE(SerialConfig)
 {
-  PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
 
-  BOOST_TEST(!utils::MasterSlave::isMaster());
-  BOOST_TEST(!utils::MasterSlave::isSlave());
+  BOOST_TEST(!utils::MasterSlave::isPrimary());
+  BOOST_TEST(!utils::MasterSlave::isSecondary());
   BOOST_TEST(!utils::MasterSlave::isParallel());
 
   BOOST_TEST(utils::MasterSlave::getRank() == context.rank);
@@ -26,9 +26,9 @@ BOOST_AUTO_TEST_CASE(SerialConfig)
     BOOST_TEST(ranks.front() == 0);
   }
 
-  { // slaves
-    auto slaves = utils::MasterSlave::allSlaves();
-    BOOST_TEST((slaves.begin() == slaves.end()));
+  { // secondary ranks
+    auto secondaryRanks = utils::MasterSlave::allSecondaryRanks();
+    BOOST_TEST((secondaryRanks.begin() == secondaryRanks.end()));
   }
 
   BOOST_TEST(!static_cast<bool>(utils::MasterSlave::getCommunication()));
@@ -36,10 +36,10 @@ BOOST_AUTO_TEST_CASE(SerialConfig)
 
 BOOST_AUTO_TEST_CASE(ParallelConfig)
 {
-  PRECICE_TEST(""_on(3_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
 
-  BOOST_TEST(utils::MasterSlave::isMaster() == context.isMaster());
-  BOOST_TEST(utils::MasterSlave::isSlave() != context.isMaster());
+  BOOST_TEST(utils::MasterSlave::isPrimary() == context.isPrimary());
+  BOOST_TEST(utils::MasterSlave::isSecondary() != context.isPrimary());
   BOOST_TEST(utils::MasterSlave::isParallel());
 
   BOOST_TEST(utils::MasterSlave::getRank() == context.rank);
@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(ParallelConfig)
     BOOST_TEST(ranks == expected, boost::test_tools::per_element());
   }
 
-  { // slaves
-    auto             slaves = utils::MasterSlave::allSlaves();
-    std::vector<int> ranks(slaves.begin(), slaves.end());
+  { // secondary ranks
+    auto             secondaryRanks = utils::MasterSlave::allSecondaryRanks();
+    std::vector<int> ranks(secondaryRanks.begin(), secondaryRanks.end());
     std::vector<int> expected{1, 2};
     BOOST_TEST(ranks == expected, boost::test_tools::per_element());
   }
@@ -64,10 +64,10 @@ BOOST_AUTO_TEST_CASE(ParallelConfig)
 
 BOOST_AUTO_TEST_CASE(Parallell2norm)
 {
-  PRECICE_TEST(""_on(3_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
 
   const double norm = 16.881943016134134;
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     Eigen::VectorXd v(3);
     v << 1, 2, 3;
     BOOST_TEST(utils::MasterSlave::l2norm(v) == norm);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(Parallell2norm)
 
 BOOST_AUTO_TEST_CASE(Seriall2norm)
 {
-  PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
 
   const double    norm = 16.881943016134134;
   Eigen::VectorXd v(9);
@@ -96,9 +96,9 @@ BOOST_AUTO_TEST_CASE(Seriall2norm)
 
 BOOST_AUTO_TEST_CASE(Paralleldot)
 {
-  PRECICE_TEST(""_on(3_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     Eigen::VectorXd u(3), v(3);
     u << 1, 2, 3;
     v << 9, 8, 7;
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(Paralleldot)
 
 BOOST_AUTO_TEST_CASE(Serialdot)
 {
-  PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
 
   Eigen::VectorXd u(9), v(9);
   u << 1, 2, 3, 4, 5, 6, 7, 8, 9;
@@ -130,9 +130,9 @@ BOOST_AUTO_TEST_CASE(Serialdot)
 
 BOOST_AUTO_TEST_CASE(ParallelReduceSum)
 {
-  PRECICE_TEST(""_on(3_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     {
       std::vector<double> in{1, 2, 3}, out{-1, -1, -1};
       utils::MasterSlave::reduceSum(in, out);
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(ParallelReduceSum)
 
 BOOST_AUTO_TEST_CASE(SerialReduceSum)
 {
-  PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
 
   {
     std::vector<double> in{1, 2, 3}, out{-1, -1, -1};
@@ -210,9 +210,9 @@ BOOST_AUTO_TEST_CASE(SerialReduceSum)
 
 BOOST_AUTO_TEST_CASE(ParallelAllReduceSum)
 {
-  PRECICE_TEST(""_on(3_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     {
       std::vector<double> in{1, 2, 3}, out{-1, -1, -1};
       utils::MasterSlave::allreduceSum(in, out);
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(ParallelAllReduceSum)
 
 BOOST_AUTO_TEST_CASE(SerialAllReduceSum)
 {
-  PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
 
   {
     std::vector<double> in{1, 2, 3}, out{-1, -1, -1};
@@ -288,9 +288,9 @@ BOOST_AUTO_TEST_CASE(SerialAllReduceSum)
 
 BOOST_AUTO_TEST_CASE(ParallelBroadcast)
 {
-  PRECICE_TEST(""_on(3_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     {
       std::vector<double> in{1, 2, 3};
       utils::MasterSlave::broadcast(in);
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(ParallelBroadcast)
 
 BOOST_AUTO_TEST_CASE(SerialBroadcast)
 {
-  PRECICE_TEST(""_on(1_rank).setupMasterSlaves());
+  PRECICE_TEST(""_on(1_rank).setupIntraComm());
   {
     std::vector<double> in{1, 2, 3};
     utils::MasterSlave::broadcast(in);

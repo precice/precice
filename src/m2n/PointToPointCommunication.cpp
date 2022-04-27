@@ -89,10 +89,10 @@ void broadcastReceive(mesh::Mesh::VertexDistribution &m,
 
 void broadcast(mesh::Mesh::VertexDistribution &m)
 {
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isPrimary()) {
     // Broadcast (send) vertex distributions.
     m2n::broadcastSend(m);
-  } else if (utils::MasterSlave::isSlave()) {
+  } else if (utils::MasterSlave::isSecondary()) {
     // Broadcast (receive) vertex distributions.
     m2n::broadcastReceive(m, 0);
   }
@@ -110,13 +110,13 @@ void print(std::map<int, std::vector<int>> const &m)
     }
   }
 
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     utils::MasterSlave::getCommunication()->send(oss.str(), 0);
   } else {
 
     std::string s;
 
-    for (Rank rank : utils::MasterSlave::allSlaves()) {
+    for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
       utils::MasterSlave::getCommunication()->receive(s, rank);
 
       oss << s;
@@ -130,7 +130,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
 {
   int size = m.size();
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isPrimary()) {
     size_t count   = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
@@ -142,7 +142,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
       count++;
     }
 
-    for (Rank rank : utils::MasterSlave::allSlaves()) {
+    for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
       utils::MasterSlave::getCommunication()->receive(size, rank);
 
       total += size;
@@ -173,7 +173,7 @@ void printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const &
               << "Number of Interface Processes: " << count << "\n"
               << '\n';
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
+    PRECICE_ASSERT(utils::MasterSlave::isSecondary());
     utils::MasterSlave::getCommunication()->send(size, 0);
   }
 }
@@ -186,7 +186,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
     size += i.second.size();
   }
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isPrimary()) {
     size_t count   = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
@@ -199,7 +199,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
       count++;
     }
 
-    for (Rank rank : utils::MasterSlave::allSlaves()) {
+    for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
       utils::MasterSlave::getCommunication()->receive(size, rank);
 
       total += size;
@@ -231,7 +231,7 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
               << "Number of Interface Processes: " << count << '\n'
               << '\n';
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::isSlave());
+    PRECICE_ASSERT(utils::MasterSlave::isSecondary());
 
     utils::MasterSlave::getCommunication()->send(size, 0);
   }
@@ -315,13 +315,13 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  requesterVertexDistribution;
 
-  if (not utils::MasterSlave::isSlave()) {
-    PRECICE_DEBUG("Exchange vertex distribution between both masters");
+  if (not utils::MasterSlave::isSecondary()) {
+    PRECICE_DEBUG("Exchange vertex distribution between both primary ranks");
     Event e0("m2n.exchangeVertexDistribution");
-    // Establish connection between participants' master processes.
+    // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(acceptorName, requesterName, "TMP-MASTERCOM-" + _mesh->getName(), utils::MasterSlave::getRank());
+    c->acceptConnection(acceptorName, requesterName, "TMP-PRIMARYCOM-" + _mesh->getName(), utils::MasterSlave::getRank());
 
     // Exchange vertex distributions.
     m2n::send(vertexDistribution, 0, c);
@@ -439,13 +439,13 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   mesh::Mesh::VertexDistribution &vertexDistribution = _mesh->getVertexDistribution();
   mesh::Mesh::VertexDistribution  acceptorVertexDistribution;
 
-  if (not utils::MasterSlave::isSlave()) {
-    PRECICE_DEBUG("Exchange vertex distribution between both masters");
+  if (not utils::MasterSlave::isSecondary()) {
+    PRECICE_DEBUG("Exchange vertex distribution between both primary ranks");
     Event e0("m2n.exchangeVertexDistribution");
-    // Establish connection between participants' master processes.
+    // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
     c->requestConnection(acceptorName, requesterName,
-                         "TMP-MASTERCOM-" + _mesh->getName(),
+                         "TMP-PRIMARYCOM-" + _mesh->getName(),
                          0, 1);
 
     // Exchange vertex distributions.
@@ -559,7 +559,7 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   _isConnected = true;
 }
 
-void PointToPointCommunication::completeSlavesConnection()
+void PointToPointCommunication::completeSecondaryRanksConnection()
 {
   mesh::Mesh::CommunicationMap localCommunicationMap = _mesh->getCommunicationMap();
 

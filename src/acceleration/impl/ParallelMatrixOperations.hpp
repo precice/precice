@@ -42,11 +42,11 @@ public:
     PRECICE_ASSERT(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
     PRECICE_ASSERT(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
-    // if serial computation on single processor, i.e, no master-slave mode
+    // if serial computation on single processor
     if (!utils::MasterSlave::isParallel()) {
       result.noalias() = leftMatrix * rightMatrix;
 
-      // if parallel computation on p processors, i.e., master-slave mode
+      // if parallel computation on p processors
     } else {
       PRECICE_ASSERT(utils::MasterSlave::getCommunication() != NULL);
       PRECICE_ASSERT(utils::MasterSlave::getCommunication()->isConnected());
@@ -102,7 +102,7 @@ public:
     Eigen::MatrixXd localResult(result.rows(), result.cols());
     localResult.noalias() = leftMatrix * rightMatrix;
 
-    // if serial computation on single processor, i.e, no master-slave mode
+    // if serial computation on single processor
     if (!utils::MasterSlave::isParallel()) {
       result = localResult;
     } else {
@@ -278,53 +278,53 @@ private:
     // Note: if procs have no vertices, the block size remains (n_global x m), however,
     // 	     it must be initialized with zeros, so zeros are added for those procs)
 
-    // sum up blocks in master, reduce
-    Eigen::MatrixXd summarizedBlocks = Eigen::MatrixXd::Zero(p, r); /// @todo: only master should allocate memory.
+    // sum up blocks on the primary rank, reduce
+    Eigen::MatrixXd summarizedBlocks = Eigen::MatrixXd::Zero(p, r); /// @todo: only primary rank should allocate memory.
     utils::MasterSlave::reduceSum(block, summarizedBlocks);
 
-    // slaves wait to receive their local result
-    if (utils::MasterSlave::isSlave()) {
+    // secondary ranks wait to receive their local result
+    if (utils::MasterSlave::isSecondary()) {
       if (result.size() > 0)
         utils::MasterSlave::getCommunication()->receive(result, 0);
     }
 
-    // master distributes the sub blocks of the results
-    if (utils::MasterSlave::isMaster()) {
-      // distribute blocks of summarizedBlocks (result of multiplication) to corresponding slaves
+    // primary rank distributes the sub blocks of the results
+    if (utils::MasterSlave::isPrimary()) {
+      // distribute blocks of summarizedBlocks (result of multiplication) to corresponding secondary ranks
       result = summarizedBlocks.block(0, 0, offsets[1], r);
 
-      for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-        int off       = offsets[rankSlave];
-        int send_rows = offsets[rankSlave + 1] - offsets[rankSlave];
+      for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
+        int off       = offsets[secondaryRank];
+        int send_rows = offsets[secondaryRank + 1] - offsets[secondaryRank];
 
         if (summarizedBlocks.block(off, 0, send_rows, r).size() > 0) {
           // necessary to save the matrix-block that is to be sent in a temporary matrix-object
           // otherwise, the send routine walks over the bounds of the block (matrix structure is still from the entire matrix)
           Eigen::MatrixXd sendBlock = summarizedBlocks.block(off, 0, send_rows, r);
-          utils::MasterSlave::getCommunication()->send(sendBlock, rankSlave);
+          utils::MasterSlave::getCommunication()->send(sendBlock, secondaryRank);
         }
       }
     }
   }
 
-  /// Communication between neighboring slaves, backwards
+  /// Communication between neighboring ranks, backwards
   com::PtrCommunication _cyclicCommLeft = nullptr;
 
-  /// Communication between neighboring slaves, forward
+  /// Communication between neighboring ranks, forward
   com::PtrCommunication _cyclicCommRight = nullptr;
 
   bool _needCyclicComm = true;
 
-  /** Establishes the circular connection between slaves
+  /** Establishes the circular connection between ranks
    *
-   * This creates and connects the slaves.
+   * This creates and connects the ranks.
    *
    * @precondition _cyclicCommLeft and _cyclicCommRight must be nullptr
    * @postcondition _cyclicCommLeft, _cyclicCommRight are connected
    */
   void establishCircularCommunication();
 
-  /** Closes the circular connection between slaves
+  /** Closes the circular connection between ranks
    *
    * @precondition establishCircularCommunication() was called
    * @postcondition _cyclicCommLeft, _cyclicCommRight are disconnected and set to nullptr

@@ -23,14 +23,14 @@ WatchIntegral::WatchIntegral(
 {
   PRECICE_ASSERT(_mesh);
 
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
     _txtWriter.addData("Time", io::TXTTableWriter::DOUBLE);
   }
 
   for (size_t i = 0; i < _mesh->data().size(); i++) {
     _dataToExport.push_back(_mesh->data()[i]);
 
-    if (not utils::MasterSlave::isSlave()) {
+    if (not utils::MasterSlave::isSecondary()) {
       if (_dataToExport[i]->getDimensions() > 1) {
 
         io::TXTTableWriter::DataType vectorType = _dataToExport[i]->getDimensions() == 2
@@ -47,7 +47,7 @@ WatchIntegral::WatchIntegral(
 void WatchIntegral::initialize()
 {
   // Do not add surface area column if there is no connectivity
-  if ((not utils::MasterSlave::isSlave()) and (not _mesh->edges().empty())) {
+  if ((not utils::MasterSlave::isSecondary()) and (not _mesh->edges().empty())) {
     _txtWriter.addData("SurfaceArea", io::TXTTableWriter::DOUBLE);
   }
   if (_isScalingOn and (_mesh->edges().empty())) {
@@ -62,7 +62,7 @@ void WatchIntegral::exportIntegralData(
     double time)
 {
 
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
     _txtWriter.writeData("Time", time);
   }
 
@@ -75,7 +75,7 @@ void WatchIntegral::exportIntegralData(
       utils::MasterSlave::reduceSum(integral, valueRecv);
       integral = std::move(valueRecv);
     }
-    if (not utils::MasterSlave::isSlave()) {
+    if (not utils::MasterSlave::isSecondary()) {
       if (dataDimensions == 1) {
         _txtWriter.writeData(elem->getName(), integral[0]);
       } else if (dataDimensions == 2) {
@@ -94,7 +94,7 @@ void WatchIntegral::exportIntegralData(
       utils::MasterSlave::reduceSum(surfaceArea, surfaceAreaSum);
       surfaceArea = surfaceAreaSum;
     }
-    if (not utils::MasterSlave::isSlave()) {
+    if (not utils::MasterSlave::isSecondary()) {
       _txtWriter.writeData("SurfaceArea", surfaceArea);
     }
   } else {

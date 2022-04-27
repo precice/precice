@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
   if (context.isNamed("FluidSolver")) {
     precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       interface.initialize();
       interface.advance(1.0);
       interface.finalize();

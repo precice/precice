@@ -135,10 +135,10 @@ private:
 
   mapping::PtrMapping getMapping(const std::string &mappingName);
 
-  // Does this participant already define a master tag?
+  // Does this participant already define a primary tag?
   // This context information is needed in xmlEndTagCallback to create a default
-  // master com if required (i.e. no solution yet defined and parallel).
-  bool _isMasterDefined = false;
+  // primary com if required (i.e. no solution yet defined and parallel).
+  bool _isIntraCommDefined = false;
 
   void finishParticipantConfiguration(
       const xml::ConfigurationContext &context,
