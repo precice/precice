@@ -218,11 +218,11 @@ void ReceivedPartition::compute()
       _mesh->getVertexDistribution()[0] = std::move(vertexIDs);
 
       for (int secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
-        int numberOfSlaveVertices = -1;
-        utils::MasterSlave::getCommunication()->receive(numberOfSlaveVertices, secondaryRank);
-        PRECICE_ASSERT(numberOfSlaveVertices >= 0);
-        std::vector<int> secondaryVertexIDs(numberOfSlaveVertices, -1);
-        if (numberOfSlaveVertices != 0) {
+        int numberOfSecondaryRankVertices = -1;
+        utils::MasterSlave::getCommunication()->receive(numberOfSecondaryRankVertices, secondaryRank);
+        PRECICE_ASSERT(numberOfSecondaryRankVertices >= 0);
+        std::vector<int> secondaryVertexIDs(numberOfSecondaryRankVertices, -1);
+        if (numberOfSecondaryRankVertices != 0) {
           PRECICE_DEBUG("Receive partition feedback from secondary rank {}", secondaryRank);
           utils::MasterSlave::getCommunication()->receive(secondaryVertexIDs, secondaryRank);
         }
@@ -251,9 +251,9 @@ void ReceivedPartition::compute()
 
     // receive number of secondary vertices and fill vertex offsets
     for (int secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
-      int numberOfSlaveVertices = -1;
-      utils::MasterSlave::getCommunication()->receive(numberOfSlaveVertices, secondaryRank);
-      _mesh->getVertexOffsets()[secondaryRank] = numberOfSlaveVertices + _mesh->getVertexOffsets()[secondaryRank - 1];
+      int numberOfSecondaryRankVertices = -1;
+      utils::MasterSlave::getCommunication()->receive(numberOfSecondaryRankVertices, secondaryRank);
+      _mesh->getVertexOffsets()[secondaryRank] = numberOfSecondaryRankVertices + _mesh->getVertexOffsets()[secondaryRank - 1];
     }
 
     // broadcast vertex offsets
@@ -285,14 +285,14 @@ void ReceivedPartition::filterByBoundingBox()
   if (m2n().usesTwoLevelInitialization()) {
     std::string msg = "The received mesh " + _mesh->getName() +
                       " cannot solely be filtered on the primary rank "
-                      "(option \"filter-on-primary-rank\") if it is communicated by an m2n communication that uses "
+                      "(option \"filter-on-master\") if it is communicated by an m2n communication that uses "
                       "two-level initialization. Use \"filter-on-secondary-rank\" or \"no-filter\" instead.";
-    PRECICE_CHECK(_geometricFilter != ON_MASTER, msg);
+    PRECICE_CHECK(_geometricFilter != ON_PRIMARY_RANK, msg);
   }
 
   prepareBoundingBox();
 
-  if (_geometricFilter == ON_MASTER) { //filter on primary rank and communicate reduced mesh then
+  if (_geometricFilter == ON_PRIMARY_RANK) { //filter on primary rank and communicate reduced mesh then
 
     PRECICE_ASSERT(not m2n().usesTwoLevelInitialization());
     PRECICE_INFO("Pre-filter mesh {} by bounding box on primary rank", _mesh->getName());
@@ -349,7 +349,7 @@ void ReceivedPartition::filterByBoundingBox()
         com::CommunicateMesh(utils::MasterSlave::getCommunication()).broadcastSendMesh(*_mesh);
       }
     }
-    if (_geometricFilter == ON_SLAVES) {
+    if (_geometricFilter == ON_SECONDARY_RANKS) {
 
       PRECICE_INFO("Filter mesh {} by bounding box on secondary ranks", _mesh->getName());
       Event e("partition.filterMeshBB." + _mesh->getName(), precice::syncMode);

@@ -34,9 +34,9 @@ public:
     /// No geometric filter used (e.g. for RBF mappings)
     NO_FILTER,
     /// Filter at primary rank and communicate only filtered mesh.
-    ON_MASTER,
+    ON_PRIMARY_RANK,
     /// Filter after communication on all secondary ranks
-    ON_SLAVES
+    ON_SECONDARY_RANKS
   };
 
   /// Constructor

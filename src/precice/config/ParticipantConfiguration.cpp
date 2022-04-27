@@ -162,11 +162,11 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "If a mesh is received from another partipant (see tag <from>), it needs to be"
                                "decomposed at the receiving participant. To speed up this process, "
                                "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. "
-                               "Two different variants are implemented: a filter \"on-primary\" strategy, "
+                               "Two different variants are implemented: a filter \"on-master\" strategy, "
                                "which is beneficial for a huge mesh and a low number of processors, and a filter "
-                               "\"on-secondary ranks\" strategy, which performs better for a very high number of "
+                               "\"on-slaves\" strategy, which performs better for a very high number of "
                                "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
-                               "\"on-primary\" is not supported if you use two-level initialization. "
+                               "\"on-master\" is not supported if you use two-level initialization. "
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
                            .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER})
                            .setDefaultValue(VALUE_FILTER_ON_SLAVES);
@@ -314,7 +314,7 @@ void ParticipantConfiguration::xmlTagCallback(
                   "Participant \"{}\" uses mesh \"{}\" which is not defined. "
                   "Please check the use-mesh node with name=\"{}\" or define the mesh.",
                   _participants.back()->getName(), name, name);
-    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SLAVES || safetyFactor != 0.5) && from == "") {
+    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SECONDARY_RANKS || safetyFactor != 0.5) && from == "") {
       PRECICE_ERROR(
           "Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a geometric-filter and/or a safety factor defined. "
           "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />",
@@ -398,9 +398,9 @@ ParticipantConfiguration::getParticipants() const
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
 {
   if (geoFilter == VALUE_FILTER_ON_MASTER) {
-    return partition::ReceivedPartition::GeometricFilter::ON_MASTER;
+    return partition::ReceivedPartition::GeometricFilter::ON_PRIMARY_RANK;
   } else if (geoFilter == VALUE_FILTER_ON_SLAVES) {
-    return partition::ReceivedPartition::GeometricFilter::ON_SLAVES;
+    return partition::ReceivedPartition::GeometricFilter::ON_SECONDARY_RANKS;
   } else {
     PRECICE_ASSERT(geoFilter == VALUE_NO_FILTER);
     return partition::ReceivedPartition::GeometricFilter::NO_FILTER;

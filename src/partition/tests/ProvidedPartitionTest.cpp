@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
     part.addM2N(m2n);
     part.communicate();
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
       mesh::Vertex &v2 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v1, v2);
     } else if (context.isRank(1)) { //SecondaryRank1
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       Eigen::VectorXd position(dimensions);
       position << 0.0, 3.5;
       mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
 
     double safetyFactor = 0.1;
 
-    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(pSolidzMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
     part.addM2N(m2n);
     part.communicate();
 
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
       mesh::Vertex &v2 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v1, v2);
     } else if (context.isRank(1)) { //SecondaryRank1
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       Eigen::VectorXd position(dimensions);
       position << 0.0, 3.5, 0.1;
       mesh::Vertex &v3 = pSolidzMesh->createVertex(position);
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
       BOOST_TEST(vertexOffsets.at(0) == 2);
       BOOST_TEST(vertexOffsets.at(1) == 2);
       BOOST_TEST(vertexOffsets.at(2) == 6);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       BOOST_REQUIRE(vertexOffsets.size() == 3);
       BOOST_TEST(vertexOffsets.at(0) == 2);
       BOOST_TEST(vertexOffsets.at(1) == 2);
@@ -239,8 +239,8 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
     Eigen::VectorXd position(dim);
     position << 2.0, 0.0;
     pMesh->createVertex(position);
-  } else if (context.isRank(2)) { //Slave2
-  } else if (context.isRank(3)) { //Slave3
+  } else if (context.isRank(2)) { //Secondary rank 2
+  } else if (context.isRank(3)) { //Secondary rank 3
     Eigen::VectorXd position(dim);
     position << 3.0, 0.0;
     pMesh->createVertex(position);
@@ -275,14 +275,14 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
       BOOST_TEST(pMesh->getVertexOffsets().at(3) == 5);
       BOOST_TEST(pMesh->vertices().at(0).getGlobalIndex() == 2);
       BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
       BOOST_TEST_REQUIRE(pMesh->getVertexOffsets().size() == 4);
       BOOST_TEST(pMesh->getVertexOffsets().at(0) == 2);
       BOOST_TEST(pMesh->getVertexOffsets().at(1) == 3);
       BOOST_TEST(pMesh->getVertexOffsets().at(2) == 3);
       BOOST_TEST(pMesh->getVertexOffsets().at(3) == 5);
-    } else if (context.isRank(3)) { //Slave3
+    } else if (context.isRank(3)) { //Secondary rank 3
       BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
       BOOST_TEST_REQUIRE(pMesh->getVertexOffsets().size() == 4);
       BOOST_TEST(pMesh->getVertexOffsets().at(0) == 2);
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
       position << 0.0, 4.5;
       mesh::Vertex &v4 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v3, v4);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       Eigen::VectorXd position(dimensions);
       position << 2.5, 5.5;
       mesh::Vertex &v5 = pSolidzMesh->createVertex(position);
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
       BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(0) == 0);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(1) == 2);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(0) == 0);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(1) == 1);
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
       position << 0.0, 4.5, 0.0;
       mesh::Vertex &v4 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v3, v4);
-    } else if (context.isRank(2)) { //Slave2
+    } else if (context.isRank(2)) { //Secondary rank 2
       Eigen::VectorXd position(dimensions);
       position << 2.5, 5.5, 2.5;
       mesh::Vertex &v5 = pSolidzMesh->createVertex(position);
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
     part.communicate();
   } else {
     m2n->createDistributedCommunication(mesh);
-    ReceivedPartition part(mesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(mesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
     m2n->requestSecondaryRanksPreConnection("SolidSecondaryRanks", "FluidSecondaryRanks");
     part.addM2N(m2n);
 
@@ -705,7 +705,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
     boundingFromMapping->setMeshes(receivedMesh, mesh);
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
-    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
 
     part.addM2N(m2n);
 
@@ -834,7 +834,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
     boundingFromMapping->setMeshes(receivedMesh, mesh);
     boundingToMapping->setMeshes(mesh, receivedMesh);
 
-    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SLAVES, safetyFactor);
+    ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
     part.addM2N(m2n);
 
     part.addFromMapping(boundingFromMapping);

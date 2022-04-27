@@ -137,11 +137,11 @@ void ProvidedPartition::prepare()
 
     // receive number of secondary vertices and fill vertex offsets
     for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
-      int numberOfSlaveVertices = -1;
-      utils::MasterSlave::getCommunication()->receive(numberOfSlaveVertices, secondaryRank);
-      _mesh->getVertexOffsets()[secondaryRank] = numberOfSlaveVertices + _mesh->getVertexOffsets()[secondaryRank - 1];
+      int numberOfSecondaryRankVertices = -1;
+      utils::MasterSlave::getCommunication()->receive(numberOfSecondaryRankVertices, secondaryRank);
+      _mesh->getVertexOffsets()[secondaryRank] = numberOfSecondaryRankVertices + _mesh->getVertexOffsets()[secondaryRank - 1];
       utils::MasterSlave::getCommunication()->send(globalNumberOfVertices, secondaryRank);
-      globalNumberOfVertices += numberOfSlaveVertices;
+      globalNumberOfVertices += numberOfSecondaryRankVertices;
     }
 
     // set and broadcast global number of vertices
