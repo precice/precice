@@ -97,10 +97,10 @@ protected:
   mesh::PtrData _providedData;
 
   /// If a mapping exists, mesh::PtrData the mapping maps from.
-  std::vector<mesh::PtrData> _fromData;
+  std::vector<mesh::PtrData> _fromDatas;
 
   /// If a mapping exists, mesh::PtrData the mapping maps from.
-  std::vector<mesh::PtrData> _toData;
+  std::vector<mesh::PtrData> _toDatas;
 
   /**
    * @brief Helper to add _mappingContext, _fromData and _toData.
