@@ -55,7 +55,7 @@ public:
    *
    * @return int ID of _mesh.
    */
-  int getMeshID() const;
+  MeshID getMeshID() const;
 
   /**
    * @brief Check whether mapping has to be performed.
@@ -79,7 +79,7 @@ public:
    * @param[in] mappingContext Context of the mapping
    * @param[in] meshContext Context of mesh this mapping is mapping from or to
    */
-  virtual void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) = 0;
+  virtual void addMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext) = 0;
 
 protected:
   /**
@@ -91,25 +91,25 @@ protected:
   DataContext(mesh::PtrData data, mesh::PtrMesh mesh);
 
   /// Defines the mapping associated to this DataContext. A DataContext may also exist without a mapping.
-  MappingContext _mappingContext;
+  std::vector<MappingContext> _mappingContext;
 
-  /// Data this participant will write to and read from
+  /// Unique data this context is associated with
   mesh::PtrData _providedData;
 
   /// If a mapping exists, mesh::PtrData the mapping maps from.
-  mesh::PtrData _fromData;
+  std::vector<mesh::PtrData> _fromData;
 
   /// If a mapping exists, mesh::PtrData the mapping maps from.
-  mesh::PtrData _toData;
+  std::vector<mesh::PtrData> _toData;
 
   /**
-   * @brief Helper to set _mappingContext, _fromData and _toData.
+   * @brief Helper to add _mappingContext, _fromData and _toData.
    *
    * @param mappingContext MappingContext this DataContext will be associated to.
    * @param fromData Data the mapping maps from.
    * @param toData Data the mapping maps to.
    */
-  void setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
+  void addMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
 
   /**
    * @brief Informs the user whether this DataContext has a read mapping.
@@ -126,7 +126,7 @@ protected:
   bool hasWriteMapping() const;
 
 private:
-  /// Mesh associated with _providedData.
+  /// Unique mesh associated with _providedData.
   mesh::PtrMesh _mesh;
 
   static logging::Logger _log;
@@ -134,16 +134,20 @@ private:
   /**
    * @brief Get the ID of _fromData. Used for performing the mapping outside of this class.
    *
-   * @return int ID of _fromData.
+   * @param[in] dataVectorIndex Index of the 'fromData' vector this data context holds
+   *
+   * @return DataID ID of _fromData.
    */
-  int getFromDataID() const;
+  DataID getFromDataID(int dataVectorIndex) const;
 
   /**
    * @brief Get the ID of _toData. Used for performing the mapping outside of this class.
    *
-   * @return int ID of _toData.
+   * @param[in] dataVectorIndex Index of the 'fromData' vector this data context holds
+   *
+   * @return DataID ID of _toData.
    */
-  int getToDataID() const;
+  DataID getToDataID(int dataVectorIndex) const;
 
   /**
    * @brief Informs the user whether this DataContext has a _mappingContext.
