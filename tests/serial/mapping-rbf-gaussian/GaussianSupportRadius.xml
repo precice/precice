@@ -20,6 +20,7 @@
       <use-mesh name="MeshOne" from="SolverOne" />
       <use-mesh name="MeshTwo" provide="on" />
       <mapping:rbf-gaussian
+        solver-rtol="1e-11"
         support-radius="2"
         direction="read"
         from="MeshOne"

@@ -36,9 +36,9 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
   Vector3d coordTwoB{0.5, 0.5, z}; // Maps on the left side of the domain
   Vector3d coordTwoC{3.5, 0.5, z}; // Maps more in the middle of the domain
 
-  double expectedValTwoA = 1.000000008897409;
-  double expectedValTwoB = 7.4949306631817993;
-  double expectedValTwoC = 77.499808821611879;
+  double expectedValTwoA = 1.0;
+  double expectedValTwoB = 7.4949306741452819;
+  double expectedValTwoC = 77.499808833124902;
 
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
