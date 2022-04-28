@@ -21,36 +21,36 @@ void BoundM2N::prepareEstablishment()
   m2n->prepareEstablishment(localName, remoteName);
 }
 
-void BoundM2N::connectMasters()
+void BoundM2N::connectPrimaryRanks()
 {
   std::string fullLocalName = localName;
 
   if (isRequesting) {
-    m2n->requestMasterConnection(remoteName, fullLocalName);
+    m2n->requestPrimaryConnection(remoteName, fullLocalName);
   } else {
-    m2n->acceptMasterConnection(fullLocalName, remoteName);
+    m2n->acceptPrimaryConnection(fullLocalName, remoteName);
   }
 }
 
-void BoundM2N::connectSlaves()
+void BoundM2N::connectSecondaryRanks()
 {
   if (m2n->usesTwoLevelInitialization()) {
-    PRECICE_DEBUG("Update slaves connections");
-    m2n->completeSlavesConnection();
+    PRECICE_DEBUG("Update secondary connections");
+    m2n->completeSecondaryRanksConnection();
   } else {
     if (isRequesting) {
-      PRECICE_DEBUG("Awaiting slaves connection from {}", remoteName);
-      m2n->requestSlavesConnection(remoteName, localName);
-      PRECICE_DEBUG("Established slaves connection from {}", remoteName);
+      PRECICE_DEBUG("Awaiting secondary connections from {}", remoteName);
+      m2n->requestSecondaryConnections(remoteName, localName);
+      PRECICE_DEBUG("Established secondary connections from {}", remoteName);
     } else {
-      PRECICE_DEBUG("Establishing slaves connection to {}", remoteName);
-      m2n->acceptSlavesConnection(localName, remoteName);
-      PRECICE_DEBUG("Established  slaves connection to {}", remoteName);
+      PRECICE_DEBUG("Establishing secondary connections to {}", remoteName);
+      m2n->acceptSecondaryConnections(localName, remoteName);
+      PRECICE_DEBUG("Established  secondary connections to {}", remoteName);
     }
   }
 }
 
-void BoundM2N::preConnectSlaves()
+void BoundM2N::preConnectSecondaryRanks()
 {
   if (not m2n->usesTwoLevelInitialization())
     return;
@@ -58,13 +58,13 @@ void BoundM2N::preConnectSlaves()
   PRECICE_WARN("Two-level initialization is still in beta testing. Several edge cases are known to fail. Please report problems nevertheless.");
 
   if (isRequesting) {
-    PRECICE_DEBUG("Awaiting preliminary slaves connection from {}", remoteName);
-    m2n->requestSlavesPreConnection(remoteName, localName);
-    PRECICE_DEBUG("Established preliminary slaves connection from {}", remoteName);
+    PRECICE_DEBUG("Awaiting preliminary secondary connections from {}", remoteName);
+    m2n->requestSecondaryRanksPreConnection(remoteName, localName);
+    PRECICE_DEBUG("Established preliminary secondary connections from {}", remoteName);
   } else {
-    PRECICE_DEBUG("Establishing preliminary slaves connection to {}", remoteName);
-    m2n->acceptSlavesPreConnection(localName, remoteName);
-    PRECICE_DEBUG("Established preliminary slaves connection to {}", remoteName);
+    PRECICE_DEBUG("Establishing preliminary secondary connections to {}", remoteName);
+    m2n->acceptSecondaryPreConnections(localName, remoteName);
+    PRECICE_DEBUG("Established preliminary secondary connections to {}", remoteName);
   }
 }
 
@@ -73,22 +73,22 @@ void BoundM2N::cleanupEstablishment()
   if (isRequesting) {
     return;
   }
-  waitForSlaves();
-  if (!utils::MasterSlave::isSlave()) {
+  waitForSecondaryRanks();
+  if (!utils::MasterSlave::isSecondary()) {
     m2n->cleanupEstablishment(localName, remoteName);
   }
 }
 
-void BoundM2N::waitForSlaves()
+void BoundM2N::waitForSecondaryRanks()
 {
-  if (utils::MasterSlave::isMaster()) {
-    for (Rank rank : utils::MasterSlave::allSlaves()) {
+  if (utils::MasterSlave::isPrimary()) {
+    for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
       int item = 0;
       utils::MasterSlave::getCommunication()->receive(item, rank);
       PRECICE_ASSERT(item > 0);
     }
   }
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     int item = utils::MasterSlave::getRank();
     utils::MasterSlave::getCommunication()->send(item, 0);
   }

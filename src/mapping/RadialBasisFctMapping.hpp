@@ -148,7 +148,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = output();
   }
 
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
 
     // Input mesh may have overlaps
     mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
@@ -158,12 +158,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     com::CommunicateMesh(utils::MasterSlave::getCommunication()).sendMesh(filteredInMesh, 0);
     com::CommunicateMesh(utils::MasterSlave::getCommunication()).sendMesh(*outMesh, 0);
 
-  } else { // Parallel Master or Serial
+  } else { // Parallel Primary rank or Serial
 
     mesh::Mesh globalInMesh("globalInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
     mesh::Mesh globalOutMesh("globalOutMesh", outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
 
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::MasterSlave::isPrimary()) {
       {
         // Input mesh may have overlaps
         mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
@@ -173,14 +173,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
 
       // Receive mesh
-      for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-        mesh::Mesh slaveInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-        com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(slaveInMesh, rankSlave);
-        globalInMesh.addMesh(slaveInMesh);
+      for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
+        mesh::Mesh secondaryInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+        com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(secondaryInMesh, secondaryRank);
+        globalInMesh.addMesh(secondaryInMesh);
 
-        mesh::Mesh slaveOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-        com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(slaveOutMesh, rankSlave);
-        globalOutMesh.addMesh(slaveOutMesh);
+        mesh::Mesh secondaryOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+        com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(secondaryOutMesh, secondaryRank);
+        globalOutMesh.addMesh(secondaryOutMesh);
       }
 
     } else { // Serial
@@ -257,7 +257,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
   PRECICE_TRACE(inputDataID, outputDataID, polyparams);
 
   // Gather input data
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
 
     const auto &localInData = input()->data(inputDataID)->values();
 
@@ -273,7 +273,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     utils::MasterSlave::getCommunication()->send(localInData, 0);
     utils::MasterSlave::getCommunication()->send(localOutputSize, 0);
 
-  } else { // Parallel Master or Serial case
+  } else { // Parallel Primary rank or Serial case
 
     std::vector<double> globalInValues;
     std::vector<double> outputValueSizes;
@@ -294,14 +294,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     }
 
     {
-      std::vector<double> slaveBuffer;
-      int                 slaveOutputValueSize;
-      for (Rank rank : utils::MasterSlave::allSlaves()) {
-        utils::MasterSlave::getCommunication()->receive(slaveBuffer, rank);
-        globalInValues.insert(globalInValues.end(), slaveBuffer.begin(), slaveBuffer.end());
+      std::vector<double> secondaryBuffer;
+      int                 secondaryOutputValueSize;
+      for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
+        utils::MasterSlave::getCommunication()->receive(secondaryBuffer, rank);
+        globalInValues.insert(globalInValues.end(), secondaryBuffer.begin(), secondaryBuffer.end());
 
-        utils::MasterSlave::getCommunication()->receive(slaveOutputValueSize, rank);
-        outputValueSizes.push_back(slaveOutputValueSize);
+        utils::MasterSlave::getCommunication()->receive(secondaryOutputValueSize, rank);
+        outputValueSizes.push_back(secondaryOutputValueSize);
       }
     }
 
@@ -330,8 +330,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       }
     }
 
-    // Data scattering to slaves
-    if (utils::MasterSlave::isMaster()) {
+    // Data scattering to secondary ranks
+    if (utils::MasterSlave::isPrimary()) {
 
       // Filter data
       int outputCounter = 0;
@@ -344,9 +344,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
         }
       }
 
-      // Data scattering to slaves
+      // Data scattering to secondary ranks
       int beginPoint = outputValueSizes.at(0);
-      for (Rank rank : utils::MasterSlave::allSlaves()) {
+      for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
         precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outputValueSizes.at(rank))};
         utils::MasterSlave::getCommunication()->send(toSend, rank);
         beginPoint += outputValueSizes.at(rank);
@@ -355,7 +355,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       output()->data(outputDataID)->values() = outputValues;
     }
   }
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     std::vector<double> receivedValues;
     utils::MasterSlave::getCommunication()->receive(receivedValues, 0);
 
@@ -380,7 +380,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
   PRECICE_TRACE(inputDataID, outputDataID, polyparams);
 
   // Gather input data
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     // Input data is filtered
     auto localInDataFiltered = input()->getOwnedVertexData(inputDataID);
     int  localOutputSize     = output()->data(outputDataID)->values().size();
@@ -389,14 +389,14 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     utils::MasterSlave::getCommunication()->send(localInDataFiltered, 0);
     utils::MasterSlave::getCommunication()->send(localOutputSize, 0);
 
-  } else { // Master or Serial case
+  } else { // Primary rank or Serial case
 
     int valueDim = output()->data(outputDataID)->getDimensions();
 
     std::vector<double> globalInValues((_matrixA.cols() - polyparams) * valueDim, 0.0);
     std::vector<int>    outValuesSize;
 
-    if (utils::MasterSlave::isMaster()) { // Parallel case
+    if (utils::MasterSlave::isPrimary()) { // Parallel case
 
       // Filter input data
       const auto &localInData = input()->getOwnedVertexData(inputDataID);
@@ -404,17 +404,17 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
       outValuesSize.push_back(output()->data(outputDataID)->values().size());
 
       int inputSizeCounter = localInData.size();
-      int slaveOutDataSize{0};
+      int secondaryOutDataSize{0};
 
-      std::vector<double> slaveBuffer;
+      std::vector<double> secondaryBuffer;
 
-      for (Rank rank : utils::MasterSlave::allSlaves()) {
-        utils::MasterSlave::getCommunication()->receive(slaveBuffer, rank);
-        std::copy(slaveBuffer.begin(), slaveBuffer.end(), globalInValues.begin() + inputSizeCounter);
-        inputSizeCounter += slaveBuffer.size();
+      for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
+        utils::MasterSlave::getCommunication()->receive(secondaryBuffer, rank);
+        std::copy(secondaryBuffer.begin(), secondaryBuffer.end(), globalInValues.begin() + inputSizeCounter);
+        inputSizeCounter += secondaryBuffer.size();
 
-        utils::MasterSlave::getCommunication()->receive(slaveOutDataSize, rank);
-        outValuesSize.push_back(slaveOutDataSize);
+        utils::MasterSlave::getCommunication()->receive(secondaryOutDataSize, rank);
+        outValuesSize.push_back(secondaryOutDataSize);
       }
 
     } else { // Serial case
@@ -452,18 +452,18 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
 
-    // Data scattering to slaves
+    // Data scattering to secondary ranks
     int beginPoint = outValuesSize.at(0);
 
-    if (utils::MasterSlave::isMaster()) {
-      for (Rank rank : utils::MasterSlave::allSlaves()) {
+    if (utils::MasterSlave::isPrimary()) {
+      for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
         precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outValuesSize.at(rank))};
         utils::MasterSlave::getCommunication()->send(toSend, rank);
         beginPoint += outValuesSize.at(rank);
       }
     }
   }
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     std::vector<double> receivedValues;
     utils::MasterSlave::getCommunication()->receive(receivedValues, 0);
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());

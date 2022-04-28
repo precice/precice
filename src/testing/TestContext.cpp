@@ -39,7 +39,7 @@ TestContext::~TestContext() noexcept
   if (!invalid && _events) {
     precice::utils::EventRegistry::instance().finalize();
   }
-  if (!invalid && _initMS) {
+  if (!invalid && _initIntraComm) {
     utils::MasterSlave::getCommunication() = nullptr;
     utils::MasterSlave::reset();
   }
@@ -83,7 +83,7 @@ bool TestContext::isRank(Rank rank) const
   return this->rank == rank;
 }
 
-bool TestContext::isMaster() const
+bool TestContext::isPrimary() const
 {
   return isRank(0);
 }
@@ -116,11 +116,11 @@ void TestContext::handleOption(Participants &participants, Participant participa
 
 void TestContext::setContextFrom(const Participant &p, Rank rank)
 {
-  this->name         = p.name;
-  this->size         = p.size;
-  this->rank         = rank;
-  this->_initMS      = p.initMS;
-  this->_contextComm = utils::Parallel::current();
+  this->name           = p.name;
+  this->size           = p.size;
+  this->rank           = rank;
+  this->_initIntraComm = p.initIntraComm;
+  this->_contextComm   = utils::Parallel::current();
 }
 
 void TestContext::initialize(const Participants &participants)
@@ -186,18 +186,18 @@ void TestContext::initializeMasterSlave()
   utils::MasterSlave::configure(rank, size);
   utils::MasterSlave::getCommunication().reset();
 
-  if (!_initMS || hasSize(1))
+  if (!_initIntraComm || hasSize(1))
     return;
 
 #ifndef PRECICE_NO_MPI
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
 #else
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
+  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::SocketCommunication());
 #endif
 
-  masterSlaveCom->connectMasterSlaves(name, "", rank, size);
+  intraComm->connectIntraComm(name, "", rank, size);
 
-  utils::MasterSlave::getCommunication() = std::move(masterSlaveCom);
+  utils::MasterSlave::getCommunication() = std::move(intraComm);
 }
 
 void TestContext::initializeEvents()
@@ -214,7 +214,7 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
+m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());
 
@@ -229,7 +229,7 @@ m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::
   default:
     throw std::runtime_error{"ConnectionType unknown"};
   };
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
+  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
 
   if (std::find(_names.begin(), _names.end(), acceptor) == _names.end()) {
     throw std::runtime_error{
@@ -241,9 +241,9 @@ m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::
   }
 
   if (isNamed(acceptor)) {
-    m2n->acceptMasterConnection(acceptor, requestor);
+    m2n->acceptPrimaryConnection(acceptor, requestor);
   } else if (isNamed(requestor)) {
-    m2n->requestMasterConnection(acceptor, requestor);
+    m2n->requestPrimaryConnection(acceptor, requestor);
   } else {
     throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
   }
@@ -264,9 +264,9 @@ std::string TestContext::describe() const
   }
   os << " and runs on rank " << rank << " out of " << size << '.';
 
-  if (_initMS || _events || _petsc) {
+  if (_initIntraComm || _events || _petsc) {
     os << " Initialized: {";
-    if (_initMS)
+    if (_initIntraComm)
       os << " MasterSlave Communication ";
     if (_events)
       os << " Events";

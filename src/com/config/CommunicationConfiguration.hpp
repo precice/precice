@@ -13,7 +13,7 @@ class XMLTag;
 namespace com {
 
 /**
- * @brief Configuration for communication channels between a master and its slaves.
+ * @brief Configuration for communication channels between a primary and its secondary ranks.
  * The communication between two solvers is configured in m2n::M2NConfiguration
  */
 class CommunicationConfiguration {

@@ -114,8 +114,11 @@ target_sources(testprecice
     tests/serial/multi-coupling/MultiCouplingThreeSolvers3.cpp
     tests/serial/multi-coupling/helpers.cpp
     tests/serial/multi-coupling/helpers.hpp
-    tests/serial/multiple-mappings/MultipleFromMappings.cpp
-    tests/serial/multiple-mappings/MultipleToMappings.cpp
+    tests/serial/multiple-mappings/MultipleReadFromMappings.cpp
+    tests/serial/multiple-mappings/MultipleReadToMappings.cpp
+    tests/serial/multiple-mappings/MultipleWriteFromMappings.cpp
+    tests/serial/multiple-mappings/MultipleWriteFromMappingsAndData.cpp
+    tests/serial/multiple-mappings/MultipleWriteToMappings.cpp
     tests/serial/stationary-mapping-with-solver-mesh/StationaryMappingWithSolverMesh2D.cpp
     tests/serial/stationary-mapping-with-solver-mesh/StationaryMappingWithSolverMesh3D.cpp
     tests/serial/stationary-mapping-with-solver-mesh/helpers.cpp

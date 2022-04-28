@@ -46,7 +46,7 @@ void validate_result_equals_reference(
 
 BOOST_AUTO_TEST_CASE(ParVectorOperations)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   int              n_global = 10;
   int              n_local;
   double           a = 0;
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
 
   // <vec1, vec2> = 7.069617899295469
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     n_local = 3;
     a       = 1;
   } else if (context.isRank(1)) {
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
   BOOST_TEST(testing::equals(res2.at(0), 10.));
   BOOST_TEST(testing::equals(res2.at(1), 10.));
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isPrimary()) {
     BOOST_TEST(testing::equals(res3.at(0), 10.));
     BOOST_TEST(testing::equals(res3.at(1), 10.));
     BOOST_TEST(testing::equals(ires1, 10));
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
 
 BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
 
   int              n_global = 10, m_global = 5;
   int              n_local;
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
       1.803781441584700,
       1.462976489192458;
 
-  if (context.isMaster()) {
+  if (context.isPrimary()) {
     n_local = 3;
   } else if (context.isRank(1)) {
     n_local = 4;

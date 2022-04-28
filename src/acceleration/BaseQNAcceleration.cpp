@@ -133,7 +133,7 @@ void BaseQNAcceleration::initialize(
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
     PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::MasterSlave::isPrimary()) {
       _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
     }
 
@@ -144,7 +144,7 @@ void BaseQNAcceleration::initialize(
     _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n", entries);
   }
 
-  // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+  // set the number of global rows in the QRFactorization.
   _qrV.setGlobalRows(getLSSystemRows());
 
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
@@ -381,7 +381,7 @@ void BaseQNAcceleration::performAcceleration(
         _matrixCols.clear();
         _matrixCols.push_front(0); // vital after clear()
         _qrV.reset();
-        // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+        // set the number of global rows in the QRFactorization.
         _qrV.setGlobalRows(getLSSystemRows());
         _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
       }
@@ -471,7 +471,7 @@ void BaseQNAcceleration::iterationsConverged(
 {
   PRECICE_TRACE();
 
-  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel())
+  if (utils::MasterSlave::isPrimary() || !utils::MasterSlave::isParallel())
     _infostringstream << "# time window " << tWindows << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
 
@@ -518,7 +518,7 @@ void BaseQNAcceleration::iterationsConverged(
       _matrixV.resize(0, 0);
       _matrixW.resize(0, 0);
       _qrV.reset();
-      // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+      // set the number of global rows in the QRFactorization.
       _qrV.setGlobalRows(getLSSystemRows());
       _matrixCols.clear(); // _matrixCols.push_front() at the end of the method.
     } else {
@@ -633,10 +633,10 @@ void BaseQNAcceleration::writeInfo(
     // serial acceleration mode
     _infostringstream << s;
 
-    // parallel acceleration, master-slave mode
+    // parallel acceleration
   } else {
     if (not allProcs) {
-      if (utils::MasterSlave::isMaster())
+      if (utils::MasterSlave::isPrimary())
         _infostringstream << s;
     } else {
       _infostringstream << s;
