@@ -8,7 +8,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MappingRbfGaussian)
-BOOST_AUTO_TEST_CASE(GaussianSupportRadius)
+BOOST_AUTO_TEST_CASE(GaussianSupportRadius, *boost::unit_test::disabled())
 {
   /**
  * @brief Tests the Gaussian rbf mapping using the support radius option
