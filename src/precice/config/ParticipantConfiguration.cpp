@@ -372,7 +372,10 @@ void ParticipantConfiguration::xmlTagCallback(
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
     config.isScalingOn = tag.getBooleanAttributeValue(ATTR_SCALE_WITH_CONN);
     _watchIntegralConfigs.push_back(config);
-  } else if (tag.getNamespace() == TAG_MASTER) {
+  } else if (tag.getNamespace() == TAG_MASTER || tag.getNamespace() == TAG_PRIMARY_RANK) {
+    if (tag.getNamespace() == TAG_MASTER) {
+      PRECICE_WARN("Tag \"{}\" is deprecated and will be removed in v3.0.0. Please use \"{}\".", TAG_MASTER, TAG_PRIMARY_RANK);
+    }
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com  = comConfig.createCommunication(tag);
     utils::IntraComm::getCommunication() = com;
@@ -400,12 +403,12 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
 {
   if (geoFilter == VALUE_FILTER_ON_MASTER || geoFilter == VALUE_FILTER_ON_PRIMARY_RANK) {
     if (geoFilter == VALUE_FILTER_ON_MASTER) {
-      PRECICE_WARN("Tag \"{}\" is deprecated and will be removed in v3.0.0.", VALUE_FILTER_ON_MASTER);
+      PRECICE_WARN("Value \"{}\" is deprecated and will be removed in v3.0.0. Please use \"{}\"", VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_PRIMARY_RANK);
     }
     return partition::ReceivedPartition::GeometricFilter::ON_PRIMARY_RANK;
   } else if (geoFilter == VALUE_FILTER_ON_SLAVES || geoFilter == VALUE_FILTER_ON_SECONDARY_RANKS) {
     if (geoFilter == VALUE_FILTER_ON_SLAVES) {
-      PRECICE_WARN("Tag \"{}\" is deprecated and will be removed in v3.0.0.", VALUE_FILTER_ON_SLAVES);
+      PRECICE_WARN("Value \"{}\" is deprecated and will be removed in v3.0.0. Please use \"{}\".", VALUE_FILTER_ON_SLAVES, VALUE_FILTER_ON_SECONDARY_RANKS);
     }
     return partition::ReceivedPartition::GeometricFilter::ON_SECONDARY_RANKS;
   } else {
