@@ -22,7 +22,7 @@
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/EventUtils.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 
@@ -40,8 +40,8 @@ TestContext::~TestContext() noexcept
     precice::utils::EventRegistry::instance().finalize();
   }
   if (!invalid && _initIntraComm) {
-    utils::MasterSlave::getCommunication() = nullptr;
-    utils::MasterSlave::reset();
+    utils::IntraComm::getCommunication() = nullptr;
+    utils::IntraComm::reset();
   }
 
   // Reset communicators
@@ -128,7 +128,7 @@ void TestContext::initialize(const Participants &participants)
   Par::Parallel::CommState::world()->synchronize();
   initializeMPI(participants);
   Par::Parallel::CommState::world()->synchronize();
-  initializeMasterSlave();
+  initializeIntraComm();
   initializeEvents();
   initializePetsc();
 }
@@ -177,14 +177,14 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   }
 }
 
-void TestContext::initializeMasterSlave()
+void TestContext::initializeIntraComm()
 {
   if (invalid)
     return;
 
   // Establish a consistent state for all tests
-  utils::MasterSlave::configure(rank, size);
-  utils::MasterSlave::getCommunication().reset();
+  utils::IntraComm::configure(rank, size);
+  utils::IntraComm::getCommunication().reset();
 
   if (!_initIntraComm || hasSize(1))
     return;
@@ -197,7 +197,7 @@ void TestContext::initializeMasterSlave()
 
   intraComm->connectIntraComm(name, "", rank, size);
 
-  utils::MasterSlave::getCommunication() = std::move(intraComm);
+  utils::IntraComm::getCommunication() = std::move(intraComm);
 }
 
 void TestContext::initializeEvents()
@@ -267,7 +267,7 @@ std::string TestContext::describe() const
   if (_initIntraComm || _events || _petsc) {
     os << " Initialized: {";
     if (_initIntraComm)
-      os << " MasterSlave Communication ";
+      os << " IntraComm Communication ";
     if (_events)
       os << " Events";
     if (_petsc)

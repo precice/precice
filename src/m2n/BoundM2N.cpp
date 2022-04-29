@@ -6,7 +6,7 @@
 #include "m2n/BoundM2N.hpp"
 #include "m2n/M2N.hpp"
 #include "precice/types.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -74,23 +74,23 @@ void BoundM2N::cleanupEstablishment()
     return;
   }
   waitForSecondaryRanks();
-  if (!utils::MasterSlave::isSecondary()) {
+  if (!utils::IntraComm::isSecondary()) {
     m2n->cleanupEstablishment(localName, remoteName);
   }
 }
 
 void BoundM2N::waitForSecondaryRanks()
 {
-  if (utils::MasterSlave::isPrimary()) {
-    for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
+  if (utils::IntraComm::isPrimary()) {
+    for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
       int item = 0;
-      utils::MasterSlave::getCommunication()->receive(item, rank);
+      utils::IntraComm::getCommunication()->receive(item, rank);
       PRECICE_ASSERT(item > 0);
     }
   }
-  if (utils::MasterSlave::isSecondary()) {
-    int item = utils::MasterSlave::getRank();
-    utils::MasterSlave::getCommunication()->send(item, 0);
+  if (utils::IntraComm::isSecondary()) {
+    int item = utils::IntraComm::getRank();
+    utils::IntraComm::getCommunication()->send(item, 0);
   }
 }
 

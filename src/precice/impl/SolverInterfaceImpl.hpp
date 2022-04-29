@@ -158,7 +158,7 @@ public:
    * - finalizes managed PETSc
    * - finalizes managed MPI
    *
-   * @post Closes MasterSlave communication
+   * @post Closes IntraComm communication
    * @post Finalized managed PETSc
    * @post Finalized managed MPI
    *
@@ -789,7 +789,7 @@ private:
       const config::SolverInterfaceConfiguration &config);
 
   /// Initializes intra-participant communication.
-  void initializeMasterSlaveCommunication();
+  void initializeIntraCommunication();
 
   /// Syncs the timestep between all ranks (all timesteps should be the same!)
   void syncTimestep(double computedTimestepLength);

@@ -279,8 +279,8 @@ target_sources(precice
     src/utils/MPI_Mock.hpp
     src/utils/ManageUniqueIDs.cpp
     src/utils/ManageUniqueIDs.hpp
-    src/utils/MasterSlave.cpp
-    src/utils/MasterSlave.hpp
+    src/utils/IntraComm.cpp
+    src/utils/IntraComm.hpp
     src/utils/MultiLock.hpp
     src/utils/Parallel.cpp
     src/utils/Parallel.hpp

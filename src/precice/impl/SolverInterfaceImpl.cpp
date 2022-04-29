@@ -62,7 +62,7 @@
 #include "utils/Event.hpp"
 #include "utils/EventUtils.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "utils/PointerVector.hpp"
@@ -214,7 +214,7 @@ void SolverInterfaceImpl::configure(
                 "If you do not know exactly what an intra-participant communication is and why you want to use it "
                 "you probably just want to remove the intraComm tag from the preCICE configuration.");
 
-  utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
+  utils::IntraComm::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
   _participants = config.getParticipantConfiguration()->getParticipants();
   configureM2Ns(config.getM2NConfiguration());
@@ -238,8 +238,8 @@ void SolverInterfaceImpl::configure(
   utils::EventRegistry::instance().initialize("precice-" + _accessorName, "", utils::Parallel::current()->comm);
 
   PRECICE_DEBUG("Initialize intra-participant communication");
-  if (utils::MasterSlave::isParallel()) {
-    initializeMasterSlaveCommunication();
+  if (utils::IntraComm::isParallel()) {
+    initializeIntraCommunication();
   }
 
   auto &solverInitEvent = EventRegistry::instance().getStoredEvent("solver.initialize");
@@ -416,7 +416,7 @@ double SolverInterfaceImpl::advance(
 
 #ifndef NDEBUG
   PRECICE_DEBUG("Synchronize timestep length");
-  if (utils::MasterSlave::isParallel()) {
+  if (utils::IntraComm::isParallel()) {
     syncTimestep(computedTimestepLength);
   }
 #endif
@@ -509,9 +509,9 @@ void SolverInterfaceImpl::finalize()
 
   // Close Connections
   PRECICE_DEBUG("Close intra-participant communication");
-  if (utils::MasterSlave::isParallel()) {
-    utils::MasterSlave::getCommunication()->closeConnection();
-    utils::MasterSlave::getCommunication() = nullptr;
+  if (utils::IntraComm::isParallel()) {
+    utils::IntraComm::getCommunication()->closeConnection();
+    utils::IntraComm::getCommunication() = nullptr;
   }
   _m2ns.clear();
 
@@ -523,7 +523,7 @@ void SolverInterfaceImpl::finalize()
   utils::EventRegistry::instance().finalize();
 
   // Printing requires finalization
-  if (not precice::utils::MasterSlave::isSecondary()) {
+  if (not precice::utils::IntraComm::isSecondary()) {
     utils::EventRegistry::instance().printAll();
   }
 
@@ -2092,26 +2092,26 @@ PtrParticipant SolverInterfaceImpl::determineAccessingParticipant(
                 _accessorName);
 }
 
-void SolverInterfaceImpl::initializeMasterSlaveCommunication()
+void SolverInterfaceImpl::initializeIntraCommunication()
 {
   PRECICE_TRACE();
 
-  Event e("com.initializeMasterSlaveCom", precice::syncMode);
-  utils::MasterSlave::getCommunication()->connectIntraComm(
+  Event e("com.initializeIntraCom", precice::syncMode);
+  utils::IntraComm::getCommunication()->connectIntraComm(
       _accessorName, "IntraComm",
       _accessorProcessRank, _accessorCommunicatorSize);
 }
 
 void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
 {
-  PRECICE_ASSERT(utils::MasterSlave::isParallel());
-  if (utils::MasterSlave::isSecondary()) {
-    utils::MasterSlave::getCommunication()->send(computedTimestepLength, 0);
+  PRECICE_ASSERT(utils::IntraComm::isParallel());
+  if (utils::IntraComm::isSecondary()) {
+    utils::IntraComm::getCommunication()->send(computedTimestepLength, 0);
   } else {
-    PRECICE_ASSERT(utils::MasterSlave::isPrimary());
-    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
+    PRECICE_ASSERT(utils::IntraComm::isPrimary());
+    for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
       double dt;
-      utils::MasterSlave::getCommunication()->receive(dt, secondaryRank);
+      utils::IntraComm::getCommunication()->receive(dt, secondaryRank);
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
                     "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the value is {}, while on rank 0, the value is {}.",
                     secondaryRank, dt, computedTimestepLength);
@@ -2129,7 +2129,7 @@ void SolverInterfaceImpl::closeCommunicationChannels(CloseChannels close)
   std::string pong = "pong";
   for (auto &iter : _m2ns) {
     auto bm2n = iter.second;
-    if (not utils::MasterSlave::isSecondary()) {
+    if (not utils::IntraComm::isSecondary()) {
       PRECICE_DEBUG("Synchronizing primary rank with {}", bm2n.remoteName);
       if (bm2n.isRequesting) {
         bm2n.m2n->getPrimaryRankCommunication()->send(ping, 0);

@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(AccelerationTests)
 
 using DataMap = std::map<int, PtrCouplingData>;
 
-BOOST_AUTO_TEST_SUITE(AccelerationMasterSlaveTests)
+BOOST_AUTO_TEST_SUITE(AccelerationIntraCommTests)
 
 /// Test that runs on 4 processors.
 BOOST_AUTO_TEST_CASE(testVIQNILSpp)

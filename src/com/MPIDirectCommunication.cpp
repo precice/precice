@@ -40,8 +40,8 @@ void MPIDirectCommunication::acceptConnection(std::string const &acceptorName,
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
-  // MPI Direct Comm only supports MasterSlave connections
-  PRECICE_ASSERT(rankOffset == 1, "MPIDirectCommunication only supports MasterSlave Communications!");
+  // MPI Direct Comm only supports IntraComm connections
+  PRECICE_ASSERT(rankOffset == 1, "MPIDirectCommunication only supports IntraComm Communications!");
   setRankOffset(rankOffset);
 
   _commState   = utils::Parallel::current();

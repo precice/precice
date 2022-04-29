@@ -6,7 +6,7 @@
 #include "math/constants.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 using namespace precice;
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication)
   PRECICE_TEST(""_on(4_ranks).setupIntraComm())
   // In this test you can use an intra-participant communication, here is an example how:
   BOOST_TEST(context.hasSize(4));
-  BOOST_TEST(utils::MasterSlave::getCommunication()->isConnected());
+  BOOST_TEST(utils::IntraComm::getCommunication()->isConnected());
 }
 
 /// Test that requires 2 participants "A" on 1 rank and "B" on 2 ranks

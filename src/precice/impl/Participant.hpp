@@ -21,7 +21,7 @@
 #include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/PointerVector.hpp"
 
 namespace precice {

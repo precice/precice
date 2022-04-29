@@ -1158,7 +1158,7 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationVertexCount)
   mesh->setGlobalNumberOfVertices(mesh->vertices().size());
 
   for (auto &vertex : mesh->vertices()) {
-    vertex.setGlobalIndex(vertex.getID() + 5 * utils::MasterSlave::getRank());
+    vertex.setGlobalIndex(vertex.getID() + 5 * utils::IntraComm::getRank());
 
     if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
       vertex.setGlobalIndex(0);
@@ -1307,7 +1307,7 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationLowerRank)
   mesh->setGlobalNumberOfVertices(mesh->vertices().size());
 
   for (auto &vertex : mesh->vertices()) {
-    vertex.setGlobalIndex(vertex.getID() + 10 * utils::MasterSlave::getRank());
+    vertex.setGlobalIndex(vertex.getID() + 10 * utils::IntraComm::getRank());
 
     if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
       if (vertex.getCoords()[2] == 0) {
@@ -1435,7 +1435,7 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationEmptyPartition)
   mesh->setGlobalNumberOfVertices(mesh->vertices().size());
 
   for (auto &vertex : mesh->vertices()) {
-    vertex.setGlobalIndex(vertex.getID() + 10 * utils::MasterSlave::getRank());
+    vertex.setGlobalIndex(vertex.getID() + 10 * utils::IntraComm::getRank());
 
     if (vertex.getCoords()[0] == 0 && vertex.getCoords()[1] == 0) {
       if (vertex.getCoords()[2] == 0) {

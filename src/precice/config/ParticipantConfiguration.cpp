@@ -28,7 +28,7 @@
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
@@ -374,7 +374,7 @@ void ParticipantConfiguration::xmlTagCallback(
   } else if (tag.getNamespace() == TAG_MASTER) {
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication           com    = comConfig.createCommunication(tag);
-    utils::MasterSlave::getCommunication() = com;
+    utils::IntraComm::getCommunication() = com;
     _isIntraCommDefined                    = true;
     _participants.back()->setUsePrimaryRank(true);
   }
@@ -644,7 +644,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                   "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
     com::PtrCommunication com              = std::make_shared<com::MPIDirectCommunication>();
-    utils::MasterSlave::getCommunication() = com;
+    utils::IntraComm::getCommunication() = com;
     participant->setUsePrimaryRank(true);
 #endif
   }

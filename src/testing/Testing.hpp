@@ -9,7 +9,7 @@
 #include "math/math.hpp"
 #include "testing/TestContext.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
