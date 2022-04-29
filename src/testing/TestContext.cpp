@@ -241,9 +241,9 @@ m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const 
   }
 
   if (isNamed(acceptor)) {
-    m2n->acceptPrimaryConnection(acceptor, requestor);
+    m2n->acceptPrimaryRankConnection(acceptor, requestor);
   } else if (isNamed(requestor)) {
-    m2n->requestPrimaryConnection(acceptor, requestor);
+    m2n->requestPrimaryRankConnection(acceptor, requestor);
   } else {
     throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
   }

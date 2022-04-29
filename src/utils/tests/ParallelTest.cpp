@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(SplitCommTest)
   BOOST_TEST(groups.at(1).size == 1);
 }
 
-BOOST_AUTO_TEST_CASE(Master1SlaveTest)
+BOOST_AUTO_TEST_CASE(Primary1SecondaryTest)
 {
   PRECICE_TEST(""_on(2_ranks).setupIntraComm());
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(Master1SlaveTest)
   }
 }
 
-BOOST_AUTO_TEST_CASE(Master2SlaveTest)
+BOOST_AUTO_TEST_CASE(Primary2SecondaryTest)
 {
   PRECICE_TEST(""_on(3_ranks).setupIntraComm());
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(Master2SlaveTest)
   }
 }
 
-BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
+BOOST_AUTO_TEST_CASE(OffsetPrimary1SecondaryTest)
 {
   PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupIntraComm());
 
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
   }
 }
 
-BOOST_AUTO_TEST_CASE(OffsetMaster2SlaveTest)
+BOOST_AUTO_TEST_CASE(OffsetPrimary2SecondaryTest)
 {
   PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupIntraComm());
 

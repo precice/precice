@@ -90,7 +90,7 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
       PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
 
       int secondaryRankSize = vertexDistribution[secondaryRank].size() * valueDimension;
-      PRECICE_DEBUG("Slave Size = {}", secondaryRankSize);
+      PRECICE_DEBUG("Secondary Size = {}", secondaryRankSize);
       if (secondaryRankSize > 0) {
         std::vector<double> secondaryRankValues(secondaryRankSize);
         utils::IntraComm::getCommunication()->receive(span<double>{secondaryRankValues}, secondaryRank);
@@ -145,7 +145,7 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
       PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
 
       int secondarySize = vertexDistribution[secondaryRank].size() * valueDimension;
-      PRECICE_DEBUG("Slave Size = {}", secondarySize);
+      PRECICE_DEBUG("Secondary Size = {}", secondarySize);
       if (secondarySize > 0) {
         std::vector<double> secondaryRankValues(secondarySize);
         for (size_t i = 0; i < vertexDistribution[secondaryRank].size(); i++) {

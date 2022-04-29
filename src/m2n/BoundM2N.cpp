@@ -26,9 +26,9 @@ void BoundM2N::connectPrimaryRanks()
   std::string fullLocalName = localName;
 
   if (isRequesting) {
-    m2n->requestPrimaryConnection(remoteName, fullLocalName);
+    m2n->requestPrimaryRankConnection(remoteName, fullLocalName);
   } else {
-    m2n->acceptPrimaryConnection(fullLocalName, remoteName);
+    m2n->acceptPrimaryRankConnection(fullLocalName, remoteName);
   }
 }
 
@@ -40,11 +40,11 @@ void BoundM2N::connectSecondaryRanks()
   } else {
     if (isRequesting) {
       PRECICE_DEBUG("Awaiting secondary connections from {}", remoteName);
-      m2n->requestSecondaryConnections(remoteName, localName);
+      m2n->requestSecondaryRanksConnection(remoteName, localName);
       PRECICE_DEBUG("Established secondary connections from {}", remoteName);
     } else {
       PRECICE_DEBUG("Establishing secondary connections to {}", remoteName);
-      m2n->acceptSecondaryConnections(localName, remoteName);
+      m2n->acceptSecondaryRanksConnection(localName, remoteName);
       PRECICE_DEBUG("Established  secondary connections to {}", remoteName);
     }
   }
@@ -63,7 +63,7 @@ void BoundM2N::preConnectSecondaryRanks()
     PRECICE_DEBUG("Established preliminary secondary connections from {}", remoteName);
   } else {
     PRECICE_DEBUG("Establishing preliminary secondary connections to {}", remoteName);
-    m2n->acceptSecondaryPreConnections(localName, remoteName);
+    m2n->acceptSecondaryRanksPreConnection(localName, remoteName);
     PRECICE_DEBUG("Established preliminary secondary connections to {}", remoteName);
   }
 }

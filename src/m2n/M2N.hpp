@@ -44,7 +44,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptPrimaryConnection(const std::string &acceptorName,
+  void acceptPrimaryRankConnection(const std::string &acceptorName,
                                const std::string &requesterName);
 
   /**
@@ -53,7 +53,7 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestPrimaryConnection(const std::string &acceptorName,
+  void requestPrimaryRankConnection(const std::string &acceptorName,
                                 const std::string &requesterName);
 
   /**
@@ -62,7 +62,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptSecondaryConnections(const std::string &acceptorName,
+  void acceptSecondaryRanksConnection(const std::string &acceptorName,
                                   const std::string &requesterName);
 
   /**
@@ -71,18 +71,18 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestSecondaryConnections(const std::string &acceptorName,
+  void requestSecondaryRanksConnection(const std::string &acceptorName,
                                    const std::string &requesterName);
 
   /**
-   * Same as acceptSecondaryConnections except this only creates the channels,
+   * Same as acceptSecondaryRanksConnection except this only creates the channels,
    * no vertex list needed!
    */
-  void acceptSecondaryPreConnections(const std::string &acceptorName,
+  void acceptSecondaryRanksPreConnection(const std::string &acceptorName,
                                      const std::string &requesterName);
 
   /**
-   * Same as requestSecondaryConnections except this only creates the channels,
+   * Same as requestSecondaryRanksConnection except this only creates the channels,
    * no vertex list needed!
    */
   void requestSecondaryRanksPreConnection(const std::string &acceptorName,
@@ -129,7 +129,7 @@ public:
   /**
    * @brief Disconnects from communication space, i.e. participant.
    *
-   * Calls closePrimaryRankConnection() and closeSlaveConnections()
+   * Calls closePrimaryRankConnection() and closeSecondaryRanksConnection()
    * This method is called on destruction.
    */
   void closeConnection();

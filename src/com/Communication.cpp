@@ -20,7 +20,7 @@ void Communication::connectIntraComm(std::string const &participantName,
     return;
 
   std::string primaryName   = participantName + "Primary";
-  std::string secondaryName = participantName + "Slave";
+  std::string secondaryName = participantName + "Secondary";
 
   constexpr Rank rankOffset         = 1;
   int            secondaryRanksSize = size - rankOffset;

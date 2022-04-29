@@ -317,7 +317,7 @@ void ReceivedPartition::filterByBoundingBox()
         com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).receiveBoundingBox(secondaryBB, secondaryRank);
 
         PRECICE_DEBUG("From secondary rank {}, bounding mesh: {}", secondaryRank, secondaryBB);
-        mesh::Mesh secondaryMesh("SlaveMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
+        mesh::Mesh secondaryMesh("SecondaryMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(secondaryMesh, *_mesh, [&secondaryBB](const mesh::Vertex &v) { return secondaryBB.contains(v); });
         PRECICE_DEBUG("Send filtered mesh to secondary rank: {}", secondaryRank);
         com::CommunicateMesh(utils::IntraComm::getCommunication()).sendMesh(secondaryMesh, secondaryRank);
