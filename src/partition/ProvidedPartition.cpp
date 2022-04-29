@@ -242,7 +242,7 @@ void ProvidedPartition::compareBoundingBoxes()
   if (utils::IntraComm::isSecondary()) { //secondary
     PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
     com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).sendBoundingBox(_mesh->getBoundingBox(), 0);
-  } else { // Master
+  } else { // Primary
 
     PRECICE_ASSERT(utils::IntraComm::getRank() == 0);
     PRECICE_ASSERT(utils::IntraComm::getSize() > 1);

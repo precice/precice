@@ -209,7 +209,7 @@ void ReceivedPartition::compute()
         PRECICE_DEBUG("Send partition feedback to primary rank");
         utils::IntraComm::getCommunication()->send(vertexIDs, 0);
       }
-    } else { // Master
+    } else { // Primary
       int              numberOfVertices = _mesh->vertices().size();
       std::vector<int> vertexIDs(numberOfVertices, -1);
       for (int i = 0; i < numberOfVertices; i++) {
@@ -308,7 +308,7 @@ void ReceivedPartition::filterByBoundingBox()
         PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
       }
 
-    } else { // Master
+    } else { // Primary
       PRECICE_ASSERT(utils::IntraComm::getRank() == 0);
       PRECICE_ASSERT(utils::IntraComm::getSize() > 1);
 
@@ -344,7 +344,7 @@ void ReceivedPartition::filterByBoundingBox()
 
       if (utils::IntraComm::isSecondary()) {
         com::CommunicateMesh(utils::IntraComm::getCommunication()).broadcastReceiveMesh(*_mesh);
-      } else { // Master
+      } else { // Primary
         PRECICE_ASSERT(utils::IntraComm::isPrimary());
         com::CommunicateMesh(utils::IntraComm::getCommunication()).broadcastSendMesh(*_mesh);
       }
@@ -419,7 +419,7 @@ void ReceivedPartition::compareBoundingBoxes()
   // prepare local bounding box
   prepareBoundingBox();
 
-  if (utils::IntraComm::isPrimary()) {                // Master
+  if (utils::IntraComm::isPrimary()) {                  // Primary
     std::map<int, std::vector<int>> connectionMap;      //local ranks -> {remote ranks}
     std::vector<int>                connectedRanksList; // local ranks with any connection
 

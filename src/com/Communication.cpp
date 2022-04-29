@@ -19,7 +19,7 @@ void Communication::connectIntraComm(std::string const &participantName,
   if (size == 1)
     return;
 
-  std::string primaryName   = participantName + "Master";
+  std::string primaryName   = participantName + "Primary";
   std::string secondaryName = participantName + "Slave";
 
   constexpr Rank rankOffset         = 1;
@@ -31,7 +31,7 @@ void Communication::connectIntraComm(std::string const &participantName,
     cleanupEstablishment(primaryName, secondaryName);
   } else {
     int secondaryRank = rank - rankOffset;
-    PRECICE_INFO("Connecting Secondary rank #{} to Master", secondaryRank);
+    PRECICE_INFO("Connecting Secondary rank #{} to Primary", secondaryRank);
     requestConnection(primaryName, secondaryName, tag, secondaryRank, secondaryRanksSize);
   }
 }

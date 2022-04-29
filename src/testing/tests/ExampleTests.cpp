@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(TwoProcTests)
  * For some primary tests, you might need an intra-participant communication. This example shows how to set one up.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
-BOOST_AUTO_TEST_CASE(FourProcTestsWithMasterCommmunication)
+BOOST_AUTO_TEST_CASE(FourProcTestsWithPrimaryCommmunication)
 {
   // The short syntax won't work here. You have to name the context
   PRECICE_TEST(""_on(4_ranks).setupIntraComm())
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(NamedContexts)
 /// Tests that requires an m2n communication
 /*
  * For some primary tests, you might need an m2n communication (e.g. partition or cplscheme).
- * This example shows how to set up one. Call .connectMaster() on the context and pass the participants to be connected.
+ * This example shows how to set up one. Call .connectPrimary() on the context and pass the participants to be connected.
  * M2N requires Events, thus you also need to list it as a requirement using Require::Events.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */

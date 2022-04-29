@@ -157,7 +157,7 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
         PRECICE_DEBUG("secondaryRankValues[0] = {}", secondaryRankValues[0]);
       }
     }
-  } // Master
+  } // Primary
 }
 
 void GatherScatterCommunication::acceptPreConnection(

@@ -188,7 +188,7 @@ void createNastinMesh3D(mesh::PtrMesh pNastinMesh, Rank rank)
   BOOST_TEST(pNastinMesh);
   BOOST_TEST(pNastinMesh->getDimensions() == dimensions);
 
-  if (rank == 0) { //Master
+  if (rank == 0) { //Primary
     Eigen::VectorXd position(dimensions);
     position << -1.0, -1.0, 0.0;
     pNastinMesh->createVertex(position);
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
     BOOST_TEST_CONTEXT(*pSolidzMesh)
     {
       // check if the sending and filtering worked right
-      if (context.isPrimary()) { //Master
+      if (context.isPrimary()) { //Primary
         BOOST_TEST(pSolidzMesh->vertices().size() == 2);
         BOOST_TEST(pSolidzMesh->edges().size() == 1);
       } else if (context.isRank(1)) { //SecondaryRank1
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
     part.compute();
 
     // check if the sending and filtering worked right
-    if (context.isPrimary()) { //Master
+    if (context.isPrimary()) { //Primary
       BOOST_TEST(pSolidzMesh->vertices().size() == 2);
       BOOST_TEST(pSolidzMesh->edges().size() == 1);
     } else if (context.isRank(1)) { //SecondaryRank1
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
     BOOST_TEST_CONTEXT(*pSolidzMesh)
     {
       // check if the sending and filtering worked right
-      if (context.isPrimary()) { //Master
+      if (context.isPrimary()) { //Primary
         BOOST_TEST(pSolidzMesh->vertices().size() == 3);
         BOOST_TEST(pSolidzMesh->edges().size() == 2);
       } else if (context.isRank(1)) { //SecondaryRank1
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
 
       // check if the sending and filtering worked right
-      if (context.isPrimary()) { //Master
+      if (context.isPrimary()) { //Primary
         BOOST_TEST(pSolidzMesh->vertices().size() == 6);
         BOOST_TEST(pSolidzMesh->edges().size() == 5);
         BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
 
       // check if the sending and filtering worked right
-      if (context.isPrimary()) { //Master
+      if (context.isPrimary()) { //Primary
         BOOST_TEST(pSolidzMesh->vertices().size() == 3);
         BOOST_TEST(pSolidzMesh->edges().size() == 2);
         BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 6);
 
       // check if the sending and filtering worked right
-      if (context.isPrimary()) { //Master
+      if (context.isPrimary()) { //Primary
         BOOST_TEST(pSolidzMesh->vertices().size() == 4);
         BOOST_TEST(pSolidzMesh->edges().size() == 3);
         BOOST_TEST(pSolidzMesh->vertices().at(0).isOwner() == true);
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
       BOOST_TEST(pSolidzMesh->getGlobalNumberOfVertices() == 5);
 
       // check if the sending and filtering worked right
-      if (context.isPrimary()) { //Master
+      if (context.isPrimary()) { //Primary
         BOOST_TEST(pSolidzMesh->vertices().size() == 5);
         BOOST_TEST(pSolidzMesh->edges().size() == 6);
         BOOST_TEST(pSolidzMesh->triangles().size() == 2);
@@ -749,7 +749,7 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
     part.compute();
 
     // check if the sending and filtering worked right
-    if (context.isPrimary()) { //Master
+    if (context.isPrimary()) { //Primary
       BOOST_TEST(pSolidzMesh->vertices().size() == 2);
       BOOST_TEST(pSolidzMesh->edges().size() == 1);
       BOOST_TEST(pSolidzMesh->triangles().size() == 0);
@@ -798,7 +798,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
         new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
     boundingFromMapping->setMeshes(pMesh, pOtherMesh);
 
-    if (context.isPrimary()) { //Master
+    if (context.isPrimary()) { //Primary
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0;
       pOtherMesh->createVertex(position);
@@ -828,7 +828,7 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
     BOOST_TEST(pMesh->getVertexOffsets().at(1) == 3);
     BOOST_TEST(pMesh->getVertexOffsets().at(2) == 3);
 
-    if (context.isPrimary()) { //Master
+    if (context.isPrimary()) { //Primary
       BOOST_TEST(pMesh->getVertexDistribution().at(0).size() == 2);
       BOOST_TEST(pMesh->getVertexDistribution().at(1).size() == 1);
       BOOST_TEST(pMesh->getVertexDistribution().at(2).size() == 0);
@@ -1533,7 +1533,7 @@ BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
     BOOST_TEST_CONTEXT(*pSolidzMesh)
     {
       // check if the sending and filtering worked right
-      if (context.isPrimary()) { //Master
+      if (context.isPrimary()) { //Primary
         BOOST_TEST(pSolidzMesh->vertices().size() == 2);
         BOOST_TEST(pSolidzMesh->edges().size() == 1);
       } else if (context.isRank(1)) { //SecondaryRank1
