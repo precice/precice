@@ -15,7 +15,7 @@
     </mesh>
 
     <participant name="SolverOne">
-      <master:mpi-single />
+      <primary-rank:mpi-single />
       <use-mesh name="MeshTwo" from="SolverTwo" />
       <use-mesh name="MeshOne" provide="yes" />
       <mapping:rbf-thin-plate-splines

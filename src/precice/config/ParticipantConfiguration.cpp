@@ -168,7 +168,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
                                "\"on-master\" is not supported if you use two-level initialization. "
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
-                           .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER})
+                           .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
                            .setDefaultValue(VALUE_FILTER_ON_SLAVES);
   tagUseMesh.addAttribute(attrGeoFilter);
 
@@ -194,65 +194,66 @@ ParticipantConfiguration::ParticipantConfiguration(
 
   std::list<XMLTag>  intraCommTags;
   XMLTag::Occurrence intraCommOcc = XMLTag::OCCUR_NOT_OR_ONCE;
-  {
-    XMLTag tagMaster(*this, "sockets", intraCommOcc, TAG_MASTER);
-    doc = "A solver in parallel needs a communication between its ranks. ";
-    doc += "By default, the participant's MPI_COM_WORLD is reused.";
-    doc += "Use this tag to use TCP/IP sockets instead.";
-    tagMaster.setDocumentation(doc);
+  for (std::string tag_name : {TAG_MASTER, TAG_PRIMARY_RANK}) {
+    {
+      XMLTag tagMaster(*this, "sockets", intraCommOcc, tag_name);
+      doc = "A solver in parallel needs a communication between its ranks. ";
+      doc += "By default, the participant's MPI_COM_WORLD is reused.";
+      doc += "Use this tag to use TCP/IP sockets instead.";
+      tagMaster.setDocumentation(doc);
 
-    auto attrPort = makeXMLAttribute("port", 0)
-                        .setDocumentation(
-                            "Port number (16-bit unsigned integer) to be used for socket "
-                            "communication. The default is \"0\", what means that OS will "
-                            "dynamically search for a free port (if at least one exists) and "
-                            "bind it automatically.");
-    tagMaster.addAttribute(attrPort);
+      auto attrPort = makeXMLAttribute("port", 0)
+                          .setDocumentation(
+                              "Port number (16-bit unsigned integer) to be used for socket "
+                              "communication. The default is \"0\", what means that OS will "
+                              "dynamically search for a free port (if at least one exists) and "
+                              "bind it automatically.");
+      tagMaster.addAttribute(attrPort);
 
-    auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
-                           .setDocumentation(
-                               "Interface name to be used for socket communication. "
-                               "Default is the canonical name of the loopback interface of your platform. "
-                               "Might be different on supercomputing systems, e.g. \"ib0\" "
-                               "for the InfiniBand on SuperMUC. ");
-    tagMaster.addAttribute(attrNetwork);
+      auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
+                             .setDocumentation(
+                                 "Interface name to be used for socket communication. "
+                                 "Default is the canonical name of the loopback interface of your platform. "
+                                 "Might be different on supercomputing systems, e.g. \"ib0\" "
+                                 "for the InfiniBand on SuperMUC. ");
+      tagMaster.addAttribute(attrNetwork);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-                                     .setDocumentation(
-                                         "Directory where connection information is exchanged. By default, the "
-                                         "directory of startup is chosen.");
-    tagMaster.addAttribute(attrExchangeDirectory);
+      auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+                                       .setDocumentation(
+                                           "Directory where connection information is exchanged. By default, the "
+                                           "directory of startup is chosen.");
+      tagMaster.addAttribute(attrExchangeDirectory);
 
-    intraCommTags.push_back(tagMaster);
+      intraCommTags.push_back(tagMaster);
+    }
+    {
+      XMLTag tagMaster(*this, "mpi", intraCommOcc, tag_name);
+      doc = "A solver in parallel needs a communication between its ranks. ";
+      doc += "By default, the participant's MPI_COM_WORLD is reused.";
+      doc += "Use this tag to use MPI with separated communication spaces instead instead.";
+      tagMaster.setDocumentation(doc);
+
+      auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+                                       .setDocumentation(
+                                           "Directory where connection information is exchanged. By default, the "
+                                           "directory of startup is chosen.");
+      tagMaster.addAttribute(attrExchangeDirectory);
+
+      intraCommTags.push_back(tagMaster);
+    }
+    {
+      XMLTag tagMaster(*this, "mpi-single", intraCommOcc, tag_name);
+      doc = "A solver in parallel needs a communication between its ranks. ";
+      doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
+      doc += "This tag is only used to ensure backwards compatibility.";
+      tagMaster.setDocumentation(doc);
+
+      intraCommTags.push_back(tagMaster);
+    }
+    for (XMLTag &tagMaster : intraCommTags) {
+      tag.addSubtag(tagMaster);
+    }
   }
-  {
-    XMLTag tagMaster(*this, "mpi", intraCommOcc, TAG_MASTER);
-    doc = "A solver in parallel needs a communication between its ranks. ";
-    doc += "By default, the participant's MPI_COM_WORLD is reused.";
-    doc += "Use this tag to use MPI with separated communication spaces instead instead.";
-    tagMaster.setDocumentation(doc);
-
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-                                     .setDocumentation(
-                                         "Directory where connection information is exchanged. By default, the "
-                                         "directory of startup is chosen.");
-    tagMaster.addAttribute(attrExchangeDirectory);
-
-    intraCommTags.push_back(tagMaster);
-  }
-  {
-    XMLTag tagMaster(*this, "mpi-single", intraCommOcc, TAG_MASTER);
-    doc = "A solver in parallel needs a communication between its ranks. ";
-    doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
-    doc += "This tag is only used to ensure backwards compatibility.";
-    tagMaster.setDocumentation(doc);
-
-    intraCommTags.push_back(tagMaster);
-  }
-  for (XMLTag &tagMaster : intraCommTags) {
-    tag.addSubtag(tagMaster);
-  }
-
   parent.addSubtag(tag);
 }
 
@@ -373,9 +374,9 @@ void ParticipantConfiguration::xmlTagCallback(
     _watchIntegralConfigs.push_back(config);
   } else if (tag.getNamespace() == TAG_MASTER) {
     com::CommunicationConfiguration comConfig;
-    com::PtrCommunication           com    = comConfig.createCommunication(tag);
+    com::PtrCommunication           com  = comConfig.createCommunication(tag);
     utils::IntraComm::getCommunication() = com;
-    _isIntraCommDefined                    = true;
+    _isIntraCommDefined                  = true;
     _participants.back()->setUsePrimaryRank(true);
   }
 }
@@ -397,9 +398,15 @@ ParticipantConfiguration::getParticipants() const
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
 {
-  if (geoFilter == VALUE_FILTER_ON_MASTER) {
+  if (geoFilter == VALUE_FILTER_ON_MASTER || geoFilter == VALUE_FILTER_ON_PRIMARY_RANK) {
+    if (geoFilter == VALUE_FILTER_ON_MASTER) {
+      PRECICE_WARN("Tag \"{}\" is deprecated and will be removed in v3.0.0.", VALUE_FILTER_ON_MASTER);
+    }
     return partition::ReceivedPartition::GeometricFilter::ON_PRIMARY_RANK;
-  } else if (geoFilter == VALUE_FILTER_ON_SLAVES) {
+  } else if (geoFilter == VALUE_FILTER_ON_SLAVES || geoFilter == VALUE_FILTER_ON_SECONDARY_RANKS) {
+    if (geoFilter == VALUE_FILTER_ON_SLAVES) {
+      PRECICE_WARN("Tag \"{}\" is deprecated and will be removed in v3.0.0.", VALUE_FILTER_ON_SLAVES);
+    }
     return partition::ReceivedPartition::GeometricFilter::ON_SECONDARY_RANKS;
   } else {
     PRECICE_ASSERT(geoFilter == VALUE_NO_FILTER);
@@ -643,7 +650,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     PRECICE_ERROR("Implicit intra-participant communications for parallel participants are only available if preCICE was built with MPI. "
                   "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
-    com::PtrCommunication com              = std::make_shared<com::MPIDirectCommunication>();
+    com::PtrCommunication com            = std::make_shared<com::MPIDirectCommunication>();
     utils::IntraComm::getCommunication() = com;
     participant->setUsePrimaryRank(true);
 #endif
