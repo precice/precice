@@ -13,7 +13,7 @@ We use versioning inspired by semantic versioning: https://semver.org/
 Guidelines
 ------------------
 
-- Use ```git cherrypick``` to backport small bug fixes from develop to master. That consitutes an revision release, i.e. increment last digit.
+- Use ```git cherrypick``` to backport small bug fixes from develop to master. That constitutes a revision release, i.e. increment last digit.
 - For bigger bug fixes, branch from master, fix the bug and merge back into master. Then merge master to develop.
 - Use coding days to release.
 - Update ```CHANGELOG.md``` with all user notable changes. Whenever such a change is pushed to develop, update the changelog for the upcoming release.

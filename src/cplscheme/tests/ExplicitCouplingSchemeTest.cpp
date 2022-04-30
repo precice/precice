@@ -262,12 +262,12 @@ struct ExplicitCouplingSchemeFixture : m2n::WhiteboxAccessor {
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
-    useOnlyMasterCom(communication) = true;
+    useOnlyPrimaryCom(communication) = true;
     if (participant0 == localParticipant) {
-      communication->requestMasterConnection(participant1, participant0);
+      communication->requestPrimaryConnection(participant1, participant0);
     } else {
       BOOST_TEST(participant1 == localParticipant);
-      communication->acceptMasterConnection(participant1, participant0);
+      communication->acceptPrimaryConnection(participant1, participant0);
     }
   }
 };
@@ -280,8 +280,8 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag                root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);
@@ -594,8 +594,8 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag                root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
@@ -654,7 +654,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling)
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::ConfigurationContext ccontext{context.name, 0, 1};
   xml::configure(root, ccontext, configurationPath);

@@ -3,9 +3,9 @@
 namespace precice {
 namespace testing {
 
-impl::MappingContext DataContextFixture::mappingContext(precice::impl::DataContext &dataContext)
+std::vector<impl::MappingContext> DataContextFixture::mappingContexts(precice::impl::DataContext &dataContext)
 {
-  return dataContext._mappingContext;
+  return dataContext._mappingContexts;
 }
 
 int DataContextFixture::getProvidedDataID(precice::impl::DataContext &dataContext)
@@ -13,14 +13,14 @@ int DataContextFixture::getProvidedDataID(precice::impl::DataContext &dataContex
   return dataContext._providedData->getID();
 }
 
-int DataContextFixture::getFromDataID(precice::impl::DataContext &dataContext)
+int DataContextFixture::getFromDataID(precice::impl::DataContext &dataContext, int dataVectorIndex)
 {
-  return dataContext.getFromDataID();
+  return dataContext.getFromDataID(dataVectorIndex);
 }
 
-int DataContextFixture::getToDataID(precice::impl::DataContext &dataContext)
+int DataContextFixture::getToDataID(precice::impl::DataContext &dataContext, int dataVectorIndex)
 {
-  return dataContext.getToDataID();
+  return dataContext.getToDataID(dataVectorIndex);
 }
 
 bool DataContextFixture::hasMapping(precice::impl::DataContext &dataContext)

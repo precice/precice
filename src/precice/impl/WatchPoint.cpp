@@ -16,7 +16,6 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
-#include "query/Index.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/assertion.hpp"
 
@@ -60,30 +59,30 @@ void WatchPoint::initialize()
   PRECICE_TRACE();
 
   if (_mesh->vertices().size() > 0) {
-    auto match        = query::Index{_mesh}.findNearestProjection(_point, 4);
+    auto match        = _mesh->index().findNearestProjection(_point, 4);
     _interpolation    = std::make_unique<mapping::Polation>(match.polation);
     _shortestDistance = match.distance;
   }
 
-  if (utils::MasterSlave::isSlave()) {
+  if (utils::MasterSlave::isSecondary()) {
     utils::MasterSlave::getCommunication()->send(_shortestDistance, 0);
     utils::MasterSlave::getCommunication()->receive(_isClosest, 0);
   }
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::MasterSlave::isPrimary()) {
     int    closestRank           = 0;
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal  = std::numeric_limits<double>::max();
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::getCommunication()->receive(closestDistanceLocal, rankSlave);
+    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
+      utils::MasterSlave::getCommunication()->receive(closestDistanceLocal, secondaryRank);
       if (closestDistanceLocal < closestDistanceGlobal) {
         closestDistanceGlobal = closestDistanceLocal;
-        closestRank           = rankSlave;
+        closestRank           = secondaryRank;
       }
     }
     _isClosest = closestRank == 0;
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::getCommunication()->send(closestRank == rankSlave, rankSlave);
+    for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
+      utils::MasterSlave::getCommunication()->send(closestRank == secondaryRank, secondaryRank);
     }
   }
 
@@ -97,7 +96,6 @@ void WatchPoint::exportPointData(
     return;
   }
 
-  //PRECICE_ASSERT(_vertices.size() == _weights.size());
   _txtWriter.writeData("Time", time);
   // Export watch point coordinates
   Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);

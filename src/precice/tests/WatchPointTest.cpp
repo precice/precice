@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(Reinitalize)
     // Change Mesh and data
     mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
     mesh->createEdge(v3, v4);
-    mesh->meshChanged(*mesh);
+    mesh->index().clear();
     mesh->allocateDataValues();
     doubleValues.setConstant(1.0);
     doubleValues(2) = 2.0;

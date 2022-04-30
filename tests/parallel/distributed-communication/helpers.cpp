@@ -35,7 +35,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
 
   if (context.isNamed("Fluid")) {
     meshName = "FluidMesh";
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       i1 = 0;
       i2 = 2;
     } else {
@@ -44,7 +44,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
     }
   } else {
     meshName = "StructureMesh";
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       i1 = 0;
       i2 = 1;
     } else {

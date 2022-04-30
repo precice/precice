@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <boost/signals2.hpp>
 #include <deque>
 #include <iosfwd>
 #include <list>
@@ -17,6 +16,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
+#include "query/Index.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
@@ -49,12 +49,6 @@ public:
   /// A mapping from remote local ranks to the IDs that must be communicated
   using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
 
-  /// Signal is emitted when the mesh is changed
-  boost::signals2::signal<void(Mesh &)> meshChanged;
-
-  /// Signal is emitted when the mesh is destroyed
-  boost::signals2::signal<void(Mesh &)> meshDestroyed;
-
   /// Use if the id of the mesh is not necessary
   static constexpr MeshID MESH_ID_UNDEFINED{-1};
 
@@ -69,9 +63,6 @@ public:
       std::string name,
       int         dimensions,
       MeshID      id);
-
-  /// Destructor, deletes created objects.
-  ~Mesh();
 
   /// Returns modifieable container holding all vertices.
   VertexContainer &vertices();
@@ -131,14 +122,8 @@ public:
   /// Create only data for vertex
   PtrData &createData(const std::string &name,
                       int                dimension,
-                      DataID             id);
-
-  /// Creates data for vertex with additional gradient data
-  PtrData &createDataWithGradient(
-      const std::string &name,
-      int                dimension,
-      int                meshDimensions,
-      DataID             id);
+                      DataID             id,
+                      bool               withGradient = false);
 
   /// Allows access to all data
   const DataContainer &data() const;
@@ -235,6 +220,16 @@ public:
 
   bool operator!=(const Mesh &other) const;
 
+  const query::Index &index() const
+  {
+    return _index;
+  }
+
+  query::Index &index()
+  {
+    return _index;
+  }
+
 private:
   mutable logging::Logger _log{"mesh::Mesh"};
 
@@ -256,13 +251,13 @@ private:
   DataContainer _data;
 
   /**
-   * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
+   * @brief Vertex distribution for the primary rank, holding for each secondary rank all vertex IDs it owns.
    *
-   * For slaves, this data structure is empty and should not be used.
+   * For secondary ranks, this data structure is empty and should not be used.
    */
   VertexDistribution _vertexDistribution;
 
-  /// Holds the index of the last vertex for each slave.
+  /// Holds the index of the last vertex for each rank.
   /**
    * The last entry holds the total number of vertices.
    * Needed for the matrix-matrix multiplication of the IMVJ acceleration.
@@ -289,6 +284,8 @@ private:
   CommunicationMap _communicationMap;
 
   BoundingBox _boundingBox;
+
+  query::Index _index;
 };
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);

@@ -1,6 +1,7 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <cstddef>
+#include <functional>
 #include <limits>
 #include <sstream>
 #include <utility>
@@ -89,6 +90,10 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     // Data is actually only send if size>0, which is checked in the derived classes implementation
     m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
+    if (pair.second->hasGradient()) {
+      m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
+    }
+
     sentDataIDs.push_back(pair.first);
   }
   PRECICE_DEBUG("Number of sent data sets = {}", sentDataIDs.size());
@@ -103,6 +108,10 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   for (const DataMap::value_type &pair : receiveData) {
     // Data is only received on ranks with size>0, which is checked in the derived class implementation
     m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
+
+    if (pair.second->hasGradient()) {
+      m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
+    }
 
     receivedDataIDs.push_back(pair.first);
   }
@@ -305,15 +314,28 @@ bool BaseCouplingScheme::willDataBeExchanged(
   return not math::greater(remainder, 0.0, _eps);
 }
 
+bool BaseCouplingScheme::hasInitialDataBeenReceived() const
+{
+  return _hasInitialDataBeenReceived;
+}
+
 bool BaseCouplingScheme::hasDataBeenReceived() const
 {
   return _hasDataBeenReceived;
 }
 
+void BaseCouplingScheme::checkInitialDataHasBeenReceived()
+{
+  PRECICE_ASSERT(not _hasDataBeenReceived, "checkInitialDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
+  _hasInitialDataBeenReceived = true;
+  checkDataHasBeenReceived();
+}
+
 void BaseCouplingScheme::checkDataHasBeenReceived()
 {
   PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
-  _hasDataBeenReceived = true;
+  _hasDataBeenReceived        = true;
+  _hasInitialDataBeenReceived = true; // If any data has been received, this counts as initial data. Important for waveform relaxation & subcycling.
 }
 
 double BaseCouplingScheme::getTime() const
@@ -495,7 +517,7 @@ bool BaseCouplingScheme::measureConvergence()
   bool oneSuffices  = false; //at least one convergence measure suffices and did converge
   bool oneStrict    = false; //at least one convergence measure is strict and did not converge
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
@@ -505,7 +527,7 @@ bool BaseCouplingScheme::measureConvergence()
 
     convMeasure.measure->measure(convMeasure.couplingData->previousIteration(), convMeasure.couplingData->values());
 
-    if (not utils::MasterSlave::isSlave() && convMeasure.doesLogging) {
+    if (not utils::MasterSlave::isSecondary() && convMeasure.doesLogging) {
       _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());
     }
 
@@ -536,7 +558,7 @@ bool BaseCouplingScheme::measureConvergence()
 
 void BaseCouplingScheme::initializeTXTWriters()
 {
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
 
     _iterationsWriter = std::make_shared<io::TXTTableWriter>("precice-" + _localParticipant + "-iterations.log");
     if (not doesFirstStep()) {
@@ -571,7 +593,7 @@ void BaseCouplingScheme::initializeTXTWriters()
 
 void BaseCouplingScheme::advanceTXTWriters()
 {
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::MasterSlave::isSecondary()) {
 
     _iterationsWriter->writeData("TimeWindow", _timeWindows - 1);
     _iterationsWriter->writeData("TotalIterations", _totalIterations);
