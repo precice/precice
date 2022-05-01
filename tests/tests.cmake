@@ -7,7 +7,7 @@ target_sources(testprecice
     tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/LocalRBFPartitioning.cpp
-    tests/parallel/MasterSockets.cpp
+    tests/parallel/PrimaryRankSockets.cpp
     tests/parallel/NearestProjectionRePartitioning.cpp
     tests/parallel/TestBoundingBoxInitialization.cpp
     tests/parallel/TestBoundingBoxInitializationTwoWay.cpp
@@ -30,8 +30,8 @@ target_sources(testprecice
     tests/parallel/distributed-communication/TestDistributedCommunicationP2PSockets.cpp
     tests/parallel/distributed-communication/helpers.cpp
     tests/parallel/distributed-communication/helpers.hpp
-    tests/parallel/gather-scatter/EnforceGatherScatterEmptyMaster.cpp
-    tests/parallel/gather-scatter/EnforceGatherScatterEmptyReceivedMaster.cpp
+    tests/parallel/gather-scatter/EnforceGatherScatterEmptyPrimaryRank.cpp
+    tests/parallel/gather-scatter/EnforceGatherScatterEmptyReceivedPrimaryRank.cpp
     tests/parallel/gather-scatter/helpers.cpp
     tests/parallel/gather-scatter/helpers.hpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp

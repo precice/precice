@@ -196,11 +196,11 @@ ParticipantConfiguration::ParticipantConfiguration(
   XMLTag::Occurrence intraCommOcc = XMLTag::OCCUR_NOT_OR_ONCE;
   for (std::string tag_name : {TAG_MASTER, TAG_PRIMARY_RANK}) {
     {
-      XMLTag tagMaster(*this, "sockets", intraCommOcc, tag_name);
+      XMLTag tagPrimary(*this, "sockets", intraCommOcc, tag_name);
       doc = "A solver in parallel needs a communication between its ranks. ";
       doc += "By default, the participant's MPI_COM_WORLD is reused.";
       doc += "Use this tag to use TCP/IP sockets instead.";
-      tagMaster.setDocumentation(doc);
+      tagPrimary.setDocumentation(doc);
 
       auto attrPort = makeXMLAttribute("port", 0)
                           .setDocumentation(
@@ -208,7 +208,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                               "communication. The default is \"0\", what means that OS will "
                               "dynamically search for a free port (if at least one exists) and "
                               "bind it automatically.");
-      tagMaster.addAttribute(attrPort);
+      tagPrimary.addAttribute(attrPort);
 
       auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
                              .setDocumentation(
@@ -216,42 +216,42 @@ ParticipantConfiguration::ParticipantConfiguration(
                                  "Default is the canonical name of the loopback interface of your platform. "
                                  "Might be different on supercomputing systems, e.g. \"ib0\" "
                                  "for the InfiniBand on SuperMUC. ");
-      tagMaster.addAttribute(attrNetwork);
+      tagPrimary.addAttribute(attrNetwork);
 
       auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
                                        .setDocumentation(
                                            "Directory where connection information is exchanged. By default, the "
                                            "directory of startup is chosen.");
-      tagMaster.addAttribute(attrExchangeDirectory);
+      tagPrimary.addAttribute(attrExchangeDirectory);
 
-      intraCommTags.push_back(tagMaster);
+      intraCommTags.push_back(tagPrimary);
     }
     {
-      XMLTag tagMaster(*this, "mpi", intraCommOcc, tag_name);
+      XMLTag tagPrimary(*this, "mpi", intraCommOcc, tag_name);
       doc = "A solver in parallel needs a communication between its ranks. ";
       doc += "By default, the participant's MPI_COM_WORLD is reused.";
       doc += "Use this tag to use MPI with separated communication spaces instead instead.";
-      tagMaster.setDocumentation(doc);
+      tagPrimary.setDocumentation(doc);
 
       auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
                                        .setDocumentation(
                                            "Directory where connection information is exchanged. By default, the "
                                            "directory of startup is chosen.");
-      tagMaster.addAttribute(attrExchangeDirectory);
+      tagPrimary.addAttribute(attrExchangeDirectory);
 
-      intraCommTags.push_back(tagMaster);
+      intraCommTags.push_back(tagPrimary);
     }
     {
-      XMLTag tagMaster(*this, "mpi-single", intraCommOcc, tag_name);
+      XMLTag tagPrimary(*this, "mpi-single", intraCommOcc, tag_name);
       doc = "A solver in parallel needs a communication between its ranks. ";
       doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
       doc += "This tag is only used to ensure backwards compatibility.";
-      tagMaster.setDocumentation(doc);
+      tagPrimary.setDocumentation(doc);
 
-      intraCommTags.push_back(tagMaster);
+      intraCommTags.push_back(tagPrimary);
     }
-    for (XMLTag &tagMaster : intraCommTags) {
-      tag.addSubtag(tagMaster);
+    for (XMLTag &tagPrimary : intraCommTags) {
+      tag.addSubtag(tagPrimary);
     }
   }
   parent.addSubtag(tag);

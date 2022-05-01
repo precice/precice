@@ -91,11 +91,11 @@ int main(int argc, char **argv)
 
   if (utils::IntraComm::isPrimary()) {
     utils::Parallel::initializeMPI(NULL, NULL);
-    utils::Parallel::splitCommunicator("Master");
+    utils::Parallel::splitCommunicator("Primary");
   } else {
     assertion(utils::IntraComm::isSecondary());
     utils::Parallel::initializeMPI(NULL, NULL);
-    utils::Parallel::splitCommunicator("Slave");
+    utils::Parallel::splitCommunicator("Secondary");
   }
 
   utils::IntraComm::getCommunication() =
@@ -105,13 +105,13 @@ int main(int argc, char **argv)
 
   if (utils::IntraComm::isPrimary()) {
     utils::IntraComm::getCommunication()->acceptConnection(
-        "Master", "Slave", utils::IntraComm::getRank(), 1);
+        "Primary", "Secondary", utils::IntraComm::getRank(), 1);
     utils::IntraComm::getCommunication()->setRankOffset(rankOffset);
   } else {
     assertion(utils::IntraComm::isSecondary());
     utils::IntraComm::getCommunication()->requestConnection(
-        "Master",
-        "Slave",
+        "Primary",
+        "Secondary",
         utils::IntraComm::getRank() - rankOffset,
         utils::IntraComm::getSize() - rankOffset);
   }
