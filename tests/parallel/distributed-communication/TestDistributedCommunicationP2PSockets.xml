@@ -15,7 +15,7 @@
     </mesh>
 
     <participant name="Fluid">
-      <primary-rank:mpi-single />
+      <intra-comm:mpi-single />
       <use-mesh name="FluidMesh" provide="yes" />
       <use-mesh name="StructureMesh" from="Structure" />
       <write-data name="Forces" mesh="FluidMesh" />
@@ -35,7 +35,7 @@
     </participant>
 
     <participant name="Structure">
-      <primary-rank:mpi-single />
+      <intra-comm:mpi-single />
       <use-mesh name="StructureMesh" provide="yes" />
       <write-data name="Velocities" mesh="StructureMesh" />
       <read-data name="Forces" mesh="StructureMesh" />

@@ -279,7 +279,7 @@ void Parallel::splitCommunicator(const std::string &groupName)
   std::vector<AccessorGroup>  accessorGroups;
   com::MPIDirectCommunication com;
 
-  if (rank == 0) { // Primary
+  if (rank == 0) { // Primary rank
     // Step 1 receive groupNames from Salves and setup accessorGroups
     std::map<std::string, int> groupMap; // map from names to group ID
     groupMap[groupName] = 0;
@@ -304,7 +304,7 @@ void Parallel::splitCommunicator(const std::string &groupName)
         accessorGroups[groupMap[name]].size++;
       }
     }
-    // Step 2 send groupCount to Primary
+    // Step 2 send groupCount to Primary rank
     auto groupCount = static_cast<int>(accessorGroups.size());
     MPI_Bcast(&groupCount, 1, MPI_INT, 0, globalComm);
     PRECICE_ASSERT(groupCount > 1, "Calling split with a single group is not permitted!");
@@ -320,14 +320,14 @@ void Parallel::splitCommunicator(const std::string &groupName)
       }
     }
   } else { // rank != 0
-    // Step 1 send groupName to Primary
+    // Step 1 send groupName to Primary rank
     com.send(groupName, 0);
-    // Step 2 receive groupCount from Primary
+    // Step 2 receive groupCount from Primary rank
     int groupCount = -1;
     MPI_Bcast(&groupCount, 1, MPI_INT, 0, globalComm);
     PRECICE_ASSERT(groupCount > 1, "Calling split with a single group is not permitted!");
 
-    // Step 3 receive AccessorGroups from Primary
+    // Step 3 receive AccessorGroups from Primary rank
     for (int i = 0; i < groupCount; i++) {
       AccessorGroup newGroup;
       com.receive(newGroup.name, 0);
