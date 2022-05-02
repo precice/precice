@@ -98,8 +98,11 @@ public:
    * @param[in] tag Tag for establishing this connection
    * @param[in] acceptorRank Rank of the accpeting process, usually the calling one.
    */
-  virtual void acceptConnection(std::string const &acceptorName, std::string const &requesterName,
-                                std::string const &tag, int acceptorRank, int rankOffset = 0) = 0;
+  virtual void acceptConnection(std::string const &acceptorName,
+                                std::string const &requesterName,
+                                std::string const &tag,
+                                int                acceptorRank,
+                                int                rankOffset = 0) = 0;
 
   /**
    * @brief Accepts connection from another communicator, which has to call requestConnectionAsClient().
@@ -116,8 +119,11 @@ public:
    * @param[in] acceptorRank Rank of accepting server, usually the rank of the current process.
    * @param[in] requesterCommunicatorSize Size of the requester (N)
    */
-  virtual void acceptConnectionAsServer(std::string const &acceptorName, std::string const &requesterName,
-                                        std::string const &tag, int acceptorRank, int requesterCommunicatorSize) = 0;
+  virtual void acceptConnectionAsServer(std::string const &acceptorName,
+                                        std::string const &requesterName,
+                                        std::string const &tag,
+                                        int                acceptorRank,
+                                        int                requesterCommunicatorSize) = 0;
 
   /**
    * @brief Connects to another communicator, which has to call acceptConnection().
@@ -134,8 +140,11 @@ public:
    * @param[in] requesterRank Rank of the requester (has to go from 0 to N-1)
    * @param[in] requesterCommunicatorSize Size of the requester (N)
    */
-  virtual void requestConnection(std::string const &acceptorName, std::string const &requesterName,
-                                 std::string const &tag, int requesterRank, int requesterCommunicatorSize) = 0;
+  virtual void requestConnection(std::string const &acceptorName,
+                                 std::string const &requesterName,
+                                 std::string const &tag,
+                                 int                requesterRank,
+                                 int                requesterCommunicatorSize) = 0;
 
   /**
    * @brief Connects to another communicator, which has to call acceptConnectionAsServer().
@@ -151,9 +160,11 @@ public:
    * @param[in] acceptorRanks Set of ranks that accept a connection
    * @param[in] requesterRank Rank that requests the connection, usually the caller's rank
    */
-  virtual void requestConnectionAsClient(std::string const &acceptorName, std::string const &requesterName,
-                                         std::string const &tag, std::set<int> const &acceptorRanks,
-                                         int requesterRank) = 0;
+  virtual void requestConnectionAsClient(std::string const &  acceptorName,
+                                         std::string const &  requesterName,
+                                         std::string const &  tag,
+                                         std::set<int> const &acceptorRanks,
+                                         int                  requesterRank) = 0;
 
   /** Establishes the intra-participant communication connection.
    *
@@ -194,16 +205,18 @@ public:
   /// @{
 
   /// Performs a reduce summation on the rank given by primaryRank
-  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive,
-                         Rank primaryRank);
+  virtual void reduceSum(precice::span<double const> itemsToSend,
+                         precice::span<double>       itemsToReceive,
+                         Rank                        primaryRank);
   /// Performs a reduce summation on the primary rank, every other rank has to call reduceSum
   virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
   virtual void reduceSum(int itemToSend, int &itemToReceive, Rank primaryRank);
   virtual void reduceSum(int itemsToSend, int &itemsToReceive);
 
-  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive,
-                            Rank primaryRank);
+  virtual void allreduceSum(precice::span<double const> itemsToSend,
+                            precice::span<double>       itemsToReceive,
+                            Rank                        primaryRank);
   virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive);
 
   virtual void allreduceSum(double itemToSend, double &itemToReceive, Rank primaryRank);

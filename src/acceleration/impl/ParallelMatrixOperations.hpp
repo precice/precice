@@ -30,9 +30,14 @@ public:
   void initialize(const bool needCyclicComm);
 
   template <typename Derived1, typename Derived2>
-  void multiply(Eigen::PlainObjectBase<Derived1> &leftMatrix, Eigen::PlainObjectBase<Derived2> &rightMatrix,
-                Eigen::PlainObjectBase<Derived2> &result, const std::vector<int> &offsets, int p, int q, int r,
-                bool dotProductComputation = true)
+  void multiply(Eigen::PlainObjectBase<Derived1> &leftMatrix,
+                Eigen::PlainObjectBase<Derived2> &rightMatrix,
+                Eigen::PlainObjectBase<Derived2> &result,
+                const std::vector<int> &          offsets,
+                int                               p,
+                int                               q,
+                int                               r,
+                bool                              dotProductComputation = true)
   {
     PRECICE_TRACE();
     PRECICE_ASSERT(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
@@ -83,8 +88,12 @@ public:
    *
    */
   template <typename Derived1, typename Derived2, typename Derived3>
-  void multiply(const Eigen::MatrixBase<Derived1> &leftMatrix, const Eigen::MatrixBase<Derived2> &rightMatrix,
-                Eigen::PlainObjectBase<Derived3> &result, int p, int q, int r)
+  void multiply(const Eigen::MatrixBase<Derived1> &leftMatrix,
+                const Eigen::MatrixBase<Derived2> &rightMatrix,
+                Eigen::PlainObjectBase<Derived3> & result,
+                int                                p,
+                int                                q,
+                int                                r)
   {
     PRECICE_TRACE();
     PRECICE_ASSERT(leftMatrix.rows() == p, leftMatrix.rows(), p);
@@ -109,8 +118,13 @@ private:
   // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic
   // result matrix
   template <typename Derived1, typename Derived2>
-  void _multiplyNN(Eigen::PlainObjectBase<Derived1> &leftMatrix, Eigen::PlainObjectBase<Derived2> &rightMatrix,
-                   Eigen::PlainObjectBase<Derived2> &result, const std::vector<int> &offsets, int p, int q, int r)
+  void _multiplyNN(Eigen::PlainObjectBase<Derived1> &leftMatrix,
+                   Eigen::PlainObjectBase<Derived2> &rightMatrix,
+                   Eigen::PlainObjectBase<Derived2> &result,
+                   const std::vector<int> &          offsets,
+                   int                               p,
+                   int                               q,
+                   int                               r)
   {
     PRECICE_TRACE();
     /*
@@ -220,8 +234,12 @@ private:
   // @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
   template <typename Derived1, typename Derived2>
   void _multiplyNM_dotProduct(Eigen::PlainObjectBase<Derived1> &leftMatrix,
-                              Eigen::PlainObjectBase<Derived2> &rightMatrix, Eigen::PlainObjectBase<Derived2> &result,
-                              const std::vector<int> &offsets, int p, int q, int r)
+                              Eigen::PlainObjectBase<Derived2> &rightMatrix,
+                              Eigen::PlainObjectBase<Derived2> &result,
+                              const std::vector<int> &          offsets,
+                              int                               p,
+                              int                               q,
+                              int                               r)
   {
     PRECICE_TRACE();
     for (int i = 0; i < leftMatrix.rows(); i++) {
@@ -254,14 +272,20 @@ private:
   /// Multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix of dimension n x
   /// m
   template <typename Derived1, typename Derived2>
-  void _multiplyNM_block(Eigen::PlainObjectBase<Derived1> &leftMatrix, Eigen::PlainObjectBase<Derived2> &rightMatrix,
-                         Eigen::PlainObjectBase<Derived2> &result, const std::vector<int> &offsets, int p, int q, int r)
+  void _multiplyNM_block(Eigen::PlainObjectBase<Derived1> &leftMatrix,
+                         Eigen::PlainObjectBase<Derived2> &rightMatrix,
+                         Eigen::PlainObjectBase<Derived2> &result,
+                         const std::vector<int> &          offsets,
+                         int                               p,
+                         int                               q,
+                         int                               r)
   {
     PRECICE_TRACE();
 
     // ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
     PRECICE_ASSERT(static_cast<int>(leftMatrix.IsRowMajor) == static_cast<int>(rightMatrix.IsRowMajor),
-                   leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
+                   leftMatrix.IsRowMajor,
+                   rightMatrix.IsRowMajor);
 
     // multiply local block (saxpy-based approach)
     // dimension: (n_global x n_local) * (n_local x m) = (n_global x m)

@@ -116,12 +116,22 @@ private:
 
   std::vector<ConfiguredMapping> _mappings;
 
-  ConfiguredMapping createMapping(const xml::ConfigurationContext &context, const std::string &direction,
-                                  const std::string &type, const std::string &constraint,
-                                  const std::string &fromMeshName, const std::string &toMeshName, Timing timing,
-                                  double shapeParameter, double supportRadius, double solverRtol, bool xDead,
-                                  bool yDead, bool zDead, bool useLU, Polynomial polynomial,
-                                  Preallocation preallocation) const;
+  ConfiguredMapping createMapping(const xml::ConfigurationContext &context,
+                                  const std::string &              direction,
+                                  const std::string &              type,
+                                  const std::string &              constraint,
+                                  const std::string &              fromMeshName,
+                                  const std::string &              toMeshName,
+                                  Timing                           timing,
+                                  double                           shapeParameter,
+                                  double                           supportRadius,
+                                  double                           solverRtol,
+                                  bool                             xDead,
+                                  bool                             yDead,
+                                  bool                             zDead,
+                                  bool                             useLU,
+                                  Polynomial                       polynomial,
+                                  Preallocation                    preallocation) const;
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);

@@ -230,9 +230,22 @@ void MappingConfiguration::xmlTagCallback(const xml::ConfigurationContext &conte
         preallocation = Preallocation::OFF;
     }
 
-    ConfiguredMapping configuredMapping =
-        createMapping(context, dir, type, constraint, fromMesh, toMesh, timing, shapeParameter, supportRadius,
-                      solverRtol, xDead, yDead, zDead, useLU, polynomial, preallocation);
+    ConfiguredMapping configuredMapping = createMapping(context,
+                                                        dir,
+                                                        type,
+                                                        constraint,
+                                                        fromMesh,
+                                                        toMesh,
+                                                        timing,
+                                                        shapeParameter,
+                                                        supportRadius,
+                                                        solverRtol,
+                                                        xDead,
+                                                        yDead,
+                                                        zDead,
+                                                        useLU,
+                                                        polynomial,
+                                                        preallocation);
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
   }
@@ -245,11 +258,22 @@ const std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration
   return _mappings;
 }
 
-MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
-    const xml::ConfigurationContext &context, const std::string &direction, const std::string &type,
-    const std::string &constraint, const std::string &fromMeshName, const std::string &toMeshName, Timing timing,
-    double shapeParameter, double supportRadius, double solverRtol, bool xDead, bool yDead, bool zDead, bool useLU,
-    Polynomial polynomial, Preallocation preallocation) const
+MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(const xml::ConfigurationContext &context,
+                                                                            const std::string &              direction,
+                                                                            const std::string &              type,
+                                                                            const std::string &              constraint,
+                                                                            const std::string &fromMeshName,
+                                                                            const std::string &toMeshName,
+                                                                            Timing             timing,
+                                                                            double             shapeParameter,
+                                                                            double             supportRadius,
+                                                                            double             solverRtol,
+                                                                            bool               xDead,
+                                                                            bool               yDead,
+                                                                            bool               zDead,
+                                                                            bool               useLU,
+                                                                            Polynomial         polynomial,
+                                                                            Preallocation      preallocation) const
 {
   PRECICE_TRACE(direction, type, timing, shapeParameter, supportRadius);
   using namespace mapping;
@@ -370,32 +394,72 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<ThinPlateSplines>(
           constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_MULTIQUADRICS) {
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<Multiquadrics>(constraintValue, dimensions, Multiquadrics(shapeParameter), xDead,
-                                                      yDead, zDead, solverRtol, polynomial, preallocation));
+      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<Multiquadrics>(constraintValue,
+                                                                                         dimensions,
+                                                                                         Multiquadrics(shapeParameter),
+                                                                                         xDead,
+                                                                                         yDead,
+                                                                                         zDead,
+                                                                                         solverRtol,
+                                                                                         polynomial,
+                                                                                         preallocation));
     } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
-      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<InverseMultiquadrics>(
-          constraintValue, dimensions, InverseMultiquadrics(shapeParameter), xDead, yDead, zDead, solverRtol,
-          polynomial, preallocation));
+      configuredMapping.mapping =
+          PtrMapping(new PetRadialBasisFctMapping<InverseMultiquadrics>(constraintValue,
+                                                                        dimensions,
+                                                                        InverseMultiquadrics(shapeParameter),
+                                                                        xDead,
+                                                                        yDead,
+                                                                        zDead,
+                                                                        solverRtol,
+                                                                        polynomial,
+                                                                        preallocation));
     } else if (type == VALUE_RBF_VOLUME_SPLINES) {
       configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<VolumeSplines>(
           constraintValue, dimensions, VolumeSplines(), xDead, yDead, zDead, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_GAUSSIAN) {
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<Gaussian>(constraintValue, dimensions, Gaussian(shapeParameter), xDead, yDead,
-                                                 zDead, solverRtol, polynomial, preallocation));
+      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<Gaussian>(constraintValue,
+                                                                                    dimensions,
+                                                                                    Gaussian(shapeParameter),
+                                                                                    xDead,
+                                                                                    yDead,
+                                                                                    zDead,
+                                                                                    solverRtol,
+                                                                                    polynomial,
+                                                                                    preallocation));
     } else if (type == VALUE_RBF_CTPS_C2) {
-      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(
-          constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius), xDead, yDead, zDead, solverRtol,
-          polynomial, preallocation));
+      configuredMapping.mapping =
+          PtrMapping(new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(constraintValue,
+                                                                             dimensions,
+                                                                             CompactThinPlateSplinesC2(supportRadius),
+                                                                             xDead,
+                                                                             yDead,
+                                                                             zDead,
+                                                                             solverRtol,
+                                                                             polynomial,
+                                                                             preallocation));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
-      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<CompactPolynomialC0>(
-          constraintValue, dimensions, CompactPolynomialC0(supportRadius), xDead, yDead, zDead, solverRtol, polynomial,
-          preallocation));
+      configuredMapping.mapping =
+          PtrMapping(new PetRadialBasisFctMapping<CompactPolynomialC0>(constraintValue,
+                                                                       dimensions,
+                                                                       CompactPolynomialC0(supportRadius),
+                                                                       xDead,
+                                                                       yDead,
+                                                                       zDead,
+                                                                       solverRtol,
+                                                                       polynomial,
+                                                                       preallocation));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
-      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<CompactPolynomialC6>(
-          constraintValue, dimensions, CompactPolynomialC6(supportRadius), xDead, yDead, zDead, solverRtol, polynomial,
-          preallocation));
+      configuredMapping.mapping =
+          PtrMapping(new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue,
+                                                                       dimensions,
+                                                                       CompactPolynomialC6(supportRadius),
+                                                                       xDead,
+                                                                       yDead,
+                                                                       zDead,
+                                                                       solverRtol,
+                                                                       polynomial,
+                                                                       preallocation));
     } else {
       PRECICE_ERROR("Unknown mapping type!");
     }
@@ -416,7 +480,8 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
     PRECICE_CHECK(!sameMapping,
                   "There cannot be two mappings from mesh \"{}\" to mesh \"{}\". "
                   "Please remove one of the duplicated meshes. ",
-                  mapping.fromMesh->getName(), mapping.toMesh->getName());
+                  mapping.fromMesh->getName(),
+                  mapping.toMesh->getName());
   }
 }
 

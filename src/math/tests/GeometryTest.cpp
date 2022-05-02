@@ -154,23 +154,23 @@ BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
   Vector3d expected           = Vector3d::Constant(0.0);
 
   // True intersection
-  int result = geometry::segmentPlaneIntersection(pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint,
-                                                  intersectionPoint);
+  int result = geometry::segmentPlaneIntersection(
+      pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::INTERSECTION);
   BOOST_CHECK(equals(intersectionPoint, expected));
 
   // Touching second segment vertex
   secondSegmentPoint = Vector3d::Constant(0.0);
-  result = geometry::segmentPlaneIntersection(pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint,
-                                              intersectionPoint);
+  result             = geometry::segmentPlaneIntersection(
+      pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::TOUCHING);
   BOOST_CHECK(equals(intersectionPoint, expected));
 
   // Touching first segment vertex
   firstSegmentPoint  = Vector3d::Constant(0.0);
   secondSegmentPoint = Vector3d::Constant(-1.0);
-  result = geometry::segmentPlaneIntersection(pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint,
-                                              intersectionPoint);
+  result             = geometry::segmentPlaneIntersection(
+      pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::TOUCHING);
   BOOST_CHECK(equals(intersectionPoint, expected));
 
@@ -178,32 +178,32 @@ BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
   firstSegmentPoint << 0.0, 0.0, -3.0;
   intersectionPoint << 1.0, 2.0, 3.0; // should not be modified
   expected = intersectionPoint;
-  result   = geometry::segmentPlaneIntersection(pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint,
-                                              intersectionPoint);
+  result   = geometry::segmentPlaneIntersection(
+      pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::NO_INTERSECTION);
   BOOST_CHECK(equals(intersectionPoint, expected));
 
   // Parallel segment contained in plane
   firstSegmentPoint << 0.0, 0.0, 0.0;
   secondSegmentPoint << 1.0, 1.0, -2.0;
-  result = geometry::segmentPlaneIntersection(pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint,
-                                              intersectionPoint);
+  result = geometry::segmentPlaneIntersection(
+      pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::CONTAINED);
   BOOST_CHECK(equals(intersectionPoint, expected));
 
   // Segment ending before intersection
   firstSegmentPoint << -2.0, -2.0, -2.0;
   secondSegmentPoint << -1.0, -1.0, -1.0;
-  result = geometry::segmentPlaneIntersection(pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint,
-                                              intersectionPoint);
+  result = geometry::segmentPlaneIntersection(
+      pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::NO_INTERSECTION);
   BOOST_CHECK(equals(intersectionPoint, expected));
 
   // Segment ending before intersection (inversed segment points)
   firstSegmentPoint << -1.0, -1.0, -1.0;
   secondSegmentPoint << -2.0, -2.0, -2.0;
-  result = geometry::segmentPlaneIntersection(pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint,
-                                              intersectionPoint);
+  result = geometry::segmentPlaneIntersection(
+      pointOnPlane, planeNormal, firstSegmentPoint, secondSegmentPoint, intersectionPoint);
   BOOST_TEST(result == geometry::NO_INTERSECTION);
   BOOST_CHECK(equals(intersectionPoint, expected));
 }

@@ -31,9 +31,14 @@ namespace acceleration {
  *     Constructor
  * ----------------------------------------------------------------------------
  */
-BaseQNAcceleration::BaseQNAcceleration(double initialRelaxation, bool forceInitialRelaxation, int maxIterationsUsed,
-                                       int timeWindowsReused, int filter, double singularityLimit,
-                                       std::vector<int> dataIDs, impl::PtrPreconditioner preconditioner)
+BaseQNAcceleration::BaseQNAcceleration(double                  initialRelaxation,
+                                       bool                    forceInitialRelaxation,
+                                       int                     maxIterationsUsed,
+                                       int                     timeWindowsReused,
+                                       int                     filter,
+                                       double                  singularityLimit,
+                                       std::vector<int>        dataIDs,
+                                       impl::PtrPreconditioner preconditioner)
     : _preconditioner(std::move(preconditioner)), _initialRelaxation(initialRelaxation),
       _maxIterationsUsed(maxIterationsUsed), _timeWindowsReused(timeWindowsReused), _dataIDs(std::move(dataIDs)),
       _forceInitialRelaxation(forceInitialRelaxation), _qrV(filter), _filter(filter),
@@ -68,7 +73,8 @@ void BaseQNAcceleration::initialize(const DataMap &cplData)
   for (const DataMap::value_type &pair : cplData) {
     PRECICE_ASSERT(pair.second->values().size() == pair.second->previousIteration().size(),
                    "current and previousIteration have to be initialized and of identical size.",
-                   pair.second->values().size(), pair.second->previousIteration().size());
+                   pair.second->values().size(),
+                   pair.second->previousIteration().size());
   }
 
   checkDataIDs(cplData);
@@ -123,8 +129,8 @@ void BaseQNAcceleration::initialize(const DataMap &cplData)
     }
     PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
     if (utils::MasterSlave::isPrimary()) {
-      _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(),
-                                       _dimOffsets);
+      _infostringstream << fmt::format(
+          "\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
     }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
@@ -409,8 +415,8 @@ void BaseQNAcceleration::applyFilter()
 
       removeMatrixColumn(delIndices[i]);
 
-      PRECICE_DEBUG(" Filter: removing column with index {} in iteration {} of time window: {}", delIndices[i], its,
-                    tWindows);
+      PRECICE_DEBUG(
+          " Filter: removing column with index {} in iteration {} of time window: {}", delIndices[i], its, tWindows);
     }
     PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }

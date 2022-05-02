@@ -8,8 +8,10 @@
 
 namespace precice {
 namespace com {
-SocketCommunicationFactory::SocketCommunicationFactory(unsigned short portNumber, bool reuseAddress,
-                                                       std::string networkName, std::string addressDirectory)
+SocketCommunicationFactory::SocketCommunicationFactory(unsigned short portNumber,
+                                                       bool           reuseAddress,
+                                                       std::string    networkName,
+                                                       std::string    addressDirectory)
     : _portNumber(portNumber), _reuseAddress(reuseAddress), _networkName(std::move(networkName)),
       _addressDirectory(std::move(addressDirectory))
 {

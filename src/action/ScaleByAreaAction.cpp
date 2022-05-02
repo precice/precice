@@ -19,7 +19,9 @@ ScaleByAreaAction::ScaleByAreaAction(Timing timing, int targetDataID, const mesh
 {
 }
 
-void ScaleByAreaAction::performAction(double time, double timeStepSize, double computedTimeWindowPart,
+void ScaleByAreaAction::performAction(double time,
+                                      double timeStepSize,
+                                      double computedTimeWindowPart,
                                       double timeWindowSize)
 {
   PRECICE_TRACE();

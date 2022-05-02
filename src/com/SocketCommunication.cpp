@@ -19,8 +19,10 @@ namespace com {
 
 namespace asio = boost::asio;
 
-SocketCommunication::SocketCommunication(unsigned short portNumber, bool reuseAddress, std::string networkName,
-                                         std::string addressDirectory)
+SocketCommunication::SocketCommunication(unsigned short portNumber,
+                                         bool           reuseAddress,
+                                         std::string    networkName,
+                                         std::string    addressDirectory)
     : _portNumber(portNumber), _reuseAddress(reuseAddress), _networkName(std::move(networkName)),
       _addressDirectory(std::move(addressDirectory)), _ioService(new IOService)
 {
@@ -47,8 +49,11 @@ size_t SocketCommunication::getRemoteCommunicatorSize()
   return _sockets.size();
 }
 
-void SocketCommunication::acceptConnection(std::string const &acceptorName, std::string const &requesterName,
-                                           std::string const &tag, int acceptorRank, int rankOffset)
+void SocketCommunication::acceptConnection(std::string const &acceptorName,
+                                           std::string const &requesterName,
+                                           std::string const &tag,
+                                           int                acceptorRank,
+                                           int                rankOffset)
 {
   PRECICE_TRACE(acceptorName, requesterName);
 
@@ -94,7 +99,8 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName, std:
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
 
       PRECICE_ASSERT(_sockets.count(requesterRank) == 0,
-                     "Rank {} has already been connected. Duplicate requests are not allowed.", requesterRank);
+                     "Rank {} has already been connected. Duplicate requests are not allowed.",
+                     requesterRank);
 
       _sockets[requesterRank] = socket;
       // send and receive expect a rank from the acceptor perspective.
@@ -109,11 +115,14 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName, std:
         peerCount = requesterCommunicatorSize;
       }
 
-      PRECICE_ASSERT(requesterCommunicatorSize > 0, "Requester communicator size is {} which is invalid.",
+      PRECICE_ASSERT(requesterCommunicatorSize > 0,
+                     "Requester communicator size is {} which is invalid.",
                      requesterCommunicatorSize);
       PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
-                     "Current requester size from rank {} is {} but should be {}", requesterRank,
-                     requesterCommunicatorSize, peerCount);
+                     "Current requester size from rank {} is {} but should be {}",
+                     requesterRank,
+                     requesterCommunicatorSize,
+                     peerCount);
     } while (++peerCurrent < requesterCommunicatorSize);
 
     acceptor.close();
@@ -127,9 +136,11 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName, std:
   _thread = std::thread([this] { _ioService->run(); });
 }
 
-void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName, std::string const &requesterName,
-                                                   std::string const &tag, int acceptorRank,
-                                                   int requesterCommunicatorSize)
+void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
+                                                   std::string const &requesterName,
+                                                   std::string const &tag,
+                                                   int                acceptorRank,
+                                                   int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   PRECICE_ASSERT(requesterCommunicatorSize >= 0, "Requester communicator size has to be positive.");
@@ -188,8 +199,11 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
   _thread = std::thread([this] { _ioService->run(); });
 }
 
-void SocketCommunication::requestConnection(std::string const &acceptorName, std::string const &requesterName,
-                                            std::string const &tag, int requesterRank, int requesterCommunicatorSize)
+void SocketCommunication::requestConnection(std::string const &acceptorName,
+                                            std::string const &requesterName,
+                                            std::string const &tag,
+                                            int                requesterRank,
+                                            int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
@@ -244,9 +258,11 @@ void SocketCommunication::requestConnection(std::string const &acceptorName, std
   _thread = std::thread([this] { _ioService->run(); });
 }
 
-void SocketCommunication::requestConnectionAsClient(std::string const &acceptorName, std::string const &requesterName,
-                                                    std::string const &tag, std::set<int> const &acceptorRanks,
-                                                    int requesterRank)
+void SocketCommunication::requestConnectionAsClient(std::string const &  acceptorName,
+                                                    std::string const &  requesterName,
+                                                    std::string const &  tag,
+                                                    std::set<int> const &acceptorRanks,
+                                                    int                  requesterRank)
 
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRanks, requesterRank);
@@ -395,7 +411,8 @@ PtrRequest SocketCommunication::aSend(precice::span<const int> itemsToSend, Rank
 
   PtrRequest request(new SocketRequest);
 
-  _queue.dispatch(_sockets[rankReceiver], asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(int)),
+  _queue.dispatch(_sockets[rankReceiver],
+                  asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(int)),
                   [request] { std::static_pointer_cast<SocketRequest>(request)->complete(); });
   return request;
 }
@@ -427,7 +444,8 @@ PtrRequest SocketCommunication::aSend(precice::span<const double> itemsToSend, R
 
   PtrRequest request(new SocketRequest);
 
-  _queue.dispatch(_sockets[rankReceiver], asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(double)),
+  _queue.dispatch(_sockets[rankReceiver],
+                  asio::buffer(itemsToSend.data(), itemsToSend.size() * sizeof(double)),
                   [request] { std::static_pointer_cast<SocketRequest>(request)->complete(); });
   return request;
 }
@@ -443,8 +461,9 @@ PtrRequest SocketCommunication::aSend(std::vector<double> const &itemsToSend, Ra
 
   PtrRequest request(new SocketRequest);
 
-  _queue.dispatch(_sockets[rankReceiver], asio::buffer(itemsToSend),
-                  [request] { std::static_pointer_cast<SocketRequest>(request)->complete(); });
+  _queue.dispatch(_sockets[rankReceiver], asio::buffer(itemsToSend), [request] {
+    std::static_pointer_cast<SocketRequest>(request)->complete();
+  });
   return request;
 }
 
@@ -501,8 +520,9 @@ PtrRequest SocketCommunication::aSend(std::vector<int> const &itemsToSend, Rank 
 
   PtrRequest request(new SocketRequest);
 
-  _queue.dispatch(_sockets[rankReceiver], asio::buffer(itemsToSend),
-                  [request] { std::static_pointer_cast<SocketRequest>(request)->complete(); });
+  _queue.dispatch(_sockets[rankReceiver], asio::buffer(itemsToSend), [request] {
+    std::static_pointer_cast<SocketRequest>(request)->complete();
+  });
   return request;
 }
 
@@ -533,8 +553,9 @@ PtrRequest SocketCommunication::aSend(const bool &itemToSend, Rank rankReceiver)
 
   PtrRequest request(new SocketRequest);
 
-  _queue.dispatch(_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(bool)),
-                  [request] { std::static_pointer_cast<SocketRequest>(request)->complete(); });
+  _queue.dispatch(_sockets[rankReceiver], asio::buffer(&itemToSend, sizeof(bool)), [request] {
+    std::static_pointer_cast<SocketRequest>(request)->complete();
+  });
   return request;
 }
 
@@ -603,7 +624,8 @@ PtrRequest SocketCommunication::aReceive(precice::span<double> itemsToReceive, i
   PtrRequest request(new SocketRequest);
 
   try {
-    asio::async_read(*_sockets[rankSender], asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(double)),
+    asio::async_read(*_sockets[rankSender],
+                     asio::buffer(itemsToReceive.data(), itemsToReceive.size() * sizeof(double)),
                      [request](boost::system::error_code const &, std::size_t) {
                        std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
@@ -626,10 +648,10 @@ PtrRequest SocketCommunication::aReceive(std::vector<double> &itemsToReceive, Ra
   PtrRequest request(new SocketRequest);
 
   try {
-    asio::async_read(*_sockets[rankSender], asio::buffer(itemsToReceive),
-                     [request](boost::system::error_code const &, std::size_t) {
-                       std::static_pointer_cast<SocketRequest>(request)->complete();
-                     });
+    asio::async_read(
+        *_sockets[rankSender], asio::buffer(itemsToReceive), [request](boost::system::error_code const &, std::size_t) {
+          std::static_pointer_cast<SocketRequest>(request)->complete();
+        });
   } catch (std::exception &e) {
     PRECICE_ERROR("Receive using sockets failed with system error: {}", e.what());
   }
@@ -686,7 +708,8 @@ PtrRequest SocketCommunication::aReceive(int &itemToReceive, Rank rankSender)
   PtrRequest request(new SocketRequest);
 
   try {
-    asio::async_read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(int)),
+    asio::async_read(*_sockets[rankSender],
+                     asio::buffer(&itemToReceive, sizeof(int)),
                      [request](boost::system::error_code const &, std::size_t) {
                        std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
@@ -725,7 +748,8 @@ PtrRequest SocketCommunication::aReceive(bool &itemToReceive, Rank rankSender)
   PtrRequest request(new SocketRequest);
 
   try {
-    asio::async_read(*_sockets[rankSender], asio::buffer(&itemToReceive, sizeof(bool)),
+    asio::async_read(*_sockets[rankSender],
+                     asio::buffer(&itemToReceive, sizeof(bool)),
                      [request](boost::system::error_code const &, std::size_t) {
                        std::static_pointer_cast<SocketRequest>(request)->complete();
                      });
@@ -874,8 +898,8 @@ std::string SocketCommunication::getIpAddress()
 
   auto interfaces = detectInterfaces();
 
-  auto pos = std::find_if(interfaces.begin(), interfaces.end(),
-                          [&](Interface const &interface) { return interface.name == _networkName; });
+  auto pos = std::find_if(
+      interfaces.begin(), interfaces.end(), [&](Interface const &interface) { return interface.name == _networkName; });
   if (pos == interfaces.end()) {
     PRECICE_DEBUG("There  NOTHING");
     std::ostringstream err;
@@ -889,7 +913,8 @@ std::string SocketCommunication::getIpAddress()
 
   // Unconnected interfaces don't have an IP address.
   PRECICE_CHECK(not pos->address.empty(),
-                "The interface \"{}\" does not have an IP address. Please select another interface.", _networkName);
+                "The interface \"{}\" does not have an IP address. Please select another interface.",
+                _networkName);
 
   PRECICE_DEBUG("Detected network IP address of interface \"{}\": {}.", _networkName, pos->address);
   return pos->address;

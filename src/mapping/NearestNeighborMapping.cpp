@@ -38,10 +38,14 @@ void NearestNeighborMapping::map(int inputDataID, int outputDataID)
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
   Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
 
-  PRECICE_ASSERT(inputValues.size() / valueDimensions == (int) input()->vertices().size(), inputValues.size(),
-                 valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(), outputValues.size(),
-                 valueDimensions, output()->vertices().size());
+  PRECICE_ASSERT(inputValues.size() / valueDimensions == (int) input()->vertices().size(),
+                 inputValues.size(),
+                 valueDimensions,
+                 input()->vertices().size());
+  PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
+                 outputValues.size(),
+                 valueDimensions,
+                 output()->vertices().size());
 
   if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Map conservative");

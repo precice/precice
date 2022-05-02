@@ -18,13 +18,30 @@
 namespace precice {
 namespace cplscheme {
 
-SerialCouplingScheme::SerialCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
-                                           const std::string &firstParticipant, const std::string &secondParticipant,
-                                           const std::string &localParticipant, m2n::PtrM2N m2n,
-                                           constants::TimesteppingMethod dtMethod, CouplingMode cplMode,
-                                           int maxIterations, int extrapolationOrder)
-    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant, secondParticipant,
-                       localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder)
+SerialCouplingScheme::SerialCouplingScheme(double                        maxTime,
+                                           int                           maxTimeWindows,
+                                           double                        timeWindowSize,
+                                           int                           validDigits,
+                                           const std::string &           firstParticipant,
+                                           const std::string &           secondParticipant,
+                                           const std::string &           localParticipant,
+                                           m2n::PtrM2N                   m2n,
+                                           constants::TimesteppingMethod dtMethod,
+                                           CouplingMode                  cplMode,
+                                           int                           maxIterations,
+                                           int                           extrapolationOrder)
+    : BiCouplingScheme(maxTime,
+                       maxTimeWindows,
+                       timeWindowSize,
+                       validDigits,
+                       firstParticipant,
+                       secondParticipant,
+                       localParticipant,
+                       std::move(m2n),
+                       maxIterations,
+                       cplMode,
+                       dtMethod,
+                       extrapolationOrder)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {

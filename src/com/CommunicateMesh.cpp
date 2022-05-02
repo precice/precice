@@ -162,8 +162,8 @@ void CommunicateMesh::receiveMesh(mesh::Mesh &mesh, int rankSender)
         PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
-        mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]],
-                            *edgeMap[triangleIDs[i * 3 + 2]]);
+        mesh.createTriangle(
+            *edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
       }
     }
   }
@@ -303,8 +303,8 @@ void CommunicateMesh::broadcastReceiveMesh(mesh::Mesh &mesh)
         PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
-        mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]],
-                            *edgeMap[triangleIDs[i * 3 + 2]]);
+        mesh.createTriangle(
+            *edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
       }
     }
   }

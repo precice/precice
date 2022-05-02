@@ -60,8 +60,10 @@ public:
    *                            match the name given for a participant in the
    *                            xml configuration file.
    */
-  SolverInterfaceImpl(std::string participantName, const std::string &configurationFileName, int accessorProcessRank,
-                      int accessorCommunicatorSize);
+  SolverInterfaceImpl(std::string        participantName,
+                      const std::string &configurationFileName,
+                      int                accessorProcessRank,
+                      int                accessorCommunicatorSize);
 
   /// Deleted copy constructor
   SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
@@ -91,8 +93,11 @@ public:
    * @param[in] configurationFileName Name (with path) of the xml config file.
    * @param[in] communicator    A pointer to the MPI_Comm to use.
    */
-  SolverInterfaceImpl(std::string participantName, const std::string &configurationFileName, int accessorProcessRank,
-                      int accessorCommunicatorSize, void *communicator);
+  SolverInterfaceImpl(std::string        participantName,
+                      const std::string &configurationFileName,
+                      int                accessorProcessRank,
+                      int                accessorCommunicatorSize,
+                      void *             communicator);
 
   /** Ensures that finalize() has been called.
    *
@@ -311,8 +316,8 @@ public:
   void setMeshQuad(MeshID meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID, int fourthEdgeID);
 
   /// Sets a quadrangle and creates/sets edges automatically of a solver mesh.
-  void setMeshQuadWithEdges(MeshID meshID, int firstVertexID, int secondVertexID, int thirdVertexID,
-                            int fourthVertexID);
+  void
+  setMeshQuadWithEdges(MeshID meshID, int firstVertexID, int secondVertexID, int thirdVertexID, int fourthVertexID);
 
   /**
    * @brief Computes and maps all write data mapped from mesh with given ID.
@@ -338,8 +343,8 @@ public:
   void writeBlockVectorData(int fromDataID, int size, const int *valueIndices, const double *values);
 
   /// @copydoc precice::SolverInterface::writeBlockVectorGradientData
-  void writeBlockVectorGradientData(int fromDataID, int size, const int *valueIndices, const double *gradientValues,
-                                    bool rowsFirst = false);
+  void writeBlockVectorGradientData(
+      int fromDataID, int size, const int *valueIndices, const double *gradientValues, bool rowsFirst = false);
 
   /**
    * @brief Write vectorial data to the interface mesh
@@ -421,8 +426,8 @@ public:
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
    * @param[out] values Pointer to read destination.
    */
-  void readBlockVectorData(int toDataID, int size, const int *valueIndices, double relativeReadTime,
-                           double *values) const;
+  void
+  readBlockVectorData(int toDataID, int size, const int *valueIndices, double relativeReadTime, double *values) const;
 
   /**
    * @brief Reads vector data at a vertex on a mesh. Values correspond to the end of the current time window.
@@ -495,8 +500,8 @@ public:
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
    * @param[out] values Pointer to the read destination.
    */
-  void readBlockScalarData(int toDataID, int size, const int *valueIndices, double relativeReadTime,
-                           double *values) const;
+  void
+  readBlockScalarData(int toDataID, int size, const int *valueIndices, double relativeReadTime, double *values) const;
 
   /**
    * @brief Reads scalar data at a vertex on a mesh. Values correspond to the end of the current time window.
@@ -617,13 +622,13 @@ private:
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
 
   /// Implementation of read functions.
-  void readBlockVectorDataImpl(int toDataID, int size, const int *valueIndices, double relativeReadTime,
-                               double *values) const;
+  void readBlockVectorDataImpl(
+      int toDataID, int size, const int *valueIndices, double relativeReadTime, double *values) const;
 
   void readVectorDataImpl(int toDataID, int valueIndex, double relativeReadTime, double *value) const;
 
-  void readBlockScalarDataImpl(int toDataID, int size, const int *valueIndices, double relativeReadTime,
-                               double *values) const;
+  void readBlockScalarDataImpl(
+      int toDataID, int size, const int *valueIndices, double relativeReadTime, double *values) const;
 
   void readScalarDataImpl(int toDataID, int valueIndex, double relativeReadTime, double &value) const;
 
@@ -661,8 +666,11 @@ private:
    * computed.
    * @param[in] timeWindowSize Current time window size.
    */
-  void performDataActions(const std::set<action::Action::Timing> &timings, double time, double timeStepSize,
-                          double computedTimeWindowPart, double timeWindowSize);
+  void performDataActions(const std::set<action::Action::Timing> &timings,
+                          double                                  time,
+                          double                                  timeStepSize,
+                          double                                  computedTimeWindowPart,
+                          double                                  timeWindowSize);
 
   /// Resets written data, displacements and mesh neighbors to export.
   void resetWrittenData();

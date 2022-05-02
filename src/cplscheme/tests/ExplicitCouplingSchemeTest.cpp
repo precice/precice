@@ -32,7 +32,8 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-void runSimpleExplicitCoupling(CouplingScheme &cplScheme, const std::string &participantName,
+void runSimpleExplicitCoupling(CouplingScheme &               cplScheme,
+                               const std::string &            participantName,
                                const mesh::MeshConfiguration &meshConfig)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
@@ -131,7 +132,8 @@ void runSimpleExplicitCoupling(CouplingScheme &cplScheme, const std::string &par
   }
 }
 
-void runExplicitCouplingWithSubcycling(CouplingScheme &cplScheme, const std::string &participantName,
+void runExplicitCouplingWithSubcycling(CouplingScheme &               cplScheme,
+                                       const std::string &            participantName,
                                        const mesh::MeshConfiguration &meshConfig)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
@@ -248,8 +250,10 @@ struct ExplicitCouplingSchemeFixture : m2n::WhiteboxAccessor {
     _pathToTests = testing::getPathToSources() + "/cplscheme/tests/";
   }
 
-  void connect(const std::string &participant0, const std::string &participant1, const std::string &localParticipant,
-               m2n::PtrM2N &communication)
+  void connect(const std::string &participant0,
+               const std::string &participant1,
+               const std::string &localParticipant,
+               m2n::PtrM2N &      communication)
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
@@ -301,8 +305,15 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
     sendDataIndex    = 1;
     receiveDataIndex = 0;
   }
-  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
-                                            nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
+  cplscheme::SerialCouplingScheme cplScheme(maxTime,
+                                            maxTimesteps,
+                                            timestepLength,
+                                            12,
+                                            nameParticipant0,
+                                            nameParticipant1,
+                                            context.name,
+                                            m2n,
+                                            constants::FIXED_TIME_WINDOW_SIZE,
                                             BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
@@ -618,8 +629,15 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
     sendDataIndex    = 1;
     receiveDataIndex = 0;
   }
-  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
-                                            nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
+  cplscheme::SerialCouplingScheme cplScheme(maxTime,
+                                            maxTimesteps,
+                                            timestepLength,
+                                            12,
+                                            nameParticipant0,
+                                            nameParticipant1,
+                                            context.name,
+                                            m2n,
+                                            constants::FIXED_TIME_WINDOW_SIZE,
                                             BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);

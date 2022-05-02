@@ -72,7 +72,8 @@ struct WhiteboxAccessor {
 
 /// equals to be used in tests. Compares two matrices using a given tolerance. Prints both operands on failure.
 template <class DerivedA, class DerivedB>
-boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<DerivedB> &B,
+boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
+                                           const Eigen::MatrixBase<DerivedB> &B,
                                            double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   if (not math::equals(A, B, tolerance)) {

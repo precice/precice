@@ -183,8 +183,12 @@ public:
       @param[in] type PETSc type of the matrix
       @param[in] doSetup Call MatSetup(). Not calling MatSetup can have performance gains when using preallocation
   */
-  void init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type = nullptr,
-            bool doSetup = true);
+  void init(PetscInt localRows,
+            PetscInt localCols,
+            PetscInt globalRows,
+            PetscInt globalCols,
+            MatType  type    = nullptr,
+            bool     doSetup = true);
 
   /// Destroys and recreates the matrix on the same communicator
   void reset();

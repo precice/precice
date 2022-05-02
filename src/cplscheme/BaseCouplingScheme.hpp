@@ -61,9 +61,15 @@ class BaseCouplingScheme : public CouplingScheme {
 public:
   enum CouplingMode { Explicit, Implicit, Undefined };
 
-  BaseCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
-                     std::string localParticipant, int maxIterations, CouplingMode cplMode,
-                     constants::TimesteppingMethod dtMethod, int extrapolationOrder);
+  BaseCouplingScheme(double                        maxTime,
+                     int                           maxTimeWindows,
+                     double                        timeWindowSize,
+                     int                           validDigits,
+                     std::string                   localParticipant,
+                     int                           maxIterations,
+                     CouplingMode                  cplMode,
+                     constants::TimesteppingMethod dtMethod,
+                     int                           extrapolationOrder);
 
   /**
    * @brief getter for _isInitialized
@@ -212,8 +218,8 @@ public:
   void advance() override final;
 
   /// Adds a measure to determine the convergence of coupling iterations.
-  void addConvergenceMeasure(int dataID, bool suffices, bool strict, impl::PtrConvergenceMeasure measure,
-                             bool doesLogging);
+  void
+  addConvergenceMeasure(int dataID, bool suffices, bool strict, impl::PtrConvergenceMeasure measure, bool doesLogging);
 
   /// Set an acceleration technique.
   void setAcceleration(const acceleration::PtrAcceleration &acceleration);

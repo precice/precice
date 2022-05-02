@@ -109,7 +109,24 @@ BOOST_AUTO_TEST_CASE(TimeSeries)
   {
     auto result   = readDoublesFromTXTFile(filename0, 6);
     auto expected = std::vector<double>{
-        0.0, 0.0, 0.0, 1.0, 1.0, 2.0, 1.0, 0.0, 0.0, 2.0, 2.0, 3.0, 2.0, 0.0, 0.0, 2.0, 2.0, 3.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        2.0,
+        1.0,
+        0.0,
+        0.0,
+        2.0,
+        2.0,
+        3.0,
+        2.0,
+        0.0,
+        0.0,
+        2.0,
+        2.0,
+        3.0,
     };
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {

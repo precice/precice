@@ -12,7 +12,8 @@ namespace mesh {
  * @note This version currently only supports Sources with a const `src.vertex(index).getCoords()` access.
  */
 template <typename Source, typename Value>
-class IndexRangeIterator : public boost::iterator_facade<IndexRangeIterator<Source, const Value>, const Value,
+class IndexRangeIterator : public boost::iterator_facade<IndexRangeIterator<Source, const Value>,
+                                                         const Value,
                                                          boost::random_access_traversal_tag> {
 public:
   IndexRangeIterator() = default;

@@ -149,8 +149,8 @@ void NearestProjectionMapping::map(int inputDataID, int outputDataID)
   if (hasConstraint(CONSERVATIVE)) {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Map conservative");
-    PRECICE_ASSERT(_interpolations.size() == input()->vertices().size(), _interpolations.size(),
-                   input()->vertices().size());
+    PRECICE_ASSERT(
+        _interpolations.size() == input()->vertices().size(), _interpolations.size(), input()->vertices().size());
     for (size_t i = 0; i < input()->vertices().size(); i++) {
       size_t      inOffset = i * dimensions;
       const auto &elems    = _interpolations[i].getWeightedElements();
@@ -165,8 +165,8 @@ void NearestProjectionMapping::map(int inputDataID, int outputDataID)
     }
   } else {
     PRECICE_DEBUG("Map consistent");
-    PRECICE_ASSERT(_interpolations.size() == output()->vertices().size(), _interpolations.size(),
-                   output()->vertices().size());
+    PRECICE_ASSERT(
+        _interpolations.size() == output()->vertices().size(), _interpolations.size(), output()->vertices().size());
     for (size_t i = 0; i < output()->vertices().size(); i++) {
       const auto &elems     = _interpolations[i].getWeightedElements();
       size_t      outOffset = i * dimensions;

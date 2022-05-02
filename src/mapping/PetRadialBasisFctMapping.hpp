@@ -60,10 +60,15 @@ public:
    * For description on convergence testing and meaning of solverRtol see
    * http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
-  PetRadialBasisFctMapping(Constraint constraint, int dimensions, const RADIAL_BASIS_FUNCTION_T &function, bool xDead,
-                           bool yDead, bool zDead, double solverRtol = 1e-9,
-                           Polynomial    polynomial    = Polynomial::SEPARATE,
-                           Preallocation preallocation = Preallocation::TREE);
+  PetRadialBasisFctMapping(Constraint                     constraint,
+                           int                            dimensions,
+                           const RADIAL_BASIS_FUNCTION_T &function,
+                           bool                           xDead,
+                           bool                           yDead,
+                           bool                           zDead,
+                           double                         solverRtol    = 1e-9,
+                           Polynomial                     polynomial    = Polynomial::SEPARATE,
+                           Preallocation                  preallocation = Preallocation::TREE);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
@@ -179,10 +184,14 @@ private:
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(Constraint constraint, int dimensions,
+PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(Constraint                     constraint,
+                                                                            int                            dimensions,
                                                                             const RADIAL_BASIS_FUNCTION_T &function,
-                                                                            bool xDead, bool yDead, bool zDead,
-                                                                            double solverRtol, Polynomial polynomial,
+                                                                            bool                           xDead,
+                                                                            bool                           yDead,
+                                                                            bool                           zDead,
+                                                                            double                         solverRtol,
+                                                                            Polynomial                     polynomial,
                                                                             Preallocation preallocation)
     : Mapping(constraint, dimensions), _basisFunction(function), _matrixC("C"), _matrixQ("Q"), _matrixA("A"),
       _matrixV("V"), _solver("Coefficient Solver"), _QRsolver("QR Solver"), _AOmapping(nullptr),
@@ -251,8 +260,8 @@ template <typename RADIAL_BASIS_FUNCTION_T> void PetRadialBasisFctMapping<RADIAL
     PRECICE_DEBUG("Using separated polynomial.");
   }
 
-  PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(), input()->getDimensions(),
-                 output()->getDimensions());
+  PRECICE_ASSERT(
+      input()->getDimensions() == output()->getDimensions(), input()->getDimensions(), output()->getDimensions());
   int const     dimensions = input()->getDimensions();
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
@@ -596,11 +605,13 @@ template <typename RADIAL_BASIS_FUNCTION_T> void PetRadialBasisFctMapping<RADIAL
 
   PRECICE_DEBUG("Number of mallocs for matrix C = {}", _matrixC.getInfo(MAT_LOCAL).mallocs);
   PRECICE_DEBUG("Non-zeros allocated / used / unused for matrix C = {} / {} / {}",
-                _matrixC.getInfo(MAT_LOCAL).nz_allocated, _matrixC.getInfo(MAT_LOCAL).nz_used,
+                _matrixC.getInfo(MAT_LOCAL).nz_allocated,
+                _matrixC.getInfo(MAT_LOCAL).nz_used,
                 _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
   PRECICE_DEBUG("Number of mallocs for matrix A = {}", _matrixA.getInfo(MAT_LOCAL).mallocs);
   PRECICE_DEBUG("Non-zeros allocated / used / unused for matrix A = {} / {} / {}",
-                _matrixA.getInfo(MAT_LOCAL).nz_allocated, _matrixA.getInfo(MAT_LOCAL).nz_used,
+                _matrixA.getInfo(MAT_LOCAL).nz_allocated,
+                _matrixA.getInfo(MAT_LOCAL).nz_used,
                 _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
 }
 
@@ -633,15 +644,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   precice::utils::Event e("map.pet.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(), input()->getDimensions(),
-                 output()->getDimensions());
+  PRECICE_ASSERT(
+      input()->getDimensions() == output()->getDimensions(), input()->getDimensions(), output()->getDimensions());
 
   PetscErrorCode ierr      = 0;
   auto const &   inValues  = input()->data(inputDataID)->values();
   auto &         outValues = output()->data(outputDataID)->values();
 
   int const valueDim = input()->data(inputDataID)->getDimensions();
-  PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(), valueDim,
+  PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
+                 valueDim,
                  output()->data(outputDataID)->getDimensions());
 
   if (hasConstraint(CONSERVATIVE)) {
@@ -687,7 +699,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         switch (_QRsolver.solveTranspose(tau, sigma)) {
         case (petsc::KSPSolver::SolverResult::Converged):
           PRECICE_DEBUG("The polynomial linear system of the RBF mapping from mesh {} to mesh {} converged. {}",
-                        input()->getName(), output()->getName(), _QRsolver.summaryFor(tau));
+                        input()->getName(),
+                        output()->getName(),
+                        _QRsolver.summaryFor(tau));
           break;
         case (petsc::KSPSolver::SolverResult::Stopped):
           PRECICE_WARN("The polynomial linear system of the RBF mapping from mesh {} to mesh {} has not converged. "
@@ -695,7 +709,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                        "is too conservative. "
                        "Please check if your coupling meshes are correct. "
                        "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                       input()->getName(), output()->getName(), _QRsolver.summaryFor(tau));
+                       input()->getName(),
+                       output()->getName(),
+                       _QRsolver.summaryFor(tau));
           break;
         case (petsc::KSPSolver::SolverResult::Diverged):
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
@@ -703,7 +719,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                         "has diverged. This means most probably that the mapping problem is not well-posed. "
                         "Please check if your coupling meshes are correct. "
                         "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                        input()->getName(), output()->getName(), _QRsolver.summaryFor(tau));
+                        input()->getName(),
+                        output()->getName(),
+                        _QRsolver.summaryFor(tau));
           break;
         }
 
@@ -720,7 +738,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         switch (solverResult) {
         case (petsc::KSPSolver::SolverResult::Converged):
           PRECICE_DEBUG("The linear system of the RBF mapping from mesh {} to mesh {} converged. {}",
-                        input()->getName(), output()->getName(), _solver.summaryFor(au));
+                        input()->getName(),
+                        output()->getName(),
+                        _solver.summaryFor(au));
           break;
         case (petsc::KSPSolver::SolverResult::Stopped):
           PRECICE_WARN("The linear system of the RBF mapping from mesh {} to mesh {} has not converged. "
@@ -728,7 +748,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                        "is too conservative. "
                        "Please check if your coupling meshes are correct. "
                        "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                       input()->getName(), output()->getName(), _solver.summaryFor(au));
+                       input()->getName(),
+                       output()->getName(),
+                       _solver.summaryFor(au));
           break;
         case (petsc::KSPSolver::SolverResult::Diverged):
           KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
@@ -736,7 +758,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                         "has diverged. This means most probably that the mapping problem is not well-posed. "
                         "Please check if your coupling meshes are correct. "
                         "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                        input()->getName(), output()->getName(), _solver.summaryFor(au));
+                        input()->getName(),
+                        output()->getName(),
+                        _solver.summaryFor(au));
           break;
         }
       }
@@ -789,7 +813,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         switch (_QRsolver.solve(in, a)) {
         case (petsc::KSPSolver::SolverResult::Converged):
           PRECICE_DEBUG("The polynomial QR system of the RBF mapping from mesh {} to mesh {} converged. {}",
-                        input()->getName(), output()->getName(), _QRsolver.summaryFor(in));
+                        input()->getName(),
+                        output()->getName(),
+                        _QRsolver.summaryFor(in));
           break;
         case (petsc::KSPSolver::SolverResult::Stopped):
           PRECICE_WARN("The polynomial QR system of the RBF mapping from mesh {} to mesh {} has not converged. "
@@ -797,7 +823,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                        "is too conservative. "
                        "Please check if your coupling meshes are correct. "
                        "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                       input()->getName(), output()->getName(), _QRsolver.summaryFor(in));
+                       input()->getName(),
+                       output()->getName(),
+                       _QRsolver.summaryFor(in));
           break;
         case (petsc::KSPSolver::SolverResult::Diverged):
           KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
@@ -805,7 +833,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                         "This means most probably that the mapping problem is not well-posed. "
                         "Please check if your coupling meshes are correct. "
                         "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                        input()->getName(), output()->getName(), _QRsolver.summaryFor(in));
+                        input()->getName(),
+                        output()->getName(),
+                        _QRsolver.summaryFor(in));
           break;
         }
 
@@ -828,8 +858,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
       switch (solverResult) {
       case (petsc::KSPSolver::SolverResult::Converged):
-        PRECICE_DEBUG("The linear system of the RBF mapping from mesh {} to mesh {} converged. {}", input()->getName(),
-                      output()->getName(), _solver.summaryFor(in));
+        PRECICE_DEBUG("The linear system of the RBF mapping from mesh {} to mesh {} converged. {}",
+                      input()->getName(),
+                      output()->getName(),
+                      _solver.summaryFor(in));
         break;
       case (petsc::KSPSolver::SolverResult::Stopped):
         PRECICE_WARN("The linear system of the RBF mapping from mesh {} to mesh {} has not converged. "
@@ -837,7 +869,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                      "is too conservative. "
                      "Please check if your coupling meshes are correct. "
                      "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                     input()->getName(), output()->getName(), _solver.summaryFor(in));
+                     input()->getName(),
+                     output()->getName(),
+                     _solver.summaryFor(in));
         break;
       case (petsc::KSPSolver::SolverResult::Diverged):
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
@@ -845,7 +879,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                       "This means most probably that the mapping problem is not well-posed. "
                       "Please check if your coupling meshes are correct. "
                       "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                      input()->getName(), output()->getName(), _solver.summaryFor(in));
+                      input()->getName(),
+                      output()->getName(),
+                      _solver.summaryFor(in));
         break;
       }
 
@@ -964,12 +1000,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
                                                                       : "separate";
 
   PRECICE_INFO("Mapping \"{}\" {} from \"{}\" (ID {}) to \"{}\" (ID {}) for dimension {} with polynomial set to {}",
-               input()->data(inputDataID)->getName(), constraintName, input()->getName(), input()->getID(),
-               output()->getName(), output()->getID(), dim, polynomialName);
+               input()->data(inputDataID)->getName(),
+               constraintName,
+               input()->getName(),
+               input()->getID(),
+               output()->getName(),
+               output()->getID(),
+               dim,
+               polynomialName);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMatrixC(int rows, int cols,
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMatrixC(int           rows,
+                                                                                     int           cols,
                                                                                      mesh::PtrMesh mesh)
 {
   std::ignore = rows;
@@ -1003,14 +1046,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
   if (_commState->size() == 1) {
     MatSeqSBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), nnzPerRow / 2, nullptr);
   } else {
-    MatMPISBAIJSetPreallocation(_matrixC, _matrixC.blockSize(), nnzPerRow / (size * 2), nullptr, nnzPerRow / (size * 2),
-                                nullptr);
+    MatMPISBAIJSetPreallocation(
+        _matrixC, _matrixC.blockSize(), nnzPerRow / (size * 2), nullptr, nnzPerRow / (size * 2), nullptr);
   }
   MatSetOption(_matrixC, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMatrixA(int rows, int cols,
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMatrixA(int           rows,
+                                                                                     int           cols,
                                                                                      mesh::PtrMesh mesh)
 {
   std::ignore = rows;

@@ -29,22 +29,27 @@ static std::string errormsgCreate =
     "preCICE has been created already! Be sure to call either \"precicec_createSolverInterface\" or "
     "\"precicec_createSolverInterface_withCommunicator\" exactly once.";
 
-void precicec_createSolverInterface_withCommunicator(const char *participantName, const char *configFileName,
-                                                     int solverProcessIndex, int solverProcessSize, void *communicator)
+void precicec_createSolverInterface_withCommunicator(const char *participantName,
+                                                     const char *configFileName,
+                                                     int         solverProcessIndex,
+                                                     int         solverProcessSize,
+                                                     void *      communicator)
 {
   std::string stringAccessorName(participantName);
   std::string stringConfigFileName(configFileName);
 
   PRECICE_CHECK(impl == nullptr, errormsgCreate);
-  impl.reset(new precice::SolverInterface(stringAccessorName, stringConfigFileName, solverProcessIndex,
-                                          solverProcessSize, communicator));
+  impl.reset(new precice::SolverInterface(
+      stringAccessorName, stringConfigFileName, solverProcessIndex, solverProcessSize, communicator));
 }
 
-void precicec_createSolverInterface(const char *participantName, const char *configFileName, int solverProcessIndex,
-                                    int solverProcessSize)
+void precicec_createSolverInterface(const char *participantName,
+                                    const char *configFileName,
+                                    int         solverProcessIndex,
+                                    int         solverProcessSize)
 {
-  precicec_createSolverInterface_withCommunicator(participantName, configFileName, solverProcessIndex,
-                                                  solverProcessSize, nullptr);
+  precicec_createSolverInterface_withCommunicator(
+      participantName, configFileName, solverProcessIndex, solverProcessSize, nullptr);
 }
 
 double precicec_initialize()
@@ -243,8 +248,8 @@ void precicec_setMeshQuad(int meshID, int firstEdgeID, int secondEdgeID, int thi
   impl->setMeshQuad(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
 }
 
-void precicec_setMeshQuadWithEdges(int meshID, int firstVertexID, int secondVertexID, int thirdVertexID,
-                                   int fourthVertexID)
+void precicec_setMeshQuadWithEdges(
+    int meshID, int firstVertexID, int secondVertexID, int thirdVertexID, int fourthVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);

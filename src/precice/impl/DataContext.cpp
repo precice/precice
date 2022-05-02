@@ -98,7 +98,8 @@ bool DataContext::isMappingRequired()
     return false;
   }
 
-  PRECICE_ASSERT(std::all_of(_mappingContexts.begin(), _mappingContexts.end(),
+  PRECICE_ASSERT(std::all_of(_mappingContexts.begin(),
+                             _mappingContexts.end(),
                              [this](const auto &context) { return context.timing == _mappingContexts[0].timing; }),
                  "Different mapping timings for the same data context are not supported");
 

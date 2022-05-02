@@ -21,8 +21,8 @@ namespace precice {
 namespace acceleration {
 namespace impl {
 
-QRFactorization::QRFactorization(Eigen::MatrixXd Q, Eigen::MatrixXd R, int rows, int cols, int filter, double omega,
-                                 double theta, double sigma)
+QRFactorization::QRFactorization(
+    Eigen::MatrixXd Q, Eigen::MatrixXd R, int rows, int cols, int filter, double omega, double theta, double sigma)
 
     : _Q(std::move(Q)), _R(std::move(R)), _rows(rows), _cols(cols), _filter(filter), _omega(omega), _theta(theta),
       _sigma(sigma), _infostream(), _fstream_set(false), _globalRows(rows)
@@ -208,7 +208,8 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   // rho0:     the norm of the initial column that is to be inserted
   if (applyFilter && (rho0 * singularityLimit > rho_orth)) {
     PRECICE_DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: {} > {}",
-                  rho0 * singularityLimit, rho_orth);
+                  rho0 * singularityLimit,
+                  rho_orth);
     _cols--;
     return false;
   }
@@ -595,8 +596,8 @@ void QRFactorization::computeReflector(QRFactorization::givensRot &grot, double 
  *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G,
  *  where G is the Givens matrix grot, determined by sigma and gamma.
  */
-void QRFactorization::applyReflector(const QRFactorization::givensRot &grot, int k, int l, Eigen::VectorXd &p,
-                                     Eigen::VectorXd &q)
+void QRFactorization::applyReflector(
+    const QRFactorization::givensRot &grot, int k, int l, Eigen::VectorXd &p, Eigen::VectorXd &q)
 {
   double nu = grot.sigma / (1. + grot.gamma);
   for (int j = k; j < l; j++) {
@@ -642,8 +643,8 @@ void QRFactorization::reset()
   _globalRows = 0;
 }
 
-void QRFactorization::reset(Eigen::MatrixXd const &Q, Eigen::MatrixXd const &R, int rows, int cols, double omega,
-                            double theta, double sigma)
+void QRFactorization::reset(
+    Eigen::MatrixXd const &Q, Eigen::MatrixXd const &R, int rows, int cols, double omega, double theta, double sigma)
 {
   _Q          = Q;
   _R          = R;

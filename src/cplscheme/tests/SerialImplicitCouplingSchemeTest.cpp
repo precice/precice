@@ -44,8 +44,10 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-void runCoupling(CouplingScheme &cplScheme, const std::string &nameParticipant,
-                 const mesh::MeshConfiguration &meshConfig, const std::vector<int> &validIterations)
+void runCoupling(CouplingScheme &               cplScheme,
+                 const std::string &            nameParticipant,
+                 const mesh::MeshConfiguration &meshConfig,
+                 const std::vector<int> &       validIterations)
 {
   BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
@@ -206,8 +208,10 @@ void runCoupling(CouplingScheme &cplScheme, const std::string &nameParticipant,
   }
 }
 
-void runCouplingWithSubcycling(CouplingScheme &cplScheme, const std::string &nameParticipant,
-                               const mesh::MeshConfiguration &meshConfig, const std::vector<int> &validIterations)
+void runCouplingWithSubcycling(CouplingScheme &               cplScheme,
+                               const std::string &            nameParticipant,
+                               const mesh::MeshConfiguration &meshConfig,
+                               const std::vector<int> &       validIterations)
 {
   BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
@@ -458,8 +462,17 @@ BOOST_AUTO_TEST_CASE(FirstOrder)
   const int             extrapolationOrder = 1;
 
   // Test first order extrapolation
-  SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom,
-                              constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations,
+  SerialCouplingScheme scheme(maxTime,
+                              maxTimesteps,
+                              dt,
+                              16,
+                              first,
+                              second,
+                              accessor,
+                              globalCom,
+                              constants::FIXED_TIME_WINDOW_SIZE,
+                              BaseCouplingScheme::Implicit,
+                              maxIterations,
                               extrapolationOrder);
 
   using Fixture = testing::SerialCouplingSchemeFixture;
@@ -535,8 +548,17 @@ BOOST_AUTO_TEST_CASE(SecondOrder)
   const int             extrapolationOrder = 2;
 
   // Test second order extrapolation
-  SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom,
-                              constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations,
+  SerialCouplingScheme scheme(maxTime,
+                              maxTimesteps,
+                              dt,
+                              16,
+                              first,
+                              second,
+                              accessor,
+                              globalCom,
+                              constants::FIXED_TIME_WINDOW_SIZE,
+                              BaseCouplingScheme::Implicit,
+                              maxIterations,
                               extrapolationOrder);
 
   using Fixture = testing::SerialCouplingSchemeFixture;
@@ -660,9 +682,18 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
   }
 
   // Create the coupling scheme object
-  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, 16, first, second, context.name,
-                                            m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit,
-                                            maxIterations, extrapolationOrder);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime,
+                                            maxTimeWindows,
+                                            timeWindowSize,
+                                            16,
+                                            first,
+                                            second,
+                                            context.name,
+                                            m2n,
+                                            constants::FIXED_TIME_WINDOW_SIZE,
+                                            BaseCouplingScheme::Implicit,
+                                            maxIterations,
+                                            extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
@@ -859,9 +890,18 @@ BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
   }
 
   // Create the coupling scheme object
-  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, 16, first, second, context.name,
-                                            m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit,
-                                            maxIterations, extrapolationOrder);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime,
+                                            maxTimeWindows,
+                                            timeWindowSize,
+                                            16,
+                                            first,
+                                            second,
+                                            context.name,
+                                            m2n,
+                                            constants::FIXED_TIME_WINDOW_SIZE,
+                                            BaseCouplingScheme::Implicit,
+                                            maxIterations,
+                                            extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second));
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first));
 
@@ -1103,9 +1143,18 @@ BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
   }
 
   // Create the coupling scheme object
-  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, 16, first, second, context.name,
-                                            m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit,
-                                            maxIterations, extrapolationOrder);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime,
+                                            maxTimeWindows,
+                                            timeWindowSize,
+                                            16,
+                                            first,
+                                            second,
+                                            context.name,
+                                            m2n,
+                                            constants::FIXED_TIME_WINDOW_SIZE,
+                                            BaseCouplingScheme::Implicit,
+                                            maxIterations,
+                                            extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
@@ -1332,9 +1381,18 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   }
 
   // Create the coupling scheme object
-  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
-                                            nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-                                            BaseCouplingScheme::Implicit, 100, extrapolationOrder);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime,
+                                            maxTimesteps,
+                                            timestepLength,
+                                            16,
+                                            nameParticipant0,
+                                            nameParticipant1,
+                                            context.name,
+                                            m2n,
+                                            constants::FIXED_TIME_WINDOW_SIZE,
+                                            BaseCouplingScheme::Implicit,
+                                            100,
+                                            extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
@@ -1435,9 +1493,18 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   }
 
   // Create the coupling scheme object
-  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
-                                            nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-                                            BaseCouplingScheme::Implicit, 100, extrapolationOrder);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime,
+                                            maxTimesteps,
+                                            timestepLength,
+                                            16,
+                                            nameParticipant0,
+                                            nameParticipant1,
+                                            context.name,
+                                            m2n,
+                                            constants::FIXED_TIME_WINDOW_SIZE,
+                                            BaseCouplingScheme::Implicit,
+                                            100,
+                                            extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
@@ -1499,9 +1566,18 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   }
 
   // Create the coupling scheme object
-  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
-                                            nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-                                            BaseCouplingScheme::Implicit, 100, extrapolationOrder);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime,
+                                            maxTimesteps,
+                                            timestepLength,
+                                            16,
+                                            nameParticipant0,
+                                            nameParticipant1,
+                                            context.name,
+                                            m2n,
+                                            constants::FIXED_TIME_WINDOW_SIZE,
+                                            BaseCouplingScheme::Implicit,
+                                            100,
+                                            extrapolationOrder);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
 
@@ -1561,9 +1637,18 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   }
 
   // Create the coupling scheme object
-  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
-                                            nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-                                            BaseCouplingScheme::Implicit, 100, extrapolationOrder);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime,
+                                            maxTimesteps,
+                                            timestepLength,
+                                            16,
+                                            nameParticipant0,
+                                            nameParticipant1,
+                                            context.name,
+                                            m2n,
+                                            constants::FIXED_TIME_WINDOW_SIZE,
+                                            BaseCouplingScheme::Implicit,
+                                            100,
+                                            extrapolationOrder);
   using Fixture = testing::SerialCouplingSchemeFixture;
 
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);

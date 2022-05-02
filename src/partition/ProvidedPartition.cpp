@@ -89,7 +89,8 @@ void ProvidedPartition::communicate()
 
           for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
             com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(globalMesh, secondaryRank);
-            PRECICE_DEBUG("Received sub-mesh, from secondary rank: {}, global vertexCount: {}", secondaryRank,
+            PRECICE_DEBUG("Received sub-mesh, from secondary rank: {}, global vertexCount: {}",
+                          secondaryRank,
                           globalMesh.vertices().size());
           }
         }
@@ -154,8 +155,8 @@ void ProvidedPartition::prepare()
     utils::MasterSlave::getCommunication()->broadcast(_mesh->getVertexOffsets());
 
     // fill vertex distribution
-    if (std::any_of(_m2ns.begin(), _m2ns.end(),
-                    [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); })) {
+    if (std::any_of(
+            _m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); })) {
       if (utils::MasterSlave::isPrimary()) {
         PRECICE_DEBUG("Fill vertex distribution");
         auto &localIds = _mesh->getVertexDistribution()[0];

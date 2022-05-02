@@ -20,8 +20,18 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
     double offset        = context.rank * 0.4;
     double xCoord        = 0.0;
     double yCoord        = 1.0;
-    double positions[12] = {xCoord, yCoord, 0.1 + offset, xCoord, yCoord, 0.2 + offset,
-                            xCoord, yCoord, 0.3 + offset, xCoord, yCoord, 0.4 + offset};
+    double positions[12] = {xCoord,
+                            yCoord,
+                            0.1 + offset,
+                            xCoord,
+                            yCoord,
+                            0.2 + offset,
+                            xCoord,
+                            yCoord,
+                            0.3 + offset,
+                            xCoord,
+                            yCoord,
+                            0.4 + offset};
     interface.setMeshVertices(meshID, 4, positions, vertexIDs);
     interface.initialize();
     interface.advance(1.0);

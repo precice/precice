@@ -130,7 +130,8 @@ void AccelerationConfiguration::xmlTagCallback(const xml::ConfigurationContext &
       PRECICE_ERROR(
           "You have provided a subtag <data name=\"{}\" mesh=\"{}\"/> more than once in your <acceleration:.../>. "
           "Please remove the duplicated entry.",
-          dataName, meshName);
+          dataName,
+          meshName);
     }
     _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
     double scaling = 1.0;
@@ -141,7 +142,8 @@ void AccelerationConfiguration::xmlTagCallback(const xml::ConfigurationContext &
     PRECICE_CHECK(_meshConfig->hasMeshName(_meshName) && _meshConfig->getMesh(_meshName)->hasDataName(dataName),
                   "Data with name \"{0}\" associated to mesh \"{1}\" not found on configuration of acceleration. "
                   "Add \"{0}\" to the \"<mesh name={1}>\" tag, or change the data name in the acceleration scheme.",
-                  dataName, _meshName);
+                  dataName,
+                  _meshName);
 
     const mesh::PtrMesh &mesh = _meshConfig->getMesh(_meshName);
     const mesh::PtrData &data = mesh->data(dataName);
@@ -247,23 +249,41 @@ void AccelerationConfiguration::xmlEndTagCallback(const xml::ConfigurationContex
     } else if (callingTag.getName() == VALUE_AITKEN) {
       _acceleration = PtrAcceleration(new AitkenAcceleration(_config.relaxationFactor, _config.dataIDs));
     } else if (callingTag.getName() == VALUE_IQNILS) {
-      _acceleration = PtrAcceleration(new IQNILSAcceleration(
-          _config.relaxationFactor, _config.forceInitialRelaxation, _config.maxIterationsUsed,
-          _config.timeWindowsReused, _config.filter, _config.singularityLimit, _config.dataIDs, _preconditioner));
+      _acceleration = PtrAcceleration(new IQNILSAcceleration(_config.relaxationFactor,
+                                                             _config.forceInitialRelaxation,
+                                                             _config.maxIterationsUsed,
+                                                             _config.timeWindowsReused,
+                                                             _config.filter,
+                                                             _config.singularityLimit,
+                                                             _config.dataIDs,
+                                                             _preconditioner));
     } else if (callingTag.getName() == VALUE_MVQN) {
 #ifndef PRECICE_NO_MPI
-      _acceleration = PtrAcceleration(new MVQNAcceleration(
-          _config.relaxationFactor, _config.forceInitialRelaxation, _config.maxIterationsUsed,
-          _config.timeWindowsReused, _config.filter, _config.singularityLimit, _config.dataIDs, _preconditioner,
-          _config.alwaysBuildJacobian, _config.imvjRestartType, _config.imvjChunkSize,
-          _config.imvjRSLS_reusedTimeWindows, _config.imvjRSSVD_truncationEps));
+      _acceleration = PtrAcceleration(new MVQNAcceleration(_config.relaxationFactor,
+                                                           _config.forceInitialRelaxation,
+                                                           _config.maxIterationsUsed,
+                                                           _config.timeWindowsReused,
+                                                           _config.filter,
+                                                           _config.singularityLimit,
+                                                           _config.dataIDs,
+                                                           _preconditioner,
+                                                           _config.alwaysBuildJacobian,
+                                                           _config.imvjRestartType,
+                                                           _config.imvjChunkSize,
+                                                           _config.imvjRSLS_reusedTimeWindows,
+                                                           _config.imvjRSSVD_truncationEps));
 #else
       PRECICE_ERROR("Acceleration IQN-IMVJ only works if preCICE is compiled with MPI");
 #endif
     } else if (callingTag.getName() == VALUE_BROYDEN) {
-      _acceleration = PtrAcceleration(new BroydenAcceleration(
-          _config.relaxationFactor, _config.forceInitialRelaxation, _config.maxIterationsUsed,
-          _config.timeWindowsReused, _config.filter, _config.singularityLimit, _config.dataIDs, _preconditioner));
+      _acceleration = PtrAcceleration(new BroydenAcceleration(_config.relaxationFactor,
+                                                              _config.forceInitialRelaxation,
+                                                              _config.maxIterationsUsed,
+                                                              _config.timeWindowsReused,
+                                                              _config.filter,
+                                                              _config.singularityLimit,
+                                                              _config.dataIDs,
+                                                              _preconditioner));
     } else {
       PRECICE_ASSERT(false);
     }
@@ -382,8 +402,10 @@ void AccelerationConfiguration::addTypeSpecificSubtags(xml::XMLTag &tag)
         " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current "
         "time window.");
     auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
-                                      .setOptions({VALUE_CONSTANT_PRECONDITIONER, VALUE_VALUE_PRECONDITIONER,
-                                                   VALUE_RESIDUAL_PRECONDITIONER, VALUE_RESIDUAL_SUM_PRECONDITIONER})
+                                      .setOptions({VALUE_CONSTANT_PRECONDITIONER,
+                                                   VALUE_VALUE_PRECONDITIONER,
+                                                   VALUE_RESIDUAL_PRECONDITIONER,
+                                                   VALUE_RESIDUAL_SUM_PRECONDITIONER})
                                       .setDocumentation("The type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto nonconstTWindows =
@@ -402,11 +424,12 @@ void AccelerationConfiguration::addTypeSpecificSubtags(xml::XMLTag &tag)
     tag.addSubtag(tagInitRelax);
 
     XMLTag tagIMVJRESTART(*this, TAG_IMVJRESTART, XMLTag::OCCUR_NOT_OR_ONCE);
-    auto   attrRestartName = XMLAttribute<std::string>(ATTR_TYPE)
-                               .setOptions({VALUE_NO_RESTART, VALUE_ZERO_RESTART, VALUE_LS_RESTART, VALUE_SVD_RESTART,
-                                            VALUE_SLIDE_RESTART})
-                               .setDefaultValue(VALUE_SVD_RESTART)
-                               .setDocumentation("Type of the restart mode.");
+    auto   attrRestartName =
+        XMLAttribute<std::string>(ATTR_TYPE)
+            .setOptions(
+                {VALUE_NO_RESTART, VALUE_ZERO_RESTART, VALUE_LS_RESTART, VALUE_SVD_RESTART, VALUE_SLIDE_RESTART})
+            .setDefaultValue(VALUE_SVD_RESTART)
+            .setDocumentation("Type of the restart mode.");
     tagIMVJRESTART.addAttribute(attrRestartName);
     tagIMVJRESTART.setDocumentation(
         "Type of IMVJ restart mode that is used:\n"
@@ -458,8 +481,10 @@ void AccelerationConfiguration::addTypeSpecificSubtags(xml::XMLTag &tag)
         "- A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current "
         "time window.\n");
     auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
-                                      .setOptions({VALUE_CONSTANT_PRECONDITIONER, VALUE_VALUE_PRECONDITIONER,
-                                                   VALUE_RESIDUAL_PRECONDITIONER, VALUE_RESIDUAL_SUM_PRECONDITIONER})
+                                      .setOptions({VALUE_CONSTANT_PRECONDITIONER,
+                                                   VALUE_VALUE_PRECONDITIONER,
+                                                   VALUE_RESIDUAL_PRECONDITIONER,
+                                                   VALUE_RESIDUAL_SUM_PRECONDITIONER})
                                       .setDocumentation("Type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto nonconstTWindows =

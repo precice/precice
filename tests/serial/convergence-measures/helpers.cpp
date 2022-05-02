@@ -5,8 +5,9 @@
 
 #include "precice/SolverInterface.hpp"
 
-void testConvergenceMeasures(const std::string configFile, TestContext const &context,
-                             std::vector<int> &expectedIterations)
+void testConvergenceMeasures(const std::string  configFile,
+                             TestContext const &context,
+                             std::vector<int> & expectedIterations)
 {
   using Eigen::Vector2d;
   using namespace precice::constants;

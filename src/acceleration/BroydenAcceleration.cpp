@@ -18,11 +18,22 @@ namespace acceleration {
 
 using namespace precice::acceleration::impl;
 
-BroydenAcceleration::BroydenAcceleration(double initialRelaxation, bool forceInitialRelaxation, int maxIterationsUsed,
-                                         int pastTimeWindowsReused, int filter, double singularityLimit,
-                                         std::vector<int> dataIDs, impl::PtrPreconditioner preconditioner)
-    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused, filter,
-                         singularityLimit, std::move(dataIDs), std::move(preconditioner)),
+BroydenAcceleration::BroydenAcceleration(double                  initialRelaxation,
+                                         bool                    forceInitialRelaxation,
+                                         int                     maxIterationsUsed,
+                                         int                     pastTimeWindowsReused,
+                                         int                     filter,
+                                         double                  singularityLimit,
+                                         std::vector<int>        dataIDs,
+                                         impl::PtrPreconditioner preconditioner)
+    : BaseQNAcceleration(initialRelaxation,
+                         forceInitialRelaxation,
+                         maxIterationsUsed,
+                         pastTimeWindowsReused,
+                         filter,
+                         singularityLimit,
+                         std::move(dataIDs),
+                         std::move(preconditioner)),
       _maxColumns(maxIterationsUsed)
 {
 }

@@ -29,13 +29,27 @@ namespace precice {
 namespace acceleration {
 
 // ==================================================================================
-MVQNAcceleration::MVQNAcceleration(double initialRelaxation, bool forceInitialRelaxation, int maxIterationsUsed,
-                                   int pastTimeWindowsReused, int filter, double singularityLimit,
-                                   std::vector<int> dataIDs, const impl::PtrPreconditioner &preconditioner,
-                                   bool alwaysBuildJacobian, int imvjRestartType, int chunkSize,
-                                   int RSLSreusedTimeWindows, double RSSVDtruncationEps)
-    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused, filter,
-                         singularityLimit, std::move(dataIDs), preconditioner),
+MVQNAcceleration::MVQNAcceleration(double                         initialRelaxation,
+                                   bool                           forceInitialRelaxation,
+                                   int                            maxIterationsUsed,
+                                   int                            pastTimeWindowsReused,
+                                   int                            filter,
+                                   double                         singularityLimit,
+                                   std::vector<int>               dataIDs,
+                                   const impl::PtrPreconditioner &preconditioner,
+                                   bool                           alwaysBuildJacobian,
+                                   int                            imvjRestartType,
+                                   int                            chunkSize,
+                                   int                            RSLSreusedTimeWindows,
+                                   double                         RSSVDtruncationEps)
+    : BaseQNAcceleration(initialRelaxation,
+                         forceInitialRelaxation,
+                         maxIterationsUsed,
+                         pastTimeWindowsReused,
+                         filter,
+                         singularityLimit,
+                         std::move(dataIDs),
+                         preconditioner),
       //  _secondaryOldXTildes(),
       _invJacobian(), _oldInvJacobian(), _Wtil(), _WtilChunk(), _pseudoInverseChunk(), _matrixV_RSLS(), _matrixW_RSLS(),
       _matrixCols_RSLS(), _parMatrixOps(nullptr), _svdJ(RSSVDtruncationEps, preconditioner),
@@ -170,8 +184,8 @@ void MVQNAcceleration::updateDifferenceMatrices(const DataMap &cplData)
         } else {
           // compute J_prev * V(0) := wtil the new column in _Wtil of dimension: (n x n) * (n x 1) = (n x 1),
           //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-          _parMatrixOps->multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1,
-                                  false);
+          _parMatrixOps->multiply(
+              _oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
         }
         wtil *= -1;
         wtil += w;
@@ -271,8 +285,8 @@ void MVQNAcceleration::buildWtil()
       PRECICE_ASSERT(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
       Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, _qrV.cols());
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
-      _parMatrixOps->multiply(_pseudoInverseChunk[i], _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(),
-                              _qrV.cols());
+      _parMatrixOps->multiply(
+          _pseudoInverseChunk[i], _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
       // multiply: Wtil^q * ZV  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
       _Wtil += _WtilChunk[i] * ZV;
     }
@@ -281,8 +295,8 @@ void MVQNAcceleration::buildWtil()
   } else {
     // multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
     //                                    parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
-    _parMatrixOps->multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(),
-                            getLSSystemCols(), false);
+    _parMatrixOps->multiply(
+        _oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
   }
 
   // W_til = (W-J_inv_n*V) = (W-V_tilde)
@@ -412,16 +426,16 @@ void MVQNAcceleration::computeNewtonUpdateEfficient(const DataMap &cplData, Eige
       PRECICE_ASSERT(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
       r_til = Eigen::VectorXd::Zero(colsLSSystemBackThen);
       // multiply: r_til := Z^q * (-res) of size (m x 1) with m=#cols of LS at that time, result stored on each proc.
-      _parMatrixOps->multiply(_pseudoInverseChunk[i], negativeResiduals, r_til, colsLSSystemBackThen, getLSSystemRows(),
-                              1);
+      _parMatrixOps->multiply(
+          _pseudoInverseChunk[i], negativeResiduals, r_til, colsLSSystemBackThen, getLSSystemRows(), 1);
       // multiply: Wtil^q * r_til  dimensions: (n x m) * (m x 1), fully local and embarrassingly parallel
       xUpdate += _WtilChunk[i] * r_til;
     }
 
     // imvj without restart is used, i.e., compute directly J_prev * (-res)
   } else {
-    _parMatrixOps->multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(),
-                            getLSSystemRows(), 1, false);
+    _parMatrixOps->multiply(
+        _oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
     PRECICE_DEBUG("Mult J*V DONE");
   }
 
@@ -459,7 +473,12 @@ void MVQNAcceleration::computeNewtonUpdate(const DataMap &cplData, Eigen::Vector
    *  and W_til = (W - J_inv_n*V)                                           parallel:  (n_global x n_local) * (n_local x
    * m) = (n_local x m)
    */
-  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(),
+  _parMatrixOps->multiply(_Wtil,
+                          Z,
+                          _invJacobian,
+                          _dimOffsets,
+                          getLSSystemRows(),
+                          getLSSystemCols(),
                           getLSSystemRows()); // --------
 
   // update Jacobian
@@ -471,8 +490,14 @@ void MVQNAcceleration::computeNewtonUpdate(const DataMap &cplData, Eigen::Vector
 
   // multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
   //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-  _parMatrixOps->multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(),
-                          1, false); // --------
+  _parMatrixOps->multiply(_invJacobian,
+                          negativeResiduals,
+                          xUpdate,
+                          _dimOffsets,
+                          getLSSystemRows(),
+                          getLSSystemRows(),
+                          1,
+                          false); // --------
 }
 
 // ==================================================================================
@@ -541,7 +566,10 @@ void MVQNAcceleration::restartIMVJ()
 
     PRECICE_DEBUG(
         "MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian {}, new modes: {}, truncated modes: {} avg rank: {}",
-        rankAfter, rankAfter - rankBefore, waste, _avgRank / _nbRestarts);
+        rankAfter,
+        rankAfter - rankBefore,
+        waste,
+        _avgRank / _nbRestarts);
 
     // double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
     if (utils::MasterSlave::isPrimary() || !utils::MasterSlave::isParallel()) {
@@ -623,7 +651,8 @@ void MVQNAcceleration::restartIMVJ()
       // |===================                             ==|
     }
 
-    PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with {} columns from {} time windows.", _matrixV_RSLS.cols(),
+    PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with {} columns from {} time windows.",
+                  _matrixV_RSLS.cols(),
                   _RSLSreusedTimeWindows);
     if (utils::MasterSlave::isPrimary() || !utils::MasterSlave::isParallel()) {
       _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols()
@@ -646,12 +675,12 @@ void MVQNAcceleration::restartIMVJ()
     for (int i = static_cast<int>(_WtilChunk.size()) - 1; i >= 1; i--) {
 
       int colsLSSystemBackThen = _pseudoInverseChunk.front().rows();
-      PRECICE_ASSERT(colsLSSystemBackThen == _WtilChunk.front().cols(), colsLSSystemBackThen,
-                     _WtilChunk.front().cols());
+      PRECICE_ASSERT(
+          colsLSSystemBackThen == _WtilChunk.front().cols(), colsLSSystemBackThen, _WtilChunk.front().cols());
       Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, _qrV.cols());
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
-      _parMatrixOps->multiply(_pseudoInverseChunk.front(), _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(),
-                              _qrV.cols());
+      _parMatrixOps->multiply(
+          _pseudoInverseChunk.front(), _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
       // multiply: Wtil^0 * (Z_0*V)  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
       Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
       tmp                 = _WtilChunk.front() * ZV;

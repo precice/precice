@@ -57,8 +57,14 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
-  IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed, timeWindowsReused, filter,
-                        singularityLimit, dataIDs, prec);
+  IQNILSAcceleration pp(initialRelaxation,
+                        enforceInitialRelaxation,
+                        maxIterationsUsed,
+                        timeWindowsReused,
+                        filter,
+                        singularityLimit,
+                        dataIDs,
+                        prec);
 
   Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
@@ -284,9 +290,19 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
-  MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed, timeWindowsReused, filter,
-                      singularityLimit, dataIDs, prec, alwaysBuildJacobian, restartType, chunkSize,
-                      reusedTimeWindowsAtRestart, svdTruncationEps);
+  MVQNAcceleration pp(initialRelaxation,
+                      enforceInitialRelaxation,
+                      maxIterationsUsed,
+                      timeWindowsReused,
+                      filter,
+                      singularityLimit,
+                      dataIDs,
+                      prec,
+                      alwaysBuildJacobian,
+                      restartType,
+                      chunkSize,
+                      reusedTimeWindowsAtRestart,
+                      svdTruncationEps);
 
   Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
@@ -558,9 +574,19 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("dummyMesh", 2, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
-  MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed, timeWindowsReused, filter,
-                      singularityLimit, dataIDs, _preconditioner, alwaysBuildJacobian, restartType, chunkSize,
-                      reusedTimeWindowsAtRestart, svdTruncationEps);
+  MVQNAcceleration pp(initialRelaxation,
+                      enforceInitialRelaxation,
+                      maxIterationsUsed,
+                      timeWindowsReused,
+                      filter,
+                      singularityLimit,
+                      dataIDs,
+                      _preconditioner,
+                      alwaysBuildJacobian,
+                      restartType,
+                      chunkSize,
+                      reusedTimeWindowsAtRestart,
+                      svdTruncationEps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 2));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 2));
@@ -1131,8 +1157,14 @@ BOOST_AUTO_TEST_CASE(testColumnsLogging)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
-  IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed, timeWindowsReused, filter,
-                         singularityLimit, dataIDs, prec);
+  IQNILSAcceleration acc(initialRelaxation,
+                         enforceInitialRelaxation,
+                         maxIterationsUsed,
+                         timeWindowsReused,
+                         filter,
+                         singularityLimit,
+                         dataIDs,
+                         prec);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
 

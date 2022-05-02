@@ -23,8 +23,8 @@ Triangle::Triangle(Edge &edgeOne, Edge &edgeTwo, Edge &edgeThree, int id)
     : _edges({&edgeOne, &edgeTwo, &edgeThree}), _id(id)
 {
   PRECICE_ASSERT(edgeOne.getDimensions() == edgeTwo.getDimensions(), edgeOne.getDimensions(), edgeTwo.getDimensions());
-  PRECICE_ASSERT(edgeTwo.getDimensions() == edgeThree.getDimensions(), edgeTwo.getDimensions(),
-                 edgeThree.getDimensions());
+  PRECICE_ASSERT(
+      edgeTwo.getDimensions() == edgeThree.getDimensions(), edgeTwo.getDimensions(), edgeThree.getDimensions());
 
   // Determine vertex map
   Vertex &v0 = edge(0).vertex(0);
@@ -93,14 +93,15 @@ const Eigen::VectorXd Triangle::getCenter() const
 double Triangle::getEnclosingRadius() const
 {
   auto center = getCenter();
-  return std::max({(center - vertex(0).getCoords()).norm(), (center - vertex(1).getCoords()).norm(),
+  return std::max({(center - vertex(0).getCoords()).norm(),
+                   (center - vertex(1).getCoords()).norm(),
                    (center - vertex(2).getCoords()).norm()});
 }
 
 bool Triangle::operator==(const Triangle &other) const
 {
-  return std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin(),
-                             [](const Edge *e1, const Edge *e2) { return *e1 == *e2; });
+  return std::is_permutation(
+      _edges.begin(), _edges.end(), other._edges.begin(), [](const Edge *e1, const Edge *e2) { return *e1 == *e2; });
 }
 
 bool Triangle::operator!=(const Triangle &other) const

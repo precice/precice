@@ -33,8 +33,8 @@ std::string toGHLink(const std::string &heading)
     std::string sanitized = std::regex_replace(std::regex_replace(heading, sanitizer, ""), spaces, "-");
 
     // convert to lowercase
-    std::transform(sanitized.begin(), sanitized.end(), sanitized.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+    std::transform(
+        sanitized.begin(), sanitized.end(), sanitized.begin(), [](unsigned char c) { return std::tolower(c); });
     return "#" + sanitized;
 
   } catch (const std::regex_error &e) {

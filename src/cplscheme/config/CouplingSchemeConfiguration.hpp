@@ -52,7 +52,8 @@ public:
    * @param[in] m2nConfig For checking if a communication between participants to be coupled is defined.
    * @param[in] participantConfig For checking waveform order.
    */
-  CouplingSchemeConfiguration(xml::XMLTag &parent, mesh::PtrMeshConfiguration meshConfig,
+  CouplingSchemeConfiguration(xml::XMLTag &                        parent,
+                              mesh::PtrMeshConfiguration           meshConfig,
                               m2n::M2NConfiguration::SharedPointer m2nConfig,
                               config::PtrParticipantConfiguration  participantConfig);
 
@@ -199,17 +200,17 @@ private:
 
   void addTagAcceleration(xml::XMLTag &tag);
 
-  void addAbsoluteConvergenceMeasure(const std::string &dataName, const std::string &meshName, double limit,
-                                     bool suffices, bool strict);
+  void addAbsoluteConvergenceMeasure(
+      const std::string &dataName, const std::string &meshName, double limit, bool suffices, bool strict);
 
-  void addRelativeConvergenceMeasure(const std::string &dataName, const std::string &meshName, double limit,
-                                     bool suffices, bool strict);
+  void addRelativeConvergenceMeasure(
+      const std::string &dataName, const std::string &meshName, double limit, bool suffices, bool strict);
 
-  void addResidualRelativeConvergenceMeasure(const std::string &dataName, const std::string &meshName, double limit,
-                                             bool suffices, bool strict);
+  void addResidualRelativeConvergenceMeasure(
+      const std::string &dataName, const std::string &meshName, double limit, bool suffices, bool strict);
 
-  void addMinIterationConvergenceMeasure(const std::string &dataName, const std::string &meshName, int minIterations,
-                                         bool suffices, bool strict);
+  void addMinIterationConvergenceMeasure(
+      const std::string &dataName, const std::string &meshName, int minIterations, bool suffices, bool strict);
 
   mesh::PtrData getData(const std::string &dataName, const std::string &meshName) const;
 
@@ -242,7 +243,8 @@ private:
 
   void checkSerialImplicitAccelerationData(DataID dataID, const std::string &first, const std::string &second) const;
 
-  void addConvergenceMeasures(BaseCouplingScheme *scheme, const std::string &participant,
+  void addConvergenceMeasures(BaseCouplingScheme *                            scheme,
+                              const std::string &                             participant,
                               const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const;
 
   void setSerialAcceleration(BaseCouplingScheme *scheme, const std::string &first, const std::string &second) const;

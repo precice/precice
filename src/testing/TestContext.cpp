@@ -138,8 +138,10 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   auto      baseComm   = Par::current();
   const int globalRank = baseComm->rank();
   const int available  = baseComm->size();
-  const int required   = std::accumulate(participants.begin(), participants.end(), 0,
-                                       [](int total, const Participant &next) { return total + next.size; });
+  const int required =
+      std::accumulate(participants.begin(), participants.end(), 0, [](int total, const Participant &next) {
+        return total + next.size;
+      });
   if (required > available) {
     throw std::runtime_error{"This test requests " + std::to_string(required) + " ranks, but there are only " +
                              std::to_string(available) + " available"};
@@ -216,7 +218,8 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &requestor,
+m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &      acceptor,
+                                             const std::string &      requestor,
                                              const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());

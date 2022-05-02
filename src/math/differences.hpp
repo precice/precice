@@ -10,8 +10,9 @@ constexpr double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
 
 /// Compares two Eigen::MatrixBase for equality up to tolerance
 template <class DerivedA, class DerivedB>
-constexpr bool equals(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<DerivedB> &B,
-                      double tolerance = NUMERICAL_ZERO_DIFFERENCE)
+constexpr bool equals(const Eigen::MatrixBase<DerivedA> &A,
+                      const Eigen::MatrixBase<DerivedB> &B,
+                      double                             tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
   return A.isApprox(B, tolerance);
 }
@@ -25,8 +26,9 @@ equals(const Scalar a, const Scalar b, const Scalar tolerance = NUMERICAL_ZERO_D
 }
 
 template <class DerivedA, class DerivedB>
-bool oneGreater(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<DerivedB> &B,
-                double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+bool oneGreater(const Eigen::MatrixBase<DerivedA> &A,
+                const Eigen::MatrixBase<DerivedB> &B,
+                double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
   PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
@@ -35,8 +37,9 @@ bool oneGreater(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<De
 }
 
 template <class DerivedA, class DerivedB>
-bool oneGreaterEquals(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<DerivedB> &B,
-                      double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+bool oneGreaterEquals(const Eigen::MatrixBase<DerivedA> &A,
+                      const Eigen::MatrixBase<DerivedB> &B,
+                      double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
   PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
@@ -45,8 +48,9 @@ bool oneGreaterEquals(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixB
 }
 
 template <class DerivedA, class DerivedB>
-bool allGreater(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<DerivedB> &B,
-                double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+bool allGreater(const Eigen::MatrixBase<DerivedA> &A,
+                const Eigen::MatrixBase<DerivedB> &B,
+                double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
   PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
@@ -55,8 +59,9 @@ bool allGreater(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<De
 }
 
 template <class DerivedA, class DerivedB>
-bool allGreaterEquals(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<DerivedB> &B,
-                      double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+bool allGreaterEquals(const Eigen::MatrixBase<DerivedA> &A,
+                      const Eigen::MatrixBase<DerivedB> &B,
+                      double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   PRECICE_ASSERT(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
   PRECICE_ASSERT(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");

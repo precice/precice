@@ -109,7 +109,9 @@ PtrData &Mesh::createData(const std::string &name, int dimension, DataID id, boo
     PRECICE_CHECK(data->getName() != name,
                   "Data \"{}\" cannot be created twice for mesh \"{}\". "
                   "Please rename or remove one of the use-data tags with name \"{}\".",
-                  name, _name, name);
+                  name,
+                  _name,
+                  name);
   }
   //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
   PtrData data(new Data(name, id, dimension, _dimensions, true));
@@ -209,7 +211,9 @@ void Mesh::allocateDataValues()
         utils::append(data->gradientValues(),
                       Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
       }
-      PRECICE_DEBUG("Gradient Data {} now has {} x {} values", data->getName(), data->gradientValues().rows(),
+      PRECICE_DEBUG("Gradient Data {} now has {} x {} values",
+                    data->getName(),
+                    data->gradientValues().rows(),
                     data->gradientValues().cols());
     }
   }

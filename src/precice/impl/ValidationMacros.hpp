@@ -27,7 +27,8 @@
   PRECICE_CHECK(_accessor->isMeshUsed(id),                                                                             \
                 "This participant does not use the mesh \"{0}\", but attempted to access it. "                         \
                 "Please define <use-mesh name=\"{0}\" /> in the configuration of participant \" {1}.",                 \
-                _accessor->getMeshName(id), _accessorName);
+                _accessor->getMeshName(id),                                                                            \
+                _accessorName);
 
 /** Implementation of PRECICE_REQUIRE_MESH_PROVIDE()
  *
@@ -108,7 +109,9 @@
       (_accessor->isDataRead(id)),                                                                                     \
       "This participant does not use Data \"{0}\", but attempted to read it. "                                         \
       "Please extend the configuration of participant \"{1}\" by defining <read-data mesh=\"{2}\" name=\"{0}\" />.",   \
-      _accessor->getDataName(id), _accessorName, _accessor->getMeshNameFromData(id));
+      _accessor->getDataName(id),                                                                                      \
+      _accessorName,                                                                                                   \
+      _accessor->getMeshNameFromData(id));
 
 /** Implementation of PRECICE_REQUIRE_DATA_WRITE()
  *
@@ -120,7 +123,9 @@
       (_accessor->isDataWrite(id)),                                                                                    \
       "This participant does not use Data \"{0}\", but attempted to write it. "                                        \
       "Please extend the configuration of participant \"{1}\" by defining <write-data mesh=\"{2}\" name=\"{0}\" />.",  \
-      _accessor->getDataName(id), _accessorName, _accessor->getMeshNameFromData(id));
+      _accessor->getDataName(id),                                                                                      \
+      _accessorName,                                                                                                   \
+      _accessor->getMeshNameFromData(id));
 
 /** Validates a given dataID
  * This macros creates the "id" in a local scope and provides it to the called implementation.

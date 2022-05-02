@@ -10,16 +10,19 @@
 namespace precice {
 namespace action {
 
-ScaleByDtAction::ScaleByDtAction(Timing timing, int sourceDataID, int targetDataID, const mesh::PtrMesh &mesh,
-                                 Scaling scaling)
+ScaleByDtAction::ScaleByDtAction(
+    Timing timing, int sourceDataID, int targetDataID, const mesh::PtrMesh &mesh, Scaling scaling)
     : Action(timing, mesh), _sourceData(mesh->data(sourceDataID)), _targetData(mesh->data(targetDataID)),
       _scaling(scaling)
 {
-  PRECICE_ASSERT(_sourceData->getDimensions() == _targetData->getDimensions(), _sourceData->getDimensions(),
+  PRECICE_ASSERT(_sourceData->getDimensions() == _targetData->getDimensions(),
+                 _sourceData->getDimensions(),
                  _targetData->getDimensions());
 }
 
-void ScaleByDtAction::performAction(double time, double timeStepSize, double computedTimeWindowPart,
+void ScaleByDtAction::performAction(double time,
+                                    double timeStepSize,
+                                    double computedTimeWindowPart,
                                     double timeWindowSize)
 {
   PRECICE_TRACE(timeStepSize, computedTimeWindowPart, timeWindowSize);

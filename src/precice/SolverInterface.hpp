@@ -49,8 +49,10 @@ public:
    *        from 0 and end with solverProcessSize - 1.
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    */
-  SolverInterface(const std::string &participantName, const std::string &configurationFileName, int solverProcessIndex,
-                  int solverProcessSize);
+  SolverInterface(const std::string &participantName,
+                  const std::string &configurationFileName,
+                  int                solverProcessIndex,
+                  int                solverProcessSize);
 
   /**
    * @param[in] participantName Name of the participant using the interface. Has to
@@ -62,8 +64,11 @@ public:
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
    */
-  SolverInterface(const std::string &participantName, const std::string &configurationFileName, int solverProcessIndex,
-                  int solverProcessSize, void *communicator);
+  SolverInterface(const std::string &participantName,
+                  const std::string &configurationFileName,
+                  int                solverProcessIndex,
+                  int                solverProcessSize,
+                  void *             communicator);
 
   ~SolverInterface();
 
@@ -649,8 +654,8 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeBlockVectorGradientData(int dataID, int size, const int *valueIndices, const double *gradientValues,
-                                    bool rowsFirst = false);
+  void writeBlockVectorGradientData(
+      int dataID, int size, const int *valueIndices, const double *gradientValues, bool rowsFirst = false);
 
   /**
    * @brief Writes vector data to a vertex
@@ -852,8 +857,8 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readBlockVectorData(int dataID, int size, const int *valueIndices, double relativeReadTime,
-                           double *values) const;
+  void
+  readBlockVectorData(int dataID, int size, const int *valueIndices, double relativeReadTime, double *values) const;
 
   /**
    * @brief Reads vector data at a vertex on a mesh. Values correspond to the end of the current time window.
@@ -956,8 +961,8 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readBlockScalarData(int dataID, int size, const int *valueIndices, double relativeReadTime,
-                           double *values) const;
+  void
+  readBlockScalarData(int dataID, int size, const int *valueIndices, double relativeReadTime, double *values) const;
 
   /**
    * @brief Reads scalar data at a vertex on a mesh. Values correspond to the end of the current time window.

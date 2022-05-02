@@ -82,7 +82,8 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     runThreeSolverCoupling(cplSchemeConfig.getCouplingScheme(context.name), context.name, meshConfig);
   }
 
-  void runThreeSolverCoupling(PtrCouplingScheme cplScheme, const std::string &participantName,
+  void runThreeSolverCoupling(PtrCouplingScheme          cplScheme,
+                              const std::string &        participantName,
                               mesh::PtrMeshConfiguration meshConfig)
   {
     BOOST_TEST(meshConfig->meshes().size() == 1);
@@ -185,8 +186,10 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     }
   }
 
-  void connect(const std::string &participant0, const std::string &participant1, const std::string &localParticipant,
-               m2n::PtrM2N communication) const
+  void connect(const std::string &participant0,
+               const std::string &participant1,
+               const std::string &localParticipant,
+               m2n::PtrM2N        communication) const
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());

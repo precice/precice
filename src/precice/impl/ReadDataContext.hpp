@@ -25,8 +25,9 @@ public:
    * @param mesh Mesh associated with this ReadDataContext.
    * @param interpolationOrder Order of the Waveform stored by this ReadDataContext.
    */
-  ReadDataContext(mesh::PtrData data, mesh::PtrMesh mesh,
-                  int interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
+  ReadDataContext(mesh::PtrData data,
+                  mesh::PtrMesh mesh,
+                  int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
 
   /**
    * @brief Gets _interpolationOrder of _waveform

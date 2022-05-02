@@ -15,8 +15,12 @@ BOOST_AUTO_TEST_CASE(MarkdownReference)
   }();
 
   BOOST_TEST(ref.size() > 0);
-  for (const auto &keyword : {"# precice-configuration", "<precice-configuration", "</precice-configuration>",
-                              "Example", "Valid Subtags:", "Attribute"}) {
+  for (const auto &keyword : {"# precice-configuration",
+                              "<precice-configuration",
+                              "</precice-configuration>",
+                              "Example",
+                              "Valid Subtags:",
+                              "Attribute"}) {
     BOOST_TEST(ref.find(keyword) != std::string::npos, "The output should include \"" << keyword << '"');
   }
 }

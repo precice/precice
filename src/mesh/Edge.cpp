@@ -11,8 +11,8 @@ namespace mesh {
 
 Edge::Edge(Vertex &vertexOne, Vertex &vertexTwo, EdgeID id) : _vertices({&vertexOne, &vertexTwo}), _id(id)
 {
-  PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(), vertexOne.getDimensions(),
-                 vertexTwo.getDimensions());
+  PRECICE_ASSERT(
+      vertexOne.getDimensions() == vertexTwo.getDimensions(), vertexOne.getDimensions(), vertexTwo.getDimensions());
 }
 
 EdgeID Edge::getID() const
@@ -44,7 +44,9 @@ bool Edge::connectedTo(const Edge &other) const
 
 bool Edge::operator==(const Edge &other) const
 {
-  return std::is_permutation(_vertices.begin(), _vertices.end(), other._vertices.begin(),
+  return std::is_permutation(_vertices.begin(),
+                             _vertices.end(),
+                             other._vertices.begin(),
                              [](const Vertex *a, const Vertex *b) { return *a == *b; });
 }
 bool Edge::operator!=(const Edge &other) const

@@ -33,8 +33,11 @@ size_t MPIPortsCommunication::getRemoteCommunicatorSize()
   return _communicators.size();
 }
 
-void MPIPortsCommunication::acceptConnection(std::string const &acceptorName, std::string const &requesterName,
-                                             std::string const &tag, int acceptorRank, int rankOffset)
+void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
+                                             std::string const &requesterName,
+                                             std::string const &tag,
+                                             int                acceptorRank,
+                                             int                rankOffset)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank);
   PRECICE_ASSERT(not isConnected());
@@ -71,12 +74,17 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName, st
       peerCount = requesterCommunicatorSize;
     }
 
-    PRECICE_ASSERT(requesterCommunicatorSize > 0, "Requester communicator size is {} which is invalid.",
+    PRECICE_ASSERT(requesterCommunicatorSize > 0,
+                   "Requester communicator size is {} which is invalid.",
                    requesterCommunicatorSize);
-    PRECICE_ASSERT(requesterCommunicatorSize == peerCount, "Current requester size from rank {} is {} but should be {}",
-                   requesterRank, requesterCommunicatorSize, peerCount);
+    PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
+                   "Current requester size from rank {} is {} but should be {}",
+                   requesterRank,
+                   requesterCommunicatorSize,
+                   peerCount);
     PRECICE_ASSERT(_communicators.count(requesterRank) == 0,
-                   "Rank {} has already been connected. Duplicate requests are not allowed.", requesterRank);
+                   "Rank {} has already been connected. Duplicate requests are not allowed.",
+                   requesterRank);
 
     _communicators.emplace(requesterRank, communicator);
 
@@ -89,9 +97,11 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName, st
   _isConnected = true;
 }
 
-void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptorName, std::string const &requesterName,
-                                                     std::string const &tag, int acceptorRank,
-                                                     int requesterCommunicatorSize)
+void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptorName,
+                                                     std::string const &requesterName,
+                                                     std::string const &tag,
+                                                     int                acceptorRank,
+                                                     int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
   PRECICE_ASSERT(requesterCommunicatorSize >= 0, "Requester communicator size has to be positive.");
@@ -128,8 +138,11 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
   _isConnected = true;
 }
 
-void MPIPortsCommunication::requestConnection(std::string const &acceptorName, std::string const &requesterName,
-                                              std::string const &tag, int requesterRank, int requesterCommunicatorSize)
+void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
+                                              std::string const &requesterName,
+                                              std::string const &tag,
+                                              int                requesterRank,
+                                              int                requesterCommunicatorSize)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
@@ -162,9 +175,11 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName, s
   _communicators.emplace(acceptorRank, communicator);
 }
 
-void MPIPortsCommunication::requestConnectionAsClient(std::string const &acceptorName, std::string const &requesterName,
-                                                      std::string const &tag, std::set<int> const &acceptorRanks,
-                                                      int requesterRank)
+void MPIPortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
+                                                      std::string const &  requesterName,
+                                                      std::string const &  tag,
+                                                      std::set<int> const &acceptorRanks,
+                                                      int                  requesterRank)
 
 {
   PRECICE_TRACE(acceptorName, requesterName, acceptorRanks, requesterRank);

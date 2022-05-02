@@ -7,7 +7,8 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCallsOfAdvance,
+void runTestThreeSolvers(std::string const &config,
+                         std::vector<int>   expectedCallsOfAdvance,
                          TestContext const &context);
 
 #endif

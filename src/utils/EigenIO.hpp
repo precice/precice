@@ -8,7 +8,8 @@ namespace eigenio {
 
 inline Eigen::IOFormat wkt()
 {
-  return Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols,
+  return Eigen::IOFormat(Eigen::StreamPrecision,
+                         Eigen::DontAlignCols,
                          " ", // Coeff separator
                          ","  // Row separator
   );

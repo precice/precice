@@ -50,8 +50,8 @@ BOOST_AUTO_TEST_CASE(DivideByArea2D)
   BOOST_TEST(values(2) == 4.0);
 
   // Scale properties
-  action::ScaleByAreaAction scale(action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh,
-                                  action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
+  action::ScaleByAreaAction scale(
+      action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
 
   scale.performAction(0.0, 0.0, 0.0, 0.0);
 
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(DivideByArea3D)
   BOOST_TEST(values(4) == 6.0);
 
   // Scale properties
-  action::ScaleByAreaAction scale(action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh,
-                                  action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
+  action::ScaleByAreaAction scale(
+      action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
 
   scale.performAction(0.0, 0.0, 0.0, 0.0);
 
@@ -124,7 +124,10 @@ BOOST_AUTO_TEST_CASE(ScaleByTimeStepSizeToTimeWindowSize)
   sourceValues << 2.0, 3.0, 4.0;
   targetValues = Eigen::VectorXd::Zero(targetValues.size());
 
-  action::ScaleByDtAction scale(action::ScaleByDtAction::WRITE_MAPPING_POST, sourceDataID, targetDataID, mesh,
+  action::ScaleByDtAction scale(action::ScaleByDtAction::WRITE_MAPPING_POST,
+                                sourceDataID,
+                                targetDataID,
+                                mesh,
                                 action::ScaleByDtAction::SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO);
 
   scale.performAction(0.0, 0.0, 0.0, 1.0);
@@ -178,7 +181,10 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimeWindowPart)
   sourceValues << 2.0, 3.0, 4.0;
   targetValues = Eigen::VectorXd::Zero(targetValues.size());
 
-  action::ScaleByDtAction scale(action::ScaleByDtAction::WRITE_MAPPING_POST, sourceDataID, targetDataID, mesh,
+  action::ScaleByDtAction scale(action::ScaleByDtAction::WRITE_MAPPING_POST,
+                                sourceDataID,
+                                targetDataID,
+                                mesh,
                                 action::ScaleByDtAction::SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO);
 
   scale.performAction(0.0, 0.0, 0.0, 1.0);

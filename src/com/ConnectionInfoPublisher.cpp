@@ -14,8 +14,10 @@
 namespace precice {
 namespace com {
 
-std::string impl::hashedFilePath(const std::string &acceptorName, const std::string &requesterName,
-                                 const std::string &tag, Rank rank)
+std::string impl::hashedFilePath(const std::string &acceptorName,
+                                 const std::string &requesterName,
+                                 const std::string &tag,
+                                 Rank               rank)
 {
   using namespace boost::filesystem;
 
@@ -33,7 +35,8 @@ std::string impl::hashedFilePath(const std::string &acceptorName, const std::str
   return p.string();
 }
 
-std::string impl::localDirectory(const std::string &acceptorName, const std::string &requesterName,
+std::string impl::localDirectory(const std::string &acceptorName,
+                                 const std::string &requesterName,
                                  const std::string &addressDirectory)
 {
   using namespace boost::filesystem;

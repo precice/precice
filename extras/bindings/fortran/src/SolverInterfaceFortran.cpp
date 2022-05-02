@@ -36,8 +36,12 @@ int strippedLength(const char *string, int length);
 } // namespace impl
 } // namespace precice
 
-void precicef_create_(const char *participantName, const char *configFileName, const int *solverProcessIndex,
-                      const int *solverProcessSize, int lengthAccessorName, int lengthConfigFileName)
+void precicef_create_(const char *participantName,
+                      const char *configFileName,
+                      const int * solverProcessIndex,
+                      const int * solverProcessSize,
+                      int         lengthAccessorName,
+                      int         lengthConfigFileName)
 {
   // cout << "lengthAccessorName: " << lengthAccessorName << '\n';
   // cout << "lengthConfigFileName: " << lengthConfigFileName << '\n';
@@ -285,22 +289,27 @@ void precicef_set_triangle_(const int *meshID, const int *firstEdgeID, const int
   impl->setMeshTriangle(*meshID, *firstEdgeID, *secondEdgeID, *thirdEdgeID);
 }
 
-void precicef_set_triangle_we_(const int *meshID, const int *firstVertexID, const int *secondVertexID,
+void precicef_set_triangle_we_(const int *meshID,
+                               const int *firstVertexID,
+                               const int *secondVertexID,
                                const int *thirdVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshTriangleWithEdges(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID);
 }
 
-void precicef_set_quad_(const int *meshID, const int *firstEdgeID, const int *secondEdgeID, const int *thirdEdgeID,
-                        const int *fourthEdgeID)
+void precicef_set_quad_(
+    const int *meshID, const int *firstEdgeID, const int *secondEdgeID, const int *thirdEdgeID, const int *fourthEdgeID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshQuad(*meshID, *firstEdgeID, *secondEdgeID, *thirdEdgeID, *fourthEdgeID);
 }
 
-void precicef_set_quad_we_(const int *meshID, const int *firstVertexID, const int *secondVertexID,
-                           const int *thirdVertexID, const int *fourthVertexID)
+void precicef_set_quad_we_(const int *meshID,
+                           const int *firstVertexID,
+                           const int *secondVertexID,
+                           const int *thirdVertexID,
+                           const int *fourthVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshQuadWithEdges(*meshID, *firstVertexID, *secondVertexID, *thirdVertexID, *fourthVertexID);

@@ -117,9 +117,18 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   }
 
   // Create the coupling scheme object
-  ParallelCouplingScheme cplScheme(maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-                                   context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit,
-                                   100, extrapolationOrder);
+  ParallelCouplingScheme cplScheme(maxTime,
+                                   maxTimesteps,
+                                   timestepLength,
+                                   16,
+                                   nameParticipant0,
+                                   nameParticipant1,
+                                   context.name,
+                                   m2n,
+                                   constants::FIXED_TIME_WINDOW_SIZE,
+                                   BaseCouplingScheme::Implicit,
+                                   100,
+                                   extrapolationOrder);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);

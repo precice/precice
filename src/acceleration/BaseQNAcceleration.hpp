@@ -62,8 +62,13 @@ namespace acceleration {
  */
 class BaseQNAcceleration : public Acceleration {
 public:
-  BaseQNAcceleration(double initialRelaxation, bool forceInitialRelaxation, int maxIterationsUsed,
-                     int timeWindowsReused, int filter, double singularityLimit, std::vector<int> dataIDs,
+  BaseQNAcceleration(double                  initialRelaxation,
+                     bool                    forceInitialRelaxation,
+                     int                     maxIterationsUsed,
+                     int                     timeWindowsReused,
+                     int                     filter,
+                     double                  singularityLimit,
+                     std::vector<int>        dataIDs,
                      impl::PtrPreconditioner preconditioner);
 
   /**

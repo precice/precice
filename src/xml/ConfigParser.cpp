@@ -37,8 +37,15 @@ std::string decodeXML(std::string xml)
 
 // ------------------------- Callback functions for libxml2  -------------------------
 
-void OnStartElementNs(void *ctx, const xmlChar *localname, const xmlChar *prefix, const xmlChar *URI, int nb_namespaces,
-                      const xmlChar **namespaces, int nb_attributes, int nb_defaulted, const xmlChar **attributes)
+void OnStartElementNs(void *          ctx,
+                      const xmlChar * localname,
+                      const xmlChar * prefix,
+                      const xmlChar * URI,
+                      int             nb_namespaces,
+                      const xmlChar **namespaces,
+                      int             nb_attributes,
+                      int             nb_defaulted,
+                      const xmlChar **attributes)
 {
   ConfigParser::CTag::AttributePair attributesMap;
   unsigned int                      index = 0;
@@ -87,7 +94,8 @@ void OnStructuredErrorFunc(void *userData, xmlError *error)
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
-ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationContext &context,
+ConfigParser::ConfigParser(const std::string &                   filePath,
+                           const ConfigurationContext &          context,
                            std::shared_ptr<precice::xml::XMLTag> pXmlTag)
     : m_pXmlTag(std::move(pXmlTag))
 {
@@ -153,16 +161,18 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   return 0;
 }
 
-void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<XMLTag>> &DefTags,
-                               CTagPtrVec &SubTags)
+void ConfigParser::connectTags(const ConfigurationContext &          context,
+                               std::vector<std::shared_ptr<XMLTag>> &DefTags,
+                               CTagPtrVec &                          SubTags)
 {
   std::unordered_set<std::string> usedTags;
 
   for (auto &subtag : SubTags) {
     std::string expectedName = (subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name;
     const auto  tagPosition =
-        std::find_if(DefTags.begin(), DefTags.end(),
-                     [expectedName](const std::shared_ptr<XMLTag> &pTag) { return pTag->_fullName == expectedName; });
+        std::find_if(DefTags.begin(), DefTags.end(), [expectedName](const std::shared_ptr<XMLTag> &pTag) {
+          return pTag->_fullName == expectedName;
+        });
 
     if (tagPosition == DefTags.end()) {
       PRECICE_ERROR("The configuration contains an unknown tag <{}>.", expectedName);

@@ -25,8 +25,10 @@ using namespace precice::acceleration::impl;
 
 BOOST_AUTO_TEST_SUITE(ParallelMatrixOperationsTests)
 
-void validate_result_equals_reference(Eigen::MatrixXd &result_local, Eigen::MatrixXd &reference_global, int offset,
-                                      bool partitionedRowWise)
+void validate_result_equals_reference(Eigen::MatrixXd &result_local,
+                                      Eigen::MatrixXd &reference_global,
+                                      int              offset,
+                                      bool             partitionedRowWise)
 {
   for (int i = 0; i < result_local.rows(); i++) {
     for (int j = 0; j < result_local.cols(); j++) {

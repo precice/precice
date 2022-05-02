@@ -6,10 +6,12 @@
 #include "testing/Testing.hpp"
 
 // StartIndex is here the first index to be used for writing on the secondary rank
-void runTestAccessReceivedMesh(const TestContext &context, const std::vector<double> boundingBoxSlave,
+void runTestAccessReceivedMesh(const TestContext &       context,
+                               const std::vector<double> boundingBoxSlave,
                                const std::vector<double> writeDataSlave,
                                const std::vector<double> expectedPositionSlave,
-                               const std::vector<double> expectedReadDataSlave, const int startIndex)
+                               const std::vector<double> expectedReadDataSlave,
+                               const int                 startIndex)
 {
   if (context.isNamed("SolverOne")) {
     // Defines the bounding box and writes data to the received mesh

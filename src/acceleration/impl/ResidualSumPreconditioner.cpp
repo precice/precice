@@ -23,7 +23,8 @@ void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs)
   _residualSum.resize(_subVectorSizes.size(), 0.0);
 }
 
-void ResidualSumPreconditioner::_update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues,
+void ResidualSumPreconditioner::_update_(bool                   timeWindowComplete,
+                                         const Eigen::VectorXd &oldValues,
                                          const Eigen::VectorXd &res)
 {
   if (not timeWindowComplete) {

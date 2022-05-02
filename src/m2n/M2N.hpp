@@ -31,8 +31,10 @@ struct WhiteboxAccessor;
  */
 class M2N {
 public:
-  M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory,
-      bool useOnlyPrimaryCom = false, bool useTwoLevelInit = false);
+  M2N(com::PtrCommunication                intraComm,
+      DistributedComFactory::SharedPointer distrFactory,
+      bool                                 useOnlyPrimaryCom = false,
+      bool                                 useTwoLevelInit   = false);
 
   /// Destructor, empty.
   ~M2N();

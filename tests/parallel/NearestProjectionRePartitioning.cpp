@@ -93,13 +93,18 @@ BOOST_AUTO_TEST_CASE(NearestProjectionRePartitioning)
       edgeIDs.at(4 * i + 2) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2 + 1), vertexIDs.at(i * 2 + 3)); // bottom
       edgeIDs.at(4 * i + 3) = interface.setMeshEdge(meshID, vertexIDs.at(i * 2), vertexIDs.at(i * 2 + 3)); // diagonal
     }
-    edgeIDs.at(numberOfEdges - 1) = interface.setMeshEdge(meshID, vertexIDs.at(numberOfVertices - 2),
+    edgeIDs.at(numberOfEdges - 1) = interface.setMeshEdge(meshID,
+                                                          vertexIDs.at(numberOfVertices - 2),
                                                           vertexIDs.at(numberOfVertices - 1)); // very right
 
     for (int i = 0; i < numberOfCells; i++) {
-      interface.setMeshTriangle(meshID, edgeIDs.at(4 * i), edgeIDs.at(4 * i + 3),
+      interface.setMeshTriangle(meshID,
+                                edgeIDs.at(4 * i),
+                                edgeIDs.at(4 * i + 3),
                                 edgeIDs.at(4 * i + 2)); // left-diag-bottom
-      interface.setMeshTriangle(meshID, edgeIDs.at(4 * i + 1), edgeIDs.at(4 * i + 3),
+      interface.setMeshTriangle(meshID,
+                                edgeIDs.at(4 * i + 1),
+                                edgeIDs.at(4 * i + 3),
                                 edgeIDs.at(4 * i + 4)); // top-diag-right
     }
 

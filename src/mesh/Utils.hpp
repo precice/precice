@@ -112,8 +112,8 @@ template <std::size_t n> std::array<Vertex *, n> vertexPtrsFor(Mesh &mesh, const
 template <std::size_t n> std::array<Eigen::VectorXd, n> coordsFor(const Mesh &mesh, const std::array<int, n> &vertexIDs)
 {
   std::array<Eigen::VectorXd, n> coords;
-  std::transform(vertexIDs.begin(), vertexIDs.end(), coords.begin(),
-                 [&mesh](int id) { return mesh.vertices()[id].getCoords(); });
+  std::transform(
+      vertexIDs.begin(), vertexIDs.end(), coords.begin(), [&mesh](int id) { return mesh.vertices()[id].getCoords(); });
   return coords;
 }
 

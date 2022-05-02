@@ -61,9 +61,11 @@ public:
   }
 
 private:
-  boost::accumulators::accumulator_set<
-      double, boost::accumulators::stats<boost::accumulators::tag::min, boost::accumulators::tag::max,
-                                         boost::accumulators::tag::mean, boost::accumulators::tag::lazy_variance>>
+  boost::accumulators::accumulator_set<double,
+                                       boost::accumulators::stats<boost::accumulators::tag::min,
+                                                                  boost::accumulators::tag::max,
+                                                                  boost::accumulators::tag::mean,
+                                                                  boost::accumulators::tag::lazy_variance>>
       _acc;
 };
 

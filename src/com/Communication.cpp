@@ -54,8 +54,9 @@ void Communication::reduceSum(precice::span<double const> itemsToSend, precice::
   }
 }
 
-void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive,
-                              Rank primaryRank)
+void Communication::reduceSum(precice::span<double const> itemsToSend,
+                              precice::span<double>       itemsToReceive,
+                              Rank                        primaryRank)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
@@ -108,8 +109,9 @@ void Communication::allreduceSum(precice::span<double const> itemsToSend, precic
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive,
-                                 Rank primaryRank)
+void Communication::allreduceSum(precice::span<double const> itemsToSend,
+                                 precice::span<double>       itemsToReceive,
+                                 Rank                        primaryRank)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());

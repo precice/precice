@@ -11,8 +11,10 @@
 namespace precice {
 namespace action {
 
-SummationAction::SummationAction(Timing timing, const std::vector<int> &sourceDataIDs, int targetDataID,
-                                 const mesh::PtrMesh &mesh)
+SummationAction::SummationAction(Timing                  timing,
+                                 const std::vector<int> &sourceDataIDs,
+                                 int                     targetDataID,
+                                 const mesh::PtrMesh &   mesh)
     : Action(timing, mesh, mapping::Mapping::MeshRequirement::VERTEX), _targetData(mesh->data(targetDataID))
 {
 
@@ -26,7 +28,9 @@ SummationAction::SummationAction(Timing timing, const std::vector<int> &sourceDa
   }
 }
 
-void SummationAction::performAction(double time, double timeStepSize, double computedTimeWindowPart,
+void SummationAction::performAction(double time,
+                                    double timeStepSize,
+                                    double computedTimeWindowPart,
                                     double timeWindowSize)
 {
   PRECICE_TRACE();

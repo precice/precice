@@ -25,8 +25,13 @@ namespace acceleration {
  */
 class IQNILSAcceleration : public BaseQNAcceleration {
 public:
-  IQNILSAcceleration(double initialRelaxation, bool forceInitialRelaxation, int maxIterationsUsed,
-                     int pastTimeWindowsReused, int filter, double singularityLimit, std::vector<int> dataIDs,
+  IQNILSAcceleration(double                  initialRelaxation,
+                     bool                    forceInitialRelaxation,
+                     int                     maxIterationsUsed,
+                     int                     pastTimeWindowsReused,
+                     int                     filter,
+                     double                  singularityLimit,
+                     std::vector<int>        dataIDs,
                      impl::PtrPreconditioner preconditioner);
 
   virtual ~IQNILSAcceleration() {}

@@ -18,7 +18,9 @@ ComputeCurvatureAction::ComputeCurvatureAction(Timing timing, int dataID, const 
 {
 }
 
-void ComputeCurvatureAction::performAction(double time, double timeStepSize, double computedTimeWindowPart,
+void ComputeCurvatureAction::performAction(double time,
+                                           double timeStepSize,
+                                           double computedTimeWindowPart,
                                            double timeWindowSize)
 {
   PRECICE_TRACE();

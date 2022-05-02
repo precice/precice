@@ -105,8 +105,8 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   auto integralOutput = mesh::integrate(output(), output()->data(outputDataID));
 
   // Create reshape the output values vector to matrix
-  Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions,
-                                                 outputValues.size() / valueDimensions);
+  Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(
+      outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
 
   // Scale in each direction
   Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();

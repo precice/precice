@@ -23,7 +23,12 @@ class EventData {
 public:
   explicit EventData(std::string _name);
 
-  EventData(std::string _name, long _count, long _total, long _max, long _min, Event::Data data,
+  EventData(std::string         _name,
+            long                _count,
+            long                _total,
+            long                _max,
+            long                _min,
+            Event::Data         data,
             Event::StateChanges stateChanges);
 
   /// Adds an Events data.

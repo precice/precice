@@ -8,7 +8,9 @@ namespace action {
 
 RecorderAction::RecorderAction(Timing timing, const mesh::PtrMesh &mesh) : Action(timing, mesh) {}
 
-void RecorderAction::performAction(double time, double timeStepSize, double computedTimeWindowPart,
+void RecorderAction::performAction(double time,
+                                   double timeStepSize,
+                                   double computedTimeWindowPart,
                                    double timeWindowSize)
 {
   records.push_back(Record{getTiming(), time, timeStepSize, computedTimeWindowPart, timeWindowSize});

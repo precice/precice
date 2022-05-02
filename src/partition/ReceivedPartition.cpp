@@ -30,8 +30,10 @@ extern bool syncMode;
 
 namespace partition {
 
-ReceivedPartition::ReceivedPartition(const mesh::PtrMesh &mesh, GeometricFilter geometricFilter, double safetyFactor,
-                                     bool allowDirectAccess)
+ReceivedPartition::ReceivedPartition(const mesh::PtrMesh &mesh,
+                                     GeometricFilter      geometricFilter,
+                                     double               safetyFactor,
+                                     bool                 allowDirectAccess)
     : Partition(mesh), _geometricFilter(geometricFilter), _bb(mesh->getDimensions()),
       _dimensions(mesh->getDimensions()), _safetyFactor(safetyFactor), _allowDirectAccess(allowDirectAccess)
 {
@@ -115,7 +117,8 @@ void ReceivedPartition::compute()
                      "\"setMeshAccessRegion\" "
                      "in serial mode. Associated data values of the filtered vertices will be filled with zero values "
                      "in order to provide valid data for other participants when reading data.",
-                     nFilteredVertices, _mesh->getName());
+                     nFilteredVertices,
+                     _mesh->getName());
       }
 
       _mesh->clear();
@@ -165,8 +168,12 @@ void ReceivedPartition::compute()
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
   mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
   PRECICE_DEBUG("Mapping filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
-                _mesh->vertices().size(), filteredMesh.vertices().size(), _mesh->edges().size(),
-                filteredMesh.edges().size(), _mesh->triangles().size(), filteredMesh.triangles().size());
+                _mesh->vertices().size(),
+                filteredMesh.vertices().size(),
+                _mesh->edges().size(),
+                filteredMesh.edges().size(),
+                _mesh->triangles().size(),
+                filteredMesh.triangles().size());
 
   _mesh->clear();
   _mesh->addMesh(filteredMesh);
@@ -281,7 +288,8 @@ auto errorMeshFilteredOut(const std::string &meshName, const int rank)
                      "\"<use-mesh mesh=\"{0} \" ... safety-factor=\"N\"/> (default value is 0.5) of the "
                      "decomposition strategy or disable the filtering completely: "
                      "\"<use-mesh mesh=\"{0}\" ... geometric-filter=\"no-filter\" />",
-                     meshName, rank);
+                     meshName,
+                     rank);
 }
 } // namespace
 
@@ -327,8 +335,8 @@ void ReceivedPartition::filterByBoundingBox()
 
         PRECICE_DEBUG("From secondary rank {}, bounding mesh: {}", secondaryRank, secondaryBB);
         mesh::Mesh secondaryMesh("SlaveMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
-        mesh::filterMesh(secondaryMesh, *_mesh,
-                         [&secondaryBB](const mesh::Vertex &v) { return secondaryBB.contains(v); });
+        mesh::filterMesh(
+            secondaryMesh, *_mesh, [&secondaryBB](const mesh::Vertex &v) { return secondaryBB.contains(v); });
         PRECICE_DEBUG("Send filtered mesh to secondary rank: {}", secondaryRank);
         com::CommunicateMesh(utils::MasterSlave::getCommunication()).sendMesh(secondaryMesh, secondaryRank);
       }
@@ -337,8 +345,12 @@ void ReceivedPartition::filterByBoundingBox()
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
       PRECICE_DEBUG("Primary rank mesh, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
-                    _mesh->vertices().size(), filteredMesh.vertices().size(), _mesh->edges().size(),
-                    filteredMesh.edges().size(), _mesh->triangles().size(), filteredMesh.triangles().size());
+                    _mesh->vertices().size(),
+                    filteredMesh.vertices().size(),
+                    _mesh->edges().size(),
+                    filteredMesh.edges().size(),
+                    _mesh->triangles().size(),
+                    filteredMesh.triangles().size());
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
 
@@ -368,8 +380,12 @@ void ReceivedPartition::filterByBoundingBox()
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
 
       PRECICE_DEBUG("Bounding box filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
-                    _mesh->vertices().size(), filteredMesh.vertices().size(), _mesh->edges().size(),
-                    filteredMesh.edges().size(), _mesh->triangles().size(), filteredMesh.triangles().size());
+                    _mesh->vertices().size(),
+                    filteredMesh.vertices().size(),
+                    _mesh->edges().size(),
+                    filteredMesh.edges().size(),
+                    _mesh->triangles().size(),
+                    filteredMesh.triangles().size());
 
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
@@ -756,7 +772,9 @@ void ReceivedPartition::createOwnerInformation()
     auto filteredVertices = std::count(tags.begin(), tags.end(), 0);
     if (filteredVertices)
       PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
-                   filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
+                   filteredVertices,
+                   _mesh->getGlobalNumberOfVertices(),
+                   _mesh->getName());
     // end of two-level initialization section
   } else {
     if (utils::MasterSlave::isSecondary()) {
@@ -897,7 +915,8 @@ void ReceivedPartition::createOwnerInformation()
         if (globalOwnerVec[i] == 0) {
           PRECICE_DEBUG("The Vertex with global index {} of mesh: {} was completely filtered out, since it has no "
                         "influence on any mapping.",
-                        i, _mesh->getName());
+                        i,
+                        _mesh->getName());
         }
       }
 #endif
@@ -905,7 +924,9 @@ void ReceivedPartition::createOwnerInformation()
       if (filteredVertices) {
         PRECICE_WARN(
             "{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.{}",
-            filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName(),
+            filteredVertices,
+            _mesh->getGlobalNumberOfVertices(),
+            _mesh->getName(),
             _allowDirectAccess
                 ? " Associated data values of the filtered vertices will be filled with zero values in order to "
                   "provide valid data for other participants when reading data."

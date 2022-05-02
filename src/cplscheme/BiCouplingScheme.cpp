@@ -19,12 +19,27 @@
 namespace precice {
 namespace cplscheme {
 
-BiCouplingScheme::BiCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
-                                   std::string firstParticipant, std::string secondParticipant,
-                                   const std::string &localParticipant, m2n::PtrM2N m2n, int maxIterations,
-                                   CouplingMode cplMode, constants::TimesteppingMethod dtMethod, int extrapolationOrder)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode,
-                         dtMethod, extrapolationOrder),
+BiCouplingScheme::BiCouplingScheme(double                        maxTime,
+                                   int                           maxTimeWindows,
+                                   double                        timeWindowSize,
+                                   int                           validDigits,
+                                   std::string                   firstParticipant,
+                                   std::string                   secondParticipant,
+                                   const std::string &           localParticipant,
+                                   m2n::PtrM2N                   m2n,
+                                   int                           maxIterations,
+                                   CouplingMode                  cplMode,
+                                   constants::TimesteppingMethod dtMethod,
+                                   int                           extrapolationOrder)
+    : BaseCouplingScheme(maxTime,
+                         maxTimeWindows,
+                         timeWindowSize,
+                         validDigits,
+                         localParticipant,
+                         maxIterations,
+                         cplMode,
+                         dtMethod,
+                         extrapolationOrder),
       _m2n(std::move(m2n)), _firstParticipant(std::move(firstParticipant)),
       _secondParticipant(std::move(secondParticipant))
 {
@@ -49,8 +64,9 @@ void BiCouplingScheme::addDataToSend(const mesh::PtrData &data, mesh::PtrMesh me
     if (isExplicitCouplingScheme()) {
       _sendData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization)));
     } else {
-      _sendData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization,
-                                                             getExtrapolationOrder())));
+      _sendData.emplace(
+          id,
+          PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization, getExtrapolationOrder())));
     }
   } else {
     PRECICE_ERROR(
@@ -68,8 +84,9 @@ void BiCouplingScheme::addDataToReceive(const mesh::PtrData &data, mesh::PtrMesh
     if (isExplicitCouplingScheme()) {
       _receiveData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization)));
     } else {
-      _receiveData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization,
-                                                                getExtrapolationOrder())));
+      _receiveData.emplace(
+          id,
+          PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization, getExtrapolationOrder())));
     }
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange "

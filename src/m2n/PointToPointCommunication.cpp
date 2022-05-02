@@ -68,8 +68,9 @@ void broadcastSend(mesh::Mesh::VertexDistribution const &m,
   }
 }
 
-void broadcastReceive(mesh::Mesh::VertexDistribution &m, int rankBroadcaster,
-                      const com::PtrCommunication &communication = utils::MasterSlave::getCommunication())
+void broadcastReceive(mesh::Mesh::VertexDistribution &m,
+                      int                             rankBroadcaster,
+                      const com::PtrCommunication &   communication = utils::MasterSlave::getCommunication())
 {
   m.clear();
   int size = 0;
@@ -252,7 +253,8 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this participant.
     mesh::Mesh::VertexDistribution const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
-    mesh::Mesh::VertexDistribution const &otherVertexDistribution, int thisRank = utils::MasterSlave::getRank())
+    mesh::Mesh::VertexDistribution const &otherVertexDistribution,
+    int                                   thisRank = utils::MasterSlave::getRank())
 {
   auto iterator = thisVertexDistribution.find(thisRank);
   if (iterator == thisVertexDistribution.end())
@@ -312,8 +314,8 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(acceptorName, requesterName, "TMP-PRIMARYCOM-" + _mesh->getName(),
-                        utils::MasterSlave::getRank());
+    c->acceptConnection(
+        acceptorName, requesterName, "TMP-PRIMARYCOM-" + _mesh->getName(), utils::MasterSlave::getRank());
 
     // Exchange vertex distributions.
     m2n::send(vertexDistribution, 0, c);
@@ -374,8 +376,8 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   // Accept point-to-point connections (as server) between the current acceptor
   // process (in the current participant) with rank `utils::MasterSlave::getRank()'
   // and (multiple) requester processes (in the requester participant).
-  _communication->acceptConnectionAsServer(acceptorName, requesterName, _mesh->getName(), utils::MasterSlave::getRank(),
-                                           communicationMap.size());
+  _communication->acceptConnectionAsServer(
+      acceptorName, requesterName, _mesh->getName(), utils::MasterSlave::getRank(), communicationMap.size());
 
   PRECICE_DEBUG("Store communication map");
   for (auto const &comMap : communicationMap) {
@@ -402,8 +404,8 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
 
   _communication = _communicationFactory->newCommunication();
 
-  _communication->acceptConnectionAsServer(acceptorName, requesterName, _mesh->getName(), utils::MasterSlave::getRank(),
-                                           localConnectedRanks.size());
+  _communication->acceptConnectionAsServer(
+      acceptorName, requesterName, _mesh->getName(), utils::MasterSlave::getRank(), localConnectedRanks.size());
 
   _connectionDataVector.reserve(localConnectedRanks.size());
 
@@ -495,8 +497,8 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   // requester process (in the current participant) and (multiple) acceptor
   // processes (in the acceptor participant) to ranks `accceptingRanks'
   // according to `communicationMap`.
-  _communication->requestConnectionAsClient(acceptorName, requesterName, _mesh->getName(), acceptingRanks,
-                                            utils::MasterSlave::getRank());
+  _communication->requestConnectionAsClient(
+      acceptorName, requesterName, _mesh->getName(), acceptingRanks, utils::MasterSlave::getRank());
 
   PRECICE_DEBUG("Store communication map");
   for (auto &i : communicationMap) {
@@ -528,8 +530,8 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   std::set<int> acceptingRanks(localConnectedRanks.begin(), localConnectedRanks.end());
 
   _communication = _communicationFactory->newCommunication();
-  _communication->requestConnectionAsClient(acceptorName, requesterName, _mesh->getName(), acceptingRanks,
-                                            utils::MasterSlave::getRank());
+  _communication->requestConnectionAsClient(
+      acceptorName, requesterName, _mesh->getName(), acceptingRanks, utils::MasterSlave::getRank());
 
   for (auto &connectedRank : localConnectedRanks) {
     _connectionDataVector.push_back({connectedRank, com::PtrRequest()});

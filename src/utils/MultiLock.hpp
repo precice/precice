@@ -135,15 +135,15 @@ public:
   /// Returns the count of locked locks
   size_t countLocked() const
   {
-    return std::count_if(_locks.begin(), _locks.end(),
-                         [](typename map_type::value_type const &kv) { return kv.second; });
+    return std::count_if(
+        _locks.begin(), _locks.end(), [](typename map_type::value_type const &kv) { return kv.second; });
   }
 
   /// Returns the count of unlocked locks
   size_t countUnlocked() const
   {
-    return std::count_if(_locks.begin(), _locks.end(),
-                         [](typename map_type::value_type const &kv) { return not kv.second; });
+    return std::count_if(
+        _locks.begin(), _locks.end(), [](typename map_type::value_type const &kv) { return not kv.second; });
   }
 
 private:

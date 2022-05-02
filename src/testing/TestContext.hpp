@@ -261,7 +261,8 @@ public:
    *
    * @see ConnectionOptions
    */
-  m2n::PtrM2N connectPrimaryRanks(const std::string &acceptor, const std::string &requestor,
+  m2n::PtrM2N connectPrimaryRanks(const std::string &      acceptor,
+                                  const std::string &      requestor,
                                   const ConnectionOptions &options = ConnectionOptions{}) const;
 
   /// Provides a user- and log-friendly description of the current context

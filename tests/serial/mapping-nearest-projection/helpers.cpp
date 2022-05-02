@@ -108,7 +108,8 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
   }
 }
 
-void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::string configFile,
+void testQuadMappingNearestProjection(bool               defineEdgesExplicitly,
+                                      const std::string  configFile,
                                       const TestContext &context)
 {
   using Eigen::Vector3d;
@@ -212,7 +213,8 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, const std::str
   }
 }
 
-void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, const std::string configFile,
+void testQuadMappingNearestProjectionTallKite(bool               defineEdgesExplicitly,
+                                              const std::string  configFile,
                                               const TestContext &context)
 {
   using Eigen::Vector3d;
@@ -262,7 +264,8 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, const 
   }
 }
 
-void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, const std::string configFile,
+void testQuadMappingNearestProjectionWideKite(bool               defineEdgesExplicitly,
+                                              const std::string  configFile,
                                               const TestContext &context)
 {
   using Eigen::Vector3d;

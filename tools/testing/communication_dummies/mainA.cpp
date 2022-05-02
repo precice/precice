@@ -24,8 +24,8 @@ vector<double> getData()
   static double data_2[] = {70.0, 100.0};
 
   static double *data[] = {data_0, data_1, data_2};
-  static int     size[] = {sizeof(data_0) / sizeof(*data_0), sizeof(data_1) / sizeof(*data_1),
-                       sizeof(data_2) / sizeof(*data_2)};
+  static int     size[] = {
+      sizeof(data_0) / sizeof(*data_0), sizeof(data_1) / sizeof(*data_1), sizeof(data_2) / sizeof(*data_2)};
 
   return std::move(vector<double>(data[rank], data[rank] + size[rank]));
 }
@@ -39,8 +39,8 @@ vector<double> getExpectedData()
   static double data_2[] = {70.0 + 3, 100.0 + 5};
 
   static double *data[] = {data_0, data_1, data_2};
-  static int     size[] = {sizeof(data_0) / sizeof(*data_0), sizeof(data_1) / sizeof(*data_1),
-                       sizeof(data_2) / sizeof(*data_2)};
+  static int     size[] = {
+      sizeof(data_0) / sizeof(*data_0), sizeof(data_1) / sizeof(*data_1), sizeof(data_2) / sizeof(*data_2)};
 
   return std::move(vector<double>(data[rank], data[rank] + size[rank]));
 }

@@ -52,9 +52,19 @@ BOOST_AUTO_TEST_CASE(testMVQNPP)
   impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
   mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
-  MVQNAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed, timestepsReused, filter,
-                      singularityLimit, dataIDs, prec, alwaysBuildJacobian, restartType, chunkSize,
-                      reusedTimestepsAtRestart, svdTruncationEps);
+  MVQNAcceleration pp(initialRelaxation,
+                      enforceInitialRelaxation,
+                      maxIterationsUsed,
+                      timestepsReused,
+                      filter,
+                      singularityLimit,
+                      dataIDs,
+                      prec,
+                      alwaysBuildJacobian,
+                      restartType,
+                      chunkSize,
+                      reusedTimestepsAtRestart,
+                      svdTruncationEps);
 
   Eigen::VectorXd fcol1;
 
@@ -131,8 +141,14 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   scalings.insert(std::make_pair(1, 1.0));
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
-  IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed, timestepsReused, filter,
-                        singularityLimit, dataIDs, prec);
+  IQNILSAcceleration pp(initialRelaxation,
+                        enforceInitialRelaxation,
+                        maxIterationsUsed,
+                        timestepsReused,
+                        filter,
+                        singularityLimit,
+                        dataIDs,
+                        prec);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));

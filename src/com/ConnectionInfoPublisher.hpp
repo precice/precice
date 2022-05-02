@@ -14,26 +14,34 @@ namespace impl {
  * It has the form first two letters from hash of
  * (acceptorName, requesterName, mesh, rank)/rest of hash.
  */
-std::string hashedFilePath(const std::string &acceptorName, const std::string &requesterName,
-                           const std::string &meshName, Rank rank);
+std::string hashedFilePath(const std::string &acceptorName,
+                           const std::string &requesterName,
+                           const std::string &meshName,
+                           Rank               rank);
 
 /** Returns the local directory which is the root for storing connection information.
  * It has the form addressDirectory/precice-run/acceptorName-requesterName
  */
-std::string localDirectory(const std::string &acceptorName, const std::string &requesterName,
+std::string localDirectory(const std::string &acceptorName,
+                           const std::string &requesterName,
                            const std::string &addressDirectory);
 } // namespace impl
 
 class ConnectionInfoPublisher {
 public:
-  ConnectionInfoPublisher(std::string acceptorName, std::string requesterName, std::string tag, int rank,
+  ConnectionInfoPublisher(std::string acceptorName,
+                          std::string requesterName,
+                          std::string tag,
+                          int         rank,
                           std::string addressDirectory) noexcept
       : acceptorName(std::move(acceptorName)), requesterName(std::move(requesterName)), tag(std::move(tag)), rank(rank),
         addressDirectory(std::move(addressDirectory))
   {
   }
 
-  ConnectionInfoPublisher(std::string acceptorName, std::string requesterName, std::string tag,
+  ConnectionInfoPublisher(std::string acceptorName,
+                          std::string requesterName,
+                          std::string tag,
                           std::string addressDirectory) noexcept
       : acceptorName(std::move(acceptorName)), requesterName(std::move(requesterName)), tag(std::move(tag)),
         addressDirectory(std::move(addressDirectory))
@@ -59,13 +67,18 @@ protected:
 /// Reads the connection info for the given participant/rank information
 class ConnectionInfoReader : public ConnectionInfoPublisher {
 public:
-  ConnectionInfoReader(std::string acceptorName, std::string requesterName, std::string tag, int rank,
+  ConnectionInfoReader(std::string acceptorName,
+                       std::string requesterName,
+                       std::string tag,
+                       int         rank,
                        std::string addressDirectory) noexcept
       : ConnectionInfoPublisher(acceptorName, requesterName, tag, rank, addressDirectory)
   {
   }
 
-  ConnectionInfoReader(std::string acceptorName, std::string requesterName, std::string tag,
+  ConnectionInfoReader(std::string acceptorName,
+                       std::string requesterName,
+                       std::string tag,
                        std::string addressDirectory) noexcept
       : ConnectionInfoPublisher(acceptorName, requesterName, tag, addressDirectory)
   {
@@ -81,13 +94,18 @@ public:
  */
 class ConnectionInfoWriter : public ConnectionInfoPublisher {
 public:
-  ConnectionInfoWriter(std::string acceptorName, std::string requesterName, std::string tag, int rank,
+  ConnectionInfoWriter(std::string acceptorName,
+                       std::string requesterName,
+                       std::string tag,
+                       int         rank,
                        std::string addressDirectory) noexcept
       : ConnectionInfoPublisher(acceptorName, requesterName, tag, rank, addressDirectory)
   {
   }
 
-  ConnectionInfoWriter(std::string acceptorName, std::string requesterName, std::string tag,
+  ConnectionInfoWriter(std::string acceptorName,
+                       std::string requesterName,
+                       std::string tag,
                        std::string addressDirectory) noexcept
       : ConnectionInfoPublisher(acceptorName, requesterName, tag, addressDirectory)
   {

@@ -22,8 +22,11 @@ extern "C" {
  * @param[in] solverProcessSize The number of solver processes using preCICE.
  * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
  */
-void precicec_createSolverInterface_withCommunicator(const char *participantName, const char *configFileName,
-                                                     int solverProcessIndex, int solverProcessSize, void *communicator);
+void precicec_createSolverInterface_withCommunicator(const char *participantName,
+                                                     const char *configFileName,
+                                                     int         solverProcessIndex,
+                                                     int         solverProcessSize,
+                                                     void *      communicator);
 
 /**
  * @brief Creates the coupling interface and configures it.
@@ -40,8 +43,10 @@ void precicec_createSolverInterface_withCommunicator(const char *participantName
  *                               from 0 and end with solverProcessSize - 1.
  * @param[in] solverProcessSize The number of solver processes using preCICE.
  */
-void precicec_createSolverInterface(const char *participantName, const char *configFileName, int solverProcessIndex,
-                                    int solverProcessSize);
+void precicec_createSolverInterface(const char *participantName,
+                                    const char *configFileName,
+                                    int         solverProcessIndex,
+                                    int         solverProcessSize);
 
 ///@}
 
@@ -259,8 +264,8 @@ void precicec_setMeshQuad(int meshID, int firstEdgeID, int secondEdgeID, int thi
  * @param[in] thirdVertexID ID of the third vertex of the Quad
  * @param[in] fourthVertexID ID of the fourth vertex of the Quad
  */
-void precicec_setMeshQuadWithEdges(int meshID, int firstVertexID, int secondVertexID, int thirdVertexID,
-                                   int fourthVertexID);
+void precicec_setMeshQuadWithEdges(
+    int meshID, int firstVertexID, int secondVertexID, int thirdVertexID, int fourthVertexID);
 
 ///@}
 

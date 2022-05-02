@@ -65,7 +65,12 @@ struct MPI_EventData {
 
 EventData::EventData(std::string _name) : name(std::move(_name)) {}
 
-EventData::EventData(std::string _name, long _count, long _total, long _max, long _min, Event::Data data,
+EventData::EventData(std::string         _name,
+                     long                _count,
+                     long                _total,
+                     long                _max,
+                     long                _min,
+                     Event::Data         data,
                      Event::StateChanges _stateChanges)
     : max(std::chrono::milliseconds(_max)), min(std::chrono::milliseconds(_min)),
       total(std::chrono::milliseconds(_total)), stateChanges(std::move(_stateChanges)), name(std::move(_name)),
@@ -248,8 +253,8 @@ Event &EventRegistry::getStoredEvent(std::string const &name)
   // stack set a prefix.
   auto previousPrefix = prefix;
   prefix              = "";
-  auto insertion      = storedEvents.emplace(std::piecewise_construct, std::forward_as_tuple(name),
-                                        std::forward_as_tuple(name, false, false));
+  auto insertion      = storedEvents.emplace(
+      std::piecewise_construct, std::forward_as_tuple(name), std::forward_as_tuple(name, false, false));
 
   prefix = previousPrefix;
   return std::get<0>(insertion)->second;
@@ -311,7 +316,12 @@ void EventRegistry::writeSummary(std::ostream &out) const
 
       for (auto &e : localRankData.evData) {
         auto &ev = e.second;
-        table.printRow(ev.getName(), ev.getCount(), ev.getTotal(), ev.getMax(), ev.getMin(), ev.getAvg(),
+        table.printRow(ev.getName(),
+                       ev.getCount(),
+                       ev.getTotal(),
+                       ev.getMax(),
+                       ev.getMin(),
+                       ev.getAvg(),
                        ev.getTotal() / duration);
       }
     }
@@ -393,8 +403,10 @@ void EventRegistry::collect()
   // Register MPI datatype
   MPI_Datatype MPI_EVENTDATA;
   int          blocklengths[]  = {255, 1, 3, 2};
-  MPI_Aint     displacements[] = {offsetof(MPI_EventData, name), offsetof(MPI_EventData, count),
-                              offsetof(MPI_EventData, total), offsetof(MPI_EventData, dataSize)};
+  MPI_Aint     displacements[] = {offsetof(MPI_EventData, name),
+                              offsetof(MPI_EventData, count),
+                              offsetof(MPI_EventData, total),
+                              offsetof(MPI_EventData, dataSize)};
   MPI_Datatype types[]         = {MPI_CHAR, MPI_INT, MPI_LONG, MPI_INT};
   MPI_Type_create_struct(4, blocklengths, displacements, types, &MPI_EVENTDATA);
   MPI_Type_commit(&MPI_EVENTDATA);
@@ -553,10 +565,10 @@ size_t EventRegistry::getMaxNameWidth() const
 std::pair<sys_clk::time_point, sys_clk::time_point> EventRegistry::findFirstAndLastTime() const
 {
   using T    = decltype(globalRankData)::value_type const &;
-  auto first = std::min_element(std::begin(globalRankData), std::end(globalRankData),
-                                [](T a, T b) { return a.initializedAt < b.initializedAt; });
-  auto last  = std::max_element(std::begin(globalRankData), std::end(globalRankData),
-                               [](T a, T b) { return a.finalizedAt < b.finalizedAt; });
+  auto first = std::min_element(
+      std::begin(globalRankData), std::end(globalRankData), [](T a, T b) { return a.initializedAt < b.initializedAt; });
+  auto last = std::max_element(
+      std::begin(globalRankData), std::end(globalRankData), [](T a, T b) { return a.finalizedAt < b.finalizedAt; });
 
   return std::make_pair(first->initializedAt, last->finalizedAt);
 }

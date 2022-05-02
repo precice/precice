@@ -45,12 +45,17 @@ public:
    * @attention Calls precice::utils::Parallel::splitCommunicator()
    * if local and global communicators are equal.
    */
-  virtual void acceptConnection(std::string const &acceptorName, std::string const &requesterName,
-                                std::string const &tag, int acceptorRank, int rankOffset = 0) override;
+  virtual void acceptConnection(std::string const &acceptorName,
+                                std::string const &requesterName,
+                                std::string const &tag,
+                                int                acceptorRank,
+                                int                rankOffset = 0) override;
 
-  virtual void acceptConnectionAsServer(std::string const &acceptorName, std::string const &requesterName,
-                                        std::string const &tag, int acceptorRank,
-                                        int requesterCommunicatorSize) override
+  virtual void acceptConnectionAsServer(std::string const &acceptorName,
+                                        std::string const &requesterName,
+                                        std::string const &tag,
+                                        int                acceptorRank,
+                                        int                requesterCommunicatorSize) override
   {
     PRECICE_ASSERT(false, "Not implemented!");
   }
@@ -59,12 +64,17 @@ public:
    * @attention Calls precice::utils::Parallel::splitCommunicator()
    * if local and global communicators are equal.
    */
-  virtual void requestConnection(std::string const &acceptorName, std::string const &requesterName,
-                                 std::string const &tag, int requesterRank, int requesterCommunicatorSize) override;
+  virtual void requestConnection(std::string const &acceptorName,
+                                 std::string const &requesterName,
+                                 std::string const &tag,
+                                 int                requesterRank,
+                                 int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string const &acceptorName, std::string const &requesterName,
-                                         std::string const &tag, std::set<int> const &acceptorRanks,
-                                         int requesterRank) override
+  virtual void requestConnectionAsClient(std::string const &  acceptorName,
+                                         std::string const &  requesterName,
+                                         std::string const &  tag,
+                                         std::set<int> const &acceptorRanks,
+                                         int                  requesterRank) override
   {
     PRECICE_ASSERT(false, "Not implemented!");
   }
@@ -72,8 +82,9 @@ public:
   /// See precice::com::Communication::closeConnection().
   virtual void closeConnection() override;
 
-  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive,
-                         Rank primaryRank) override;
+  virtual void reduceSum(precice::span<double const> itemsToSend,
+                         precice::span<double>       itemsToReceive,
+                         Rank                        primaryRank) override;
 
   virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive) override;
 
@@ -81,8 +92,9 @@ public:
 
   virtual void reduceSum(int itemToSend, int &itemsToReceive) override;
 
-  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive,
-                            Rank primaryRank) override;
+  virtual void allreduceSum(precice::span<double const> itemsToSend,
+                            precice::span<double>       itemsToReceive,
+                            Rank                        primaryRank) override;
 
   virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive) override;
 

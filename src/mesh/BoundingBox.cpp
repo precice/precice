@@ -17,7 +17,8 @@ logging::Logger BoundingBox::_log{"mesh::BoundingBox"};
 BoundingBox::BoundingBox(std::vector<double> bounds)
 {
   PRECICE_ASSERT((int) bounds.size() == 4 || (int) bounds.size() == 6,
-                 "Dimension of a bounding box can only be 2 or 3.", bounds.size() / 2);
+                 "Dimension of a bounding box can only be 2 or 3.",
+                 bounds.size() / 2);
   _bounds     = std::move(bounds);
   _dimensions = _bounds.size() / 2;
 }
@@ -33,8 +34,10 @@ BoundingBox::BoundingBox(int dimension) : _dimensions(dimension)
 
 bool BoundingBox::operator==(const BoundingBox &otherBB) const
 {
-  PRECICE_ASSERT(_dimensions == otherBB._dimensions, "Bounding boxes with different dimensions cannot be compared.",
-                 _dimensions, otherBB._dimensions);
+  PRECICE_ASSERT(_dimensions == otherBB._dimensions,
+                 "Bounding boxes with different dimensions cannot be compared.",
+                 _dimensions,
+                 otherBB._dimensions);
   for (int i = 0; i < _dimensions; ++i) {
     if (_bounds.at(i) != otherBB._bounds.at(i)) {
       return false;

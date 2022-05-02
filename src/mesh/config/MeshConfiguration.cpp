@@ -64,7 +64,8 @@ void MeshConfiguration::xmlTagCallback(const xml::ConfigurationContext &context,
       PRECICE_WARN("You used the attribute \"{}\" when configuring mesh \"\". "
                    "This attribute is deprecated and will be removed in the next major release. "
                    "Please remove the attribute to silence this warning.",
-                   ATTR_FLIP_NORMALS, name);
+                   ATTR_FLIP_NORMALS,
+                   name);
     }
     PRECICE_ASSERT(_meshIdManager);
     _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, _meshIdManager->getFreeID()));
@@ -81,7 +82,9 @@ void MeshConfiguration::xmlTagCallback(const xml::ConfigurationContext &context,
     if (not found) {
       PRECICE_ERROR("Data with name \"{}\" used by mesh \"{}\" is not defined. "
                     "Please define a data tag with name=\"{}\".",
-                    name, _meshes.back()->getName(), name);
+                    name,
+                    _meshes.back()->getName(),
+                    name);
     }
   }
 }
@@ -103,8 +106,8 @@ void MeshConfiguration::addMesh(const mesh::PtrMesh &mesh)
         break;
       }
     }
-    PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".",
-                  dataNewMesh->getName());
+    PRECICE_CHECK(
+        found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".", dataNewMesh->getName());
   }
   _meshes.push_back(mesh);
 }
@@ -121,8 +124,8 @@ std::vector<PtrMesh> &MeshConfiguration::meshes()
 
 bool MeshConfiguration::hasMeshName(const std::string &meshName) const
 {
-  auto iter = std::find_if(_meshes.begin(), _meshes.end(),
-                           [&meshName](const auto &mptr) { return mptr->getName() == meshName; });
+  auto iter = std::find_if(
+      _meshes.begin(), _meshes.end(), [&meshName](const auto &mptr) { return mptr->getName() == meshName; });
   return iter != _meshes.end(); // if name was not found in _meshes, iter == _meshes.end()
 }
 

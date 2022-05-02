@@ -57,8 +57,12 @@ static constexpr char const *ASSERT_FMT = "ASSERTION FAILED\n"
 #define PRECICE_ASSERT_IMPL(check, args)                                                                               \
   if (!(check)) {                                                                                                      \
     std::cerr << fmt::format(                                                                                          \
-        precice::utils::ASSERT_FMT, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__,                                        \
-        BOOST_PP_STRINGIZE(check), precice::utils::Parallel::getProcessRank(), args, getStacktrace()) << std::flush;   \
+        precice::utils::ASSERT_FMT,                                                                                    \
+        BOOST_CURRENT_FUNCTION,                                                                                        \
+        __FILE__,                                                                                                      \
+        __LINE__,                                                                                                      \
+        BOOST_PP_STRINGIZE(check), precice::utils::Parallel::getProcessRank(), args, getStacktrace())                  \
+        << std::flush;                                                                                                 \
     std::cout.flush();                                                                                                 \
     PRECICE_ASSERT_WRAPPER();                                                                                          \
   }

@@ -80,14 +80,18 @@ bool syncMode = false;
 
 namespace impl {
 
-SolverInterfaceImpl::SolverInterfaceImpl(std::string participantName, const std::string &configurationFileName,
-                                         int accessorProcessRank, int accessorCommunicatorSize, void *communicator)
+SolverInterfaceImpl::SolverInterfaceImpl(std::string        participantName,
+                                         const std::string &configurationFileName,
+                                         int                accessorProcessRank,
+                                         int                accessorCommunicatorSize,
+                                         void *             communicator)
     : _accessorName(std::move(participantName)), _accessorProcessRank(accessorProcessRank),
       _accessorCommunicatorSize(accessorCommunicatorSize)
 {
-  PRECICE_CHECK(!_accessorName.empty(), "This participant's name is an empty string. "
-                                        "When constructing a preCICE interface you need to pass the name of the "
-                                        "participant as first argument to the constructor.");
+  PRECICE_CHECK(!_accessorName.empty(),
+                "This participant's name is an empty string. "
+                "When constructing a preCICE interface you need to pass the name of the "
+                "participant as first argument to the constructor.");
   PRECICE_CHECK(_accessorProcessRank >= 0,
                 "The solver process index needs to be a non-negative number, not: {}. "
                 "Please check the value given when constructing a preCICE interface.",
@@ -100,7 +104,8 @@ SolverInterfaceImpl::SolverInterfaceImpl(std::string participantName, const std:
       _accessorProcessRank < _accessorCommunicatorSize,
       "The solver process index, currently: {}  needs to be smaller than the solver process size, currently: {}. "
       "Please check the values given when constructing a preCICE interface.",
-      _accessorProcessRank, _accessorCommunicatorSize);
+      _accessorProcessRank,
+      _accessorCommunicatorSize);
 
 // Set the global communicator to the passed communicator.
 // This is a noop if preCICE is not configured with MPI.
@@ -124,20 +129,24 @@ SolverInterfaceImpl::SolverInterfaceImpl(std::string participantName, const std:
     PRECICE_CHECK(_accessorProcessRank == currentRank,
                   "The solver process index given in the preCICE interface constructor({}) does not match the rank of "
                   "the passed MPI communicator ({}).",
-                  _accessorProcessRank, currentRank);
+                  _accessorProcessRank,
+                  currentRank);
     const auto currentSize = utils::Parallel::current()->size();
     PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
                   "The solver process size given in the preCICE interface constructor({}) does not match the size of "
                   "the passed MPI communicator ({}).",
-                  _accessorCommunicatorSize, currentSize);
+                  _accessorCommunicatorSize,
+                  currentSize);
   }
 #endif
 }
 
-SolverInterfaceImpl::SolverInterfaceImpl(std::string participantName, const std::string &configurationFileName,
-                                         int accessorProcessRank, int accessorCommunicatorSize)
-    : SolverInterfaceImpl::SolverInterfaceImpl(std::move(participantName), configurationFileName, accessorProcessRank,
-                                               accessorCommunicatorSize, nullptr)
+SolverInterfaceImpl::SolverInterfaceImpl(std::string        participantName,
+                                         const std::string &configurationFileName,
+                                         int                accessorProcessRank,
+                                         int                accessorCommunicatorSize)
+    : SolverInterfaceImpl::SolverInterfaceImpl(
+          std::move(participantName), configurationFileName, accessorProcessRank, accessorCommunicatorSize, nullptr)
 {
 }
 
@@ -209,9 +218,10 @@ void SolverInterfaceImpl::configure(const config::SolverInterfaceConfiguration &
   _participants = config.getParticipantConfiguration()->getParticipants();
   configureM2Ns(config.getM2NConfiguration());
 
-  PRECICE_CHECK(_participants.size() > 1, "In the preCICE configuration, only one participant is defined. "
-                                          "One participant makes no coupled simulation. "
-                                          "Please add at least another one.");
+  PRECICE_CHECK(_participants.size() > 1,
+                "In the preCICE configuration, only one participant is defined. "
+                "One participant makes no coupled simulation. "
+                "Please add at least another one.");
   configurePartitions(config.getM2NConfiguration());
 
   cplscheme::PtrCouplingSchemeConfiguration cplSchemeConfig = config.getCouplingSchemeConfiguration();
@@ -394,7 +404,8 @@ double SolverInterfaceImpl::advance(double computedTimestepLength)
                     (_hasInitializedData),
                 "initializeData() needs to be called before advance if data has to be initialized.");
   PRECICE_CHECK(!math::equals(computedTimestepLength, 0.0), "advance() cannot be called with a timestep size of 0.");
-  PRECICE_CHECK(computedTimestepLength > 0.0, "advance() cannot be called with a negative timestep size {}.",
+  PRECICE_CHECK(computedTimestepLength > 0.0,
+                "advance() cannot be called with a negative timestep size {}.",
                 computedTimestepLength);
   _numberAdvanceCalls++;
 
@@ -431,11 +442,11 @@ double SolverInterfaceImpl::advance(double computedTimestepLength)
   time                   = _couplingScheme->getTime();
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
-    performDataActions({action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart,
-                       timeWindowSize);
+    performDataActions(
+        {action::Action::WRITE_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart,
-                       timeWindowSize);
+    performDataActions(
+        {action::Action::WRITE_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
   PRECICE_DEBUG("Advance coupling scheme");
@@ -448,16 +459,19 @@ double SolverInterfaceImpl::advance(double computedTimestepLength)
   }
 
   if (_couplingScheme->hasDataBeenReceived()) {
-    performDataActions({action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart,
-                       timeWindowSize);
+    performDataActions(
+        {action::Action::READ_MAPPING_PRIOR}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart,
-                       timeWindowSize);
+    performDataActions(
+        {action::Action::READ_MAPPING_POST}, time, computedTimestepLength, timeWindowComputedPart, timeWindowSize);
   }
 
   if (_couplingScheme->isTimeWindowComplete()) {
-    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST}, time, computedTimestepLength,
-                       timeWindowComputedPart, timeWindowSize);
+    performDataActions({action::Action::ON_TIME_WINDOW_COMPLETE_POST},
+                       time,
+                       computedTimestepLength,
+                       timeWindowComputedPart,
+                       timeWindowSize);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -618,7 +632,8 @@ int SolverInterfaceImpl::getMeshID(const std::string &meshName) const
   PRECICE_CHECK(_accessor->isMeshUsed(meshName),
                 "The given mesh name \"{0}\" is not used by the participant \"{1}\". "
                 "Please define a <use-mesh name=\"{0}\"/> node for the particpant \"{1}\".",
-                meshName, _accessorName);
+                meshName,
+                _accessorName);
   return _accessor->getUsedMeshID(meshName);
 }
 
@@ -646,7 +661,8 @@ int SolverInterfaceImpl::getDataID(const std::string &dataName, MeshID meshID) c
   PRECICE_CHECK(_accessor->isDataUsed(dataName, meshID),
                 "Data with name \"{0}\" is not defined on mesh \"{1}\". "
                 "Please add <use-data name=\"{0}\"/> under <mesh name=\"{1}\"/>.",
-                dataName, _accessor->getMeshName(meshID));
+                dataName,
+                _accessor->getMeshName(meshID));
   return _accessor->getUsedDataID(dataName, meshID);
 }
 
@@ -673,7 +689,8 @@ int SolverInterfaceImpl::getMeshVertexSize(MeshID meshID) const
   PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID),
                 "initialize() has to be called before accessing"
                 " data of the received mesh \"{}\" on participant \"{}\".",
-                _accessor->getMeshName(meshID), _accessor->getName());
+                _accessor->getMeshName(meshID),
+                _accessor->getName());
 
   MeshContext &context = _accessor->usedMeshContext(meshID);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
@@ -721,8 +738,8 @@ void SolverInterfaceImpl::setMeshVertices(int meshID, int size, const double *po
   MeshContext & context = _accessor->usedMeshContext(meshID);
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Set positions");
-  const Eigen::Map<const Eigen::MatrixXd> posMatrix{positions, _dimensions,
-                                                    static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
+  const Eigen::Map<const Eigen::MatrixXd> posMatrix{
+      positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
   for (int i = 0; i < size; ++i) {
     Eigen::VectorXd current(posMatrix.col(i));
     ids[i] = mesh->createVertex(current).getID();
@@ -747,8 +764,10 @@ void SolverInterfaceImpl::getMeshVertices(int meshID, size_t size, const int *id
   }
 }
 
-void SolverInterfaceImpl::getMeshVertexIDsFromPositions(int meshID, size_t size, const double *positions,
-                                                        int *ids) const
+void SolverInterfaceImpl::getMeshVertexIDsFromPositions(int           meshID,
+                                                        size_t        size,
+                                                        const double *positions,
+                                                        int *         ids) const
 {
   PRECICE_TRACE(meshID, size);
   PRECICE_REQUIRE_MESH_USE(meshID);
@@ -756,9 +775,9 @@ void SolverInterfaceImpl::getMeshVertexIDsFromPositions(int meshID, size_t size,
   mesh::PtrMesh mesh(context.mesh);
   PRECICE_DEBUG("Get IDs");
   const auto &                      vertices = mesh->vertices();
-  Eigen::Map<const Eigen::MatrixXd> posMatrix{positions, _dimensions,
-                                              static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
-  const auto                        vsize = vertices.size();
+  Eigen::Map<const Eigen::MatrixXd> posMatrix{
+      positions, _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(size)};
+  const auto vsize = vertices.size();
   for (size_t i = 0; i < size; i++) {
     size_t j = 0;
     for (; j < vsize; j++) {
@@ -800,8 +819,9 @@ int SolverInterfaceImpl::setMeshEdge(MeshID meshID, int firstVertexID, int secon
 void SolverInterfaceImpl::setMeshTriangle(MeshID meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID)
 {
   PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTriangle is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(_dimensions == 3,
+                "setMeshTriangle is only possible for 3D cases."
+                " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -811,24 +831,31 @@ void SolverInterfaceImpl::setMeshTriangle(MeshID meshID, int firstEdgeID, int se
     PRECICE_CHECK(mesh->isValidEdgeID(secondEdgeID), errorInvalidEdgeID(secondEdgeID));
     PRECICE_CHECK(mesh->isValidEdgeID(thirdEdgeID), errorInvalidEdgeID(thirdEdgeID));
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID)),
-                  "setMeshTriangle() was called with repeated Edge IDs ({}, {}, {}).", firstEdgeID, secondEdgeID,
+                  "setMeshTriangle() was called with repeated Edge IDs ({}, {}, {}).",
+                  firstEdgeID,
+                  secondEdgeID,
                   thirdEdgeID);
     mesh::Edge &e0 = mesh->edges()[firstEdgeID];
     mesh::Edge &e1 = mesh->edges()[secondEdgeID];
     mesh::Edge &e2 = mesh->edges()[thirdEdgeID];
     PRECICE_CHECK(e0.connectedTo(e1) && e1.connectedTo(e2) && e2.connectedTo(e0),
                   "setMeshTriangle() was called with Edge IDs ({}, {}, {}), which identify unconnected Edges.",
-                  firstEdgeID, secondEdgeID, thirdEdgeID);
+                  firstEdgeID,
+                  secondEdgeID,
+                  thirdEdgeID);
     mesh->createTriangle(e0, e1, e2);
   }
 }
 
-void SolverInterfaceImpl::setMeshTriangleWithEdges(MeshID meshID, int firstVertexID, int secondVertexID,
-                                                   int thirdVertexID)
+void SolverInterfaceImpl::setMeshTriangleWithEdges(MeshID meshID,
+                                                   int    firstVertexID,
+                                                   int    secondVertexID,
+                                                   int    thirdVertexID)
 {
   PRECICE_TRACE(meshID, firstVertexID, secondVertexID, thirdVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTriangleWithEdges is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(_dimensions == 3,
+                "setMeshTriangleWithEdges is only possible for 3D cases."
+                " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -838,8 +865,10 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(MeshID meshID, int firstVerte
     PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
     PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
-                  "setMeshTriangleWithEdges() was called with repeated Vertex IDs ({}, {}, {}).", firstVertexID,
-                  secondVertexID, thirdVertexID);
+                  "setMeshTriangleWithEdges() was called with repeated Vertex IDs ({}, {}, {}).",
+                  firstVertexID,
+                  secondVertexID,
+                  thirdVertexID);
     mesh::Vertex *vertices[3];
     vertices[0] = &mesh->vertices()[firstVertexID];
     vertices[1] = &mesh->vertices()[secondVertexID];
@@ -848,7 +877,9 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(MeshID meshID, int firstVerte
         utils::unique_elements(
             utils::make_array(vertices[0]->getCoords(), vertices[1]->getCoords(), vertices[2]->getCoords())),
         "setMeshTriangleWithEdges() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
-        firstVertexID, secondVertexID, thirdVertexID);
+        firstVertexID,
+        secondVertexID,
+        thirdVertexID);
     mesh::Edge *edges[3];
     edges[0] = &mesh->createUniqueEdge(*vertices[0], *vertices[1]);
     edges[1] = &mesh->createUniqueEdge(*vertices[1], *vertices[2]);
@@ -858,12 +889,13 @@ void SolverInterfaceImpl::setMeshTriangleWithEdges(MeshID meshID, int firstVerte
   }
 }
 
-void SolverInterfaceImpl::setMeshQuad(MeshID meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID,
-                                      int fourthEdgeID)
+void SolverInterfaceImpl::setMeshQuad(
+    MeshID meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID, int fourthEdgeID)
 {
   PRECICE_TRACE(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases. "
-                                  "Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(_dimensions == 3,
+                "setMeshQuad is only possible for 3D cases. "
+                "Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -877,22 +909,26 @@ void SolverInterfaceImpl::setMeshQuad(MeshID meshID, int firstEdgeID, int second
     PRECICE_CHECK(utils::unique_elements(utils::make_array(firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID)),
                   "The four edge ID's are not unique. Please check that the edges that form the quad are correct.");
 
-    auto chain = mesh::asChain(utils::make_array(&mesh->edges()[firstEdgeID], &mesh->edges()[secondEdgeID],
-                                                 &mesh->edges()[thirdEdgeID], &mesh->edges()[fourthEdgeID]));
+    auto chain = mesh::asChain(utils::make_array(&mesh->edges()[firstEdgeID],
+                                                 &mesh->edges()[secondEdgeID],
+                                                 &mesh->edges()[thirdEdgeID],
+                                                 &mesh->edges()[fourthEdgeID]));
     PRECICE_CHECK(chain.connected,
                   "The four edges are not connect. Please check that the edges that form the quad are correct.");
 
     auto coords = mesh::coordsFor(chain.vertices);
-    PRECICE_CHECK(utils::unique_elements(coords), "The four vertices that form the quad are not unique. "
-                                                  "The resulting shape may be a point, line or triangle."
-                                                  "Please check that the adapter sends the four unique vertices that "
-                                                  "form the quad, or that the mesh on the interface "
-                                                  "is composed of planar quads.");
+    PRECICE_CHECK(utils::unique_elements(coords),
+                  "The four vertices that form the quad are not unique. "
+                  "The resulting shape may be a point, line or triangle."
+                  "Please check that the adapter sends the four unique vertices that "
+                  "form the quad, or that the mesh on the interface "
+                  "is composed of planar quads.");
 
     auto convexity = math::geometry::isConvexQuad(coords);
-    PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
-                                    "Please check that the adapter send the four correct vertices or that the "
-                                    "interface is composed of planar quads.");
+    PRECICE_CHECK(convexity.convex,
+                  "The given quad is not convex. "
+                  "Please check that the adapter send the four correct vertices or that the "
+                  "interface is composed of planar quads.");
 
     // Use the shortest diagonal to split the quad into 2 triangles.
     // The diagonal to be used with edges (1, 2) and (0, 3) of the chain
@@ -913,12 +949,13 @@ void SolverInterfaceImpl::setMeshQuad(MeshID meshID, int firstEdgeID, int second
   }
 }
 
-void SolverInterfaceImpl::setMeshQuadWithEdges(MeshID meshID, int firstVertexID, int secondVertexID, int thirdVertexID,
-                                               int fourthVertexID)
+void SolverInterfaceImpl::setMeshQuadWithEdges(
+    MeshID meshID, int firstVertexID, int secondVertexID, int thirdVertexID, int fourthVertexID)
 {
   PRECICE_TRACE(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuadWithEdges is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(_dimensions == 3,
+                "setMeshQuadWithEdges is only possible for 3D cases."
+                " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshID);
   MeshContext &context = _accessor->usedMeshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
@@ -1064,7 +1101,8 @@ void SolverInterfaceImpl::writeBlockVectorData(int dataID, int size, const int *
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from "
                   "calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
+                  context.getDataName(),
+                  valueIndex);
     const int offsetInternal = valueIndex * _dimensions;
     const int offset         = i * _dimensions;
     for (int dim = 0; dim < _dimensions; dim++) {
@@ -1094,7 +1132,8 @@ void SolverInterfaceImpl::writeVectorData(int dataID, int valueIndex, const doub
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from "
                 "calls to setMeshVertex/Vertices().",
-                context.getDataName(), valueIndex);
+                context.getDataName(),
+                valueIndex);
   const int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
     values[offset + dim] = value[dim];
@@ -1115,7 +1154,8 @@ void SolverInterfaceImpl::writeBlockScalarData(int dataID, int size, const int *
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call writeBlockScalarData on the vector data type \"{}\". Use writeBlockVectorData or "
                 "change the data type for \"{}\" to scalar.",
-                context.getDataName(), context.getDataName());
+                context.getDataName(),
+                context.getDataName());
   PRECICE_VALIDATE_DATA(values, size);
 
   mesh::Data &data           = *context.providedData();
@@ -1126,7 +1166,8 @@ void SolverInterfaceImpl::writeBlockScalarData(int dataID, int size, const int *
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot write data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the results from "
                   "calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
+                  context.getDataName(),
+                  valueIndex);
     valuesInternal[valueIndex] = values[i];
   }
 }
@@ -1141,7 +1182,8 @@ void SolverInterfaceImpl::writeScalarData(int dataID, int valueIndex, double val
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ({}) when writing scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
-                valueIndex, context.getDataName());
+                valueIndex,
+                context.getDataName());
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call writeScalarData on the vector data type \"{0}\". "
                 "Use writeVectorData or change the data type for \"{0}\" to scalar.",
@@ -1154,7 +1196,8 @@ void SolverInterfaceImpl::writeScalarData(int dataID, int valueIndex, double val
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot write data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                context.getDataName(), valueIndex);
+                context.getDataName(),
+                valueIndex);
   values[valueIndex] = value;
 
   PRECICE_DEBUG("Written scalar value = {}", value);
@@ -1198,12 +1241,14 @@ void SolverInterfaceImpl::writeScalarGradientData(int dataID, int valueIndex, co
     PRECICE_CHECK(valueIndex >= -1,
                   "Invalid value index ({}) when writing gradient scalar data. Value index must be >= 0. "
                   "Please check the value index for {}",
-                  valueIndex, data.getName());
+                  valueIndex,
+                  data.getName());
 
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot write data \"{}\" to invalid vertex ID ({}). "
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
+                  context.getDataName(),
+                  valueIndex);
 
     PRECICE_CHECK(data.getDimensions() == 1,
                   "You cannot call writeGradientScalarData on the vector data type \"{0}\". "
@@ -1217,7 +1262,9 @@ void SolverInterfaceImpl::writeScalarGradientData(int dataID, int valueIndex, co
   }
 }
 
-void SolverInterfaceImpl::writeBlockScalarGradientData(int dataID, int size, const int *valueIndices,
+void SolverInterfaceImpl::writeBlockScalarGradientData(int           dataID,
+                                                       int           size,
+                                                       const int *   valueIndices,
                                                        const double *gradientValues)
 {
 
@@ -1249,7 +1296,8 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(int dataID, int size, con
     PRECICE_CHECK(data.getDimensions() == 1,
                   "You cannot call writeBlockScalarGradientData on the vector data type \"{}\". Use "
                   "writeBlockVectorGradientData or change the data type for \"{}\" to scalar.",
-                  data.getName(), data.getName());
+                  data.getName(),
+                  data.getName());
 
     PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions, data.getSpatialDimensions(), _dimensions);
 
@@ -1266,12 +1314,14 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(int dataID, int size, con
         PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                       "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the "
                       "results from calls to setMeshVertex/Vertices().",
-                      context.getDataName(), valueIndex);
+                      context.getDataName(),
+                      valueIndex);
 
         // Gradient values are entered components derived first
         const int offset = i * _dimensions;
 
-        PRECICE_ASSERT(offset + dim < gradientValuesInternal.cols() * _dimensions, offset + dim,
+        PRECICE_ASSERT(offset + dim < gradientValuesInternal.cols() * _dimensions,
+                       offset + dim,
                        gradientValuesInternal.cols() * _dimensions);
 
         gradientValuesInternal(dim, valueIndex) = gradientValues[offset + dim];
@@ -1280,8 +1330,10 @@ void SolverInterfaceImpl::writeBlockScalarGradientData(int dataID, int size, con
   }
 }
 
-void SolverInterfaceImpl::writeVectorGradientData(int dataID, int valueIndex, const double *gradientValues,
-                                                  bool rowsFirst)
+void SolverInterfaceImpl::writeVectorGradientData(int           dataID,
+                                                  int           valueIndex,
+                                                  const double *gradientValues,
+                                                  bool          rowsFirst)
 {
   PRECICE_EXPERIMENTAL_API();
 
@@ -1307,7 +1359,8 @@ void SolverInterfaceImpl::writeVectorGradientData(int dataID, int valueIndex, co
     PRECICE_CHECK(data.getDimensions() > 1,
                   "You cannot call writeVectorGradientData on the scalar data type \"{}\". Use writeScalarGradientData "
                   "or change the data type for \"{}\" to vector.",
-                  data.getName(), data.getName());
+                  data.getName(),
+                  data.getName());
 
     PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions, data.getSpatialDimensions(), _dimensions);
 
@@ -1320,7 +1373,8 @@ void SolverInterfaceImpl::writeVectorGradientData(int dataID, int valueIndex, co
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use the "
                   "results from calls to setMeshVertex/Vertices().",
-                  data.getName(), valueIndex)
+                  data.getName(),
+                  valueIndex)
 
     for (int dimSpace = 0; dimSpace < _dimensions; dimSpace++) {
       for (int dimData = 0; dimData < _dimensions; dimData++) {
@@ -1331,7 +1385,8 @@ void SolverInterfaceImpl::writeVectorGradientData(int dataID, int valueIndex, co
           // Values are entered derived in spatial dimensions first : gradient matrix read rowwise
           const int offset = dimData * _dimensions;
 
-          PRECICE_ASSERT(offset + dimSpace < gradientValuesInternal.cols() * _dimensions, offset + dimSpace,
+          PRECICE_ASSERT(offset + dimSpace < gradientValuesInternal.cols() * _dimensions,
+                         offset + dimSpace,
                          gradientValuesInternal.cols() * _dimensions);
 
           gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimSpace];
@@ -1339,7 +1394,8 @@ void SolverInterfaceImpl::writeVectorGradientData(int dataID, int valueIndex, co
           // Values are entered derived components first : gradient matrix read columnwise
           const int offset = dimSpace * _dimensions;
 
-          PRECICE_ASSERT(offset + dimData < gradientValuesInternal.cols() * _dimensions, offset + dimData,
+          PRECICE_ASSERT(offset + dimData < gradientValuesInternal.cols() * _dimensions,
+                         offset + dimData,
                          gradientValuesInternal.cols() * _dimensions);
 
           gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offset + dimData];
@@ -1349,8 +1405,8 @@ void SolverInterfaceImpl::writeVectorGradientData(int dataID, int valueIndex, co
   }
 }
 
-void SolverInterfaceImpl::writeBlockVectorGradientData(int dataID, int size, const int *valueIndices,
-                                                       const double *gradientValues, bool rowsFirst)
+void SolverInterfaceImpl::writeBlockVectorGradientData(
+    int dataID, int size, const int *valueIndices, const double *gradientValues, bool rowsFirst)
 {
 
   PRECICE_EXPERIMENTAL_API();
@@ -1384,7 +1440,8 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(int dataID, int size, con
     PRECICE_CHECK(data.getDimensions() > 1,
                   "You cannot call writeBlockVectorGradientData on the scalar data type \"{}\". Use "
                   "writeBlockScalarGradientData or change the data type for \"{}\" to vector.",
-                  data.getName(), data.getName());
+                  data.getName(),
+                  data.getName());
 
     PRECICE_ASSERT(data.getSpatialDimensions() == _dimensions, data.getSpatialDimensions(), _dimensions);
 
@@ -1402,7 +1459,8 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(int dataID, int size, con
           PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                         "Cannot write gradient data \"{}\" to invalid Vertex ID ({}). Please make sure you only use "
                         "the results from calls to setMeshVertex/Vertices().",
-                        data.getName(), valueIndex);
+                        data.getName(),
+                        valueIndex);
 
           const int offsetInternal = valueIndex * _dimensions;
 
@@ -1413,7 +1471,8 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(int dataID, int size, con
             const int offsetIn  = dimSpace * _dimensions;
 
             PRECICE_ASSERT(offsetOut + offsetIn + dimData < gradientValuesInternal.cols() * _dimensions,
-                           offsetOut + offsetIn + dimData, gradientValuesInternal.cols() * _dimensions);
+                           offsetOut + offsetIn + dimData,
+                           gradientValuesInternal.cols() * _dimensions);
 
             gradientValuesInternal(dimSpace, offsetInternal + dimData) = gradientValues[offsetOut + offsetIn + dimData];
           } else {
@@ -1423,7 +1482,8 @@ void SolverInterfaceImpl::writeBlockVectorGradientData(int dataID, int size, con
             const int offsetIn  = dimData * _dimensions;
 
             PRECICE_ASSERT(offsetOut + offsetIn + dimSpace < gradientValuesInternal.cols() * _dimensions,
-                           offsetOut + offsetIn + dimSpace, gradientValuesInternal.cols() * _dimensions);
+                           offsetOut + offsetIn + dimSpace,
+                           gradientValuesInternal.cols() * _dimensions);
 
             gradientValuesInternal(dimSpace, offsetInternal + dimData) =
                 gradientValues[offsetOut + offsetIn + dimSpace];
@@ -1443,21 +1503,23 @@ void SolverInterfaceImpl::readBlockVectorData(int dataID, int size, const int *v
                  "providing a relativeReadTime. This looks like an error. You can fix this by providing a "
                  "relativeReadTime to {} or by setting interpolation order to 0.",
                  _accessor->readDataContext(dataID).getDataName(),
-                 _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+                 _accessor->readDataContext(dataID).getInterpolationOrder(),
+                 __func__,
+                 __func__);
   }
   readBlockVectorDataImpl(dataID, size, valueIndices, relativeTimeWindowEndTime, values);
 }
 
-void SolverInterfaceImpl::readBlockVectorData(int dataID, int size, const int *valueIndices, double relativeReadTime,
-                                              double *values) const
+void SolverInterfaceImpl::readBlockVectorData(
+    int dataID, int size, const int *valueIndices, double relativeReadTime, double *values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_EXPERIMENTAL_API();
   readBlockVectorDataImpl(dataID, size, valueIndices, relativeReadTime, values);
 }
 
-void SolverInterfaceImpl::readBlockVectorDataImpl(int dataID, int size, const int *valueIndices,
-                                                  double relativeReadTime, double *values) const
+void SolverInterfaceImpl::readBlockVectorDataImpl(
+    int dataID, int size, const int *valueIndices, double relativeReadTime, double *values) const
 {
   PRECICE_CHECK(_state != State::Finalized, "readBlockVectorData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(),
@@ -1484,7 +1546,8 @@ void SolverInterfaceImpl::readBlockVectorDataImpl(int dataID, int size, const in
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
+                  context.getDataName(),
+                  valueIndex);
     int offsetInternal = valueIndex * _dimensions;
     int offset         = i * _dimensions;
     for (int dim = 0; dim < _dimensions; dim++) {
@@ -1502,7 +1565,9 @@ void SolverInterfaceImpl::readVectorData(int dataID, int valueIndex, double *val
                  "providing a relativeReadTime. This looks like an error. You can fix this by providing a "
                  "relativeReadTime to {} or by setting interpolation order to 0.",
                  _accessor->readDataContext(dataID).getDataName(),
-                 _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+                 _accessor->readDataContext(dataID).getInterpolationOrder(),
+                 __func__,
+                 __func__);
   }
   readVectorDataImpl(dataID, valueIndex, relativeTimeWindowEndTime, value);
 }
@@ -1527,7 +1592,8 @@ void SolverInterfaceImpl::readVectorDataImpl(int dataID, int valueIndex, double 
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading vector data. Value index must be >= 0. "
                 "Please check the value index for {}",
-                valueIndex, context.getDataName());
+                valueIndex,
+                context.getDataName());
   PRECICE_CHECK(context.getDataDimensions() == _dimensions,
                 "You cannot call readVectorData on the scalar data type \"{0}\". Use readScalarData or change the data "
                 "type for \"{0}\" to vector.",
@@ -1539,7 +1605,8 @@ void SolverInterfaceImpl::readVectorDataImpl(int dataID, int valueIndex, double 
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                context.getDataName(), valueIndex);
+                context.getDataName(),
+                valueIndex);
   int offset = valueIndex * _dimensions;
   for (int dim = 0; dim < _dimensions; dim++) {
     value[dim] = values[offset + dim];
@@ -1558,21 +1625,23 @@ void SolverInterfaceImpl::readBlockScalarData(int dataID, int size, const int *v
                  "providing a relativeReadTime. This looks like an error. You can fix this by providing a "
                  "relativeReadTime to {} or by setting interpolation order to 0.",
                  _accessor->readDataContext(dataID).getDataName(),
-                 _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+                 _accessor->readDataContext(dataID).getInterpolationOrder(),
+                 __func__,
+                 __func__);
   }
   readBlockScalarDataImpl(dataID, size, valueIndices, relativeTimeWindowEndTime, values);
 }
 
-void SolverInterfaceImpl::readBlockScalarData(int dataID, int size, const int *valueIndices, double relativeReadTime,
-                                              double *values) const
+void SolverInterfaceImpl::readBlockScalarData(
+    int dataID, int size, const int *valueIndices, double relativeReadTime, double *values) const
 {
   PRECICE_TRACE(dataID, size);
   PRECICE_EXPERIMENTAL_API();
   readBlockScalarDataImpl(dataID, size, valueIndices, relativeReadTime, values);
 }
 
-void SolverInterfaceImpl::readBlockScalarDataImpl(int dataID, int size, const int *valueIndices,
-                                                  double relativeReadTime, double *values) const
+void SolverInterfaceImpl::readBlockScalarDataImpl(
+    int dataID, int size, const int *valueIndices, double relativeReadTime, double *values) const
 {
   PRECICE_CHECK(_state != State::Finalized, "readBlockScalarData(...) cannot be called after finalize().");
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getThisTimeWindowRemainder(),
@@ -1600,7 +1669,8 @@ void SolverInterfaceImpl::readBlockScalarDataImpl(int dataID, int size, const in
     PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                   "Cannot read data \"{}\" to invalid Vertex ID ({}). "
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                  context.getDataName(), valueIndex);
+                  context.getDataName(),
+                  valueIndex);
     values[i] = valuesInternal[valueIndex];
   }
 }
@@ -1614,7 +1684,9 @@ void SolverInterfaceImpl::readScalarData(int dataID, int valueIndex, double &val
                  "providing a relativeReadTime. This looks like an error. You can fix this by providing a "
                  "relativeReadTime to {} or by setting interpolation order to 0.",
                  _accessor->readDataContext(dataID).getDataName(),
-                 _accessor->readDataContext(dataID).getInterpolationOrder(), __func__, __func__);
+                 _accessor->readDataContext(dataID).getInterpolationOrder(),
+                 __func__,
+                 __func__);
   }
   readScalarDataImpl(dataID, valueIndex, relativeTimeWindowEndTime, value);
 }
@@ -1639,7 +1711,8 @@ void SolverInterfaceImpl::readScalarDataImpl(int dataID, int valueIndex, double 
   PRECICE_CHECK(valueIndex >= -1,
                 "Invalid value index ( {} ) when reading scalar data. Value index must be >= 0. "
                 "Please check the value index for {}",
-                valueIndex, context.getDataName());
+                valueIndex,
+                context.getDataName());
   PRECICE_CHECK(context.getDataDimensions() == 1,
                 "You cannot call readScalarData on the vector data type \"{0}\". "
                 "Use readVectorData or change the data type for \"{0}\" to scalar.",
@@ -1651,7 +1724,8 @@ void SolverInterfaceImpl::readScalarDataImpl(int dataID, int valueIndex, double 
   PRECICE_CHECK(0 <= valueIndex && valueIndex < vertexCount,
                 "Cannot read data \"{}\" from invalid Vertex ID ({}). "
                 "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
-                context.getDataName(), valueIndex);
+                context.getDataName(),
+                valueIndex);
   value = values[valueIndex];
   PRECICE_DEBUG("Read value = {}", value);
 }
@@ -1701,7 +1775,8 @@ void SolverInterfaceImpl::getMeshVerticesAndIDs(const int meshID, const int size
   PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshID),
                 "initialize() has to be called before accessing"
                 " data of the received mesh \"{}\" on participant \"{}\".",
-                _accessor->getMeshName(meshID), _accessor->getName());
+                _accessor->getMeshName(meshID),
+                _accessor->getName());
 
   if (size == 0)
     return;
@@ -1776,8 +1851,10 @@ void SolverInterfaceImpl::configurePartitions(const m2n::M2NConfiguration::Share
   for (MeshContext *context : _accessor->usedMeshContexts()) {
 
     if (context->provideMesh) { // Accessor provides mesh
-      PRECICE_CHECK(context->receiveMeshFrom.empty(), "Participant \"{}\" cannot provide and receive mesh {}!",
-                    _accessorName, context->mesh->getName());
+      PRECICE_CHECK(context->receiveMeshFrom.empty(),
+                    "Participant \"{}\" cannot provide and receive mesh {}!",
+                    _accessorName,
+                    context->mesh->getName());
 
       context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh));
 
@@ -1804,12 +1881,18 @@ void SolverInterfaceImpl::configurePartitions(const m2n::M2NConfiguration::Share
           not context->receiveMeshFrom.empty(),
           "Participant \"{}\" must either provide or receive the mesh \"{}\". "
           "Please define either a \"from\" or a \"provide\" attribute in the <use-mesh name=\"{}\"/> node of \"{}\".",
-          _accessorName, context->mesh->getName(), context->mesh->getName(), _accessorName);
+          _accessorName,
+          context->mesh->getName(),
+          context->mesh->getName(),
+          _accessorName);
       PRECICE_CHECK(
           not context->provideMesh,
           "Participant \"{}\" cannot provide and receive mesh \"{}\" at the same time. "
           "Please check your \"from\" and \"provide\" attributes in the <use-mesh name=\"{}\"/> node of \"{}\".",
-          _accessorName, context->mesh->getName(), context->mesh->getName(), _accessorName);
+          _accessorName,
+          context->mesh->getName(),
+          context->mesh->getName(),
+          _accessorName);
       std::string receiver(_accessorName);
       std::string provider(context->receiveMeshFrom);
 
@@ -1834,7 +1917,8 @@ void SolverInterfaceImpl::configurePartitions(const m2n::M2NConfiguration::Share
 void SolverInterfaceImpl::compareBoundingBoxes()
 {
   // sort meshContexts by name, for communication in right order.
-  std::sort(_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+  std::sort(_accessor->usedMeshContexts().begin(),
+            _accessor->usedMeshContexts().end(),
             [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
               return lhs->mesh->getName() < rhs->mesh->getName();
             });
@@ -1880,8 +1964,9 @@ void SolverInterfaceImpl::computePartitions()
 
   if (resort) {
     // pull provided meshes up front, to have them ready for the decomposition of the received meshes (for the mappings)
-    std::stable_partition(contexts.begin(), contexts.end(),
-                          [](MeshContext const *const meshContext) -> bool { return meshContext->provideMesh; });
+    std::stable_partition(contexts.begin(), contexts.end(), [](MeshContext const *const meshContext) -> bool {
+      return meshContext->provideMesh;
+    });
   }
 
   for (MeshContext *meshContext : contexts) {
@@ -1907,7 +1992,8 @@ void SolverInterfaceImpl::computeMappings(const utils::ptr_vector<MappingContext
     mapNow |= timing == MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     if (mapNow && not hasComputed) {
-      PRECICE_INFO("Compute \"{}\" mapping from mesh \"{}\" to mesh \"{}\".", mappingType,
+      PRECICE_INFO("Compute \"{}\" mapping from mesh \"{}\" to mesh \"{}\".",
+                   mappingType,
                    _accessor->meshContext(context.fromMeshID).mesh->getName(),
                    _accessor->meshContext(context.toMeshID).mesh->getName());
       context.mapping->computeMapping();
@@ -1956,8 +2042,11 @@ void SolverInterfaceImpl::mapReadData()
   clearMappings(_accessor->readMappingContexts());
 }
 
-void SolverInterfaceImpl::performDataActions(const std::set<action::Action::Timing> &timings, double time,
-                                             double timeStepSize, double computedTimeWindowPart, double timeWindowSize)
+void SolverInterfaceImpl::performDataActions(const std::set<action::Action::Timing> &timings,
+                                             double                                  time,
+                                             double                                  timeStepSize,
+                                             double                                  computedTimeWindowPart,
+                                             double                                  timeWindowSize)
 {
   PRECICE_TRACE();
   for (action::PtrAction &action : _accessor->actions()) {
@@ -2028,8 +2117,8 @@ void SolverInterfaceImpl::initializeMasterSlaveCommunication()
   PRECICE_TRACE();
 
   Event e("com.initializeMasterSlaveCom", precice::syncMode);
-  utils::MasterSlave::getCommunication()->connectIntraComm(_accessorName, "IntraComm", _accessorProcessRank,
-                                                           _accessorCommunicatorSize);
+  utils::MasterSlave::getCommunication()->connectIntraComm(
+      _accessorName, "IntraComm", _accessorProcessRank, _accessorCommunicatorSize);
 }
 
 void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
@@ -2045,7 +2134,9 @@ void SolverInterfaceImpl::syncTimestep(double computedTimestepLength)
       PRECICE_CHECK(math::equals(dt, computedTimestepLength),
                     "Found ambiguous values for the timestep length passed to preCICE in \"advance\". On rank {}, the "
                     "value is {}, while on rank 0, the value is {}.",
-                    secondaryRank, dt, computedTimestepLength);
+                    secondaryRank,
+                    dt,
+                    computedTimestepLength);
     }
   }
 }

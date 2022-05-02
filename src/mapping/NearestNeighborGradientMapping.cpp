@@ -74,14 +74,19 @@ void NearestNeighborGradientMapping::map(int inputDataID, int outputDataID)
   PRECICE_CHECK(input()->data(inputDataID)->hasGradient(),
                 "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data "
                 "for each vertices.",
-                "Check if hasGradient flag in the Data object was successfully initialized.", input()->getName());
+                "Check if hasGradient flag in the Data object was successfully initialized.",
+                input()->getName());
 
   const Eigen::MatrixXd &gradientValues = input()->data(inputDataID)->gradientValues();
 
   PRECICE_ASSERT(inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size()),
-                 inputValues.size(), valueDimensions, input()->vertices().size());
+                 inputValues.size(),
+                 valueDimensions,
+                 input()->vertices().size());
   PRECICE_ASSERT(outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size()),
-                 outputValues.size(), valueDimensions, output()->vertices().size());
+                 outputValues.size(),
+                 valueDimensions,
+                 output()->vertices().size());
 
   // Consistent mapping
   PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));

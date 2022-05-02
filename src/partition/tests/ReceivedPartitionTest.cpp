@@ -495,7 +495,11 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
 
     mapping::PtrMapping boundingFromMapping =
         mapping::PtrMapping(new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(
-            mapping::Mapping::CONSISTENT, dimensions, mapping::CompactThinPlateSplinesC2(supportRadius), false, false,
+            mapping::Mapping::CONSISTENT,
+            dimensions,
+            mapping::CompactThinPlateSplinesC2(supportRadius),
+            false,
+            false,
             false));
     mapping::PtrMapping boundingToMapping =
         mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
@@ -569,7 +573,11 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
 
     mapping::PtrMapping boundingFromMapping =
         mapping::PtrMapping(new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(
-            mapping::Mapping::CONSISTENT, dimensions, mapping::CompactThinPlateSplinesC2(supportRadius), false, false,
+            mapping::Mapping::CONSISTENT,
+            dimensions,
+            mapping::CompactThinPlateSplinesC2(supportRadius),
+            false,
+            false,
             false));
     mapping::PtrMapping boundingToMapping =
         mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));
@@ -650,12 +658,20 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
 
     mapping::PtrMapping boundingFromMapping =
         mapping::PtrMapping(new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(
-            mapping::Mapping::CONSISTENT, dimensions, mapping::CompactThinPlateSplinesC2(supportRadius1), false, false,
+            mapping::Mapping::CONSISTENT,
+            dimensions,
+            mapping::CompactThinPlateSplinesC2(supportRadius1),
+            false,
+            false,
             false));
     mapping::PtrMapping boundingToMapping =
         mapping::PtrMapping(new mapping::PetRadialBasisFctMapping<mapping::CompactThinPlateSplinesC2>(
-            mapping::Mapping::CONSERVATIVE, dimensions, mapping::CompactThinPlateSplinesC2(supportRadius2), false,
-            false, false));
+            mapping::Mapping::CONSERVATIVE,
+            dimensions,
+            mapping::CompactThinPlateSplinesC2(supportRadius2),
+            false,
+            false,
+            false));
     boundingFromMapping->setMeshes(pSolidzMesh, pNastinMesh);
     boundingToMapping->setMeshes(pNastinMesh, pSolidzMesh);
 

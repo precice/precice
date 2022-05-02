@@ -35,7 +35,8 @@ void ConstantPreconditioner::initialize(std::vector<size_t> &svs)
   }
 }
 
-void ConstantPreconditioner::_update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues,
+void ConstantPreconditioner::_update_(bool                   timeWindowComplete,
+                                      const Eigen::VectorXd &oldValues,
                                       const Eigen::VectorXd &res)
 {
 

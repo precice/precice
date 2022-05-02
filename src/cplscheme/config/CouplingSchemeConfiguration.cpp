@@ -39,7 +39,8 @@
 namespace precice {
 namespace cplscheme {
 
-CouplingSchemeConfiguration::CouplingSchemeConfiguration(xml::XMLTag &parent, mesh::PtrMeshConfiguration meshConfig,
+CouplingSchemeConfiguration::CouplingSchemeConfiguration(xml::XMLTag &                        parent,
+                                                         mesh::PtrMeshConfiguration           meshConfig,
                                                          m2n::M2NConfiguration::SharedPointer m2nConfig,
                                                          config::PtrParticipantConfiguration  participantConfig)
     : TAG("coupling-scheme"), TAG_PARTICIPANTS("participants"), TAG_PARTICIPANT("participant"),
@@ -137,7 +138,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(const xml::ConfigurationContext
                   "Provided first participant equals second participant in coupling scheme. "
                   "Please correct the <participants first=\"{}\" second=\"{}\" /> tag in the <coupling-scheme:...> of "
                   "your precice-config.xml",
-                  first, second);
+                  first,
+                  second);
     _config.participants.push_back(second);
   } else if (tag.getName() == TAG_PARTICIPANT) {
     PRECICE_ASSERT(_config.type == VALUE_MULTI);
@@ -156,7 +158,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(const xml::ConfigurationContext
                     "Only one controller per MultiCouplingScheme can be defined. "
                     "Please check the <participant name=\"{}\" control=\"{}\" /> tag in the <coupling-scheme:...> of "
                     "your precice-config.xml",
-                    participantName, control);
+                    participantName,
+                    control);
       _config.controller    = participantName;
       _config.setController = true;
     }
@@ -186,20 +189,26 @@ void CouplingSchemeConfiguration::xmlTagCallback(const xml::ConfigurationContext
                     "Time window size has to be larger than zero. "
                     "Please check the <time-window-size value=\"{}\" valid-digits=\"{}\" method=\"{}\" /> tag "
                     "in the <coupling-scheme:...> of your precice-config.xml",
-                    _config.timeWindowSize, _config.validDigits, tag.getStringAttributeValue(ATTR_METHOD));
+                    _config.timeWindowSize,
+                    _config.validDigits,
+                    tag.getStringAttributeValue(ATTR_METHOD));
     } else {
       PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE);
       PRECICE_CHECK(_config.timeWindowSize == -1,
                     "Time window size value has to be equal to -1 (default), if method=\"first-participant\" is used. "
                     "Please check the <time-window-size value=\"{}\" valid-digits=\"{}\" method=\"{}\" /> "
                     "tag in the <coupling-scheme:...> of your precice-config.xml",
-                    _config.timeWindowSize, _config.validDigits, tag.getStringAttributeValue(ATTR_METHOD));
+                    _config.timeWindowSize,
+                    _config.validDigits,
+                    tag.getStringAttributeValue(ATTR_METHOD));
     }
     PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),
                   "Valid digits of time window size has to be between 1 and 16. "
                   "Please check the <time-window-size value=\"{}\" valid-digits=\"{}\" method=\"{}\" /> tag "
                   "in the <coupling-scheme:...> of your precice-config.xml",
-                  _config.timeWindowSize, _config.validDigits, tag.getStringAttributeValue(ATTR_METHOD));
+                  _config.timeWindowSize,
+                  _config.validDigits,
+                  tag.getStringAttributeValue(ATTR_METHOD));
   } else if (tag.getName() == TAG_ABS_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
     const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
@@ -247,7 +256,12 @@ void CouplingSchemeConfiguration::xmlTagCallback(const xml::ConfigurationContext
                   "Mesh \"{}\" with data \"{}\" not defined. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> "
                   "tag in the <coupling-scheme:... /> of your precice-config.xml.",
-                  nameMesh, nameData, nameData, nameMesh, nameParticipantFrom, nameParticipantTo);
+                  nameMesh,
+                  nameData,
+                  nameData,
+                  nameMesh,
+                  nameParticipantFrom,
+                  nameParticipantTo);
 
     mesh::PtrMesh exchangeMesh = _meshConfig->getMesh(nameMesh);
     PRECICE_ASSERT(exchangeMesh);
@@ -635,16 +649,17 @@ void CouplingSchemeConfiguration::addTagAcceleration(xml::XMLTag &tag)
   _accelerationConfig->connectTags(tag);
 }
 
-void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(const std::string &dataName,
-                                                                const std::string &meshName, double limit,
-                                                                bool suffices, bool strict)
+void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
+    const std::string &dataName, const std::string &meshName, double limit, bool suffices, bool strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0),
                 "Absolute convergence limit has to be greater than zero. "
                 "Please check the <absolute-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
-                limit, dataName, meshName);
+                limit,
+                dataName,
+                meshName);
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
   convMeasureDef.data        = getData(dataName, meshName);
@@ -656,16 +671,17 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(const std::strin
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
-void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(const std::string &dataName,
-                                                                const std::string &meshName, double limit,
-                                                                bool suffices, bool strict)
+void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
+    const std::string &dataName, const std::string &meshName, double limit, bool suffices, bool strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
                 "Relative convergence limit has to be in ]0;1]. "
                 "Please check the <relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
-                limit, dataName, meshName);
+                limit,
+                dataName,
+                meshName);
 
   impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
@@ -678,16 +694,17 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(const std::strin
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
-void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(const std::string &dataName,
-                                                                        const std::string &meshName, double limit,
-                                                                        bool suffices, bool strict)
+void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
+    const std::string &dataName, const std::string &meshName, double limit, bool suffices, bool strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
                 "Relative convergence limit has to be in ]0;1]. "
                 "Please check the <residul-relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
-                limit, dataName, meshName);
+                limit,
+                dataName,
+                meshName);
   impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
   convMeasureDef.data        = getData(dataName, meshName);
@@ -699,9 +716,8 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(const st
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
-void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(const std::string &dataName,
-                                                                    const std::string &meshName, int minIterations,
-                                                                    bool suffices, bool strict)
+void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
+    const std::string &dataName, const std::string &meshName, int minIterations, bool suffices, bool strict)
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(new impl::MinIterationConvergenceMeasure(minIterations));
@@ -718,7 +734,9 @@ void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(const std::s
 mesh::PtrData CouplingSchemeConfiguration::getData(const std::string &dataName, const std::string &meshName) const
 {
   PRECICE_CHECK(_meshConfig->hasMeshName(meshName) && _meshConfig->getMesh(meshName)->data(dataName),
-                "Data \"{}\" used by mesh \"{}\" is not configured.", dataName, meshName);
+                "Data \"{}\" used by mesh \"{}\" is not configured.",
+                dataName,
+                meshName);
   const mesh::PtrMesh &mesh = _meshConfig->getMesh(meshName);
   return mesh->data(dataName);
 }
@@ -737,9 +755,16 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
 {
   PRECICE_TRACE(accessor);
   m2n::PtrM2N           m2n    = _m2nConfig->getM2N(_config.participants[0], _config.participants[1]);
-  SerialCouplingScheme *scheme = new SerialCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.validDigits, _config.participants[0],
-      _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+  SerialCouplingScheme *scheme = new SerialCouplingScheme(_config.maxTime,
+                                                          _config.maxTimeWindows,
+                                                          _config.timeWindowSize,
+                                                          _config.validDigits,
+                                                          _config.participants[0],
+                                                          _config.participants[1],
+                                                          accessor,
+                                                          m2n,
+                                                          _config.dtMethod,
+                                                          BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -750,9 +775,16 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
 {
   PRECICE_TRACE(accessor);
   m2n::PtrM2N             m2n    = _m2nConfig->getM2N(_config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.validDigits, _config.participants[0],
-      _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime,
+                                                              _config.maxTimeWindows,
+                                                              _config.timeWindowSize,
+                                                              _config.validDigits,
+                                                              _config.participants[0],
+                                                              _config.participants[1],
+                                                              accessor,
+                                                              m2n,
+                                                              _config.dtMethod,
+                                                              BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -767,9 +799,18 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   const auto second = _config.participants[1];
 
   m2n::PtrM2N           m2n    = _m2nConfig->getM2N(first, second);
-  SerialCouplingScheme *scheme = new SerialCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.validDigits, first, second, accessor,
-      m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
+  SerialCouplingScheme *scheme = new SerialCouplingScheme(_config.maxTime,
+                                                          _config.maxTimeWindows,
+                                                          _config.timeWindowSize,
+                                                          _config.validDigits,
+                                                          first,
+                                                          second,
+                                                          accessor,
+                                                          m2n,
+                                                          _config.dtMethod,
+                                                          BaseCouplingScheme::Implicit,
+                                                          _config.maxIterations,
+                                                          _config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(
@@ -803,11 +844,19 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
 PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingScheme(const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
-  m2n::PtrM2N             m2n = _m2nConfig->getM2N(_config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme =
-      new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.validDigits,
-                                 _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod,
-                                 BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
+  m2n::PtrM2N             m2n    = _m2nConfig->getM2N(_config.participants[0], _config.participants[1]);
+  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime,
+                                                              _config.maxTimeWindows,
+                                                              _config.timeWindowSize,
+                                                              _config.validDigits,
+                                                              _config.participants[0],
+                                                              _config.participants[1],
+                                                              accessor,
+                                                              m2n,
+                                                              _config.dtMethod,
+                                                              BaseCouplingScheme::Implicit,
+                                                              _config.maxIterations,
+                                                              _config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(
@@ -843,8 +892,15 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(const s
     }
   }
 
-  scheme = new MultiCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.validDigits,
-                                   accessor, m2ns, _config.dtMethod, _config.controller, _config.maxIterations,
+  scheme = new MultiCouplingScheme(_config.maxTime,
+                                   _config.maxTimeWindows,
+                                   _config.timeWindowSize,
+                                   _config.validDigits,
+                                   accessor,
+                                   m2ns,
+                                   _config.dtMethod,
+                                   _config.controller,
+                                   _config.maxIterations,
                                    _config.extrapolationOrder);
 
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
@@ -907,19 +963,30 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(BiCouplingScheme &scheme,
                   "You cannot define an exchange from and to the same participant. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the "
                   "<coupling-scheme:... /> of your precice-config.xml.",
-                  dataName, meshName, from, to);
+                  dataName,
+                  meshName,
+                  from,
+                  to);
 
     PRECICE_CHECK((utils::contained(from, _config.participants) || from == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the "
                   "<coupling-scheme:... /> of your precice-config.xml.",
-                  from, dataName, meshName, from, to);
+                  from,
+                  dataName,
+                  meshName,
+                  from,
+                  to);
 
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the "
                   "<coupling-scheme:... /> of your precice-config.xml.",
-                  to, dataName, meshName, from, to);
+                  to,
+                  dataName,
+                  meshName,
+                  from,
+                  to);
 
     const bool requiresInitialization = exchange.requiresInitialization;
     if (from == accessor) {
@@ -929,7 +996,11 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(BiCouplingScheme &scheme,
                       "In serial coupling only second participant can initialize data and send it. "
                       "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> "
                       "tag in the <coupling-scheme:... /> of your precice-config.xml.",
-                      dataName, meshName, from, to, requiresInitialization);
+                      dataName,
+                      meshName,
+                      from,
+                      to,
+                      requiresInitialization);
       }
     } else if (to == accessor) {
       scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization);
@@ -938,7 +1009,11 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(BiCouplingScheme &scheme,
                       "In serial coupling only first participant can receive initial data. "
                       "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> "
                       "tag in the <coupling-scheme:... /> of your precice-config.xml.",
-                      dataName, meshName, from, to, requiresInitialization);
+                      dataName,
+                      meshName,
+                      from,
+                      to,
+                      requiresInitialization);
       }
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
@@ -960,13 +1035,18 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(MultiCouplingScheme 
                   "You cannot define an exchange from and to the same participant. "
                   "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the "
                   "<coupling-scheme:... /> of your precice-config.xml.",
-                  dataName, meshName, from, to);
+                  dataName,
+                  meshName,
+                  from,
+                  to);
 
     PRECICE_CHECK((utils::contained(from, _config.participants) || from == _config.controller),
-                  "Participant \"{}\" is not configured for coupling scheme", from);
+                  "Participant \"{}\" is not configured for coupling scheme",
+                  from);
 
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
-                  "Participant \"{}\" is not configured for coupling scheme", to);
+                  "Participant \"{}\" is not configured for coupling scheme",
+                  to);
 
     const bool initialize = exchange.requiresInitialization;
     if (from == accessor) {
@@ -980,8 +1060,9 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(MultiCouplingScheme 
 void CouplingSchemeConfiguration::checkIfDataIsExchanged(DataID dataID) const
 {
   const auto match =
-      std::find_if(_config.exchanges.begin(), _config.exchanges.end(),
-                   [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
+      std::find_if(_config.exchanges.begin(), _config.exchanges.end(), [dataID](const Config::Exchange &exchange) {
+        return exchange.data->getID() == dataID;
+      });
   if (match != _config.exchanges.end()) {
     return;
   }
@@ -1011,19 +1092,24 @@ void CouplingSchemeConfiguration::checkWaveformOrderReadData(int maxAllowedOrder
       if (usedOrder > maxAllowedOrder) {
         PRECICE_ERROR("You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the "
                       "coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
-                      dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
+                      dataContext.getDataName(),
+                      dataContext.getMeshName(),
+                      usedOrder,
+                      maxAllowedOrder);
       }
     }
   }
 }
 
-void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(int dataID, const std::string &first,
+void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(int                dataID,
+                                                                      const std::string &first,
                                                                       const std::string &second) const
 {
   checkIfDataIsExchanged(dataID);
   const auto match =
-      std::find_if(_config.exchanges.begin(), _config.exchanges.end(),
-                   [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
+      std::find_if(_config.exchanges.begin(), _config.exchanges.end(), [dataID](const Config::Exchange &exchange) {
+        return exchange.data->getID() == dataID;
+      });
   PRECICE_ASSERT(match != _config.exchanges.end());
   const auto &exchange = *match;
 
@@ -1045,11 +1131,19 @@ void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(int dataID
                 "Here, from \"{}\" to \"{}\". "
                 "However, you configured data \"{}\" for acceleration, which is exchanged from \"{}\" to \"{}\". "
                 "Please remove this acceleration data tag or switch to a parallel implicit coupling scheme.",
-                dataName, first, second, second, first, dataName, first, second);
+                dataName,
+                first,
+                second,
+                second,
+                first,
+                dataName,
+                first,
+                second);
 }
 
 void CouplingSchemeConfiguration::addConvergenceMeasures(
-    BaseCouplingScheme *scheme, const std::string &participant,
+    BaseCouplingScheme *                            scheme,
+    const std::string &                             participant,
     const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const
 {
   for (auto &elem : convergenceMeasureDefinitions) {
@@ -1059,8 +1153,9 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
   }
 }
 
-void CouplingSchemeConfiguration::setSerialAcceleration(BaseCouplingScheme *scheme, const std::string &first,
-                                                        const std::string &second) const
+void CouplingSchemeConfiguration::setSerialAcceleration(BaseCouplingScheme *scheme,
+                                                        const std::string & first,
+                                                        const std::string & second) const
 {
   if (_accelerationConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {

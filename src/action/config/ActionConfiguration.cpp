@@ -29,7 +29,7 @@ ActionConfiguration::ActionConfiguration(xml::XMLTag &parent, mesh::PtrMeshConfi
       NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO(
           "scale-by-computed-dt-part-ratio"),          //@todo rename this, breaking change!
       NAME_SCALING_BY_TIME_WINDOW_SIZE("scale-by-dt"), //@todo rename this, breaking change!, currently misleading. See
-                                                       //https://github.com/precice/precice/issues/934
+                                                       // https://github.com/precice/precice/issues/934
       NAME_SUMMATION("summation"), NAME_COMPUTE_CURVATURE("compute-curvature"), NAME_PYTHON("python"),
       NAME_RECORDER("recorder"), TAG_SOURCE_DATA("source-data"), TAG_TARGET_DATA("target-data"),
       TAG_CONVERGENCE_TOLERANCE("convergence-tolerance"), TAG_MAX_ITERATIONS("max-iterations"), TAG_MODULE_PATH("path"),
@@ -145,8 +145,14 @@ ActionConfiguration::ActionConfiguration(xml::XMLTag &parent, mesh::PtrMeshConfi
   auto attrTiming =
       XMLAttribute<std::string>(ATTR_TIMING)
           .setDocumentation("Determines when (relative to advancing the coupling scheme) the action is executed.")
-          .setOptions({VALUE_REGULAR_PRIOR, VALUE_REGULAR_POST, VALUE_ON_EXCHANGE_PRIOR, VALUE_ON_EXCHANGE_POST,
-                       VALUE_ON_TIME_WINDOW_COMPLETE_POST, WRITE_MAPPING_PRIOR, WRITE_MAPPING_POST, READ_MAPPING_PRIOR,
+          .setOptions({VALUE_REGULAR_PRIOR,
+                       VALUE_REGULAR_POST,
+                       VALUE_ON_EXCHANGE_PRIOR,
+                       VALUE_ON_EXCHANGE_POST,
+                       VALUE_ON_TIME_WINDOW_COMPLETE_POST,
+                       WRITE_MAPPING_PRIOR,
+                       WRITE_MAPPING_POST,
+                       READ_MAPPING_PRIOR,
                        READ_MAPPING_POST});
 
   auto attrMesh = XMLAttribute<std::string>(ATTR_MESH).setDocumentation("Determines mesh used in action.");
@@ -191,7 +197,8 @@ void ActionConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &con
 int ActionConfiguration::getUsedMeshID() const
 {
   PRECICE_CHECK(_meshConfig->hasMeshName(_configuredAction.mesh),
-                "No mesh name \"{}\" found. Please check that the correct mesh name is used.", _configuredAction.mesh);
+                "No mesh name \"{}\" found. Please check that the correct mesh name is used.",
+                _configuredAction.mesh);
   return _meshConfig->getMesh(_configuredAction.mesh)->getID();
 }
 
@@ -215,7 +222,8 @@ void ActionConfiguration::createAction()
     PRECICE_CHECK(mesh->hasDataName(_configuredAction.targetData),
                   "Data action uses target data \"{}\" which is not configured. Please ensure that the target data "
                   "name is used by the mesh with name \"{}\".",
-                  _configuredAction.targetData, _configuredAction.mesh);
+                  _configuredAction.targetData,
+                  _configuredAction.mesh);
     targetDataID = mesh->data(_configuredAction.targetData)->getID();
     PRECICE_ASSERT(targetDataID != -1);
   }
@@ -224,14 +232,16 @@ void ActionConfiguration::createAction()
     PRECICE_CHECK(mesh->hasDataName(dataName),
                   "Data action uses source data \"{}\" which is not configured. Please ensure that the target data "
                   "name is used by the mesh with name \"{}\".",
-                  dataName, _configuredAction.mesh);
+                  dataName,
+                  _configuredAction.mesh);
     sourceDataIDs.push_back(mesh->data(dataName)->getID());
   }
 
   PRECICE_CHECK((_configuredAction.sourceDataVector.empty() || not sourceDataIDs.empty()),
                 "Data action uses source data \"{}\" which is not configured. Please ensure that the source data name "
                 "is used by the mesh with name \"{}\".",
-                _configuredAction.sourceDataVector.back(), _configuredAction.mesh);
+                _configuredAction.sourceDataVector.back(),
+                _configuredAction.mesh);
 
   action::PtrAction action;
   if (_configuredAction.type == NAME_MULTIPLY_BY_AREA) {
@@ -242,15 +252,21 @@ void ActionConfiguration::createAction()
         new action::ScaleByAreaAction(timing, targetDataID, mesh, action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA));
   } else if (_configuredAction.type == NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO) {
     action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID, mesh,
+        new action::ScaleByDtAction(timing,
+                                    sourceDataIDs.back(),
+                                    targetDataID,
+                                    mesh,
                                     action::ScaleByDtAction::SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO));
   } else if (_configuredAction.type == NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO) {
     action = action::PtrAction(
-        new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID, mesh,
+        new action::ScaleByDtAction(timing,
+                                    sourceDataIDs.back(),
+                                    targetDataID,
+                                    mesh,
                                     action::ScaleByDtAction::SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO));
   } else if (_configuredAction.type == NAME_SCALING_BY_TIME_WINDOW_SIZE) {
-    action = action::PtrAction(new action::ScaleByDtAction(timing, sourceDataIDs.back(), targetDataID, mesh,
-                                                           action::ScaleByDtAction::SCALING_BY_TIME_WINDOW_SIZE));
+    action = action::PtrAction(new action::ScaleByDtAction(
+        timing, sourceDataIDs.back(), targetDataID, mesh, action::ScaleByDtAction::SCALING_BY_TIME_WINDOW_SIZE));
   } else if (_configuredAction.type == NAME_COMPUTE_CURVATURE) {
     action = action::PtrAction(new action::ComputeCurvatureAction(timing, targetDataID, mesh));
   } else if (_configuredAction.type == NAME_SUMMATION) {
@@ -260,8 +276,8 @@ void ActionConfiguration::createAction()
   }
 #ifndef PRECICE_NO_PYTHON
   else if (_configuredAction.type == NAME_PYTHON) {
-    action = action::PtrAction(new action::PythonAction(timing, _configuredAction.path, _configuredAction.module, mesh,
-                                                        targetDataID, sourceDataIDs.back()));
+    action = action::PtrAction(new action::PythonAction(
+        timing, _configuredAction.path, _configuredAction.module, mesh, targetDataID, sourceDataIDs.back()));
   }
 #endif
   PRECICE_ASSERT(action.get() != nullptr);

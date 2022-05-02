@@ -36,8 +36,9 @@ bool unique_elements(const Container &c, BinaryPredicate p = {})
   }
   auto cstart = cbegin + 1;
   for (; cstart < cend; ++cbegin, ++cstart) {
-    if (std::find_if(cstart, cend,
-                     [&p, cbegin](const typename Container::value_type &v) -> bool { return p(*cbegin, v); }) != cend) {
+    if (std::find_if(cstart, cend, [&p, cbegin](const typename Container::value_type &v) -> bool {
+          return p(*cbegin, v);
+        }) != cend) {
       return false;
     }
   }
@@ -127,7 +128,8 @@ template <typename Iter> std::ostream &operator<<(std::ostream &out, const Range
  *
  * The preview contains the first and last n elements and the minmax-elements.
  */
-template <typename Range, typename Iter = typename Range::const_iterator,
+template <typename Range,
+          typename Iter = typename Range::const_iterator,
           typename Size = typename std::iterator_traits<Iter>::difference_type>
 const RangePreview<Iter> previewRange(Size n, const Range &range)
 {

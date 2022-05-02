@@ -10,7 +10,8 @@ namespace precice {
 namespace math {
 namespace barycenter {
 
-Eigen::Vector2d calcBarycentricCoordsForEdge(const Eigen::VectorXd &a, const Eigen::VectorXd &b,
+Eigen::Vector2d calcBarycentricCoordsForEdge(const Eigen::VectorXd &a,
+                                             const Eigen::VectorXd &b,
                                              const Eigen::VectorXd &u)
 {
   using Eigen::Vector2d;
@@ -42,8 +43,10 @@ static double crossProduct2D(const Eigen::Vector2d &u, const Eigen::Vector2d &v)
   return u(0) * v(1) - u(1) * v(0);
 }
 
-Eigen::Vector3d calcBarycentricCoordsForTriangle(const Eigen::VectorXd &a, const Eigen::VectorXd &b,
-                                                 const Eigen::VectorXd &c, const Eigen::VectorXd &u)
+Eigen::Vector3d calcBarycentricCoordsForTriangle(const Eigen::VectorXd &a,
+                                                 const Eigen::VectorXd &b,
+                                                 const Eigen::VectorXd &c,
+                                                 const Eigen::VectorXd &u)
 {
   using Eigen::Vector2d;
   using Eigen::Vector3d;

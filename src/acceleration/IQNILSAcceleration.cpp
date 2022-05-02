@@ -25,11 +25,22 @@ using precice::cplscheme::PtrCouplingData;
 namespace precice {
 namespace acceleration {
 
-IQNILSAcceleration::IQNILSAcceleration(double initialRelaxation, bool forceInitialRelaxation, int maxIterationsUsed,
-                                       int pastTimeWindowsReused, int filter, double singularityLimit,
-                                       std::vector<int> dataIDs, impl::PtrPreconditioner preconditioner)
-    : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused, filter,
-                         singularityLimit, std::move(dataIDs), std::move(preconditioner))
+IQNILSAcceleration::IQNILSAcceleration(double                  initialRelaxation,
+                                       bool                    forceInitialRelaxation,
+                                       int                     maxIterationsUsed,
+                                       int                     pastTimeWindowsReused,
+                                       int                     filter,
+                                       double                  singularityLimit,
+                                       std::vector<int>        dataIDs,
+                                       impl::PtrPreconditioner preconditioner)
+    : BaseQNAcceleration(initialRelaxation,
+                         forceInitialRelaxation,
+                         maxIterationsUsed,
+                         pastTimeWindowsReused,
+                         filter,
+                         singularityLimit,
+                         std::move(dataIDs),
+                         std::move(preconditioner))
 {
 }
 
@@ -89,7 +100,8 @@ void IQNILSAcceleration::updateDifferenceMatrices(const DataMap &cplData)
     // Store x_tildes for secondary data
     for (int id : _secondaryDataIDs) {
       PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData.at(id)->values().size(),
-                     _secondaryOldXTildes[id].size(), cplData.at(id)->values().size());
+                     _secondaryOldXTildes[id].size(),
+                     cplData.at(id)->values().size());
       _secondaryOldXTildes[id] = cplData.at(id)->values();
     }
   }
@@ -103,7 +115,8 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(const DataMap &cplD
   // Store x_tildes for secondary data
   for (int id : _secondaryDataIDs) {
     PRECICE_ASSERT(_secondaryOldXTildes.at(id).size() == cplData.at(id)->values().size(),
-                   _secondaryOldXTildes.at(id).size(), cplData.at(id)->values().size());
+                   _secondaryOldXTildes.at(id).size(),
+                   cplData.at(id)->values().size());
     _secondaryOldXTildes[id] = cplData.at(id)->values();
   }
 

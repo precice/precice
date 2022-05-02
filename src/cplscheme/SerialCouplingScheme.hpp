@@ -41,11 +41,18 @@ public:
    * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
    * @param[in] extrapolationOrder order used for extrapolation
    */
-  SerialCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
-                       const std::string &firstParticipant, const std::string &secondParticipant,
-                       const std::string &localParticipant, m2n::PtrM2N m2n, constants::TimesteppingMethod dtMethod,
-                       CouplingMode cplMode, int maxIterations = UNDEFINED_MAX_ITERATIONS,
-                       int extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
+  SerialCouplingScheme(double                        maxTime,
+                       int                           maxTimeWindows,
+                       double                        timeWindowSize,
+                       int                           validDigits,
+                       const std::string &           firstParticipant,
+                       const std::string &           secondParticipant,
+                       const std::string &           localParticipant,
+                       m2n::PtrM2N                   m2n,
+                       constants::TimesteppingMethod dtMethod,
+                       CouplingMode                  cplMode,
+                       int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
+                       int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};

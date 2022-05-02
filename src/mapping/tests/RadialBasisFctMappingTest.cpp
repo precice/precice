@@ -33,7 +33,9 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
   }
 }
 
-void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, mesh::PtrData inData,
+void testSerialScaledConsistent(mesh::PtrMesh inMesh,
+                                mesh::PtrMesh outMesh,
+                                mesh::PtrData inData,
                                 mesh::PtrData outData)
 {
   auto inputIntegral  = mesh::integrate(inMesh, inData);
@@ -75,8 +77,11 @@ using MeshSpecification = std::vector<VertexSpecification>;
 /// Contains which values are expected on which rank: rank -> vector of data.
 using ReferenceSpecification = std::vector<std::pair<int, std::vector<double>>>;
 
-void getDistributedMesh(const TestContext &context, MeshSpecification const &vertices, mesh::PtrMesh &mesh,
-                        mesh::PtrData &data, int globalIndexOffset = 0)
+void getDistributedMesh(const TestContext &      context,
+                        MeshSpecification const &vertices,
+                        mesh::PtrMesh &          mesh,
+                        mesh::PtrData &          data,
+                        int                      globalIndexOffset = 0)
 {
   Eigen::VectorXd d;
 
@@ -108,8 +113,12 @@ void getDistributedMesh(const TestContext &context, MeshSpecification const &ver
   data->values() = d;
 }
 
-void testDistributed(const TestContext &context, Mapping &mapping, MeshSpecification inMeshSpec,
-                     MeshSpecification outMeshSpec, ReferenceSpecification referenceSpec, int inGlobalIndexOffset = 0)
+void testDistributed(const TestContext &    context,
+                     Mapping &              mapping,
+                     MeshSpecification      inMeshSpec,
+                     MeshSpecification      outMeshSpec,
+                     ReferenceSpecification referenceSpec,
+                     int                    inGlobalIndexOffset = 0)
 {
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
@@ -153,7 +162,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {// Consistent mapping: The inMesh is communicated
                    {-1, 0, {0, 0}, {1}},
                    {-1, 0, {0, 1}, {2}},
@@ -189,7 +199,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {// Consistent mapping: The inMesh is communicated
                    {-1, 0, {0, 0}, {1, 4}},
                    {-1, 0, {0, 1}, {2, 5}},
@@ -226,7 +237,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
                    {-1, 0, {0, 0}, {1}},
                    {-1, 0, {0, 1}, {2}},
@@ -266,7 +278,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {
                       // Rank 0 has part of the mesh, owns a subpart
                       {0, 0, {0, 0}, {1}},
@@ -322,7 +335,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {
                       // Rank 0 has part of the mesh, owns a subpart
                       {0, 0, {0, 0}, {1, 4}},
@@ -378,7 +392,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {
                       // Rank 0 has no vertices
                       // Rank 1 has the entire mesh, owns a subpart
@@ -425,7 +440,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {
                       // Every rank has the entire mesh and owns a subpart
                       {0, 0, {0, 0}, {1.1}},  {0, 0, {0, 1}, {2.5}},  {0, -1, {1, 0}, {3}}, {0, -1, {1, 1}, {4}},
@@ -461,7 +477,8 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6, *boost::unit_test::tolerance(1e-
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {
                       // Rank 0 has no vertices
                       // Rank 1 has the entire mesh, owns a subpart
@@ -506,7 +523,8 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {// Conservative mapping: The inMesh is local
                    {0, -1, {0, 0}, {1}},
                    {0, -1, {0, 1}, {2}},
@@ -541,7 +559,8 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {// Conservative mapping: The inMesh is local
                    {0, -1, {0, 0}, {1, 4}},
                    {0, -1, {0, 1}, {2, 5}},
@@ -579,7 +598,8 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 
   std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {// Conservative mapping: The inMesh is local but rank 0 has no vertices
                    {1, -1, {0, 0}, {1}},
                    {1, -1, {0, 1}, {2}},
@@ -616,7 +636,8 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 
   std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {// Conservative mapping: The inMesh is local but rank 0 has no vertices
                    {1, -1, {0, 0}, {1}},
                    {1, -1, {1, 0}, {3}},
@@ -652,7 +673,8 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4, *boost::unit_test::tolerance(1
 
   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {// Conservative mapping: The inMesh is local
                    {0, -1, {0, 0}, {1}},
                    {0, -1, {0, 1}, {2}},
@@ -689,7 +711,8 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {// Conservative mapping: The inMesh is local
                    {0, -1, {0, 0}, {1}},
                    {0, -1, {0, 1}, {2}},
@@ -724,7 +747,8 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
-  testDistributed(context, mapping,
+  testDistributed(context,
+                  mapping,
                   {// Conservative mapping: The inMesh is local
                    {0, -1, {0, 0}, {1, 4}},
                    {0, -1, {0, 1}, {2, 5}},
@@ -753,8 +777,12 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                   context.rank * 2);
 }
 
-void testTagging(const TestContext &context, MeshSpecification inMeshSpec, MeshSpecification outMeshSpec,
-                 MeshSpecification shouldTagFirstRound, MeshSpecification shouldTagSecondRound, bool consistent)
+void testTagging(const TestContext &context,
+                 MeshSpecification  inMeshSpec,
+                 MeshSpecification  outMeshSpec,
+                 MeshSpecification  shouldTagFirstRound,
+                 MeshSpecification  shouldTagSecondRound,
+                 bool               consistent)
 {
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
@@ -1525,11 +1553,11 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
   perform2DTestConsistentMapping(consistentMap2D);
   RadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead,
-                                                                    zDead);
+  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(
+      Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead,
-                                                                    zDead);
+  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(
+      Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);

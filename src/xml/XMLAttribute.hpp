@@ -114,8 +114,9 @@ private:
 
   /// Sets non Eigen::VectorXd type values.
   template <typename VALUE_T>
-  typename std::enable_if<
-      std::is_same<VALUE_T, ATTRIBUTE_T>::value && not std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
+  typename std::enable_if<std::is_same<VALUE_T, ATTRIBUTE_T>::value &&
+                              not std::is_same<VALUE_T, Eigen::VectorXd>::value,
+                          void>::type
   set(ATTRIBUTE_T &toSet, const VALUE_T &setter);
 
   /// Sets Eigen::VectorXd type values by clearing and copy.

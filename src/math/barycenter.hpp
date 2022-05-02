@@ -18,7 +18,8 @@ namespace barycenter {
  *
  * @note Simple scalar projection approach, projected point in Cartesian coordinates is not actually calculated.
  */
-Eigen::Vector2d calcBarycentricCoordsForEdge(const Eigen::VectorXd &a, const Eigen::VectorXd &b,
+Eigen::Vector2d calcBarycentricCoordsForEdge(const Eigen::VectorXd &a,
+                                             const Eigen::VectorXd &b,
                                              const Eigen::VectorXd &u);
 
 /** Takes the corner vertices of a triangle and a point in 3D space.
@@ -33,8 +34,10 @@ Eigen::Vector2d calcBarycentricCoordsForEdge(const Eigen::VectorXd &a, const Eig
  *  _Computing the barycentric coordinates of a projected point_ by W. Heidrich (2005)
  *
  */
-Eigen::Vector3d calcBarycentricCoordsForTriangle(const Eigen::VectorXd &a, const Eigen::VectorXd &b,
-                                                 const Eigen::VectorXd &c, const Eigen::VectorXd &u);
+Eigen::Vector3d calcBarycentricCoordsForTriangle(const Eigen::VectorXd &a,
+                                                 const Eigen::VectorXd &b,
+                                                 const Eigen::VectorXd &c,
+                                                 const Eigen::VectorXd &u);
 
 } // namespace barycenter
 } // namespace math

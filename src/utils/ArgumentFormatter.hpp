@@ -13,6 +13,7 @@
 
 #define PRECICE_LOG_ARGUMENTS(...)                                                                                     \
   BOOST_PP_IF(                                                                                                         \
-      BOOST_VMD_IS_EMPTY(__VA_ARGS__), "",                                                                             \
+      BOOST_VMD_IS_EMPTY(__VA_ARGS__),                                                                                 \
+      "",                                                                                                              \
       fmt::format("\n" BOOST_PP_SEQ_FOR_EACH_I(PRECICE_LOG_ARGUMENTS_FMT, , BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)),    \
                   __VA_ARGS__))

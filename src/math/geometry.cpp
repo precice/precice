@@ -15,9 +15,11 @@ namespace geometry {
 
 logging::Logger _log("math::geometry");
 
-bool segmentsIntersect(const Eigen::Ref<const Eigen::Vector2d> &a, const Eigen::Ref<const Eigen::Vector2d> &b,
-                       const Eigen::Ref<const Eigen::Vector2d> &c, const Eigen::Ref<const Eigen::Vector2d> &d,
-                       bool countTouchingAsIntersection)
+bool segmentsIntersect(const Eigen::Ref<const Eigen::Vector2d> &a,
+                       const Eigen::Ref<const Eigen::Vector2d> &b,
+                       const Eigen::Ref<const Eigen::Vector2d> &c,
+                       const Eigen::Ref<const Eigen::Vector2d> &d,
+                       bool                                     countTouchingAsIntersection)
 {
   PRECICE_ASSERT(a.size() == 2, a.size());
   PRECICE_ASSERT(b.size() == 2, b.size());
@@ -73,9 +75,11 @@ bool segmentsIntersect(const Eigen::Ref<const Eigen::Vector2d> &a, const Eigen::
   return isFirstSegmentBetween && isSecondSegmentBetween;
 }
 
-bool lineIntersection(const Eigen::Ref<const Eigen::Vector2d> &a, const Eigen::Ref<const Eigen::Vector2d> &b,
-                      const Eigen::Ref<const Eigen::Vector2d> &c, const Eigen::Ref<const Eigen::Vector2d> &d,
-                      Eigen::Ref<Eigen::Vector2d> &intersectionPoint)
+bool lineIntersection(const Eigen::Ref<const Eigen::Vector2d> &a,
+                      const Eigen::Ref<const Eigen::Vector2d> &b,
+                      const Eigen::Ref<const Eigen::Vector2d> &c,
+                      const Eigen::Ref<const Eigen::Vector2d> &d,
+                      Eigen::Ref<Eigen::Vector2d> &            intersectionPoint)
 {
   // Compute denominator for solving 2x2 equation system
   double D = a(0) * (d(1) - c(1)) + b(0) * (c(1) - d(1)) + d(0) * (b(1) - a(1)) - c(0) * (a(1) - b(1));
@@ -93,9 +97,11 @@ bool lineIntersection(const Eigen::Ref<const Eigen::Vector2d> &a, const Eigen::R
   return true;
 }
 
-ResultConstants segmentPlaneIntersection(const Eigen::Vector3d &pointOnPlane, const Eigen::Vector3d &planeNormal,
+ResultConstants segmentPlaneIntersection(const Eigen::Vector3d &pointOnPlane,
+                                         const Eigen::Vector3d &planeNormal,
                                          const Eigen::Vector3d &firstPointSegment,
-                                         const Eigen::Vector3d &secondPointSegment, Eigen::Vector3d &intersectionPoint)
+                                         const Eigen::Vector3d &secondPointSegment,
+                                         Eigen::Vector3d &      intersectionPoint)
 {
   // Methodology of "Computation Geometry in C", Joseph O'Rourke, Chapter 7.3.1
 
@@ -161,8 +167,8 @@ double triangleArea(const Eigen::VectorXd &a, const Eigen::VectorXd &b, const Ei
   }
 }
 
-double tetraVolume(const Eigen::Vector3d &a, const Eigen::Vector3d &b, const Eigen::Vector3d &c,
-                   const Eigen::Vector3d &d)
+double
+tetraVolume(const Eigen::Vector3d &a, const Eigen::Vector3d &b, const Eigen::Vector3d &c, const Eigen::Vector3d &d)
 {
   return std::abs((a - d).dot((b - d).cross(c - d))) / 6.0;
 }
@@ -183,8 +189,10 @@ Eigen::Vector2d projectVector(const Eigen::Vector3d &vector, int indexDimensionT
   return projectedVector;
 }
 
-int containedInTriangle(const Eigen::Vector2d &triangleVertex0, const Eigen::Vector2d &triangleVertex1,
-                        const Eigen::Vector2d &triangleVertex2, const Eigen::Vector2d &testPoint)
+int containedInTriangle(const Eigen::Vector2d &triangleVertex0,
+                        const Eigen::Vector2d &triangleVertex1,
+                        const Eigen::Vector2d &triangleVertex2,
+                        const Eigen::Vector2d &testPoint)
 {
   double area0 = triangleArea(triangleVertex0, triangleVertex1, testPoint);
   double area1 = triangleArea(triangleVertex1, triangleVertex2, testPoint);
@@ -239,7 +247,8 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
   Eigen::Vector3d normalVector = e_1.cross(e_2);
 
   PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0),
-                "Non-planar quads are not supported. The vertex coordinates are: {}.", coords);
+                "Non-planar quads are not supported. The vertex coordinates are: {}.",
+                coords);
 
   // Transform Coordinates - coord[0] is the origin
   for (int i = 0; i < 4; i++) {

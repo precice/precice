@@ -18,8 +18,8 @@ public:
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] dimensions Dimensionality of the meshes
    */
-  NearestNeighborBaseMapping(Constraint constraint, int dimensions, bool hasGradient, std::string mappingName,
-                             std::string mappingNameShort);
+  NearestNeighborBaseMapping(
+      Constraint constraint, int dimensions, bool hasGradient, std::string mappingName, std::string mappingNameShort);
 
   /// Destructor, empty.
   virtual ~NearestNeighborBaseMapping() = default;

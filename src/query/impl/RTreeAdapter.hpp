@@ -250,17 +250,20 @@ public:
 
 template <typename Primitive> class IsDirectIndexableHelper {
 private:
-  template <typename T, typename = typename std::enable_if<std::is_same<typename boost::geometry::traits::tag<T>::type,
-                                                                        boost::geometry::point_tag>::value,
-                                                           std::nullptr_t>::type>
+  template <typename T,
+            typename = typename std::enable_if<
+                std::is_same<typename boost::geometry::traits::tag<T>::type, boost::geometry::point_tag>::value,
+                std::nullptr_t>::type>
   static std::true_type test(char *);
-  template <typename T, typename = typename std::enable_if<std::is_same<typename boost::geometry::traits::tag<T>::type,
-                                                                        boost::geometry::segment_tag>::value,
-                                                           std::nullptr_t>::type>
+  template <typename T,
+            typename = typename std::enable_if<
+                std::is_same<typename boost::geometry::traits::tag<T>::type, boost::geometry::segment_tag>::value,
+                std::nullptr_t>::type>
   static std::true_type test(int *);
-  template <typename T, typename = typename std::enable_if<std::is_same<typename boost::geometry::traits::tag<T>::type,
-                                                                        boost::geometry::box_tag>::value,
-                                                           std::nullptr_t>::type>
+  template <typename T,
+            typename = typename std::enable_if<
+                std::is_same<typename boost::geometry::traits::tag<T>::type, boost::geometry::box_tag>::value,
+                std::nullptr_t>::type>
   static std::true_type test(void *);
 
   template <typename T> static std::false_type test(...);
@@ -277,12 +280,13 @@ template <class Primitive> struct RTreeTraits {
   using MeshContainer      = typename PrimitiveTraits<Primitive>::MeshContainer;
   using MeshContainerIndex = typename MeshContainer::size_type;
 
-  using IndexType = typename std::conditional<IsDirectIndexable<Primitive>::value, MeshContainerIndex,
+  using IndexType = typename std::conditional<IsDirectIndexable<Primitive>::value,
+                                              MeshContainerIndex,
                                               std::pair<RTreeBox, MeshContainerIndex>>::type;
 
-  using IndexGetter =
-      typename std::conditional<IsDirectIndexable<Primitive>::value, impl::VectorIndexable<MeshContainer>,
-                                boost::geometry::index::indexable<IndexType>>::type;
+  using IndexGetter = typename std::conditional<IsDirectIndexable<Primitive>::value,
+                                                impl::VectorIndexable<MeshContainer>,
+                                                boost::geometry::index::indexable<IndexType>>::type;
 
   using RTree = boost::geometry::index::rtree<IndexType, RTreeParameters, IndexGetter>;
   using Ptr   = std::shared_ptr<RTree>;

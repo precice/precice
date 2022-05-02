@@ -45,8 +45,8 @@ public:
    * computed.
    * @param[in] timeWindowSize Current time window size.
    */
-  virtual void performAction(double time, double timeStepSize, double computedTimeWindowPart,
-                             double timeWindowSize) = 0;
+  virtual void
+  performAction(double time, double timeStepSize, double computedTimeWindowPart, double timeWindowSize) = 0;
 
   /// Returns the timing of the action.
   Timing getTiming() const

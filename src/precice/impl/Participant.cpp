@@ -60,9 +60,14 @@ void Participant::addWatchIntegral(const PtrWatchIntegral &watchIntegral)
   _watchIntegrals.push_back(watchIntegral);
 }
 
-void Participant::useMesh(const mesh::PtrMesh &mesh, const Eigen::VectorXd &localOffset, bool remote,
-                          const std::string &fromParticipant, double safetyFactor, bool provideMesh,
-                          partition::ReceivedPartition::GeometricFilter geoFilter, const bool allowDirectAccess)
+void Participant::useMesh(const mesh::PtrMesh &                         mesh,
+                          const Eigen::VectorXd &                       localOffset,
+                          bool                                          remote,
+                          const std::string &                           fromParticipant,
+                          double                                        safetyFactor,
+                          bool                                          provideMesh,
+                          partition::ReceivedPartition::GeometricFilter geoFilter,
+                          const bool                                    allowDirectAccess)
 {
   PRECICE_TRACE(_name, mesh->getName(), mesh->getID());
   checkDuplicatedUse(mesh);
@@ -70,8 +75,8 @@ void Participant::useMesh(const mesh::PtrMesh &mesh, const Eigen::VectorXd &loca
   auto context         = new MeshContext(mesh->getDimensions());
   context->mesh        = mesh;
   context->localOffset = localOffset;
-  PRECICE_ASSERT(mesh->getDimensions() == context->localOffset.size(), mesh->getDimensions(),
-                 context->localOffset.size());
+  PRECICE_ASSERT(
+      mesh->getDimensions() == context->localOffset.size(), mesh->getDimensions(), context->localOffset.size());
   context->receiveMeshFrom   = fromParticipant;
   context->safetyFactor      = safetyFactor;
   context->provideMesh       = provideMesh;
@@ -86,7 +91,10 @@ void Participant::useMesh(const mesh::PtrMesh &mesh, const Eigen::VectorXd &loca
       fromParticipant.empty() || (!provideMesh),
       "Participant \"{}\" cannot receive and provide mesh \"{}\" at the same time. "
       "Please remove all but one of the \"from\" and \"provide\" attributes in the <use-mesh name=\"{}\"/> node of {}.",
-      _name, mesh->getName(), mesh->getName(), _name);
+      _name,
+      mesh->getName(),
+      mesh->getName(),
+      _name);
 }
 
 void Participant::addWriteData(const mesh::PtrData &data, const mesh::PtrMesh &mesh)
@@ -147,8 +155,8 @@ bool Participant::hasData(DataID dataID) const
       return false;
     }
     const auto &meshData = mcptr->mesh->data();
-    return std::any_of(meshData.begin(), meshData.end(),
-                       [dataID](const auto &dptr) { return dptr->getID() == dataID; });
+    return std::any_of(
+        meshData.begin(), meshData.end(), [dataID](const auto &dptr) { return dptr->getID() == dataID; });
   });
 }
 
@@ -221,32 +229,36 @@ std::vector<MeshContext *> &Participant::usedMeshContexts()
 
 MeshContext &Participant::usedMeshContext(MeshID meshID)
 {
-  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
-                          [meshID](MeshContext const *context) { return context->mesh->getID() == meshID; });
+  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(), [meshID](MeshContext const *context) {
+    return context->mesh->getID() == meshID;
+  });
   PRECICE_ASSERT(pos != _usedMeshContexts.end());
   return **pos;
 }
 
 MeshContext const &Participant::usedMeshContext(MeshID meshID) const
 {
-  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
-                          [meshID](MeshContext const *context) { return context->mesh->getID() == meshID; });
+  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(), [meshID](MeshContext const *context) {
+    return context->mesh->getID() == meshID;
+  });
   PRECICE_ASSERT(pos != _usedMeshContexts.end());
   return **pos;
 }
 
 MeshContext &Participant::usedMeshContext(const std::string &name)
 {
-  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
-                          [&name](MeshContext const *context) { return context->mesh->getName() == name; });
+  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(), [&name](MeshContext const *context) {
+    return context->mesh->getName() == name;
+  });
   PRECICE_ASSERT(pos != _usedMeshContexts.end());
   return **pos;
 }
 
 MeshContext const &Participant::usedMeshContext(const std::string &name) const
 {
-  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
-                          [&name](MeshContext const *context) { return context->mesh->getName() == name; });
+  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(), [&name](MeshContext const *context) {
+    return context->mesh->getName() == name;
+  });
   PRECICE_ASSERT(pos != _usedMeshContexts.end());
   return **pos;
 }
@@ -258,20 +270,23 @@ bool Participant::hasMesh(MeshID meshID) const
 
 bool Participant::hasMesh(const std::string &meshName) const
 {
-  return std::any_of(_meshContexts.begin(), _meshContexts.end(),
-                     [&meshName](const MeshContext *mcptr) { return mcptr && meshName == mcptr->mesh->getName(); });
+  return std::any_of(_meshContexts.begin(), _meshContexts.end(), [&meshName](const MeshContext *mcptr) {
+    return mcptr && meshName == mcptr->mesh->getName();
+  });
 }
 
 bool Participant::isMeshUsed(MeshID meshID) const
 {
-  return std::any_of(_usedMeshContexts.begin(), _usedMeshContexts.end(),
-                     [meshID](const MeshContext *mcptr) { return mcptr->mesh->getID() == meshID; });
+  return std::any_of(_usedMeshContexts.begin(), _usedMeshContexts.end(), [meshID](const MeshContext *mcptr) {
+    return mcptr->mesh->getID() == meshID;
+  });
 }
 
 bool Participant::isMeshUsed(const std::string &meshName) const
 {
-  return std::any_of(_usedMeshContexts.begin(), _usedMeshContexts.end(),
-                     [&meshName](const MeshContext *mcptr) { return mcptr->mesh->getName() == meshName; });
+  return std::any_of(_usedMeshContexts.begin(), _usedMeshContexts.end(), [&meshName](const MeshContext *mcptr) {
+    return mcptr->mesh->getName() == meshName;
+  });
 }
 
 bool Participant::isMeshProvided(MeshID meshID) const
@@ -370,7 +385,9 @@ void Participant::checkDuplicatedUse(const mesh::PtrMesh &mesh)
   PRECICE_CHECK(_meshContexts[mesh->getID()] == nullptr,
                 "Mesh \"{} cannot be used twice by participant {}. "
                 "Please remove one of the use-mesh nodes with name=\"{}\"./>",
-                mesh->getName(), _name, mesh->getName());
+                mesh->getName(),
+                _name,
+                mesh->getName());
 }
 
 void Participant::checkDuplicatedData(const mesh::PtrData &data, const std::string &meshName)
@@ -378,7 +395,9 @@ void Participant::checkDuplicatedData(const mesh::PtrData &data, const std::stri
   PRECICE_CHECK(!isDataWrite(data->getID()) && !isDataRead(data->getID()),
                 "Participant \"{}\" can read/write data \"{}\" from/to mesh \"{}\" only once. "
                 "Please remove any duplicate instances of write-data/read-data nodes.",
-                _name, meshName, data->getName());
+                _name,
+                meshName,
+                data->getName());
 }
 
 } // namespace impl

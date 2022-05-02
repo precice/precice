@@ -30,8 +30,13 @@ public:
   /**
    * @brief Constructor.
    */
-  BroydenAcceleration(double initialRelaxation, bool forceInitialRelaxation, int maxIterationsUsed,
-                      int pastTimeWindowsReused, int filter, double singularityLimit, std::vector<int> dataIDs,
+  BroydenAcceleration(double                  initialRelaxation,
+                      bool                    forceInitialRelaxation,
+                      int                     maxIterationsUsed,
+                      int                     pastTimeWindowsReused,
+                      int                     filter,
+                      double                  singularityLimit,
+                      std::vector<int>        dataIDs,
                       impl::PtrPreconditioner preconditioner);
 
   /**

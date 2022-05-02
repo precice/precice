@@ -296,26 +296,34 @@ void ParticipantConfiguration::xmlTagCallback(const xml::ConfigurationContext &c
     PRECICE_CHECK(safetyFactor >= 0,
                   "Participant \"{}\" uses mesh \"{}\" with safety-factor=\"{}\". "
                   "Please use a positive or zero safety-factor instead.",
-                  context.name, name, safetyFactor);
+                  context.name,
+                  name,
+                  safetyFactor);
 
     bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
     if (_participants.back()->getName() == from) {
       PRECICE_CHECK(provide,
                     "Participant \"{}\" cannot use mesh \"{}\" from itself. "
                     "Use the \"from\"-field to specify which participant has to communicate the mesh to \"{}\".",
-                    context.name, name, context.name);
+                    context.name,
+                    name,
+                    context.name);
     }
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
                   "Participant \"{}\" uses mesh \"{}\" which is not defined. "
                   "Please check the use-mesh node with name=\"{}\" or define the mesh.",
-                  _participants.back()->getName(), name, name);
+                  _participants.back()->getName(),
+                  name,
+                  name);
     if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SECONDARY_RANKS || safetyFactor != 0.5) &&
         from == "") {
       PRECICE_ERROR("Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a "
                     "geometric-filter and/or a safety factor defined. "
                     "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />",
-                    _participants.back()->getName(), name, name);
+                    _participants.back()->getName(),
+                    name,
+                    name);
     }
 
     PRECICE_CHECK(
@@ -324,7 +332,9 @@ void ParticipantConfiguration::xmlTagCallback(const xml::ConfigurationContext &c
         "This combination of options is not allowed. "
         "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />"
         " or remove the direct access option.",
-        _participants.back()->getName(), name, name);
+        _participants.back()->getName(),
+        name,
+        name);
 
     _participants.back()->useMesh(mesh, offset, false, from, safetyFactor, provide, geoFilter, allowDirectAccess);
   } else if (tag.getName() == TAG_WRITE) {
@@ -334,7 +344,9 @@ void ParticipantConfiguration::xmlTagCallback(const xml::ConfigurationContext &c
     PRECICE_CHECK(mesh,
                   "Participant \"{}\" has to use mesh \"{}\" in order to write data to it. Please add a use-mesh node "
                   "with name=\"{}\".",
-                  _participants.back()->getName(), meshName, meshName);
+                  _participants.back()->getName(),
+                  meshName,
+                  meshName);
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addWriteData(data, mesh);
   } else if (tag.getName() == TAG_READ) {
@@ -344,7 +356,9 @@ void ParticipantConfiguration::xmlTagCallback(const xml::ConfigurationContext &c
     PRECICE_CHECK(mesh,
                   "Participant \"{}\" has to use mesh \"{}\" in order to read data from it. Please add a use-mesh node "
                   "with name=\"{}\".",
-                  _participants.back()->getName(), meshName, meshName);
+                  _participants.back()->getName(),
+                  meshName,
+                  meshName);
     mesh::PtrData data          = getData(mesh, dataName);
     int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
     if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {
@@ -352,17 +366,21 @@ void ParticipantConfiguration::xmlTagCallback(const xml::ConfigurationContext &c
         PRECICE_ERROR(
             "You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", which is "
             "currently still experimental. Please set experimental=\"true\", if you want to use this feature.",
-            dataName, waveformOrder);
+            dataName,
+            waveformOrder);
       }
       if (waveformOrder < time::Time::MIN_INTERPOLATION_ORDER || waveformOrder > time::Time::MAX_INTERPOLATION_ORDER) {
         PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", but the "
                       "order must be between \"{}\" and \"{}\". Please use an order in the allowed range.",
-                      dataName, waveformOrder, time::Time::MIN_INTERPOLATION_ORDER,
+                      dataName,
+                      waveformOrder,
+                      time::Time::MIN_INTERPOLATION_ORDER,
                       time::Time::MAX_INTERPOLATION_ORDER);
       }
       PRECICE_WARN("You configured the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently "
                    "still experimental. Use with care.",
-                   dataName, waveformOrder);
+                   dataName,
+                   waveformOrder);
     }
     _participants.back()->addReadData(data, mesh, waveformOrder);
   } else if (tag.getName() == TAG_WATCH_POINT) {
@@ -417,7 +435,10 @@ const mesh::PtrData &ParticipantConfiguration::getData(const mesh::PtrMesh &mesh
   PRECICE_CHECK(mesh->hasDataName(nameData),
                 "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
                 "Please add a use-data tag with name=\"{}\" to this mesh.",
-                _participants.back()->getName(), nameData, mesh->getName(), nameData);
+                _participants.back()->getName(),
+                nameData,
+                mesh->getName(),
+                nameData);
   return mesh->data(nameData);
 }
 
@@ -438,16 +459,22 @@ void ParticipantConfiguration::finishParticipantConfiguration(const xml::Configu
     PRECICE_CHECK(participant->isMeshUsed(fromMeshID),
                   "Participant \"{}\" has mapping from mesh \"{}\", without using this mesh. "
                   "Please add a use-mesh tag with name=\"{}\"",
-                  participant->getName(), confMapping.fromMesh->getName(), confMapping.fromMesh->getName());
+                  participant->getName(),
+                  confMapping.fromMesh->getName(),
+                  confMapping.fromMesh->getName());
     PRECICE_CHECK(participant->isMeshUsed(toMeshID),
                   "Participant \"{}\" has mapping to mesh \"{}\", without using this mesh. "
                   "Please add a use-mesh tag with name=\"{}\"",
-                  participant->getName(), confMapping.toMesh->getName(), confMapping.toMesh->getName());
+                  participant->getName(),
+                  confMapping.toMesh->getName(),
+                  confMapping.toMesh->getName());
     PRECICE_CHECK(
         (participant->isMeshProvided(fromMeshID) || participant->isMeshProvided(toMeshID)),
         "Participant \"{}\" has mapping from mesh \"{}\",  to mesh \"{}\", but neither are provided. "
         "Please mark the mesh provided by this participant by configuring its use-mesh tag with provided=\"true\".",
-        participant->getName(), confMapping.fromMesh->getName(), confMapping.toMesh->getName());
+        participant->getName(),
+        confMapping.fromMesh->getName(),
+        confMapping.toMesh->getName());
 
     if (context.size > 1) {
       if ((confMapping.direction == mapping::MappingConfiguration::WRITE &&
@@ -470,23 +497,27 @@ void ParticipantConfiguration::finishParticipantConfiguration(const xml::Configu
           toMeshContext.provideMesh,
           "A read mapping of participant \"{}\" needs to map TO a provided mesh. Mesh \"{}\" is not provided. "
           "Please add a provide=\"yes\" attribute to the participant's use-mesh tag.",
-          participant->getName(), confMapping.toMesh->getName());
+          participant->getName(),
+          confMapping.toMesh->getName());
       PRECICE_CHECK(
           not fromMeshContext.receiveMeshFrom.empty(),
           "A read mapping of participant \"{}\" needs to map FROM a received mesh. Mesh \"{}\" is not received. "
           "Please add a from=\"(participant)\" attribute to the participant's use-mesh tag.",
-          participant->getName(), confMapping.fromMesh->getName());
+          participant->getName(),
+          confMapping.fromMesh->getName());
     } else {
       PRECICE_CHECK(
           fromMeshContext.provideMesh,
           "A write mapping of participant \"{}\" needs to map FROM a provided mesh. Mesh \"{}\" is not provided. "
           "Please add a provide=\"yes\" attribute to the participant's use-mesh tag.",
-          participant->getName(), confMapping.fromMesh->getName());
+          participant->getName(),
+          confMapping.fromMesh->getName());
       PRECICE_CHECK(
           not toMeshContext.receiveMeshFrom.empty(),
           "A write mapping of participant \"{}\" needs to map TO a received mesh. Mesh \"{}\" is not received. "
           "Please add a from=\"(participant)\" attribute to the participant's use-mesh tag.",
-          participant->getName(), confMapping.toMesh->getName());
+          participant->getName(),
+          confMapping.toMesh->getName());
     }
 
     if (confMapping.isRBF) {
@@ -540,7 +571,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(const xml::Configu
           PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
                         "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
                         "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
-                        participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
+                        participant->getName(),
+                        dataContext.getMeshName(),
+                        dataContext.getMeshName());
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           dataFound = true;
         }
@@ -550,7 +583,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(const xml::Configu
                   "Participant \"{}\" defines a write mapping from mesh \"{}\" to mesh \"{}\", "
                   "but there is either no corresponding write-data tag or the meshes used "
                   "by this participant lack the necessary use-data tags.",
-                  participant->getName(), mappingContext.mapping->getInputMesh()->getName(),
+                  participant->getName(),
+                  mappingContext.mapping->getInputMesh()->getName(),
                   mappingContext.mapping->getOutputMesh()->getName());
   }
 
@@ -571,7 +605,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(const xml::Configu
           PRECICE_CHECK(participant->isMeshProvided(toMeshID),
                         "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
                         "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
-                        participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
+                        participant->getName(),
+                        dataContext.getMeshName(),
+                        dataContext.getMeshName());
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           dataFound = true;
         }
@@ -581,7 +617,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(const xml::Configu
                   "Participant \"{}\" defines a read mapping from mesh \"{}\" to mesh \"{}\", "
                   "but there is either no corresponding read-data tag or the meshes used "
                   "by this participant lack the necessary use-data tags.",
-                  participant->getName(), mappingContext.mapping->getInputMesh()->getName(),
+                  participant->getName(),
+                  mappingContext.mapping->getInputMesh()->getName(),
                   mappingContext.mapping->getOutputMesh()->getName());
   }
 
@@ -591,7 +628,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(const xml::Configu
     PRECICE_CHECK(used,
                   "Data action of participant \"{}\" uses mesh \"{}\", which is not used by the participant. "
                   "Please add a use-mesh node with name=\"{}\".",
-                  _participants.back()->getName(), action->getMesh()->getName(), action->getMesh()->getName());
+                  _participants.back()->getName(),
+                  action->getMesh()->getName(),
+                  action->getMesh()->getName());
   }
   for (action::PtrAction &action : _actionConfig->extractActions()) {
     _participants.back()->addAction(std::move(action));
@@ -622,7 +661,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(const xml::Configu
     } else if (exportContext.type == VALUE_CSV) {
       exporter = io::PtrExport(new io::ExportCSV());
     } else {
-      PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".", _participants.back()->getName(),
+      PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
+                    _participants.back()->getName(),
                     exportContext.type);
     }
     exportContext.exporter = exporter;
@@ -636,12 +676,18 @@ void ParticipantConfiguration::finishParticipantConfiguration(const xml::Configu
     PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
                   "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not used by the participant. "
                   "Please add a use-mesh node with name=\"{}\".",
-                  participant->getName(), config.name, config.nameMesh, config.nameMesh);
+                  participant->getName(),
+                  config.name,
+                  config.nameMesh,
+                  config.nameMesh);
     const auto &meshContext = participant->usedMeshContext(config.nameMesh);
     PRECICE_CHECK(meshContext.provideMesh,
                   "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
-                  participant->getName(), config.name, config.nameMesh, config.nameMesh);
+                  participant->getName(),
+                  config.name,
+                  config.nameMesh,
+                  config.nameMesh);
 
     std::string         filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
     impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, meshContext.mesh, filename));
@@ -655,13 +701,19 @@ void ParticipantConfiguration::finishParticipantConfiguration(const xml::Configu
         participant->isMeshUsed(config.nameMesh),
         "Participant \"{}\" defines watch integral \"{}\" for mesh \"{}\" which is not used by the participant. "
         "Please add a use-mesh node with name=\"{}\".",
-        participant->getName(), config.name, config.nameMesh, config.nameMesh);
+        participant->getName(),
+        config.name,
+        config.nameMesh,
+        config.nameMesh);
     const auto &meshContext = participant->usedMeshContext(config.nameMesh);
     PRECICE_CHECK(
         meshContext.provideMesh,
         "Participant \"{}\" defines watch integral \"{}\" for the received mesh \"{}\", which is not allowed. "
         "Please move the watchpoint definition to the participant providing mesh \"{}\".",
-        participant->getName(), config.name, config.nameMesh, config.nameMesh);
+        participant->getName(),
+        config.name,
+        config.nameMesh,
+        config.nameMesh);
 
     std::string            filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
     impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext.mesh, filename, config.isScalingOn));
@@ -726,7 +778,10 @@ void ParticipantConfiguration::checkIllDefinedMappings(const mapping::MappingCon
                         "Here, both from meshes contain data \"{}\". "
                         "The mapping is not well defined. "
                         "Which data \"{}\" should be mapped to mesh \"{}\"?",
-                        mapping.toMesh->getName(), data->getName(), data->getName(), mapping.toMesh->getName());
+                        mapping.toMesh->getName(),
+                        data->getName(),
+                        data->getName(),
+                        mapping.toMesh->getName());
         }
       }
     }

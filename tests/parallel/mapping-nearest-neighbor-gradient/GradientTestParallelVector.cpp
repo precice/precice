@@ -55,8 +55,10 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     Eigen::Vector4d values;
     interface.advance(1.0);
     interface.readBlockVectorData(dataID, 2, vertexIDs, values.data());
-    Eigen::Vector4d expected(context.rank * 2.0 + 1.0 + 0.05, context.rank * 2.0 + 1.0 + 0.05,
-                             2.0 * (context.rank + 1) + 0.05, 2.0 * (context.rank + 1) + 0.05);
+    Eigen::Vector4d expected(context.rank * 2.0 + 1.0 + 0.05,
+                             context.rank * 2.0 + 1.0 + 0.05,
+                             2.0 * (context.rank + 1) + 0.05,
+                             2.0 * (context.rank + 1) + 0.05);
     BOOST_TEST(values == expected);
     interface.finalize();
   } else {

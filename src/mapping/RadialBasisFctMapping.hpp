@@ -39,8 +39,8 @@ public:
    * @param[in] function Radial basis function used for mapping.
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    */
-  RadialBasisFctMapping(Constraint constraint, int dimensions, RADIAL_BASIS_FUNCTION_T function, bool xDead, bool yDead,
-                        bool zDead);
+  RadialBasisFctMapping(
+      Constraint constraint, int dimensions, RADIAL_BASIS_FUNCTION_T function, bool xDead, bool yDead, bool zDead);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping() override;
@@ -99,9 +99,8 @@ private:
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(Constraint constraint, int dimensions,
-                                                                      RADIAL_BASIS_FUNCTION_T function, bool xDead,
-                                                                      bool yDead, bool zDead)
+RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctMapping(
+    Constraint constraint, int dimensions, RADIAL_BASIS_FUNCTION_T function, bool xDead, bool yDead, bool zDead)
     : Mapping(constraint, dimensions), _basisFunction(function)
 {
   if (constraint == SCALEDCONSISTENT) {
@@ -121,8 +120,8 @@ template <typename RADIAL_BASIS_FUNCTION_T> void RadialBasisFctMapping<RADIAL_BA
   precice::utils::Event e("map.rbf.computeMapping.From" + input()->getName() + "To" + output()->getName(),
                           precice::syncMode);
 
-  PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(), input()->getDimensions(),
-                 output()->getDimensions());
+  PRECICE_ASSERT(
+      input()->getDimensions() == output()->getDimensions(), input()->getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(), getDimensions(), output()->getDimensions());
 
   mesh::PtrMesh inMesh;
@@ -184,7 +183,8 @@ template <typename RADIAL_BASIS_FUNCTION_T> void RadialBasisFctMapping<RADIAL_BA
                   "This means that the mapping problem is not well-posed. "
                   "Please check if your coupling meshes are correct. Maybe you need to fix axis-aligned mapping setups "
                   "by marking perpendicular axes as dead?",
-                  input()->getName(), output()->getName());
+                  input()->getName(),
+                  output()->getName());
   }
   _hasComputedMapping = true;
   PRECICE_DEBUG("Compute Mapping is Completed.");
@@ -212,12 +212,13 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int ou
   precice::utils::Event e("map.rbf.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(), input()->getDimensions(),
-                 output()->getDimensions());
+  PRECICE_ASSERT(
+      input()->getDimensions() == output()->getDimensions(), input()->getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(), getDimensions(), output()->getDimensions());
   {
     int valueDim = input()->data(inputDataID)->getDimensions();
-    PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(), valueDim,
+    PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
+                   valueDim,
                    output()->data(outputDataID)->getDimensions());
   }
   int deadDimensions = 0;
@@ -520,8 +521,9 @@ template <typename RADIAL_BASIS_FUNCTION_T> void RadialBasisFctMapping<RADIAL_BA
 // ------- Non-Member Functions ---------
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh,
-                               std::vector<bool> deadAxis)
+Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction,
+                               const mesh::Mesh &      inputMesh,
+                               std::vector<bool>       deadAxis)
 {
   int inputSize  = inputMesh.vertices().size();
   int dimensions = inputMesh.getDimensions();
@@ -560,8 +562,10 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh,
-                             const mesh::Mesh &outputMesh, std::vector<bool> deadAxis)
+Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction,
+                             const mesh::Mesh &      inputMesh,
+                             const mesh::Mesh &      outputMesh,
+                             std::vector<bool>       deadAxis)
 {
   int inputSize  = inputMesh.vertices().size();
   int outputSize = outputMesh.vertices().size();

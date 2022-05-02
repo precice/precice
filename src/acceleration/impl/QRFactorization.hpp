@@ -26,22 +26,33 @@ public:
    * @brief Constructor.
    * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
-  QRFactorization(int filter = 0, double omega = 0, double theta = 1. / 0.7,
-                  double sigma = std::numeric_limits<double>::min());
+  QRFactorization(int    filter = 0,
+                  double omega  = 0,
+                  double theta  = 1. / 0.7,
+                  double sigma  = std::numeric_limits<double>::min());
 
   /**
    * @brief Constructor.
    * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
-  QRFactorization(Eigen::MatrixXd A, int filter, double omega = 0, double theta = 1. / 0.7,
-                  double sigma = std::numeric_limits<double>::min());
+  QRFactorization(Eigen::MatrixXd A,
+                  int             filter,
+                  double          omega = 0,
+                  double          theta = 1. / 0.7,
+                  double          sigma = std::numeric_limits<double>::min());
 
   /**
    * @brief Constructor.
    * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
-  QRFactorization(Eigen::MatrixXd Q, Eigen::MatrixXd R, int rows, int cols, int filter, double omega = 0,
-                  double theta = 1. / 0.7, double sigma = std::numeric_limits<double>::min());
+  QRFactorization(Eigen::MatrixXd Q,
+                  Eigen::MatrixXd R,
+                  int             rows,
+                  int             cols,
+                  int             filter,
+                  double          omega = 0,
+                  double          theta = 1. / 0.7,
+                  double          sigma = std::numeric_limits<double>::min());
 
   /**
    * @brief Destructor, empty.
@@ -56,14 +67,22 @@ public:
   /**
    * @brief resets the QR factorization to the given factorization Q, R
    */
-  void reset(Eigen::MatrixXd const &Q, Eigen::MatrixXd const &R, int rows, int cols, double omega = 0,
-             double theta = 1. / 0.7, double sigma = std::numeric_limits<double>::min());
+  void reset(Eigen::MatrixXd const &Q,
+             Eigen::MatrixXd const &R,
+             int                    rows,
+             int                    cols,
+             double                 omega = 0,
+             double                 theta = 1. / 0.7,
+             double                 sigma = std::numeric_limits<double>::min());
 
   /**
    * @brief resets the QR factorization to be the factorization of A = QR
    */
-  void reset(Eigen::MatrixXd const &A, int globalRows, double omega = 0, double theta = 1. / 0.7,
-             double sigma = std::numeric_limits<double>::min());
+  void reset(Eigen::MatrixXd const &A,
+             int                    globalRows,
+             double                 omega = 0,
+             double                 theta = 1. / 0.7,
+             double                 sigma = std::numeric_limits<double>::min());
 
   /**
    * @brief inserts a new column at arbitrary position and updates the QR factorization

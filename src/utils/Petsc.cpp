@@ -42,7 +42,8 @@ using old_signature = PetscErrorCode(const char[], const char[]);
  */
 template <typename curr_signature = decltype(PetscOptionsSetValue)>
 PetscErrorCode PetscOptionsSetValueWrapper(
-    const char name[], const char value[],
+    const char name[],
+    const char value[],
     typename std::enable_if<std::is_same<curr_signature, new_signature>::value, curr_signature>::type
         PetscOptionsSetValueImpl = PetscOptionsSetValue)
 {
@@ -58,7 +59,8 @@ PetscErrorCode PetscOptionsSetValueWrapper(
  */
 template <typename curr_signature = decltype(PetscOptionsSetValue)>
 PetscErrorCode PetscOptionsSetValueWrapper(
-    const char name[], const char value[],
+    const char name[],
+    const char value[],
     typename std::enable_if<std::is_same<curr_signature, old_signature>::value, curr_signature>::type
         PetscOptionsSetValueImpl = PetscOptionsSetValue)
 {
@@ -445,8 +447,8 @@ void Matrix::assemble(MatAssemblyType type)
   CHKERRV(ierr);
 }
 
-void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type,
-                  bool doSetup)
+void Matrix::init(
+    PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type, bool doSetup)
 {
   PetscErrorCode ierr = 0;
   if (type != nullptr) {

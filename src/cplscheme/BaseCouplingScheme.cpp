@@ -25,9 +25,15 @@
 namespace precice {
 namespace cplscheme {
 
-BaseCouplingScheme::BaseCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
-                                       std::string localParticipant, int maxIterations, CouplingMode cplMode,
-                                       constants::TimesteppingMethod dtMethod, int extrapolationOrder)
+BaseCouplingScheme::BaseCouplingScheme(double                        maxTime,
+                                       int                           maxTimeWindows,
+                                       double                        timeWindowSize,
+                                       int                           validDigits,
+                                       std::string                   localParticipant,
+                                       int                           maxIterations,
+                                       CouplingMode                  cplMode,
+                                       constants::TimesteppingMethod dtMethod,
+                                       int                           extrapolationOrder)
     : _couplingMode(cplMode), _maxTime(maxTime), _maxTimeWindows(maxTimeWindows), _timeWindows(1),
       _timeWindowSize(timeWindowSize), _maxIterations(maxIterations), _iterations(1), _totalIterations(1),
       _localParticipant(std::move(localParticipant)), _extrapolationOrder(extrapolationOrder),
@@ -77,7 +83,8 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     if (pair.second->hasGradient()) {
-      m2n->send(pair.second->gradientValues(), pair.second->getMeshID(),
+      m2n->send(pair.second->gradientValues(),
+                pair.second->getMeshID(),
                 pair.second->getDimensions() * pair.second->meshDimensions());
     }
 
@@ -97,7 +104,8 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     if (pair.second->hasGradient()) {
-      m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(),
+      m2n->receive(pair.second->gradientValues(),
+                   pair.second->getMeshID(),
                    pair.second->getDimensions() * pair.second->meshDimensions());
     }
 
@@ -130,8 +138,9 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
-      PRECICE_CHECK(not _convergenceMeasures.empty(), "At least one convergence measure has to be defined for "
-                                                      "an implicit coupling scheme.");
+      PRECICE_CHECK(not _convergenceMeasures.empty(),
+                    "At least one convergence measure has to be defined for "
+                    "an implicit coupling scheme.");
       // reserve memory and initialize data with zero
       initializeStorages();
     }
@@ -289,7 +298,8 @@ void BaseCouplingScheme::addComputedTime(double timeToAdd)
                 "in the remaining of this time window. "
                 "Did you restrict your timestep length, \"dt = min(precice_dt, dt)\"? "
                 "For more information, consult the adapter example in the preCICE documentation.",
-                timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
+                timeToAdd,
+                _timeWindowSize - _computedTimeWindowPart + timeToAdd);
 }
 
 bool BaseCouplingScheme::willDataBeExchanged(double lastSolverTimestepLength) const
@@ -476,8 +486,8 @@ void BaseCouplingScheme::newConvergenceMeasurements()
   }
 }
 
-void BaseCouplingScheme::addConvergenceMeasure(int dataID, bool suffices, bool strict,
-                                               impl::PtrConvergenceMeasure measure, bool doesLogging)
+void BaseCouplingScheme::addConvergenceMeasure(
+    int dataID, bool suffices, bool strict, impl::PtrConvergenceMeasure measure, bool doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
   auto                      allData = getAllData();

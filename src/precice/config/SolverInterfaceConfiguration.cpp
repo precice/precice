@@ -75,7 +75,8 @@ void SolverInterfaceConfiguration::xmlEndTagCallback(const xml::ConfigurationCon
                 "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
                 "Please either add a use-mesh tag in this participant's configuration, or use a different mesh in the "
                 "coupling scheme.",
-                neededMeshes.first, neededMesh);
+                neededMeshes.first,
+                neededMesh);
           }
           participantFound = true;
           break;

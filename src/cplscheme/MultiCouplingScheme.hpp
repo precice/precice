@@ -39,10 +39,16 @@ public:
    * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
    * @param[in] extrapolationOrder order used for extrapolation
    */
-  MultiCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
-                      const std::string &localParticipant, std::map<std::string, m2n::PtrM2N> m2ns,
-                      constants::TimesteppingMethod dtMethod, const std::string &controller, int maxIterations,
-                      int extrapolationOrder);
+  MultiCouplingScheme(double                             maxTime,
+                      int                                maxTimeWindows,
+                      double                             timeWindowSize,
+                      int                                validDigits,
+                      const std::string &                localParticipant,
+                      std::map<std::string, m2n::PtrM2N> m2ns,
+                      constants::TimesteppingMethod      dtMethod,
+                      const std::string &                controller,
+                      int                                maxIterations,
+                      int                                extrapolationOrder);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(const mesh::PtrData &data, mesh::PtrMesh mesh, bool initialize, const std::string &to);
@@ -58,8 +64,9 @@ public:
    */
   bool hasAnySendData() override final
   {
-    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(),
-                       [](const auto &sendExchange) { return not sendExchange.second.empty(); });
+    return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) {
+      return not sendExchange.second.empty();
+    });
   }
 
 private:
