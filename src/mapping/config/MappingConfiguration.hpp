@@ -16,39 +16,19 @@ namespace mapping {
  * OFF: Omit it altogether
  * SEPARATE: Compute it separately using least-squares QR.
  */
-enum class Polynomial {
-  ON,
-  OFF,
-  SEPARATE
-};
+enum class Polynomial { ON, OFF, SEPARATE };
 
-enum class Preallocation {
-  OFF,
-  COMPUTE,
-  ESTIMATE,
-  SAVE,
-  TREE
-};
+enum class Preallocation { OFF, COMPUTE, ESTIMATE, SAVE, TREE };
 
-enum class RBFType {
-  EIGEN,
-  PETSc
-};
+enum class RBFType { EIGEN, PETSc };
 
 /// Performs XML configuration and holds configured mappings.
 class MappingConfiguration : public xml::XMLTag::Listener {
 public:
   /// Constants defining the direction of a mapping.
-  enum Direction {
-    WRITE,
-    READ
-  };
+  enum Direction { WRITE, READ };
 
-  enum Timing {
-    INITIAL,
-    ON_ADVANCE,
-    ON_DEMAND
-  };
+  enum Timing { INITIAL, ON_ADVANCE, ON_DEMAND };
 
   /// Configuration data for one mapping.
   struct ConfiguredMapping {
@@ -66,27 +46,21 @@ public:
     bool isRBF;
   };
 
-  MappingConfiguration(
-      xml::XMLTag &              parent,
-      mesh::PtrMeshConfiguration meshConfiguration);
+  MappingConfiguration(xml::XMLTag &parent, mesh::PtrMeshConfiguration meshConfiguration);
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback(
-      const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback(
-      const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /// Returns all configured mappings.
   const std::vector<ConfiguredMapping> &mappings();
@@ -142,23 +116,12 @@ private:
 
   std::vector<ConfiguredMapping> _mappings;
 
-  ConfiguredMapping createMapping(
-      const xml::ConfigurationContext &context,
-      const std::string &              direction,
-      const std::string &              type,
-      const std::string &              constraint,
-      const std::string &              fromMeshName,
-      const std::string &              toMeshName,
-      Timing                           timing,
-      double                           shapeParameter,
-      double                           supportRadius,
-      double                           solverRtol,
-      bool                             xDead,
-      bool                             yDead,
-      bool                             zDead,
-      bool                             useLU,
-      Polynomial                       polynomial,
-      Preallocation                    preallocation) const;
+  ConfiguredMapping createMapping(const xml::ConfigurationContext &context, const std::string &direction,
+                                  const std::string &type, const std::string &constraint,
+                                  const std::string &fromMeshName, const std::string &toMeshName, Timing timing,
+                                  double shapeParameter, double supportRadius, double solverRtol, bool xDead,
+                                  bool yDead, bool zDead, bool useLU, Polynomial polynomial,
+                                  Preallocation preallocation) const;
 
   /// Check whether a mapping to and from the same mesh already exists
   void checkDuplicates(const ConfiguredMapping &mapping);

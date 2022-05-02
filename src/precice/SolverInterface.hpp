@@ -49,11 +49,8 @@ public:
    *        from 0 and end with solverProcessSize - 1.
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    */
-  SolverInterface(
-      const std::string &participantName,
-      const std::string &configurationFileName,
-      int                solverProcessIndex,
-      int                solverProcessSize);
+  SolverInterface(const std::string &participantName, const std::string &configurationFileName, int solverProcessIndex,
+                  int solverProcessSize);
 
   /**
    * @param[in] participantName Name of the participant using the interface. Has to
@@ -65,12 +62,8 @@ public:
    * @param[in] solverProcessSize The number of solver processes using preCICE.
    * @param[in] communicator A pointer to an MPI_Comm to use as communicator.
    */
-  SolverInterface(
-      const std::string &participantName,
-      const std::string &configurationFileName,
-      int                solverProcessIndex,
-      int                solverProcessSize,
-      void *             communicator);
+  SolverInterface(const std::string &participantName, const std::string &configurationFileName, int solverProcessIndex,
+                  int solverProcessSize, void *communicator);
 
   ~SolverInterface();
 
@@ -386,9 +379,7 @@ public:
    *
    * @see getDimensions()
    */
-  int setMeshVertex(
-      int           meshID,
-      const double *position);
+  int setMeshVertex(int meshID, const double *position);
 
   /**
    * @brief Returns the number of vertices of a mesh.
@@ -420,11 +411,7 @@ public:
    *
    * @see getDimensions()
    */
-  void setMeshVertices(
-      int           meshID,
-      int           size,
-      const double *positions,
-      int *         ids);
+  void setMeshVertices(int meshID, int size, const double *positions, int *ids);
 
   /**
    * @brief Get vertex positions for multiple vertex ids from a given mesh
@@ -441,11 +428,7 @@ public:
    *
    * @see getDimensions()
    */
-  void getMeshVertices(
-      int        meshID,
-      int        size,
-      const int *ids,
-      double *   positions) const;
+  void getMeshVertices(int meshID, int size, const int *ids, double *positions) const;
 
   /**
    * @brief Gets mesh vertex IDs from positions.
@@ -462,11 +445,7 @@ public:
    *
    * @note prefer to reuse the IDs returned from calls to setMeshVertex() and setMeshVertices().
    */
-  void getMeshVertexIDsFromPositions(
-      int           meshID,
-      int           size,
-      const double *positions,
-      int *         ids) const;
+  void getMeshVertexIDsFromPositions(int meshID, int size, const double *positions, int *ids) const;
 
   /**
    * @brief Sets mesh edge from vertex IDs, returns edge ID.
@@ -479,10 +458,7 @@ public:
    *
    * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the ID meshID
    */
-  int setMeshEdge(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID);
+  int setMeshEdge(int meshID, int firstVertexID, int secondVertexID);
 
   /**
    * @brief Sets mesh triangle from edge IDs
@@ -494,11 +470,7 @@ public:
    *
    * @pre edges with firstEdgeID, secondEdgeID, and thirdEdgeID were added to the mesh with the ID meshID
    */
-  void setMeshTriangle(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID);
+  void setMeshTriangle(int meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID);
 
   /**
    * @brief Sets mesh triangle from vertex IDs.
@@ -516,11 +488,7 @@ public:
    *
    * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the ID meshID
    */
-  void setMeshTriangleWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID);
+  void setMeshTriangleWithEdges(int meshID, int firstVertexID, int secondVertexID, int thirdVertexID);
 
   /**
    * @brief Sets mesh Quad from edge IDs.
@@ -534,12 +502,7 @@ public:
    * @pre edges with firstEdgeID, secondEdgeID, thirdEdgeID and fourthEdgeID were added to the mesh with the ID meshID.
    *
    */
-  void setMeshQuad(
-      int meshID,
-      int firstEdgeID,
-      int secondEdgeID,
-      int thirdEdgeID,
-      int fourthEdgeID);
+  void setMeshQuad(int meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID, int fourthEdgeID);
 
   /**
    * @brief Sets surface mesh quadrangle from vertex IDs.
@@ -556,15 +519,11 @@ public:
    * @param[in] thirdVertexID ID of the third vertex of the Quad
    * @param[in] fourthVertexID ID of the fourth vertex of the Quad
    *
-   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the ID meshID
+   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the
+   * ID meshID
    *
    */
-  void setMeshQuadWithEdges(
-      int meshID,
-      int firstVertexID,
-      int secondVertexID,
-      int thirdVertexID,
-      int fourthVertexID);
+  void setMeshQuadWithEdges(int meshID, int firstVertexID, int secondVertexID, int thirdVertexID, int fourthVertexID);
 
   ///@}
 
@@ -600,7 +559,9 @@ public:
    *
    * @pre A mapping to toMeshID was configured.
    */
-  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/859 and comment, if you need this function.")]] void mapReadDataTo(int toMeshID);
+  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/859 and comment, if you need "
+               "this function.")]] void
+  mapReadDataTo(int toMeshID);
 
   /**
    * @brief Computes and maps all write data mapped from the mesh with given ID.
@@ -612,7 +573,9 @@ public:
    *
    * @pre A mapping from fromMeshID was configured.
    */
-  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/859 and comment, if you need this function.")]] void mapWriteDataFrom(int fromMeshID);
+  [[deprecated("Will be removed in 3.0.0. See https://github.com/precice/precice/issues/859 and comment, if you need "
+               "this function.")]] void
+  mapWriteDataFrom(int fromMeshID);
 
   /**
    * @brief Writes vector data given as block.
@@ -635,11 +598,7 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeBlockVectorData(
-      int           dataID,
-      int           size,
-      const int *   valueIndices,
-      const double *values);
+  void writeBlockVectorData(int dataID, int size, const int *valueIndices, const double *values);
 
   /**
    * @brief Writes vector gradient data given as block.
@@ -655,7 +614,8 @@ public:
    *                                        ... ,
    *                                        vnx_dx, vnx_dy, vny_dx, vny_dy)
    *
-   * corresponding to the vector data v0 = (v0x, v0y) , v1 = (v1x, v1y), ... , vn = (vnx, vny) differentiated in spatial directions x and y.
+   * corresponding to the vector data v0 = (v0x, v0y) , v1 = (v1x, v1y), ... , vn = (vnx, vny) differentiated in spatial
+   * directions x and y.
    *
    *
    * The 3D-format of \p gradientValue is ( v0x_dx, v0x_dy, v0x_dz, v0y_dx, v0y_dy, v0y_dz, v0z_dx, v0z_dy, v0z_dz,
@@ -663,7 +623,8 @@ public:
    *                                        ... ,
    *                                        vnx_dx, vnx_dy, vnx_dz, vny_dx, vny_dy, vny_dz, vnz_dx, vnz_dy, vnz_dz)
    *
-   * corresponding to the vector data v0 = (v0x, v0y, v0z) , v1 = (v1x, v1y, v1z), ... , vn = (vnx, vny, vnz) differentiated in spatial directions x,y and z.
+   * corresponding to the vector data v0 = (v0x, v0y, v0z) , v1 = (v1x, v1y, v1z), ... , vn = (vnx, vny, vnz)
+   * differentiated in spatial directions x,y and z.
    *
    * The optional \p rowsFirst attribute allows to enter the derivatives directions-wise:
    *
@@ -688,12 +649,8 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeBlockVectorGradientData(
-      int           dataID,
-      int           size,
-      const int *   valueIndices,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+  void writeBlockVectorGradientData(int dataID, int size, const int *valueIndices, const double *gradientValues,
+                                    bool rowsFirst = false);
 
   /**
    * @brief Writes vector data to a vertex
@@ -713,10 +670,7 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeVectorData(
-      int           dataID,
-      int           valueIndex,
-      const double *value);
+  void writeVectorData(int dataID, int valueIndex, const double *value);
 
   /**
    * @brief Writes vector gradient data to a vertex
@@ -726,11 +680,12 @@ public:
    *
    * By default, the gradients are passed in the following way:
    *
-   * The 2D-format of \p gradientValue is (vx_dx, vx_dy, vy_dx, vy_dy) matrix corresponding to the data block v = (vx, vy)
-   * differentiated respectively in x-direction dx and y-direction dy
+   * The 2D-format of \p gradientValue is (vx_dx, vx_dy, vy_dx, vy_dy) matrix corresponding to the data block v = (vx,
+   * vy) differentiated respectively in x-direction dx and y-direction dy
    *
    * The 3D-format of \p gradientValue is (vx_dx, vx_dy, vx_dz, vy_dx, vy_dy, vy_dz, vz_dx, vz_dy, vz_dz) matrix
-   * corresponding to the data block v = (vx, vy, vz) differentiated respectively in spatial directions x-direction dx and y-direction dy and z-direction dz
+   * corresponding to the data block v = (vx, vy, vz) differentiated respectively in spatial directions x-direction dx
+   * and y-direction dy and z-direction dz
    *
    * The optional \p rowsFirst attribute allows to enter the values differentiated in the spatial directions first:
    *
@@ -750,11 +705,7 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeVectorGradientData(
-      int           dataID,
-      int           valueIndex,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+  void writeVectorGradientData(int dataID, int valueIndex, const double *gradientValues, bool rowsFirst = false);
 
   /**
    * @brief Writes scalar data given as block.
@@ -774,11 +725,7 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeBlockScalarData(
-      int           dataID,
-      int           size,
-      const int *   valueIndices,
-      const double *values);
+  void writeBlockScalarData(int dataID, int size, const int *valueIndices, const double *values);
 
   /**
    * @brief Writes scalar gradient data given as block.
@@ -812,11 +759,7 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeBlockScalarGradientData(
-      int           dataID,
-      int           size,
-      const int *   valueIndices,
-      const double *gradientValues);
+  void writeBlockScalarGradientData(int dataID, int size, const int *valueIndices, const double *gradientValues);
 
   /**
    * @brief Writes scalar data to a vertex
@@ -831,10 +774,7 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeScalarData(
-      int    dataID,
-      int    valueIndex,
-      double value);
+  void writeScalarData(int dataID, int valueIndex, double value);
 
   /**
    * @brief Writes scalar gradient data to a vertex
@@ -844,7 +784,8 @@ public:
    *
    * @param[in] dataID ID to write to.
    * @param[in] valueIndex Index of the vertex.
-   * @param[in] gradientValue Gradient values differentiated in the spacial direction (dx, dy) for 2D space, (dx, dy, dz) for 3D space
+   * @param[in] gradientValue Gradient values differentiated in the spacial direction (dx, dy) for 2D space, (dx, dy,
+   * dz) for 3D space
    *
    * @pre count of available elements at value matches the configured dimension
    * @pre initialize() has been called
@@ -853,13 +794,11 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void writeScalarGradientData(
-      int           dataID,
-      int           valueIndex,
-      const double *gradientValues);
+  void writeScalarGradientData(int dataID, int valueIndex, const double *gradientValues);
 
   /**
-   * @brief Reads vector data values given as block from a mesh. Values correspond to the end of the current time window.
+   * @brief Reads vector data values given as block from a mesh. Values correspond to the end of the current time
+   * window.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are read into a block of continuous memory.
@@ -881,14 +820,11 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readBlockVectorData(
-      int        dataID,
-      int        size,
-      const int *valueIndices,
-      double *   values) const;
+  void readBlockVectorData(int dataID, int size, const int *valueIndices, double *values) const;
 
   /**
-   * @brief Reads vector data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   * @brief Reads vector data values given as block from a mesh. Values correspond to a given point in time relative to
+   * the beginning of the current timestep.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are read into a block of continuous memory.
@@ -897,10 +833,10 @@ public:
    * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current
+   * time step. relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will
+   * call advance(dt) at the end of the time step, dt indicates the length of the current time step. Then
+   * relativeReadTime = dt corresponds to the data at the end of the time step.
    *
    * @param[in] dataID ID to read from.
    * @param[in] size Number n of vertices.
@@ -916,12 +852,8 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readBlockVectorData(
-      int        dataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+  void readBlockVectorData(int dataID, int size, const int *valueIndices, double relativeReadTime,
+                           double *values) const;
 
   /**
    * @brief Reads vector data at a vertex on a mesh. Values correspond to the end of the current time window.
@@ -943,13 +875,11 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readVectorData(
-      int     dataID,
-      int     valueIndex,
-      double *value) const;
+  void readVectorData(int dataID, int valueIndex, double *value) const;
 
   /**
-   * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the
+   * beginning of the current timestep.
    *
    * This function reads a value of a specified vertex from a dataID.
    * Values are provided as a block of continuous memory.
@@ -957,10 +887,10 @@ public:
    * The 2D-format of value is (x, y)
    * The 3D-format of value is (x, y, z)
    *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current
+   * time step. relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will
+   * call advance(dt) at the end of the time step, dt indicates the length of the current time step. Then
+   * relativeReadTime = dt corresponds to the data at the end of the time step.
    *
    * @param[in] dataID ID to read from.
    * @param[in] valueIndex Index of the vertex.
@@ -974,14 +904,11 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readVectorData(
-      int     dataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double *value) const;
+  void readVectorData(int dataID, int valueIndex, double relativeReadTime, double *value) const;
 
   /**
-   * @brief Reads scalar data values given as block from a mesh. Values correspond to the end of the current time window.
+   * @brief Reads scalar data values given as block from a mesh. Values correspond to the end of the current time
+   * window.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are provided as a block of continuous memory.
@@ -1000,23 +927,20 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readBlockScalarData(
-      int        dataID,
-      int        size,
-      const int *valueIndices,
-      double *   values) const;
+  void readBlockScalarData(int dataID, int size, const int *valueIndices, double *values) const;
 
   /**
-   * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to
+   * the beginning of the current timestep.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are provided as a block of continuous memory.
    * valueIndices contains the indices of the vertices.
    *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current
+   * time step. relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will
+   * call advance(dt) at the end of the time step, dt indicates the length of the current time step. Then
+   * relativeReadTime = dt corresponds to the data at the end of the time step.
    *
    * @param[in] dataID ID to read from.
    * @param[in] size Number n of vertices.
@@ -1032,12 +956,8 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readBlockScalarData(
-      int        dataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+  void readBlockScalarData(int dataID, int size, const int *valueIndices, double relativeReadTime,
+                           double *values) const;
 
   /**
    * @brief Reads scalar data at a vertex on a mesh. Values correspond to the end of the current time window.
@@ -1054,20 +974,18 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readScalarData(
-      int     dataID,
-      int     valueIndex,
-      double &value) const;
+  void readScalarData(int dataID, int valueIndex, double &value) const;
 
   /**
-   * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the
+   * beginning of the current timestep.
    *
    * This function reads a value of a specified vertex from a dataID.
    *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current
+   * time step. relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will
+   * call advance(dt) at the end of the time step, dt indicates the length of the current time step. Then
+   * relativeReadTime = dt corresponds to the data at the end of the time step.
    *
    * @param[in] dataID ID to read from.
    * @param[in] valueIndex Index of the vertex.
@@ -1080,11 +998,7 @@ public:
    *
    * @see SolverInterface::setMeshVertex()
    */
-  void readScalarData(
-      int     dataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double &value) const;
+  void readScalarData(int dataID, int valueIndex, double relativeReadTime, double &value) const;
 
   ///@}
 
@@ -1149,9 +1063,7 @@ public:
    *
    * @pre @p initialize() has not yet been called.
    */
-  void setMeshAccessRegion(
-      const int     meshID,
-      const double *boundingBox) const;
+  void setMeshAccessRegion(const int meshID, const double *boundingBox) const;
 
   /**
    * @brief getMeshVerticesAndIDs Iterates over the region of
@@ -1171,11 +1083,7 @@ public:
    * if the \p meshID corresponds to a received mesh, since the relevant mesh data
    * is exchanged during the @p initialize() call.
    */
-  void getMeshVerticesAndIDs(
-      const int meshID,
-      const int size,
-      int *     ids,
-      double *  coordinates) const;
+  void getMeshVerticesAndIDs(const int meshID, const int size, int *ids, double *coordinates) const;
 
   ///@}
 

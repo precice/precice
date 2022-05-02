@@ -39,9 +39,7 @@ BOOST_AUTO_TEST_CASE(MultiCoupling)
   std::string writeIterCheckpoint(precice::constants::actionWriteIterationCheckpoint());
   std::string readIterCheckpoint(precice::constants::actionReadIterationCheckpoint());
 
-  if (context.isNamed("SOLIDZ1") ||
-      context.isNamed("SOLIDZ2") ||
-      context.isNamed("SOLIDZ3")) {
+  if (context.isNamed("SOLIDZ1") || context.isNamed("SOLIDZ2") || context.isNamed("SOLIDZ3")) {
     MeshID meshID      = -1;
     int    dataWriteID = -1;
     int    dataReadID  = -1;

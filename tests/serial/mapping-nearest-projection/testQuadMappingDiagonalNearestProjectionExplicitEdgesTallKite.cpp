@@ -6,7 +6,8 @@
 #include "helpers.hpp"
 
 /**
- * @brief Tests the Nearest Projection Mapping on a single participant on a quad mesh of a tall kite with setMeshQuadWithEdges
+ * @brief Tests the Nearest Projection Mapping on a single participant on a quad mesh of a tall kite with
+ * setMeshQuadWithEdges
  */
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)

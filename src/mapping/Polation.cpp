@@ -15,10 +15,7 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Edge &element)
   const auto &A = element.vertex(0);
   const auto &B = element.vertex(1);
 
-  const auto bcoords = math::barycenter::calcBarycentricCoordsForEdge(
-      A.getCoords(),
-      B.getCoords(),
-      location);
+  const auto bcoords = math::barycenter::calcBarycentricCoordsForEdge(A.getCoords(), B.getCoords(), location);
 
   _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
   _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
@@ -31,11 +28,8 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Triangle &elemen
   auto &B = element.vertex(1);
   auto &C = element.vertex(2);
 
-  const auto bcoords = math::barycenter::calcBarycentricCoordsForTriangle(
-      A.getCoords(),
-      B.getCoords(),
-      C.getCoords(),
-      location);
+  const auto bcoords =
+      math::barycenter::calcBarycentricCoordsForTriangle(A.getCoords(), B.getCoords(), C.getCoords(), location);
 
   _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
   _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
@@ -49,7 +43,8 @@ const std::vector<WeightedElement> &Polation::getWeightedElements() const
 
 bool Polation::isInterpolation() const
 {
-  return std::all_of(_weightedElements.begin(), _weightedElements.end(), [](const mapping::WeightedElement &elem) { return elem.weight >= 0.0; });
+  return std::all_of(_weightedElements.begin(), _weightedElements.end(),
+                     [](const mapping::WeightedElement &elem) { return elem.weight >= 0.0; });
 }
 
 std::ostream &operator<<(std::ostream &os, const WeightedElement &w)

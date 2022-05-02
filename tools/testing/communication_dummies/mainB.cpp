@@ -16,8 +16,7 @@ using std::cout;
 using std::rand;
 using std::vector;
 
-vector<double>
-getData()
+vector<double> getData()
 {
   int rank = utils::MasterSlave::getRank();
 
@@ -28,17 +27,13 @@ getData()
   static double  data_4[] = {rand(), rand(), rand()};
 
   static double *data[] = {data_0, data_1, data_2, data_3, data_4};
-  static int     size[] = {sizeof(data_0) / sizeof(*data_0),
-                       sizeof(data_1) / sizeof(*data_1),
-                       sizeof(data_2) / sizeof(*data_2),
-                       0,
-                       sizeof(data_4) / sizeof(*data_4)};
+  static int     size[] = {sizeof(data_0) / sizeof(*data_0), sizeof(data_1) / sizeof(*data_1),
+                       sizeof(data_2) / sizeof(*data_2), 0, sizeof(data_4) / sizeof(*data_4)};
 
   return std::move(vector<double>(data[rank], data[rank] + size[rank]));
 }
 
-vector<double>
-getExpectedData()
+vector<double> getExpectedData()
 {
   int rank = utils::MasterSlave::getRank();
 
@@ -49,11 +44,8 @@ getExpectedData()
   static double  data_4[] = {80.0, 90.0, 100.0};
 
   static double *data[] = {data_0, data_1, data_2, data_3, data_4};
-  static int     size[] = {sizeof(data_0) / sizeof(*data_0),
-                       sizeof(data_1) / sizeof(*data_1),
-                       sizeof(data_2) / sizeof(*data_2),
-                       0,
-                       sizeof(data_4) / sizeof(*data_4)};
+  static int     size[] = {sizeof(data_0) / sizeof(*data_0), sizeof(data_1) / sizeof(*data_1),
+                       sizeof(data_2) / sizeof(*data_2), 0, sizeof(data_4) / sizeof(*data_4)};
 
   return std::move(vector<double>(data[rank], data[rank] + size[rank]));
 }
@@ -114,22 +106,17 @@ int main(int argc, char **argv)
     utils::Parallel::splitCommunicator("Slave");
   }
 
-  utils::MasterSlave::getCommunication() =
-      com::PtrCommunication(new com::MPIDirectCommunication);
+  utils::MasterSlave::getCommunication() = com::PtrCommunication(new com::MPIDirectCommunication);
 
   int rankOffset = 1;
 
   if (utils::MasterSlave::isPrimary()) {
-    utils::MasterSlave::getCommunication()->acceptConnection(
-        "Master", "Slave", utils::MasterSlave::getRank(), 1);
+    utils::MasterSlave::getCommunication()->acceptConnection("Master", "Slave", utils::MasterSlave::getRank(), 1);
     utils::MasterSlave::getCommunication()->setRankOffset(rankOffset);
   } else {
     assertion(utils::MasterSlave::isSecondary());
     utils::MasterSlave::getCommunication()->requestConnection(
-        "Master",
-        "Slave",
-        utils::MasterSlave::getRank() - rankOffset,
-        utils::MasterSlave::getSize() - rankOffset);
+        "Master", "Slave", utils::MasterSlave::getRank() - rankOffset, utils::MasterSlave::getSize() - rankOffset);
   }
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
@@ -154,10 +141,9 @@ int main(int argc, char **argv)
     mesh->getVertexDistribution()[4].push_back(9);
   }
 
-  std::vector<com::PtrCommunicationFactory> cfs(
-      {com::PtrCommunicationFactory(new com::SocketCommunicationFactory)});
+  std::vector<com::PtrCommunicationFactory> cfs({com::PtrCommunicationFactory(new com::SocketCommunicationFactory)});
 
-  //std::vector<com::PtrCommunicationFactory> cfs(
+  // std::vector<com::PtrCommunicationFactory> cfs(
   //     {com::PtrCommunicationFactory(new com::SocketCommunicationFactory),
   //      com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory)});
 

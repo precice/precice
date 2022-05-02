@@ -30,12 +30,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t) -> double {
-    return (double) (2 + t);
-  };
-  DataFunction dataTwoFunction = [](double t) -> double {
-    return (double) (10 + t);
-  };
+  DataFunction dataOneFunction = [](double t) -> double { return (double) (2 + t); };
+  DataFunction dataTwoFunction = [](double t) -> double { return (double) (10 + t); };
   DataFunction writeFunction;
   DataFunction readFunction;
 
@@ -68,10 +64,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   double windowStartTime = 0;
   int    windowStartStep = 0;
   int    iterations      = 0;
-  double dt              = windowDt / (nSubsteps - 0.5);                 // Solver always tries to do a timestep of fixed size.
-  double expectedDts[]   = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
-  double currentDt       = dt > maxDt ? maxDt : dt;                      // determine actual timestep length; must fit into remaining time in window
-  double time            = timestep * dt;
+  double dt              = windowDt / (nSubsteps - 0.5); // Solver always tries to do a timestep of fixed size.
+  double expectedDts[]   = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0,
+                          2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via
+                                        // preCICE steering to fit into the window.
+  double currentDt =
+      dt > maxDt ? maxDt : dt; // determine actual timestep length; must fit into remaining time in window
+  double time = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);
@@ -98,8 +97,12 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, readData);
     }
-    if (context.isNamed("SolverOne") && iterations == 0) {                     // special situation for serial coupling: SolverOne gets the old data in its first iteration for all time windows.
-      BOOST_TEST(readData == readFunction(startTime + timewindow * windowDt)); // zeroth window: Initial Data from SolverTwo; following windows: data at end of window was written by SolverTwo.
+    if (context.isNamed("SolverOne") && iterations == 0) { // special situation for serial coupling: SolverOne gets the
+                                                           // old data in its first iteration for all time windows.
+      BOOST_TEST(
+          readData ==
+          readFunction(startTime + timewindow * windowDt)); // zeroth window: Initial Data from SolverTwo; following
+                                                            // windows: data at end of window was written by SolverTwo.
     } else {
       BOOST_TEST(readData == readFunction(startTime + (timewindow + 1) * windowDt));
     }
@@ -114,11 +117,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     maxDt     = precice.advance(currentDt);
     currentDt = dt > maxDt ? maxDt : dt;
     timestep++;
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
+    if (precice.isActionRequired(
+            precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
       iterations++;
       timestep = windowStartStep;
       time     = windowStartTime;
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we have to make the action
+      precice.markActionFulfilled(
+          precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we
+                                                                // have to make the action
     }
     if (precice.isTimeWindowComplete()) {
       iterations++;

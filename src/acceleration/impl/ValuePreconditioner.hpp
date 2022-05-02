@@ -12,8 +12,7 @@ namespace impl {
 /// Preconditioner that uses the values from the previous time window to scale the quasi-Newton system.
 class ValuePreconditioner : public Preconditioner {
 public:
-  ValuePreconditioner(
-      int maxNonConstTimeWindows);
+  ValuePreconditioner(int maxNonConstTimeWindows);
   /**
    * @brief Destructor, empty.
    */

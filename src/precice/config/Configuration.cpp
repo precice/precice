@@ -9,9 +9,7 @@ extern bool syncMode;
 namespace config {
 
 Configuration::Configuration()
-    : _tag(*this, "precice-configuration", xml::XMLTag::OCCUR_ONCE),
-      _logConfig(_tag),
-      _solverInterfaceConfig(_tag)
+    : _tag(*this, "precice-configuration", xml::XMLTag::OCCUR_ONCE), _logConfig(_tag), _solverInterfaceConfig(_tag)
 {
   _tag.setDocumentation("Main tag containing preCICE configuration.");
   _tag.addNamespace("data");
@@ -22,8 +20,9 @@ Configuration::Configuration()
   _tag.addNamespace("coupling-scheme");
   _tag.addNamespace("acceleration");
 
-  auto attrSyncMode = xml::makeXMLAttribute("sync-mode", false)
-                          .setDocumentation("sync-mode enabled additional inter- and intra-participant synchronizations");
+  auto attrSyncMode =
+      xml::makeXMLAttribute("sync-mode", false)
+          .setDocumentation("sync-mode enabled additional inter- and intra-participant synchronizations");
   _tag.addAttribute(attrSyncMode);
 }
 
@@ -40,15 +39,12 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
   }
 }
 
-void Configuration::xmlEndTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+void Configuration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getName());
 }
 
-const SolverInterfaceConfiguration &
-Configuration::getSolverInterfaceConfiguration() const
+const SolverInterfaceConfiguration &Configuration::getSolverInterfaceConfiguration() const
 {
   return _solverInterfaceConfig;
 }

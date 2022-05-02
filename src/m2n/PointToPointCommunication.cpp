@@ -30,9 +30,7 @@ namespace precice {
 bool extern syncMode;
 namespace m2n {
 
-void send(mesh::Mesh::VertexDistribution const &m,
-          int                                   rankReceiver,
-          const com::PtrCommunication &         communication)
+void send(mesh::Mesh::VertexDistribution const &m, int rankReceiver, const com::PtrCommunication &communication)
 {
   communication->send(static_cast<int>(m.size()), rankReceiver);
 
@@ -44,9 +42,7 @@ void send(mesh::Mesh::VertexDistribution const &m,
   }
 }
 
-void receive(mesh::Mesh::VertexDistribution &m,
-             int                             rankSender,
-             const com::PtrCommunication &   communication)
+void receive(mesh::Mesh::VertexDistribution &m, int rankSender, const com::PtrCommunication &communication)
 {
   m.clear();
   int size = 0;
@@ -72,9 +68,8 @@ void broadcastSend(mesh::Mesh::VertexDistribution const &m,
   }
 }
 
-void broadcastReceive(mesh::Mesh::VertexDistribution &m,
-                      int                             rankBroadcaster,
-                      const com::PtrCommunication &   communication = utils::MasterSlave::getCommunication())
+void broadcastReceive(mesh::Mesh::VertexDistribution &m, int rankBroadcaster,
+                      const com::PtrCommunication &communication = utils::MasterSlave::getCommunication())
 {
   m.clear();
   int size = 0;
@@ -257,8 +252,7 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this participant.
     mesh::Mesh::VertexDistribution const &thisVertexDistribution,
     // `otherVertexDistribution' is input vertex distribution from other participant.
-    mesh::Mesh::VertexDistribution const &otherVertexDistribution,
-    int                                   thisRank = utils::MasterSlave::getRank())
+    mesh::Mesh::VertexDistribution const &otherVertexDistribution, int thisRank = utils::MasterSlave::getRank())
 {
   auto iterator = thisVertexDistribution.find(thisRank);
   if (iterator == thisVertexDistribution.end())
@@ -287,11 +281,9 @@ std::map<int, std::vector<int>> buildCommunicationMap(
   return communicationMap;
 }
 
-PointToPointCommunication::PointToPointCommunication(
-    com::PtrCommunicationFactory communicationFactory,
-    mesh::PtrMesh                mesh)
-    : DistributedCommunication(std::move(mesh)),
-      _communicationFactory(std::move(communicationFactory))
+PointToPointCommunication::PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
+                                                     mesh::PtrMesh                mesh)
+    : DistributedCommunication(std::move(mesh)), _communicationFactory(std::move(communicationFactory))
 {
 }
 
@@ -306,8 +298,7 @@ bool PointToPointCommunication::isConnected() const
   return _isConnected;
 }
 
-void PointToPointCommunication::acceptConnection(std::string const &acceptorName,
-                                                 std::string const &requesterName)
+void PointToPointCommunication::acceptConnection(std::string const &acceptorName, std::string const &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected(), "Already connected.");
@@ -321,7 +312,8 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
     // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
 
-    c->acceptConnection(acceptorName, requesterName, "TMP-PRIMARYCOM-" + _mesh->getName(), utils::MasterSlave::getRank());
+    c->acceptConnection(acceptorName, requesterName, "TMP-PRIMARYCOM-" + _mesh->getName(),
+                        utils::MasterSlave::getRank());
 
     // Exchange vertex distributions.
     m2n::send(vertexDistribution, 0, c);
@@ -352,8 +344,8 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
   Event                           e2("m2n.buildCommunicationMap", precice::syncMode);
-  std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
-      vertexDistribution, requesterVertexDistribution);
+  std::map<int, std::vector<int>> communicationMap =
+      m2n::buildCommunicationMap(vertexDistribution, requesterVertexDistribution);
   e2.stop();
 
 // Print `communicationMap'.
@@ -382,10 +374,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   // Accept point-to-point connections (as server) between the current acceptor
   // process (in the current participant) with rank `utils::MasterSlave::getRank()'
   // and (multiple) requester processes (in the requester participant).
-  _communication->acceptConnectionAsServer(acceptorName,
-                                           requesterName,
-                                           _mesh->getName(),
-                                           utils::MasterSlave::getRank(),
+  _communication->acceptConnectionAsServer(acceptorName, requesterName, _mesh->getName(), utils::MasterSlave::getRank(),
                                            communicationMap.size());
 
   PRECICE_DEBUG("Store communication map");
@@ -399,8 +388,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   _isConnected = true;
 }
 
-void PointToPointCommunication::acceptPreConnection(std::string const &acceptorName,
-                                                    std::string const &requesterName)
+void PointToPointCommunication::acceptPreConnection(std::string const &acceptorName, std::string const &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected(), "Already connected.");
@@ -414,12 +402,8 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
 
   _communication = _communicationFactory->newCommunication();
 
-  _communication->acceptConnectionAsServer(
-      acceptorName,
-      requesterName,
-      _mesh->getName(),
-      utils::MasterSlave::getRank(),
-      localConnectedRanks.size());
+  _communication->acceptConnectionAsServer(acceptorName, requesterName, _mesh->getName(), utils::MasterSlave::getRank(),
+                                           localConnectedRanks.size());
 
   _connectionDataVector.reserve(localConnectedRanks.size());
 
@@ -430,8 +414,7 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   _isConnected = true;
 }
 
-void PointToPointCommunication::requestConnection(std::string const &acceptorName,
-                                                  std::string const &requesterName)
+void PointToPointCommunication::requestConnection(std::string const &acceptorName, std::string const &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected(), "Already connected.");
@@ -444,9 +427,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
     Event e0("m2n.exchangeVertexDistribution");
     // Establish connection between participants' primary processes.
     auto c = _communicationFactory->newCommunication();
-    c->requestConnection(acceptorName, requesterName,
-                         "TMP-PRIMARYCOM-" + _mesh->getName(),
-                         0, 1);
+    c->requestConnection(acceptorName, requesterName, "TMP-PRIMARYCOM-" + _mesh->getName(), 0, 1);
 
     // Exchange vertex distributions.
     m2n::receive(acceptorVertexDistribution, 0, c);
@@ -477,8 +458,8 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
   Event                           e2("m2n.buildCommunicationMap", precice::syncMode);
-  std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
-      vertexDistribution, acceptorVertexDistribution);
+  std::map<int, std::vector<int>> communicationMap =
+      m2n::buildCommunicationMap(vertexDistribution, acceptorVertexDistribution);
   e2.stop();
 
 // Print `communicationMap'.
@@ -514,9 +495,8 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   // requester process (in the current participant) and (multiple) acceptor
   // processes (in the acceptor participant) to ranks `accceptingRanks'
   // according to `communicationMap`.
-  _communication->requestConnectionAsClient(acceptorName, requesterName,
-                                            _mesh->getName(),
-                                            acceptingRanks, utils::MasterSlave::getRank());
+  _communication->requestConnectionAsClient(acceptorName, requesterName, _mesh->getName(), acceptingRanks,
+                                            utils::MasterSlave::getRank());
 
   PRECICE_DEBUG("Store communication map");
   for (auto &i : communicationMap) {
@@ -529,8 +509,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   _isConnected = true;
 }
 
-void PointToPointCommunication::requestPreConnection(std::string const &acceptorName,
-                                                     std::string const &requesterName)
+void PointToPointCommunication::requestPreConnection(std::string const &acceptorName, std::string const &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected(), "Already connected.");
@@ -549,9 +528,8 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   std::set<int> acceptingRanks(localConnectedRanks.begin(), localConnectedRanks.end());
 
   _communication = _communicationFactory->newCommunication();
-  _communication->requestConnectionAsClient(acceptorName, requesterName,
-                                            _mesh->getName(),
-                                            acceptingRanks, utils::MasterSlave::getRank());
+  _communication->requestConnectionAsClient(acceptorName, requesterName, _mesh->getName(), acceptingRanks,
+                                            utils::MasterSlave::getRank());
 
   for (auto &connectedRank : localConnectedRanks) {
     _connectionDataVector.push_back({connectedRank, com::PtrRequest()});

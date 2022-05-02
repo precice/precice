@@ -15,13 +15,15 @@ namespace time {
 /**
  * @brief Stores data samples in time and allows to perform interpolation to obtain new values.
  *
- * When created via Waveform(interpolationOrder) a waveform reserves storage for the samples that are used to create the interpolant.
- * After creation of the waveform it must be initialized with Waveform::initialize(value) to finally reserve the storage.
- * The waveform is initialized with one data value as a constant function.
- * Waveform::store(value) allows the user to update the data sample in the Waveform.
- * Each time the user calls Waveform::moveToNextWindow() the data provided through Waveform::initialize or Waveform::store will be locked.
- * With each call of Waveform::moveToNextWindow() the number of available samples and, therefore, the order of the waveform is increased by one until the interpolation order that was defined during construction is reached.
- * As soon as this interpolation order is reached, the oldest sample will be discarded when Waveform::moveToNextWindow() is called. The order will then stay the same.
+ * When created via Waveform(interpolationOrder) a waveform reserves storage for the samples that are used to create the
+ * interpolant. After creation of the waveform it must be initialized with Waveform::initialize(value) to finally
+ * reserve the storage. The waveform is initialized with one data value as a constant function. Waveform::store(value)
+ * allows the user to update the data sample in the Waveform. Each time the user calls Waveform::moveToNextWindow() the
+ * data provided through Waveform::initialize or Waveform::store will be locked. With each call of
+ * Waveform::moveToNextWindow() the number of available samples and, therefore, the order of the waveform is increased
+ * by one until the interpolation order that was defined during construction is reached. As soon as this interpolation
+ * order is reached, the oldest sample will be discarded when Waveform::moveToNextWindow() is called. The order will
+ * then stay the same.
  */
 class Waveform {
   friend class testing::WaveformFixture; // Make the fixture friend of this class
@@ -31,7 +33,8 @@ public:
    *
    * Storage still needs to be initialized with Waveform::initialize, before the Waveform can be used.
    *
-   * @param interpolationOrder Defines the interpolation order supported by this Waveform and reserves storage correspondingly
+   * @param interpolationOrder Defines the interpolation order supported by this Waveform and reserves storage
+   * correspondingly
    */
   Waveform(const int interpolationOrder);
 
@@ -43,7 +46,8 @@ public:
   int getInterpolationOrder() const;
 
   /**
-   * @brief Used to initialize _timeWindowsStorage according to required size and initializes Waveform as constant with given values.
+   * @brief Used to initialize _timeWindowsStorage according to required size and initializes Waveform as constant with
+   * given values.
    * @param values Defines constant initial value of waveform and its size
    */
   void initialize(const Eigen::VectorXd &values);
@@ -55,16 +59,19 @@ public:
   void store(const Eigen::VectorXd &values);
 
   /**
-   * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.
+   * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (=
+   * constant extrapolation). Called when moving to the next time window.
    */
   void moveToNextWindow();
 
   /**
    * @brief Evaluate waveform at specific point in time. Uses interpolation if necessary.
    *
-   * Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order of this Waveform.
+   * Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order
+   * of this Waveform.
    *
-   * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
+   * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers
+   * to the beginning of the window and 1 to the end.
    * @return Value of Waveform at time normalizedDt.
    */
   Eigen::VectorXd sample(const double normalizedDt);

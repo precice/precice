@@ -23,8 +23,8 @@ class EventData {
 public:
   explicit EventData(std::string _name);
 
-  EventData(std::string _name, long _count, long _total, long _max, long _min,
-            Event::Data data, Event::StateChanges stateChanges);
+  EventData(std::string _name, long _count, long _total, long _max, long _min, Event::Data data,
+            Event::StateChanges stateChanges);
 
   /// Adds an Events data.
   void put(Event const &event);
@@ -160,8 +160,7 @@ public:
 
 private:
   /// Private, empty constructor for singleton pattern
-  EventRegistry()
-      : globalEvent("_GLOBAL", true, false) // Unstarted, it's started in initialize
+  EventRegistry() : globalEvent("_GLOBAL", true, false) // Unstarted, it's started in initialize
   {
   }
 

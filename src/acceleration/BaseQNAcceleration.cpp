@@ -31,25 +31,13 @@ namespace acceleration {
  *     Constructor
  * ----------------------------------------------------------------------------
  */
-BaseQNAcceleration::BaseQNAcceleration(
-    double                  initialRelaxation,
-    bool                    forceInitialRelaxation,
-    int                     maxIterationsUsed,
-    int                     timeWindowsReused,
-    int                     filter,
-    double                  singularityLimit,
-    std::vector<int>        dataIDs,
-    impl::PtrPreconditioner preconditioner)
-    : _preconditioner(std::move(preconditioner)),
-      _initialRelaxation(initialRelaxation),
-      _maxIterationsUsed(maxIterationsUsed),
-      _timeWindowsReused(timeWindowsReused),
-      _dataIDs(std::move(dataIDs)),
-      _forceInitialRelaxation(forceInitialRelaxation),
-      _qrV(filter),
-      _filter(filter),
-      _singularityLimit(singularityLimit),
-      _infostringstream(std::ostringstream::ate)
+BaseQNAcceleration::BaseQNAcceleration(double initialRelaxation, bool forceInitialRelaxation, int maxIterationsUsed,
+                                       int timeWindowsReused, int filter, double singularityLimit,
+                                       std::vector<int> dataIDs, impl::PtrPreconditioner preconditioner)
+    : _preconditioner(std::move(preconditioner)), _initialRelaxation(initialRelaxation),
+      _maxIterationsUsed(maxIterationsUsed), _timeWindowsReused(timeWindowsReused), _dataIDs(std::move(dataIDs)),
+      _forceInitialRelaxation(forceInitialRelaxation), _qrV(filter), _filter(filter),
+      _singularityLimit(singularityLimit), _infostringstream(std::ostringstream::ate)
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "Initial relaxation factor for QN acceleration has to "
@@ -74,18 +62,18 @@ BaseQNAcceleration::BaseQNAcceleration(
  * @brief: Initializes all the needed variables and data
  *  ---------------------------------------------------------------------------------------------
  */
-void BaseQNAcceleration::initialize(
-    const DataMap &cplData)
+void BaseQNAcceleration::initialize(const DataMap &cplData)
 {
   PRECICE_TRACE(cplData.size());
   for (const DataMap::value_type &pair : cplData) {
-    PRECICE_ASSERT(pair.second->values().size() == pair.second->previousIteration().size(), "current and previousIteration have to be initialized and of identical size.",
+    PRECICE_ASSERT(pair.second->values().size() == pair.second->previousIteration().size(),
+                   "current and previousIteration have to be initialized and of identical size.",
                    pair.second->values().size(), pair.second->previousIteration().size());
   }
 
   checkDataIDs(cplData);
   size_t              entries = 0;
-  std::vector<size_t> subVectorSizes; //needed for preconditioner
+  std::vector<size_t> subVectorSizes; // needed for preconditioner
 
   for (auto &elem : _dataIDs) {
     entries += cplData.at(elem)->values().size();
@@ -119,8 +107,9 @@ void BaseQNAcceleration::initialize(
 
     /** provide vertex offset information for all processors
      *  mesh->getVertexOffsets() provides an array that stores the number of mesh vertices on each processor
-     *  This information needs to be gathered for all meshes. To get the number of respective unknowns of a specific processor
-     *  we need to multiply the number of vertices with the dimensionality of the vector-valued data for each coupling data.
+     *  This information needs to be gathered for all meshes. To get the number of respective unknowns of a specific
+     * processor we need to multiply the number of vertices with the dimensionality of the vector-valued data for each
+     * coupling data.
      */
     _dimOffsets.resize(utils::MasterSlave::getSize() + 1);
     _dimOffsets[0] = 0;
@@ -134,7 +123,8 @@ void BaseQNAcceleration::initialize(
     }
     PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
     if (utils::MasterSlave::isPrimary()) {
-      _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
+      _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(),
+                                       _dimOffsets);
     }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
@@ -166,8 +156,7 @@ void BaseQNAcceleration::initialize(
  *         updates the difference matrices F and C.
  *  ---------------------------------------------------------------------------------------------
  */
-void BaseQNAcceleration::updateDifferenceMatrices(
-    const DataMap &cplData)
+void BaseQNAcceleration::updateDifferenceMatrices(const DataMap &cplData)
 {
   PRECICE_TRACE();
 
@@ -182,7 +171,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
                  "Or you just converge much further than actually necessary.");
   }
 
-  //if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
+  // if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
   } else {
@@ -227,7 +216,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
         // QR decomposition and update decomposition
 
-        //apply scaling here
+        // apply scaling here
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
@@ -261,8 +250,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
  * @brief: performs one iteration of the quasi Newton acceleration.
  *  ---------------------------------------------------------------------------------------------
  */
-void BaseQNAcceleration::performAcceleration(
-    const DataMap &cplData)
+void BaseQNAcceleration::performAcceleration(const DataMap &cplData)
 {
   PRECICE_TRACE(_dataIDs.size(), cplData.size());
 
@@ -330,7 +318,7 @@ void BaseQNAcceleration::performAcceleration(
     _preconditioner->apply(_matrixV);
 
     if (_preconditioner->requireNewQR()) {
-      if (not(_filter == Acceleration::QR2FILTER)) { //for QR2 filter, there is no need to do this twice
+      if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
@@ -388,10 +376,13 @@ void BaseQNAcceleration::performAcceleration(
     }
 
     if (std::isnan(utils::MasterSlave::l2norm(xUpdate))) {
-      PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
-                    "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
+      PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed "
+                    "to converge. "
+                    "When writing your own adapter this could indicate that you give wrong information to preCICE, "
+                    "such as identical "
                     "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
-                    "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
+                    "If you give the correct data this could also mean that the coupled problem is too hard to solve. "
+                    "Try to use a QR "
                     "filter or increase its threshold (larger epsilon).");
     }
   }
@@ -418,14 +409,14 @@ void BaseQNAcceleration::applyFilter()
 
       removeMatrixColumn(delIndices[i]);
 
-      PRECICE_DEBUG(" Filter: removing column with index {} in iteration {} of time window: {}", delIndices[i], its, tWindows);
+      PRECICE_DEBUG(" Filter: removing column with index {} in iteration {} of time window: {}", delIndices[i], its,
+                    tWindows);
     }
     PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
 }
 
-void BaseQNAcceleration::concatenateCouplingData(
-    const DataMap &cplData)
+void BaseQNAcceleration::concatenateCouplingData(const DataMap &cplData)
 {
   PRECICE_TRACE();
 
@@ -442,8 +433,7 @@ void BaseQNAcceleration::concatenateCouplingData(
   }
 }
 
-void BaseQNAcceleration::splitCouplingData(
-    const DataMap &cplData)
+void BaseQNAcceleration::splitCouplingData(const DataMap &cplData)
 {
   PRECICE_TRACE();
 
@@ -466,8 +456,7 @@ void BaseQNAcceleration::splitCouplingData(
  *         updates F and C according to the number of reused time windows
  *  ---------------------------------------------------------------------------------------------
  */
-void BaseQNAcceleration::iterationsConverged(
-    const DataMap &cplData)
+void BaseQNAcceleration::iterationsConverged(const DataMap &cplData)
 {
   PRECICE_TRACE();
 
@@ -556,8 +545,7 @@ void BaseQNAcceleration::iterationsConverged(
  * @brief: removes a column from the least squares system, i. e., from the matrices F and C
  *  ---------------------------------------------------------------------------------------------
  */
-void BaseQNAcceleration::removeMatrixColumn(
-    int columnIndex)
+void BaseQNAcceleration::removeMatrixColumn(int columnIndex)
 {
   PRECICE_TRACE(columnIndex, _matrixV.cols());
 
@@ -584,15 +572,9 @@ void BaseQNAcceleration::removeMatrixColumn(
   }
 }
 
-void BaseQNAcceleration::exportState(
-    io::TXTWriter &writer)
-{
-}
+void BaseQNAcceleration::exportState(io::TXTWriter &writer) {}
 
-void BaseQNAcceleration::importState(
-    io::TXTReader &reader)
-{
-}
+void BaseQNAcceleration::importState(io::TXTReader &reader) {}
 
 int BaseQNAcceleration::getDeletedColumns() const
 {
@@ -626,8 +608,7 @@ int BaseQNAcceleration::getLSSystemRows()
   return _residuals.size();
 }
 
-void BaseQNAcceleration::writeInfo(
-    const std::string &s, bool allProcs)
+void BaseQNAcceleration::writeInfo(const std::string &s, bool allProcs)
 {
   if (not utils::MasterSlave::isParallel()) {
     // serial acceleration mode

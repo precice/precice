@@ -11,17 +11,12 @@ namespace precice {
 namespace acceleration {
 namespace impl {
 
-SVDFactorization::SVDFactorization(
-    double            eps,
-    PtrPreconditioner preconditioner)
-    : _preconditioner(std::move(preconditioner)),
-      _truncationEps(eps)
+SVDFactorization::SVDFactorization(double eps, PtrPreconditioner preconditioner)
+    : _preconditioner(std::move(preconditioner)), _truncationEps(eps)
 {
 }
 
-void SVDFactorization::initialize(
-    PtrParMatrixOps parOps,
-    int             globalRows)
+void SVDFactorization::initialize(PtrParMatrixOps parOps, int globalRows)
 {
   _parMatrixOps = std::move(parOps);
   _globalRows   = globalRows;
@@ -73,10 +68,7 @@ void SVDFactorization::reset()
   _epsQR2                = 1e-3;
 }
 
-void SVDFactorization::computeQRdecomposition(
-    Matrix const &A,
-    Matrix &      Q,
-    Matrix &      R)
+void SVDFactorization::computeQRdecomposition(Matrix const &A, Matrix &Q, Matrix &R)
 {
   PRECICE_TRACE();
 
@@ -103,7 +95,8 @@ void SVDFactorization::computeQRdecomposition(
 
     // if system is quadratic; discard
     if (_globalRows == colIndex) {
-      PRECICE_WARN("The matrix that is about to be factorized is quadratic, i.e., the new column cannot be orthogonalized; discard.");
+      PRECICE_WARN("The matrix that is about to be factorized is quadratic, i.e., the new column cannot be "
+                   "orthogonalized; discard.");
       return;
     }
 
@@ -170,7 +163,8 @@ void SVDFactorization::computeQRdecomposition(
       if (rho_orth * theta <= rho0 + omega * norm_coefficients) {
         // exit to fail if too many iterations
         if (its >= 4) {
-          PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded.");
+          PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 "
+                       "iterations. New column will be discarded.");
           orthogonalized = false;
           termination    = true;
         }

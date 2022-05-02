@@ -32,7 +32,7 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-//std::string pathToTests = testing::getPathToSources() + "/tests/serial/mapping-nearest-neighbor-gradient/";
+// std::string pathToTests = testing::getPathToSources() + "/tests/serial/mapping-nearest-neighbor-gradient/";
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
     Vector2d valueDataB(2.0, 3.0);
     cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
 
-    //tell preCICE that data has been written and call initializeData
+    // tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
 

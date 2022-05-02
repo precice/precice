@@ -13,16 +13,14 @@
 namespace precice {
 namespace acceleration {
 
-ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(
-    double           relaxation,
-    std::vector<int> dataIDs)
-    : _relaxation(relaxation),
-      _dataIDs(std::move(dataIDs))
+ConstantRelaxationAcceleration::ConstantRelaxationAcceleration(double relaxation, std::vector<int> dataIDs)
+    : _relaxation(relaxation), _dataIDs(std::move(dataIDs))
 {
-  PRECICE_CHECK((relaxation > 0.0) && (relaxation <= 1.0),
-                "Relaxation factor for constant relaxation acceleration has to be larger than zero and smaller or equal to one. "
-                "Current relaxation factor is: {}",
-                relaxation);
+  PRECICE_CHECK(
+      (relaxation > 0.0) && (relaxation <= 1.0),
+      "Relaxation factor for constant relaxation acceleration has to be larger than zero and smaller or equal to one. "
+      "Current relaxation factor is: {}",
+      relaxation);
 }
 
 void ConstantRelaxationAcceleration::initialize(const DataMap &cplData)

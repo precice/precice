@@ -29,10 +29,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
 {
   config::Configuration config;
   logging::setMPIRank(0);
-  xml::ConfigurationContext context{
-      participant,
-      0,
-      size};
+  xml::ConfigurationContext context{participant, 0, size};
   xml::configure(config.getXMLTag(), context, filename);
 }
 

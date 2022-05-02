@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadVector)
 
     if (cplInterface.isGradientDataRequired(dataID)) {
 
-      double gradientValues[18] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
+      double gradientValues[18] = {1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0,  8.0,  9.0,
                                    10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0};
       cplInterface.writeBlockVectorGradientData(dataID, 2, indices, gradientValues, true);
     }

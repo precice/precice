@@ -12,10 +12,7 @@ const std::string &actionReadIterationCheckpoint();
 
 const std::string &actionWriteInitialData();
 
-enum TimesteppingMethod {
-  FIXED_TIME_WINDOW_SIZE,
-  FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE
-};
+enum TimesteppingMethod { FIXED_TIME_WINDOW_SIZE, FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE };
 
 } // namespace constants
 } // namespace cplscheme

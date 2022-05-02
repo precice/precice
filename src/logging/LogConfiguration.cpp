@@ -30,7 +30,8 @@ public:
     namespace expr              = boost::log::expressions;
     args_map::const_iterator it = args.find("format");
     if (it != args.end())
-      return expr::stream << expr::format_date_time<boost::posix_time::ptime>(expr::attr<boost::posix_time::ptime>(name), it->second);
+      return expr::stream << expr::format_date_time<boost::posix_time::ptime>(
+                 expr::attr<boost::posix_time::ptime>(name), it->second);
     else
       return expr::stream << expr::attr<boost::posix_time::ptime>(name);
   }
@@ -44,14 +45,13 @@ public:
     namespace expr = boost::log::expressions;
     auto severity  = expr::attr<boost::log::trivial::severity_level>("Severity");
 
-    return expr::stream
-           << expr::if_(severity == boost::log::trivial::severity_level::error)
-                  [expr::stream << "\033[31m" //red
-                                << "ERROR: "]
-           << expr::if_(severity == boost::log::trivial::severity_level::warning)
-                  [expr::stream << "\033[36m" //cyan
-                                << "WARNING: "]
-           << "\033[0m";
+    return expr::stream << expr::if_(severity ==
+                                     boost::log::trivial::severity_level::error)[expr::stream << "\033[31m" // red
+                                                                                              << "ERROR: "]
+                        << expr::if_(severity ==
+                                     boost::log::trivial::severity_level::warning)[expr::stream << "\033[36m" // cyan
+                                                                                                << "WARNING: "]
+                        << "\033[0m";
   }
 };
 
@@ -63,20 +63,16 @@ public:
     namespace expr = boost::log::expressions;
     auto severity  = expr::attr<boost::log::trivial::severity_level>("Severity");
 
-    return expr::stream
-           << expr::if_(severity == boost::log::trivial::severity_level::error)
-                  [expr::stream
-                   << "ERROR: "]
-           << expr::if_(severity == boost::log::trivial::severity_level::warning)
-                  [expr::stream
-                   << "WARNING: "];
+    return expr::stream << expr::if_(severity == boost::log::trivial::severity_level::error)[expr::stream << "ERROR: "]
+                        << expr::if_(severity ==
+                                     boost::log::trivial::severity_level::warning)[expr::stream << "WARNING: "];
   }
 };
 
 /// A simple backends that outputs the message to a stream
 /**
  * Rationale: The original text_ostream_backend from boost suffered from the great amount of code that lies
- * between the printing of the message and the endline. This leads to high probability that a process switch 
+ * between the printing of the message and the endline. This leads to high probability that a process switch
  * occurs and the message is severed from the endline.
  */
 class StreamBackend : public boost::log::sinks::text_ostream_backend {
@@ -84,13 +80,11 @@ private:
   boost::shared_ptr<std::ostream> _ostream;
 
 public:
-  explicit StreamBackend(boost::shared_ptr<std::ostream> ostream)
-      : _ostream(std::move(ostream)) {}
+  explicit StreamBackend(boost::shared_ptr<std::ostream> ostream) : _ostream(std::move(ostream)) {}
 
   void consume(boost::log::record_view const &rec, string_type const &formatted_record)
   {
-    *_ostream << formatted_record << '\n'
-              << std::flush;
+    *_ostream << formatted_record << '\n' << std::flush;
   }
 };
 
@@ -128,10 +122,12 @@ LoggingConfiguration readLogConfFile(std::string const &filename)
 }
 
 // Default values for filter and format. They are also used from config/LogConfiguration.cpp
-const std::string BackendConfiguration::default_filter    = "(%Severity% > debug) and not ((%Severity% = info) and (%Rank% != 0))";
-const std::string BackendConfiguration::default_formatter = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%Line% in %Function%: %ColorizedSeverity%%Message%";
-const std::string BackendConfiguration::default_type      = "stream";
-const std::string BackendConfiguration::default_output    = "stdout";
+const std::string BackendConfiguration::default_filter =
+    "(%Severity% > debug) and not ((%Severity% = info) and (%Rank% != 0))";
+const std::string BackendConfiguration::default_formatter =
+    "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%Line% in %Function%: %ColorizedSeverity%%Message%";
+const std::string BackendConfiguration::default_type   = "stream";
+const std::string BackendConfiguration::default_output = "stdout";
 
 void BackendConfiguration::setOption(std::string key, std::string value)
 {
@@ -163,15 +159,12 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
   bl::register_simple_filter_factory<bl::trivial::severity_level, char>("Severity");
 
   // Possible, longer output format. Currently unused.
-  auto fmtStream =
-      bl::expressions::stream
-      << "(" << bl::expressions::attr<int>("Rank") << ") "
-      << bl::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S") << " "
-      << bl::expressions::attr<std::string>("File") << ":"
-      << bl::expressions::attr<int>("Line")
-      << " [" << bl::expressions::attr<std::string>("Module") << "] in "
-      << bl::expressions::attr<std::string>("Function") << ": "
-      << bl::expressions::message;
+  auto fmtStream = bl::expressions::stream
+                   << "(" << bl::expressions::attr<int>("Rank") << ") "
+                   << bl::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S") << " "
+                   << bl::expressions::attr<std::string>("File") << ":" << bl::expressions::attr<int>("Line") << " ["
+                   << bl::expressions::attr<std::string>("Module") << "] in "
+                   << bl::expressions::attr<std::string>("Function") << ": " << bl::expressions::message;
 
   // Reset
   bl::core::get()->remove_all_sinks();
@@ -210,12 +203,16 @@ void setupLogging(std::string const &logConfigFile)
 
 void setMPIRank(int const rank)
 {
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(boost::log::core::get()->get_global_attributes()["Rank"]).set(rank);
+  boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(
+      boost::log::core::get()->get_global_attributes()["Rank"])
+      .set(rank);
 }
 
 void setParticipant(std::string const &participant)
 {
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<std::string>>(boost::log::core::get()->get_global_attributes()["Participant"]).set(participant);
+  boost::log::attribute_cast<boost::log::attributes::mutable_constant<std::string>>(
+      boost::log::core::get()->get_global_attributes()["Participant"])
+      .set(participant);
 }
 
 bool _precice_logging_config_lock{false};

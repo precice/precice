@@ -37,24 +37,17 @@ public:
    * @param[in] secondParticipant Name of second participant in coupling.
    * @param[in] localParticipant Name of participant using this coupling scheme.
    * @param[in] m2n Communication object for com. between participants.
-   * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
+   * @param[in] dtMethod Method used for determining the time window size, see
+   * https://www.precice.org/couple-your-code-timestep-sizes.html
    * @param[in] cplMode Set implicit or explicit coupling
    * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
    * @param[in] extrapolationOrder order used for extrapolation
    */
-  ParallelCouplingScheme(
-      double                        maxTime,
-      int                           maxTimeWindows,
-      double                        timeWindowSize,
-      int                           validDigits,
-      const std::string &           firstParticipant,
-      const std::string &           secondParticipant,
-      const std::string &           localParticipant,
-      m2n::PtrM2N                   m2n,
-      constants::TimesteppingMethod dtMethod,
-      CouplingMode                  cplMode,
-      int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
-      int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
+  ParallelCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
+                         const std::string &firstParticipant, const std::string &secondParticipant,
+                         const std::string &localParticipant, m2n::PtrM2N m2n, constants::TimesteppingMethod dtMethod,
+                         CouplingMode cplMode, int maxIterations = UNDEFINED_MAX_ITERATIONS,
+                         int extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};

@@ -12,8 +12,8 @@ namespace acceleration {
 namespace impl {
 
 /**
- * @brief Preconditioner that uses the residuals of all iterations of the current time window summed up to scale the quasi-Newton system.
- * This is somewhat similar to what is done in the Marks and Luke paper.
+ * @brief Preconditioner that uses the residuals of all iterations of the current time window summed up to scale the
+ * quasi-Newton system. This is somewhat similar to what is done in the Marks and Luke paper.
  */
 class ResidualSumPreconditioner : public Preconditioner {
 public:

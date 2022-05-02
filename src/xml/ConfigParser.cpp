@@ -17,7 +17,8 @@ namespace xml {
 
 std::string decodeXML(std::string xml)
 {
-  static const std::map<std::string, char> escapes{{"&lt;", '<'}, {"&gt;", '>'}, {"&amp;", '&'}, {"&quot;", '"'}, {"&apos;", '\''}};
+  static const std::map<std::string, char> escapes{
+      {"&lt;", '<'}, {"&gt;", '>'}, {"&amp;", '&'}, {"&quot;", '"'}, {"&apos;", '\''}};
   while (true) {
     bool changes{false};
     for (const auto &kv : escapes) {
@@ -36,16 +37,8 @@ std::string decodeXML(std::string xml)
 
 // ------------------------- Callback functions for libxml2  -------------------------
 
-void OnStartElementNs(
-    void *          ctx,
-    const xmlChar * localname,
-    const xmlChar * prefix,
-    const xmlChar * URI,
-    int             nb_namespaces,
-    const xmlChar **namespaces,
-    int             nb_attributes,
-    int             nb_defaulted,
-    const xmlChar **attributes)
+void OnStartElementNs(void *ctx, const xmlChar *localname, const xmlChar *prefix, const xmlChar *URI, int nb_namespaces,
+                      const xmlChar **namespaces, int nb_attributes, int nb_defaulted, const xmlChar **attributes)
 {
   ConfigParser::CTag::AttributePair attributesMap;
   unsigned int                      index = 0;
@@ -66,11 +59,7 @@ void OnStartElementNs(
   pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
 }
 
-void OnEndElementNs(
-    void *         ctx,
-    const xmlChar *localname,
-    const xmlChar *prefix,
-    const xmlChar *URI)
+void OnEndElementNs(void *ctx, const xmlChar *localname, const xmlChar *prefix, const xmlChar *URI)
 {
   ConfigParser *pParser = static_cast<ConfigParser *>(ctx);
   pParser->OnEndElement();
@@ -98,7 +87,8 @@ void OnStructuredErrorFunc(void *userData, xmlError *error)
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
-ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationContext &context, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
+ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationContext &context,
+                           std::shared_ptr<precice::xml::XMLTag> pXmlTag)
     : m_pXmlTag(std::move(pXmlTag))
 {
   readXmlFile(filePath);
@@ -153,8 +143,8 @@ int ConfigParser::readXmlFile(std::string const &filePath)
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
-  xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
-                                                  content.c_str(), content.size(), nullptr);
+  xmlParserCtxtPtr ctxt =
+      xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this), content.c_str(), content.size(), nullptr);
 
   xmlParseChunk(ctxt, nullptr, 0, 1);
   xmlFreeParserCtxt(ctxt);
@@ -163,18 +153,16 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   return 0;
 }
 
-void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<XMLTag>> &DefTags, CTagPtrVec &SubTags)
+void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<XMLTag>> &DefTags,
+                               CTagPtrVec &SubTags)
 {
   std::unordered_set<std::string> usedTags;
 
   for (auto &subtag : SubTags) {
     std::string expectedName = (subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name;
-    const auto  tagPosition  = std::find_if(
-        DefTags.begin(),
-        DefTags.end(),
-        [expectedName](const std::shared_ptr<XMLTag> &pTag) {
-          return pTag->_fullName == expectedName;
-        });
+    const auto  tagPosition =
+        std::find_if(DefTags.begin(), DefTags.end(),
+                     [expectedName](const std::shared_ptr<XMLTag> &pTag) { return pTag->_fullName == expectedName; });
 
     if (tagPosition == DefTags.end()) {
       PRECICE_ERROR("The configuration contains an unknown tag <{}>.", expectedName);
@@ -202,10 +190,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
   }
 }
 
-void ConfigParser::OnStartElement(
-    std::string         localname,
-    std::string         prefix,
-    CTag::AttributePair attributes)
+void ConfigParser::OnStartElement(std::string localname, std::string prefix, CTag::AttributePair attributes)
 {
   auto pTag = std::make_shared<CTag>();
 

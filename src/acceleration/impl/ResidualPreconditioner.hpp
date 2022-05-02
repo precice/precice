@@ -14,8 +14,7 @@ namespace impl {
  */
 class ResidualPreconditioner : public Preconditioner {
 public:
-  ResidualPreconditioner(
-      int maxNonConstTimeWindows);
+  ResidualPreconditioner(int maxNonConstTimeWindows);
 
   /**
    * @brief Destructor, empty.
@@ -24,13 +23,11 @@ public:
 
 private:
   /**
-    * @brief Update the scaling after every FSI iteration.
-    *
-    * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
-    */
-  virtual void _update_(bool                   timeWindowComplete,
-                        const Eigen::VectorXd &oldValues,
-                        const Eigen::VectorXd &res);
+   * @brief Update the scaling after every FSI iteration.
+   *
+   * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
+   */
+  virtual void _update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res);
 
   logging::Logger _log{"acceleration::ResidualPreconditioner"};
 };

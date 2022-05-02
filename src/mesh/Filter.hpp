@@ -11,10 +11,9 @@ namespace mesh {
 /** filters the source Mesh and adds it to the destination Mesh
  * @param[inout] destination the destination mesh to append the filtered Mesh to
  * @param[in] source the source Mesh to filter
- * @param[in] p the filter as a UnaryPredicate on mesh::Vertex 
+ * @param[in] p the filter as a UnaryPredicate on mesh::Vertex
  */
-template <typename UnaryPredicate>
-void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
+template <typename UnaryPredicate> void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
 {
   // Create a flat_map which can contain all vertices of the original mesh.
   // This prevents resizes during the map build-up.
@@ -41,8 +40,7 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
   for (const Edge &edge : source.edges()) {
     VertexID vertexIndex1 = edge.vertex(0).getID();
     VertexID vertexIndex2 = edge.vertex(1).getID();
-    if (vertexMap.count(vertexIndex1) == 1 &&
-        vertexMap.count(vertexIndex2) == 1) {
+    if (vertexMap.count(vertexIndex1) == 1 && vertexMap.count(vertexIndex2) == 1) {
       Edge &e               = destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
       edgeMap[edge.getID()] = &e;
     }
@@ -54,9 +52,7 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
       EdgeID edgeIndex1 = triangle.edge(0).getID();
       EdgeID edgeIndex2 = triangle.edge(1).getID();
       EdgeID edgeIndex3 = triangle.edge(2).getID();
-      if (edgeMap.count(edgeIndex1) == 1 &&
-          edgeMap.count(edgeIndex2) == 1 &&
-          edgeMap.count(edgeIndex3) == 1) {
+      if (edgeMap.count(edgeIndex1) == 1 && edgeMap.count(edgeIndex2) == 1 && edgeMap.count(edgeIndex3) == 1) {
         destination.createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
       }
     }

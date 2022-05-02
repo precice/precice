@@ -61,11 +61,9 @@ public:
   }
 
 private:
-  boost::accumulators::accumulator_set<double, boost::accumulators::stats<
-                                                   boost::accumulators::tag::min,
-                                                   boost::accumulators::tag::max,
-                                                   boost::accumulators::tag::mean,
-                                                   boost::accumulators::tag::lazy_variance>>
+  boost::accumulators::accumulator_set<
+      double, boost::accumulators::stats<boost::accumulators::tag::min, boost::accumulators::tag::max,
+                                         boost::accumulators::tag::mean, boost::accumulators::tag::lazy_variance>>
       _acc;
 };
 
@@ -74,11 +72,8 @@ inline std::ostream &operator<<(std::ostream &out, const DistanceAccumulator &ac
   if (accumulator.empty()) {
     out << "empty";
   } else {
-    out << "min:" << accumulator.min()
-        << " max:" << accumulator.max()
-        << " avg: " << accumulator.mean()
-        << " var: " << accumulator.variance()
-        << " cnt: " << accumulator.count();
+    out << "min:" << accumulator.min() << " max:" << accumulator.max() << " avg: " << accumulator.mean()
+        << " var: " << accumulator.variance() << " cnt: " << accumulator.count();
   }
   return out;
 }

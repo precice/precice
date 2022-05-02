@@ -19,8 +19,7 @@ public:
   explicit TXTReader(const std::string &filename);
 
   /// Reads the Eigen::Matrix from the file.
-  template <typename Scalar, int Rows, int Cols>
-  void read(Eigen::Matrix<Scalar, Rows, Cols> &matrix)
+  template <typename Scalar, int Rows, int Cols> void read(Eigen::Matrix<Scalar, Rows, Cols> &matrix)
   {
     for (long i = 0; i < matrix.rows(); i++) {
       for (long j = 0; j < matrix.cols(); j++) {

@@ -10,8 +10,8 @@ namespace action {
  * @brief Abstract base class for configurable actions on data and/or meshes.
  *
  * Actions are executed on call of precice::SolverInterface::initialize(),
- * precice::SolverInterface::initializeData(), and precice::SolverInterface::advance(). They can change meshes and in particular
- * data values.
+ * precice::SolverInterface::initializeData(), and precice::SolverInterface::advance(). They can change meshes and in
+ * particular data values.
  */
 class Action {
 public:
@@ -24,23 +24,12 @@ public:
     READ_MAPPING_POST             // Everytime, after read mapping
   };
 
-  Action(
-      Timing                            timing,
-      const mesh::PtrMesh &             mesh,
-      mapping::Mapping::MeshRequirement requirement)
-      : _timing(timing),
-        _mesh(mesh),
-        _meshRequirement(requirement)
+  Action(Timing timing, const mesh::PtrMesh &mesh, mapping::Mapping::MeshRequirement requirement)
+      : _timing(timing), _mesh(mesh), _meshRequirement(requirement)
   {
   }
 
-  Action(
-      Timing               timing,
-      const mesh::PtrMesh &mesh)
-      : _timing(timing),
-        _mesh(mesh)
-  {
-  }
+  Action(Timing timing, const mesh::PtrMesh &mesh) : _timing(timing), _mesh(mesh) {}
 
   Action &operator=(Action &&) = delete;
 
@@ -48,18 +37,16 @@ public:
   virtual ~Action() {}
 
   /**
-    * @brief Performs the action, to be overwritten by subclasses.
-    *
-    * @param[in] time the current total simulation time.
-    * @param[in] timeStepSize Length of last time step computed.
-    * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
-    * @param[in] timeWindowSize Current time window size.
-    */
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize) = 0;
+   * @brief Performs the action, to be overwritten by subclasses.
+   *
+   * @param[in] time the current total simulation time.
+   * @param[in] timeStepSize Length of last time step computed.
+   * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already
+   * computed.
+   * @param[in] timeWindowSize Current time window size.
+   */
+  virtual void performAction(double time, double timeStepSize, double computedTimeWindowPart,
+                             double timeWindowSize) = 0;
 
   /// Returns the timing of the action.
   Timing getTiming() const

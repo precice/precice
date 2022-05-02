@@ -19,18 +19,12 @@ BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::const_iterato
 BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<Triangle>) );
 BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Triangle>) );
 
-Triangle::Triangle(
-    Edge &edgeOne,
-    Edge &edgeTwo,
-    Edge &edgeThree,
-    int   id)
-    : _edges({&edgeOne, &edgeTwo, &edgeThree}),
-      _id(id)
+Triangle::Triangle(Edge &edgeOne, Edge &edgeTwo, Edge &edgeThree, int id)
+    : _edges({&edgeOne, &edgeTwo, &edgeThree}), _id(id)
 {
-  PRECICE_ASSERT(edgeOne.getDimensions() == edgeTwo.getDimensions(),
-                 edgeOne.getDimensions(), edgeTwo.getDimensions());
-  PRECICE_ASSERT(edgeTwo.getDimensions() == edgeThree.getDimensions(),
-                 edgeTwo.getDimensions(), edgeThree.getDimensions());
+  PRECICE_ASSERT(edgeOne.getDimensions() == edgeTwo.getDimensions(), edgeOne.getDimensions(), edgeTwo.getDimensions());
+  PRECICE_ASSERT(edgeTwo.getDimensions() == edgeThree.getDimensions(), edgeTwo.getDimensions(),
+                 edgeThree.getDimensions());
 
   // Determine vertex map
   Vertex &v0 = edge(0).vertex(0);
@@ -67,11 +61,10 @@ Triangle::Triangle(
     }
   }
 
-  PRECICE_ASSERT(
-      (&edge(0).vertex(_vertexMap[0]) != &edge(1).vertex(_vertexMap[1])) &&
-          (&edge(0).vertex(_vertexMap[0]) != &edge(2).vertex(_vertexMap[2])) &&
-          (&edge(1).vertex(_vertexMap[1]) != &edge(2).vertex(_vertexMap[2])),
-      "Triangle vertices are not unique!");
+  PRECICE_ASSERT((&edge(0).vertex(_vertexMap[0]) != &edge(1).vertex(_vertexMap[1])) &&
+                     (&edge(0).vertex(_vertexMap[0]) != &edge(2).vertex(_vertexMap[2])) &&
+                     (&edge(1).vertex(_vertexMap[1]) != &edge(2).vertex(_vertexMap[2])),
+                 "Triangle vertices are not unique!");
 }
 
 double Triangle::getArea() const
@@ -100,8 +93,7 @@ const Eigen::VectorXd Triangle::getCenter() const
 double Triangle::getEnclosingRadius() const
 {
   auto center = getCenter();
-  return std::max({(center - vertex(0).getCoords()).norm(),
-                   (center - vertex(1).getCoords()).norm(),
+  return std::max({(center - vertex(0).getCoords()).norm(), (center - vertex(1).getCoords()).norm(),
                    (center - vertex(2).getCoords()).norm()});
 }
 
@@ -119,8 +111,7 @@ bool Triangle::operator!=(const Triangle &other) const
 std::ostream &operator<<(std::ostream &os, const Triangle &t)
 {
   using utils::eigenio::wkt;
-  return os << "POLYGON (("
-            << t.vertex(0).getCoords().transpose().format(wkt()) << ", "
+  return os << "POLYGON ((" << t.vertex(0).getCoords().transpose().format(wkt()) << ", "
             << t.vertex(1).getCoords().transpose().format(wkt()) << ", "
             << t.vertex(2).getCoords().transpose().format(wkt()) << ", "
             << t.vertex(0).getCoords().transpose().format(wkt()) << "))";

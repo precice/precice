@@ -15,12 +15,8 @@
 
 namespace precice {
 namespace m2n {
-GatherScatterCommunication::GatherScatterCommunication(
-    com::PtrCommunication com,
-    mesh::PtrMesh         mesh)
-    : DistributedCommunication(std::move(mesh)),
-      _com(std::move(com)),
-      _isConnected(false)
+GatherScatterCommunication::GatherScatterCommunication(com::PtrCommunication com, mesh::PtrMesh mesh)
+    : DistributedCommunication(std::move(mesh)), _com(std::move(com)), _isConnected(false)
 {
 }
 
@@ -36,18 +32,14 @@ bool GatherScatterCommunication::isConnected() const
   return _isConnected;
 }
 
-void GatherScatterCommunication::acceptConnection(
-    const std::string &acceptorName,
-    const std::string &requesterName)
+void GatherScatterCommunication::acceptConnection(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(utils::MasterSlave::isSecondary() || _com->isConnected());
   _isConnected = true;
 }
 
-void GatherScatterCommunication::requestConnection(
-    const std::string &acceptorName,
-    const std::string &requesterName)
+void GatherScatterCommunication::requestConnection(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(utils::MasterSlave::isSecondary() || _com->isConnected());
@@ -96,7 +88,8 @@ void GatherScatterCommunication::send(precice::span<double const> itemsToSend, i
         utils::MasterSlave::getCommunication()->receive(span<double>{secondaryRankValues}, secondaryRank);
         for (size_t i = 0; i < vertexDistribution[secondaryRank].size(); i++) {
           for (int j = 0; j < valueDimension; j++) {
-            globalItemsToSend[vertexDistribution[secondaryRank][i] * valueDimension + j] += secondaryRankValues[i * valueDimension + j];
+            globalItemsToSend[vertexDistribution[secondaryRank][i] * valueDimension + j] +=
+                secondaryRankValues[i * valueDimension + j];
           }
         }
       }
@@ -150,7 +143,8 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
         std::vector<double> secondaryRankValues(secondarySize);
         for (size_t i = 0; i < vertexDistribution[secondaryRank].size(); i++) {
           for (int j = 0; j < valueDimension; j++) {
-            secondaryRankValues[i * valueDimension + j] = globalItemsToReceive[vertexDistribution[secondaryRank][i] * valueDimension + j];
+            secondaryRankValues[i * valueDimension + j] =
+                globalItemsToReceive[vertexDistribution[secondaryRank][i] * valueDimension + j];
           }
         }
         utils::MasterSlave::getCommunication()->send(secondaryRankValues, secondaryRank);
@@ -160,16 +154,12 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
   } // Master
 }
 
-void GatherScatterCommunication::acceptPreConnection(
-    std::string const &acceptorName,
-    std::string const &requesterName)
+void GatherScatterCommunication::acceptPreConnection(std::string const &acceptorName, std::string const &requesterName)
 {
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
-void GatherScatterCommunication::requestPreConnection(
-    std::string const &acceptorName,
-    std::string const &requesterName)
+void GatherScatterCommunication::requestPreConnection(std::string const &acceptorName, std::string const &requesterName)
 {
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }

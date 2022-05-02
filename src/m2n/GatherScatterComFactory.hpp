@@ -11,8 +11,7 @@ class GatherScatterComFactory : public DistributedComFactory {
 public:
   GatherScatterComFactory(com::PtrCommunication intraComm);
 
-  DistributedCommunication::SharedPointer newDistributedCommunication(
-      mesh::PtrMesh mesh);
+  DistributedCommunication::SharedPointer newDistributedCommunication(mesh::PtrMesh mesh);
 
 private:
   /// communication between the primary processes

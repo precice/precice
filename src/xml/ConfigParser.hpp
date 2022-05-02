@@ -57,13 +57,11 @@ public:
    * @param DefTags predefined tags
    * @param SubTags actual tags from xml file
    */
-  void connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<precice::xml::XMLTag>> &DefTags, CTagPtrVec &SubTags);
+  void connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<precice::xml::XMLTag>> &DefTags,
+                   CTagPtrVec &SubTags);
 
   /// Callback for Start-Tag
-  void OnStartElement(
-      std::string         localname,
-      std::string         prefix,
-      CTag::AttributePair attributes);
+  void OnStartElement(std::string localname, std::string prefix, CTag::AttributePair attributes);
 
   /// Callback for End-Tag
   void OnEndElement();

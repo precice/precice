@@ -138,9 +138,11 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   auto      baseComm   = Par::current();
   const int globalRank = baseComm->rank();
   const int available  = baseComm->size();
-  const int required   = std::accumulate(participants.begin(), participants.end(), 0, [](int total, const Participant &next) { return total + next.size; });
+  const int required   = std::accumulate(participants.begin(), participants.end(), 0,
+                                       [](int total, const Participant &next) { return total + next.size; });
   if (required > available) {
-    throw std::runtime_error{"This test requests " + std::to_string(required) + " ranks, but there are only " + std::to_string(available) + " available"};
+    throw std::runtime_error{"This test requests " + std::to_string(required) + " ranks, but there are only " +
+                             std::to_string(available) + " available"};
   }
 
   // Restrict the communicator to the total required size
@@ -214,7 +216,8 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
+m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &requestor,
+                                             const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());
 
@@ -224,20 +227,20 @@ m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const 
     distrFactory.reset(new m2n::GatherScatterComFactory(participantCom));
     break;
   case ConnectionType::PointToPoint:
-    distrFactory.reset(new m2n::PointToPointComFactory(com::PtrCommunicationFactory(new com::SocketCommunicationFactory())));
+    distrFactory.reset(
+        new m2n::PointToPointComFactory(com::PtrCommunicationFactory(new com::SocketCommunicationFactory())));
     break;
   default:
     throw std::runtime_error{"ConnectionType unknown"};
   };
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
+  auto m2n =
+      m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
 
   if (std::find(_names.begin(), _names.end(), acceptor) == _names.end()) {
-    throw std::runtime_error{
-        "Acceptor \"" + acceptor + "\" not defined in this context."};
+    throw std::runtime_error{"Acceptor \"" + acceptor + "\" not defined in this context."};
   }
   if (std::find(_names.begin(), _names.end(), requestor) == _names.end()) {
-    throw std::runtime_error{
-        "Requestor \"" + requestor + "\" not defined in this context."};
+    throw std::runtime_error{"Requestor \"" + requestor + "\" not defined in this context."};
   }
 
   if (isNamed(acceptor)) {
@@ -245,7 +248,8 @@ m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const 
   } else if (isNamed(requestor)) {
     m2n->requestPrimaryConnection(acceptor, requestor);
   } else {
-    throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
+    throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " +
+                             name};
   }
   return m2n;
 }

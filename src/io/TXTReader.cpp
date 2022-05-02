@@ -4,9 +4,7 @@
 namespace precice {
 namespace io {
 
-TXTReader::TXTReader(
-    const std::string &filename)
-    : _file()
+TXTReader::TXTReader(const std::string &filename) : _file()
 {
   _file.open(filename);
   PRECICE_CHECK(_file, "TXT reader failed to open file \"{}\"", filename);

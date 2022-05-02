@@ -19,11 +19,8 @@
 namespace precice {
 namespace acceleration {
 
-AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
-                                       std::vector<int> dataIDs)
-    : _initialRelaxation(initialRelaxation),
-      _dataIDs(std::move(dataIDs)),
-      _aitkenFactor(initialRelaxation)
+AitkenAcceleration::AitkenAcceleration(double initialRelaxation, std::vector<int> dataIDs)
+    : _initialRelaxation(initialRelaxation), _dataIDs(std::move(dataIDs)), _aitkenFactor(initialRelaxation)
 {
   PRECICE_CHECK((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "Initial relaxation factor for Aitken acceleration has to "
@@ -40,16 +37,14 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
     entries = cplData.at(_dataIDs.at(0))->values().size();
   } else {
     PRECICE_ASSERT(_dataIDs.size() == 2);
-    entries = cplData.at(_dataIDs.at(0))->values().size() +
-              cplData.at(_dataIDs.at(1))->values().size();
+    entries = cplData.at(_dataIDs.at(0))->values().size() + cplData.at(_dataIDs.at(1))->values().size();
   }
   double          initializer = std::numeric_limits<double>::max();
   Eigen::VectorXd toAppend    = Eigen::VectorXd::Constant(entries, initializer);
   utils::append(_residuals, toAppend);
 }
 
-void AitkenAcceleration::performAcceleration(
-    const DataMap &cplData)
+void AitkenAcceleration::performAcceleration(const DataMap &cplData)
 {
   PRECICE_TRACE();
 
@@ -102,8 +97,7 @@ void AitkenAcceleration::performAcceleration(
   _iterationCounter++;
 }
 
-void AitkenAcceleration::iterationsConverged(
-    const DataMap &cplData)
+void AitkenAcceleration::iterationsConverged(const DataMap &cplData)
 {
   _iterationCounter = 0;
   _residuals        = Eigen::VectorXd::Constant(_residuals.size(), std::numeric_limits<double>::max());

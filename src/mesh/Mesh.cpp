@@ -22,15 +22,8 @@
 namespace precice {
 namespace mesh {
 
-Mesh::Mesh(
-    std::string name,
-    int         dimensions,
-    MeshID      id)
-    : _name(std::move(name)),
-      _dimensions(dimensions),
-      _id(id),
-      _boundingBox(dimensions),
-      _index(*this)
+Mesh::Mesh(std::string name, int dimensions, MeshID id)
+    : _name(std::move(name)), _dimensions(dimensions), _id(id), _boundingBox(dimensions), _index(*this)
 {
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
@@ -79,26 +72,21 @@ Vertex &Mesh::createVertex(const Eigen::VectorXd &coords)
   return _vertices.back();
 }
 
-Edge &Mesh::createEdge(
-    Vertex &vertexOne,
-    Vertex &vertexTwo)
+Edge &Mesh::createEdge(Vertex &vertexOne, Vertex &vertexTwo)
 {
   auto nextID = _edges.size();
   _edges.emplace_back(vertexOne, vertexTwo, nextID);
   return _edges.back();
 }
 
-Edge &Mesh::createUniqueEdge(
-    Vertex &vertexOne,
-    Vertex &vertexTwo)
+Edge &Mesh::createUniqueEdge(Vertex &vertexOne, Vertex &vertexTwo)
 {
   const std::array<VertexID, 2> vids{vertexOne.getID(), vertexTwo.getID()};
   const auto                    eend = edges().end();
-  auto                          pos  = std::find_if(edges().begin(), eend,
-                          [&vids](const Edge &e) -> bool {
-                            const std::array<VertexID, 2> eids{e.vertex(0).getID(), e.vertex(1).getID()};
-                            return std::is_permutation(vids.begin(), vids.end(), eids.begin());
-                          });
+  auto                          pos  = std::find_if(edges().begin(), eend, [&vids](const Edge &e) -> bool {
+    const std::array<VertexID, 2> eids{e.vertex(0).getID(), e.vertex(1).getID()};
+    return std::is_permutation(vids.begin(), vids.end(), eids.begin());
+  });
   if (pos != eend) {
     return *pos;
   } else {
@@ -106,25 +94,15 @@ Edge &Mesh::createUniqueEdge(
   }
 }
 
-Triangle &Mesh::createTriangle(
-    Edge &edgeOne,
-    Edge &edgeTwo,
-    Edge &edgeThree)
+Triangle &Mesh::createTriangle(Edge &edgeOne, Edge &edgeTwo, Edge &edgeThree)
 {
-  PRECICE_ASSERT(
-      edgeOne.connectedTo(edgeTwo) &&
-      edgeTwo.connectedTo(edgeThree) &&
-      edgeThree.connectedTo(edgeOne));
+  PRECICE_ASSERT(edgeOne.connectedTo(edgeTwo) && edgeTwo.connectedTo(edgeThree) && edgeThree.connectedTo(edgeOne));
   auto nextID = _triangles.size();
   _triangles.emplace_back(edgeOne, edgeTwo, edgeThree, nextID);
   return _triangles.back();
 }
 
-PtrData &Mesh::createData(
-    const std::string &name,
-    int                dimension,
-    DataID             id,
-    bool               withGradient)
+PtrData &Mesh::createData(const std::string &name, int dimension, DataID id, bool withGradient)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -146,34 +124,28 @@ const Mesh::DataContainer &Mesh::data() const
 
 bool Mesh::hasDataID(DataID dataID) const
 {
-  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) {
-    return dptr->getID() == dataID;
-  });
+  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) { return dptr->getID() == dataID; });
   return iter != _data.end(); // if id was not found in mesh, iter == _data.end()
 }
 
 const PtrData &Mesh::data(DataID dataID) const
 {
-  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) {
-    return dptr->getID() == dataID;
-  });
+  auto iter = std::find_if(_data.begin(), _data.end(), [dataID](const auto &dptr) { return dptr->getID() == dataID; });
   PRECICE_ASSERT(iter != _data.end(), "Data with id not found in mesh.", dataID, _name);
   return *iter;
 }
 
 bool Mesh::hasDataName(const std::string &dataName) const
 {
-  auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
-    return dptr->getName() == dataName;
-  });
+  auto iter =
+      std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) { return dptr->getName() == dataName; });
   return iter != _data.end(); // if name was not found in mesh, iter == _data.end()
 }
 
 const PtrData &Mesh::data(const std::string &dataName) const
 {
-  auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
-    return dptr->getName() == dataName;
-  });
+  auto iter =
+      std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) { return dptr->getName() == dataName; });
   PRECICE_ASSERT(iter != _data.end(), "Data not found in mesh", dataName, _name);
   return *iter;
 }
@@ -234,9 +206,11 @@ void Mesh::allocateDataValues()
       // Enlarge Buffer
       if (expectedColumnSize > actualColumnSize) {
         const auto columnLeftToAllocate = expectedColumnSize - actualColumnSize;
-        utils::append(data->gradientValues(), Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
+        utils::append(data->gradientValues(),
+                      Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
       }
-      PRECICE_DEBUG("Gradient Data {} now has {} x {} values", data->getName(), data->gradientValues().rows(), data->gradientValues().cols());
+      PRECICE_DEBUG("Gradient Data {} now has {} x {} values", data->getName(), data->gradientValues().rows(),
+                    data->gradientValues().cols());
     }
   }
 }
@@ -339,8 +313,7 @@ void Mesh::tagAll()
   }
 }
 
-void Mesh::addMesh(
-    Mesh &deltaMesh)
+void Mesh::addMesh(Mesh &deltaMesh)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_dimensions == deltaMesh.getDimensions());
@@ -367,8 +340,7 @@ void Mesh::addMesh(
   for (const Edge &edge : deltaMesh.edges()) {
     VertexID vertexIndex1 = edge.vertex(0).getID();
     VertexID vertexIndex2 = edge.vertex(1).getID();
-    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) &&
-                   (vertexMap.count(vertexIndex2) == 1));
+    PRECICE_ASSERT((vertexMap.count(vertexIndex1) == 1) && (vertexMap.count(vertexIndex2) == 1));
     Edge &e               = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
     edgeMap[edge.getID()] = &e;
   }
@@ -378,8 +350,7 @@ void Mesh::addMesh(
       EdgeID edgeIndex1 = triangle.edge(0).getID();
       EdgeID edgeIndex2 = triangle.edge(1).getID();
       EdgeID edgeIndex3 = triangle.edge(2).getID();
-      PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) &&
-                     (edgeMap.count(edgeIndex2) == 1) &&
+      PRECICE_ASSERT((edgeMap.count(edgeIndex1) == 1) && (edgeMap.count(edgeIndex2) == 1) &&
                      (edgeMap.count(edgeIndex3) == 1));
       createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
     }
@@ -402,8 +373,8 @@ bool Mesh::operator==(const Mesh &other) const
   bool equal = true;
   equal &= _vertices.size() == other._vertices.size() &&
            std::is_permutation(_vertices.begin(), _vertices.end(), other._vertices.begin());
-  equal &= _edges.size() == other._edges.size() &&
-           std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin());
+  equal &=
+      _edges.size() == other._edges.size() && std::is_permutation(_edges.begin(), _edges.end(), other._edges.begin());
   equal &= _triangles.size() == other._triangles.size() &&
            std::is_permutation(_triangles.begin(), _triangles.end(), other._triangles.begin());
   return equal;

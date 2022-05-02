@@ -68,12 +68,7 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
     interface.setMeshVertices(meshID, 6, positions, vertexIDs);
     interface.initialize();
     int    dataID     = interface.getDataID("Data2", meshID);
-    double values[12] = {1.0, 1.0,
-                         2.0, 2.0,
-                         3.0, 3.0,
-                         4.0, 4.0,
-                         5.0, 5.0,
-                         6.0, 6.0};
+    double values[12] = {1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0, 6.0};
 
     interface.writeBlockVectorData(dataID, 6, vertexIDs, values);
 

@@ -131,7 +131,7 @@ void runTestStationaryMappingWithSolverMesh(std::string const &config, int dim, 
     maxDt = interface.advance(maxDt);
 
     BOOST_TEST(interface.isWriteDataRequired(maxDt));
-    BOOST_TEST(not interface.isReadDataAvailable()); //second participant has no new data after last advance
+    BOOST_TEST(not interface.isReadDataAvailable()); // second participant has no new data after last advance
     for (size_t i = 0; i < size; i++) {
       interface.readVectorData(dataForcesID, i, force.data());
     }

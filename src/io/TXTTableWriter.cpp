@@ -8,11 +8,7 @@
 namespace precice {
 namespace io {
 
-TXTTableWriter::TXTTableWriter(
-    const std::string &filename)
-    : _data(),
-      _writeIterator(_data.end()),
-      _outputStream()
+TXTTableWriter::TXTTableWriter(const std::string &filename) : _data(), _writeIterator(_data.end()), _outputStream()
 {
   _outputStream.open(filename);
   PRECICE_CHECK(_outputStream, "TXT table writer failed to open file \"{}\"", filename);
@@ -22,9 +18,7 @@ TXTTableWriter::TXTTableWriter(
   _outputStream << std::setprecision(16);
 }
 
-void TXTTableWriter::addData(
-    const std::string &name,
-    DataType           type)
+void TXTTableWriter::addData(const std::string &name, DataType type)
 {
   PRECICE_ASSERT(_outputStream);
   Data data;
@@ -51,9 +45,7 @@ void TXTTableWriter::addData(
   _writeIterator = _data.end();
 }
 
-void TXTTableWriter::writeData(
-    const std::string &name,
-    int                value)
+void TXTTableWriter::writeData(const std::string &name, int value)
 {
   PRECICE_ASSERT(_outputStream);
   PRECICE_ASSERT(not _data.empty());
@@ -70,9 +62,7 @@ void TXTTableWriter::writeData(
   }
 }
 
-void TXTTableWriter::writeData(
-    const std::string &name,
-    double             value)
+void TXTTableWriter::writeData(const std::string &name, double value)
 {
   PRECICE_ASSERT(_outputStream);
   PRECICE_ASSERT(not _data.empty());
@@ -89,9 +79,7 @@ void TXTTableWriter::writeData(
   }
 }
 
-void TXTTableWriter::writeData(
-    const std::string &    name,
-    const Eigen::Vector2d &value)
+void TXTTableWriter::writeData(const std::string &name, const Eigen::Vector2d &value)
 {
   PRECICE_ASSERT(_outputStream);
   PRECICE_ASSERT(not _data.empty());
@@ -110,9 +98,7 @@ void TXTTableWriter::writeData(
   }
 }
 
-void TXTTableWriter::writeData(
-    const std::string &    name,
-    const Eigen::Vector3d &value)
+void TXTTableWriter::writeData(const std::string &name, const Eigen::Vector3d &value)
 {
   PRECICE_ASSERT(_outputStream);
   PRECICE_ASSERT(not _data.empty());

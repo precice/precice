@@ -15,21 +15,12 @@ namespace action {
 /// Action whose implementation is given in a Python file.
 class PythonAction : public Action {
 public:
-  PythonAction(
-      Timing               timing,
-      std::string          modulePath,
-      std::string          moduleName,
-      const mesh::PtrMesh &mesh,
-      int                  targetDataID,
-      int                  sourceDataID);
+  PythonAction(Timing timing, std::string modulePath, std::string moduleName, const mesh::PtrMesh &mesh,
+               int targetDataID, int sourceDataID);
 
   virtual ~PythonAction();
 
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  virtual void performAction(double time, double timeStepSize, double computedTimeWindowPart, double timeWindowSize);
 
 private:
   logging::Logger _log{"action::PythonAction"};

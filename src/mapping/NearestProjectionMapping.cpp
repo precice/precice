@@ -26,9 +26,7 @@ extern bool syncMode;
 
 namespace mapping {
 
-NearestProjectionMapping::NearestProjectionMapping(
-    Constraint constraint,
-    int        dimensions)
+NearestProjectionMapping::NearestProjectionMapping(Constraint constraint, int dimensions)
     : Mapping(constraint, dimensions)
 {
   if (constraint == CONSISTENT) {
@@ -50,8 +48,7 @@ struct MatchType {
   int    index;
 
   MatchType() = default;
-  MatchType(double d, int i)
-      : distance(d), index(i){};
+  MatchType(double d, int i) : distance(d), index(i){};
   constexpr bool operator<(MatchType const &other) const
   {
     return distance < other.distance;
@@ -107,7 +104,8 @@ void NearestProjectionMapping::computeMapping()
   auto &index = searchSpace->index();
   for (const auto &fVertex : fVertices) {
     // Nearest projection element is edge for 2d if exists, if not, it is the nearest vertex
-    // Nearest projection element is triangle for 3d if exists, if not the edge and at the worst case it is the nearest vertex
+    // Nearest projection element is triangle for 3d if exists, if not the edge and at the worst case it is the nearest
+    // vertex
     auto match = index.findNearestProjection(fVertex.getCoords(), nnearest);
     _interpolations.push_back(std::move(match.polation));
     distanceStatistics(match.distance);
@@ -134,9 +132,7 @@ void NearestProjectionMapping::clear()
   _hasComputedMapping = false;
 }
 
-void NearestProjectionMapping::map(
-    int inputDataID,
-    int outputDataID)
+void NearestProjectionMapping::map(int inputDataID, int outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
@@ -146,15 +142,15 @@ void NearestProjectionMapping::map(
   mesh::PtrData          outData   = output()->data(outputDataID);
   const Eigen::VectorXd &inValues  = inData->values();
   Eigen::VectorXd &      outValues = outData->values();
-  //assign(outValues) = 0.0;
+  // assign(outValues) = 0.0;
   int dimensions = inData->getDimensions();
   PRECICE_ASSERT(dimensions == outData->getDimensions());
 
   if (hasConstraint(CONSERVATIVE)) {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE, getConstraint());
     PRECICE_DEBUG("Map conservative");
-    PRECICE_ASSERT(_interpolations.size() == input()->vertices().size(),
-                   _interpolations.size(), input()->vertices().size());
+    PRECICE_ASSERT(_interpolations.size() == input()->vertices().size(), _interpolations.size(),
+                   input()->vertices().size());
     for (size_t i = 0; i < input()->vertices().size(); i++) {
       size_t      inOffset = i * dimensions;
       const auto &elems    = _interpolations[i].getWeightedElements();
@@ -169,8 +165,8 @@ void NearestProjectionMapping::map(
     }
   } else {
     PRECICE_DEBUG("Map consistent");
-    PRECICE_ASSERT(_interpolations.size() == output()->vertices().size(),
-                   _interpolations.size(), output()->vertices().size());
+    PRECICE_ASSERT(_interpolations.size() == output()->vertices().size(), _interpolations.size(),
+                   output()->vertices().size());
     for (size_t i = 0; i < output()->vertices().size(); i++) {
       const auto &elems     = _interpolations[i].getWeightedElements();
       size_t      outOffset = i * dimensions;
@@ -192,7 +188,8 @@ void NearestProjectionMapping::map(
 void NearestProjectionMapping::tagMeshFirstRound()
 {
   PRECICE_TRACE();
-  precice::utils::Event e("map.np.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event e("map.np.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(),
+                          precice::syncMode);
   PRECICE_DEBUG("Compute Mapping for Tagging");
 
   computeMapping();

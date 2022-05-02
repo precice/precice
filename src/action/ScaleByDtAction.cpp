@@ -10,32 +10,22 @@
 namespace precice {
 namespace action {
 
-ScaleByDtAction::ScaleByDtAction(
-    Timing               timing,
-    int                  sourceDataID,
-    int                  targetDataID,
-    const mesh::PtrMesh &mesh,
-    Scaling              scaling)
-    : Action(timing, mesh),
-      _sourceData(mesh->data(sourceDataID)),
-      _targetData(mesh->data(targetDataID)),
+ScaleByDtAction::ScaleByDtAction(Timing timing, int sourceDataID, int targetDataID, const mesh::PtrMesh &mesh,
+                                 Scaling scaling)
+    : Action(timing, mesh), _sourceData(mesh->data(sourceDataID)), _targetData(mesh->data(targetDataID)),
       _scaling(scaling)
 {
-  PRECICE_ASSERT(_sourceData->getDimensions() == _targetData->getDimensions(),
-                 _sourceData->getDimensions(), _targetData->getDimensions());
+  PRECICE_ASSERT(_sourceData->getDimensions() == _targetData->getDimensions(), _sourceData->getDimensions(),
+                 _targetData->getDimensions());
 }
 
-void ScaleByDtAction::performAction(
-    double time,
-    double timeStepSize,
-    double computedTimeWindowPart,
-    double timeWindowSize)
+void ScaleByDtAction::performAction(double time, double timeStepSize, double computedTimeWindowPart,
+                                    double timeWindowSize)
 {
   PRECICE_TRACE(timeStepSize, computedTimeWindowPart, timeWindowSize);
   auto &sourceValues = _sourceData->values();
   auto &targetValues = _targetData->values();
-  PRECICE_ASSERT(sourceValues.size() == targetValues.size(),
-                 sourceValues.size(), targetValues.size());
+  PRECICE_ASSERT(sourceValues.size() == targetValues.size(), sourceValues.size(), targetValues.size());
   if (_scaling == SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO) {
     double scaling = timeStepSize / timeWindowSize;
     PRECICE_DEBUG("Scale by ratio: time step size / time window size = {}", scaling);

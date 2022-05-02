@@ -34,10 +34,7 @@ class DistributedCommunication {
 public:
   using SharedPointer = std::shared_ptr<DistributedCommunication>;
 
-  explicit DistributedCommunication(mesh::PtrMesh mesh)
-      : _mesh(mesh)
-  {
-  }
+  explicit DistributedCommunication(mesh::PtrMesh mesh) : _mesh(mesh) {}
 
   /// Destructor, empty.
   virtual ~DistributedCommunication() {}
@@ -51,9 +48,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void acceptConnection(
-      const std::string &acceptorName,
-      const std::string &requesterName) = 0;
+  virtual void acceptConnection(const std::string &acceptorName, const std::string &requesterName) = 0;
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
@@ -61,9 +56,7 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  virtual void requestConnection(
-      const std::string &acceptorName,
-      const std::string &requesterName) = 0;
+  virtual void requestConnection(const std::string &acceptorName, const std::string &requesterName) = 0;
 
   /**
    * @brief Connects to another participant, which has to call requestPreConnection().
@@ -73,9 +66,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  virtual void acceptPreConnection(
-      std::string const &acceptorName,
-      std::string const &requesterName) = 0;
+  virtual void acceptPreConnection(std::string const &acceptorName, std::string const &requesterName) = 0;
 
   /**
    * @brief Connects to another participant, which has to call acceptPreConnection().
@@ -85,9 +76,7 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  virtual void requestPreConnection(
-      std::string const &acceptorName,
-      std::string const &requesterName) = 0;
+  virtual void requestPreConnection(std::string const &acceptorName, std::string const &requesterName) = 0;
 
   /* @brief Completes the secondary connections for both acceptor and requester by updating
    * the vertex list in _mappings.

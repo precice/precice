@@ -50,9 +50,8 @@ BOOST_AUTO_TEST_CASE(DivideByArea2D)
   BOOST_TEST(values(2) == 4.0);
 
   // Scale properties
-  action::ScaleByAreaAction scale(
-      action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh,
-      action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
+  action::ScaleByAreaAction scale(action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh,
+                                  action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
 
   scale.performAction(0.0, 0.0, 0.0, 0.0);
 
@@ -94,9 +93,8 @@ BOOST_AUTO_TEST_CASE(DivideByArea3D)
   BOOST_TEST(values(4) == 6.0);
 
   // Scale properties
-  action::ScaleByAreaAction scale(
-      action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh,
-      action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
+  action::ScaleByAreaAction scale(action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh,
+                                  action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
 
   scale.performAction(0.0, 0.0, 0.0, 0.0);
 
@@ -126,9 +124,8 @@ BOOST_AUTO_TEST_CASE(ScaleByTimeStepSizeToTimeWindowSize)
   sourceValues << 2.0, 3.0, 4.0;
   targetValues = Eigen::VectorXd::Zero(targetValues.size());
 
-  action::ScaleByDtAction scale(
-      action::ScaleByDtAction::WRITE_MAPPING_POST, sourceDataID, targetDataID, mesh,
-      action::ScaleByDtAction::SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO);
+  action::ScaleByDtAction scale(action::ScaleByDtAction::WRITE_MAPPING_POST, sourceDataID, targetDataID, mesh,
+                                action::ScaleByDtAction::SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO);
 
   scale.performAction(0.0, 0.0, 0.0, 1.0);
   BOOST_TEST(sourceValues(0) == 2.0);
@@ -181,9 +178,8 @@ BOOST_AUTO_TEST_CASE(ScaleByComputedTimeWindowPart)
   sourceValues << 2.0, 3.0, 4.0;
   targetValues = Eigen::VectorXd::Zero(targetValues.size());
 
-  action::ScaleByDtAction scale(
-      action::ScaleByDtAction::WRITE_MAPPING_POST, sourceDataID, targetDataID, mesh,
-      action::ScaleByDtAction::SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO);
+  action::ScaleByDtAction scale(action::ScaleByDtAction::WRITE_MAPPING_POST, sourceDataID, targetDataID, mesh,
+                                action::ScaleByDtAction::SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO);
 
   scale.performAction(0.0, 0.0, 0.0, 1.0);
   BOOST_TEST(sourceValues(0) == 2.0);
@@ -214,8 +210,8 @@ BOOST_AUTO_TEST_CASE(Configuration)
 {
   PRECICE_TEST(1_rank);
   {
-    std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-1.xml";
-    xml::XMLTag                tag      = xml::getRootTag();
+    std::string filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-1.xml";
+    xml::XMLTag tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(2);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
@@ -227,8 +223,8 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(static_cast<bool>(action));
   }
   {
-    std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-2.xml";
-    xml::XMLTag                tag      = xml::getRootTag();
+    std::string filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-2.xml";
+    xml::XMLTag tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(2);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
@@ -240,8 +236,8 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(static_cast<bool>(action));
   }
   {
-    std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-3.xml";
-    xml::XMLTag                tag      = xml::getRootTag();
+    std::string filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-3.xml";
+    xml::XMLTag tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
@@ -253,8 +249,8 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(static_cast<bool>(action));
   }
   {
-    std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-4.xml";
-    xml::XMLTag                tag      = xml::getRootTag();
+    std::string filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-4.xml";
+    xml::XMLTag tag      = xml::getRootTag();
     mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
     dataConfig->setDimensions(3);
     mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));

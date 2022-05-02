@@ -17,8 +17,8 @@ std::string getPathToRepository()
 {
   precice::logging::Logger _log("testing");
   char *                   preciceRoot = std::getenv("PRECICE_ROOT");
-  PRECICE_CHECK(preciceRoot != nullptr,
-                "Environment variable PRECICE_ROOT is required to run the tests, but has not been set. Please set it to the root directory of the precice repository.");
+  PRECICE_CHECK(preciceRoot != nullptr, "Environment variable PRECICE_ROOT is required to run the tests, but has not "
+                                        "been set. Please set it to the root directory of the precice repository.");
 
   // Cleanup the path by canonicalising it.
   boost::filesystem::path root(preciceRoot);

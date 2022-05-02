@@ -9,10 +9,7 @@ namespace io {
 
 class ExportCSV : public Export {
 public:
-  virtual void doExport(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh);
+  virtual void doExport(const std::string &name, const std::string &location, const mesh::Mesh &mesh);
 
 private:
   mutable logging::Logger _log{"io::ExportCSV"};

@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     cplInterface.writeVectorData(dataBID, 0, valueDataB.data());
     cplInterface.writeVectorGradientData(dataBID, 0, gradient.data());
 
-    //tell preCICE that data has been written and call initializeData
+    // tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
 

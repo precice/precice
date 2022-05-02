@@ -9,27 +9,13 @@
 namespace precice {
 namespace mesh {
 
-Data::Data()
-    : _name(""),
-      _id(-1),
-      _dimensions(0),
-      _spatialDimensions(-1),
-      _hasGradient(false)
+Data::Data() : _name(""), _id(-1), _dimensions(0), _spatialDimensions(-1), _hasGradient(false)
 {
   PRECICE_ASSERT(false);
 }
 
-Data::Data(
-    std::string name,
-    DataID      id,
-    int         dimensions,
-    int         spacialDimensions,
-    bool        hasGradient)
-    : _values(),
-      _name(std::move(name)),
-      _id(id),
-      _dimensions(dimensions),
-      _spatialDimensions(spacialDimensions),
+Data::Data(std::string name, DataID id, int dimensions, int spacialDimensions, bool hasGradient)
+    : _values(), _name(std::move(name)), _id(id), _dimensions(dimensions), _spatialDimensions(spacialDimensions),
       _hasGradient(hasGradient)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);

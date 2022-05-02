@@ -55,8 +55,7 @@ public:
  */
 class Multiquadrics : public NoCompactSupportBase {
 public:
-  explicit Multiquadrics(double c)
-      : _cPow2(std::pow(c, 2)) {}
+  explicit Multiquadrics(double c) : _cPow2(std::pow(c, 2)) {}
 
   double evaluate(double radius) const
   {
@@ -77,11 +76,10 @@ private:
  */
 class InverseMultiquadrics : public NoCompactSupportBase {
 public:
-  explicit InverseMultiquadrics(double c)
-      : _cPow2(std::pow(c, 2))
+  explicit InverseMultiquadrics(double c) : _cPow2(std::pow(c, 2))
   {
-    PRECICE_CHECK(math::greater(c, 0.0),
-                  "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute.");
+    PRECICE_CHECK(math::greater(c, 0.0), "Shape parameter for radial-basis-function inverse multiquadric has to be "
+                                         "larger than zero. Please update the \"shape-parameter\" attribute.");
   }
 
   double evaluate(double radius) const
@@ -121,13 +119,13 @@ public:
 class Gaussian : public CompactSupportBase {
 public:
   Gaussian(const double shape, const double supportRadius = std::numeric_limits<double>::infinity())
-      : _shape(shape),
-        _supportRadius(supportRadius)
+      : _shape(shape), _supportRadius(supportRadius)
   {
-    PRECICE_CHECK(math::greater(_shape, 0.0),
-                  "Shape parameter for radial-basis-function gaussian has to be larger than zero. Please update the \"shape-parameter\" attribute.");
+    PRECICE_CHECK(math::greater(_shape, 0.0), "Shape parameter for radial-basis-function gaussian has to be larger "
+                                              "than zero. Please update the \"shape-parameter\" attribute.");
     PRECICE_CHECK(math::greater(_supportRadius, 0.0),
-                  "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the \"support-radius\" attribute.");
+                  "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the "
+                  "\"support-radius\" attribute.");
 
     if (supportRadius < std::numeric_limits<double>::infinity()) {
       _deltaY = evaluate(supportRadius);
@@ -176,11 +174,10 @@ private:
  */
 class CompactThinPlateSplinesC2 : public CompactSupportBase {
 public:
-  explicit CompactThinPlateSplinesC2(double supportRadius)
-      : _r(supportRadius)
+  explicit CompactThinPlateSplinesC2(double supportRadius) : _r(supportRadius)
   {
-    PRECICE_CHECK(math::greater(_r, 0.0),
-                  "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
+    PRECICE_CHECK(math::greater(_r, 0.0), "Support radius for radial-basis-function compact thin-plate-splines c2 has "
+                                          "to be larger than zero. Please update the \"support-radius\" attribute.");
   }
 
   double getSupportRadius() const
@@ -195,7 +192,8 @@ public:
     double const p = radius / _r;
     using std::log;
     using std::pow;
-    return 1.0 - 30.0 * pow(p, 2.0) - 10.0 * pow(p, 3.0) + 45.0 * pow(p, 4.0) - 6.0 * pow(p, 5.0) - 60.0 * log(pow(p, pow(p, 3.0)));
+    return 1.0 - 30.0 * pow(p, 2.0) - 10.0 * pow(p, 3.0) + 45.0 * pow(p, 4.0) - 6.0 * pow(p, 5.0) -
+           60.0 * log(pow(p, pow(p, 3.0)));
   }
 
 private:
@@ -216,11 +214,10 @@ private:
  */
 class CompactPolynomialC0 : public CompactSupportBase {
 public:
-  explicit CompactPolynomialC0(double supportRadius)
-      : _r(supportRadius)
+  explicit CompactPolynomialC0(double supportRadius) : _r(supportRadius)
   {
-    PRECICE_CHECK(math::greater(_r, 0.0),
-                  "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute.");
+    PRECICE_CHECK(math::greater(_r, 0.0), "Support radius for radial-basis-function compact polynomial c0 has to be "
+                                          "larger than zero. Please update the \"support-radius\" attribute.");
   }
 
   double getSupportRadius() const
@@ -253,11 +250,10 @@ private:
  */
 class CompactPolynomialC6 : public CompactSupportBase {
 public:
-  explicit CompactPolynomialC6(double supportRadius)
-      : _r(supportRadius)
+  explicit CompactPolynomialC6(double supportRadius) : _r(supportRadius)
   {
-    PRECICE_CHECK(math::greater(_r, 0.0),
-                  "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
+    PRECICE_CHECK(math::greater(_r, 0.0), "Support radius for radial-basis-function compact polynomial c6 has to be "
+                                          "larger than zero. Please update the \"support-radius\" attribute.");
   }
 
   double getSupportRadius() const

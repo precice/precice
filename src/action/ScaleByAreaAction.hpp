@@ -30,22 +30,14 @@ public:
    * @param[in] data Data that should be scaled.
    * @param[in] scalingType Type of scaling to be performed.
    */
-  ScaleByAreaAction(
-      Timing               timing,
-      int                  targetDataID,
-      const mesh::PtrMesh &mesh,
-      Scaling              scaling);
+  ScaleByAreaAction(Timing timing, int targetDataID, const mesh::PtrMesh &mesh, Scaling scaling);
 
   virtual ~ScaleByAreaAction() {}
 
   /**
    * @brief Scales data on mesh nodes according to selected scaling type.
    */
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  virtual void performAction(double time, double timeStepSize, double computedTimeWindowPart, double timeWindowSize);
 
 private:
   logging::Logger _log{"action::ScaleByAreaAction"};

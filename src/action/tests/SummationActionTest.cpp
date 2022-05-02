@@ -49,8 +49,7 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
   sourceValues3 << 2.0, 3.0, 4.0;
   targetValues = Eigen::VectorXd::Zero(targetValues.size());
 
-  action::SummationAction sum(
-      action::SummationAction::WRITE_MAPPING_PRIOR, sourceDataIDs, targetDataID, mesh);
+  action::SummationAction sum(action::SummationAction::WRITE_MAPPING_PRIOR, sourceDataIDs, targetDataID, mesh);
 
   sum.performAction(0.0, 0.25, 0.0, 0.25);
   BOOST_TEST(sourceValues1(0) == 2.0);
@@ -103,8 +102,7 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
   sourceValues2 << 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0;
   targetValues = Eigen::VectorXd::Zero(targetValues.size());
 
-  action::SummationAction sum(
-      action::SummationAction::WRITE_MAPPING_PRIOR, sourceDataIDs, targetDataID, mesh);
+  action::SummationAction sum(action::SummationAction::WRITE_MAPPING_PRIOR, sourceDataIDs, targetDataID, mesh);
 
   sum.performAction(0.0, 0.25, 0.0, 0.25);
   BOOST_TEST(sourceValues1(0) == 1.0);
@@ -147,8 +145,8 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
 BOOST_AUTO_TEST_CASE(Configuration)
 {
   PRECICE_TEST(1_rank);
-  std::string                filename = testing::getPathToSources() + "/action/tests/SummationActionTest-testConfiguration-1.xml";
-  xml::XMLTag                tag      = xml::getRootTag();
+  std::string filename = testing::getPathToSources() + "/action/tests/SummationActionTest-testConfiguration-1.xml";
+  xml::XMLTag tag      = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
   dataConfig->setDimensions(3);
   mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));

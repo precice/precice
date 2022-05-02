@@ -13,13 +13,8 @@
 namespace precice {
 namespace impl {
 
-WatchIntegral::WatchIntegral(
-    mesh::PtrMesh      meshToWatch,
-    const std::string &exportFilename,
-    bool               isScalingOn)
-    : _mesh(std::move(meshToWatch)),
-      _txtWriter(exportFilename),
-      _isScalingOn(isScalingOn)
+WatchIntegral::WatchIntegral(mesh::PtrMesh meshToWatch, const std::string &exportFilename, bool isScalingOn)
+    : _mesh(std::move(meshToWatch)), _txtWriter(exportFilename), _isScalingOn(isScalingOn)
 {
   PRECICE_ASSERT(_mesh);
 
@@ -33,9 +28,8 @@ WatchIntegral::WatchIntegral(
     if (not utils::MasterSlave::isSecondary()) {
       if (_dataToExport[i]->getDimensions() > 1) {
 
-        io::TXTTableWriter::DataType vectorType = _dataToExport[i]->getDimensions() == 2
-                                                      ? io::TXTTableWriter::VECTOR2D
-                                                      : io::TXTTableWriter::VECTOR3D;
+        io::TXTTableWriter::DataType vectorType =
+            _dataToExport[i]->getDimensions() == 2 ? io::TXTTableWriter::VECTOR2D : io::TXTTableWriter::VECTOR3D;
         _txtWriter.addData(_dataToExport[i]->getName(), vectorType);
       } else {
         _txtWriter.addData(_dataToExport[i]->getName(), io::TXTTableWriter::DOUBLE);
@@ -58,8 +52,7 @@ void WatchIntegral::initialize()
   }
 }
 
-void WatchIntegral::exportIntegralData(
-    double time)
+void WatchIntegral::exportIntegralData(double time)
 {
 
   if (not utils::MasterSlave::isSecondary()) {

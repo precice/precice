@@ -39,8 +39,7 @@ Logger::LoggerImpl::LoggerImpl(const std::string &module)
   log::core::get()->add_global_attribute("Function", attrs::mutable_constant<std::string>(""));
 }
 
-Logger::Logger(std::string module)
-    : _impl(new LoggerImpl{std::move(module)}) {}
+Logger::Logger(std::string module) : _impl(new LoggerImpl{std::move(module)}) {}
 
 // This is required for the std::unique_ptr.
 Logger::~Logger() = default;
@@ -68,9 +67,15 @@ namespace {
 /// Sets the log location in the boost core
 void setLogLocation(LogLocation loc)
 {
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(boost::log::core::get()->get_global_attributes()["Line"]).set(loc.line);
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<std::string>>(boost::log::core::get()->get_global_attributes()["File"]).set(loc.file);
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<std::string>>(boost::log::core::get()->get_global_attributes()["Function"]).set(loc.func);
+  boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(
+      boost::log::core::get()->get_global_attributes()["Line"])
+      .set(loc.line);
+  boost::log::attribute_cast<boost::log::attributes::mutable_constant<std::string>>(
+      boost::log::core::get()->get_global_attributes()["File"])
+      .set(loc.file);
+  boost::log::attribute_cast<boost::log::attributes::mutable_constant<std::string>>(
+      boost::log::core::get()->get_global_attributes()["Function"])
+      .set(loc.func);
 }
 } // namespace
 

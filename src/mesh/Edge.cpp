@@ -9,15 +9,10 @@
 namespace precice {
 namespace mesh {
 
-Edge::Edge(
-    Vertex &vertexOne,
-    Vertex &vertexTwo,
-    EdgeID  id)
-    : _vertices({&vertexOne, &vertexTwo}),
-      _id(id)
+Edge::Edge(Vertex &vertexOne, Vertex &vertexTwo, EdgeID id) : _vertices({&vertexOne, &vertexTwo}), _id(id)
 {
-  PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(),
-                 vertexOne.getDimensions(), vertexTwo.getDimensions());
+  PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(), vertexOne.getDimensions(),
+                 vertexTwo.getDimensions());
 }
 
 EdgeID Edge::getID() const
@@ -43,7 +38,8 @@ double Edge::getEnclosingRadius() const
 
 bool Edge::connectedTo(const Edge &other) const
 {
-  return _vertices[0] == other._vertices[0] || _vertices[0] == other._vertices[1] || _vertices[1] == other._vertices[0] || _vertices[1] == other._vertices[1];
+  return _vertices[0] == other._vertices[0] || _vertices[0] == other._vertices[1] ||
+         _vertices[1] == other._vertices[0] || _vertices[1] == other._vertices[1];
 }
 
 bool Edge::operator==(const Edge &other) const
@@ -59,11 +55,8 @@ bool Edge::operator!=(const Edge &other) const
 std::ostream &operator<<(std::ostream &stream, const Edge &edge)
 {
   using utils::eigenio::wkt;
-  return stream << "LINESTRING ("
-                << edge.vertex(0).getCoords().transpose().format(wkt())
-                << ", "
-                << edge.vertex(1).getCoords().transpose().format(wkt())
-                << ')';
+  return stream << "LINESTRING (" << edge.vertex(0).getCoords().transpose().format(wkt()) << ", "
+                << edge.vertex(1).getCoords().transpose().format(wkt()) << ')';
 }
 
 } // namespace mesh

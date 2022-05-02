@@ -18,11 +18,10 @@ public:
     int         dimensions;
     bool        hasGradient;
 
-    ConfiguredData(
-        const std::string &name,
-        int                dimensions,
-        bool               hasGradient = false)
-        : name(name), dimensions(dimensions), hasGradient(hasGradient) {}
+    ConfiguredData(const std::string &name, int dimensions, bool hasGradient = false)
+        : name(name), dimensions(dimensions), hasGradient(hasGradient)
+    {
+    }
   };
 
   DataConfiguration(xml::XMLTag &parent);
@@ -33,13 +32,9 @@ public:
 
   ConfiguredData getRecentlyConfiguredData() const;
 
-  virtual void xmlTagCallback(
-      const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
-  virtual void xmlEndTagCallback(
-      const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /**
    * @brief Adds data manually.
@@ -47,9 +42,7 @@ public:
    * @param[in] name Unique name of the data.
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    */
-  void addData(const std::string &name,
-               int                dataDimensions,
-               bool               hasGradient = false);
+  void addData(const std::string &name, int dataDimensions, bool hasGradient = false);
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};

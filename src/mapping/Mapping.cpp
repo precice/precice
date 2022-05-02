@@ -8,23 +8,14 @@
 namespace precice {
 namespace mapping {
 
-Mapping::Mapping(
-    Constraint constraint,
-    int        dimensions,
-    bool       requireGradient)
-    : _constraint(constraint),
-      _inputRequirement(MeshRequirement::UNDEFINED),
-      _outputRequirement(MeshRequirement::UNDEFINED),
-      _input(),
-      _output(),
-      _dimensions(dimensions),
+Mapping::Mapping(Constraint constraint, int dimensions, bool requireGradient)
+    : _constraint(constraint), _inputRequirement(MeshRequirement::UNDEFINED),
+      _outputRequirement(MeshRequirement::UNDEFINED), _input(), _output(), _dimensions(dimensions),
       _requireGradient(requireGradient)
 {
 }
 
-void Mapping::setMeshes(
-    const mesh::PtrMesh &input,
-    const mesh::PtrMesh &output)
+void Mapping::setMeshes(const mesh::PtrMesh &input, const mesh::PtrMesh &output)
 {
   _input  = input;
   _output = output;
@@ -65,14 +56,12 @@ mesh::PtrMesh Mapping::output() const
   return _output;
 }
 
-void Mapping::setInputRequirement(
-    MeshRequirement requirement)
+void Mapping::setInputRequirement(MeshRequirement requirement)
 {
   _inputRequirement = requirement;
 }
 
-void Mapping::setOutputRequirement(
-    MeshRequirement requirement)
+void Mapping::setOutputRequirement(MeshRequirement requirement)
 {
   _outputRequirement = requirement;
 }
@@ -116,7 +105,8 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
   auto integralOutput = mesh::integrate(output(), output()->data(outputDataID));
 
   // Create reshape the output values vector to matrix
-  Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
+  Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions,
+                                                 outputValues.size() / valueDimensions);
 
   // Scale in each direction
   Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();

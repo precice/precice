@@ -24,7 +24,8 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName << "\" and participant name \"" << solverName << "\".\n";
+  std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName
+            << "\" and participant name \"" << solverName << "\".\n";
 
   SolverInterface interface(solverName, configFileName, commRank, commSize);
 

@@ -21,10 +21,9 @@ namespace com {
 /// Implements Communication by using sockets.
 class SocketCommunication : public Communication {
 public:
-  SocketCommunication(unsigned short portNumber       = 0,
-                      bool           reuseAddress     = false,
-                      std::string    networkName      = utils::networking::loopbackInterfaceName(),
-                      std::string    addressDirectory = ".");
+  SocketCommunication(unsigned short portNumber = 0, bool reuseAddress = false,
+                      std::string networkName      = utils::networking::loopbackInterfaceName(),
+                      std::string addressDirectory = ".");
 
   explicit SocketCommunication(std::string const &addressDirectory);
 
@@ -32,29 +31,19 @@ public:
 
   virtual size_t getRemoteCommunicatorSize() override;
 
-  virtual void acceptConnection(std::string const &acceptorName,
-                                std::string const &requesterName,
-                                std::string const &tag,
-                                int                acceptorRank,
-                                int                rankOffset = 0) override;
+  virtual void acceptConnection(std::string const &acceptorName, std::string const &requesterName,
+                                std::string const &tag, int acceptorRank, int rankOffset = 0) override;
 
-  virtual void acceptConnectionAsServer(std::string const &acceptorName,
-                                        std::string const &requesterName,
-                                        std::string const &tag,
-                                        int                acceptorRank,
-                                        int                requesterCommunicatorSize) override;
+  virtual void acceptConnectionAsServer(std::string const &acceptorName, std::string const &requesterName,
+                                        std::string const &tag, int acceptorRank,
+                                        int requesterCommunicatorSize) override;
 
-  virtual void requestConnection(std::string const &acceptorName,
-                                 std::string const &requesterName,
-                                 std::string const &tag,
-                                 int                requesterRank,
-                                 int                requesterCommunicatorSize) override;
+  virtual void requestConnection(std::string const &acceptorName, std::string const &requesterName,
+                                 std::string const &tag, int requesterRank, int requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string const &  acceptorName,
-                                         std::string const &  requesterName,
-                                         std::string const &  tag,
-                                         std::set<int> const &acceptorRanks,
-                                         int                  requesterRank) override;
+  virtual void requestConnectionAsClient(std::string const &acceptorName, std::string const &requesterName,
+                                         std::string const &tag, std::set<int> const &acceptorRanks,
+                                         int requesterRank) override;
 
   virtual void closeConnection() override;
 
@@ -105,8 +94,7 @@ public:
   virtual void receive(precice::span<double> itemsToReceive, Rank rankSender) override;
 
   /// Asynchronously receives an array of double values.
-  virtual PtrRequest aReceive(precice::span<double> itemsToReceive,
-                              int                   rankSender) override;
+  virtual PtrRequest aReceive(precice::span<double> itemsToReceive, int rankSender) override;
 
   virtual PtrRequest aReceive(std::vector<double> &itemsToReceive, Rank rankSender) override;
 
@@ -134,11 +122,9 @@ public:
   void send(std::vector<double> const &v, Rank rankReceiver) override;
   void receive(std::vector<double> &v, Rank rankSender) override;
 
-  virtual void prepareEstablishment(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
+  virtual void prepareEstablishment(std::string const &acceptorName, std::string const &requesterName) override;
 
-  virtual void cleanupEstablishment(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
+  virtual void cleanupEstablishment(std::string const &acceptorName, std::string const &requesterName) override;
 
 private:
   logging::Logger _log{"com::SocketCommunication"};

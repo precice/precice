@@ -59,20 +59,11 @@ class CouplingData;
  */
 class BaseCouplingScheme : public CouplingScheme {
 public:
-  enum CouplingMode { Explicit,
-                      Implicit,
-                      Undefined };
+  enum CouplingMode { Explicit, Implicit, Undefined };
 
-  BaseCouplingScheme(
-      double                        maxTime,
-      int                           maxTimeWindows,
-      double                        timeWindowSize,
-      int                           validDigits,
-      std::string                   localParticipant,
-      int                           maxIterations,
-      CouplingMode                  cplMode,
-      constants::TimesteppingMethod dtMethod,
-      int                           extrapolationOrder);
+  BaseCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
+                     std::string localParticipant, int maxIterations, CouplingMode cplMode,
+                     constants::TimesteppingMethod dtMethod, int extrapolationOrder);
 
   /**
    * @brief getter for _isInitialized
@@ -170,7 +161,9 @@ public:
    * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  double getNextTimestepMaxLength() const override final; // @todo mainly used in tests. Is this function actually needed or can we drop it and only use getThisTimeWindowRemainder()?
+  double
+  getNextTimestepMaxLength() const override final; // @todo mainly used in tests. Is this function actually needed or
+                                                   // can we drop it and only use getThisTimeWindowRemainder()?
 
   /// Returns true, when the coupled simulation is still ongoing.
   bool isCouplingOngoing() const override final;
@@ -219,12 +212,8 @@ public:
   void advance() override final;
 
   /// Adds a measure to determine the convergence of coupling iterations.
-  void addConvergenceMeasure(
-      int                         dataID,
-      bool                        suffices,
-      bool                        strict,
-      impl::PtrConvergenceMeasure measure,
-      bool                        doesLogging);
+  void addConvergenceMeasure(int dataID, bool suffices, bool strict, impl::PtrConvergenceMeasure measure,
+                             bool doesLogging);
 
   /// Set an acceleration technique.
   void setAcceleration(const acceleration::PtrAcceleration &acceleration);
@@ -326,7 +315,8 @@ protected:
   }
 
   /**
-   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and acceleration, and initializes with zero.
+   * @brief Reserves memory to store data values from previous iterations and time windows in coupling data and
+   * acceleration, and initializes with zero.
    */
   void initializeStorages();
 
@@ -438,10 +428,12 @@ private:
   /// True, if this participant has to receive initialized data.
   bool _receivesInitializedData = false;
 
-  /// True, if initialData has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
+  /// True, if initialData has been received from other participant. Flag is used to make sure that coupling scheme is
+  /// implemented and used correctly.
   bool _hasInitialDataBeenReceived = false;
 
-  /// True, if data has been received from other participant. Flag is used to make sure that coupling scheme is implemented and used correctly.
+  /// True, if data has been received from other participant. Flag is used to make sure that coupling scheme is
+  /// implemented and used correctly.
   bool _hasDataBeenReceived = false;
 
   /// True, if coupling has been initialized.
@@ -565,9 +557,7 @@ private:
    * @param timeWindows current number of completed time windows
    * @param time current time
    */
-  std::string printBasicState(
-      int    timeWindows,
-      double time) const;
+  std::string printBasicState(int timeWindows, double time) const;
 
   /**
    * @brief Prints the action state

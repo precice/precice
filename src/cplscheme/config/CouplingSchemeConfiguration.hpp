@@ -52,11 +52,9 @@ public:
    * @param[in] m2nConfig For checking if a communication between participants to be coupled is defined.
    * @param[in] participantConfig For checking waveform order.
    */
-  CouplingSchemeConfiguration(
-      xml::XMLTag &                        parent,
-      mesh::PtrMeshConfiguration           meshConfig,
-      m2n::M2NConfiguration::SharedPointer m2nConfig,
-      config::PtrParticipantConfiguration  participantConfig);
+  CouplingSchemeConfiguration(xml::XMLTag &parent, mesh::PtrMeshConfiguration meshConfig,
+                              m2n::M2NConfiguration::SharedPointer m2nConfig,
+                              config::PtrParticipantConfiguration  participantConfig);
 
   void setExperimental(bool experimental);
 
@@ -201,97 +199,60 @@ private:
 
   void addTagAcceleration(xml::XMLTag &tag);
 
-  void addAbsoluteConvergenceMeasure(
-      const std::string &dataName,
-      const std::string &meshName,
-      double             limit,
-      bool               suffices,
-      bool               strict);
+  void addAbsoluteConvergenceMeasure(const std::string &dataName, const std::string &meshName, double limit,
+                                     bool suffices, bool strict);
 
-  void addRelativeConvergenceMeasure(
-      const std::string &dataName,
-      const std::string &meshName,
-      double             limit,
-      bool               suffices,
-      bool               strict);
+  void addRelativeConvergenceMeasure(const std::string &dataName, const std::string &meshName, double limit,
+                                     bool suffices, bool strict);
 
-  void addResidualRelativeConvergenceMeasure(
-      const std::string &dataName,
-      const std::string &meshName,
-      double             limit,
-      bool               suffices,
-      bool               strict);
+  void addResidualRelativeConvergenceMeasure(const std::string &dataName, const std::string &meshName, double limit,
+                                             bool suffices, bool strict);
 
-  void addMinIterationConvergenceMeasure(
-      const std::string &dataName,
-      const std::string &meshName,
-      int                minIterations,
-      bool               suffices,
-      bool               strict);
+  void addMinIterationConvergenceMeasure(const std::string &dataName, const std::string &meshName, int minIterations,
+                                         bool suffices, bool strict);
 
-  mesh::PtrData getData(
-      const std::string &dataName,
-      const std::string &meshName) const;
+  mesh::PtrData getData(const std::string &dataName, const std::string &meshName) const;
 
-  mesh::PtrData findDataByID(
-      int ID) const;
+  mesh::PtrData findDataByID(int ID) const;
 
-  PtrCouplingScheme createSerialExplicitCouplingScheme(
-      const std::string &accessor) const;
+  PtrCouplingScheme createSerialExplicitCouplingScheme(const std::string &accessor) const;
 
-  PtrCouplingScheme createParallelExplicitCouplingScheme(
-      const std::string &accessor) const;
+  PtrCouplingScheme createParallelExplicitCouplingScheme(const std::string &accessor) const;
 
-  PtrCouplingScheme createSerialImplicitCouplingScheme(
-      const std::string &accessor) const;
+  PtrCouplingScheme createSerialImplicitCouplingScheme(const std::string &accessor) const;
 
-  PtrCouplingScheme createParallelImplicitCouplingScheme(
-      const std::string &accessor) const;
+  PtrCouplingScheme createParallelImplicitCouplingScheme(const std::string &accessor) const;
 
-  PtrCouplingScheme createMultiCouplingScheme(
-      const std::string &accessor) const;
+  PtrCouplingScheme createMultiCouplingScheme(const std::string &accessor) const;
 
-  constants::TimesteppingMethod getTimesteppingMethod(
-      const std::string &method) const;
+  constants::TimesteppingMethod getTimesteppingMethod(const std::string &method) const;
 
   /// Adds configured exchange data to be sent or received to scheme.
-  void addDataToBeExchanged(
-      BiCouplingScheme & scheme,
-      const std::string &accessor) const;
+  void addDataToBeExchanged(BiCouplingScheme &scheme, const std::string &accessor) const;
 
   /**
    * @brief Adds configured exchange data to be sent or received to scheme.
    * Only used specifically for MultiCouplingScheme
    */
-  void addMultiDataToBeExchanged(
-      MultiCouplingScheme &scheme,
-      const std::string &  accessor) const;
+  void addMultiDataToBeExchanged(MultiCouplingScheme &scheme, const std::string &accessor) const;
 
-  void checkIfDataIsExchanged(
-      DataID dataID) const;
+  void checkIfDataIsExchanged(DataID dataID) const;
 
-  void checkWaveformOrderReadData(
-      int maxAllowedOrder) const;
+  void checkWaveformOrderReadData(int maxAllowedOrder) const;
 
-  void checkSerialImplicitAccelerationData(
-      DataID dataID, const std::string &first, const std::string &second) const;
+  void checkSerialImplicitAccelerationData(DataID dataID, const std::string &first, const std::string &second) const;
 
-  void addConvergenceMeasures(
-      BaseCouplingScheme *                            scheme,
-      const std::string &                             participant,
-      const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const;
+  void addConvergenceMeasures(BaseCouplingScheme *scheme, const std::string &participant,
+                              const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const;
 
-  void setSerialAcceleration(
-      BaseCouplingScheme *scheme,
-      const std::string & first,
-      const std::string & second) const;
+  void setSerialAcceleration(BaseCouplingScheme *scheme, const std::string &first, const std::string &second) const;
 
-  void setParallelAcceleration(
-      BaseCouplingScheme *scheme,
-      const std::string & participant) const;
+  void setParallelAcceleration(BaseCouplingScheme *scheme, const std::string &participant) const;
 
-  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;   // For whitebox tests
+  friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::
+      testParseConfigurationWithRelaxation; // For whitebox tests
+  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox
+                                                                                                         // tests
 };
 } // namespace cplscheme
 } // namespace precice

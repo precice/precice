@@ -11,11 +11,8 @@
 namespace precice {
 namespace action {
 
-SummationAction::SummationAction(
-    Timing                  timing,
-    const std::vector<int> &sourceDataIDs,
-    int                     targetDataID,
-    const mesh::PtrMesh &   mesh)
+SummationAction::SummationAction(Timing timing, const std::vector<int> &sourceDataIDs, int targetDataID,
+                                 const mesh::PtrMesh &mesh)
     : Action(timing, mesh, mapping::Mapping::MeshRequirement::VERTEX), _targetData(mesh->data(targetDataID))
 {
 
@@ -24,15 +21,13 @@ SummationAction::SummationAction(
   }
 
   for (const auto &source : _sourceDataVector) {
-    PRECICE_CHECK(source->getDimensions() == _targetData->getDimensions(), "Source and target data dimensions (scalar or vector) of summation action need to be identical.");
+    PRECICE_CHECK(source->getDimensions() == _targetData->getDimensions(),
+                  "Source and target data dimensions (scalar or vector) of summation action need to be identical.");
   }
 }
 
-void SummationAction::performAction(
-    double time,
-    double timeStepSize,
-    double computedTimeWindowPart,
-    double timeWindowSize)
+void SummationAction::performAction(double time, double timeStepSize, double computedTimeWindowPart,
+                                    double timeWindowSize)
 {
   PRECICE_TRACE();
 

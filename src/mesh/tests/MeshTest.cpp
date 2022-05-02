@@ -46,8 +46,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
   mesh::BoundingBox bBox = mesh.getBoundingBox();
   auto              cog  = bBox.center();
 
-  mesh::BoundingBox referenceBox({-1.0, 2.0,
-                                  0.0, 4.0});
+  mesh::BoundingBox referenceBox({-1.0, 2.0, 0.0, 4.0});
 
   std::vector<double> referenceCOG = {0.5, 2.0};
 
@@ -79,9 +78,7 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   mesh::BoundingBox bBox = mesh.getBoundingBox();
   auto              cog  = bBox.center();
 
-  mesh::BoundingBox referenceBox({-1.0, 3.5,
-                                  0.0, 4.0,
-                                  -3.0, 8.0});
+  mesh::BoundingBox referenceBox({-1.0, 3.5, 0.0, 4.0, -3.0, 8.0});
 
   std::vector<double> referenceCOG = {1.25, 2.0, 2.5};
 
@@ -245,13 +242,13 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
   mesh.createTriangle(e0, e1, e2);
   std::stringstream sstream;
   sstream << mesh;
-  std::string reference(
-      "Mesh \"WKTMesh\", dimensionality = 3:\n"
-      "GEOMETRYCOLLECTION(\n"
-      "POINT (0 0 0), POINT (1 0 0), POINT (0 0 1), POINT (1 0 1),\n"
-      "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 1, 0 0 0), LINESTRING (1 0 0, 1 0 1), LINESTRING (1 0 1, 0 0 1),\n"
-      "POLYGON ((0 0 0, 1 0 0, 0 0 1, 0 0 0))\n"
-      ")");
+  std::string reference("Mesh \"WKTMesh\", dimensionality = 3:\n"
+                        "GEOMETRYCOLLECTION(\n"
+                        "POINT (0 0 0), POINT (1 0 0), POINT (0 0 1), POINT (1 0 1),\n"
+                        "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 1, 0 0 0), LINESTRING "
+                        "(1 0 0, 1 0 1), LINESTRING (1 0 1, 0 0 1),\n"
+                        "POLYGON ((0 0 0, 1 0 0, 0 0 1, 0 0 0))\n"
+                        ")");
   BOOST_TEST(reference == sstream.str());
 }
 

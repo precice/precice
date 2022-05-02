@@ -65,7 +65,7 @@ double MasterSlave::l2norm(const Eigen::VectorXd &vec)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimaryRank && not _isSecondaryRank) { //old case
+  if (not _isPrimaryRank && not _isSecondaryRank) { // old case
     return vec.norm();
   }
 
@@ -103,7 +103,7 @@ double MasterSlave::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2
 {
   PRECICE_TRACE();
 
-  if (not _isPrimaryRank && not _isSecondaryRank) { //old case
+  if (not _isPrimaryRank && not _isSecondaryRank) { // old case
     return vec1.dot(vec2);
   }
 
@@ -175,8 +175,7 @@ void MasterSlave::reduceSum(precice::span<const double> sendData, precice::span<
 void MasterSlave::reduceSum(const double &sendData, double &rcvData)
 {
   PRECICE_TRACE();
-  reduceSum(precice::refToSpan<const double>(sendData),
-            precice::refToSpan<double>(rcvData));
+  reduceSum(precice::refToSpan<const double>(sendData), precice::refToSpan<double>(rcvData));
 }
 
 void MasterSlave::reduceSum(const int &sendData, int &rcvData)

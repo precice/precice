@@ -9,10 +9,7 @@
 namespace precice {
 namespace utils {
 
-std::string wrapText(
-    const std::string &text,
-    int                linewidth,
-    int                indentation)
+std::string wrapText(const std::string &text, int linewidth, int indentation)
 {
   std::vector<std::string> tokens;
   boost::algorithm::split(tokens, text, boost::algorithm::is_space());
@@ -41,9 +38,7 @@ std::string wrapText(
   return wrapped;
 }
 
-std::string &checkAppendExtension(
-    std::string &      filename,
-    const std::string &extension)
+std::string &checkAppendExtension(std::string &filename, const std::string &extension)
 {
   size_t pos = filename.rfind(extension);
   if ((pos == std::string::npos) || (pos != filename.size() - extension.size())) {

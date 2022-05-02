@@ -21,15 +21,9 @@
 
 namespace precice {
 namespace com {
-CommunicateMesh::CommunicateMesh(
-    com::PtrCommunication communication)
-    : _communication(std::move(communication))
-{
-}
+CommunicateMesh::CommunicateMesh(com::PtrCommunication communication) : _communication(std::move(communication)) {}
 
-void CommunicateMesh::sendMesh(
-    const mesh::Mesh &mesh,
-    int               rankReceiver)
+void CommunicateMesh::sendMesh(const mesh::Mesh &mesh, int rankReceiver)
 {
   PRECICE_TRACE(mesh.getName(), rankReceiver);
   const int dim = mesh.getDimensions();
@@ -51,8 +45,8 @@ void CommunicateMesh::sendMesh(
   const int numberOfEdges = mesh.edges().size();
   _communication->send(numberOfEdges, rankReceiver);
   if (not mesh.edges().empty()) {
-    //we need to send the vertexIDs first such that the right edges can be created later
-    //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+    // we need to send the vertexIDs first such that the right edges can be created later
+    // contrary to the normal sendMesh, this variant must also work for adding delta meshes
     std::vector<int> vertexIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       vertexIDs[i] = meshVertices[i].getID();
@@ -71,8 +65,8 @@ void CommunicateMesh::sendMesh(
     int numberOfTriangles = mesh.triangles().size();
     _communication->send(numberOfTriangles, rankReceiver);
     if (not mesh.triangles().empty()) {
-      //we need to send the edgeIDs first such that the right edges can be created later
-      //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+      // we need to send the edgeIDs first such that the right edges can be created later
+      // contrary to the normal sendMesh, this variant must also work for adding delta meshes
       std::vector<int> edgeIDs(numberOfEdges);
       for (int i = 0; i < numberOfEdges; i++) {
         edgeIDs[i] = mesh.edges()[i].getID();
@@ -90,9 +84,7 @@ void CommunicateMesh::sendMesh(
   }
 }
 
-void CommunicateMesh::receiveMesh(
-    mesh::Mesh &mesh,
-    int         rankSender)
+void CommunicateMesh::receiveMesh(mesh::Mesh &mesh, int rankSender)
 {
   PRECICE_TRACE(mesh.getName(), rankSender);
   int dim = mesh.getDimensions();
@@ -170,7 +162,8 @@ void CommunicateMesh::receiveMesh(
         PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
-        mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
+        mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]],
+                            *edgeMap[triangleIDs[i * 3 + 2]]);
       }
     }
   }
@@ -198,8 +191,8 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
   int numberOfEdges = mesh.edges().size();
   _communication->broadcast(numberOfEdges);
   if (numberOfEdges > 0) {
-    //we need to send the vertexIDs first such that the right edges can be created later
-    //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+    // we need to send the vertexIDs first such that the right edges can be created later
+    // contrary to the normal sendMesh, this variant must also work for adding delta meshes
     std::vector<int> vertexIDs(numberOfVertices);
     for (int i = 0; i < numberOfVertices; i++) {
       vertexIDs[i] = meshVertices[i].getID();
@@ -219,8 +212,8 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
     int numberOfTriangles = mesh.triangles().size();
     _communication->broadcast(numberOfTriangles);
     if (numberOfTriangles > 0) {
-      //we need to send the edgeIDs first such that the right edges can be created later
-      //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+      // we need to send the edgeIDs first such that the right edges can be created later
+      // contrary to the normal sendMesh, this variant must also work for adding delta meshes
       std::vector<int> edgeIDs(numberOfEdges);
       for (int i = 0; i < numberOfEdges; i++) {
         edgeIDs[i] = mesh.edges()[i].getID();
@@ -239,8 +232,7 @@ void CommunicateMesh::broadcastSendMesh(const mesh::Mesh &mesh)
   }
 }
 
-void CommunicateMesh::broadcastReceiveMesh(
-    mesh::Mesh &mesh)
+void CommunicateMesh::broadcastReceiveMesh(mesh::Mesh &mesh)
 {
   PRECICE_TRACE(mesh.getName());
   int  dim             = mesh.getDimensions();
@@ -311,7 +303,8 @@ void CommunicateMesh::broadcastReceiveMesh(
         PRECICE_ASSERT(triangleIDs[i * 3] != triangleIDs[i * 3 + 1]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 1] != triangleIDs[i * 3 + 2]);
         PRECICE_ASSERT(triangleIDs[i * 3 + 2] != triangleIDs[i * 3]);
-        mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]], *edgeMap[triangleIDs[i * 3 + 2]]);
+        mesh.createTriangle(*edgeMap[triangleIDs[i * 3]], *edgeMap[triangleIDs[i * 3 + 1]],
+                            *edgeMap[triangleIDs[i * 3 + 2]]);
       }
     }
   }

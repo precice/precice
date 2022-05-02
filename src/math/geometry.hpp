@@ -37,12 +37,9 @@ enum ResultConstants {
  *
  * @return True, if interseting. False, otherwise
  */
-bool segmentsIntersect(
-    const Eigen::Ref<const Eigen::Vector2d> &a,
-    const Eigen::Ref<const Eigen::Vector2d> &b,
-    const Eigen::Ref<const Eigen::Vector2d> &c,
-    const Eigen::Ref<const Eigen::Vector2d> &d,
-    bool                                     countTouchingAsIntersection);
+bool segmentsIntersect(const Eigen::Ref<const Eigen::Vector2d> &a, const Eigen::Ref<const Eigen::Vector2d> &b,
+                       const Eigen::Ref<const Eigen::Vector2d> &c, const Eigen::Ref<const Eigen::Vector2d> &d,
+                       bool countTouchingAsIntersection);
 
 /**
  * @brief Determines the intersection point of two lines, if one exists.
@@ -55,12 +52,9 @@ bool segmentsIntersect(
  * @param[out] intersectionPoint Point of intersection.
  * @return True, if an intersection point exists and could be determined.
  */
-bool lineIntersection(
-    const Eigen::Ref<const Eigen::Vector2d> &a,
-    const Eigen::Ref<const Eigen::Vector2d> &b,
-    const Eigen::Ref<const Eigen::Vector2d> &c,
-    const Eigen::Ref<const Eigen::Vector2d> &d,
-    Eigen::Ref<Eigen::Vector2d> &            intersectionPoint);
+bool lineIntersection(const Eigen::Ref<const Eigen::Vector2d> &a, const Eigen::Ref<const Eigen::Vector2d> &b,
+                      const Eigen::Ref<const Eigen::Vector2d> &c, const Eigen::Ref<const Eigen::Vector2d> &d,
+                      Eigen::Ref<Eigen::Vector2d> &intersectionPoint);
 
 /**
  * @brief Determines the intersection point of a segment with a plane in 3D.
@@ -74,12 +68,9 @@ bool lineIntersection(
  *         - TOUCHING
  *         - CONTAINED
  */
-ResultConstants segmentPlaneIntersection(
-    const Eigen::Vector3d &pointOnPlane,
-    const Eigen::Vector3d &planeNormal,
-    const Eigen::Vector3d &firstPointSegment,
-    const Eigen::Vector3d &secondPointSegment,
-    Eigen::Vector3d &      intersectionPoint);
+ResultConstants segmentPlaneIntersection(const Eigen::Vector3d &pointOnPlane, const Eigen::Vector3d &planeNormal,
+                                         const Eigen::Vector3d &firstPointSegment,
+                                         const Eigen::Vector3d &secondPointSegment, Eigen::Vector3d &intersectionPoint);
 
 /**
  * @brief Determines, if a point lies on the line segment defined by a, b
@@ -93,10 +84,7 @@ ResultConstants segmentPlaneIntersection(
  * @return True, if toCheck lies between a and b. False, otherwise
  */
 template <typename VECTORA_T, typename VECTORB_T, typename VECTORC_T>
-bool between(
-    const VECTORA_T &a,
-    const VECTORB_T &b,
-    const VECTORC_T &toCheck);
+bool between(const VECTORA_T &a, const VECTORB_T &b, const VECTORC_T &toCheck);
 
 /**
  * @brief Determines, if three points are collinear (on one line)
@@ -110,10 +98,8 @@ bool between(
  * @return True, if collinear. False, otherwise
  */
 template <typename Derived>
-bool collinear(
-    const Eigen::MatrixBase<Derived> &a,
-    const Eigen::MatrixBase<Derived> &b,
-    const Eigen::MatrixBase<Derived> &c);
+bool collinear(const Eigen::MatrixBase<Derived> &a, const Eigen::MatrixBase<Derived> &b,
+               const Eigen::MatrixBase<Derived> &c);
 
 /**
  * @brief Determines, if two lines are parallel to each other.
@@ -127,11 +113,8 @@ bool collinear(
  * @return True, if the two lines are parallel to each other.
  */
 template <typename Derived>
-static bool parallel(
-    const Eigen::MatrixBase<Derived> &a,
-    const Eigen::MatrixBase<Derived> &b,
-    const Eigen::MatrixBase<Derived> &c,
-    const Eigen::MatrixBase<Derived> &d);
+static bool parallel(const Eigen::MatrixBase<Derived> &a, const Eigen::MatrixBase<Derived> &b,
+                     const Eigen::MatrixBase<Derived> &c, const Eigen::MatrixBase<Derived> &d);
 
 /**
  * @brief Computes the signed area of a triangle in 2D.
@@ -139,22 +122,14 @@ static bool parallel(
  * The area is negative, if the points a, b, c are given in
  * clockwise ordering, otherwise positive.
  */
-double triangleArea(
-    const Eigen::VectorXd &a,
-    const Eigen::VectorXd &b,
-    const Eigen::VectorXd &c);
+double triangleArea(const Eigen::VectorXd &a, const Eigen::VectorXd &b, const Eigen::VectorXd &c);
 
 /// Computes the (unsigned) area of a triangle in 3D.
-double tetraVolume(
-    const Eigen::Vector3d &a,
-    const Eigen::Vector3d &b,
-    const Eigen::Vector3d &c,
-    const Eigen::Vector3d &d);
+double tetraVolume(const Eigen::Vector3d &a, const Eigen::Vector3d &b, const Eigen::Vector3d &c,
+                   const Eigen::Vector3d &d);
 
 /// Projects a 3D vector to a 2D one by removing one dimension.
-Eigen::Vector2d projectVector(
-    const Eigen::Vector3d &vector,
-    const int              indexDimensionToRemove);
+Eigen::Vector2d projectVector(const Eigen::Vector3d &vector, const int indexDimensionToRemove);
 
 /**
  * @brief Tests if a vertex is contained in a triangle.
@@ -164,11 +139,8 @@ Eigen::Vector2d projectVector(
  *         - NOT_CONTAINED
  *         - TOUCHING
  */
-int containedInTriangle(
-    const Eigen::Vector2d &triangleVertex0,
-    const Eigen::Vector2d &triangleVertex1,
-    const Eigen::Vector2d &triangleVertex2,
-    const Eigen::Vector2d &testPoint);
+int containedInTriangle(const Eigen::Vector2d &triangleVertex0, const Eigen::Vector2d &triangleVertex1,
+                        const Eigen::Vector2d &triangleVertex2, const Eigen::Vector2d &testPoint);
 
 /**
  * @brief Tests, if a vertex is contained in a hyperrectangle.
@@ -179,18 +151,13 @@ int containedInTriangle(
  *         - TOUCHING
  */
 template <class Derived>
-int containedInHyperrectangle(
-    const Eigen::MatrixBase<Derived> &sidelengths,
-    const Eigen::MatrixBase<Derived> &center,
-    const Eigen::MatrixBase<Derived> &testPoint);
+int containedInHyperrectangle(const Eigen::MatrixBase<Derived> &sidelengths, const Eigen::MatrixBase<Derived> &center,
+                              const Eigen::MatrixBase<Derived> &testPoint);
 
 // --------------------------------------------------------- HEADER DEFINITIONS
 
 template <typename VECTORA_T, typename VECTORB_T, typename VECTORC_T>
-bool between(
-    const VECTORA_T &a,
-    const VECTORB_T &b,
-    const VECTORC_T &toCheck)
+bool between(const VECTORA_T &a, const VECTORB_T &b, const VECTORC_T &toCheck)
 {
   if (not collinear(a, b, toCheck)) {
     return false;
@@ -206,10 +173,8 @@ bool between(
 }
 
 template <typename Derived>
-bool collinear(
-    const Eigen::MatrixBase<Derived> &a,
-    const Eigen::MatrixBase<Derived> &b,
-    const Eigen::MatrixBase<Derived> &c)
+bool collinear(const Eigen::MatrixBase<Derived> &a, const Eigen::MatrixBase<Derived> &b,
+               const Eigen::MatrixBase<Derived> &c)
 {
   PRECICE_ASSERT(a.size() == b.size(), a.size(), b.size());
   PRECICE_ASSERT(a.size() == c.size(), a.size(), c.size());
@@ -221,11 +186,8 @@ bool collinear(
 }
 
 template <class Derived>
-bool parallel(
-    const Eigen::MatrixBase<Derived> &a,
-    const Eigen::MatrixBase<Derived> &b,
-    const Eigen::MatrixBase<Derived> &c,
-    const Eigen::MatrixBase<Derived> &d)
+bool parallel(const Eigen::MatrixBase<Derived> &a, const Eigen::MatrixBase<Derived> &b,
+              const Eigen::MatrixBase<Derived> &c, const Eigen::MatrixBase<Derived> &d)
 {
   if (math::equals(triangleArea(a, b, c), 0.0) and math::equals(triangleArea(a, b, d), 0.0))
     return true;
@@ -234,10 +196,8 @@ bool parallel(
 }
 
 template <class Derived>
-int containedInHyperrectangle(
-    const Eigen::MatrixBase<Derived> &sidelengths,
-    const Eigen::MatrixBase<Derived> &center,
-    const Eigen::MatrixBase<Derived> &testPoint)
+int containedInHyperrectangle(const Eigen::MatrixBase<Derived> &sidelengths, const Eigen::MatrixBase<Derived> &center,
+                              const Eigen::MatrixBase<Derived> &testPoint)
 {
   int             dim      = sidelengths.size();
   Eigen::VectorXd toCenter = testPoint - center;

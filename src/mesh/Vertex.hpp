@@ -19,17 +19,13 @@ public:
   using RawCoords = std::array<double, 3>;
 
   /// Constructor for vertex
-  template <typename VECTOR_T>
-  Vertex(
-      const VECTOR_T &coordinates,
-      VertexID        id);
+  template <typename VECTOR_T> Vertex(const VECTOR_T &coordinates, VertexID id);
 
   /// Returns spatial dimensionality of vertex.
   int getDimensions() const;
 
   /// Sets the coordinates of the vertex.
-  template <typename VECTOR_T>
-  void setCoords(const VECTOR_T &coordinates);
+  template <typename VECTOR_T> void setCoords(const VECTOR_T &coordinates);
 
   /// Returns the unique (among vertices of one mesh on one processor) ID of the vertex.
   VertexID getID() const;
@@ -79,12 +75,7 @@ private:
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
 
-template <typename VECTOR_T>
-Vertex::Vertex(
-    const VECTOR_T &coordinates,
-    int             id)
-    : _dim(coordinates.size()),
-      _id(id)
+template <typename VECTOR_T> Vertex::Vertex(const VECTOR_T &coordinates, int id) : _dim(coordinates.size()), _id(id)
 {
   PRECICE_ASSERT(_dim == 2 || _dim == 3, _dim);
   _coords[0] = coordinates[0];
@@ -92,9 +83,7 @@ Vertex::Vertex(
   _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
 }
 
-template <typename VECTOR_T>
-void Vertex::setCoords(
-    const VECTOR_T &coordinates)
+template <typename VECTOR_T> void Vertex::setCoords(const VECTOR_T &coordinates)
 {
   PRECICE_ASSERT(coordinates.size() == _dim, coordinates.size(), _dim);
   _coords[0] = coordinates[0];

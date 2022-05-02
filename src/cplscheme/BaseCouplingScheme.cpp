@@ -25,30 +25,15 @@
 namespace precice {
 namespace cplscheme {
 
-BaseCouplingScheme::BaseCouplingScheme(
-    double                        maxTime,
-    int                           maxTimeWindows,
-    double                        timeWindowSize,
-    int                           validDigits,
-    std::string                   localParticipant,
-    int                           maxIterations,
-    CouplingMode                  cplMode,
-    constants::TimesteppingMethod dtMethod,
-    int                           extrapolationOrder)
-    : _couplingMode(cplMode),
-      _maxTime(maxTime),
-      _maxTimeWindows(maxTimeWindows),
-      _timeWindows(1),
-      _timeWindowSize(timeWindowSize),
-      _maxIterations(maxIterations),
-      _iterations(1),
-      _totalIterations(1),
-      _localParticipant(std::move(localParticipant)),
-      _extrapolationOrder(extrapolationOrder),
+BaseCouplingScheme::BaseCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
+                                       std::string localParticipant, int maxIterations, CouplingMode cplMode,
+                                       constants::TimesteppingMethod dtMethod, int extrapolationOrder)
+    : _couplingMode(cplMode), _maxTime(maxTime), _maxTimeWindows(maxTimeWindows), _timeWindows(1),
+      _timeWindowSize(timeWindowSize), _maxIterations(maxIterations), _iterations(1), _totalIterations(1),
+      _localParticipant(std::move(localParticipant)), _extrapolationOrder(extrapolationOrder),
       _eps(std::pow(10.0, -1 * validDigits))
 {
-  PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-                 "Maximum time has to be larger than zero.");
+  PRECICE_ASSERT(not((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)), "Maximum time has to be larger than zero.");
   PRECICE_ASSERT(not((maxTimeWindows != UNDEFINED_TIME_WINDOWS) && (maxTimeWindows < 0)),
                  "Maximum number of time windows has to be larger than zero.");
   PRECICE_ASSERT(not((timeWindowSize != UNDEFINED_TIME_WINDOW_SIZE) && (timeWindowSize < 0.0)),
@@ -71,7 +56,8 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 
   if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER, "Extrapolation is not allowed for explicit coupling");
+    PRECICE_ASSERT(_extrapolationOrder == UNDEFINED_EXTRAPOLATION_ORDER,
+                   "Extrapolation is not allowed for explicit coupling");
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
     PRECICE_CHECK((_extrapolationOrder == 0) || (_extrapolationOrder == 1) || (_extrapolationOrder == 2),
@@ -91,7 +77,8 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     m2n->send(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     if (pair.second->hasGradient()) {
-      m2n->send(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
+      m2n->send(pair.second->gradientValues(), pair.second->getMeshID(),
+                pair.second->getDimensions() * pair.second->meshDimensions());
     }
 
     sentDataIDs.push_back(pair.first);
@@ -110,7 +97,8 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
     m2n->receive(pair.second->values(), pair.second->getMeshID(), pair.second->getDimensions());
 
     if (pair.second->hasGradient()) {
-      m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(), pair.second->getDimensions() * pair.second->meshDimensions());
+      m2n->receive(pair.second->gradientValues(), pair.second->getMeshID(),
+                   pair.second->getDimensions() * pair.second->meshDimensions());
     }
 
     receivedDataIDs.push_back(pair.first);
@@ -142,9 +130,8 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   if (isImplicitCouplingScheme()) {
     if (not doesFirstStep()) {
-      PRECICE_CHECK(not _convergenceMeasures.empty(),
-                    "At least one convergence measure has to be defined for "
-                    "an implicit coupling scheme.");
+      PRECICE_CHECK(not _convergenceMeasures.empty(), "At least one convergence measure has to be defined for "
+                                                      "an implicit coupling scheme.");
       // reserve memory and initialize data with zero
       initializeStorages();
     }
@@ -239,7 +226,7 @@ void BaseCouplingScheme::advance()
           requireAction(constants::actionWriteIterationCheckpoint());
         }
       }
-      //update iterations
+      // update iterations
       _totalIterations++;
       if (not convergence) {
         _iterations++;
@@ -286,8 +273,7 @@ double BaseCouplingScheme::getTimeWindowSize() const
   return _timeWindowSize;
 }
 
-void BaseCouplingScheme::addComputedTime(
-    double timeToAdd)
+void BaseCouplingScheme::addComputedTime(double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd, _time);
   PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end.");
@@ -306,8 +292,7 @@ void BaseCouplingScheme::addComputedTime(
                 timeToAdd, _timeWindowSize - _computedTimeWindowPart + timeToAdd);
 }
 
-bool BaseCouplingScheme::willDataBeExchanged(
-    double lastSolverTimestepLength) const
+bool BaseCouplingScheme::willDataBeExchanged(double lastSolverTimestepLength) const
 {
   PRECICE_TRACE(lastSolverTimestepLength);
   double remainder = getThisTimeWindowRemainder() - lastSolverTimestepLength;
@@ -326,16 +311,21 @@ bool BaseCouplingScheme::hasDataBeenReceived() const
 
 void BaseCouplingScheme::checkInitialDataHasBeenReceived()
 {
-  PRECICE_ASSERT(not _hasDataBeenReceived, "checkInitialDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
+  PRECICE_ASSERT(not _hasDataBeenReceived,
+                 "checkInitialDataHasBeenReceived() may only be called once within one coupling iteration. If this "
+                 "assertion is triggered this probably means that your coupling scheme has a bug.");
   _hasInitialDataBeenReceived = true;
   checkDataHasBeenReceived();
 }
 
 void BaseCouplingScheme::checkDataHasBeenReceived()
 {
-  PRECICE_ASSERT(not _hasDataBeenReceived, "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion is triggered this probably means that your coupling scheme has a bug.");
+  PRECICE_ASSERT(not _hasDataBeenReceived,
+                 "checkDataHasBeenReceived() may only be called once within one coupling iteration. If this assertion "
+                 "is triggered this probably means that your coupling scheme has a bug.");
   _hasDataBeenReceived        = true;
-  _hasInitialDataBeenReceived = true; // If any data has been received, this counts as initial data. Important for waveform relaxation & subcycling.
+  _hasInitialDataBeenReceived = true; // If any data has been received, this counts as initial data. Important for
+                                      // waveform relaxation & subcycling.
 }
 
 double BaseCouplingScheme::getTime() const
@@ -383,20 +373,17 @@ bool BaseCouplingScheme::isTimeWindowComplete() const
   return _isTimeWindowComplete;
 }
 
-bool BaseCouplingScheme::isActionRequired(
-    const std::string &actionName) const
+bool BaseCouplingScheme::isActionRequired(const std::string &actionName) const
 {
   return _actions.count(actionName) > 0;
 }
 
-void BaseCouplingScheme::markActionFulfilled(
-    const std::string &actionName)
+void BaseCouplingScheme::markActionFulfilled(const std::string &actionName)
 {
   _actions.erase(actionName);
 }
 
-void BaseCouplingScheme::requireAction(
-    const std::string &actionName)
+void BaseCouplingScheme::requireAction(const std::string &actionName)
 {
   _actions.insert(actionName);
 }
@@ -412,9 +399,7 @@ std::string BaseCouplingScheme::printCouplingState() const
   return os.str();
 }
 
-std::string BaseCouplingScheme::printBasicState(
-    int    timeWindows,
-    double time) const
+std::string BaseCouplingScheme::printBasicState(int timeWindows, double time) const
 {
   std::ostringstream os;
   os << "time-window: " << timeWindows;
@@ -458,7 +443,8 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
       }
       stream << action;
     }
-    PRECICE_ERROR("The required actions {} are not fulfilled. Did you forget to call \"markActionFulfilled\"?", stream.str());
+    PRECICE_ERROR("The required actions {} are not fulfilled. Did you forget to call \"markActionFulfilled\"?",
+                  stream.str());
   }
 }
 
@@ -475,8 +461,7 @@ void BaseCouplingScheme::initializeStorages()
   }
 }
 
-void BaseCouplingScheme::setAcceleration(
-    const acceleration::PtrAcceleration &acceleration)
+void BaseCouplingScheme::setAcceleration(const acceleration::PtrAcceleration &acceleration)
 {
   PRECICE_ASSERT(acceleration.get() != nullptr);
   _acceleration = acceleration;
@@ -491,12 +476,8 @@ void BaseCouplingScheme::newConvergenceMeasurements()
   }
 }
 
-void BaseCouplingScheme::addConvergenceMeasure(
-    int                         dataID,
-    bool                        suffices,
-    bool                        strict,
-    impl::PtrConvergenceMeasure measure,
-    bool                        doesLogging)
+void BaseCouplingScheme::addConvergenceMeasure(int dataID, bool suffices, bool strict,
+                                               impl::PtrConvergenceMeasure measure, bool doesLogging)
 {
   ConvergenceMeasureContext convMeasure;
   auto                      allData = getAllData();
@@ -514,8 +495,8 @@ bool BaseCouplingScheme::measureConvergence()
   PRECICE_TRACE();
   PRECICE_ASSERT(not doesFirstStep());
   bool allConverged = true;
-  bool oneSuffices  = false; //at least one convergence measure suffices and did converge
-  bool oneStrict    = false; //at least one convergence measure is strict and did not converge
+  bool oneSuffices  = false; // at least one convergence measure suffices and did converge
+  bool oneStrict    = false; // at least one convergence measure is strict and did not converge
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::MasterSlave::isSecondary()) {
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
@@ -549,7 +530,7 @@ bool BaseCouplingScheme::measureConvergence()
 
   if (allConverged) {
     PRECICE_INFO("All converged");
-  } else if (oneSuffices && not oneStrict) { //strict overrules suffices
+  } else if (oneSuffices && not oneStrict) { // strict overrules suffices
     PRECICE_INFO("Sufficient measures converged");
   }
 

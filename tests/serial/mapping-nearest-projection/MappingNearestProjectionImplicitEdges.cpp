@@ -11,9 +11,9 @@ BOOST_AUTO_TEST_SUITE(MappingNearestProjection)
 BOOST_AUTO_TEST_CASE(MappingNearestProjectionImplicitEdges)
 {
   /**
- * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges
- *
- */
+   * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges
+   *
+   */
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   bool defineEdgesExplicitly = false;
   testMappingNearestProjection(defineEdgesExplicitly, context.config(), context);

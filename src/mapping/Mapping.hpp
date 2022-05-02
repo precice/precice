@@ -19,15 +19,11 @@ public:
    * rigid body motions are retained. A conservative mapping retains the sum of
    * the values. The scaled-consistent mapping first map the values consistently,
    * then scales the mapped such that the integrals on both sides of the interface
-   * are equal. Values integrated over some area should be mapped conservative or 
-   * scaled-consistent, while area independent values such as pressure or stresses 
+   * are equal. Values integrated over some area should be mapped conservative or
+   * scaled-consistent, while area independent values such as pressure or stresses
    * should be mapped consistent.
    */
-  enum Constraint {
-    CONSISTENT,
-    CONSERVATIVE,
-    SCALEDCONSISTENT
-  };
+  enum Constraint { CONSISTENT, CONSERVATIVE, SCALEDCONSISTENT };
 
   /**
    * @brief Specifies requirements for the input and output meshes of a mapping.
@@ -60,9 +56,7 @@ public:
    * @param[in] input Mesh with known data values to be mapped.
    * @param[in] output Mesh with unknown data values to be computed from input.
    */
-  void setMeshes(
-      const mesh::PtrMesh &input,
-      const mesh::PtrMesh &output);
+  void setMeshes(const mesh::PtrMesh &input, const mesh::PtrMesh &output);
 
   const mesh::PtrMesh &getInputMesh() const;
 
@@ -102,9 +96,7 @@ public:
    * Post-conditions:
    * - output values are computed from input values
    */
-  virtual void map(
-      int inputDataID,
-      int outputDataID) = 0;
+  virtual void map(int inputDataID, int outputDataID) = 0;
 
   /// Method used by partition. Tags vertices that could be owned by this rank.
   virtual void tagMeshFirstRound() = 0;
@@ -116,7 +108,7 @@ public:
    * @brief Scales the consistently mapped output data such that the surface integral
    * of the values on input mesh and output mesh are equal
    *
-   * 
+   *
    * @pre Input and output mesh should have full connectivity information.
    */
   virtual void scaleConsistentMapping(int inputDataID, int outputDataID) const;
@@ -162,15 +154,15 @@ private:
 };
 
 /** Defines an ordering for MeshRequirement in terms of specificality
-* @param[in] lhs the left-hand side of the binary operator
-* @param[in] rhs the right-hand side of the binary operator
-*/
+ * @param[in] lhs the left-hand side of the binary operator
+ * @param[in] rhs the right-hand side of the binary operator
+ */
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs);
 
 /** Defines the output operation to streams
-* @param[in,out] out stream to output to.
-* @param[in] val the value to output.
-*/
+ * @param[in,out] out stream to output to.
+ * @param[in] val the value to output.
+ */
 std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val);
 
 } // namespace mapping

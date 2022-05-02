@@ -20,10 +20,7 @@
 namespace precice {
 namespace io {
 
-void ExportXML::doExport(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh)
+void ExportXML::doExport(const std::string &name, const std::string &location, const mesh::Mesh &mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   processDataNamesAndDimensions(mesh);
@@ -32,7 +29,8 @@ void ExportXML::doExport(
   if (utils::MasterSlave::isPrimary()) {
     writeParallelFile(name, location, mesh);
   }
-  if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
+  if (mesh.vertices().size() > 0) { // only procs at the coupling interface should write output (for performance
+                                    // reasons)
     writeSubFile(name, location, mesh);
   }
 }
@@ -53,10 +51,7 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
   }
 }
 
-void ExportXML::writeParallelFile(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh) const
+void ExportXML::writeParallelFile(const std::string &name, const std::string &location, const mesh::Mesh &mesh) const
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -87,7 +82,7 @@ void ExportXML::writeParallelFile(
   for (auto rank : utils::MasterSlave::allSecondaryRanks()) {
     PRECICE_ASSERT(rank < offsets.size());
     if (offsets[rank] - offsets[rank - 1] > 0) {
-      //only non-empty subfiles
+      // only non-empty subfiles
       outParallelFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
     }
   }
@@ -108,10 +103,7 @@ std::string getPieceSuffix()
 }
 } // namespace
 
-void ExportXML::writeSubFile(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh) const
+void ExportXML::writeSubFile(const std::string &name, const std::string &location, const mesh::Mesh &mesh) const
 {
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -142,9 +134,7 @@ void ExportXML::writeSubFile(
   outSubFile.close();
 }
 
-void ExportXML::exportData(
-    std::ostream &    outFile,
-    const mesh::Mesh &mesh) const
+void ExportXML::exportData(std::ostream &outFile, const mesh::Mesh &mesh) const
 {
   outFile << "         <PointData Scalars=\"Rank ";
   for (const auto &scalarDataName : _scalarDataNames) {
@@ -170,7 +160,8 @@ void ExportXML::exportData(
     int              dataDimensions = data->getDimensions();
     std::string      dataName(data->getName());
     int              numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
-    outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
+    outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << "\" NumberOfComponents=\""
+            << numberOfComponents;
     outFile << "\" format=\"ascii\">\n";
     outFile << "               ";
     if (dataDimensions > 1) {
@@ -184,7 +175,7 @@ void ExportXML::exportData(
           outFile << viewTemp[i] << ' ';
         }
         if (dataDimensions == 2) {
-          outFile << "0.0" << ' '; //2D data needs to be 3D for vtk
+          outFile << "0.0" << ' '; // 2D data needs to be 3D for vtk
         }
         outFile << ' ';
       }
@@ -193,49 +184,41 @@ void ExportXML::exportData(
         outFile << values(count) << ' ';
       }
     }
-    outFile << '\n'
-            << "            </DataArray>\n";
+    outFile << '\n' << "            </DataArray>\n";
   }
   outFile << "         </PointData> \n";
 }
 
-void ExportXML::writeVertex(
-    const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+void ExportXML::writeVertex(const Eigen::VectorXd &position, std::ostream &outFile)
 {
   outFile << "               ";
   for (int i = 0; i < position.size(); i++) {
     outFile << position(i) << "  ";
   }
   if (position.size() == 2) {
-    outFile << 0.0 << "  "; //also for 2D scenario, vtk needs 3D data
+    outFile << 0.0 << "  "; // also for 2D scenario, vtk needs 3D data
   }
   outFile << '\n';
 }
 
-void ExportXML::writeTriangle(
-    const mesh::Triangle &triangle,
-    std::ostream &        outFile)
+void ExportXML::writeTriangle(const mesh::Triangle &triangle, std::ostream &outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
   outFile << triangle.vertex(2).getID() << "  ";
 }
 
-void ExportXML::writeLine(
-    const mesh::Edge &edge,
-    std::ostream &    outFile)
+void ExportXML::writeLine(const mesh::Edge &edge, std::ostream &outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
   outFile << edge.vertex(1).getID() << "  ";
 }
 
-void ExportXML::exportPoints(
-    std::ostream &    outFile,
-    const mesh::Mesh &mesh) const
+void ExportXML::exportPoints(std::ostream &outFile, const mesh::Mesh &mesh) const
 {
   outFile << "         <Points> \n";
-  outFile << "            <DataArray type=\"Float64\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\" format=\"ascii\"> \n";
+  outFile << "            <DataArray type=\"Float64\" Name=\"Position\" NumberOfComponents=\"" << 3
+          << "\" format=\"ascii\"> \n";
   for (const mesh::Vertex &vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outFile);
   }
@@ -260,11 +243,13 @@ void ExportXML::writeParallelData(std::ostream &out) const
   out << "         <PDataArray type=\"Int32\" Name=\"Rank\" NumberOfComponents=\"1\"/>\n";
 
   for (const auto &scalarDataName : _scalarDataNames) {
-    out << "         <PDataArray type=\"Float64\" Name=\"" << scalarDataName << "\" NumberOfComponents=\"" << 1 << "\"/>\n";
+    out << "         <PDataArray type=\"Float64\" Name=\"" << scalarDataName << "\" NumberOfComponents=\"" << 1
+        << "\"/>\n";
   }
 
   for (const auto &vectorDataName : _vectorDataNames) {
-    out << "         <PDataArray type=\"Float64\" Name=\"" << vectorDataName << "\" NumberOfComponents=\"" << 3 << "\"/>\n";
+    out << "         <PDataArray type=\"Float64\" Name=\"" << vectorDataName << "\" NumberOfComponents=\"" << 3
+        << "\"/>\n";
   }
   out << "      </PPointData>\n";
 }

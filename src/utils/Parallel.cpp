@@ -187,9 +187,7 @@ void Parallel::pushState(CommStatePtr newState)
 // #endif
 // }
 
-void Parallel::initializeManagedMPI(
-    int *   argc,
-    char ***argv)
+void Parallel::initializeManagedMPI(int *argc, char ***argv)
 {
 #ifndef PRECICE_NO_MPI
   PRECICE_TRACE();
@@ -209,9 +207,7 @@ void Parallel::initializeManagedMPI(
 #endif // not PRECICE_NO_MPI
 }
 
-void Parallel::initializeMPI(
-    int *   argc,
-    char ***argv)
+void Parallel::initializeMPI(int *argc, char ***argv)
 {
 #ifndef PRECICE_NO_MPI
   int isMPIInitialized{-1};
@@ -340,11 +336,13 @@ void Parallel::splitCommunicator(const std::string &groupName)
 
   // Step 4 split into groups
   PRECICE_DEBUG("Split groups");
-  auto thisGroup = std::find_if(accessorGroups.begin(), accessorGroups.end(), [groupName](const AccessorGroup &group) { return group.name == groupName; });
+  auto thisGroup = std::find_if(accessorGroups.begin(), accessorGroups.end(),
+                                [groupName](const AccessorGroup &group) { return group.name == groupName; });
   PRECICE_ASSERT(thisGroup != accessorGroups.end(), "This requested groupName is not in accessorGroups!", groupName);
 
   CommStatePtr newState;
-  const bool   restrictToSelf = std::all_of(accessorGroups.begin(), accessorGroups.end(), [](const AccessorGroup &group) { return group.size == 1; });
+  const bool   restrictToSelf = std::all_of(accessorGroups.begin(), accessorGroups.end(),
+                                          [](const AccessorGroup &group) { return group.size == 1; });
   if (restrictToSelf) {
     PRECICE_DEBUG("Split to Comm Self");
     newState = CommState::self();
@@ -360,8 +358,8 @@ void Parallel::splitCommunicator(const std::string &groupName)
 #ifndef NDEBUG
   PRECICE_DEBUG("Detected {} groups", accessorGroups.size());
   for (const AccessorGroup &group : accessorGroups) {
-    PRECICE_DEBUG("Group {}: name = {}, leaderRank = {}, size = {}",
-                  group.id, group.name, group.leaderRank, group.size);
+    PRECICE_DEBUG("Group {}: name = {}, leaderRank = {}, size = {}", group.id, group.name, group.leaderRank,
+                  group.size);
   }
 #endif // NDEBUG
 
@@ -453,7 +451,8 @@ int Parallel::getLocalProcessRank()
 // {
 // #ifndef PRECICE_NO_MPI
 //   PRECICE_TRACE();
-//   if (free && _globalCommunicator != getCommunicatorWorld() && _globalCommunicator != MPI_COMM_SELF && _globalCommunicator != MPI_COMM_NULL) {
+//   if (free && _globalCommunicator != getCommunicatorWorld() && _globalCommunicator != MPI_COMM_SELF &&
+//   _globalCommunicator != MPI_COMM_NULL) {
 //     MPI_Comm_free(&_globalCommunicator);
 //   }
 //   _globalCommunicator = defaultCommunicator;

@@ -8,14 +8,9 @@
 
 namespace precice {
 namespace com {
-SocketCommunicationFactory::SocketCommunicationFactory(
-    unsigned short portNumber,
-    bool           reuseAddress,
-    std::string    networkName,
-    std::string    addressDirectory)
-    : _portNumber(portNumber),
-      _reuseAddress(reuseAddress),
-      _networkName(std::move(networkName)),
+SocketCommunicationFactory::SocketCommunicationFactory(unsigned short portNumber, bool reuseAddress,
+                                                       std::string networkName, std::string addressDirectory)
+    : _portNumber(portNumber), _reuseAddress(reuseAddress), _networkName(std::move(networkName)),
       _addressDirectory(std::move(addressDirectory))
 {
   if (_addressDirectory.empty()) {
@@ -23,16 +18,14 @@ SocketCommunicationFactory::SocketCommunicationFactory(
   }
 }
 
-SocketCommunicationFactory::SocketCommunicationFactory(
-    std::string const &addressDirectory)
+SocketCommunicationFactory::SocketCommunicationFactory(std::string const &addressDirectory)
     : SocketCommunicationFactory(0, false, utils::networking::loopbackInterfaceName(), addressDirectory)
 {
 }
 
 PtrCommunication SocketCommunicationFactory::newCommunication()
 {
-  return std::make_shared<SocketCommunication>(
-      _portNumber, _reuseAddress, _networkName, _addressDirectory);
+  return std::make_shared<SocketCommunication>(_portNumber, _reuseAddress, _networkName, _addressDirectory);
 }
 
 std::string SocketCommunicationFactory::addressDirectory()

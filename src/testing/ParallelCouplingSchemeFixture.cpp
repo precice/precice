@@ -8,12 +8,14 @@ bool ParallelCouplingSchemeFixture::isImplicitCouplingScheme(cplscheme::Parallel
   return cplscheme.isImplicitCouplingScheme();
 }
 
-cplscheme::CouplingData *ParallelCouplingSchemeFixture::getReceiveData(cplscheme::ParallelCouplingScheme &cplscheme, int dataID)
+cplscheme::CouplingData *ParallelCouplingSchemeFixture::getReceiveData(cplscheme::ParallelCouplingScheme &cplscheme,
+                                                                       int                                dataID)
 {
   return cplscheme.getReceiveData(dataID);
 }
 
-cplscheme::CouplingData *ParallelCouplingSchemeFixture::getSendData(cplscheme::ParallelCouplingScheme &cplscheme, int dataID)
+cplscheme::CouplingData *ParallelCouplingSchemeFixture::getSendData(cplscheme::ParallelCouplingScheme &cplscheme,
+                                                                    int                                dataID)
 {
   return cplscheme.getSendData(dataID);
 }

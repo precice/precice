@@ -60,11 +60,8 @@ public:
    *                            match the name given for a participant in the
    *                            xml configuration file.
    */
-  SolverInterfaceImpl(
-      std::string        participantName,
-      const std::string &configurationFileName,
-      int                accessorProcessRank,
-      int                accessorCommunicatorSize);
+  SolverInterfaceImpl(std::string participantName, const std::string &configurationFileName, int accessorProcessRank,
+                      int accessorCommunicatorSize);
 
   /// Deleted copy constructor
   SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
@@ -94,12 +91,8 @@ public:
    * @param[in] configurationFileName Name (with path) of the xml config file.
    * @param[in] communicator    A pointer to the MPI_Comm to use.
    */
-  SolverInterfaceImpl(
-      std::string        participantName,
-      const std::string &configurationFileName,
-      int                accessorProcessRank,
-      int                accessorCommunicatorSize,
-      void *             communicator);
+  SolverInterfaceImpl(std::string participantName, const std::string &configurationFileName, int accessorProcessRank,
+                      int accessorCommunicatorSize, void *communicator);
 
   /** Ensures that finalize() has been called.
    *
@@ -275,20 +268,14 @@ public:
    *
    * @return Vertex ID to be used when setting an edge.
    */
-  int setMeshVertex(
-      int           meshID,
-      const double *position);
+  int setMeshVertex(int meshID, const double *position);
 
   /**
    * @brief Sets several spatial positions for a mesh.
    *
    * @param[out] ids IDs for data from given positions.
    */
-  void setMeshVertices(
-      int           meshID,
-      int           size,
-      const double *positions,
-      int *         ids);
+  void setMeshVertices(int meshID, int size, const double *positions, int *ids);
 
   /**
    * @brief Gets spatial positions of vertices for given IDs.
@@ -296,11 +283,7 @@ public:
    * @param[in] ids IDs obtained when setting write positions.
    * @param[out] positions Positions corresponding to IDs.
    */
-  void getMeshVertices(
-      int        meshID,
-      size_t     size,
-      const int *ids,
-      double *   positions) const;
+  void getMeshVertices(int meshID, size_t size, const int *ids, double *positions) const;
 
   /**
    * @brief Gets vertex data ids from positions.
@@ -309,51 +292,27 @@ public:
    * @param[in] positions Positions (x,y,z,x,y,z,...) to find ids for.
    * @param[out] ids IDs corresponding to positions.
    */
-  void getMeshVertexIDsFromPositions(
-      int           meshID,
-      size_t        size,
-      const double *positions,
-      int *         ids) const;
+  void getMeshVertexIDsFromPositions(int meshID, size_t size, const double *positions, int *ids) const;
 
   /**
    * @brief Set an edge of a solver mesh.
    *
    * @return Index of the edge to be used when setting a triangle.
    */
-  int setMeshEdge(
-      MeshID meshID,
-      int    firstVertexID,
-      int    secondVertexID);
+  int setMeshEdge(MeshID meshID, int firstVertexID, int secondVertexID);
 
   /// Set a triangle of a solver mesh.
-  void setMeshTriangle(
-      MeshID meshID,
-      int    firstEdgeID,
-      int    secondEdgeID,
-      int    thirdEdgeID);
+  void setMeshTriangle(MeshID meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID);
 
   /// Sets a triangle and creates/sets edges automatically of a solver mesh.
-  void setMeshTriangleWithEdges(
-      MeshID meshID,
-      int    firstVertexID,
-      int    secondVertexID,
-      int    thirdVertexID);
+  void setMeshTriangleWithEdges(MeshID meshID, int firstVertexID, int secondVertexID, int thirdVertexID);
 
   /// Set a quadrangle of a solver mesh.
-  void setMeshQuad(
-      MeshID meshID,
-      int    firstEdgeID,
-      int    secondEdgeID,
-      int    thirdEdgeID,
-      int    fourthEdgeID);
+  void setMeshQuad(MeshID meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID, int fourthEdgeID);
 
   /// Sets a quadrangle and creates/sets edges automatically of a solver mesh.
-  void setMeshQuadWithEdges(
-      MeshID meshID,
-      int    firstVertexID,
-      int    secondVertexID,
-      int    thirdVertexID,
-      int    fourthVertexID);
+  void setMeshQuadWithEdges(MeshID meshID, int firstVertexID, int secondVertexID, int thirdVertexID,
+                            int fourthVertexID);
 
   /**
    * @brief Computes and maps all write data mapped from mesh with given ID.
@@ -376,19 +335,11 @@ public:
    * @param[in] size Number of valueIndices, and number of values * dimensions.
    * @param[in] values Values of the data to be written.
    */
-  void writeBlockVectorData(
-      int           fromDataID,
-      int           size,
-      const int *   valueIndices,
-      const double *values);
+  void writeBlockVectorData(int fromDataID, int size, const int *valueIndices, const double *values);
 
   /// @copydoc precice::SolverInterface::writeBlockVectorGradientData
-  void writeBlockVectorGradientData(
-      int           fromDataID,
-      int           size,
-      const int *   valueIndices,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+  void writeBlockVectorGradientData(int fromDataID, int size, const int *valueIndices, const double *gradientValues,
+                                    bool rowsFirst = false);
 
   /**
    * @brief Write vectorial data to the interface mesh
@@ -399,17 +350,10 @@ public:
    * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
    * @param[in] dataValue Value of the data to be written
    */
-  void writeVectorData(
-      int           fromDataID,
-      int           valueIndex,
-      const double *value);
+  void writeVectorData(int fromDataID, int valueIndex, const double *value);
 
   /// @copydoc precice::SolverInterface::writeVectorGradientData
-  void writeVectorGradientData(
-      int           fromDataID,
-      int           valueIndex,
-      const double *gradientValues,
-      bool          rowsFirst = false);
+  void writeVectorGradientData(int fromDataID, int valueIndex, const double *gradientValues, bool rowsFirst = false);
 
   /**
    * @brief Writes scalar data values given as block.
@@ -418,18 +362,10 @@ public:
    * @param[in] size Number of valueIndices, and number of values.
    * @param[in] values Values of the data to be written.
    */
-  void writeBlockScalarData(
-      int           fromDataID,
-      int           size,
-      const int *   valueIndices,
-      const double *values);
+  void writeBlockScalarData(int fromDataID, int size, const int *valueIndices, const double *values);
 
   /// @copydoc precice::SolverInterface::writeBlockScalarGradientData
-  void writeBlockScalarGradientData(
-      int           fromDataID,
-      int           size,
-      const int *   valueIndices,
-      const double *gradientValues);
+  void writeBlockScalarGradientData(int fromDataID, int size, const int *valueIndices, const double *gradientValues);
 
   /**
    * @brief Write scalar data to the interface mesh
@@ -440,19 +376,14 @@ public:
    * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
    * @param[in] dataValue Value of the data to be written
    */
-  void writeScalarData(
-      int    fromDataID,
-      int    valueIndex,
-      double value);
+  void writeScalarData(int fromDataID, int valueIndex, double value);
 
   /// @copydoc precice::SolverInterface::writeScalarGradientData
-  void writeScalarGradientData(
-      int           fromDataID,
-      int           valueIndex,
-      const double *gradientValues);
+  void writeScalarGradientData(int fromDataID, int valueIndex, const double *gradientValues);
 
   /**
-   * @brief Reads vector data values given as block from a mesh. Values correspond to the end of the current time window.
+   * @brief Reads vector data values given as block from a mesh. Values correspond to the end of the current time
+   * window.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are read into a block of continuous memory.
@@ -466,14 +397,11 @@ public:
    * @param[in] valueIndices Indices of the vertices.
    * @param[out] values Pointer to read destination.
    */
-  void readBlockVectorData(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double *   values) const;
+  void readBlockVectorData(int toDataID, int size, const int *valueIndices, double *values) const;
 
   /**
-   * @brief Reads vector data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   * @brief Reads vector data values given as block from a mesh. Values correspond to a given point in time relative to
+   * the beginning of the current timestep.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are read into a block of continuous memory.
@@ -482,10 +410,10 @@ public:
    * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current
+   * time step. relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will
+   * call advance(dt) at the end of the time step, dt indicates the length of the current time step. Then
+   * relativeReadTime = dt corresponds to the data at the end of the time step.
    *
    * @param[in] dataID ID to read from.
    * @param[in] size Number n of vertices.
@@ -493,12 +421,8 @@ public:
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
    * @param[out] values Pointer to read destination.
    */
-  void readBlockVectorData(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+  void readBlockVectorData(int toDataID, int size, const int *valueIndices, double relativeReadTime,
+                           double *values) const;
 
   /**
    * @brief Reads vector data at a vertex on a mesh. Values correspond to the end of the current time window.
@@ -513,13 +437,11 @@ public:
    * @param[in] valueIndex Index of the vertex.
    * @param[out] value Pointer to the vector value.
    */
-  void readVectorData(
-      int     toDataID,
-      int     valueIndex,
-      double *value) const;
+  void readVectorData(int toDataID, int valueIndex, double *value) const;
 
   /**
-   * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the
+   * beginning of the current timestep.
    *
    * This function reads a value of a specified vertex from a dataID.
    * Values are provided as a block of continuous memory.
@@ -527,24 +449,21 @@ public:
    * The 2D-format of value is (x, y)
    * The 3D-format of value is (x, y, z)
    *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current
+   * time step. relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will
+   * call advance(dt) at the end of the time step, dt indicates the length of the current time step. Then
+   * relativeReadTime = dt corresponds to the data at the end of the time step.
    *
    * @param[in] dataID ID to read from.
    * @param[in] valueIndex Index of the vertex.
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
    * @param[out] value Pointer to the vector value.
    */
-  void readVectorData(
-      int     toDataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double *value) const;
+  void readVectorData(int toDataID, int valueIndex, double relativeReadTime, double *value) const;
 
   /**
-   * @brief Reads scalar data values given as block from a mesh. Values correspond to the end of the current time window.
+   * @brief Reads scalar data values given as block from a mesh. Values correspond to the end of the current time
+   * window.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are provided as a block of continuous memory.
@@ -555,23 +474,20 @@ public:
    * @param[in] valueIndices Indices of the vertices.
    * @param[out] values Pointer to the read destination.
    */
-  void readBlockScalarData(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double *   values) const;
+  void readBlockScalarData(int toDataID, int size, const int *valueIndices, double *values) const;
 
   /**
-   * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to
+   * the beginning of the current timestep.
    *
    * This function reads values of specified vertices from a dataID.
    * Values are provided as a block of continuous memory.
    * valueIndices contains the indices of the vertices.
    *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current
+   * time step. relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will
+   * call advance(dt) at the end of the time step, dt indicates the length of the current time step. Then
+   * relativeReadTime = dt corresponds to the data at the end of the time step.
    *
    * @param[in] dataID ID to read from.
    * @param[in] size Number n of vertices.
@@ -579,12 +495,8 @@ public:
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
    * @param[out] values Pointer to the read destination.
    */
-  void readBlockScalarData(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+  void readBlockScalarData(int toDataID, int size, const int *valueIndices, double relativeReadTime,
+                           double *values) const;
 
   /**
    * @brief Reads scalar data at a vertex on a mesh. Values correspond to the end of the current time window.
@@ -595,42 +507,31 @@ public:
    * @param[in] valueIndex Index of the vertex.
    * @param[out] value Read destination of the value.
    */
-  void readScalarData(
-      int     toDataID,
-      int     valueIndex,
-      double &value) const;
+  void readScalarData(int toDataID, int valueIndex, double &value) const;
 
   /**
-   * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
+   * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the
+   * beginning of the current timestep.
    *
    * This function reads a value of a specified vertex from a dataID.
    *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current
+   * time step. relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will
+   * call advance(dt) at the end of the time step, dt indicates the length of the current time step. Then
+   * relativeReadTime = dt corresponds to the data at the end of the time step.
    *
    * @param[in] dataID ID to read from.
    * @param[in] valueIndex Index of the vertex.
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step
    * @param[out] value Read destination of the value.
    */
-  void readScalarData(
-      int     toDataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double &value) const;
+  void readScalarData(int toDataID, int valueIndex, double relativeReadTime, double &value) const;
 
   /// @copydoc precice::SolverInterface::setMeshAccessRegion
-  void setMeshAccessRegion(const int     meshID,
-                           const double *boundingBox) const;
+  void setMeshAccessRegion(const int meshID, const double *boundingBox) const;
 
   /// @copydoc precice::SolverInterface::getMeshVerticesAndIDs
-  void getMeshVerticesAndIDs(
-      const int meshID,
-      const int size,
-      int *     ids,
-      double *  coordinates) const;
+  void getMeshVerticesAndIDs(const int meshID, const int size, int *ids, double *coordinates) const;
 
   /**
    * @brief Writes a mesh to vtk file.
@@ -674,8 +575,10 @@ private:
   /// Represents the various states a SolverInterface can be in.
   enum struct State {
     Constructed, // Initial state of SolverInterface
-    Initialized, // SolverInterface.initialize() triggers transition from State::Constructed to State::Initialized; mandatory
-    Finalized    // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to State::Finalized; mandatory
+    Initialized, // SolverInterface.initialize() triggers transition from State::Constructed to State::Initialized;
+                 // mandatory
+    Finalized    // SolverInterface.finalize() triggers transition form State::Initialized or State::InitializedData to
+                 // State::Finalized; mandatory
   };
 
   /// SolverInterface.initializeData() triggers transition from false to true.
@@ -714,38 +617,21 @@ private:
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
 
   /// Implementation of read functions.
-  void readBlockVectorDataImpl(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+  void readBlockVectorDataImpl(int toDataID, int size, const int *valueIndices, double relativeReadTime,
+                               double *values) const;
 
-  void readVectorDataImpl(
-      int     toDataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double *value) const;
+  void readVectorDataImpl(int toDataID, int valueIndex, double relativeReadTime, double *value) const;
 
-  void readBlockScalarDataImpl(
-      int        toDataID,
-      int        size,
-      const int *valueIndices,
-      double     relativeReadTime,
-      double *   values) const;
+  void readBlockScalarDataImpl(int toDataID, int size, const int *valueIndices, double relativeReadTime,
+                               double *values) const;
 
-  void readScalarDataImpl(
-      int     toDataID,
-      int     valueIndex,
-      double  relativeReadTime,
-      double &value) const;
+  void readScalarDataImpl(int toDataID, int valueIndex, double relativeReadTime, double &value) const;
 
   /// Exports meshes with data and watch point data.
   void handleExports();
 
   /// Determines participants providing meshes to other participants.
-  void configurePartitions(
-      const m2n::M2NConfiguration::SharedPointer &m2nConfig);
+  void configurePartitions(const m2n::M2NConfiguration::SharedPointer &m2nConfig);
 
   /// Communicate bounding boxes and look for overlaps
   void compareBoundingBoxes();
@@ -771,22 +657,18 @@ private:
    * @param[in] timings the timings of the action.
    * @param[in] time the current total simulation time.
    * @param[in] timeStepSize Length of last time step computed.
-   * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already computed.
+   * @param[in] computedTimeWindowPart Sum of all time steps within current time window, i.e. part that is already
+   * computed.
    * @param[in] timeWindowSize Current time window size.
    */
-  void performDataActions(
-      const std::set<action::Action::Timing> &timings,
-      double                                  time,
-      double                                  timeStepSize,
-      double                                  computedTimeWindowPart,
-      double                                  timeWindowSize);
+  void performDataActions(const std::set<action::Action::Timing> &timings, double time, double timeStepSize,
+                          double computedTimeWindowPart, double timeWindowSize);
 
   /// Resets written data, displacements and mesh neighbors to export.
   void resetWrittenData();
 
   /// Determines participant accessing this interface from the configuration.
-  impl::PtrParticipant determineAccessingParticipant(
-      const config::SolverInterfaceConfiguration &config);
+  impl::PtrParticipant determineAccessingParticipant(const config::SolverInterfaceConfiguration &config);
 
   /// Initializes intra-participant communication.
   void initializeMasterSlaveCommunication();
@@ -795,10 +677,7 @@ private:
   void syncTimestep(double computedTimestepLength);
 
   /// Which channels to close in closeCommunicationChannels()
-  enum class CloseChannels : bool {
-    All         = false,
-    Distributed = true
-  };
+  enum class CloseChannels : bool { All = false, Distributed = true };
 
   /// Syncs the primary ranks of all connected participants
   void closeCommunicationChannels(CloseChannels cc);

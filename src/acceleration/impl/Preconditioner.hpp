@@ -15,18 +15,17 @@ namespace impl {
 /**
  * @brief Interface for preconditioner variants that can be applied to quasi-Newton acceleration schemes.
  *
- * Preconditioning (formerly also known as scaling) improves the balance between several sub-vectors for parallel or multi coupling.
+ * Preconditioning (formerly also known as scaling) improves the balance between several sub-vectors for parallel or
+ * multi coupling.
  *
  * apply() applies the weighting, i.e. transforms from physical values to balanced values.
  * revert() reverts the weighting, i.e. transforms from balanced values back to physical values.
- * update() updates the preconditioner, after every FSI iteration (though some variants might only be updated after a complete time window)
+ * update() updates the preconditioner, after every FSI iteration (though some variants might only be updated after a
+ * complete time window)
  */
 class Preconditioner {
 public:
-  Preconditioner(int maxNonConstTimeWindows)
-      : _maxNonConstTimeWindows(maxNonConstTimeWindows)
-  {
-  }
+  Preconditioner(int maxNonConstTimeWindows) : _maxNonConstTimeWindows(maxNonConstTimeWindows) {}
 
   /// Destructor, empty.
   virtual ~Preconditioner() {}
@@ -82,7 +81,7 @@ public:
   void revert(Eigen::MatrixXd &M, bool transpose)
   {
     PRECICE_TRACE();
-    //PRECICE_ASSERT(_needsGlobalWeights);
+    // PRECICE_ASSERT(_needsGlobalWeights);
     if (transpose) {
       PRECICE_ASSERT(M.cols() == (int) _invWeights.size());
       for (int i = 0; i < M.cols(); i++) {

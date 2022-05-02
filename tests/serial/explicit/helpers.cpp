@@ -15,7 +15,7 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
 
   SolverInterface couplingInterface(context.name, configurationFileName, 0, 1);
 
-  //was necessary to replace pre-defined geometries
+  // was necessary to replace pre-defined geometries
   if (context.isNamed("SolverOne") && couplingInterface.hasMesh("MeshOne")) {
     MeshID meshID = couplingInterface.getMeshID("MeshOne");
     couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());

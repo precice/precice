@@ -16,24 +16,17 @@ namespace com {
 class CommunicateMesh {
 public:
   /// Constructor, takes communication to be used in transfer.
-  explicit CommunicateMesh(
-      com::PtrCommunication communication);
+  explicit CommunicateMesh(com::PtrCommunication communication);
 
   /// Sends a constructed mesh to the receiver with given rank.
-  void sendMesh(
-      const mesh::Mesh &mesh,
-      int               rankReceiver);
+  void sendMesh(const mesh::Mesh &mesh, int rankReceiver);
 
   /// Receives a mesh from the sender with given rank. Adds received mesh to mesh.
-  void receiveMesh(
-      mesh::Mesh &mesh,
-      int         rankSender);
+  void receiveMesh(mesh::Mesh &mesh, int rankSender);
 
-  void broadcastSendMesh(
-      const mesh::Mesh &mesh);
+  void broadcastSendMesh(const mesh::Mesh &mesh);
 
-  void broadcastReceiveMesh(
-      mesh::Mesh &mesh);
+  void broadcastReceiveMesh(mesh::Mesh &mesh);
 
 private:
   logging::Logger _log{"com::CommunicateMesh"};

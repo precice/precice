@@ -44,9 +44,7 @@ void ExportVTP::writeParallelCells(std::ostream &out) const
   out << "      </PPolys>\n";
 }
 
-void ExportVTP::exportConnectivity(
-    std::ostream &    outFile,
-    const mesh::Mesh &mesh) const
+void ExportVTP::exportConnectivity(std::ostream &outFile, const mesh::Mesh &mesh) const
 {
   outFile << "         <Lines>\n";
   outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">\n";

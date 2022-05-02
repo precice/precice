@@ -29,7 +29,8 @@ Eigen::VectorXd integrate(const PtrMesh &mesh, const PtrData &data)
       int vertex3 = face.vertex(2).getID() * valueDimensions;
 
       for (int dim = 0; dim < valueDimensions; ++dim) {
-        integral(dim) += (face.getArea() / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
+        integral(dim) +=
+            (face.getArea() / 3.0) * (values(vertex1 + dim) + values(vertex2 + dim) + values(vertex3 + dim));
       }
     }
   }

@@ -12,12 +12,11 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
 {
   using namespace xml;
 
-  auto attrName = XMLAttribute<std::string>(ATTR_NAME)
-                      .setDocumentation("Unique name for the data set.");
+  auto attrName = XMLAttribute<std::string>(ATTR_NAME).setDocumentation("Unique name for the data set.");
 
-  auto attrHasGradient = makeXMLAttribute(ATTR_HAS_GRADIENT, false)
-                             .setDocumentation(
-                                 "If this attribute is set to \"on\", the data must have gradient values");
+  auto attrHasGradient =
+      makeXMLAttribute(ATTR_HAS_GRADIENT, false)
+          .setDocumentation("If this attribute is set to \"on\", the data must have gradient values");
 
   XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
@@ -34,16 +33,14 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   parent.addSubtag(tagVector);
 }
 
-void DataConfiguration::setDimensions(
-    int dimensions)
+void DataConfiguration::setDimensions(int dimensions)
 {
   PRECICE_TRACE(dimensions);
   PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
-const std::vector<DataConfiguration::ConfiguredData> &
-DataConfiguration::data() const
+const std::vector<DataConfiguration::ConfiguredData> &DataConfiguration::data() const
 {
   return _data;
 }
@@ -56,9 +53,7 @@ DataConfiguration::ConfiguredData DataConfiguration::getRecentlyConfiguredData()
   return _data[_indexLastConfigured];
 }
 
-void DataConfiguration::xmlTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+void DataConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   if (tag.getNamespace() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
@@ -72,42 +67,36 @@ void DataConfiguration::xmlTagCallback(
   }
 }
 
-void DataConfiguration::xmlEndTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
-{
-}
+void DataConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) {}
 
-void DataConfiguration::addData(
-    const std::string &name,
-    int                dataDimensions,
-    bool               hasGradient)
+void DataConfiguration::addData(const std::string &name, int dataDimensions, bool hasGradient)
 {
   if (hasGradient) {
 
     ConfiguredData data(name, dataDimensions, hasGradient);
     // Check if data with same name has been added already
     for (auto &elem : _data) {
-      PRECICE_CHECK(elem.name != data.name,
-                    "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
-                    data.name);
+      PRECICE_CHECK(
+          elem.name != data.name,
+          "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
+          data.name);
     }
     _data.push_back(data);
   } else {
 
     // Check if data with same name has been added already
     for (auto &elem : _data) {
-      PRECICE_CHECK(elem.name != name,
-                    "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
-                    name);
+      PRECICE_CHECK(
+          elem.name != name,
+          "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
+          name);
     }
 
     _data.push_back({name, dataDimensions});
   }
 }
 
-int DataConfiguration::getDataDimensions(
-    const std::string &typeName) const
+int DataConfiguration::getDataDimensions(const std::string &typeName) const
 {
   if (typeName == VALUE_VECTOR) {
     return _dimensions;

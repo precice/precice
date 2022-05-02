@@ -17,9 +17,7 @@ namespace action {
  */
 class ActionConfiguration : public xml::XMLTag::Listener {
 public:
-  ActionConfiguration(
-      xml::XMLTag &              parent,
-      mesh::PtrMeshConfiguration meshConfig);
+  ActionConfiguration(xml::XMLTag &parent, mesh::PtrMeshConfiguration meshConfig);
 
   /**
    * @brief Callback function required for use of automatic configuration.

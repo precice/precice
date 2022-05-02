@@ -22,21 +22,14 @@
 namespace precice {
 namespace impl {
 
-WatchPoint::WatchPoint(
-    Eigen::VectorXd    pointCoords,
-    mesh::PtrMesh      meshToWatch,
-    const std::string &exportFilename)
-    : _point(std::move(pointCoords)),
-      _mesh(std::move(meshToWatch)),
-      _txtWriter(exportFilename)
+WatchPoint::WatchPoint(Eigen::VectorXd pointCoords, mesh::PtrMesh meshToWatch, const std::string &exportFilename)
+    : _point(std::move(pointCoords)), _mesh(std::move(meshToWatch)), _txtWriter(exportFilename)
 {
   PRECICE_ASSERT(_mesh);
-  PRECICE_ASSERT(_point.size() == _mesh->getDimensions(), _point.size(),
-                 _mesh->getDimensions());
+  PRECICE_ASSERT(_point.size() == _mesh->getDimensions(), _point.size(), _mesh->getDimensions());
 
-  io::TXTTableWriter::DataType vectorType = _mesh->getDimensions() == 2
-                                                ? io::TXTTableWriter::VECTOR2D
-                                                : io::TXTTableWriter::VECTOR3D;
+  io::TXTTableWriter::DataType vectorType =
+      _mesh->getDimensions() == 2 ? io::TXTTableWriter::VECTOR2D : io::TXTTableWriter::VECTOR3D;
   _txtWriter.addData("Time", io::TXTTableWriter::DOUBLE);
   _txtWriter.addData("Coordinate", vectorType);
   for (size_t i = 0; i < _mesh->data().size(); i++) {
@@ -89,8 +82,7 @@ void WatchPoint::initialize()
   PRECICE_DEBUG("Rank: {}, isClosest: {}", utils::MasterSlave::getRank(), _isClosest);
 }
 
-void WatchPoint::exportPointData(
-    double time)
+void WatchPoint::exportPointData(double time)
 {
   if (!_isClosest) {
     return;
@@ -126,9 +118,7 @@ void WatchPoint::exportPointData(
   }
 }
 
-void WatchPoint::getValue(
-    Eigen::VectorXd &value,
-    mesh::PtrData &  data)
+void WatchPoint::getValue(Eigen::VectorXd &value, mesh::PtrData &data)
 {
   int                    dim = _mesh->getDimensions();
   Eigen::VectorXd        temp(dim);
@@ -143,9 +133,7 @@ void WatchPoint::getValue(
   }
 }
 
-void WatchPoint::getValue(
-    double &       value,
-    mesh::PtrData &data)
+void WatchPoint::getValue(double &value, mesh::PtrData &data)
 {
   const Eigen::VectorXd &values = data->values();
   for (const auto &elem : _interpolation->getWeightedElements()) {

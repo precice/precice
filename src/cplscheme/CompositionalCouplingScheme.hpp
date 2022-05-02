@@ -74,12 +74,10 @@ public:
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
-* @param[in] startTime TODO
-* @param[in] startTimeWindow TODO
-*/
-  void initialize(
-      double startTime,
-      int    startTimeWindow) final override;
+   * @param[in] startTime TODO
+   * @param[in] startTimeWindow TODO
+   */
+  void initialize(double startTime, int startTimeWindow) final override;
 
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;
@@ -243,18 +241,17 @@ private:
     // region again.
     bool onHold;
 
-    Scheme(PtrCouplingScheme scheme)
-        : scheme(scheme), onHold(false) {}
+    Scheme(PtrCouplingScheme scheme) : scheme(scheme), onHold(false) {}
   };
 
   typedef std::list<Scheme>           Schemes;
   typedef std::list<Scheme>::iterator SchemesIt;
-  //typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
+  // typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
 
   /// Coupling schemes to be executed in parallel.
   Schemes _couplingSchemes;
 
-  //Schemes _activeCouplingSchemes;
+  // Schemes _activeCouplingSchemes;
 
   /// Iterator to begin of coupling schemes currently active.
   SchemesIt _activeSchemesBegin = _couplingSchemes.end();

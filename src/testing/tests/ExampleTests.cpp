@@ -39,8 +39,7 @@ BOOST_AUTO_TEST_CASE(SingleProcessor)
 }
 
 /// Test with a modified numerical tolerance
-BOOST_AUTO_TEST_CASE(NumericalTolerance,
-                     *boost::unit_test::tolerance(1e-4))
+BOOST_AUTO_TEST_CASE(NumericalTolerance, *boost::unit_test::tolerance(1e-4))
 {
   PRECICE_TEST(1_rank);
   // Default tolerance is 1e-9, it can be changed for the entire case or even suite
@@ -52,8 +51,7 @@ BOOST_AUTO_TEST_CASE(NumericalTolerance,
 }
 
 /// Use testing::Deleted to unconditionally delete the test
-BOOST_AUTO_TEST_CASE(Deleted,
-                     *testing::Deleted())
+BOOST_AUTO_TEST_CASE(Deleted, *testing::Deleted())
 {
   PRECICE_TEST(1_rank);
   BOOST_TEST(false);
@@ -125,7 +123,7 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication)
 
   auto m2n = context.connectPrimaryRanks("A", "B");
 
-  //This is how you can access the m2n communication
+  // This is how you can access the m2n communication
   BOOST_TEST(m2n->getPrimaryRankCommunication()->isConnected());
 
   // Automatically finalizes Events
@@ -147,7 +145,8 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithPETSc)
  * where each participant uses it own communicator, i.e. each participant should not see that he is
  * part of a test.
  * In this case, you can simply create the participants and create a solverinterface.
- * The context-object is of type TestContext and provides access to the name of the current context and the rank and size of its communicator.  
+ * The context-object is of type TestContext and provides access to the name of the current context and the rank and
+ * size of its communicator.
  */
 BOOST_AUTO_TEST_CASE(IntegrationTestsWithTwoParticipants)
 {

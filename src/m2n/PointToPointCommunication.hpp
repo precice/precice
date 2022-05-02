@@ -31,8 +31,7 @@ namespace m2n {
  */
 class PointToPointCommunication : public DistributedCommunication {
 public:
-  PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
-                            mesh::PtrMesh                mesh);
+  PointToPointCommunication(com::PtrCommunicationFactory communicationFactory, mesh::PtrMesh mesh);
 
   ~PointToPointCommunication() override;
 
@@ -46,8 +45,7 @@ public:
    * @param[in] acceptorName  Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptConnection(std::string const &acceptorName,
-                        std::string const &requesterName) override;
+  void acceptConnection(std::string const &acceptorName, std::string const &requesterName) override;
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -55,8 +53,7 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestConnection(std::string const &acceptorName,
-                         std::string const &requesterName) override;
+  void requestConnection(std::string const &acceptorName, std::string const &requesterName) override;
 
   /**
    * @brief Accepts connection from participant, which has to call
@@ -66,8 +63,7 @@ public:
    * @param[in] acceptorName  Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptPreConnection(std::string const &acceptorName,
-                           std::string const &requesterName) override;
+  void acceptPreConnection(std::string const &acceptorName, std::string const &requesterName) override;
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -76,8 +72,7 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestPreConnection(std::string const &acceptorName,
-                            std::string const &requesterName) override;
+  void requestPreConnection(std::string const &acceptorName, std::string const &requesterName) override;
 
   /// Completes the secondary connections for both acceptor and requester by updating the vertex list in _mappings
   void completeSecondaryRanksConnection() override;
@@ -181,9 +176,7 @@ private:
 
   bool _isConnected = false;
 
-  std::list<std::pair<std::shared_ptr<com::Request>,
-                      std::shared_ptr<std::vector<double>>>>
-      bufferedRequests;
+  std::list<std::pair<std::shared_ptr<com::Request>, std::shared_ptr<std::vector<double>>>> bufferedRequests;
 };
 } // namespace m2n
 } // namespace precice

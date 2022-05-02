@@ -28,8 +28,9 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
   Vector3d coordTwoB{0.0, 0.5, z - 0.01};              // Maps to edge AD
   Vector3d coordTwoC{2.0 / 3.0, 1.0 / 3.0, z + 0.001}; // Maps to triangle ABC
 
-  double expectedIntegral = precice::math::geometry::triangleArea(coordOneA, coordOneB, coordOneC) * (valOneA + valOneB + valOneC) / 3.0 +
-                            precice::math::geometry::triangleArea(coordOneA, coordOneC, coordOneD) * (valOneA + valOneC + valOneD) / 3.0;
+  double expectedIntegral =
+      precice::math::geometry::triangleArea(coordOneA, coordOneB, coordOneC) * (valOneA + valOneB + valOneC) / 3.0 +
+      precice::math::geometry::triangleArea(coordOneA, coordOneC, coordOneD) * (valOneA + valOneC + valOneD) / 3.0;
 
   if (context.isNamed("SolverOne")) {
     precice::SolverInterface interface("SolverOne", configFile, 0, 1);
@@ -97,7 +98,8 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     interface.readScalarData(dataAID, idB, valueB);
     interface.readScalarData(dataAID, idC, valueC);
 
-    double calculatedIntegral = precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC) / 3.0;
+    double calculatedIntegral =
+        precice::math::geometry::triangleArea(coordTwoA, coordTwoB, coordTwoC) * (valueA + valueB + valueC) / 3.0;
     BOOST_TEST(expectedIntegral == calculatedIntegral);
 
     // Verify that there is only one time step necessary.

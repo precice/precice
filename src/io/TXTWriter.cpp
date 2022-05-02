@@ -5,9 +5,7 @@
 namespace precice {
 namespace io {
 
-TXTWriter::TXTWriter(
-    const std::string &filename)
-    : _file()
+TXTWriter::TXTWriter(const std::string &filename) : _file()
 {
   _file.open(filename);
   PRECICE_CHECK(_file, "TXT writer failed to open file \"{}\"", filename);

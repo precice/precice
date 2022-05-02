@@ -21,9 +21,7 @@ public:
    * @param[in] numberIterations If 1, models and explicit coupling scheme,
    *        otherwise and implicit one.
    */
-  DummyCouplingScheme(
-      int numberIterations,
-      int maxTimesteps);
+  DummyCouplingScheme(int numberIterations, int maxTimesteps);
 
   /**
    * @brief Destructor, empty.
@@ -33,9 +31,7 @@ public:
   /**
    * @brief
    */
-  void initialize(
-      double startTime,
-      int    startTimesteps) override final;
+  void initialize(double startTime, int startTimesteps) override final;
 
   /**
    * @brief Not implemented.

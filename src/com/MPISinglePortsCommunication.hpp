@@ -25,14 +25,17 @@ namespace com {
  *
  * acceptConnectionAsServer / requestConnectionAsClient just uses communicator[0], so it actually creates just one comm.
  *
- * The reason of that is that the first variant is called in various different ways, mostly just from the accepting/receiving rank.
- * In order to just use a single communicator, accept/request must be called on the entire global communicator.
- * This would require quite some rework of the calling code. The gains would also be minuscule, because accept/request is mainly used for 1:1 connection anyways.
+ * The reason of that is that the first variant is called in various different ways, mostly just from the
+ *accepting/receiving rank. In order to just use a single communicator, accept/request must be called on the entire
+ *global communicator. This would require quite some rework of the calling code. The gains would also be minuscule,
+ *because accept/request is mainly used for 1:1 connection anyways.
  *
- * The latter, in contrast, is only called from m2n::PointToPointCommunication, due to that the p2p class was also heavily modified. But this connection method is the most important, because it does the m2n heavy lifiting.
+ * The latter, in contrast, is only called from m2n::PointToPointCommunication, due to that the p2p class was also
+ *heavily modified. But this connection method is the most important, because it does the m2n heavy lifiting.
  *
- * If we agree, that acceptConnection / requestConnection just does 1:1 connection, we can rewrite and simplify the code.
-**/
+ * If we agree, that acceptConnection / requestConnection just does 1:1 connection, we can rewrite and simplify the
+ *code.
+ **/
 class MPISinglePortsCommunication : public MPICommunication {
 public:
   explicit MPISinglePortsCommunication(std::string addressDirectory = ".");
@@ -41,35 +44,23 @@ public:
 
   virtual size_t getRemoteCommunicatorSize() override;
 
-  virtual void acceptConnection(std::string const &acceptorName,
-                                std::string const &requesterName,
-                                std::string const &tag,
-                                int                acceptorRank,
-                                int                rankOffset = 0) override;
+  virtual void acceptConnection(std::string const &acceptorName, std::string const &requesterName,
+                                std::string const &tag, int acceptorRank, int rankOffset = 0) override;
 
-  virtual void acceptConnectionAsServer(std::string const &acceptorName,
-                                        std::string const &requesterName,
-                                        std::string const &tag,
-                                        int                acceptorRank,
-                                        int                requesterCommunicatorSize) override;
+  virtual void acceptConnectionAsServer(std::string const &acceptorName, std::string const &requesterName,
+                                        std::string const &tag, int acceptorRank,
+                                        int requesterCommunicatorSize) override;
 
-  virtual void requestConnection(std::string const &acceptorName,
-                                 std::string const &requesterName,
-                                 std::string const &tag,
-                                 int                requesterRank,
-                                 int                requesterCommunicatorSize) override;
+  virtual void requestConnection(std::string const &acceptorName, std::string const &requesterName,
+                                 std::string const &tag, int requesterRank, int requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string const &  acceptorName,
-                                         std::string const &  requesterName,
-                                         std::string const &  tag,
-                                         std::set<int> const &acceptorRanks,
-                                         int                  requesterRank) override;
+  virtual void requestConnectionAsClient(std::string const &acceptorName, std::string const &requesterName,
+                                         std::string const &tag, std::set<int> const &acceptorRanks,
+                                         int requesterRank) override;
 
-  virtual void prepareEstablishment(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
+  virtual void prepareEstablishment(std::string const &acceptorName, std::string const &requesterName) override;
 
-  virtual void cleanupEstablishment(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
+  virtual void cleanupEstablishment(std::string const &acceptorName, std::string const &requesterName) override;
 
   virtual void closeConnection() override;
 

@@ -27,20 +27,18 @@
 namespace precice {
 namespace mapping {
 
-MappingConfiguration::MappingConfiguration(
-    xml::XMLTag &              parent,
-    mesh::PtrMeshConfiguration meshConfiguration)
+MappingConfiguration::MappingConfiguration(xml::XMLTag &parent, mesh::PtrMeshConfiguration meshConfiguration)
     : _meshConfig(std::move(meshConfiguration))
 {
   PRECICE_ASSERT(_meshConfig);
   using namespace xml;
 
-  auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
-                            .setDocumentation("Specific shape parameter for RBF basis function.");
+  auto attrShapeParam =
+      XMLAttribute<double>(ATTR_SHAPE_PARAM).setDocumentation("Specific shape parameter for RBF basis function.");
   auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
                                .setDocumentation("Support radius of each RBF basis function (global choice).");
-  auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
-                            .setDocumentation("Solver relative tolerance for convergence");
+  auto attrSolverRtol =
+      makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9).setDocumentation("Solver relative tolerance for convergence");
   auto attrXDead = makeXMLAttribute(ATTR_X_DEAD, false)
                        .setDocumentation("If set to true, the x axis will be ignored for the mapping");
   auto attrYDead = makeXMLAttribute(ATTR_Y_DEAD, false)
@@ -116,37 +114,47 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR, occ, TAG);
-    tag.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries.");
+    tag.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run "
+                         "nearest-neighbour queries.");
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_PROJECTION, occ, TAG);
-    tag.setDocumentation("Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate the nearest projections.");
+    tag.setDocumentation("Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate "
+                         "the nearest projections.");
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG);
-    tag.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data.");
+    tag.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional "
+                         "linear approximation using gradient data.");
     tags.push_back(tag);
   }
 
-  auto attrDirection = XMLAttribute<std::string>(ATTR_DIRECTION)
-                           .setOptions({VALUE_WRITE, VALUE_READ})
-                           .setDocumentation("Write mappings map written data prior to communication, thus in the same participant who writes the data. "
-                                             "Read mappings map received data after communication, thus in the same participant who reads the data.");
+  auto attrDirection =
+      XMLAttribute<std::string>(ATTR_DIRECTION)
+          .setOptions({VALUE_WRITE, VALUE_READ})
+          .setDocumentation(
+              "Write mappings map written data prior to communication, thus in the same participant who writes the "
+              "data. "
+              "Read mappings map received data after communication, thus in the same participant who reads the data.");
 
-  auto attrFromMesh = XMLAttribute<std::string>(ATTR_FROM)
-                          .setDocumentation("The mesh to map the data from.");
+  auto attrFromMesh = XMLAttribute<std::string>(ATTR_FROM).setDocumentation("The mesh to map the data from.");
 
-  auto attrToMesh = XMLAttribute<std::string>(ATTR_TO)
-                        .setDocumentation("The mesh to map the data to.");
+  auto attrToMesh = XMLAttribute<std::string>(ATTR_TO).setDocumentation("The mesh to map the data to.");
 
-  auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
-                            .setDocumentation("Use conservative to conserve the nodal sum of the data over the interface (needed e.g. for force mapping).  Use consistent for normalized quantities such as temperature or pressure. Use scaled-consistent for normalized quantities where conservation of integral values is needed (e.g. velocities when the mass flow rate needs to be conserved). Mesh connectivity is required to use scaled-consistent.")
-                            .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT, VALUE_SCALED_CONSISTENT});
+  auto attrConstraint =
+      XMLAttribute<std::string>(ATTR_CONSTRAINT)
+          .setDocumentation("Use conservative to conserve the nodal sum of the data over the interface (needed e.g. "
+                            "for force mapping).  Use consistent for normalized quantities such as temperature or "
+                            "pressure. Use scaled-consistent for normalized quantities where conservation of integral "
+                            "values is needed (e.g. velocities when the mass flow rate needs to be conserved). Mesh "
+                            "connectivity is required to use scaled-consistent.")
+          .setOptions({VALUE_CONSERVATIVE, VALUE_CONSISTENT, VALUE_SCALED_CONSISTENT});
 
   auto attrTiming = makeXMLAttribute(ATTR_TIMING, VALUE_TIMING_INITIAL)
-                        .setDocumentation("This allows to defer the mapping of the data to advance or to a manual call to mapReadDataTo and mapWriteDataFrom.")
+                        .setDocumentation("This allows to defer the mapping of the data to advance or to a manual call "
+                                          "to mapReadDataTo and mapWriteDataFrom.")
                         .setOptions({VALUE_TIMING_INITIAL, VALUE_TIMING_ON_ADVANCE, VALUE_TIMING_ON_DEMAND});
 
   // Add tags that all mappings use and add to parent tag
@@ -160,9 +168,7 @@ MappingConfiguration::MappingConfiguration(
   }
 }
 
-void MappingConfiguration::xmlTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+void MappingConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getNamespace() == TAG) {
@@ -224,45 +230,26 @@ void MappingConfiguration::xmlTagCallback(
         preallocation = Preallocation::OFF;
     }
 
-    ConfiguredMapping configuredMapping = createMapping(context,
-                                                        dir, type, constraint,
-                                                        fromMesh, toMesh, timing,
-                                                        shapeParameter, supportRadius, solverRtol,
-                                                        xDead, yDead, zDead,
-                                                        useLU,
-                                                        polynomial, preallocation);
+    ConfiguredMapping configuredMapping =
+        createMapping(context, dir, type, constraint, fromMesh, toMesh, timing, shapeParameter, supportRadius,
+                      solverRtol, xDead, yDead, zDead, useLU, polynomial, preallocation);
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
   }
 }
 
-void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
-{
-}
+void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) {}
 
-const std::vector<MappingConfiguration::ConfiguredMapping> &
-MappingConfiguration::mappings()
+const std::vector<MappingConfiguration::ConfiguredMapping> &MappingConfiguration::mappings()
 {
   return _mappings;
 }
 
 MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
-    const xml::ConfigurationContext &context,
-    const std::string &              direction,
-    const std::string &              type,
-    const std::string &              constraint,
-    const std::string &              fromMeshName,
-    const std::string &              toMeshName,
-    Timing                           timing,
-    double                           shapeParameter,
-    double                           supportRadius,
-    double                           solverRtol,
-    bool                             xDead,
-    bool                             yDead,
-    bool                             zDead,
-    bool                             useLU,
-    Polynomial                       polynomial,
-    Preallocation                    preallocation) const
+    const xml::ConfigurationContext &context, const std::string &direction, const std::string &type,
+    const std::string &constraint, const std::string &fromMeshName, const std::string &toMeshName, Timing timing,
+    double shapeParameter, double supportRadius, double solverRtol, bool xDead, bool yDead, bool zDead, bool useLU,
+    Polynomial polynomial, Preallocation preallocation) const
 {
   PRECICE_TRACE(direction, type, timing, shapeParameter, supportRadius);
   using namespace mapping;
@@ -302,14 +289,12 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   }
 
   if (type == VALUE_NEAREST_NEIGHBOR) {
-    configuredMapping.mapping = PtrMapping(
-        new NearestNeighborMapping(constraintValue, dimensions));
-    configuredMapping.isRBF = false;
+    configuredMapping.mapping = PtrMapping(new NearestNeighborMapping(constraintValue, dimensions));
+    configuredMapping.isRBF   = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_PROJECTION) {
-    configuredMapping.mapping = PtrMapping(
-        new NearestProjectionMapping(constraintValue, dimensions));
-    configuredMapping.isRBF = false;
+    configuredMapping.mapping = PtrMapping(new NearestProjectionMapping(constraintValue, dimensions));
+    configuredMapping.isRBF   = false;
     return configuredMapping;
   } else if (type == VALUE_NEAREST_NEIGHBOR_GRADIENT) {
 
@@ -318,9 +303,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
                   "Nearest-neighbor-gradient mapping is not implemented using a \"conservative\" constraint. "
                   "Please select constraint=\" consistent\" or a different mapping method.");
 
-    configuredMapping.mapping = PtrMapping(
-        new NearestNeighborGradientMapping(constraintValue, dimensions));
-    configuredMapping.isRBF = false;
+    configuredMapping.mapping = PtrMapping(new NearestNeighborGradientMapping(constraintValue, dimensions));
+    configuredMapping.isRBF   = false;
     return configuredMapping;
   }
 
@@ -350,35 +334,29 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   if (rbfType == RBFType::EIGEN) {
     PRECICE_DEBUG("Eigen RBF is used");
     if (type == VALUE_RBF_TPS) {
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead));
+      configuredMapping.mapping = PtrMapping(new RadialBasisFctMapping<ThinPlateSplines>(
+          constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead));
     } else if (type == VALUE_RBF_MULTIQUADRICS) {
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<Multiquadrics>(
-              constraintValue, dimensions, Multiquadrics(shapeParameter), xDead, yDead, zDead));
+      configuredMapping.mapping = PtrMapping(new RadialBasisFctMapping<Multiquadrics>(
+          constraintValue, dimensions, Multiquadrics(shapeParameter), xDead, yDead, zDead));
     } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<InverseMultiquadrics>(
-              constraintValue, dimensions, InverseMultiquadrics(shapeParameter), xDead, yDead, zDead));
+      configuredMapping.mapping = PtrMapping(new RadialBasisFctMapping<InverseMultiquadrics>(
+          constraintValue, dimensions, InverseMultiquadrics(shapeParameter), xDead, yDead, zDead));
     } else if (type == VALUE_RBF_VOLUME_SPLINES) {
       configuredMapping.mapping = PtrMapping(
           new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), xDead, yDead, zDead));
     } else if (type == VALUE_RBF_GAUSSIAN) {
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<Gaussian>(
-              constraintValue, dimensions, Gaussian(shapeParameter), xDead, yDead, zDead));
+      configuredMapping.mapping = PtrMapping(new RadialBasisFctMapping<Gaussian>(
+          constraintValue, dimensions, Gaussian(shapeParameter), xDead, yDead, zDead));
     } else if (type == VALUE_RBF_CTPS_C2) {
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<CompactThinPlateSplinesC2>(
-              constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius), xDead, yDead, zDead));
+      configuredMapping.mapping = PtrMapping(new RadialBasisFctMapping<CompactThinPlateSplinesC2>(
+          constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius), xDead, yDead, zDead));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<CompactPolynomialC0>(
-              constraintValue, dimensions, CompactPolynomialC0(supportRadius), xDead, yDead, zDead));
+      configuredMapping.mapping = PtrMapping(new RadialBasisFctMapping<CompactPolynomialC0>(
+          constraintValue, dimensions, CompactPolynomialC0(supportRadius), xDead, yDead, zDead));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
-      configuredMapping.mapping = PtrMapping(
-          new RadialBasisFctMapping<CompactPolynomialC6>(
-              constraintValue, dimensions, CompactPolynomialC6(supportRadius), xDead, yDead, zDead));
+      configuredMapping.mapping = PtrMapping(new RadialBasisFctMapping<CompactPolynomialC6>(
+          constraintValue, dimensions, CompactPolynomialC6(supportRadius), xDead, yDead, zDead));
     } else {
       PRECICE_ERROR("Unknown mapping type!");
     }
@@ -389,37 +367,35 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   if (rbfType == RBFType::PETSc) {
     PRECICE_DEBUG("PETSc RBF is used.");
     if (type == VALUE_RBF_TPS) {
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
-                                                         xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<ThinPlateSplines>(
+          constraintValue, dimensions, ThinPlateSplines(), xDead, yDead, zDead, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_MULTIQUADRICS) {
       configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<Multiquadrics>(constraintValue, dimensions, Multiquadrics(shapeParameter),
-                                                      xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+          new PetRadialBasisFctMapping<Multiquadrics>(constraintValue, dimensions, Multiquadrics(shapeParameter), xDead,
+                                                      yDead, zDead, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_INV_MULTIQUADRICS) {
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<InverseMultiquadrics>(constraintValue, dimensions, InverseMultiquadrics(shapeParameter),
-                                                             xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<InverseMultiquadrics>(
+          constraintValue, dimensions, InverseMultiquadrics(shapeParameter), xDead, yDead, zDead, solverRtol,
+          polynomial, preallocation));
     } else if (type == VALUE_RBF_VOLUME_SPLINES) {
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
-                                                      xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<VolumeSplines>(
+          constraintValue, dimensions, VolumeSplines(), xDead, yDead, zDead, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_GAUSSIAN) {
       configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<Gaussian>(constraintValue, dimensions, Gaussian(shapeParameter),
-                                                 xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+          new PetRadialBasisFctMapping<Gaussian>(constraintValue, dimensions, Gaussian(shapeParameter), xDead, yDead,
+                                                 zDead, solverRtol, polynomial, preallocation));
     } else if (type == VALUE_RBF_CTPS_C2) {
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius),
-                                                                  xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(
+          constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius), xDead, yDead, zDead, solverRtol,
+          polynomial, preallocation));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C0) {
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactPolynomialC0>(constraintValue, dimensions, CompactPolynomialC0(supportRadius),
-                                                            xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<CompactPolynomialC0>(
+          constraintValue, dimensions, CompactPolynomialC0(supportRadius), xDead, yDead, zDead, solverRtol, polynomial,
+          preallocation));
     } else if (type == VALUE_RBF_CPOLYNOMIAL_C6) {
-      configuredMapping.mapping = PtrMapping(
-          new PetRadialBasisFctMapping<CompactPolynomialC6>(constraintValue, dimensions, CompactPolynomialC6(supportRadius),
-                                                            xDead, yDead, zDead, solverRtol, polynomial, preallocation));
+      configuredMapping.mapping = PtrMapping(new PetRadialBasisFctMapping<CompactPolynomialC6>(
+          constraintValue, dimensions, CompactPolynomialC6(supportRadius), xDead, yDead, zDead, solverRtol, polynomial,
+          preallocation));
     } else {
       PRECICE_ERROR("Unknown mapping type!");
     }

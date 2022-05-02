@@ -25,23 +25,14 @@ public:
    * @param[in] data Data that should be scaled.
    * @param[in] scalingType Type of scaling to be performed.
    */
-  ScaleByDtAction(
-      Timing               timing,
-      int                  sourceDataID,
-      int                  targetDataID,
-      const mesh::PtrMesh &mesh,
-      Scaling              scaling);
+  ScaleByDtAction(Timing timing, int sourceDataID, int targetDataID, const mesh::PtrMesh &mesh, Scaling scaling);
 
   virtual ~ScaleByDtAction() {}
 
   /**
    * @brief Scales data on mesh nodes according to selected scaling type.
    */
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  virtual void performAction(double time, double timeStepSize, double computedTimeWindowPart, double timeWindowSize);
 
 private:
   logging::Logger _log{"action::ScaleByDtAction"};

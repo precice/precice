@@ -19,18 +19,12 @@
 namespace precice {
 namespace cplscheme {
 
-MultiCouplingScheme::MultiCouplingScheme(
-    double                             maxTime,
-    int                                maxTimeWindows,
-    double                             timeWindowSize,
-    int                                validDigits,
-    const std::string &                localParticipant,
-    std::map<std::string, m2n::PtrM2N> m2ns,
-    constants::TimesteppingMethod      dtMethod,
-    const std::string &                controller,
-    int                                maxIterations,
-    int                                extrapolationOrder)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, Implicit, dtMethod, extrapolationOrder),
+MultiCouplingScheme::MultiCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
+                                         const std::string &localParticipant, std::map<std::string, m2n::PtrM2N> m2ns,
+                                         constants::TimesteppingMethod dtMethod, const std::string &controller,
+                                         int maxIterations, int extrapolationOrder)
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations,
+                         Implicit, dtMethod, extrapolationOrder),
       _m2ns(std::move(m2ns)), _controller(controller), _isController(controller == localParticipant)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
@@ -135,11 +129,8 @@ bool MultiCouplingScheme::exchangeDataAndAccelerate()
   return convergence;
 }
 
-void MultiCouplingScheme::addDataToSend(
-    const mesh::PtrData &data,
-    mesh::PtrMesh        mesh,
-    bool                 initialize,
-    const std::string &  to)
+void MultiCouplingScheme::addDataToSend(const mesh::PtrData &data, mesh::PtrMesh mesh, bool initialize,
+                                        const std::string &to)
 {
   int id = data->getID();
   PRECICE_DEBUG("Configuring send data to {}", to);
@@ -147,11 +138,8 @@ void MultiCouplingScheme::addDataToSend(
   _sendDataVector[to].emplace(id, ptrCplData);
 }
 
-void MultiCouplingScheme::addDataToReceive(
-    const mesh::PtrData &data,
-    mesh::PtrMesh        mesh,
-    bool                 initialize,
-    const std::string &  from)
+void MultiCouplingScheme::addDataToReceive(const mesh::PtrData &data, mesh::PtrMesh mesh, bool initialize,
+                                           const std::string &from)
 {
   int id = data->getID();
   PRECICE_DEBUG("Configuring receive data from {}", from);

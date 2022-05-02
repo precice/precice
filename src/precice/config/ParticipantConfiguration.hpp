@@ -25,9 +25,7 @@ namespace config {
  */
 class ParticipantConfiguration : public xml::XMLTag::Listener {
 public:
-  ParticipantConfiguration(
-      xml::XMLTag &              parent,
-      mesh::PtrMeshConfiguration meshConfiguration);
+  ParticipantConfiguration(xml::XMLTag &parent, mesh::PtrMeshConfiguration meshConfiguration);
 
   void setDimensions(int dimensions);
 
@@ -38,18 +36,14 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback(
-      const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback(
-      const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   /// Returns all configured participants.
   const std::vector<impl::PtrParticipant> &getParticipants() const;
@@ -129,9 +123,7 @@ private:
 
   mesh::PtrMesh copy(const mesh::PtrMesh &mesh) const;
 
-  const mesh::PtrData &getData(
-      const mesh::PtrMesh &mesh,
-      const std::string &  nameData) const;
+  const mesh::PtrData &getData(const mesh::PtrMesh &mesh, const std::string &nameData) const;
 
   mapping::PtrMapping getMapping(const std::string &mappingName);
 
@@ -140,14 +132,12 @@ private:
   // primary com if required (i.e. no solution yet defined and parallel).
   bool _isIntraCommDefined = false;
 
-  void finishParticipantConfiguration(
-      const xml::ConfigurationContext &context,
-      const impl::PtrParticipant &     participant);
+  void finishParticipantConfiguration(const xml::ConfigurationContext &context,
+                                      const impl::PtrParticipant &     participant);
 
   /// Check whether a mapping to the same mesh and with similar data fields already exists
-  void checkIllDefinedMappings(
-      const mapping::MappingConfiguration::ConfiguredMapping &mapping,
-      const impl::PtrParticipant &                            participant);
+  void checkIllDefinedMappings(const mapping::MappingConfiguration::ConfiguredMapping &mapping,
+                               const impl::PtrParticipant &                            participant);
 };
 
 } // namespace config

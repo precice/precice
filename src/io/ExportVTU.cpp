@@ -52,9 +52,7 @@ void ExportVTU::writeParallelCells(std::ostream &out) const
   out << "      </PCells>\n";
 }
 
-void ExportVTU::exportConnectivity(
-    std::ostream &    outFile,
-    const mesh::Mesh &mesh) const
+void ExportVTU::exportConnectivity(std::ostream &outFile, const mesh::Mesh &mesh) const
 {
   outFile << "         <Cells>\n";
   outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">\n";

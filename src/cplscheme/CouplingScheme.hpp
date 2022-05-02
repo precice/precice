@@ -64,9 +64,7 @@ public:
    * @param[in] startTime starting time for coupling @BU correct?
    * @param[in] startTimeWindow counter of time window for coupling @BU correct?
    */
-  virtual void initialize(
-      double startTime,
-      int    startTimeWindow) = 0;
+  virtual void initialize(double startTime, int startTimeWindow) = 0;
 
   /// Returns true, if initialize has been called.
   virtual bool isInitialized() const = 0;

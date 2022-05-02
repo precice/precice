@@ -25,13 +25,11 @@ using Distance = double;
 constexpr double INVALID_DISTANCE{-1};
 
 /// Struct to hold index and distance information of the closest primitive
-template <class Tag>
-struct MatchType {
+template <class Tag> struct MatchType {
   Distance distance{INVALID_DISTANCE};
   MatchID  index{NO_MATCH};
   MatchType() = default;
-  MatchType(Distance d, MatchID i)
-      : distance(d), index(i){};
+  MatchType(Distance d, MatchID i) : distance(d), index(i){};
 
   constexpr bool operator<(MatchType const &other) const
   {
@@ -76,7 +74,8 @@ public:
 
   /**
    * @brief Find the closest interpolation element to the given location.
-   * If exists, triangle or edge projection element is returned. If not vertex projection element, which is the nearest neighbor is returned.
+   * If exists, triangle or edge projection element is returned. If not vertex projection element, which is the nearest
+   * neighbor is returned.
    *
    * param[in] sourceVertex
    * param[in] n how many nearest edges/faces are going to be checked
@@ -104,7 +103,8 @@ private:
   /// Find closest edge interpolation element. If cannot be found, it falls back to vertex projection
   ProjectionMatch findEdgeProjection(const Eigen::VectorXd &location, int n);
 
-  /// Find closest face interpolation element. If cannot be found, it falls back to first edge interpolation element, then vertex if necessary
+  /// Find closest face interpolation element. If cannot be found, it falls back to first edge interpolation element,
+  /// then vertex if necessary
   ProjectionMatch findTriangleProjection(const Eigen::VectorXd &location, int n);
 };
 

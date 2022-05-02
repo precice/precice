@@ -62,9 +62,9 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
 
     inMesh->allocateDataValues();
 
-    //assign(inData->values()) = value;
+    // assign(inData->values()) = value;
     inData->values() = Eigen::VectorXd::Constant(inData->values().size(), value);
-    //assign(values) = 0.0;
+    // assign(values) = 0.0;
     Eigen::VectorXd &values = outData->values();
     values                  = Eigen::VectorXd::Constant(values.size(), 0.0);
 
@@ -90,9 +90,9 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
 
     inMesh->allocateDataValues();
 
-    //assign(inData->values()) = value;
+    // assign(inData->values()) = value;
     inData->values() = Eigen::VectorXd::Constant(inData->values().size(), value);
-    //assign(values) = 0.0;
+    // assign(values) = 0.0;
     Eigen::VectorXd &values = outData->values();
     values                  = Eigen::VectorXd::Constant(values.size(), 0.0);
 
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
     }
 
     // reset output value and remap
-    //assign(values) = 0.0;
+    // assign(values) = 0.0;
     values = Eigen::VectorXd::Constant(values.size(), 0.0);
 
     mapping.map(inDataID, outDataID);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
     BOOST_TEST(outData->values()(2) == valueVertex2);
 
     // Redo mapping, results should be
-    //assign(outData->values()) = 0.0;
+    // assign(outData->values()) = 0.0;
     outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
     mapping.map(inDataID, outDataID);
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
     outMesh->createVertex(Eigen::Vector2d(0.5, 0.5));
     outMesh->allocateDataValues();
 
-    //assign(outData->values()) = 0.0;
+    // assign(outData->values()) = 0.0;
     outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
     mapping.computeMapping();
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
     BOOST_TEST(outData->values()(2) == (valueVertex1 + valueVertex2) * 0.5);
 
     // Reset output data to zero and redo the mapping
-    //assign(outData->values()) = 0.0;
+    // assign(outData->values()) = 0.0;
     outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
 
     mapping.map(inDataID, outDataID);
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
 
   outMesh->allocateDataValues();
 
-  //assign(outData->values()) = 0.0;
+  // assign(outData->values()) = 0.0;
   outValues = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
@@ -605,7 +605,8 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
 
 namespace {
 using namespace precice::mesh;
-const Eigen::VectorXd &runNPMapping(mapping::Mapping::Constraint constraint, PtrMesh &inMesh, PtrData &inData, PtrMesh &outMesh, PtrData &outData)
+const Eigen::VectorXd &runNPMapping(mapping::Mapping::Constraint constraint, PtrMesh &inMesh, PtrData &inData,
+                                    PtrMesh &outMesh, PtrData &outData)
 {
   BOOST_REQUIRE(inMesh->getDimensions() == outMesh->getDimensions());
   precice::mapping::NearestProjectionMapping mapping(constraint, inMesh->getDimensions());

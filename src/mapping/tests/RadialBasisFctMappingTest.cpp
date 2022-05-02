@@ -33,7 +33,8 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
   }
 }
 
-void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, mesh::PtrData inData, mesh::PtrData outData)
+void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, mesh::PtrData inData,
+                                mesh::PtrData outData)
 {
   auto inputIntegral  = mesh::integrate(inMesh, inData);
   auto outputIntegral = mesh::integrate(outMesh, outData);
@@ -74,11 +75,8 @@ using MeshSpecification = std::vector<VertexSpecification>;
 /// Contains which values are expected on which rank: rank -> vector of data.
 using ReferenceSpecification = std::vector<std::pair<int, std::vector<double>>>;
 
-void getDistributedMesh(const TestContext &      context,
-                        MeshSpecification const &vertices,
-                        mesh::PtrMesh &          mesh,
-                        mesh::PtrData &          data,
-                        int                      globalIndexOffset = 0)
+void getDistributedMesh(const TestContext &context, MeshSpecification const &vertices, mesh::PtrMesh &mesh,
+                        mesh::PtrData &data, int globalIndexOffset = 0)
 {
   Eigen::VectorXd d;
 
@@ -110,12 +108,8 @@ void getDistributedMesh(const TestContext &      context,
   data->values() = d;
 }
 
-void testDistributed(const TestContext &    context,
-                     Mapping &              mapping,
-                     MeshSpecification      inMeshSpec,
-                     MeshSpecification      outMeshSpec,
-                     ReferenceSpecification referenceSpec,
-                     int                    inGlobalIndexOffset = 0)
+void testDistributed(const TestContext &context, Mapping &mapping, MeshSpecification inMeshSpec,
+                     MeshSpecification outMeshSpec, ReferenceSpecification referenceSpec, int inGlobalIndexOffset = 0)
 {
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
@@ -418,15 +412,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
                    {2, -1, {2, 1}, {0}},
                    {2, -1, {3, 0}, {0}},
                    {2, -1, {3, 1}, {0}}},
-                  {{1, {5}},
-                   {1, {3}},
-                   {1, {2.5}},
-                   {1, {4}},
-                   {1, {1.1}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {7}},
-                   {2, {8}}},
+                  {{1, {5}}, {1, {3}}, {1, {2.5}}, {1, {4}}, {1, {1.1}}, {2, {5}}, {2, {6}}, {2, {7}}, {2, {8}}},
                   globalIndexOffsets.at(context.rank));
 }
 
@@ -442,38 +428,14 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
   testDistributed(context, mapping,
                   {
                       // Every rank has the entire mesh and owns a subpart
-                      {0, 0, {0, 0}, {1.1}},
-                      {0, 0, {0, 1}, {2.5}},
-                      {0, -1, {1, 0}, {3}},
-                      {0, -1, {1, 1}, {4}},
-                      {0, -1, {2, 0}, {5}},
-                      {0, -1, {2, 1}, {6}},
-                      {0, -1, {3, 0}, {7}},
-                      {0, -1, {3, 1}, {8}},
-                      {1, -1, {0, 0}, {1.1}},
-                      {1, -1, {0, 1}, {2.5}},
-                      {1, 1, {1, 0}, {3}},
-                      {1, 1, {1, 1}, {4}},
-                      {1, -1, {2, 0}, {5}},
-                      {1, -1, {2, 1}, {6}},
-                      {1, -1, {3, 0}, {7}},
-                      {1, -1, {3, 1}, {8}},
-                      {2, -1, {0, 0}, {1.1}},
-                      {2, -1, {0, 1}, {2.5}},
-                      {2, -1, {1, 0}, {3}},
-                      {2, -1, {1, 1}, {4}},
-                      {2, 2, {2, 0}, {5}},
-                      {2, 2, {2, 1}, {6}},
-                      {2, -1, {3, 0}, {7}},
-                      {2, -1, {3, 1}, {8}},
-                      {3, -1, {0, 0}, {1.1}},
-                      {3, -1, {0, 1}, {2.5}},
-                      {3, -1, {1, 0}, {3}},
-                      {3, -1, {1, 1}, {4}},
-                      {3, -1, {2, 0}, {5}},
-                      {3, -1, {2, 1}, {6}},
-                      {3, 3, {3, 0}, {7}},
-                      {3, 3, {3, 1}, {8}},
+                      {0, 0, {0, 0}, {1.1}},  {0, 0, {0, 1}, {2.5}},  {0, -1, {1, 0}, {3}}, {0, -1, {1, 1}, {4}},
+                      {0, -1, {2, 0}, {5}},   {0, -1, {2, 1}, {6}},   {0, -1, {3, 0}, {7}}, {0, -1, {3, 1}, {8}},
+                      {1, -1, {0, 0}, {1.1}}, {1, -1, {0, 1}, {2.5}}, {1, 1, {1, 0}, {3}},  {1, 1, {1, 1}, {4}},
+                      {1, -1, {2, 0}, {5}},   {1, -1, {2, 1}, {6}},   {1, -1, {3, 0}, {7}}, {1, -1, {3, 1}, {8}},
+                      {2, -1, {0, 0}, {1.1}}, {2, -1, {0, 1}, {2.5}}, {2, -1, {1, 0}, {3}}, {2, -1, {1, 1}, {4}},
+                      {2, 2, {2, 0}, {5}},    {2, 2, {2, 1}, {6}},    {2, -1, {3, 0}, {7}}, {2, -1, {3, 1}, {8}},
+                      {3, -1, {0, 0}, {1.1}}, {3, -1, {0, 1}, {2.5}}, {3, -1, {1, 0}, {3}}, {3, -1, {1, 1}, {4}},
+                      {3, -1, {2, 0}, {5}},   {3, -1, {2, 1}, {6}},   {3, 3, {3, 0}, {7}},  {3, 3, {3, 1}, {8}},
                   },
                   {// The outMesh is local, rank 0 and 3 are empty
                    // not same order as input mesh and vertex (2,0) appears twice
@@ -486,21 +448,12 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
                    {2, -1, {2, 1}, {0}},
                    {2, -1, {3, 0}, {0}},
                    {2, -1, {3, 1}, {0}}},
-                  {{1, {5}},
-                   {1, {3}},
-                   {1, {2.5}},
-                   {1, {4}},
-                   {1, {1.1}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {7}},
-                   {2, {8}}},
+                  {{1, {5}}, {1, {3}}, {1, {2.5}}, {1, {4}}, {1, {1.1}}, {2, {5}}, {2, {6}}, {2, {7}}, {2, {8}}},
                   globalIndexOffsets.at(context.rank));
 }
 
 /// same as 2DV4, but strictly linear input values, converges and gives correct results
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
-                     *boost::unit_test::tolerance(1e-7))
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6, *boost::unit_test::tolerance(1e-7))
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   ThinPlateSplines                        fct;
@@ -542,15 +495,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                    {2, -1, {2, 1}, {0}},
                    {2, -1, {3, 0}, {0}},
                    {2, -1, {3, 1}, {0}}},
-                  {{1, {5}},
-                   {1, {3}},
-                   {1, {2}},
-                   {1, {4}},
-                   {1, {1}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {7}},
-                   {2, {8}}},
+                  {{1, {5}}, {1, {3}}, {1, {2}}, {1, {4}}, {1, {1}}, {2, {5}}, {2, {6}}, {2, {7}}, {2, {8}}},
                   globalIndexOffsets.at(context.rank));
 }
 
@@ -582,38 +527,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
                    {-1, 3, {3, 1}, {0}}},
                   {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                    // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {1}},
-                   {0, {2}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {3}},
-                   {1, {4}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {0}},
-                   {2, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {7}},
-                   {3, {8}}},
+                   {0, {1}}, {0, {2}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+                   {1, {0}}, {1, {0}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+                   {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
+                   {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}},
                   context.rank * 2);
 }
 
@@ -645,38 +562,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                    {-1, 3, {3, 1}, {0, 0}}},
                   {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                    // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {1, 4}},
-                   {0, {2, 5}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {3, 6}},
-                   {1, {4, 7}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {5, 8}},
-                   {2, {6, 9}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {7, 10}},
-                   {3, {8, 11}}},
+                   {0, {1, 4}}, {0, {2, 5}}, {0, {0, 0}},  {0, {0, 0}}, {0, {0, 0}}, {0, {0, 0}}, {0, {0, 0}},
+                   {0, {0, 0}}, {1, {0, 0}}, {1, {0, 0}},  {1, {3, 6}}, {1, {4, 7}}, {1, {0, 0}}, {1, {0, 0}},
+                   {1, {0, 0}}, {1, {0, 0}}, {2, {0, 0}},  {2, {0, 0}}, {2, {0, 0}}, {2, {0, 0}}, {2, {5, 8}},
+                   {2, {6, 9}}, {2, {0, 0}}, {2, {0, 0}},  {3, {0, 0}}, {3, {0, 0}}, {3, {0, 0}}, {3, {0, 0}},
+                   {3, {0, 0}}, {3, {0, 0}}, {3, {7, 10}}, {3, {8, 11}}},
                   context.rank * 2);
 }
 
@@ -710,38 +600,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
                    {-1, 3, {3, 1}, {0}}},
                   {// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
                    // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {1, {1}},
-                   {1, {2}},
-                   {1, {3}},
-                   {1, {4}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {0}},
-                   {2, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {7}},
-                   {3, {8}}},
+                   {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+                   {1, {1}}, {1, {2}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+                   {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
+                   {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}},
                   globalIndexOffsets.at(context.rank));
 }
 
@@ -774,44 +636,15 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
                    {-1, 3, {3, 1}, {0}}},
                   {// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
                    // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {1, {1}},
-                   {1, {0}},
-                   {1, {3}},
-                   {1, {4}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {0}},
-                   {2, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {7}},
-                   {3, {8}}}, // Sum of reference is also 34
+                   {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {1, {1}},
+                   {1, {0}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}}, {2, {0}}, {2, {0}},
+                   {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}}, {3, {0}}, {3, {0}}, {3, {0}},
+                   {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}}, // Sum of reference is also 34
                   globalIndexOffsets.at(context.rank));
 }
 
 /// Using meshes of different sizes, outMesh is smaller then inMesh
-BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
-                     *boost::unit_test::tolerance(1e-6))
+BOOST_AUTO_TEST_CASE(DistributedConservative2DV4, *boost::unit_test::tolerance(1e-6))
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(4.0);
@@ -839,34 +672,13 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                    {-1, 3, {3, 1}, {0}}},
                   {// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
                    // {2, 3, 4, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {1, {2.4285714526861519}},
-                   {1, {3.61905}},
-                   {1, {4.14286}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {5.333333295}},
-                   {2, {5.85714}},
-                   {2, {0}},
-                   {2, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {7.047619}},
-                   {3, {7.571428}}}, // Sum is ~36
+                   {0, {0}},       {0, {0}},           {0, {0}},        {0, {0}},
+                   {0, {0}},       {0, {0}},           {0, {0}},        {1, {2.4285714526861519}},
+                   {1, {3.61905}}, {1, {4.14286}},     {1, {0}},        {1, {0}},
+                   {1, {0}},       {1, {0}},           {2, {0}},        {2, {0}},
+                   {2, {0}},       {2, {5.333333295}}, {2, {5.85714}},  {2, {0}},
+                   {2, {0}},       {3, {0}},           {3, {0}},        {3, {0}},
+                   {3, {0}},       {3, {0}},           {3, {7.047619}}, {3, {7.571428}}}, // Sum is ~36
                   globalIndexOffsets.at(context.rank));
 }
 
@@ -898,38 +710,10 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                    {-1, 3, {3, 1}, {0}}},
                   {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                    // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {1}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {4}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {0, {0}},
-                   {1, {0}},
-                   {1, {2}},
-                   {1, {3}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {1, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {0}},
-                   {2, {5}},
-                   {2, {6}},
-                   {2, {0}},
-                   {2, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {0}},
-                   {3, {7}},
-                   {3, {8}}},
+                   {0, {1}}, {0, {0}}, {0, {0}}, {0, {4}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+                   {1, {0}}, {1, {2}}, {1, {3}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+                   {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
+                   {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}},
                   context.rank * 2);
 }
 
@@ -961,47 +745,16 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                    {-1, 3, {3, 1}, {0, 0}}},
                   {// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
                    // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
-                   {0, {1, 4}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {4, 7}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {0, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {2, 5}},
-                   {1, {3, 6}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {1, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {2, {5, 8}},
-                   {2, {6, 9}},
-                   {2, {0, 0}},
-                   {2, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {0, 0}},
-                   {3, {7, 10}},
-                   {3, {8, 11}}},
+                   {0, {1, 4}}, {0, {0, 0}}, {0, {0, 0}},  {0, {4, 7}}, {0, {0, 0}}, {0, {0, 0}}, {0, {0, 0}},
+                   {0, {0, 0}}, {1, {0, 0}}, {1, {2, 5}},  {1, {3, 6}}, {1, {0, 0}}, {1, {0, 0}}, {1, {0, 0}},
+                   {1, {0, 0}}, {1, {0, 0}}, {2, {0, 0}},  {2, {0, 0}}, {2, {0, 0}}, {2, {0, 0}}, {2, {5, 8}},
+                   {2, {6, 9}}, {2, {0, 0}}, {2, {0, 0}},  {3, {0, 0}}, {3, {0, 0}}, {3, {0, 0}}, {3, {0, 0}},
+                   {3, {0, 0}}, {3, {0, 0}}, {3, {7, 10}}, {3, {8, 11}}},
                   context.rank * 2);
 }
 
-void testTagging(const TestContext &context,
-                 MeshSpecification  inMeshSpec,
-                 MeshSpecification  outMeshSpec,
-                 MeshSpecification  shouldTagFirstRound,
-                 MeshSpecification  shouldTagSecondRound,
-                 bool               consistent)
+void testTagging(const TestContext &context, MeshSpecification inMeshSpec, MeshSpecification outMeshSpec,
+                 MeshSpecification shouldTagFirstRound, MeshSpecification shouldTagSecondRound, bool consistent)
 {
   int meshDimension  = inMeshSpec.at(0).position.size();
   int valueDimension = inMeshSpec.at(0).value.size();
@@ -1014,7 +767,7 @@ void testTagging(const TestContext &context,
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension, 1_dataID);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
 
-  Gaussian                        fct(4.5); //Support radius approx. 1
+  Gaussian                        fct(4.5); // Support radius approx. 1
   Mapping::Constraint             constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
   RadialBasisFctMapping<Gaussian> mapping(constr, 2, fct, false, false, false);
   inMesh->computeBoundingBox();
@@ -1024,36 +777,33 @@ void testTagging(const TestContext &context,
   mapping.tagMeshFirstRound();
 
   for (const auto &v : inMesh->vertices()) {
-    auto pos   = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
-                            [meshDimension, &v](const VertexSpecification &spec) {
-                              return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
-                            });
+    auto pos = std::find_if(
+        shouldTagFirstRound.begin(), shouldTagFirstRound.end(), [meshDimension, &v](const VertexSpecification &spec) {
+          return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
+        });
     bool found = pos != shouldTagFirstRound.end();
-    BOOST_TEST(found >= v.isTagged(),
-               "FirstRound: Vertex " << v << " is tagged, but should not be.");
-    BOOST_TEST(found <= v.isTagged(),
-               "FirstRound: Vertex " << v << " is not tagged, but should be.");
+    BOOST_TEST(found >= v.isTagged(), "FirstRound: Vertex " << v << " is tagged, but should not be.");
+    BOOST_TEST(found <= v.isTagged(), "FirstRound: Vertex " << v << " is not tagged, but should be.");
   }
 
   mapping.tagMeshSecondRound();
 
   for (const auto &v : inMesh->vertices()) {
-    auto posFirst    = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
-                                 [meshDimension, &v](const VertexSpecification &spec) {
-                                   return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
-                                 });
-    bool foundFirst  = posFirst != shouldTagFirstRound.end();
-    auto posSecond   = std::find_if(shouldTagSecondRound.begin(), shouldTagSecondRound.end(),
-                                  [meshDimension, &v](const VertexSpecification &spec) {
-                                    return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
-                                  });
+    auto posFirst = std::find_if(
+        shouldTagFirstRound.begin(), shouldTagFirstRound.end(), [meshDimension, &v](const VertexSpecification &spec) {
+          return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
+        });
+    bool foundFirst = posFirst != shouldTagFirstRound.end();
+    auto posSecond  = std::find_if(
+        shouldTagSecondRound.begin(), shouldTagSecondRound.end(), [meshDimension, &v](const VertexSpecification &spec) {
+          return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
+        });
     bool foundSecond = posSecond != shouldTagSecondRound.end();
-    BOOST_TEST(foundFirst <= v.isTagged(), "SecondRound: Vertex " << v
-                                                                  << " is not tagged, but should be from the first round.");
-    BOOST_TEST(foundSecond <= v.isTagged(), "SecondRound: Vertex " << v
-                                                                   << " is not tagged, but should be.");
-    BOOST_TEST((foundSecond or foundFirst) >= v.isTagged(), "SecondRound: Vertex " << v
-                                                                                   << " is tagged, but should not be.");
+    BOOST_TEST(foundFirst <= v.isTagged(),
+               "SecondRound: Vertex " << v << " is not tagged, but should be from the first round.");
+    BOOST_TEST(foundSecond <= v.isTagged(), "SecondRound: Vertex " << v << " is not tagged, but should be.");
+    BOOST_TEST((foundSecond or foundFirst) >= v.isTagged(),
+               "SecondRound: Vertex " << v << " is tagged, but should not be.");
   }
 }
 
@@ -1065,25 +815,20 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   //* * x * *
   //    *
   //    *
-  MeshSpecification outMeshSpec = {
-      {0, -1, {0, 0}, {0}}};
-  MeshSpecification inMeshSpec = {
-      {0, -1, {-1, 0}, {1}}, //inside
-      {0, -1, {-2, 0}, {1}}, //outside
-      {0, 0, {1, 0}, {1}},   //inside, owner
-      {0, -1, {2, 0}, {1}},  //outside
-      {0, -1, {0, -1}, {1}}, //inside
-      {0, -1, {0, -2}, {1}}, //outside
-      {0, -1, {0, 1}, {1}},  //inside
-      {0, -1, {0, 2}, {1}}   //outside
+  MeshSpecification outMeshSpec = {{0, -1, {0, 0}, {0}}};
+  MeshSpecification inMeshSpec  = {
+      {0, -1, {-1, 0}, {1}}, // inside
+      {0, -1, {-2, 0}, {1}}, // outside
+      {0, 0, {1, 0}, {1}},   // inside, owner
+      {0, -1, {2, 0}, {1}},  // outside
+      {0, -1, {0, -1}, {1}}, // inside
+      {0, -1, {0, -2}, {1}}, // outside
+      {0, -1, {0, 1}, {1}},  // inside
+      {0, -1, {0, 2}, {1}}   // outside
   };
   MeshSpecification shouldTagFirstRound = {
-      {0, -1, {-1, 0}, {1}},
-      {0, -1, {1, 0}, {1}},
-      {0, -1, {0, -1}, {1}},
-      {0, -1, {0, 1}, {1}}};
-  MeshSpecification shouldTagSecondRound = {
-      {0, -1, {2, 0}, {1}}};
+      {0, -1, {-1, 0}, {1}}, {0, -1, {1, 0}, {1}}, {0, -1, {0, -1}, {1}}, {0, -1, {0, 1}, {1}}};
+  MeshSpecification shouldTagSecondRound = {{0, -1, {2, 0}, {1}}};
   testTagging(context, inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, true);
   // For conservative just swap meshes.
   testTagging(context, outMeshSpec, inMeshSpec, shouldTagFirstRound, shouldTagSecondRound, false);
@@ -1780,9 +1525,11 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
   perform2DTestConsistentMapping(consistentMap2D);
   RadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap2D(Mapping::SCALEDCONSISTENT, 2, fct, xDead, yDead,
+                                                                    zDead);
   perform2DTestScaledConsistentMapping(scaledConsistentMap2D);
-  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead, zDead);
+  RadialBasisFctMapping<InverseMultiquadrics> scaledConsistentMap3D(Mapping::SCALEDCONSISTENT, 3, fct, xDead, yDead,
+                                                                    zDead);
   perform3DTestScaledConsistentMapping(scaledConsistentMap3D);
   RadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
@@ -1912,8 +1659,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   bool zDead = false;
 
   ThinPlateSplines                        fct;
-  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
-                                                  xDead, yDead, zDead);
+  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct, xDead, yDead, zDead);
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));

@@ -14,13 +14,14 @@
 namespace precice {
 namespace com {
 
-std::string impl::hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &tag, Rank rank)
+std::string impl::hashedFilePath(const std::string &acceptorName, const std::string &requesterName,
+                                 const std::string &tag, Rank rank)
 {
   using namespace boost::filesystem;
 
   constexpr int                  firstLevelLen = 2;
   boost::uuids::string_generator ns_gen;
-  auto                           ns = ns_gen("af7ce8f2-a9ee-46cb-38ee-71c318aa3580"); // md5 hash of precice.org as namespace
+  auto ns = ns_gen("af7ce8f2-a9ee-46cb-38ee-71c318aa3580"); // md5 hash of precice.org as namespace
 
   boost::uuids::name_generator gen{ns};
   std::string const            s    = acceptorName + tag + requesterName + std::to_string(rank);
@@ -32,7 +33,8 @@ std::string impl::hashedFilePath(const std::string &acceptorName, const std::str
   return p.string();
 }
 
-std::string impl::localDirectory(const std::string &acceptorName, const std::string &requesterName, const std::string &addressDirectory)
+std::string impl::localDirectory(const std::string &acceptorName, const std::string &requesterName,
+                                 const std::string &addressDirectory)
 {
   using namespace boost::filesystem;
   std::string directional = acceptorName + "-" + requesterName;
@@ -96,7 +98,8 @@ void ConnectionInfoWriter::write(std::string const &info) const
   {
     std::ofstream ofs(tmp.string(), std::ofstream::out);
     ofs << info << "\n";
-    ofs << "Acceptor: " << acceptorName << ", Requester: " << requesterName << ", Tag: " << tag << ", Rank: " << rank << "\n";
+    ofs << "Acceptor: " << acceptorName << ", Requester: " << requesterName << ", Tag: " << tag << ", Rank: " << rank
+        << "\n";
   }
   fs::rename(tmp, path);
 }

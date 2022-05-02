@@ -33,9 +33,7 @@ public:
    * @param[in] oldValues Old iterate values.
    * @param[in] newValues New iterate values.
    */
-  virtual void measure(
-      const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues) = 0;
+  virtual void measure(const Eigen::VectorXd &oldValues, const Eigen::VectorXd &newValues) = 0;
 
   /// Returns true, if the last measurement indicates convergence.
   virtual bool isConvergence() const = 0;

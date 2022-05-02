@@ -38,7 +38,8 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
 
     int velocitiesID = cplInterface.getDataID("Velocities", meshID);
     while (cplInterface.isCouplingOngoing()) {
-      for (size_t i = 0; i < testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-One").vertices().size(); ++i) {
+      for (size_t i = 0; i < testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-One").vertices().size();
+           ++i) {
         Eigen::Vector2d data = Eigen::Vector2d::Constant(i);
         cplInterface.writeVectorData(velocitiesID, i, data.data());
       }

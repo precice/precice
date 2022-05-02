@@ -14,10 +14,7 @@ using namespace precice;
 using namespace precice::acceleration;
 using namespace precice::acceleration::impl;
 
-void testQRequalsA(
-    Eigen::MatrixXd &Q,
-    Eigen::MatrixXd &R,
-    Eigen::MatrixXd &A)
+void testQRequalsA(Eigen::MatrixXd &Q, Eigen::MatrixXd &R, Eigen::MatrixXd &A)
 {
   Eigen::MatrixXd A_prime = Q * R;
 

@@ -39,54 +39,24 @@
 namespace precice {
 namespace cplscheme {
 
-CouplingSchemeConfiguration::CouplingSchemeConfiguration(
-    xml::XMLTag &                        parent,
-    mesh::PtrMeshConfiguration           meshConfig,
-    m2n::M2NConfiguration::SharedPointer m2nConfig,
-    config::PtrParticipantConfiguration  participantConfig)
-    : TAG("coupling-scheme"),
-      TAG_PARTICIPANTS("participants"),
-      TAG_PARTICIPANT("participant"),
-      TAG_EXCHANGE("exchange"),
-      TAG_MAX_TIME("max-time"),
-      TAG_MAX_TIME_WINDOWS("max-time-windows"),
-      TAG_TIME_WINDOW_SIZE("time-window-size"),
-      TAG_ABS_CONV_MEASURE("absolute-convergence-measure"),
+CouplingSchemeConfiguration::CouplingSchemeConfiguration(xml::XMLTag &parent, mesh::PtrMeshConfiguration meshConfig,
+                                                         m2n::M2NConfiguration::SharedPointer m2nConfig,
+                                                         config::PtrParticipantConfiguration  participantConfig)
+    : TAG("coupling-scheme"), TAG_PARTICIPANTS("participants"), TAG_PARTICIPANT("participant"),
+      TAG_EXCHANGE("exchange"), TAG_MAX_TIME("max-time"), TAG_MAX_TIME_WINDOWS("max-time-windows"),
+      TAG_TIME_WINDOW_SIZE("time-window-size"), TAG_ABS_CONV_MEASURE("absolute-convergence-measure"),
       TAG_REL_CONV_MEASURE("relative-convergence-measure"),
       TAG_RES_REL_CONV_MEASURE("residual-relative-convergence-measure"),
-      TAG_MIN_ITER_CONV_MEASURE("min-iteration-convergence-measure"),
-      TAG_MAX_ITERATIONS("max-iterations"),
-      TAG_EXTRAPOLATION("extrapolation-order"),
-      ATTR_DATA("data"),
-      ATTR_MESH("mesh"),
-      ATTR_PARTICIPANT("participant"),
-      ATTR_INITIALIZE("initialize"),
-      ATTR_TYPE("type"),
-      ATTR_FIRST("first"),
-      ATTR_SECOND("second"),
-      ATTR_VALUE("value"),
-      ATTR_VALID_DIGITS("valid-digits"),
-      ATTR_METHOD("method"),
-      ATTR_LIMIT("limit"),
-      ATTR_MIN_ITERATIONS("min-iterations"),
-      ATTR_NAME("name"),
-      ATTR_FROM("from"),
-      ATTR_TO("to"),
-      ATTR_SUFFICES("suffices"),
-      ATTR_STRICT("strict"),
-      ATTR_CONTROL("control"),
-      VALUE_SERIAL_EXPLICIT("serial-explicit"),
-      VALUE_PARALLEL_EXPLICIT("parallel-explicit"),
-      VALUE_SERIAL_IMPLICIT("serial-implicit"),
-      VALUE_PARALLEL_IMPLICIT("parallel-implicit"),
-      VALUE_MULTI("multi"),
-      VALUE_FIXED("fixed"),
-      VALUE_FIRST_PARTICIPANT("first-participant"),
-      _config(),
-      _meshConfig(std::move(meshConfig)),
-      _m2nConfig(std::move(m2nConfig)),
-      _participantConfig(participantConfig),
-      _couplingSchemes(),
+      TAG_MIN_ITER_CONV_MEASURE("min-iteration-convergence-measure"), TAG_MAX_ITERATIONS("max-iterations"),
+      TAG_EXTRAPOLATION("extrapolation-order"), ATTR_DATA("data"), ATTR_MESH("mesh"), ATTR_PARTICIPANT("participant"),
+      ATTR_INITIALIZE("initialize"), ATTR_TYPE("type"), ATTR_FIRST("first"), ATTR_SECOND("second"), ATTR_VALUE("value"),
+      ATTR_VALID_DIGITS("valid-digits"), ATTR_METHOD("method"), ATTR_LIMIT("limit"),
+      ATTR_MIN_ITERATIONS("min-iterations"), ATTR_NAME("name"), ATTR_FROM("from"), ATTR_TO("to"),
+      ATTR_SUFFICES("suffices"), ATTR_STRICT("strict"), ATTR_CONTROL("control"),
+      VALUE_SERIAL_EXPLICIT("serial-explicit"), VALUE_PARALLEL_EXPLICIT("parallel-explicit"),
+      VALUE_SERIAL_IMPLICIT("serial-implicit"), VALUE_PARALLEL_IMPLICIT("parallel-implicit"), VALUE_MULTI("multi"),
+      VALUE_FIXED("fixed"), VALUE_FIRST_PARTICIPANT("first-participant"), _config(), _meshConfig(std::move(meshConfig)),
+      _m2nConfig(std::move(m2nConfig)), _participantConfig(participantConfig), _couplingSchemes(),
       _couplingSchemeCompositions()
 {
   using namespace xml;
@@ -132,20 +102,17 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
   }
 }
 
-void CouplingSchemeConfiguration::setExperimental(
-    bool experimental)
+void CouplingSchemeConfiguration::setExperimental(bool experimental)
 {
   _experimental = experimental;
 }
 
-bool CouplingSchemeConfiguration::hasCouplingScheme(
-    const std::string &participantName) const
+bool CouplingSchemeConfiguration::hasCouplingScheme(const std::string &participantName) const
 {
   return utils::contained(participantName, _couplingSchemes);
 }
 
-const PtrCouplingScheme &CouplingSchemeConfiguration::getCouplingScheme(
-    const std::string &participantName) const
+const PtrCouplingScheme &CouplingSchemeConfiguration::getCouplingScheme(const std::string &participantName) const
 {
   PRECICE_CHECK(utils::contained(participantName, _couplingSchemes),
                 "No coupling scheme defined for participant \"{}\". "
@@ -155,9 +122,7 @@ const PtrCouplingScheme &CouplingSchemeConfiguration::getCouplingScheme(
   return _couplingSchemes.find(participantName)->second;
 }
 
-void CouplingSchemeConfiguration::xmlTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+void CouplingSchemeConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
@@ -167,24 +132,30 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     std::string first = tag.getStringAttributeValue(ATTR_FIRST);
     _config.participants.push_back(first);
     std::string second = tag.getStringAttributeValue(ATTR_SECOND);
-    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), second) == _config.participants.end(),
+    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), second) ==
+                      _config.participants.end(),
                   "Provided first participant equals second participant in coupling scheme. "
-                  "Please correct the <participants first=\"{}\" second=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
+                  "Please correct the <participants first=\"{}\" second=\"{}\" /> tag in the <coupling-scheme:...> of "
+                  "your precice-config.xml",
                   first, second);
     _config.participants.push_back(second);
   } else if (tag.getName() == TAG_PARTICIPANT) {
     PRECICE_ASSERT(_config.type == VALUE_MULTI);
     bool        control         = tag.getBooleanAttributeValue(ATTR_CONTROL);
     std::string participantName = tag.getStringAttributeValue(ATTR_NAME);
-    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), participantName) == _config.participants.end() && participantName.compare(_config.controller) != 0,
-                  "Participant \"{0}\" is provided multiple times to multi coupling scheme. "
-                  "Please make sure that you do not provide the participant multiple times via the <participant name=\"{0}\" /> "
-                  "tag in the <coupling-scheme:...> of your precice-config.xml",
-                  participantName);
+    PRECICE_CHECK(
+        std::find(_config.participants.begin(), _config.participants.end(), participantName) ==
+                _config.participants.end() &&
+            participantName.compare(_config.controller) != 0,
+        "Participant \"{0}\" is provided multiple times to multi coupling scheme. "
+        "Please make sure that you do not provide the participant multiple times via the <participant name=\"{0}\" /> "
+        "tag in the <coupling-scheme:...> of your precice-config.xml",
+        participantName);
     if (control) {
       PRECICE_CHECK(not _config.setController,
                     "Only one controller per MultiCouplingScheme can be defined. "
-                    "Please check the <participant name=\"{}\" control=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
+                    "Please check the <participant name=\"{}\" control=\"{}\" /> tag in the <coupling-scheme:...> of "
+                    "your precice-config.xml",
                     participantName, control);
       _config.controller    = participantName;
       _config.setController = true;
@@ -192,20 +163,23 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.participants.push_back(participantName);
   } else if (tag.getName() == TAG_MAX_TIME) {
     _config.maxTime = tag.getDoubleAttributeValue(ATTR_VALUE);
-    PRECICE_CHECK(_config.maxTime > 0,
-                  "Maximum time has to be larger than zero. "
-                  "Please check the <max-time value=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
-                  _config.maxTime);
+    PRECICE_CHECK(
+        _config.maxTime > 0,
+        "Maximum time has to be larger than zero. "
+        "Please check the <max-time value=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
+        _config.maxTime);
   } else if (tag.getName() == TAG_MAX_TIME_WINDOWS) {
     _config.maxTimeWindows = tag.getIntAttributeValue(ATTR_VALUE);
     PRECICE_CHECK(_config.maxTimeWindows > 0,
                   "Maximum number of time windows has to be larger than zero. "
-                  "Please check the <max-time-windows value=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
+                  "Please check the <max-time-windows value=\"{}\" /> tag in the <coupling-scheme:...> of your "
+                  "precice-config.xml",
                   _config.maxTimeWindows);
   } else if (tag.getName() == TAG_TIME_WINDOW_SIZE) {
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
     _config.validDigits    = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
-    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17), "Valid digits of time window size has to be between 1 and 16.");
+    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),
+                  "Valid digits of time window size has to be between 1 and 16.");
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD));
     if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
       PRECICE_CHECK(_config.timeWindowSize > 0,
@@ -232,7 +206,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
     bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
-    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT ||
+                   _config.type == VALUE_MULTI);
     addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_REL_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
@@ -240,7 +215,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
     bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
-    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT ||
+                   _config.type == VALUE_MULTI);
     addRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_RES_REL_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
@@ -248,7 +224,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     double             limit    = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
     bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
-    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT ||
+                   _config.type == VALUE_MULTI);
     addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
   } else if (tag.getName() == TAG_MIN_ITER_CONV_MEASURE) {
     const std::string &dataName      = tag.getStringAttributeValue(ATTR_DATA);
@@ -256,7 +233,8 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     int                minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
     bool               suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
     bool               strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
-    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT ||
+                   _config.type == VALUE_MULTI);
     addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices, strict);
   } else if (tag.getName() == TAG_EXCHANGE) {
     std::string nameData            = tag.getStringAttributeValue(ATTR_DATA);
@@ -278,26 +256,30 @@ void CouplingSchemeConfiguration::xmlTagCallback(
 
     _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
     _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
-    _config.exchanges.emplace_back(Config::Exchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize});
+    _config.exchanges.emplace_back(
+        Config::Exchange{exchangeData, exchangeMesh, nameParticipantFrom, nameParticipantTo, initialize});
   } else if (tag.getName() == TAG_MAX_ITERATIONS) {
-    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT ||
+                   _config.type == VALUE_MULTI);
     _config.maxIterations = tag.getIntAttributeValue(ATTR_VALUE);
     PRECICE_CHECK(_config.maxIterations > 0,
-                  "Maximal iteration limit has to be larger than zero. Please check the <max-iterations value = \"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  "Maximal iteration limit has to be larger than zero. Please check the <max-iterations value = \"{}\" "
+                  "/> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
                   _config.maxIterations);
   } else if (tag.getName() == TAG_EXTRAPOLATION) {
-    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT ||
+                   _config.type == VALUE_MULTI);
     _config.extrapolationOrder = tag.getIntAttributeValue(ATTR_VALUE);
-    PRECICE_CHECK((_config.extrapolationOrder == 0) || (_config.extrapolationOrder == 1) || (_config.extrapolationOrder == 2),
+    PRECICE_CHECK((_config.extrapolationOrder == 0) || (_config.extrapolationOrder == 1) ||
+                      (_config.extrapolationOrder == 2),
                   "Extrapolation order has to be 0, 1, or 2. "
-                  "Please check the <extrapolation-order value=\"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  "Please check the <extrapolation-order value=\"{}\" /> subtag in the <coupling-scheme:... /> of your "
+                  "precice-config.xml.",
                   _config.extrapolationOrder);
   }
 }
 
-void CouplingSchemeConfiguration::xmlEndTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+void CouplingSchemeConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
@@ -331,7 +313,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       _config = Config();
     } else if (_config.type == VALUE_SERIAL_IMPLICIT) {
       if (_experimental) {
-        int maxAllowedOrder = 0; // serial implicit coupling does not allow waveform iteration yet (see https://github.com/precice/precice/issues/1174#issuecomment-1042823430)
+        int maxAllowedOrder = 0; // serial implicit coupling does not allow waveform iteration yet (see
+                                 // https://github.com/precice/precice/issues/1174#issuecomment-1042823430)
         checkWaveformOrderReadData(maxAllowedOrder);
       }
       std::string       accessor(_config.participants[0]);
@@ -356,10 +339,12 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
         int maxAllowedOrder = 0; // multi coupling scheme does not allow waveform iteration
         checkWaveformOrderReadData(maxAllowedOrder);
       }
-      PRECICE_CHECK(_config.setController,
-                    "One controller per MultiCoupling needs to be defined. "
-                    "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
-                    "Make sure that at least one participant tag provides the attribute <participant name=... control=\"True\"/>.");
+      PRECICE_CHECK(
+          _config.setController,
+          "One controller per MultiCoupling needs to be defined. "
+          "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
+          "Make sure that at least one participant tag provides the attribute <participant name=... "
+          "control=\"True\"/>.");
       for (const std::string &accessor : _config.participants) {
         PtrCouplingScheme scheme = createMultiCouplingScheme(accessor);
         addCouplingScheme(scheme, accessor);
@@ -371,9 +356,8 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   }
 }
 
-void CouplingSchemeConfiguration::addCouplingScheme(
-    const PtrCouplingScheme &cplScheme,
-    const std::string &      participantName)
+void CouplingSchemeConfiguration::addCouplingScheme(const PtrCouplingScheme &cplScheme,
+                                                    const std::string &      participantName)
 {
   PRECICE_TRACE(participantName);
   if (utils::contained(participantName, _couplingSchemes)) {
@@ -403,10 +387,9 @@ void CouplingSchemeConfiguration::addCouplingScheme(
   }
 }
 
-void CouplingSchemeConfiguration::addTypespecifcSubtags(
-    const std::string &type,
-    //const std::string& name,
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTypespecifcSubtags(const std::string &type,
+                                                        // const std::string& name,
+                                                        xml::XMLTag &tag)
 {
   PRECICE_TRACE(type);
   addTransientLimitTags(type, tag);
@@ -450,14 +433,13 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagMaxIterations(tag);
     addTagExtrapolation(tag);
   } else {
-    // If wrong coupling scheme type is provided, this is already caught by the config parser. If the assertion below is triggered, it's a bug in preCICE, not wrong usage.
+    // If wrong coupling scheme type is provided, this is already caught by the config parser. If the assertion below is
+    // triggered, it's a bug in preCICE, not wrong usage.
     PRECICE_ASSERT(false, "Unknown coupling scheme.");
   }
 }
 
-void CouplingSchemeConfiguration::addTransientLimitTags(
-    const std::string &type,
-    xml::XMLTag &      tag)
+void CouplingSchemeConfiguration::addTransientLimitTags(const std::string &type, xml::XMLTag &tag)
 {
   using namespace xml;
   XMLTag tagMaxTime(*this, TAG_MAX_TIME, XMLTag::OCCUR_NOT_OR_ONCE);
@@ -481,7 +463,8 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
                                      .setDocumentation("The maximum time window size.");
   tagTimeWindowSize.addAttribute(attrValueTimeWindowSize);
   XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
-  attrValidDigits.setDocumentation(R"(Precision to use when checking for end of time windows used this many digits. \\(\phi = 10^{-validDigits}\\))");
+  attrValidDigits.setDocumentation(
+      R"(Precision to use when checking for end of time windows used this many digits. \\(\phi = 10^{-validDigits}\\))");
   tagTimeWindowSize.addAttribute(attrValidDigits);
   std::vector<std::string> allowedMethods;
   if (type == VALUE_SERIAL_EXPLICIT || type == VALUE_SERIAL_IMPLICIT) {
@@ -492,13 +475,13 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   }
   auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
                         .setOptions(allowedMethods)
-                        .setDocumentation("The method used to determine the time window size. Use `fixed` to fix the time window size for the participants.");
+                        .setDocumentation("The method used to determine the time window size. Use `fixed` to fix the "
+                                          "time window size for the participants.");
   tagTimeWindowSize.addAttribute(attrMethod);
   tag.addSubtag(tagTimeWindowSize);
 }
 
-void CouplingSchemeConfiguration::addTagParticipants(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTagParticipants(xml::XMLTag &tag)
 {
   using namespace xml;
   XMLTag tagParticipants(*this, TAG_PARTICIPANTS, XMLTag::OCCUR_ONCE);
@@ -512,8 +495,7 @@ void CouplingSchemeConfiguration::addTagParticipants(
   tag.addSubtag(tagParticipants);
 }
 
-void CouplingSchemeConfiguration::addTagParticipant(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTagParticipant(xml::XMLTag &tag)
 {
   using namespace xml;
   XMLTag                    tagParticipant(*this, TAG_PARTICIPANT, XMLTag::OCCUR_ONCE_OR_MORE);
@@ -526,8 +508,7 @@ void CouplingSchemeConfiguration::addTagParticipant(
   tag.addSubtag(tagParticipant);
 }
 
-void CouplingSchemeConfiguration::addTagExchange(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTagExchange(xml::XMLTag &tag)
 {
   using namespace xml;
   XMLTag tagExchange(*this, TAG_EXCHANGE, XMLTag::OCCUR_ONCE_OR_MORE);
@@ -541,13 +522,13 @@ void CouplingSchemeConfiguration::addTagExchange(
   tagExchange.addAttribute(participantFrom);
   auto participantTo = XMLAttribute<std::string>(ATTR_TO).setDocumentation("The participant receiving the data.");
   tagExchange.addAttribute(participantTo);
-  auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initializeData?");
+  auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false)
+                            .setDocumentation("Should this data be initialized during initializeData?");
   tagExchange.addAttribute(attrInitialize);
   tag.addSubtag(tagExchange);
 }
 
-void CouplingSchemeConfiguration::addTagAbsoluteConvergenceMeasure(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTagAbsoluteConvergenceMeasure(xml::XMLTag &tag)
 {
   using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_ABS_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
@@ -561,15 +542,14 @@ void CouplingSchemeConfiguration::addTagAbsoluteConvergenceMeasure(
   tag.addSubtag(tagConvergenceMeasure);
 }
 
-void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(xml::XMLTag &tag)
 {
   using namespace xml;
-  XMLTag tagConvergenceMeasure(*this, TAG_RES_REL_CONV_MEASURE,
-                               XMLTag::OCCUR_ARBITRARY);
-  tagConvergenceMeasure.setDocumentation(
-      "Residual relative convergence criterion based on the relative two-norm differences of data values between iterations.\n"
-      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^{k-1}) - x^{k-1} \\right\\rVert_2} < \\text{limit}\\$$");
+  XMLTag tagConvergenceMeasure(*this, TAG_RES_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
+  tagConvergenceMeasure.setDocumentation("Residual relative convergence criterion based on the relative two-norm "
+                                         "differences of data values between iterations.\n"
+                                         "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert "
+                                         "H(x^{k-1}) - x^{k-1} \\right\\rVert_2} < \\text{limit}\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
   attrLimit.setDocumentation("Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).");
@@ -577,26 +557,25 @@ void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(
   tag.addSubtag(tagConvergenceMeasure);
 }
 
-void CouplingSchemeConfiguration::addTagRelativeConvergenceMeasure(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTagRelativeConvergenceMeasure(xml::XMLTag &tag)
 {
   using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
   tagConvergenceMeasure.setDocumentation(
       "Relative convergence criterion based on the relative two-norm difference of data values between iterations.\n"
-      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^k) \\right\\rVert_2} < \\text{limit} \\$$");
+      "\\$$\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^k) \\right\\rVert_2} < \\text{limit} "
+      "\\$$");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
-  attrLimit.setDocumentation(R"(Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).)");
+  attrLimit.setDocumentation(
+      R"(Limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).)");
   tagConvergenceMeasure.addAttribute(attrLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }
 
-void CouplingSchemeConfiguration::addTagMinIterationConvergenceMeasure(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTagMinIterationConvergenceMeasure(xml::XMLTag &tag)
 {
-  xml::XMLTag tagMinIterationConvMeasure(*this,
-                                         TAG_MIN_ITER_CONV_MEASURE, xml::XMLTag::OCCUR_ARBITRARY);
+  xml::XMLTag tagMinIterationConvMeasure(*this, TAG_MIN_ITER_CONV_MEASURE, xml::XMLTag::OCCUR_ARBITRARY);
   tagMinIterationConvMeasure.setDocumentation(
       "Convergence criterion used to ensure a miminimal amount of iterations. "
       "Specifying a mesh and data is required for technical reasons and does not influence the measure.");
@@ -607,26 +586,25 @@ void CouplingSchemeConfiguration::addTagMinIterationConvergenceMeasure(
   tag.addSubtag(tagMinIterationConvMeasure);
 }
 
-void CouplingSchemeConfiguration::addBaseAttributesTagConvergenceMeasure(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addBaseAttributesTagConvergenceMeasure(xml::XMLTag &tag)
 {
   using namespace xml;
-  auto attrData = XMLAttribute<std::string>(ATTR_DATA)
-                      .setDocumentation("Data to be measured.");
+  auto attrData = XMLAttribute<std::string>(ATTR_DATA).setDocumentation("Data to be measured.");
   tag.addAttribute(attrData);
-  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH)
-                      .setDocumentation("Mesh holding the data.");
+  auto attrMesh = XMLAttribute<std::string>(ATTR_MESH).setDocumentation("Mesh holding the data.");
   tag.addAttribute(attrMesh);
-  auto attrSuffices = makeXMLAttribute(ATTR_SUFFICES, false)
-                          .setDocumentation("If true, convergence of this measure is sufficient for overall convergence.");
+  auto attrSuffices =
+      makeXMLAttribute(ATTR_SUFFICES, false)
+          .setDocumentation("If true, convergence of this measure is sufficient for overall convergence.");
   tag.addAttribute(attrSuffices);
-  auto attrStrict = makeXMLAttribute(ATTR_STRICT, false)
-                        .setDocumentation("If true, non-convergence of this measure ends the simulation. \"strict\" overrules \"suffices\".");
+  auto attrStrict =
+      makeXMLAttribute(ATTR_STRICT, false)
+          .setDocumentation(
+              "If true, non-convergence of this measure ends the simulation. \"strict\" overrules \"suffices\".");
   tag.addAttribute(attrStrict);
 }
 
-void CouplingSchemeConfiguration::addTagMaxIterations(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTagMaxIterations(xml::XMLTag &tag)
 {
   using namespace xml;
   XMLTag tagMaxIterations(*this, TAG_MAX_ITERATIONS, XMLTag::OCCUR_ONCE);
@@ -637,8 +615,7 @@ void CouplingSchemeConfiguration::addTagMaxIterations(
   tag.addSubtag(tagMaxIterations);
 }
 
-void CouplingSchemeConfiguration::addTagExtrapolation(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTagExtrapolation(xml::XMLTag &tag)
 {
   using namespace xml;
   XMLTag            tagExtrapolation(*this, TAG_EXTRAPOLATION, XMLTag::OCCUR_NOT_OR_ONCE);
@@ -649,23 +626,18 @@ void CouplingSchemeConfiguration::addTagExtrapolation(
   tag.addSubtag(tagExtrapolation);
 }
 
-void CouplingSchemeConfiguration::addTagAcceleration(
-    xml::XMLTag &tag)
+void CouplingSchemeConfiguration::addTagAcceleration(xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getFullName());
   if (_accelerationConfig.get() == nullptr) {
-    _accelerationConfig = std::make_shared<acceleration::AccelerationConfiguration>(
-        _meshConfig);
+    _accelerationConfig = std::make_shared<acceleration::AccelerationConfiguration>(_meshConfig);
   }
   _accelerationConfig->connectTags(tag);
 }
 
-void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
-    const std::string &dataName,
-    const std::string &meshName,
-    double             limit,
-    bool               suffices,
-    bool               strict)
+void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(const std::string &dataName,
+                                                                const std::string &meshName, double limit,
+                                                                bool suffices, bool strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0),
@@ -684,12 +656,9 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
-void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
-    const std::string &dataName,
-    const std::string &meshName,
-    double             limit,
-    bool               suffices,
-    bool               strict)
+void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(const std::string &dataName,
+                                                                const std::string &meshName, double limit,
+                                                                bool suffices, bool strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
@@ -709,12 +678,9 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
-void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
-    const std::string &dataName,
-    const std::string &meshName,
-    double             limit,
-    bool               suffices,
-    bool               strict)
+void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(const std::string &dataName,
+                                                                        const std::string &meshName, double limit,
+                                                                        bool suffices, bool strict)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
@@ -733,12 +699,9 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
-void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
-    const std::string &dataName,
-    const std::string &meshName,
-    int                minIterations,
-    bool               suffices,
-    bool               strict)
+void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(const std::string &dataName,
+                                                                    const std::string &meshName, int minIterations,
+                                                                    bool suffices, bool strict)
 {
   PRECICE_TRACE();
   impl::PtrConvergenceMeasure measure(new impl::MinIterationConvergenceMeasure(minIterations));
@@ -752,9 +715,7 @@ void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
-mesh::PtrData CouplingSchemeConfiguration::getData(
-    const std::string &dataName,
-    const std::string &meshName) const
+mesh::PtrData CouplingSchemeConfiguration::getData(const std::string &dataName, const std::string &meshName) const
 {
   PRECICE_CHECK(_meshConfig->hasMeshName(meshName) && _meshConfig->getMesh(meshName)->data(dataName),
                 "Data \"{}\" used by mesh \"{}\" is not configured.", dataName, meshName);
@@ -762,8 +723,7 @@ mesh::PtrData CouplingSchemeConfiguration::getData(
   return mesh->data(dataName);
 }
 
-mesh::PtrData CouplingSchemeConfiguration::findDataByID(
-    int ID) const
+mesh::PtrData CouplingSchemeConfiguration::findDataByID(int ID) const
 {
   for (const mesh::PtrMesh &mesh : _meshConfig->meshes()) {
     if (mesh->hasDataID(ID)) {
@@ -773,60 +733,52 @@ mesh::PtrData CouplingSchemeConfiguration::findDataByID(
   return nullptr;
 }
 
-PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingScheme(
-    const std::string &accessor) const
+PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingScheme(const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
-  m2n::PtrM2N m2n = _m2nConfig->getM2N(
-      _config.participants[0], _config.participants[1]);
+  m2n::PtrM2N           m2n    = _m2nConfig->getM2N(_config.participants[0], _config.participants[1]);
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.validDigits, _config.participants[0],
+      _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
 
   return PtrCouplingScheme(scheme);
 }
 
-PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingScheme(
-    const std::string &accessor) const
+PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingScheme(const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
-  m2n::PtrM2N m2n = _m2nConfig->getM2N(
-      _config.participants[0], _config.participants[1]);
+  m2n::PtrM2N             m2n    = _m2nConfig->getM2N(_config.participants[0], _config.participants[1]);
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.validDigits, _config.participants[0],
+      _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
 
   return PtrCouplingScheme(scheme);
 }
 
-PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingScheme(
-    const std::string &accessor) const
+PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingScheme(const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
 
   const auto first  = _config.participants[0];
   const auto second = _config.participants[1];
 
-  m2n::PtrM2N m2n = _m2nConfig->getM2N(
-      first, second);
+  m2n::PtrM2N           m2n    = _m2nConfig->getM2N(first, second);
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, first, second,
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.validDigits, first, second, accessor,
+      m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
-  PRECICE_CHECK(scheme->hasAnySendData(),
-                "No send data configured. "
-                "Use explicit scheme for one-way coupling. "
-                "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, "
-                "where from=\"{}\".",
-                accessor);
+  PRECICE_CHECK(
+      scheme->hasAnySendData(),
+      "No send data configured. "
+      "Use explicit scheme for one-way coupling. "
+      "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, "
+      "where from=\"{}\".",
+      accessor);
 
   // Add convergence measures
   PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
@@ -838,7 +790,8 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   // Set acceleration
   setSerialAcceleration(scheme, first, second);
 
-  if (scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && not _accelerationConfig->getAcceleration()->getDataIDs().empty()) {
+  if (scheme->doesFirstStep() && _accelerationConfig->getAcceleration() &&
+      not _accelerationConfig->getAcceleration()->getDataIDs().empty()) {
     DataID dataID = *(_accelerationConfig->getAcceleration()->getDataIDs().begin());
     PRECICE_CHECK(not scheme->hasSendData(dataID),
                   "In case of serial coupling, acceleration can be defined for data of second participant only!");
@@ -847,28 +800,28 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   return PtrCouplingScheme(scheme);
 }
 
-PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingScheme(
-    const std::string &accessor) const
+PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingScheme(const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
-  m2n::PtrM2N m2n = _m2nConfig->getM2N(
-      _config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
+  m2n::PtrM2N             m2n = _m2nConfig->getM2N(_config.participants[0], _config.participants[1]);
+  ParallelCouplingScheme *scheme =
+      new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.validDigits,
+                                 _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod,
+                                 BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
-  PRECICE_CHECK(scheme->hasAnySendData(),
-                "No send data configured. Use explicit scheme for one-way coupling. "
-                "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, "
-                "where from=\"{}\".",
-                accessor);
+  PRECICE_CHECK(
+      scheme->hasAnySendData(),
+      "No send data configured. Use explicit scheme for one-way coupling. "
+      "Please check your <coupling-scheme ... /> and make sure that you provide at least one <exchange .../> subtag, "
+      "where from=\"{}\".",
+      accessor);
 
   // Add convergence measures
   PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
                 "At least one convergence measure has to be defined for an implicit coupling scheme. "
-                "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
+                "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
+                "<...-convergence-measure/> subtag in the precice-config.xml.");
   addConvergenceMeasures(scheme, _config.participants[1], _config.convergenceMeasureDefinitions);
 
   // Set acceleration
@@ -877,8 +830,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   return PtrCouplingScheme(scheme);
 }
 
-PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
-    const std::string &accessor) const
+PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
 
@@ -891,10 +843,9 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     }
   }
 
-  scheme = new MultiCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, accessor, m2ns, _config.dtMethod,
-      _config.controller, _config.maxIterations, _config.extrapolationOrder);
+  scheme = new MultiCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.validDigits,
+                                   accessor, m2ns, _config.dtMethod, _config.controller, _config.maxIterations,
+                                   _config.extrapolationOrder);
 
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
   PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
@@ -920,17 +871,17 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
 
   if (not scheme->doesFirstStep() && _accelerationConfig->getAcceleration()) {
     if (_accelerationConfig->getAcceleration()->getDataIDs().size() < 3) {
-      PRECICE_WARN("Due to numerical reasons, for multi coupling, the number of coupling data vectors should be at least 3, not: {}. "
-                   "Please check the <data .../> subtags in your <acceleration:.../> and make sure that you have at least 3.",
-                   _accelerationConfig->getAcceleration()->getDataIDs().size());
+      PRECICE_WARN(
+          "Due to numerical reasons, for multi coupling, the number of coupling data vectors should be at least 3, "
+          "not: {}. "
+          "Please check the <data .../> subtags in your <acceleration:.../> and make sure that you have at least 3.",
+          _accelerationConfig->getAcceleration()->getDataIDs().size());
     }
   }
   return PtrCouplingScheme(scheme);
 }
 
-constants::TimesteppingMethod
-CouplingSchemeConfiguration::getTimesteppingMethod(
-    const std::string &method) const
+constants::TimesteppingMethod CouplingSchemeConfiguration::getTimesteppingMethod(const std::string &method) const
 {
   PRECICE_TRACE(method);
   if (method == VALUE_FIXED) {
@@ -943,9 +894,7 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
   }
 }
 
-void CouplingSchemeConfiguration::addDataToBeExchanged(
-    BiCouplingScheme & scheme,
-    const std::string &accessor) const
+void CouplingSchemeConfiguration::addDataToBeExchanged(BiCouplingScheme &scheme, const std::string &accessor) const
 {
   PRECICE_TRACE();
   for (const Config::Exchange &exchange : _config.exchanges) {
@@ -956,17 +905,20 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
 
     PRECICE_CHECK(to != from,
                   "You cannot define an exchange from and to the same participant. "
-                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the "
+                  "<coupling-scheme:... /> of your precice-config.xml.",
                   dataName, meshName, from, to);
 
     PRECICE_CHECK((utils::contained(from, _config.participants) || from == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme. "
-                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the "
+                  "<coupling-scheme:... /> of your precice-config.xml.",
                   from, dataName, meshName, from, to);
 
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme. "
-                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the "
+                  "<coupling-scheme:... /> of your precice-config.xml.",
                   to, dataName, meshName, from, to);
 
     const bool requiresInitialization = exchange.requiresInitialization;
@@ -975,7 +927,8 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(not scheme.doesFirstStep(),
                       "In serial coupling only second participant can initialize data and send it. "
-                      "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                      "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> "
+                      "tag in the <coupling-scheme:... /> of your precice-config.xml.",
                       dataName, meshName, from, to, requiresInitialization);
       }
     } else if (to == accessor) {
@@ -983,7 +936,8 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
       if (requiresInitialization && (_config.type == VALUE_SERIAL_EXPLICIT || _config.type == VALUE_SERIAL_IMPLICIT)) {
         PRECICE_CHECK(scheme.doesFirstStep(),
                       "In serial coupling only first participant can receive initial data. "
-                      "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                      "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" initialize=\"{}\" /> "
+                      "tag in the <coupling-scheme:... /> of your precice-config.xml.",
                       dataName, meshName, from, to, requiresInitialization);
       }
     } else {
@@ -992,9 +946,8 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
   }
 }
 
-void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
-    MultiCouplingScheme &scheme,
-    const std::string &  accessor) const
+void CouplingSchemeConfiguration::addMultiDataToBeExchanged(MultiCouplingScheme &scheme,
+                                                            const std::string &  accessor) const
 {
   PRECICE_TRACE();
   for (const Config::Exchange &exchange : _config.exchanges) {
@@ -1005,12 +958,12 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 
     PRECICE_CHECK(to != from,
                   "You cannot define an exchange from and to the same participant. "
-                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  "Please check the <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" /> tag in the "
+                  "<coupling-scheme:... /> of your precice-config.xml.",
                   dataName, meshName, from, to);
 
     PRECICE_CHECK((utils::contained(from, _config.participants) || from == _config.controller),
-                  "Participant \"{}\" is not configured for coupling scheme",
-                  from);
+                  "Participant \"{}\" is not configured for coupling scheme", from);
 
     PRECICE_CHECK((utils::contained(to, _config.participants) || to == _config.controller),
                   "Participant \"{}\" is not configured for coupling scheme", to);
@@ -1024,12 +977,11 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
   }
 }
 
-void CouplingSchemeConfiguration::checkIfDataIsExchanged(
-    DataID dataID) const
+void CouplingSchemeConfiguration::checkIfDataIsExchanged(DataID dataID) const
 {
-  const auto match = std::find_if(_config.exchanges.begin(),
-                                  _config.exchanges.end(),
-                                  [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
+  const auto match =
+      std::find_if(_config.exchanges.begin(), _config.exchanges.end(),
+                   [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
   if (match != _config.exchanges.end()) {
     return;
   }
@@ -1041,37 +993,37 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
     dataName = dataptr->getName();
   }
 
-  PRECICE_ERROR("You need to exchange every data that you use for convergence measures and/or the iteration acceleration. "
-                "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration acceleration. "
-                "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
-                dataName);
+  PRECICE_ERROR(
+      "You need to exchange every data that you use for convergence measures and/or the iteration acceleration. "
+      "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures "
+      "and/or iteration acceleration. "
+      "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of "
+      "your precice-config.xml.",
+      dataName);
 }
 
-void CouplingSchemeConfiguration::checkWaveformOrderReadData(
-    int maxAllowedOrder) const
+void CouplingSchemeConfiguration::checkWaveformOrderReadData(int maxAllowedOrder) const
 {
   for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
     for (auto &dataContext : participant->readDataContexts()) {
       int usedOrder = dataContext.getInterpolationOrder();
       PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
       if (usedOrder > maxAllowedOrder) {
-        PRECICE_ERROR(
-            "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
-            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
+        PRECICE_ERROR("You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the "
+                      "coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
+                      dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
       }
     }
   }
 }
 
-void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
-    int                dataID,
-    const std::string &first,
-    const std::string &second) const
+void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(int dataID, const std::string &first,
+                                                                      const std::string &second) const
 {
   checkIfDataIsExchanged(dataID);
-  const auto match = std::find_if(_config.exchanges.begin(),
-                                  _config.exchanges.end(),
-                                  [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
+  const auto match =
+      std::find_if(_config.exchanges.begin(), _config.exchanges.end(),
+                   [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
   PRECICE_ASSERT(match != _config.exchanges.end());
   const auto &exchange = *match;
 
@@ -1086,18 +1038,18 @@ void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
     dataName = dataptr->getName();
   }
 
-  PRECICE_ERROR(
-      "You configured acceleration data \"{}\" in the serial implicit coupling scheme between participants \"{}\" and \"{}\". "
-      "For serial implicit coupling schemes, only data exchanged from the second to the first participant can be used for acceleration. "
-      "Here, from \"{}\" to \"{}\". "
-      "However, you configured data \"{}\" for acceleration, which is exchanged from \"{}\" to \"{}\". "
-      "Please remove this acceleration data tag or switch to a parallel implicit coupling scheme.",
-      dataName, first, second, second, first, dataName, first, second);
+  PRECICE_ERROR("You configured acceleration data \"{}\" in the serial implicit coupling scheme between participants "
+                "\"{}\" and \"{}\". "
+                "For serial implicit coupling schemes, only data exchanged from the second to the first participant "
+                "can be used for acceleration. "
+                "Here, from \"{}\" to \"{}\". "
+                "However, you configured data \"{}\" for acceleration, which is exchanged from \"{}\" to \"{}\". "
+                "Please remove this acceleration data tag or switch to a parallel implicit coupling scheme.",
+                dataName, first, second, second, first, dataName, first, second);
 }
 
 void CouplingSchemeConfiguration::addConvergenceMeasures(
-    BaseCouplingScheme *                            scheme,
-    const std::string &                             participant,
+    BaseCouplingScheme *scheme, const std::string &participant,
     const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const
 {
   for (auto &elem : convergenceMeasureDefinitions) {
@@ -1107,10 +1059,8 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
   }
 }
 
-void CouplingSchemeConfiguration::setSerialAcceleration(
-    BaseCouplingScheme *scheme,
-    const std::string & first,
-    const std::string & second) const
+void CouplingSchemeConfiguration::setSerialAcceleration(BaseCouplingScheme *scheme, const std::string &first,
+                                                        const std::string &second) const
 {
   if (_accelerationConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
@@ -1123,9 +1073,8 @@ void CouplingSchemeConfiguration::setSerialAcceleration(
   }
 }
 
-void CouplingSchemeConfiguration::setParallelAcceleration(
-    BaseCouplingScheme *scheme,
-    const std::string & participant) const
+void CouplingSchemeConfiguration::setParallelAcceleration(BaseCouplingScheme *scheme,
+                                                          const std::string & participant) const
 {
   if (_accelerationConfig->getAcceleration().get() != nullptr) {
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
@@ -1137,11 +1086,12 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
 
     if (dynamic_cast<acceleration::AitkenAcceleration *>(_accelerationConfig->getAcceleration().get()) != nullptr)
-      PRECICE_WARN("You configured participant \"{}\" in a parallel-implicit coupling scheme with \"Aitken\" "
-                   "acceleration, which is known to perform bad in parallel coupling schemes. "
-                   "See https://precice.org/configuration-acceleration.html#dynamic-aitken-under-relaxation for details."
-                   "Consider switching to a serial-implicit coupling scheme or changing the acceleration method.",
-                   participant);
+      PRECICE_WARN(
+          "You configured participant \"{}\" in a parallel-implicit coupling scheme with \"Aitken\" "
+          "acceleration, which is known to perform bad in parallel coupling schemes. "
+          "See https://precice.org/configuration-acceleration.html#dynamic-aitken-under-relaxation for details."
+          "Consider switching to a serial-implicit coupling scheme or changing the acceleration method.",
+          participant);
   }
 }
 

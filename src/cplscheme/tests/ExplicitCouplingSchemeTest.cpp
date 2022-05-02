@@ -32,10 +32,8 @@ using namespace precice::cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
-void runSimpleExplicitCoupling(
-    CouplingScheme &               cplScheme,
-    const std::string &            participantName,
-    const mesh::MeshConfiguration &meshConfig)
+void runSimpleExplicitCoupling(CouplingScheme &cplScheme, const std::string &participantName,
+                               const mesh::MeshConfiguration &meshConfig)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
@@ -133,10 +131,8 @@ void runSimpleExplicitCoupling(
   }
 }
 
-void runExplicitCouplingWithSubcycling(
-    CouplingScheme &               cplScheme,
-    const std::string &            participantName,
-    const mesh::MeshConfiguration &meshConfig)
+void runExplicitCouplingWithSubcycling(CouplingScheme &cplScheme, const std::string &participantName,
+                                       const mesh::MeshConfiguration &meshConfig)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
@@ -170,9 +166,7 @@ void runExplicitCouplingWithSubcycling(
       cplScheme.advance();
       // If the dt from preCICE is larger than the desired one, do subcycling,
       // else, use the dt from preCICE
-      dtUsed = cplScheme.getNextTimestepMaxLength() > dtDesired
-                   ? dtDesired
-                   : cplScheme.getNextTimestepMaxLength();
+      dtUsed = cplScheme.getNextTimestepMaxLength() > dtDesired ? dtDesired : cplScheme.getNextTimestepMaxLength();
       BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
       BOOST_TEST(not cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"));
       BOOST_TEST(not cplScheme.isActionRequired("constants::actionReadIterationCheckpoint()"));
@@ -254,11 +248,8 @@ struct ExplicitCouplingSchemeFixture : m2n::WhiteboxAccessor {
     _pathToTests = testing::getPathToSources() + "/cplscheme/tests/";
   }
 
-  void connect(
-      const std::string &participant0,
-      const std::string &participant1,
-      const std::string &localParticipant,
-      m2n::PtrM2N &      communication)
+  void connect(const std::string &participant0, const std::string &participant1, const std::string &localParticipant,
+               m2n::PtrM2N &communication)
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
@@ -310,10 +301,9 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
     sendDataIndex    = 1;
     receiveDataIndex = 0;
   }
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
-      nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Explicit);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
+                                            nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
+                                            BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
@@ -337,7 +327,8 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling)
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
-  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  precice::config::PtrParticipantConfiguration participantConfig(
+      new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
@@ -353,8 +344,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling)
   meshConfig->meshes().at(0)->allocateDataValues();
 
   connect(nameParticipant0, nameParticipant1, context.name, m2n);
-  runSimpleExplicitCoupling(*cplSchemeConfig.getCouplingScheme(context.name),
-                            context.name, *meshConfig);
+  runSimpleExplicitCoupling(*cplSchemeConfig.getCouplingScheme(context.name), context.name, *meshConfig);
 }
 
 /// Test that runs on 2 processors.
@@ -374,7 +364,8 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
-  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  precice::config::PtrParticipantConfiguration participantConfig(
+      new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
@@ -459,7 +450,8 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
-  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  precice::config::PtrParticipantConfiguration participantConfig(
+      new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
@@ -530,7 +522,8 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
-  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  precice::config::PtrParticipantConfiguration participantConfig(
+      new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
@@ -625,10 +618,9 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
     sendDataIndex    = 1;
     receiveDataIndex = 0;
   }
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
-      nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Explicit);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
+                                            nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
+                                            BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
@@ -652,7 +644,8 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling)
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
-  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  precice::config::PtrParticipantConfiguration participantConfig(
+      new precice::config::ParticipantConfiguration(root, meshConfig));
   participantConfig->setDimensions(dimensions);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
@@ -667,9 +660,7 @@ BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling)
   meshConfig->meshes().at(0)->allocateDataValues();
 
   connect(nameParticipant0, nameParticipant1, context.name, m2n);
-  runExplicitCouplingWithSubcycling(
-      *cplSchemeConfig.getCouplingScheme(context.name), context.name,
-      *meshConfig);
+  runExplicitCouplingWithSubcycling(*cplSchemeConfig.getCouplingScheme(context.name), context.name, *meshConfig);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

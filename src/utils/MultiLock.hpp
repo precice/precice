@@ -9,8 +9,7 @@ namespace utils {
 
 class MultiLockException : public std::runtime_error {
 public:
-  MultiLockException()
-      : runtime_error("MultiLock") {}
+  MultiLockException() : runtime_error("MultiLock") {}
 };
 
 class LockNotFoundException : public MultiLockException {
@@ -23,8 +22,7 @@ public:
 };
 
 /// Class handling multiple locks allowing global lock and unlock operations.
-template <typename Key>
-class MultiLock {
+template <typename Key> class MultiLock {
 public:
   /// The type of the key
   using key_type = Key;
@@ -114,13 +112,11 @@ public:
   bool checkAll() const noexcept
   {
     using KL = typename decltype(_locks)::value_type;
-    return std::all_of(_locks.begin(), _locks.end(), [](const KL &kl) {
-      return kl.second;
-    });
+    return std::all_of(_locks.begin(), _locks.end(), [](const KL &kl) { return kl.second; });
   }
 
   /** @brief Checks whether a lock is known.
-   * 
+   *
    * @param[in] name the name to check
    *
    * @returns whether the name is a known lock
@@ -139,13 +135,15 @@ public:
   /// Returns the count of locked locks
   size_t countLocked() const
   {
-    return std::count_if(_locks.begin(), _locks.end(), [](typename map_type::value_type const &kv) { return kv.second; });
+    return std::count_if(_locks.begin(), _locks.end(),
+                         [](typename map_type::value_type const &kv) { return kv.second; });
   }
 
   /// Returns the count of unlocked locks
   size_t countUnlocked() const
   {
-    return std::count_if(_locks.begin(), _locks.end(), [](typename map_type::value_type const &kv) { return not kv.second; });
+    return std::count_if(_locks.begin(), _locks.end(),
+                         [](typename map_type::value_type const &kv) { return not kv.second; });
   }
 
 private:

@@ -29,10 +29,7 @@ public:
    * @param[in] location Location (path without filename).
    * @param[in] mesh Mesh to be exported.
    */
-  virtual void doExport(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh) = 0;
+  virtual void doExport(const std::string &name, const std::string &location, const mesh::Mesh &mesh) = 0;
 };
 
 } // namespace io

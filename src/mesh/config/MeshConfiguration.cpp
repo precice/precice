@@ -17,18 +17,9 @@
 namespace precice {
 namespace mesh {
 
-MeshConfiguration::MeshConfiguration(
-    xml::XMLTag &        parent,
-    PtrDataConfiguration config)
-    : TAG("mesh"),
-      ATTR_NAME("name"),
-      ATTR_FLIP_NORMALS("flip-normals"),
-      TAG_DATA("use-data"),
-      ATTR_SIDE_INDEX("side"),
-      _dimensions(0),
-      _dataConfig(std::move(config)),
-      _meshes(),
-      _neededMeshes(),
+MeshConfiguration::MeshConfiguration(xml::XMLTag &parent, PtrDataConfiguration config)
+    : TAG("mesh"), ATTR_NAME("name"), ATTR_FLIP_NORMALS("flip-normals"), TAG_DATA("use-data"), ATTR_SIDE_INDEX("side"),
+      _dimensions(0), _dataConfig(std::move(config)), _meshes(), _neededMeshes(),
       _meshIdManager(new utils::ManageUniqueIDs())
 {
   using namespace xml;
@@ -40,8 +31,7 @@ MeshConfiguration::MeshConfiguration(
   doc += "defined by a participant (see tag <use-mesh>).";
   tag.setDocumentation(doc);
 
-  auto attrName = XMLAttribute<std::string>(ATTR_NAME)
-                      .setDocumentation("Unique name for the mesh.");
+  auto attrName = XMLAttribute<std::string>(ATTR_NAME).setDocumentation("Unique name for the mesh.");
   tag.addAttribute(attrName);
 
   auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false).setDocumentation("Deprectated.");
@@ -57,17 +47,14 @@ MeshConfiguration::MeshConfiguration(
   parent.addSubtag(tag);
 }
 
-void MeshConfiguration::setDimensions(
-    int dimensions)
+void MeshConfiguration::setDimensions(int dimensions)
 {
   PRECICE_TRACE(dimensions);
   PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
-void MeshConfiguration::xmlTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+void MeshConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
@@ -99,19 +86,14 @@ void MeshConfiguration::xmlTagCallback(
   }
 }
 
-void MeshConfiguration::xmlEndTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
-{
-}
+void MeshConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) {}
 
 const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
 {
   return _dataConfig;
 }
 
-void MeshConfiguration::addMesh(
-    const mesh::PtrMesh &mesh)
+void MeshConfiguration::addMesh(const mesh::PtrMesh &mesh)
 {
   for (const PtrData &dataNewMesh : mesh->data()) {
     bool found = false;
@@ -121,7 +103,8 @@ void MeshConfiguration::addMesh(
         break;
       }
     }
-    PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".", dataNewMesh->getName());
+    PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".",
+                  dataNewMesh->getName());
   }
   _meshes.push_back(mesh);
 }
@@ -138,14 +121,12 @@ std::vector<PtrMesh> &MeshConfiguration::meshes()
 
 bool MeshConfiguration::hasMeshName(const std::string &meshName) const
 {
-  auto iter = std::find_if(_meshes.begin(), _meshes.end(), [&meshName](const auto &mptr) {
-    return mptr->getName() == meshName;
-  });
+  auto iter = std::find_if(_meshes.begin(), _meshes.end(),
+                           [&meshName](const auto &mptr) { return mptr->getName() == meshName; });
   return iter != _meshes.end(); // if name was not found in _meshes, iter == _meshes.end()
 }
 
-mesh::PtrMesh MeshConfiguration::getMesh(
-    const std::string &meshName) const
+mesh::PtrMesh MeshConfiguration::getMesh(const std::string &meshName) const
 {
   for (const mesh::PtrMesh &mesh : _meshes) {
     if (mesh->getName() == meshName) {
@@ -155,9 +136,7 @@ mesh::PtrMesh MeshConfiguration::getMesh(
   return mesh::PtrMesh();
 }
 
-void MeshConfiguration::addNeededMesh(
-    const std::string &participant,
-    const std::string &mesh)
+void MeshConfiguration::addNeededMesh(const std::string &participant, const std::string &mesh)
 {
   PRECICE_TRACE(participant, mesh);
   if (_neededMeshes.count(participant) == 0) {

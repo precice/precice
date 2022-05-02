@@ -31,11 +31,11 @@ public:
   //  };
 
   // @brief Name of an undefined data type.
-  //static const std::string TYPE_NAME_UNDEFINED;
+  // static const std::string TYPE_NAME_UNDEFINED;
   // @brief Name of a double data type.
-  //static const std::string TYPE_NAME_DOUBLE;
+  // static const std::string TYPE_NAME_DOUBLE;
   // @brief Name of a vector data type.
-  //static const std::string TYPE_NAME_VECTOR;
+  // static const std::string TYPE_NAME_VECTOR;
 
   /**
    * @brief Do not use this constructor! Only there for compatibility with std::map.
@@ -45,12 +45,7 @@ public:
   /**
    * @brief Constructor
    */
-  Data(
-      std::string name,
-      DataID      id,
-      int         dimension,
-      int         spacialDimensions = -1,
-      bool        hasGradient       = false);
+  Data(std::string name, DataID id, int dimension, int spacialDimensions = -1, bool hasGradient = false);
 
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
@@ -79,7 +74,8 @@ public:
   /// Returns the mesh dimension (i.e., number of rows) of one gradient data value .
   int getSpatialDimensions() const;
 
-  /// Returns the dimension (i.e., number of components) of one data value (i.e number of columns of one gradient data value).
+  /// Returns the dimension (i.e., number of components) of one data value (i.e number of columns of one gradient data
+  /// value).
   int getDimensions() const;
 
 private:

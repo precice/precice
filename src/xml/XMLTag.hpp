@@ -35,8 +35,7 @@ public:
 
   using Subtags = typename std::vector<std::shared_ptr<XMLTag>>;
 
-  template <typename T>
-  using AttributeMap = typename std::map<std::string, XMLAttribute<T>>;
+  template <typename T> using AttributeMap = typename std::map<std::string, XMLAttribute<T>>;
 
   /// Callback interface for configuration classes using XMLTag.
   struct Listener {
@@ -63,13 +62,7 @@ public:
   };
 
   /// Types of occurrences of an XML tag.
-  enum Occurrence {
-    OCCUR_NOT_OR_ONCE,
-    OCCUR_ONCE,
-    OCCUR_ONCE_OR_MORE,
-    OCCUR_ARBITRARY,
-    OCCUR_ARBITRARY_NESTED
-  };
+  enum Occurrence { OCCUR_NOT_OR_ONCE, OCCUR_ONCE, OCCUR_ONCE_OR_MORE, OCCUR_ARBITRARY, OCCUR_ARBITRARY_NESTED };
 
   static std::string getOccurrenceString(Occurrence occurrence);
 
@@ -81,11 +74,7 @@ public:
    * @param[in] occurrence Defines the occurrences of the tag in the configuration.
    * @param[in] xmlNamespace Defines a prefix/namespace for the tag. Tags with equal namespace or treated as group.
    */
-  XMLTag(
-      Listener &  listener,
-      std::string name,
-      Occurrence  occurrence,
-      std::string xmlNamespace = "");
+  XMLTag(Listener &listener, std::string name, Occurrence occurrence, std::string xmlNamespace = "");
 
   /**
    * @brief Adds a description of the purpose of this XML tag.
@@ -116,7 +105,7 @@ public:
   };
 
   /// Removes the XML subtag with given name
-  //XMLTag& removeSubtag ( const std::string& tagName );
+  // XMLTag& removeSubtag ( const std::string& tagName );
 
   /// Adds a XML attribute by making a copy of the given attribute.
   XMLTag &addAttribute(const XMLAttribute<double> &attribute);
@@ -204,9 +193,7 @@ public:
    * @param[in] name Name of attribute.
    * @param[in] dimensions Dimensions of the vector to be returned.
    */
-  Eigen::VectorXd getEigenVectorXdAttributeValue(
-      const std::string &name,
-      int                dimensions) const;
+  Eigen::VectorXd getEigenVectorXdAttributeValue(const std::string &name, int dimensions) const;
 
   bool isConfigured() const
   {
@@ -280,7 +267,7 @@ struct NoPListener : public XMLTag::Listener {
  *
  * This is useful for tests, when the root tag to be specified in
  */
-//NoPListener& getNoPListener();
+// NoPListener& getNoPListener();
 
 /**
  * @brief Returns an empty root tag with name "configuration".
@@ -290,10 +277,8 @@ struct NoPListener : public XMLTag::Listener {
 XMLTag getRootTag();
 
 /// Configures the given configuration from file configurationFilename.
-void configure(
-    XMLTag &                                  tag,
-    const precice::xml::ConfigurationContext &context,
-    const std::string &                       configurationFilename);
+void configure(XMLTag &tag, const precice::xml::ConfigurationContext &context,
+               const std::string &configurationFilename);
 
 } // namespace xml
 } // namespace precice
@@ -301,6 +286,6 @@ void configure(
 /**
  * @brief Adds documentation of tag to output stream os.
  */
-//std::ostream& operator<< (
+// std::ostream& operator<< (
 //  std::ostream&                 os,
 //  const precice::xml::XMLTag& tag );

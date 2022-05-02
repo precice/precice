@@ -63,11 +63,9 @@ BOOST_AUTO_TEST_CASE(Implicit)
       }
 
       // Write data
-      couplingInterface.writeBlockScalarData(otherDataID, meshSize,
-                                             otherIDs.data(), writeData.data());
+      couplingInterface.writeBlockScalarData(otherDataID, meshSize, otherIDs.data(), writeData.data());
       dt = couplingInterface.advance(dt);
-      couplingInterface.readBlockScalarData(ownDataID, ownIDs.size(),
-                                            ownIDs.data(), readData.data());
+      couplingInterface.readBlockScalarData(ownDataID, ownIDs.size(), ownIDs.data(), readData.data());
       if (couplingInterface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
         couplingInterface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
       }
@@ -115,11 +113,9 @@ BOOST_AUTO_TEST_CASE(Implicit)
       }
 
       // Write data
-      couplingInterface.writeBlockScalarData(otherDataID, meshSize,
-                                             otherIDs.data(), writeData.data());
+      couplingInterface.writeBlockScalarData(otherDataID, meshSize, otherIDs.data(), writeData.data());
       dt = couplingInterface.advance(dt);
-      couplingInterface.readBlockScalarData(ownDataID, ownIDs.size(),
-                                            ownIDs.data(), readData.data());
+      couplingInterface.readBlockScalarData(ownDataID, ownIDs.size(), ownIDs.data(), readData.data());
       if (couplingInterface.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
         couplingInterface.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
       }

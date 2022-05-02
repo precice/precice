@@ -6,7 +6,8 @@
 #include "helpers.hpp"
 
 /**
- * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges from a quad to a triangle
+ * @brief Tests the Nearest Projection Mapping between two participants with explicit definition of edges from a quad to
+ * a triangle
  */
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)

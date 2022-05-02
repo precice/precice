@@ -5,10 +5,8 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-MinIterationConvergenceMeasure::MinIterationConvergenceMeasure(
-    int minimumIterationCount)
-    : ConvergenceMeasure(),
-      _minimumIterationCount(minimumIterationCount)
+MinIterationConvergenceMeasure::MinIterationConvergenceMeasure(int minimumIterationCount)
+    : ConvergenceMeasure(), _minimumIterationCount(minimumIterationCount)
 {
 }
 

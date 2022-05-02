@@ -10,8 +10,7 @@ namespace precice {
 namespace acceleration {
 namespace impl {
 
-ResidualSumPreconditioner::ResidualSumPreconditioner(
-    int maxNonConstTimeWindows)
+ResidualSumPreconditioner::ResidualSumPreconditioner(int maxNonConstTimeWindows)
     : Preconditioner(maxNonConstTimeWindows)
 {
 }
@@ -24,8 +23,7 @@ void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs)
   _residualSum.resize(_subVectorSizes.size(), 0.0);
 }
 
-void ResidualSumPreconditioner::_update_(bool                   timeWindowComplete,
-                                         const Eigen::VectorXd &oldValues,
+void ResidualSumPreconditioner::_update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues,
                                          const Eigen::VectorXd &res)
 {
   if (not timeWindowComplete) {
@@ -46,12 +44,13 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
     }
     sum = std::sqrt(sum);
     if (math::equals(sum, 0.0)) {
-      PRECICE_WARN("All residual sub-vectors in the residual-sum preconditioner are numerically zero ( sum = {}). "
-                   "This indicates that the data values exchanged between two successive iterations did not change. "
-                   "The simulation may be unstable, e.g. produces NAN values. Please check the data values exchanged "
-                   "between the solvers is not identical between iterations. The preconditioner scaling factors were "
-                   "not updated in this iteration and the scaling factors determined in the previous iteration were used.",
-                   sum);
+      PRECICE_WARN(
+          "All residual sub-vectors in the residual-sum preconditioner are numerically zero ( sum = {}). "
+          "This indicates that the data values exchanged between two successive iterations did not change. "
+          "The simulation may be unstable, e.g. produces NAN values. Please check the data values exchanged "
+          "between the solvers is not identical between iterations. The preconditioner scaling factors were "
+          "not updated in this iteration and the scaling factors determined in the previous iteration were used.",
+          sum);
     }
 
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {

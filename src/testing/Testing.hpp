@@ -31,13 +31,13 @@ using precice::testing::operator""_on;
 using precice::testing::operator""_dataID;
 } // namespace inject
 
-#define PRECICE_TEST(...)                             \
-  using namespace precice::testing::inject;           \
-  precice::testing::TestContext context{__VA_ARGS__}; \
-  if (context.invalid) {                              \
-    return;                                           \
-  }                                                   \
-  BOOST_TEST_MESSAGE(context.describe());             \
+#define PRECICE_TEST(...)                                                                                              \
+  using namespace precice::testing::inject;                                                                            \
+  precice::testing::TestContext context{__VA_ARGS__};                                                                  \
+  if (context.invalid) {                                                                                               \
+    return;                                                                                                            \
+  }                                                                                                                    \
+  BOOST_TEST_MESSAGE(context.describe());                                                                              \
   boost::unit_test::framework::add_context(BOOST_TEST_LAZY_MSG(context.describe()), true);
 
 /// Boost.Test decorator that unconditionally deletes the test.
@@ -57,15 +57,14 @@ private:
 /// struct giving access to the impl of a befriended class or struct
 struct WhiteboxAccessor {
   /** Returns the impl of the obj by reference.
-     *
-     * Returns a reference to the object pointed to by the _impl of a class.
-     * This class needs to be friend of T.
-     *
-     * @param[in] obj The object to fetch the impl from.
-     * @returns a lvalue reference to the impl object.
-     */
-  template <typename T>
-  static auto impl(T &obj) -> typename std::add_lvalue_reference<decltype(*(obj._impl))>::type
+   *
+   * Returns a reference to the object pointed to by the _impl of a class.
+   * This class needs to be friend of T.
+   *
+   * @param[in] obj The object to fetch the impl from.
+   * @returns a lvalue reference to the impl object.
+   */
+  template <typename T> static auto impl(T &obj) -> typename std::add_lvalue_reference<decltype(*(obj._impl))>::type
   {
     return *obj._impl;
   }
@@ -73,9 +72,8 @@ struct WhiteboxAccessor {
 
 /// equals to be used in tests. Compares two matrices using a given tolerance. Prints both operands on failure.
 template <class DerivedA, class DerivedB>
-boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
-                                           const Eigen::MatrixBase<DerivedB> &B,
-                                           double                             tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A, const Eigen::MatrixBase<DerivedB> &B,
+                                           double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   if (not math::equals(A, B, tolerance)) {
     boost::test_tools::predicate_result res(false);
@@ -84,9 +82,7 @@ boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
       format.rowSeparator = ", ";
       format.rowPrefix    = "  ";
     }
-    res.message() << "\n"
-                  << A.format(format) << " != \n"
-                  << B.format(format);
+    res.message() << "\n" << A.format(format) << " != \n" << B.format(format);
     return res;
   }
   return true;
@@ -108,7 +104,8 @@ boost::test_tools::predicate_result equals(const std::vector<NumberType> &Vector
 
 /// equals to be used in tests. Compares two scalar numbers using a given tolerance. Prints both operands on failure
 template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::predicate_result>::type equals(const Scalar a, const Scalar b, const Scalar tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::predicate_result>::type
+equals(const Scalar a, const Scalar b, const Scalar tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   if (not math::equals(a, b, tolerance)) {
     boost::test_tools::predicate_result res(false);

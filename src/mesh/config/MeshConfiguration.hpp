@@ -25,9 +25,7 @@ namespace mesh {
 class MeshConfiguration : public xml::XMLTag::Listener {
 public:
   /// Constructor, takes a valid data configuration as argument.
-  MeshConfiguration(
-      xml::XMLTag &        parent,
-      PtrDataConfiguration config);
+  MeshConfiguration(xml::XMLTag &parent, PtrDataConfiguration config);
 
   void setDimensions(int dimensions);
 
@@ -45,9 +43,7 @@ public:
 
   virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
-  virtual void xmlEndTagCallback(
-      const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
 
   const PtrDataConfiguration &getDataConfiguration() const;
 
@@ -58,9 +54,7 @@ public:
     return _neededMeshes;
   }
 
-  void addNeededMesh(
-      const std::string &participant,
-      const std::string &mesh);
+  void addNeededMesh(const std::string &participant, const std::string &mesh);
 
   std::unique_ptr<utils::ManageUniqueIDs> extractMeshIdManager()
   {

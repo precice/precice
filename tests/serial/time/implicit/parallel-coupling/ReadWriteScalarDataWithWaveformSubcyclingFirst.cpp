@@ -30,12 +30,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
 
   typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t) -> double {
-    return (double) (2 + t);
-  };
-  DataFunction dataTwoFunction = [](double t) -> double {
-    return (double) (10 + t);
-  };
+  DataFunction dataOneFunction = [](double t) -> double { return (double) (2 + t); };
+  DataFunction dataTwoFunction = [](double t) -> double { return (double) (10 + t); };
   DataFunction writeFunction;
   DataFunction readFunction;
 
@@ -66,7 +62,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
   int    timestep  = 0;
   int    timestepCheckpoint;
   double dt = windowDt / nSubsteps;       // Timestep length desired by solver. E.g. 4 steps  with size 1/4
-  dt += windowDt / nSubsteps / nSubsteps; // increase timestep such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
+  dt += windowDt / nSubsteps / nSubsteps; // increase timestep such that we get a non-matching subcycling. E.g. 3 step
+                                          // with size 5/16 and 1 step with size 1/16.
   double currentDt = dt;                  // Timestep length used by solver
   double time      = timestep * dt;
   double timeCheckpoint;
@@ -94,7 +91,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, currentDt, readData);
     }
-    if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
+    if (iterations ==
+        0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations we have two samples of data. Therefore linear interpolation
       BOOST_TEST(readData == readFunction(readTime));
@@ -102,7 +100,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingFirst)
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, currentDt / 2, readData);
     }
-    if (iterations == 0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
+    if (iterations ==
+        0) { // in the first iteration of each window, we only have one sample of data. Therefore constant interpolation
       BOOST_TEST(readData == readFunction(timeCheckpoint));
     } else { // in the following iterations we have two samples of data. Therefore linear interpolation
       BOOST_TEST(readData == readFunction(readTime - currentDt / 2));

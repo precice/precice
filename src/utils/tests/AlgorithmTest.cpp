@@ -83,15 +83,11 @@ BOOST_AUTO_TEST_CASE(Mismatch)
   std::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9};
   std::vector<int> b{1, 2, 3, 4, 5, 0, 9};
 
-  auto aa = pu::mismatch(
-      a.begin(), a.end(),
-      a.begin(), a.end());
+  auto aa = pu::mismatch(a.begin(), a.end(), a.begin(), a.end());
   BOOST_TEST((aa.first == aa.second));
   BOOST_TEST((aa.first == a.end()));
 
-  auto ab = pu::mismatch(
-      a.begin(), a.end(),
-      b.begin(), b.end());
+  auto ab = pu::mismatch(a.begin(), a.end(), b.begin(), b.end());
   BOOST_TEST((ab.first != a.end()));
   BOOST_TEST(*ab.first == 6);
   BOOST_TEST(*ab.second == 0);

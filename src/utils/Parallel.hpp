@@ -141,9 +141,7 @@ public:
    *
    * @see finalizeManagedMPI
    */
-  static void initializeManagedMPI(
-      int *   argc,
-      char ***argv);
+  static void initializeManagedMPI(int *argc, char ***argv);
 
   /**
    * @brief Unconditionally initializes the MPI environment.
@@ -151,9 +149,7 @@ public:
    * @param[in] argc Parameter count
    * @param[in] argv Parameter values, is passed to MPI_Init
    */
-  static void initializeMPI(
-      int *   argc,
-      char ***argv);
+  static void initializeMPI(int *argc, char ***argv);
 
   /**
    * @brief Finalized a managed MPI environment.
@@ -202,7 +198,7 @@ public:
    * Unrequired Communicators will be automatically freed.
    *
    * @postcondition cureent() == CommState::world()
-   * 
+   *
    */
   static void resetCommState();
 
@@ -273,7 +269,7 @@ public:
    * @attention Will result in an error, if called by a process not in the new
    *            default communicator!
    */
-  //static void setGlobalCommunicator(Communicator defaultCommunicator, bool free = true);
+  // static void setGlobalCommunicator(Communicator defaultCommunicator, bool free = true);
 
   /// @}
 
@@ -283,7 +279,7 @@ public:
   /** Returns an owning pointer to the global CommState, being the parent of the current CommState
    *
    * @note Calling this on World returns World.
-   * 
+   *
    * @see getLocalCommunicator()
    */
   static const CommStatePtr getGlobalCommState();

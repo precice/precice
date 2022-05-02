@@ -8,12 +8,11 @@
 namespace precice {
 namespace time {
 
-Waveform::Waveform(
-    const int interpolationOrder)
-    : _interpolationOrder(interpolationOrder)
+Waveform::Waveform(const int interpolationOrder) : _interpolationOrder(interpolationOrder)
 {
   PRECICE_ASSERT(not _storageIsInitialized);
-  PRECICE_ASSERT(Time::MIN_INTERPOLATION_ORDER <= _interpolationOrder && _interpolationOrder <= Time::MAX_INTERPOLATION_ORDER);
+  PRECICE_ASSERT(Time::MIN_INTERPOLATION_ORDER <= _interpolationOrder &&
+                 _interpolationOrder <= Time::MAX_INTERPOLATION_ORDER);
 }
 
 int Waveform::getInterpolationOrder() const
@@ -21,8 +20,7 @@ int Waveform::getInterpolationOrder() const
   return _interpolationOrder;
 }
 
-void Waveform::initialize(
-    const Eigen::VectorXd &values)
+void Waveform::initialize(const Eigen::VectorXd &values)
 {
   int storageSize;
   PRECICE_ASSERT(_interpolationOrder >= Time::MIN_INTERPOLATION_ORDER);
@@ -85,7 +83,8 @@ void Waveform::moveToNextWindow()
   PRECICE_ASSERT(_storageIsInitialized);
   auto initialGuess = _timeWindowsStorage.col(0);                // use value from last window as initial guess for next
   utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
-  if (_numberOfStoredSamples < maxNumberOfStoredSamples()) {     // together with the initial guess the number of stored samples increases
+  if (_numberOfStoredSamples <
+      maxNumberOfStoredSamples()) { // together with the initial guess the number of stored samples increases
     _numberOfStoredSamples++;
   }
 }

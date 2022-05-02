@@ -7,35 +7,22 @@
 #include <string>
 #include <vector>
 
-Column::Column(std::string const &name)
-    : name(name),
-      width(name.size())
-{
-}
+Column::Column(std::string const &name) : name(name), width(name.size()) {}
 
-Column::Column(std::string const &name, int width)
-    : name(name),
-      width(std::max(width, static_cast<int>(name.size())))
+Column::Column(std::string const &name, int width) : name(name), width(std::max(width, static_cast<int>(name.size())))
 {
   precision = std::min(this->precision, this->width - 1);
 }
 
 Column::Column(std::string const &name, int width, int precision)
-    : name(name),
-      width(std::max(width, static_cast<int>(name.size())))
+    : name(name), width(std::max(width, static_cast<int>(name.size())))
 {
   this->precision = std::min(precision, this->width - 1);
 }
 
-Table::Table()
-    : out(std::cout)
-{
-}
+Table::Table() : out(std::cout) {}
 
-Table::Table(std::ostream &out)
-    : out(out)
-{
-}
+Table::Table(std::ostream &out) : out(out) {}
 
 void Table::printHeader()
 {

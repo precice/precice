@@ -72,11 +72,14 @@ void DataContext::appendMapping(MappingContext mappingContext, mesh::PtrData fro
   // Make sure we don't append a mapping twice
 #ifndef NDEBUG
   for (unsigned int i = 0; i < _mappingContexts.size(); ++i) {
-    PRECICE_ASSERT(!((_mappingContexts[i].mapping == mappingContext.mapping) && (_fromData[i] == fromData) && (_toData[i] == toData)), "The appended mapping already exists.");
+    PRECICE_ASSERT(!((_mappingContexts[i].mapping == mappingContext.mapping) && (_fromData[i] == fromData) &&
+                     (_toData[i] == toData)),
+                   "The appended mapping already exists.");
   }
 #endif
   _mappingContexts.emplace_back(mappingContext);
-  PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal _providedData.");
+  PRECICE_ASSERT(fromData == _providedData || toData == _providedData,
+                 "Either fromData or toData has to equal _providedData.");
   PRECICE_ASSERT(fromData->getName() == getDataName());
   _fromData.emplace_back(fromData);
   PRECICE_ASSERT(toData->getName() == getDataName());
@@ -95,12 +98,16 @@ bool DataContext::isMappingRequired()
     return false;
   }
 
-  PRECICE_ASSERT(std::all_of(_mappingContexts.begin(), _mappingContexts.end(), [this](const auto &context) { return context.timing == _mappingContexts[0].timing; }), "Different mapping timings for the same data context are not supported");
+  PRECICE_ASSERT(std::all_of(_mappingContexts.begin(), _mappingContexts.end(),
+                             [this](const auto &context) { return context.timing == _mappingContexts[0].timing; }),
+                 "Different mapping timings for the same data context are not supported");
 
   return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [](const auto &context) {
     const auto timing = context.timing;
-    const bool mapNow = (timing == mapping::MappingConfiguration::ON_ADVANCE) || (timing == mapping::MappingConfiguration::INITIAL);
-    return (mapNow && !context.hasMappedData); });
+    const bool mapNow =
+        (timing == mapping::MappingConfiguration::ON_ADVANCE) || (timing == mapping::MappingConfiguration::INITIAL);
+    return (mapNow && !context.hasMappedData);
+  });
 }
 
 void DataContext::mapData()

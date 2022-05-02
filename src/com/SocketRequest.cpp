@@ -2,10 +2,7 @@
 
 namespace precice {
 namespace com {
-SocketRequest::SocketRequest()
-    : _complete(false)
-{
-}
+SocketRequest::SocketRequest() : _complete(false) {}
 
 void SocketRequest::complete()
 {

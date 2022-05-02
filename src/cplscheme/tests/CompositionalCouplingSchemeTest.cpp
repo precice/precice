@@ -53,7 +53,8 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
     meshConfig->setDimensions(dimensions);
     m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
-    precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+    precice::config::PtrParticipantConfiguration participantConfig(
+        new precice::config::ParticipantConfiguration(root, meshConfig));
     participantConfig->setDimensions(dimensions);
     CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
@@ -78,14 +79,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       connect(nameParticipant1, nameParticipant2, context.name, m2n1);
     }
 
-    runThreeSolverCoupling(cplSchemeConfig.getCouplingScheme(context.name),
-                           context.name, meshConfig);
+    runThreeSolverCoupling(cplSchemeConfig.getCouplingScheme(context.name), context.name, meshConfig);
   }
 
-  void runThreeSolverCoupling(
-      PtrCouplingScheme          cplScheme,
-      const std::string &        participantName,
-      mesh::PtrMeshConfiguration meshConfig)
+  void runThreeSolverCoupling(PtrCouplingScheme cplScheme, const std::string &participantName,
+                              mesh::PtrMeshConfiguration meshConfig)
   {
     BOOST_TEST(meshConfig->meshes().size() == 1);
     mesh::PtrMesh mesh = meshConfig->meshes().at(0);
@@ -187,10 +185,8 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     }
   }
 
-  void connect(const std::string &participant0,
-               const std::string &participant1,
-               const std::string &localParticipant,
-               m2n::PtrM2N        communication) const
+  void connect(const std::string &participant0, const std::string &participant1, const std::string &localParticipant,
+               m2n::PtrM2N communication) const
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
@@ -258,12 +254,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  int               numberIterations = 1;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  PtrCouplingScheme scheme2(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  int                         numberIterations = 1;
+  int                         maxTimesteps     = 10;
+  PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -286,14 +280,11 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  int               numberIterations = 1;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  PtrCouplingScheme scheme2(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  PtrCouplingScheme scheme3(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  int                         numberIterations = 1;
+  int                         maxTimesteps     = 10;
+  PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  PtrCouplingScheme           scheme3(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -318,12 +309,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2)
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  int               numberIterations = 2;
-  int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
-  PtrCouplingScheme scheme2(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  int                         numberIterations = 2;
+  int                         maxTimesteps     = 10;
+  PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
@@ -546,11 +535,9 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 
   int               numberIterations = 1;
   int               maxTimesteps     = 10;
-  PtrCouplingScheme scheme1(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
   numberIterations = 3;
-  PtrCouplingScheme scheme2(
-      new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimesteps));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);

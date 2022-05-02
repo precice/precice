@@ -20,10 +20,7 @@ Eigen::VectorXd reduceVector(const Eigen::VectorXd &fullVector, const std::vecto
 
 void append(Eigen::VectorXd &v, double value);
 
-template <typename Derived1>
-void append(
-    Eigen::MatrixXd &                       A,
-    const Eigen::PlainObjectBase<Derived1> &B)
+template <typename Derived1> void append(Eigen::MatrixXd &A, const Eigen::PlainObjectBase<Derived1> &B)
 {
   int n = A.rows(), m = A.cols();
   if (n <= 0 && m <= 0) {
@@ -36,10 +33,7 @@ void append(
   }
 }
 
-template <typename Derived1>
-void append(
-    Eigen::VectorXd &                       v,
-    const Eigen::PlainObjectBase<Derived1> &app)
+template <typename Derived1> void append(Eigen::VectorXd &v, const Eigen::PlainObjectBase<Derived1> &app)
 {
   int n = v.size();
   if (n <= 0) {
@@ -58,12 +52,14 @@ void append(
  * @returns the mapped const row vector
  */
 template <typename Derived>
-auto firstN(const Eigen::PlainObjectBase<Derived> &val, unsigned n) -> const Eigen::Map<const Eigen::Matrix<typename Derived::Scalar, 1, Eigen::Dynamic>>
+auto firstN(const Eigen::PlainObjectBase<Derived> &val, unsigned n)
+    -> const Eigen::Map<const Eigen::Matrix<typename Derived::Scalar, 1, Eigen::Dynamic>>
 {
   return {val.data(), std::min<Eigen::Index>(n, val.size())};
 }
 
-template <typename Derived, typename Iter = const typename Derived::Scalar *, typename Size = typename std::iterator_traits<Iter>::difference_type>
+template <typename Derived, typename Iter = const typename Derived::Scalar *,
+          typename Size = typename std::iterator_traits<Iter>::difference_type>
 const RangePreview<Iter> previewRange(Size n, const Eigen::PlainObjectBase<Derived> &eigen)
 {
   auto begin = eigen.data();

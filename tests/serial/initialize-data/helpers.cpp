@@ -32,7 +32,7 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     double maxDt  = cplInterface.initialize();
     int    dataID = cplInterface.getDataID("Data", meshTwoID);
     cplInterface.writeScalarData(dataID, 0, 2.0);
-    //tell preCICE that data has been written and call initializeData
+    // tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
     cplInterface.finalize();

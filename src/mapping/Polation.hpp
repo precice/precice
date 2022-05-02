@@ -17,8 +17,9 @@ struct WeightedElement {
 };
 
 /**
- * @brief Calculates the barycentric coordinates of a coordinate on the given vertex/edge/triangle and stores the corresponding weights
- * If all barycentric coordinates are positive, the operation is interpolation. If not, it is an extrapolation.
+ * @brief Calculates the barycentric coordinates of a coordinate on the given vertex/edge/triangle and stores the
+ * corresponding weights If all barycentric coordinates are positive, the operation is interpolation. If not, it is an
+ * extrapolation.
  */
 class Polation {
 public:

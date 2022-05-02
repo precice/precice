@@ -8,13 +8,9 @@ namespace precice {
 namespace acceleration {
 namespace impl {
 
-ResidualPreconditioner::ResidualPreconditioner(int maxNonConstTimeWindows)
-    : Preconditioner(maxNonConstTimeWindows)
-{
-}
+ResidualPreconditioner::ResidualPreconditioner(int maxNonConstTimeWindows) : Preconditioner(maxNonConstTimeWindows) {}
 
-void ResidualPreconditioner::_update_(bool                   timeWindowComplete,
-                                      const Eigen::VectorXd &oldValues,
+void ResidualPreconditioner::_update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues,
                                       const Eigen::VectorXd &res)
 {
   if (not timeWindowComplete) {

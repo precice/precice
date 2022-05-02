@@ -29,11 +29,7 @@ extern bool syncMode;
 
 namespace partition {
 
-ProvidedPartition::ProvidedPartition(
-    mesh::PtrMesh mesh)
-    : Partition(std::move(mesh))
-{
-}
+ProvidedPartition::ProvidedPartition(mesh::PtrMesh mesh) : Partition(std::move(mesh)) {}
 
 void ProvidedPartition::communicate()
 {
@@ -53,10 +49,11 @@ void ProvidedPartition::communicate()
   for (auto &m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
 
-      PRECICE_CHECK(not twoLevelInitAlreadyUsed, "Two-level initialization does not yet support multiple receivers of a provided mesh. "
-                                                 "Please either switch two-level initialization off in your m2n definition, or "
-                                                 "adapt your mesh setup such that each provided mesh is only received by maximum one "
-                                                 "participant.");
+      PRECICE_CHECK(not twoLevelInitAlreadyUsed,
+                    "Two-level initialization does not yet support multiple receivers of a provided mesh. "
+                    "Please either switch two-level initialization off in your m2n definition, or "
+                    "adapt your mesh setup such that each provided mesh is only received by maximum one "
+                    "participant.");
       twoLevelInitAlreadyUsed = true;
 
       Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);
@@ -80,7 +77,7 @@ void ProvidedPartition::communicate()
     } else {
 
       if (not hasMeshBeenGathered) {
-        //Gather mesh
+        // Gather mesh
         Event e("partition.gatherMesh." + _mesh->getName(), precice::syncMode);
         if (not utils::MasterSlave::isSecondary()) {
           globalMesh.addMesh(*_mesh); // Add local primary mesh to global mesh
@@ -92,7 +89,8 @@ void ProvidedPartition::communicate()
 
           for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
             com::CommunicateMesh(utils::MasterSlave::getCommunication()).receiveMesh(globalMesh, secondaryRank);
-            PRECICE_DEBUG("Received sub-mesh, from secondary rank: {}, global vertexCount: {}", secondaryRank, globalMesh.vertices().size());
+            PRECICE_DEBUG("Received sub-mesh, from secondary rank: {}, global vertexCount: {}", secondaryRank,
+                          globalMesh.vertices().size());
           }
         }
         if (utils::MasterSlave::isSecondary()) {
@@ -106,9 +104,10 @@ void ProvidedPartition::communicate()
       Event e("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
 
       if (not utils::MasterSlave::isSecondary()) {
-        PRECICE_CHECK(globalMesh.vertices().size() > 0,
-                      "The provided mesh \"{}\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().",
-                      globalMesh.getName());
+        PRECICE_CHECK(
+            globalMesh.vertices().size() > 0,
+            "The provided mesh \"{}\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().",
+            globalMesh.getName());
         com::CommunicateMesh(m2n->getPrimaryRankCommunication()).sendMesh(globalMesh, 0);
       }
     }
@@ -139,7 +138,8 @@ void ProvidedPartition::prepare()
     for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
       int numberOfSecondaryRankVertices = -1;
       utils::MasterSlave::getCommunication()->receive(numberOfSecondaryRankVertices, secondaryRank);
-      _mesh->getVertexOffsets()[secondaryRank] = numberOfSecondaryRankVertices + _mesh->getVertexOffsets()[secondaryRank - 1];
+      _mesh->getVertexOffsets()[secondaryRank] =
+          numberOfSecondaryRankVertices + _mesh->getVertexOffsets()[secondaryRank - 1];
       utils::MasterSlave::getCommunication()->send(globalNumberOfVertices, secondaryRank);
       globalNumberOfVertices += numberOfSecondaryRankVertices;
     }
@@ -154,7 +154,8 @@ void ProvidedPartition::prepare()
     utils::MasterSlave::getCommunication()->broadcast(_mesh->getVertexOffsets());
 
     // fill vertex distribution
-    if (std::any_of(_m2ns.begin(), _m2ns.end(), [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); })) {
+    if (std::any_of(_m2ns.begin(), _m2ns.end(),
+                    [](const m2n::PtrM2N &m2n) { return not m2n->usesTwoLevelInitialization(); })) {
       if (utils::MasterSlave::isPrimary()) {
         PRECICE_DEBUG("Fill vertex distribution");
         auto &localIds = _mesh->getVertexDistribution()[0];
@@ -164,11 +165,13 @@ void ProvidedPartition::prepare()
         for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
           // This always creates an entry for each secondary rank
           auto &secondaryIds = _mesh->getVertexDistribution()[secondaryRank];
-          for (int i = _mesh->getVertexOffsets()[secondaryRank - 1]; i < _mesh->getVertexOffsets()[secondaryRank]; i++) {
+          for (int i = _mesh->getVertexOffsets()[secondaryRank - 1]; i < _mesh->getVertexOffsets()[secondaryRank];
+               i++) {
             secondaryIds.push_back(i);
           }
         }
-        PRECICE_ASSERT(_mesh->getVertexDistribution().size() == static_cast<decltype(_mesh->getVertexDistribution().size())>(utils::MasterSlave::getSize()));
+        PRECICE_ASSERT(_mesh->getVertexDistribution().size() ==
+                       static_cast<decltype(_mesh->getVertexDistribution().size())>(utils::MasterSlave::getSize()));
       }
     }
   } else if (utils::MasterSlave::isSecondary()) {
@@ -239,8 +242,9 @@ void ProvidedPartition::compareBoundingBoxes()
     return;
 
   // each secondary rank sends its bb to the primary rank
-  if (utils::MasterSlave::isSecondary()) { //secondary
-    PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
+  if (utils::MasterSlave::isSecondary()) { // secondary
+    PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(),
+                   "The boundingbox of the local mesh is invalid!");
     com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).sendBoundingBox(_mesh->getBoundingBox(), 0);
   } else { // Master
 
@@ -257,7 +261,8 @@ void ProvidedPartition::compareBoundingBoxes()
     for (Rank secondaryRank : utils::MasterSlave::allSecondaryRanks()) {
       // initialize bbm
       bbm.emplace(secondaryRank, bb);
-      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).receiveBoundingBox(bbm.at(secondaryRank), secondaryRank);
+      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication())
+          .receiveBoundingBox(bbm.at(secondaryRank), secondaryRank);
     }
 
     // primary rank sends number of ranks and bbm to the other primary rank
@@ -288,7 +293,8 @@ void ProvidedPartition::compareBoundingBoxes()
     // broadcast the received feedbackMap
     utils::MasterSlave::getCommunication()->broadcast(connectedRanksList);
     if (remoteConnectionMapSize != 0) {
-      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastSendConnectionMap(remoteConnectionMap);
+      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication())
+          .broadcastSendConnectionMap(remoteConnectionMap);
     }
 
     // primary rank checks which ranks are connected to it
@@ -309,7 +315,8 @@ void ProvidedPartition::compareBoundingBoxes()
       for (Rank rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
       }
-      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication()).broadcastReceiveConnectionMap(remoteConnectionMap);
+      com::CommunicateBoundingBox(utils::MasterSlave::getCommunication())
+          .broadcastReceiveConnectionMap(remoteConnectionMap);
     }
 
     _mesh->getConnectedRanks().clear();

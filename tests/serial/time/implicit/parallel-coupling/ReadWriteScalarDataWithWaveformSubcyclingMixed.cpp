@@ -16,7 +16,9 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
 /**
  * @brief Test to run a simple coupling with zeroth order waveform subcycling.
  *
- * Provides a dt argument to the read function, uses zeroth order waveform for SolverOne and a first oder waveform for SolverTwo. See ReadWriteScalarDataWithWaveformSubcyclingZero and ReadWriteScalarDataWithWaveformSubcyclingFirst for details on the non-mixed cases and expected behavior.
+ * Provides a dt argument to the read function, uses zeroth order waveform for SolverOne and a first oder waveform for
+ * SolverTwo. See ReadWriteScalarDataWithWaveformSubcyclingZero and ReadWriteScalarDataWithWaveformSubcyclingFirst for
+ * details on the non-mixed cases and expected behavior.
  */
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 {
@@ -30,12 +32,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 
   typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t) -> double {
-    return (double) (2 + t);
-  };
-  DataFunction dataTwoFunction = [](double t) -> double {
-    return (double) (10 + t);
-  };
+  DataFunction dataOneFunction = [](double t) -> double { return (double) (2 + t); };
+  DataFunction dataTwoFunction = [](double t) -> double { return (double) (10 + t); };
   DataFunction writeFunction;
   DataFunction readFunction;
 
@@ -64,7 +62,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
   int    timestep  = 0;
   int    timestepCheckpoint;
   double dt = windowDt / nSubsteps;       // Timestep length desired by solver. E.g. 4 steps  with size 1/4
-  dt += windowDt / nSubsteps / nSubsteps; // increase timestep such that we get a non-matching subcycling. E.g. 3 step with size 5/16 and 1 step with size 1/16.
+  dt += windowDt / nSubsteps / nSubsteps; // increase timestep such that we get a non-matching subcycling. E.g. 3 step
+                                          // with size 5/16 and 1 step with size 1/16.
   double currentDt = dt;                  // Timestep length used by solver
   double time      = timestep * dt;
   double timeCheckpoint;
@@ -97,7 +96,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingMixed)
 
     bool atWindowBoundary = timestep % nSubsteps == 0;
 
-    if (atWindowBoundary || context.isNamed("SolverTwo")) { // read data is only available at end of window for zeroth order, see also https://github.com/precice/precice/issues/1223
+    if (atWindowBoundary ||
+        context.isNamed("SolverTwo")) { // read data is only available at end of window for zeroth order, see also
+                                        // https://github.com/precice/precice/issues/1223
       BOOST_TEST(precice.isReadDataAvailable());
     } else {
       BOOST_TEST(!precice.isReadDataAvailable());

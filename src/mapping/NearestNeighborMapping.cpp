@@ -14,9 +14,7 @@ extern bool syncMode;
 
 namespace mapping {
 
-NearestNeighborMapping::NearestNeighborMapping(
-    Constraint constraint,
-    int        dimensions)
+NearestNeighborMapping::NearestNeighborMapping(Constraint constraint, int dimensions)
     : NearestNeighborBaseMapping(constraint, dimensions, false, "NearestNeighborMapping", "nn")
 {
   if (hasConstraint(SCALEDCONSISTENT)) {
@@ -28,22 +26,22 @@ NearestNeighborMapping::NearestNeighborMapping(
   }
 }
 
-void NearestNeighborMapping::map(
-    int inputDataID,
-    int outputDataID)
+void NearestNeighborMapping::map(int inputDataID, int outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  const int             valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
+  precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(),
+                          precice::syncMode);
+  const int             valueDimensions =
+      input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
 
   const Eigen::VectorXd &inputValues  = input()->data(inputDataID)->values();
   Eigen::VectorXd &      outputValues = output()->data(outputDataID)->values();
 
-  PRECICE_ASSERT(inputValues.size() / valueDimensions == (int) input()->vertices().size(),
-                 inputValues.size(), valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(),
-                 outputValues.size(), valueDimensions, output()->vertices().size());
+  PRECICE_ASSERT(inputValues.size() / valueDimensions == (int) input()->vertices().size(), inputValues.size(),
+                 valueDimensions, input()->vertices().size());
+  PRECICE_ASSERT(outputValues.size() / valueDimensions == (int) output()->vertices().size(), outputValues.size(),
+                 valueDimensions, output()->vertices().size());
 
   if (hasConstraint(CONSERVATIVE)) {
     PRECICE_DEBUG("Map conservative");

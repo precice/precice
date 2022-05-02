@@ -32,7 +32,7 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-//std::string pathToTests = testing::getPathToSources() + "/tests/serial/mapping-nearest-neighbor-gradient/";
+// std::string pathToTests = testing::getPathToSources() + "/tests/serial/mapping-nearest-neighbor-gradient/";
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_SUITE(SerialGradientMappingTests)
 BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
 {
 
-  //precice.isActionRequired(precice::constants::actionWriteInitialData()
+  // precice.isActionRequired(precice::constants::actionWriteInitialData()
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   using Eigen::Vector2d;
   using Eigen::Vector3d;
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
     cplInterface.writeScalarData(dataBID, 0, valueDataB);
     cplInterface.writeScalarGradientData(dataBID, 0, valueGradDataB.data());
 
-    //tell preCICE that data has been written and call initializeData
+    // tell preCICE that data has been written and call initializeData
     cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
 

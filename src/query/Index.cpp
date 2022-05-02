@@ -54,8 +54,8 @@ VertexTraits::Ptr Index::IndexImpl::getVertexRTree(const mesh::Mesh &mesh)
   // tree->insert repeatedly is about 10x faster.
   impl::RTreeParameters     params;
   VertexTraits::IndexGetter ind(mesh.vertices());
-  auto                      tree = std::make_shared<VertexTraits::RTree>(
-      boost::irange<std::size_t>(0lu, mesh.vertices().size()), params, ind);
+  auto                      tree =
+      std::make_shared<VertexTraits::RTree>(boost::irange<std::size_t>(0lu, mesh.vertices().size()), params, ind);
 
   indices.vertexRTree = std::move(tree);
   return indices.vertexRTree;
@@ -75,8 +75,7 @@ EdgeTraits::Ptr Index::IndexImpl::getEdgeRTree(const mesh::Mesh &mesh)
   impl::RTreeParameters   params;
   EdgeTraits::IndexGetter ind(mesh.edges());
 
-  auto tree = std::make_shared<EdgeTraits::RTree>(
-      boost::irange<std::size_t>(0lu, mesh.edges().size()), params, ind);
+  auto tree = std::make_shared<EdgeTraits::RTree>(boost::irange<std::size_t>(0lu, mesh.edges().size()), params, ind);
 
   indices.edgeRTree = std::move(tree);
   return indices.edgeRTree;
@@ -121,14 +120,12 @@ void Index::IndexImpl::clear()
 // query::Index
 //
 
-Index::Index(mesh::PtrMesh mesh)
-    : _mesh(mesh.get())
+Index::Index(mesh::PtrMesh mesh) : _mesh(mesh.get())
 {
   _pimpl = std::make_unique<IndexImpl>(IndexImpl{});
 }
 
-Index::Index(mesh::Mesh &mesh)
-    : _mesh(&mesh)
+Index::Index(mesh::Mesh &mesh) : _mesh(&mesh)
 {
   _pimpl = std::make_unique<IndexImpl>(IndexImpl{});
 }
@@ -187,7 +184,9 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVert
 
   const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
-  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
+  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) {
+                 return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius;
+               }),
                std::back_inserter(matches));
   return matches;
 }

@@ -8,15 +8,12 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-Extrapolation::Extrapolation(
-    const int extrapolationOrder)
-    : _extrapolationOrder(extrapolationOrder)
+Extrapolation::Extrapolation(const int extrapolationOrder) : _extrapolationOrder(extrapolationOrder)
 {
   PRECICE_ASSERT(not _storageIsInitialized);
 }
 
-void Extrapolation::initialize(
-    const int valuesSize)
+void Extrapolation::initialize(const int valuesSize)
 {
   int sampleStorageSize  = std::max({_extrapolationOrder + 1});
   _timeWindowsStorage    = Eigen::MatrixXd::Zero(valuesSize, sampleStorageSize);
@@ -38,7 +35,8 @@ void Extrapolation::moveToNextWindow()
   PRECICE_ASSERT(_storageIsInitialized);
   auto initialGuess = extrapolate();
   utils::shiftSetFirst(this->_timeWindowsStorage, initialGuess); // archive old samples and store initial guess
-  if (_numberOfStoredSamples < sizeOfSampleStorage()) {          // together with the initial guess the number of stored samples increases
+  if (_numberOfStoredSamples <
+      sizeOfSampleStorage()) { // together with the initial guess the number of stored samples increases
     _numberOfStoredSamples++;
   }
 }
@@ -63,7 +61,7 @@ int Extrapolation::valuesSize()
 
 /**
  * @brief Computes which order may be used for extrapolation.
- * 
+ *
  * Order of extrapolation is determined by number of stored samples and maximum order defined by the user.
  * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
  *
@@ -106,7 +104,7 @@ Eigen::VectorXd Extrapolation::extrapolate()
     return _timeWindowsStorage.col(0);
   }
   Eigen::VectorXd extrapolatedValue;
-  if (usedOrder == 1) { //timesteps is increased before extrapolate is called
+  if (usedOrder == 1) { // timesteps is increased before extrapolate is called
     PRECICE_DEBUG("Performing first order extrapolation");
     PRECICE_ASSERT(_numberOfStoredSamples > 1);
     extrapolatedValue = _timeWindowsStorage.col(0) * 2.0; // = 2*x^t

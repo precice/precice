@@ -15,12 +15,9 @@ namespace geometry {
 
 logging::Logger _log("math::geometry");
 
-bool segmentsIntersect(
-    const Eigen::Ref<const Eigen::Vector2d> &a,
-    const Eigen::Ref<const Eigen::Vector2d> &b,
-    const Eigen::Ref<const Eigen::Vector2d> &c,
-    const Eigen::Ref<const Eigen::Vector2d> &d,
-    bool                                     countTouchingAsIntersection)
+bool segmentsIntersect(const Eigen::Ref<const Eigen::Vector2d> &a, const Eigen::Ref<const Eigen::Vector2d> &b,
+                       const Eigen::Ref<const Eigen::Vector2d> &c, const Eigen::Ref<const Eigen::Vector2d> &d,
+                       bool countTouchingAsIntersection)
 {
   PRECICE_ASSERT(a.size() == 2, a.size());
   PRECICE_ASSERT(b.size() == 2, b.size());
@@ -62,36 +59,26 @@ bool segmentsIntersect(
   // it should not be counted (-> false).
   using utils::xOR;
 
-  if (xOR(std::abs(abc) <= math::NUMERICAL_ZERO_DIFFERENCE,
-          std::abs(abd) <= math::NUMERICAL_ZERO_DIFFERENCE)) {
+  if (xOR(std::abs(abc) <= math::NUMERICAL_ZERO_DIFFERENCE, std::abs(abd) <= math::NUMERICAL_ZERO_DIFFERENCE)) {
     return false;
   }
-  if (xOR(std::abs(cda) <= math::NUMERICAL_ZERO_DIFFERENCE,
-          std::abs(cdb) <= math::NUMERICAL_ZERO_DIFFERENCE)) {
+  if (xOR(std::abs(cda) <= math::NUMERICAL_ZERO_DIFFERENCE, std::abs(cdb) <= math::NUMERICAL_ZERO_DIFFERENCE)) {
     return false;
   }
 
   // Check, whether the segments are intersecting in the real sense.
-  bool isFirstSegmentBetween  = xOR(abc > -math::NUMERICAL_ZERO_DIFFERENCE,
-                                   abd > -math::NUMERICAL_ZERO_DIFFERENCE);
-  bool isSecondSegmentBetween = xOR(cda > -math::NUMERICAL_ZERO_DIFFERENCE,
-                                    cdb > -math::NUMERICAL_ZERO_DIFFERENCE);
+  bool isFirstSegmentBetween  = xOR(abc > -math::NUMERICAL_ZERO_DIFFERENCE, abd > -math::NUMERICAL_ZERO_DIFFERENCE);
+  bool isSecondSegmentBetween = xOR(cda > -math::NUMERICAL_ZERO_DIFFERENCE, cdb > -math::NUMERICAL_ZERO_DIFFERENCE);
 
   return isFirstSegmentBetween && isSecondSegmentBetween;
 }
 
-bool lineIntersection(
-    const Eigen::Ref<const Eigen::Vector2d> &a,
-    const Eigen::Ref<const Eigen::Vector2d> &b,
-    const Eigen::Ref<const Eigen::Vector2d> &c,
-    const Eigen::Ref<const Eigen::Vector2d> &d,
-    Eigen::Ref<Eigen::Vector2d> &            intersectionPoint)
+bool lineIntersection(const Eigen::Ref<const Eigen::Vector2d> &a, const Eigen::Ref<const Eigen::Vector2d> &b,
+                      const Eigen::Ref<const Eigen::Vector2d> &c, const Eigen::Ref<const Eigen::Vector2d> &d,
+                      Eigen::Ref<Eigen::Vector2d> &intersectionPoint)
 {
   // Compute denominator for solving 2x2 equation system
-  double D = a(0) * (d(1) - c(1)) +
-             b(0) * (c(1) - d(1)) +
-             d(0) * (b(1) - a(1)) -
-             c(0) * (a(1) - b(1));
+  double D = a(0) * (d(1) - c(1)) + b(0) * (c(1) - d(1)) + d(0) * (b(1) - a(1)) - c(0) * (a(1) - b(1));
 
   // If D==0, the two lines are parallel
   if (math::equals(D, 0.0)) {
@@ -106,12 +93,9 @@ bool lineIntersection(
   return true;
 }
 
-ResultConstants segmentPlaneIntersection(
-    const Eigen::Vector3d &pointOnPlane,
-    const Eigen::Vector3d &planeNormal,
-    const Eigen::Vector3d &firstPointSegment,
-    const Eigen::Vector3d &secondPointSegment,
-    Eigen::Vector3d &      intersectionPoint)
+ResultConstants segmentPlaneIntersection(const Eigen::Vector3d &pointOnPlane, const Eigen::Vector3d &planeNormal,
+                                         const Eigen::Vector3d &firstPointSegment,
+                                         const Eigen::Vector3d &secondPointSegment, Eigen::Vector3d &intersectionPoint)
 {
   // Methodology of "Computation Geometry in C", Joseph O'Rourke, Chapter 7.3.1
 
@@ -157,10 +141,7 @@ ResultConstants segmentPlaneIntersection(
   return INTERSECTION;
 }
 
-double triangleArea(
-    const Eigen::VectorXd &a,
-    const Eigen::VectorXd &b,
-    const Eigen::VectorXd &c)
+double triangleArea(const Eigen::VectorXd &a, const Eigen::VectorXd &b, const Eigen::VectorXd &c)
 {
   PRECICE_ASSERT(a.size() == b.size(), a.size(), b.size());
   PRECICE_ASSERT(b.size() == c.size(), b.size(), c.size());
@@ -180,18 +161,13 @@ double triangleArea(
   }
 }
 
-double tetraVolume(
-    const Eigen::Vector3d &a,
-    const Eigen::Vector3d &b,
-    const Eigen::Vector3d &c,
-    const Eigen::Vector3d &d)
+double tetraVolume(const Eigen::Vector3d &a, const Eigen::Vector3d &b, const Eigen::Vector3d &c,
+                   const Eigen::Vector3d &d)
 {
   return std::abs((a - d).dot((b - d).cross(c - d))) / 6.0;
 }
 
-Eigen::Vector2d projectVector(
-    const Eigen::Vector3d &vector,
-    int                    indexDimensionToRemove)
+Eigen::Vector2d projectVector(const Eigen::Vector3d &vector, int indexDimensionToRemove)
 {
   PRECICE_ASSERT(indexDimensionToRemove >= 0);
   PRECICE_ASSERT(indexDimensionToRemove < 3);
@@ -207,11 +183,8 @@ Eigen::Vector2d projectVector(
   return projectedVector;
 }
 
-int containedInTriangle(
-    const Eigen::Vector2d &triangleVertex0,
-    const Eigen::Vector2d &triangleVertex1,
-    const Eigen::Vector2d &triangleVertex2,
-    const Eigen::Vector2d &testPoint)
+int containedInTriangle(const Eigen::Vector2d &triangleVertex0, const Eigen::Vector2d &triangleVertex1,
+                        const Eigen::Vector2d &triangleVertex2, const Eigen::Vector2d &testPoint)
 {
   double area0 = triangleArea(triangleVertex0, triangleVertex1, testPoint);
   double area1 = triangleArea(triangleVertex1, triangleVertex2, testPoint);
@@ -254,8 +227,7 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
     All points need to be projected into a new plane with only 2 coordinates, x' and y'. These are used to check
     the convexity of the quad. These new coordinates are stored in 'coords'.
   */
-  PRECICE_ASSERT(std::all_of(coords.cbegin(), coords.cend(),
-                             [](const auto &v) { return v.size() == 3; }),
+  PRECICE_ASSERT(std::all_of(coords.cbegin(), coords.cend(), [](const auto &v) { return v.size() == 3; }),
                  "This only works in 3D.");
 
   Eigen::Vector3d coordOrigin; // Origin point for the transformation of points onto the new plane
@@ -269,7 +241,7 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
   PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0),
                 "Non-planar quads are not supported. The vertex coordinates are: {}.", coords);
 
-  //Transform Coordinates - coord[0] is the origin
+  // Transform Coordinates - coord[0] is the origin
   for (int i = 0; i < 4; i++) {
     Eigen::Vector3d coordinateDifference = coords[i] - coordOrigin;
     coords[i][0]                         = e_1.dot(coordinateDifference);
@@ -283,7 +255,8 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
   previous most right hand point. The algorithm must find 3 other points in order to be a valid quad.
   */
 
-  //First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift wrapping algorithm
+  // First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift
+  // wrapping algorithm
   int idLowestPoint = 0;
   for (int i = 1; i < 4; i++) {
     if (coords[i][0] < coords[idLowestPoint][0]) {
@@ -293,8 +266,8 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
 
   // Found starting point. Add this as the first vertex in the convex hull.
   // current is the origin point => hull[0]
-  int             validVertexIDCounter = 0;             // Counts number of times a valid vertex is found. Must be 4 for a valid quad.
-  int             currentVertex        = idLowestPoint; // current valid vertex
+  int validVertexIDCounter = 0; // Counts number of times a valid vertex is found. Must be 4 for a valid quad.
+  int currentVertex        = idLowestPoint; // current valid vertex
   ConvexityResult result{};
   do {
     // Add current point to result
@@ -320,7 +293,7 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
     validVertexIDCounter++;
   } while (currentVertex != idLowestPoint); // While we don't come to first point
 
-  //Ordering of quad is hull 0-1-2-3-0
+  // Ordering of quad is hull 0-1-2-3-0
   result.convex = (validVertexIDCounter == 4);
 
   return result;

@@ -11,10 +11,7 @@
 namespace precice {
 namespace com {
 
-void Communication::connectIntraComm(std::string const &participantName,
-                                     std::string const &tag,
-                                     int                rank,
-                                     int                size)
+void Communication::connectIntraComm(std::string const &participantName, std::string const &tag, int rank, int size)
 {
   if (size == 1)
     return;
@@ -57,7 +54,8 @@ void Communication::reduceSum(precice::span<double const> itemsToSend, precice::
   }
 }
 
-void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank)
+void Communication::reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive,
+                              Rank primaryRank)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
@@ -110,7 +108,8 @@ void Communication::allreduceSum(precice::span<double const> itemsToSend, precic
 /**
  * @attention This method modifies the input buffer.
  */
-void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank)
+void Communication::allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive,
+                                 Rank primaryRank)
 {
   PRECICE_TRACE(itemsToSend.size(), itemsToReceive.size());
   PRECICE_ASSERT(itemsToSend.size() == itemsToReceive.size());
@@ -239,8 +238,7 @@ void Communication::broadcast(precice::span<const double> itemsToSend)
   Request::wait(requests);
 }
 
-void Communication::broadcast(precice::span<double> itemsToReceive,
-                              int                   rankBroadcaster)
+void Communication::broadcast(precice::span<double> itemsToReceive, int rankBroadcaster)
 {
   PRECICE_TRACE(itemsToReceive.size());
   receive(itemsToReceive, rankBroadcaster + _rankOffset);

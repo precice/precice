@@ -19,12 +19,7 @@ namespace io {
 class TXTTableWriter {
 public:
   /// Constants defining possible data types to be written.
-  enum DataType {
-    INT,
-    DOUBLE,
-    VECTOR2D,
-    VECTOR3D
-  };
+  enum DataType { INT, DOUBLE, VECTOR2D, VECTOR3D };
 
   /// Constructor, opens file.
   explicit TXTTableWriter(const std::string &filename);
@@ -36,40 +31,30 @@ public:
    * The writeData() method has to be called in the order in which data entries
    * are added.
    */
-  void addData(
-      const std::string &name,
-      DataType           type);
+  void addData(const std::string &name, DataType type);
 
   /**
    * @brief Writes a integral scalar data value associated to the entry name.
    *
    * The write order is fixed by the order addData() is called.
    */
-  void writeData(
-      const std::string &name,
-      int                value);
+  void writeData(const std::string &name, int value);
 
   /**
    * @brief Writes a floating-point scalar data value associated to the entry name.
    *
    * The write order is fixed by the order addData() is called.
    */
-  void writeData(
-      const std::string &name,
-      double             value);
+  void writeData(const std::string &name, double value);
 
   /**
    * @brief Writes a vector data value associated to the entry name.
    *
    * The write order is fixed by the order addData() is called.
    */
-  void writeData(
-      const std::string &    name,
-      const Eigen::Vector2d &value);
+  void writeData(const std::string &name, const Eigen::Vector2d &value);
 
-  void writeData(
-      const std::string &    name,
-      const Eigen::Vector3d &value);
+  void writeData(const std::string &name, const Eigen::Vector3d &value);
 
   /// Closes the file, is automatically called on destruction.
   void close();

@@ -39,9 +39,7 @@ public:
    * @param[in] inputDataID Data ID of input data values to be mapped from.
    * @param[in] outputDataID Data ID of output data values to be mapped to.
    */
-  virtual void map(
-      int inputDataID,
-      int outputDataID) override;
+  virtual void map(int inputDataID, int outputDataID) override;
 
   virtual void tagMeshFirstRound() override;
   virtual void tagMeshSecondRound() override;

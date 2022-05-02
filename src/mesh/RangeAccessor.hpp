@@ -5,31 +5,24 @@
 namespace precice {
 namespace mesh {
 /** random-access iterator over an indexable Source.
- * 
+ *
  * @tparam Source the underlying container to index into
  * @tparam Value the resulting value
  *
  * @note This version currently only supports Sources with a const `src.vertex(index).getCoords()` access.
  */
 template <typename Source, typename Value>
-class IndexRangeIterator : public boost::iterator_facade<
-                               IndexRangeIterator<Source, const Value>,
-                               const Value,
-                               boost::random_access_traversal_tag> {
+class IndexRangeIterator : public boost::iterator_facade<IndexRangeIterator<Source, const Value>, const Value,
+                                                         boost::random_access_traversal_tag> {
 public:
   IndexRangeIterator() = default;
-  IndexRangeIterator(Source *src, size_t index)
-      : src_(src), idx_(index) {}
+  IndexRangeIterator(Source *src, size_t index) : src_(src), idx_(index) {}
 
   const Value &dereference() const
   {
     using Coord = decltype(src_->vertex(idx_).rawCoords());
-    static_assert(
-        std::is_reference<Coord>::value,
-        "Coordinate type must be a reference!");
-    static_assert(
-        std::is_convertible<Coord, Value>::value,
-        "Exposed and accessed types must match!");
+    static_assert(std::is_reference<Coord>::value, "Coordinate type must be a reference!");
+    static_assert(std::is_convertible<Coord, Value>::value, "Exposed and accessed types must match!");
     return static_cast<const Value &>(src_->vertex(idx_).rawCoords());
   }
 

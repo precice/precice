@@ -13,20 +13,13 @@
 namespace precice {
 namespace action {
 
-ComputeCurvatureAction::ComputeCurvatureAction(
-    Timing               timing,
-    int                  dataID,
-    const mesh::PtrMesh &mesh)
-    : Action(timing, mesh),
-      _data(mesh->data(dataID))
+ComputeCurvatureAction::ComputeCurvatureAction(Timing timing, int dataID, const mesh::PtrMesh &mesh)
+    : Action(timing, mesh), _data(mesh->data(dataID))
 {
 }
 
-void ComputeCurvatureAction::performAction(
-    double time,
-    double timeStepSize,
-    double computedTimeWindowPart,
-    double timeWindowSize)
+void ComputeCurvatureAction::performAction(double time, double timeStepSize, double computedTimeWindowPart,
+                                           double timeWindowSize)
 {
   PRECICE_TRACE();
   auto &dataValues = _data->values();

@@ -5,8 +5,7 @@
 namespace precice {
 
 /// Wraps a single element into a span
-template <typename T>
-auto refToSpan(T &element)
+template <typename T> auto refToSpan(T &element)
 {
   return precice::span<T>{&element, 1};
 }

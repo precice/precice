@@ -17,11 +17,12 @@ class Extrapolation {
   friend class testing::ExtrapolationFixture; // Make the fixture friend of this class
 public:
   /**
-   * @brief Extrapolation object which stores values of current and past time windows for performing extrapolation. 
+   * @brief Extrapolation object which stores values of current and past time windows for performing extrapolation.
    *
    * Storage still needs to be initialized with Extrapolation::initialize, before the Extrapolation can be used.
    *
-   * @param extrapolationOrder defines the maximum extrapolation order supported by this extrapolation and reserves storage correspondingly.
+   * @param extrapolationOrder defines the maximum extrapolation order supported by this extrapolation and reserves
+   * storage correspondingly.
    */
   Extrapolation(const int extrapolationOrder);
 
@@ -38,7 +39,8 @@ public:
   void store(const Eigen::VectorXd &values);
 
   /**
-   * @brief Called, when moving to the next time window. All entries in _timeWindowsStorage are shifted. The new entry is initialized as the value from the last window (= constant extrapolation)
+   * @brief Called, when moving to the next time window. All entries in _timeWindowsStorage are shifted. The new entry
+   * is initialized as the value from the last window (= constant extrapolation)
    */
   void moveToNextWindow();
 
@@ -73,10 +75,11 @@ private:
   int valuesSize();
 
   /**
-   * @brief Extrapolates values from _timeWindowsStorage using an extrapolation scheme of given order. 
-   * 
-   * If the order condition cannot be satisfied, since there are not enough samples available, the order is automatically reduced.
-   * If order two is required, but only two samples are available, the extrapolation order is automatically reduced to one.
+   * @brief Extrapolates values from _timeWindowsStorage using an extrapolation scheme of given order.
+   *
+   * If the order condition cannot be satisfied, since there are not enough samples available, the order is
+   * automatically reduced. If order two is required, but only two samples are available, the extrapolation order is
+   * automatically reduced to one.
    */
   Eigen::VectorXd extrapolate();
 };

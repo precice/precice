@@ -51,7 +51,8 @@ protected:
   mutable logging::Logger _log{"mapping::" + mappingName};
 
   /// Compute the vector offset between the matched vector and the source vector (needed for gradient mapping)
-  /// Optimization: save this as an std::vector<double> and use an Eigen::Map to create an interface that uses the correct dimensions.
+  /// Optimization: save this as an std::vector<double> and use an Eigen::Map to create an interface that uses the
+  /// correct dimensions.
   std::vector<Eigen::VectorXd> _offsetsMatched;
 
   /// Computed output vertex indices to map data from input vertices to.

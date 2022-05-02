@@ -6,10 +6,7 @@
 namespace precice {
 namespace utils {
 
-std::string wrapText(
-    const std::string &text,
-    int                linewidth,
-    int                indentation);
+std::string wrapText(const std::string &text, int linewidth, int indentation);
 
 /**
  * @brief Checks if filename has the given extension, if not appends it.
@@ -34,11 +31,12 @@ bool convertStringToBool(std::string const &value);
 std::string truncate_wstring_to_string(std::wstring wstr, char fill = '#');
 
 /// Turns stream-like code into a std::string.
-#define PRECICE_AS_STRING(message) [&] { \
-  std::ostringstream oss;                \
-  oss << message;                        \
-  return oss.str();                      \
-}()
+#define PRECICE_AS_STRING(message)                                                                                     \
+  [&] {                                                                                                                \
+    std::ostringstream oss;                                                                                            \
+    oss << message;                                                                                                    \
+    return oss.str();                                                                                                  \
+  }()
 
 } // namespace utils
 } // namespace precice

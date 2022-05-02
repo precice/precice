@@ -29,7 +29,8 @@ struct Ranks {
  */
 inline constexpr Ranks operator""_ranks(unsigned long long value)
 {
-  return (value <= 1) ? throw std::runtime_error{"Cannot create a single rank with _ranks()! Use _rank() instead!"} : Ranks{static_cast<int>(value)};
+  return (value <= 1) ? throw std::runtime_error{"Cannot create a single rank with _ranks()! Use _rank() instead!"}
+                      : Ranks{static_cast<int>(value)};
 }
 
 /** User-defined literal for expressively defining a single rank
@@ -40,7 +41,8 @@ inline constexpr Ranks operator""_ranks(unsigned long long value)
  */
 inline constexpr Ranks operator""_rank(unsigned long long value)
 {
-  return (value == 1) ? Ranks{1} : throw std::runtime_error{"Cannot create multiple ranks with _rank()! Use _ranks() instead!"};
+  return (value == 1) ? Ranks{1}
+                      : throw std::runtime_error{"Cannot create multiple ranks with _rank()! Use _ranks() instead!"};
 }
 
 /// Represents a Participant in a test
@@ -55,8 +57,7 @@ struct Participant {
   bool initIntraComm = false;
 
   /// Constructs a serial participant with a given name
-  explicit Participant(std::string n)
-      : name(std::move(n)){};
+  explicit Participant(std::string n) : name(std::move(n)){};
 
   /** Injects the amount of ranks this participant should run on.
    *
@@ -108,10 +109,7 @@ enum class Require {
  *
  * @see ConnectionOptions
  */
-enum struct ConnectionType {
-  GatherScatter,
-  PointToPoint
-};
+enum struct ConnectionType { GatherScatter, PointToPoint };
 
 /** Type representing options for an inter-participant connection.
  *
@@ -180,9 +178,7 @@ public:
    * @attention This call synchronizes all ranks
    *
    */
-  template <class... T>
-  TestContext(Ranks ranks)
-      : _simple(true)
+  template <class... T> TestContext(Ranks ranks) : _simple(true)
   {
     Participants participants{"Serial"_on(ranks)};
     initialize(participants);
@@ -197,9 +193,7 @@ public:
    *
    * @see Require
    */
-  template <class... T>
-  TestContext(Ranks ranks, T... args)
-      : _simple(true)
+  template <class... T> TestContext(Ranks ranks, T... args) : _simple(true)
   {
     Participants participants{"Serial"_on(ranks)};
     handleOptions(participants, args...);
@@ -212,8 +206,7 @@ public:
    *
    * @see Require
    */
-  template <class... T>
-  TestContext(T... args)
+  template <class... T> TestContext(T... args)
   {
     Participants participants;
     handleOptions(participants, args...);
@@ -268,7 +261,8 @@ public:
    *
    * @see ConnectionOptions
    */
-  m2n::PtrM2N connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
+  m2n::PtrM2N connectPrimaryRanks(const std::string &acceptor, const std::string &requestor,
+                                  const ConnectionOptions &options = ConnectionOptions{}) const;
 
   /// Provides a user- and log-friendly description of the current context
   std::string describe() const;
@@ -297,14 +291,13 @@ private:
   void handleOption(Participants &participants, Participant participant);
   void handleOption(Participants &participants, testing::Require requirement);
 
-  template <class LastOption>
-  void handleOptions(Participants &participants, LastOption &last)
+  template <class LastOption> void handleOptions(Participants &participants, LastOption &last)
   {
     handleOption(participants, last);
   }
 
   template <class NextOption, class... Rest>
-  void handleOptions(Participants &participants, NextOption &next, Rest &... rest)
+  void handleOptions(Participants &participants, NextOption &next, Rest &...rest)
   {
     handleOption(participants, next);
     handleOptions(participants, rest...);

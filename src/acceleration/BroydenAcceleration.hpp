@@ -30,32 +30,26 @@ public:
   /**
    * @brief Constructor.
    */
-  BroydenAcceleration(
-      double                  initialRelaxation,
-      bool                    forceInitialRelaxation,
-      int                     maxIterationsUsed,
-      int                     pastTimeWindowsReused,
-      int                     filter,
-      double                  singularityLimit,
-      std::vector<int>        dataIDs,
-      impl::PtrPreconditioner preconditioner);
+  BroydenAcceleration(double initialRelaxation, bool forceInitialRelaxation, int maxIterationsUsed,
+                      int pastTimeWindowsReused, int filter, double singularityLimit, std::vector<int> dataIDs,
+                      impl::PtrPreconditioner preconditioner);
 
   /**
-    * @brief Destructor, empty.
-    */
+   * @brief Destructor, empty.
+   */
   virtual ~BroydenAcceleration() {}
 
   /**
-    * @brief Initializes the acceleration.
-    */
+   * @brief Initializes the acceleration.
+   */
   virtual void initialize(const DataMap &cplData);
 
   /**
-    * @brief Marks a iteration sequence as converged.
-    *
-    * called by the iterationsConverged() method in the BaseQNAcceleration class
-    * handles the acceleration specific action after the convergence of one iteration
-    */
+   * @brief Marks a iteration sequence as converged.
+   *
+   * called by the iterationsConverged() method in the BaseQNAcceleration class
+   * handles the acceleration specific action after the convergence of one iteration
+   */
   virtual void specializedIterationsConverged(const DataMap &cplData);
 
 private:

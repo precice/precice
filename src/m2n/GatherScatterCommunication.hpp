@@ -19,9 +19,7 @@ namespace m2n {
  */
 class GatherScatterCommunication : public DistributedCommunication {
 public:
-  GatherScatterCommunication(
-      com::PtrCommunication com,
-      mesh::PtrMesh         mesh);
+  GatherScatterCommunication(com::PtrCommunication com, mesh::PtrMesh mesh);
 
   ~GatherScatterCommunication() override;
 
@@ -39,9 +37,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptConnection(
-      const std::string &acceptorName,
-      const std::string &requesterName) override;
+  void acceptConnection(const std::string &acceptorName, const std::string &requesterName) override;
 
   /**
    * @brief Requests connection from participant, which has to call acceptConnection().
@@ -52,24 +48,18 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] nameReuester Name of calling participant.
    */
-  void requestConnection(
-      const std::string &acceptorName,
-      const std::string &requesterName) override;
+  void requestConnection(const std::string &acceptorName, const std::string &requesterName) override;
   /**
    *  This method has not been implemented yet.
    *  @todo: Ideally this should not be here
    */
-  void acceptPreConnection(
-      std::string const &acceptorName,
-      std::string const &requesterName) override;
+  void acceptPreConnection(std::string const &acceptorName, std::string const &requesterName) override;
 
   /**
    *  This method has not been implemented yet.
    *  @todo: Ideally this should not be here
    */
-  void requestPreConnection(
-      std::string const &acceptorName,
-      std::string const &requesterName) override;
+  void requestPreConnection(std::string const &acceptorName, std::string const &requesterName) override;
 
   /// Completes the secondary connections for both acceptor and requester by updating the vertex list in _mappings
   void completeSecondaryRanksConnection() override;
@@ -102,10 +92,12 @@ public:
   /// Receive mesh partitions per connected rank on remote participant. Not available for GatherScatterCommunication.
   void broadcastReceiveAllMesh() override;
 
-  /// Scatters a communication map over connected ranks on remote participant. Not available for GatherScatterCommunication.
+  /// Scatters a communication map over connected ranks on remote participant. Not available for
+  /// GatherScatterCommunication.
   void scatterAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
 
-  /// Gathers a communication maps from connected ranks on remote participant. Not available for GatherScatterCommunication.
+  /// Gathers a communication maps from connected ranks on remote participant. Not available for
+  /// GatherScatterCommunication.
   void gatherAllCommunicationMap(CommunicationMap &localCommunicationMap) override;
 
 private:

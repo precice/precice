@@ -9,7 +9,7 @@
 void runTestDistributedCommunication(std::string const &config, TestContext const &context)
 {
   std::string meshName;
-  int         i1 = -1, i2 = -1; //indices for data and positions
+  int         i1 = -1, i2 = -1; // indices for data and positions
 
   std::vector<Eigen::VectorXd> positions;
   std::vector<Eigen::VectorXd> data;
@@ -66,7 +66,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
 
   precice.initialize();
 
-  if (context.isNamed("Fluid")) { //Fluid
+  if (context.isNamed("Fluid")) { // Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
     }
@@ -81,7 +81,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
 
   precice.advance(1.0);
 
-  if (context.isNamed("Fluid")) { //Fluid
+  if (context.isNamed("Fluid")) { // Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.readVectorData(velocID, vertexIDs[i], data[i + i1].data());
       for (size_t d = 0; d < 3; d++) {

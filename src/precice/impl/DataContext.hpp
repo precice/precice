@@ -73,7 +73,8 @@ public:
   void mapData();
 
   /**
-   * @brief Adds a MappingContext and the MeshContext required by the mapping to the correspnding DataContext data structures.
+   * @brief Adds a MappingContext and the MeshContext required by the mapping to the correspnding DataContext data
+   * structures.
    *
    * A mapping maps the given data from or to _providedData (depending on whether it is a read or write mapping).
    *
@@ -84,7 +85,8 @@ public:
 
 protected:
   /**
-   * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.
+   * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext
+   * should use this constructor.
    *
    * @param data Data associated with this DataContext.
    * @param mesh Mesh associated with this DataContext.

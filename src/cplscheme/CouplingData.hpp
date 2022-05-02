@@ -12,11 +12,8 @@ namespace cplscheme {
 
 class CouplingData {
 public:
-  CouplingData(
-      mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      bool          requiresInitialization,
-      int           extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+  CouplingData(mesh::PtrData data, mesh::PtrMesh mesh, bool requiresInitialization,
+               int extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
 
   int getDimensions() const;
 
@@ -74,9 +71,7 @@ private:
    *
    * Necessary when compiler creates template code for std::map::operator[].
    */
-  CouplingData()
-      : requiresInitialization(false),
-        _extrapolation(CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER)
+  CouplingData() : requiresInitialization(false), _extrapolation(CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER)
   {
     PRECICE_ASSERT(false);
   }

@@ -4,10 +4,7 @@
 
 namespace precice {
 namespace com {
-MPIRequest::MPIRequest(MPI_Request request)
-    : _request(request)
-{
-}
+MPIRequest::MPIRequest(MPI_Request request) : _request(request) {}
 
 bool MPIRequest::test()
 {

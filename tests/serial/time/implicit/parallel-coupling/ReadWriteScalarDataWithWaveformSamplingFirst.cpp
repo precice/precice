@@ -29,12 +29,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 
   typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t) -> double {
-    return (double) (2 + t);
-  };
-  DataFunction dataTwoFunction = [](double t) -> double {
-    return (double) (10 + t);
-  };
+  DataFunction dataOneFunction = [](double t) -> double { return (double) (2 + t); };
+  DataFunction dataTwoFunction = [](double t) -> double { return (double) (10 + t); };
   DataFunction writeFunction;
   DataFunction readFunction;
 
@@ -93,9 +89,11 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
       if (precice.isReadDataAvailable()) {
         precice.readScalarData(readDataID, vertexID, sampleDt, readData);
       }
-      if (iterations == 0) { // always use constant extrapolation in first iteration (from initializeData or writeData of second participant at end previous window).
+      if (iterations == 0) { // always use constant extrapolation in first iteration (from initializeData or writeData
+                             // of second participant at end previous window).
         BOOST_TEST(readData == readFunction(time));
-      } else if (iterations > 0) { // use linear interpolation in later iterations (additionally available writeData of second participant at end of this window).
+      } else if (iterations > 0) { // use linear interpolation in later iterations (additionally available writeData of
+                                   // second participant at end of this window).
         BOOST_TEST(readData == readFunction(readTime));
       } else {
         BOOST_TEST(false); // unreachable!
@@ -113,11 +111,14 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     currentDt = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt); // no subcycling.
     timestep++;
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
+    if (precice.isActionRequired(
+            precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
       iterations++;
       timestep = windowStartStep;
       time     = windowStartTime;
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we have to make the action
+      precice.markActionFulfilled(
+          precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we
+                                                                // have to make the action
     }
     if (precice.isTimeWindowComplete()) {
       timewindow++;

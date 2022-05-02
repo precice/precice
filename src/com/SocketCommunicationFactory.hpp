@@ -10,10 +10,9 @@ namespace precice {
 namespace com {
 class SocketCommunicationFactory : public CommunicationFactory {
 public:
-  SocketCommunicationFactory(unsigned short portNumber       = 0,
-                             bool           reuseAddress     = false,
-                             std::string    networkName      = utils::networking::loopbackInterfaceName(),
-                             std::string    addressDirectory = ".");
+  SocketCommunicationFactory(unsigned short portNumber = 0, bool reuseAddress = false,
+                             std::string networkName      = utils::networking::loopbackInterfaceName(),
+                             std::string addressDirectory = ".");
 
   explicit SocketCommunicationFactory(std::string const &addressDirectory);
 

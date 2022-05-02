@@ -30,13 +30,9 @@ public:
   void initialize(const bool needCyclicComm);
 
   template <typename Derived1, typename Derived2>
-  void multiply(
-      Eigen::PlainObjectBase<Derived1> &leftMatrix,
-      Eigen::PlainObjectBase<Derived2> &rightMatrix,
-      Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
-      int p, int q, int r,
-      bool dotProductComputation = true)
+  void multiply(Eigen::PlainObjectBase<Derived1> &leftMatrix, Eigen::PlainObjectBase<Derived2> &rightMatrix,
+                Eigen::PlainObjectBase<Derived2> &result, const std::vector<int> &offsets, int p, int q, int r,
+                bool dotProductComputation = true)
   {
     PRECICE_TRACE();
     PRECICE_ASSERT(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
@@ -75,23 +71,20 @@ public:
   }
 
   /** @brief: Method computes the matrix-matrix/matrix-vector product of a (p x q)
-    * matrix that is distributed column-wise (e.g. pseudoInverse Z), with a matrix/vector
-    * of size (q x r) with r=1/cols, that is distributed row-wise (e.g. _matrixW, _matrixV, residual).
-    *
-    * In each case mat-mat or mat-vec product, the result is of size (m x m) or (m x 1), where
-    * m is the number of cols, i.e., small such that the result is stored on each proc.
-    *
-    * @param[in] p - first dimension, i.e., overall (global) number of rows
-    * @param[in] q - inner dimension
-    * @param[in] r - second dimension, i.e., overall (global) number cols of result matrix
-    *
-    */
+   * matrix that is distributed column-wise (e.g. pseudoInverse Z), with a matrix/vector
+   * of size (q x r) with r=1/cols, that is distributed row-wise (e.g. _matrixW, _matrixV, residual).
+   *
+   * In each case mat-mat or mat-vec product, the result is of size (m x m) or (m x 1), where
+   * m is the number of cols, i.e., small such that the result is stored on each proc.
+   *
+   * @param[in] p - first dimension, i.e., overall (global) number of rows
+   * @param[in] q - inner dimension
+   * @param[in] r - second dimension, i.e., overall (global) number cols of result matrix
+   *
+   */
   template <typename Derived1, typename Derived2, typename Derived3>
-  void multiply(
-      const Eigen::MatrixBase<Derived1> &leftMatrix,
-      const Eigen::MatrixBase<Derived2> &rightMatrix,
-      Eigen::PlainObjectBase<Derived3> & result,
-      int p, int q, int r)
+  void multiply(const Eigen::MatrixBase<Derived1> &leftMatrix, const Eigen::MatrixBase<Derived2> &rightMatrix,
+                Eigen::PlainObjectBase<Derived3> &result, int p, int q, int r)
   {
     PRECICE_TRACE();
     PRECICE_ASSERT(leftMatrix.rows() == p, leftMatrix.rows(), p);
@@ -113,14 +106,11 @@ public:
 private:
   logging::Logger _log{"acceleration::ParallelMatrixOperations"};
 
-  // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
+  // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic
+  // result matrix
   template <typename Derived1, typename Derived2>
-  void _multiplyNN(
-      Eigen::PlainObjectBase<Derived1> &leftMatrix,
-      Eigen::PlainObjectBase<Derived2> &rightMatrix,
-      Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
-      int p, int q, int r)
+  void _multiplyNN(Eigen::PlainObjectBase<Derived1> &leftMatrix, Eigen::PlainObjectBase<Derived2> &rightMatrix,
+                   Eigen::PlainObjectBase<Derived2> &result, const std::vector<int> &offsets, int p, int q, int r)
   {
     PRECICE_TRACE();
     /*
@@ -139,20 +129,23 @@ private:
     PRECICE_ASSERT(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
     PRECICE_ASSERT(result.rows() == p, result.rows(), p);
 
-    //int nextProc = (utils::MasterSlave::getRank() + 1) % utils::MasterSlave::getSize();
-    int prevProc = (utils::MasterSlave::getRank() - 1 < 0) ? utils::MasterSlave::getSize() - 1 : utils::MasterSlave::getRank() - 1;
+    // int nextProc = (utils::MasterSlave::getRank() + 1) % utils::MasterSlave::getSize();
+    int prevProc =
+        (utils::MasterSlave::getRank() - 1 < 0) ? utils::MasterSlave::getSize() - 1 : utils::MasterSlave::getRank() - 1;
     int rows_rcv = (prevProc > 0) ? offsets[prevProc + 1] - offsets[prevProc] : offsets[1];
-    //Eigen::MatrixXd leftMatrix_rcv = Eigen::MatrixXd::Zero(rows_rcv, q);
+    // Eigen::MatrixXd leftMatrix_rcv = Eigen::MatrixXd::Zero(rows_rcv, q);
     Eigen::MatrixXd leftMatrix_rcv(rows_rcv, q);
 
     com::PtrRequest requestSend;
     com::PtrRequest requestRcv;
 
-    // initiate asynchronous send operation of leftMatrix (W_til) --> nextProc (this data is needed in cycle 1)    dim: n_local x cols
+    // initiate asynchronous send operation of leftMatrix (W_til) --> nextProc (this data is needed in cycle 1)    dim:
+    // n_local x cols
     if (leftMatrix.size() > 0)
       requestSend = _cyclicCommRight->aSend(leftMatrix, 0);
 
-    // initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til      dim: rows_rcv x cols
+    // initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til      dim:
+    // rows_rcv x cols
     if (leftMatrix_rcv.size() > 0)
       requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv, 0);
 
@@ -167,8 +160,8 @@ private:
     result.block(off, 0, diagBlock.rows(), diagBlock.cols()) = diagBlock;
 
     /**
-		 * cyclic send-receive operation
-		 */
+     * cyclic send-receive operation
+     */
     for (int cycle = 1; cycle < utils::MasterSlave::getSize(); cycle++) {
 
       // wait until W_til from previous processor is fully received
@@ -180,22 +173,29 @@ private:
       // leftMatrix (leftMatrix_rcv) is available - needed for local multiplication and hand over to next proc
       Eigen::MatrixXd leftMatrix_copy(leftMatrix_rcv);
 
-      // initiate async send to hand over leftMatrix (W_til) to the next proc (this data will be needed in the next cycle)    dim: n_local x cols
+      // initiate async send to hand over leftMatrix (W_til) to the next proc (this data will be needed in the next
+      // cycle)    dim: n_local x cols
       if (cycle < utils::MasterSlave::getSize() - 1) {
         if (leftMatrix_copy.size() > 0)
           requestSend = _cyclicCommRight->aSend(leftMatrix_copy, 0);
       }
 
       // compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cylce
-      int sourceProc_nextCycle = (utils::MasterSlave::getRank() - (cycle + 1) < 0) ? utils::MasterSlave::getSize() + (utils::MasterSlave::getRank() - (cycle + 1)) : utils::MasterSlave::getRank() - (cycle + 1);
+      int sourceProc_nextCycle = (utils::MasterSlave::getRank() - (cycle + 1) < 0)
+                                     ? utils::MasterSlave::getSize() + (utils::MasterSlave::getRank() - (cycle + 1))
+                                     : utils::MasterSlave::getRank() - (cycle + 1);
 
-      int sourceProc = (utils::MasterSlave::getRank() - cycle < 0) ? utils::MasterSlave::getSize() + (utils::MasterSlave::getRank() - cycle) : utils::MasterSlave::getRank() - cycle;
+      int sourceProc = (utils::MasterSlave::getRank() - cycle < 0)
+                           ? utils::MasterSlave::getSize() + (utils::MasterSlave::getRank() - cycle)
+                           : utils::MasterSlave::getRank() - cycle;
 
-      int rows_rcv_nextCycle = (sourceProc_nextCycle > 0) ? offsets[sourceProc_nextCycle + 1] - offsets[sourceProc_nextCycle] : offsets[1];
-      rows_rcv               = (sourceProc > 0) ? offsets[sourceProc + 1] - offsets[sourceProc] : offsets[1];
-      leftMatrix_rcv         = Eigen::MatrixXd::Zero(rows_rcv_nextCycle, q);
+      int rows_rcv_nextCycle =
+          (sourceProc_nextCycle > 0) ? offsets[sourceProc_nextCycle + 1] - offsets[sourceProc_nextCycle] : offsets[1];
+      rows_rcv       = (sourceProc > 0) ? offsets[sourceProc + 1] - offsets[sourceProc] : offsets[1];
+      leftMatrix_rcv = Eigen::MatrixXd::Zero(rows_rcv_nextCycle, q);
 
-      // initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til (this data is needed in the next cycle)
+      // initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til (this data is
+      // needed in the next cycle)
       if (cycle < utils::MasterSlave::getSize() - 1) {
         if (leftMatrix_rcv.size() > 0) // only receive data, if data has been sent
           requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv, 0);
@@ -219,12 +219,9 @@ private:
 
   // @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
   template <typename Derived1, typename Derived2>
-  void _multiplyNM_dotProduct(
-      Eigen::PlainObjectBase<Derived1> &leftMatrix,
-      Eigen::PlainObjectBase<Derived2> &rightMatrix,
-      Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
-      int p, int q, int r)
+  void _multiplyNM_dotProduct(Eigen::PlainObjectBase<Derived1> &leftMatrix,
+                              Eigen::PlainObjectBase<Derived2> &rightMatrix, Eigen::PlainObjectBase<Derived2> &result,
+                              const std::vector<int> &offsets, int p, int q, int r)
   {
     PRECICE_TRACE();
     for (int i = 0; i < leftMatrix.rows(); i++) {
@@ -254,14 +251,11 @@ private:
     }
   }
 
-  /// Multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix of dimension n x m
+  /// Multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix of dimension n x
+  /// m
   template <typename Derived1, typename Derived2>
-  void _multiplyNM_block(
-      Eigen::PlainObjectBase<Derived1> &leftMatrix,
-      Eigen::PlainObjectBase<Derived2> &rightMatrix,
-      Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
-      int p, int q, int r)
+  void _multiplyNM_block(Eigen::PlainObjectBase<Derived1> &leftMatrix, Eigen::PlainObjectBase<Derived2> &rightMatrix,
+                         Eigen::PlainObjectBase<Derived2> &result, const std::vector<int> &offsets, int p, int q, int r)
   {
     PRECICE_TRACE();
 
@@ -299,7 +293,8 @@ private:
 
         if (summarizedBlocks.block(off, 0, send_rows, r).size() > 0) {
           // necessary to save the matrix-block that is to be sent in a temporary matrix-object
-          // otherwise, the send routine walks over the bounds of the block (matrix structure is still from the entire matrix)
+          // otherwise, the send routine walks over the bounds of the block (matrix structure is still from the entire
+          // matrix)
           Eigen::MatrixXd sendBlock = summarizedBlocks.block(off, 0, send_rows, r);
           utils::MasterSlave::getCommunication()->send(sendBlock, secondaryRank);
         }

@@ -19,22 +19,13 @@
 namespace precice {
 namespace cplscheme {
 
-BiCouplingScheme::BiCouplingScheme(
-    double                        maxTime,
-    int                           maxTimeWindows,
-    double                        timeWindowSize,
-    int                           validDigits,
-    std::string                   firstParticipant,
-    std::string                   secondParticipant,
-    const std::string &           localParticipant,
-    m2n::PtrM2N                   m2n,
-    int                           maxIterations,
-    CouplingMode                  cplMode,
-    constants::TimesteppingMethod dtMethod,
-    int                           extrapolationOrder)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod, extrapolationOrder),
-      _m2n(std::move(m2n)),
-      _firstParticipant(std::move(firstParticipant)),
+BiCouplingScheme::BiCouplingScheme(double maxTime, int maxTimeWindows, double timeWindowSize, int validDigits,
+                                   std::string firstParticipant, std::string secondParticipant,
+                                   const std::string &localParticipant, m2n::PtrM2N m2n, int maxIterations,
+                                   CouplingMode cplMode, constants::TimesteppingMethod dtMethod, int extrapolationOrder)
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode,
+                         dtMethod, extrapolationOrder),
+      _m2n(std::move(m2n)), _firstParticipant(std::move(firstParticipant)),
       _secondParticipant(std::move(secondParticipant))
 {
   PRECICE_ASSERT(_firstParticipant != _secondParticipant,
@@ -49,10 +40,7 @@ BiCouplingScheme::BiCouplingScheme(
   }
 }
 
-void BiCouplingScheme::addDataToSend(
-    const mesh::PtrData &data,
-    mesh::PtrMesh        mesh,
-    bool                 requiresInitialization)
+void BiCouplingScheme::addDataToSend(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
@@ -61,17 +49,17 @@ void BiCouplingScheme::addDataToSend(
     if (isExplicitCouplingScheme()) {
       _sendData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization)));
     } else {
-      _sendData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization, getExtrapolationOrder())));
+      _sendData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization,
+                                                             getExtrapolationOrder())));
     }
   } else {
-    PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
+    PRECICE_ERROR(
+        "Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags",
+        data->getName());
   }
 }
 
-void BiCouplingScheme::addDataToReceive(
-    const mesh::PtrData &data,
-    mesh::PtrMesh        mesh,
-    bool                 requiresInitialization)
+void BiCouplingScheme::addDataToReceive(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization)
 {
   PRECICE_TRACE();
   int id = data->getID();
@@ -80,10 +68,13 @@ void BiCouplingScheme::addDataToReceive(
     if (isExplicitCouplingScheme()) {
       _receiveData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization)));
     } else {
-      _receiveData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization, getExtrapolationOrder())));
+      _receiveData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization,
+                                                                getExtrapolationOrder())));
     }
   } else {
-    PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
+    PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange "
+                  "data=\"{0}\" ... /> tags",
+                  data->getName());
   }
 }
 
@@ -99,8 +90,7 @@ std::vector<std::string> BiCouplingScheme::getCouplingPartners() const
   return partnerNames;
 }
 
-CouplingData *BiCouplingScheme::getSendData(
-    DataID dataID)
+CouplingData *BiCouplingScheme::getSendData(DataID dataID)
 {
   PRECICE_TRACE(dataID);
   DataMap::iterator iter = _sendData.find(dataID);
@@ -110,8 +100,7 @@ CouplingData *BiCouplingScheme::getSendData(
   return nullptr;
 }
 
-CouplingData *BiCouplingScheme::getReceiveData(
-    DataID dataID)
+CouplingData *BiCouplingScheme::getReceiveData(DataID dataID)
 {
   PRECICE_TRACE(dataID);
   DataMap::iterator iter = _receiveData.find(dataID);

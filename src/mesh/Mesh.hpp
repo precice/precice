@@ -59,10 +59,7 @@ public:
    * @param[in] dimensions Dimensionalty of the mesh.
    * @param[in] id The id of this mesh
    */
-  Mesh(
-      std::string name,
-      int         dimensions,
-      MeshID      id);
+  Mesh(std::string name, int dimensions, MeshID id);
 
   /// Returns modifieable container holding all vertices.
   VertexContainer &vertices();
@@ -93,9 +90,7 @@ public:
    * @param[in] vertexOne Reference to first Vertex defining the Edge.
    * @param[in] vertexTwo Reference to second Vertex defining the Edge.
    */
-  Edge &createEdge(
-      Vertex &vertexOne,
-      Vertex &vertexTwo);
+  Edge &createEdge(Vertex &vertexOne, Vertex &vertexTwo);
 
   /**
    * @brief Creates and initializes an Edge object or returns an already existing one.
@@ -103,9 +98,7 @@ public:
    * @param[in] vertexOne Reference to first Vertex defining the Edge.
    * @param[in] vertexTwo Reference to second Vertex defining the Edge.
    */
-  Edge &createUniqueEdge(
-      Vertex &vertexOne,
-      Vertex &vertexTwo);
+  Edge &createUniqueEdge(Vertex &vertexOne, Vertex &vertexTwo);
 
   /**
    * @brief Creates and initializes a Triangle object.
@@ -114,16 +107,10 @@ public:
    * @param[in] edgeTwo Reference to second edge defining the Triangle.
    * @param[in] edgeThree Reference to third edge defining the Triangle.
    */
-  Triangle &createTriangle(
-      Edge &edgeOne,
-      Edge &edgeTwo,
-      Edge &edgeThree);
+  Triangle &createTriangle(Edge &edgeOne, Edge &edgeTwo, Edge &edgeThree);
 
   /// Create only data for vertex
-  PtrData &createData(const std::string &name,
-                      int                dimension,
-                      DataID             id,
-                      bool               withGradient = false);
+  PtrData &createData(const std::string &name, int dimension, DataID id, bool withGradient = false);
 
   /// Allows access to all data
   const DataContainer &data() const;

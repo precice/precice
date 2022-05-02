@@ -21,8 +21,7 @@ namespace primaryprimary {
 /// Acceptor and Requestor are different participants
 ///
 
-template <typename T>
-void TestSendAndReceivePrimitiveTypes(TestContext const &context)
+template <typename T> void TestSendAndReceivePrimitiveTypes(TestContext const &context)
 {
   T com;
 
@@ -87,8 +86,7 @@ void TestSendAndReceivePrimitiveTypes(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestSendAndReceiveVectors(TestContext const &context)
+template <typename T> void TestSendAndReceiveVectors(TestContext const &context)
 {
   T com;
 
@@ -152,8 +150,7 @@ void TestSendAndReceiveVectors(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestSendReceiveFourProcesses(TestContext const &context)
+template <typename T> void TestSendReceiveFourProcesses(TestContext const &context)
 {
   T   communication;
   int message = -1;
@@ -195,8 +192,7 @@ void TestSendReceiveFourProcesses(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestBroadcastPrimitiveTypes(TestContext const &context)
+template <typename T> void TestBroadcastPrimitiveTypes(TestContext const &context)
 {
   T com;
 
@@ -236,8 +232,7 @@ void TestBroadcastPrimitiveTypes(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestBroadcastVectors(TestContext const &context)
+template <typename T> void TestBroadcastVectors(TestContext const &context)
 {
   T com;
 
@@ -286,8 +281,7 @@ void TestBroadcastVectors(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestReducePrimitiveTypes(TestContext const &context)
+template <typename T> void TestReducePrimitiveTypes(TestContext const &context)
 {
   T com;
 
@@ -343,8 +337,7 @@ void TestReducePrimitiveTypes(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestReduceVectors(TestContext const &context)
+template <typename T> void TestReduceVectors(TestContext const &context)
 {
   T com;
 
@@ -355,22 +348,18 @@ void TestReduceVectors(TestContext const &context)
       std::vector<double> rcv{0, 0, 0};
       com.reduceSum(msg, rcv);
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
-                                    msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
-                                    rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
     }
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
       com.allreduceSum(msg, rcv);
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
-                                    msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
-                                    rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
     }
     com.closeConnection();
   } else {
@@ -380,29 +369,24 @@ void TestReduceVectors(TestContext const &context)
       std::vector<double> rcv{0, 0, 0};
       com.reduceSum(msg, rcv, 0);
       std::vector<double> msg_expected{1, 2, 3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
-                                    msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{0, 0, 0};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
-                                    rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
     }
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
       com.allreduceSum(msg, rcv, 0);
       std::vector<double> msg_expected{1, 2, 3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
-                                    msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
-                                    rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
     }
     com.closeConnection();
   }
 }
 
-template <typename T>
-void TestSendAndReceive(TestContext const &context)
+template <typename T> void TestSendAndReceive(TestContext const &context)
 {
   TestSendAndReceivePrimitiveTypes<T>(context);
   TestSendAndReceiveVectors<T>(context);
@@ -421,8 +405,7 @@ namespace intracomm {
 /// Acceptor and Requestor are the same participant
 ///
 
-template <typename T>
-void TestSendAndReceivePrimitiveTypes(TestContext const &context)
+template <typename T> void TestSendAndReceivePrimitiveTypes(TestContext const &context)
 {
   T com;
 
@@ -487,8 +470,7 @@ void TestSendAndReceivePrimitiveTypes(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestSendAndReceiveVectors(TestContext const &context)
+template <typename T> void TestSendAndReceiveVectors(TestContext const &context)
 {
   T com;
 
@@ -552,8 +534,7 @@ void TestSendAndReceiveVectors(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestBroadcastPrimitiveTypes(TestContext const &context)
+template <typename T> void TestBroadcastPrimitiveTypes(TestContext const &context)
 {
   T com;
 
@@ -593,8 +574,7 @@ void TestBroadcastPrimitiveTypes(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestBroadcastVectors(TestContext const &context)
+template <typename T> void TestBroadcastVectors(TestContext const &context)
 {
   T com;
 
@@ -643,8 +623,7 @@ void TestBroadcastVectors(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestReducePrimitiveTypes(TestContext const &context)
+template <typename T> void TestReducePrimitiveTypes(TestContext const &context)
 {
   T com;
 
@@ -700,8 +679,7 @@ void TestReducePrimitiveTypes(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestReduceVectors(TestContext const &context)
+template <typename T> void TestReduceVectors(TestContext const &context)
 {
   T com;
 
@@ -712,22 +690,18 @@ void TestReduceVectors(TestContext const &context)
       std::vector<double> rcv{0, 0, 0};
       com.reduceSum(msg, rcv);
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
-                                    msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
-                                    rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
     }
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
       com.allreduceSum(msg, rcv);
       std::vector<double> msg_expected{0.1, 0.2, 0.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
-                                    msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
-                                    rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
     }
     com.closeConnection();
   } else {
@@ -737,29 +711,24 @@ void TestReduceVectors(TestContext const &context)
       std::vector<double> rcv{0, 0, 0};
       com.reduceSum(msg, rcv, 0);
       std::vector<double> msg_expected{1, 2, 3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
-                                    msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{0, 0, 0};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
-                                    rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
     }
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
       com.allreduceSum(msg, rcv, 0);
       std::vector<double> msg_expected{1, 2, 3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(),
-                                    msg_expected.begin(), msg_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(msg.begin(), msg.end(), msg_expected.begin(), msg_expected.end());
       std::vector<double> rcv_expected{1.1, 2.2, 3.3};
-      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(),
-                                    rcv_expected.begin(), rcv_expected.end());
+      BOOST_CHECK_EQUAL_COLLECTIONS(rcv.begin(), rcv.end(), rcv_expected.begin(), rcv_expected.end());
     }
     com.closeConnection();
   }
 }
 
-template <typename T>
-void TestSendAndReceive(TestContext const &context)
+template <typename T> void TestSendAndReceive(TestContext const &context)
 {
   TestSendAndReceivePrimitiveTypes<T>(context);
   TestSendAndReceiveVectors<T>(context);
@@ -781,8 +750,7 @@ namespace serverclient {
 
 /// Tests connecting two processes using acceptConnectionAsServer and
 /// requestConnectionAsClient
-template <typename T>
-void TestSendReceiveTwoProcessesServerClient(TestContext const &context)
+template <typename T> void TestSendReceiveTwoProcessesServerClient(TestContext const &context)
 {
   T   communication;
   int message = 1;
@@ -805,8 +773,7 @@ void TestSendReceiveTwoProcessesServerClient(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestSendReceiveFourProcessesServerClient(TestContext const &context)
+template <typename T> void TestSendReceiveFourProcessesServerClient(TestContext const &context)
 {
   T   communication;
   int message = -1;
@@ -853,8 +820,7 @@ void TestSendReceiveFourProcessesServerClient(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestSendReceiveFourProcessesServerClientV2(TestContext const &context)
+template <typename T> void TestSendReceiveFourProcessesServerClientV2(TestContext const &context)
 {
   T   communication;
   int message = -1;

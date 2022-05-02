@@ -63,20 +63,13 @@ struct MPI_EventData {
 
 // -----------------------------------------------------------------------
 
-EventData::EventData(std::string _name)
-    : name(std::move(_name))
-{
-}
+EventData::EventData(std::string _name) : name(std::move(_name)) {}
 
-EventData::EventData(std::string _name, long _count, long _total, long _max, long _min,
-                     Event::Data data, Event::StateChanges _stateChanges)
-    : max(std::chrono::milliseconds(_max)),
-      min(std::chrono::milliseconds(_min)),
-      total(std::chrono::milliseconds(_total)),
-      stateChanges(std::move(_stateChanges)),
-      name(std::move(_name)),
-      count(_count),
-      data(std::move(data))
+EventData::EventData(std::string _name, long _count, long _total, long _max, long _min, Event::Data data,
+                     Event::StateChanges _stateChanges)
+    : max(std::chrono::milliseconds(_max)), min(std::chrono::milliseconds(_min)),
+      total(std::chrono::milliseconds(_total)), stateChanges(std::move(_stateChanges)), name(std::move(_name)),
+      count(_count), data(std::move(data))
 {
 }
 
@@ -149,9 +142,8 @@ void RankData::finalize()
 void RankData::put(Event const &event)
 {
   /// Construct or return EventData object with name as key and name as arg to ctor.
-  auto data = std::get<0>(evData.emplace(std::piecewise_construct,
-                                         std::forward_as_tuple(event.name),
-                                         std::forward_as_tuple(event.name)));
+  auto data = std::get<0>(
+      evData.emplace(std::piecewise_construct, std::forward_as_tuple(event.name), std::forward_as_tuple(event.name)));
   data->second.put(event);
 }
 
@@ -256,8 +248,7 @@ Event &EventRegistry::getStoredEvent(std::string const &name)
   // stack set a prefix.
   auto previousPrefix = prefix;
   prefix              = "";
-  auto insertion      = storedEvents.emplace(std::piecewise_construct,
-                                        std::forward_as_tuple(name),
+  auto insertion      = storedEvents.emplace(std::piecewise_construct, std::forward_as_tuple(name),
                                         std::forward_as_tuple(name, false, false));
 
   prefix = previousPrefix;
@@ -297,14 +288,13 @@ void EventRegistry::writeSummary(std::ostream &out) const
   if (rank == 0) {
     using std::endl;
     { // Print per event stats
-      std::time_t  ts       = sys_clk::to_time_t(localRankData.finalizedAt);
-      double const duration = std::chrono::duration_cast<std::chrono::milliseconds>(localRankData.getDuration()).count();
+      std::time_t  ts = sys_clk::to_time_t(localRankData.finalizedAt);
+      double const duration =
+          std::chrono::duration_cast<std::chrono::milliseconds>(localRankData.getDuration()).count();
 
       out << "Run finished at " << std::asctime(std::localtime(&ts));
 
-      out << "Global runtime       = "
-          << duration << "ms / "
-          << duration / 1000 << "s" << endl
+      out << "Global runtime       = " << duration << "ms / " << duration / 1000 << "s" << endl
           << "Number of processors = " << size << endl
           << "# Rank: " << rank << endl
           << endl;
@@ -325,8 +315,7 @@ void EventRegistry::writeSummary(std::ostream &out) const
                        ev.getTotal() / duration);
       }
     }
-    out << endl
-        << endl;
+    out << endl << endl;
     { // Print aggregated states
       Table t(out);
       t.addColumn("Name", getMaxNameWidth());
@@ -372,13 +361,12 @@ void EventRegistry::writeJSON(std::ostream &out) const
     double const duration      = duration_cast<milliseconds>(rank.getDuration()).count();
     for (auto const &events : rank.evData) {
       auto const &e                     = events.second;
-      jTimings[events.second.getName()] = {
-          {"Count", e.getCount()},
-          {"Total", e.getTotal()},
-          {"Max", e.getMax()},
-          {"Min", e.getMin()},
-          {"TimeRatio", e.getTotal() / duration},
-          {"Data", e.getData()}};
+      jTimings[events.second.getName()] = {{"Count", e.getCount()},
+                                           {"Total", e.getTotal()},
+                                           {"Max", e.getMax()},
+                                           {"Min", e.getMin()},
+                                           {"TimeRatio", e.getTotal() / duration},
+                                           {"Data", e.getData()}};
       for (auto const &sc : e.stateChanges) {
         jStateChanges.push_back({{"Name", events.second.getName()},
                                  {"State", sc.first},
@@ -489,8 +477,7 @@ void EventRegistry::collect()
 
         // Receive all state changes for this event
         std::vector<long> recvStateChanges(ev.stateChangesSize * 2);
-        MPI_Recv(recvStateChanges.data(), recvStateChanges.size(),
-                 MPI_LONG, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
+        MPI_Recv(recvStateChanges.data(), recvStateChanges.size(), MPI_LONG, i, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
         Event::StateChanges stateChanges; // evtl. reserve
         for (size_t k = 0; k < recvStateChanges.size(); k += 2) {
           stateChanges.emplace_back(static_cast<Event::State>(recvStateChanges[k]),
@@ -538,8 +525,7 @@ void EventRegistry::normalize()
   localRankData.normalizeTo(t0);
 }
 
-std::pair<sys_clk::time_point, sys_clk::time_point>
-EventRegistry::collectInitAndFinalize()
+std::pair<sys_clk::time_point, sys_clk::time_point> EventRegistry::collectInitAndFinalize()
 {
   long ticks = localRankData.initializedAt.time_since_epoch().count();
   long minTicks;
@@ -551,8 +537,7 @@ EventRegistry::collectInitAndFinalize()
 
   // This assumes the same epoch and ticks rep, should be true for system time
 
-  return {sys_clk::time_point{sys_clk::duration{minTicks}},
-          sys_clk::time_point{sys_clk::duration{maxTicks}}};
+  return {sys_clk::time_point{sys_clk::duration{minTicks}}, sys_clk::time_point{sys_clk::duration{maxTicks}}};
 }
 
 size_t EventRegistry::getMaxNameWidth() const

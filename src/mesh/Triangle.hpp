@@ -40,11 +40,7 @@ public:
   using value_type = Vertex::RawCoords;
 
   /// Constructor, the order of edges defines the outer normal direction.
-  Triangle(
-      Edge &     edgeOne,
-      Edge &     edgeTwo,
-      Edge &     edgeThree,
-      TriangleID id);
+  Triangle(Edge &edgeOne, Edge &edgeTwo, Edge &edgeThree, TriangleID id);
 
   /// Returns dimensionalty of space the triangle is embedded in.
   int getDimensions() const;
@@ -114,7 +110,7 @@ public:
   /**
    * @brief Compares two Triangles for equality
    *
-   * Two Triangles are equal if the three edges are equal, 
+   * Two Triangles are equal if the three edges are equal,
    * whereas the order of edges is NOT important.
    */
   bool operator==(const Triangle &other) const;

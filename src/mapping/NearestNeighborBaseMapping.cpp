@@ -17,15 +17,9 @@ extern bool syncMode;
 
 namespace mapping {
 
-NearestNeighborBaseMapping::NearestNeighborBaseMapping(
-    Constraint  constraint,
-    int         dimensions,
-    bool        requireGradient,
-    std::string mappingName,
-    std::string mappingNameShort)
-    : Mapping(constraint, dimensions, requireGradient),
-      mappingName(mappingName),
-      mappingNameShort(mappingNameShort)
+NearestNeighborBaseMapping::NearestNeighborBaseMapping(Constraint constraint, int dimensions, bool requireGradient,
+                                                       std::string mappingName, std::string mappingNameShort)
+    : Mapping(constraint, dimensions, requireGradient), mappingName(mappingName), mappingNameShort(mappingNameShort)
 {
 }
 
@@ -36,7 +30,8 @@ void NearestNeighborBaseMapping::computeMapping()
   PRECICE_ASSERT(input().get() != nullptr);
   PRECICE_ASSERT(output().get() != nullptr);
 
-  const std::string     baseEvent = "map." + mappingNameShort + ".computeMapping.From" + input()->getName() + "To" + output()->getName();
+  const std::string baseEvent =
+      "map." + mappingNameShort + ".computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::utils::Event e(baseEvent, precice::syncMode);
 
   // Setup Direction of Mapping
@@ -110,7 +105,9 @@ void NearestNeighborBaseMapping::onMappingComputed(mesh::PtrMesh origins, mesh::
 void NearestNeighborBaseMapping::tagMeshFirstRound()
 {
   PRECICE_TRACE();
-  precice::utils::Event e("map." + mappingNameShort + ".tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event e("map." + mappingNameShort + ".tagMeshFirstRound.From" + input()->getName() + "To" +
+                              output()->getName(),
+                          precice::syncMode);
 
   computeMapping();
 

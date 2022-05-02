@@ -12,9 +12,7 @@ namespace acceleration {
 
 class ConstantRelaxationAcceleration : public Acceleration {
 public:
-  ConstantRelaxationAcceleration(
-      double           relaxation,
-      std::vector<int> dataIDs);
+  ConstantRelaxationAcceleration(double relaxation, std::vector<int> dataIDs);
 
   virtual ~ConstantRelaxationAcceleration() {}
 
@@ -27,9 +25,7 @@ public:
 
   virtual void performAcceleration(const DataMap &cplData);
 
-  virtual void iterationsConverged(const DataMap &cplData)
-  {
-  }
+  virtual void iterationsConverged(const DataMap &cplData) {}
 
 private:
   logging::Logger _log{"acceleration::ConstantRelaxationAcceleration"};

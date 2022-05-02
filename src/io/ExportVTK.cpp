@@ -18,10 +18,7 @@
 namespace precice {
 namespace io {
 
-void ExportVTK::doExport(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh)
+void ExportVTK::doExport(const std::string &name, const std::string &location, const mesh::Mesh &mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   PRECICE_ASSERT(name != std::string(""));
@@ -42,9 +39,7 @@ void ExportVTK::doExport(
   outstream.close();
 }
 
-void ExportVTK::exportMesh(
-    std::ofstream &   outFile,
-    const mesh::Mesh &mesh)
+void ExportVTK::exportMesh(std::ofstream &outFile, const mesh::Mesh &mesh)
 {
   PRECICE_TRACE(mesh.getName());
 
@@ -76,8 +71,7 @@ void ExportVTK::exportMesh(
     size_t sizeEdges     = mesh.edges().size();
     size_t sizeElements  = sizeTriangles + sizeEdges;
 
-    outFile << "CELLS " << sizeElements << ' '
-            << sizeTriangles * 4 + sizeEdges * 3 << "\n\n";
+    outFile << "CELLS " << sizeElements << ' ' << sizeTriangles * 4 + sizeEdges * 3 << "\n\n";
     for (auto const &triangle : mesh.triangles()) {
       int internalIndices[3];
       internalIndices[0] = triangle.vertex(0).getID();
@@ -103,9 +97,7 @@ void ExportVTK::exportMesh(
   outFile << '\n';
 }
 
-void ExportVTK::exportData(
-    std::ofstream &   outFile,
-    const mesh::Mesh &mesh)
+void ExportVTK::exportData(std::ofstream &outFile, const mesh::Mesh &mesh)
 {
   outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
 
@@ -145,11 +137,10 @@ void ExportVTK::exportData(
   }
 }
 
-void ExportVTK::initializeWriting(
-    std::ofstream &filestream)
+void ExportVTK::initializeWriting(std::ofstream &filestream)
 {
-  //size_t pos = fullFilename.rfind(".vtk");
-  //if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
+  // size_t pos = fullFilename.rfind(".vtk");
+  // if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
   //  fullFilename += ".vtk";
   //}
   filestream.setf(std::ios::showpoint);
@@ -157,17 +148,14 @@ void ExportVTK::initializeWriting(
   filestream << std::setprecision(std::numeric_limits<double>::max_digits10);
 }
 
-void ExportVTK::writeHeader(
-    std::ostream &outFile)
+void ExportVTK::writeHeader(std::ostream &outFile)
 {
   outFile << "# vtk DataFile Version 2.0\n\n"
           << "ASCII\n\n"
           << "DATASET UNSTRUCTURED_GRID\n\n";
 }
 
-void ExportVTK::writeVertex(
-    const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+void ExportVTK::writeVertex(const Eigen::VectorXd &position, std::ostream &outFile)
 {
   if (position.size() == 2) {
     outFile << position(0) << "  " << position(1) << "  " << 0.0 << '\n';
@@ -177,9 +165,7 @@ void ExportVTK::writeVertex(
   }
 }
 
-void ExportVTK::writeTriangle(
-    int           vertexIndices[3],
-    std::ostream &outFile)
+void ExportVTK::writeTriangle(int vertexIndices[3], std::ostream &outFile)
 {
   outFile << 3 << ' ';
   for (int i = 0; i < 3; i++) {
@@ -188,9 +174,7 @@ void ExportVTK::writeTriangle(
   outFile << '\n';
 }
 
-void ExportVTK::writeLine(
-    int           vertexIndices[2],
-    std::ostream &outFile)
+void ExportVTK::writeLine(int vertexIndices[2], std::ostream &outFile)
 {
   outFile << 2 << ' ';
   for (int i = 0; i < 2; i++) {

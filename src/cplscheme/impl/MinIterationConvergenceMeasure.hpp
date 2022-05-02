@@ -20,9 +20,7 @@ public:
 
   virtual void newMeasurementSeries();
 
-  virtual void measure(
-      const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues)
+  virtual void measure(const Eigen::VectorXd &oldValues, const Eigen::VectorXd &newValues)
   {
     PRECICE_TRACE();
     _currentIteration++;

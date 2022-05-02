@@ -90,12 +90,9 @@ BOOST_AUTO_TEST_CASE(TriangleAdapter)
   std::vector<Vertex::RawCoords> vertices(t.begin(), t.end());
   std::vector<Vertex::RawCoords> refs{v1.rawCoords(), v2.rawCoords(), v3.rawCoords()};
   BOOST_TEST(vertices.size() == refs.size());
-  BOOST_TEST((std::is_permutation(
-      vertices.begin(), vertices.end(),
-      refs.begin(),
-      [](const auto &lhs, const auto &rhs) {
-        return precice::math::equals(rawToEigen(lhs), rawToEigen(rhs));
-      })));
+  BOOST_TEST((std::is_permutation(vertices.begin(), vertices.end(), refs.begin(), [](const auto &lhs, const auto &rhs) {
+    return precice::math::equals(rawToEigen(lhs), rawToEigen(rhs));
+  })));
 }
 
 BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)

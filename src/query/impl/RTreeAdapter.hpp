@@ -24,24 +24,19 @@ namespace traits {
 /*
  * This adapts every VectorXd to a 3d point. For non-existing dimensions, zero is returned.
  */
-template <>
-struct tag<Eigen::VectorXd> {
+template <> struct tag<Eigen::VectorXd> {
   using type = point_tag;
 };
-template <>
-struct coordinate_type<Eigen::VectorXd> {
+template <> struct coordinate_type<Eigen::VectorXd> {
   using type = double;
 };
-template <>
-struct coordinate_system<Eigen::VectorXd> {
+template <> struct coordinate_system<Eigen::VectorXd> {
   using type = cs::cartesian;
 };
-template <>
-struct dimension<Eigen::VectorXd> : boost::mpl::int_<3> {
+template <> struct dimension<Eigen::VectorXd> : boost::mpl::int_<3> {
 };
 
-template <size_t Dimension>
-struct access<Eigen::VectorXd, Dimension> {
+template <size_t Dimension> struct access<Eigen::VectorXd, Dimension> {
   static double get(Eigen::VectorXd const &p)
   {
     if (Dimension >= static_cast<size_t>(p.rows())) {
@@ -63,24 +58,19 @@ struct access<Eigen::VectorXd, Dimension> {
 };
 
 /// Adapts Vertex::RawCoords to boost.geometry
-template <>
-struct tag<pm::Vertex::RawCoords> {
+template <> struct tag<pm::Vertex::RawCoords> {
   using type = point_tag;
 };
-template <>
-struct coordinate_type<pm::Vertex::RawCoords> {
+template <> struct coordinate_type<pm::Vertex::RawCoords> {
   using type = double;
 };
-template <>
-struct coordinate_system<pm::Vertex::RawCoords> {
+template <> struct coordinate_system<pm::Vertex::RawCoords> {
   using type = cs::cartesian;
 };
-template <>
-struct dimension<pm::Vertex::RawCoords> : boost::mpl::int_<3> {
+template <> struct dimension<pm::Vertex::RawCoords> : boost::mpl::int_<3> {
 };
 
-template <size_t Dimension>
-struct access<pm::Vertex::RawCoords, Dimension> {
+template <size_t Dimension> struct access<pm::Vertex::RawCoords, Dimension> {
   static double get(pm::Vertex::RawCoords const &p)
   {
     return p[Dimension];
@@ -98,24 +88,19 @@ BOOST_CONCEPT_ASSERT((bg::concepts::Point<pm::Vertex::RawCoords>) );
 /*
  * This adapts every Vertex to a 3d point. For non-existing dimensions, zero is returned.
  */
-template <>
-struct tag<pm::Vertex> {
+template <> struct tag<pm::Vertex> {
   using type = point_tag;
 };
-template <>
-struct coordinate_type<pm::Vertex> {
+template <> struct coordinate_type<pm::Vertex> {
   using type = double;
 };
-template <>
-struct coordinate_system<pm::Vertex> {
+template <> struct coordinate_system<pm::Vertex> {
   using type = cs::cartesian;
 };
-template <>
-struct dimension<pm::Vertex> : boost::mpl::int_<3> {
+template <> struct dimension<pm::Vertex> : boost::mpl::int_<3> {
 };
 
-template <size_t Dimension>
-struct access<pm::Vertex, Dimension> {
+template <size_t Dimension> struct access<pm::Vertex, Dimension> {
   static double get(pm::Vertex const &p)
   {
     return p.rawCoords()[Dimension];
@@ -134,17 +119,14 @@ BOOST_CONCEPT_ASSERT((concepts::Point<pm::Vertex>) );
  * This adapts every Edge to the segment concept of boost.geometry.
  * Include impl/RangeAdapter.hpp for full support.
  */
-template <>
-struct tag<pm::Edge> {
+template <> struct tag<pm::Edge> {
   using type = segment_tag;
 };
-template <>
-struct point_type<pm::Edge> {
+template <> struct point_type<pm::Edge> {
   using type = pm::Vertex::RawCoords;
 };
 
-template <size_t Index, size_t Dimension>
-struct indexed_access<pm::Edge, Index, Dimension> {
+template <size_t Index, size_t Dimension> struct indexed_access<pm::Edge, Index, Dimension> {
   static_assert((Index <= 1), "Valid Indices are {0, 1}");
   static_assert((Dimension <= 2), "Valid Dimensions are {0, 1, 2}");
 
@@ -164,16 +146,13 @@ struct indexed_access<pm::Edge, Index, Dimension> {
  * This adapts every Triangle to the ring concept (filled planar polygon) of boost.geometry.
  * Include impl/RangeAdapter.hpp for full support.
  */
-template <>
-struct tag<pm::Triangle> {
+template <> struct tag<pm::Triangle> {
   using type = ring_tag;
 };
-template <>
-struct point_order<pm::Triangle> {
+template <> struct point_order<pm::Triangle> {
   static const order_selector value = clockwise;
 };
-template <>
-struct closure<pm::Triangle> {
+template <> struct closure<pm::Triangle> {
   static const closure_selector value = open;
 };
 
@@ -221,27 +200,22 @@ namespace impl {
 using RTreeParameters = boost::geometry::index::rstar<16>;
 
 /// Type trait to extract information based on the type of a Primitive
-template <class T>
-struct PrimitiveTraits;
+template <class T> struct PrimitiveTraits;
 
-template <>
-struct PrimitiveTraits<pm::Vertex> {
+template <> struct PrimitiveTraits<pm::Vertex> {
   using MeshContainer = mesh::Mesh::VertexContainer;
 };
 
-template <>
-struct PrimitiveTraits<mesh::Edge> {
+template <> struct PrimitiveTraits<mesh::Edge> {
   using MeshContainer = mesh::Mesh::EdgeContainer;
 };
 
-template <>
-struct PrimitiveTraits<mesh::Triangle> {
+template <> struct PrimitiveTraits<mesh::Triangle> {
   using MeshContainer = mesh::Mesh::TriangleContainer;
 };
 
 /// Makes a utils::PtrVector indexable and thus be usable in boost::geometry::rtree
-template <typename Container>
-class PtrVectorIndexable {
+template <typename Container> class PtrVectorIndexable {
   using size_type = typename Container::container::size_type;
   using cref      = const typename Container::value_type &;
   Container const &container;
@@ -249,10 +223,7 @@ class PtrVectorIndexable {
 public:
   using result_type = cref;
 
-  explicit PtrVectorIndexable(Container const &c)
-      : container(c)
-  {
-  }
+  explicit PtrVectorIndexable(Container const &c) : container(c) {}
 
   result_type operator()(size_type i) const
   {
@@ -261,8 +232,7 @@ public:
 };
 
 /// Makes a std::vector indexable and thus be usable in boost::geometry::rtree
-template <typename Container>
-class VectorIndexable {
+template <typename Container> class VectorIndexable {
   using size_type = typename Container::size_type;
   using cref      = const typename Container::value_type &;
   Container const &container;
@@ -270,10 +240,7 @@ class VectorIndexable {
 public:
   using result_type = cref;
 
-  explicit VectorIndexable(Container const &c)
-      : container(c)
-  {
-  }
+  explicit VectorIndexable(Container const &c) : container(c) {}
 
   result_type operator()(size_type i) const
   {
@@ -281,54 +248,41 @@ public:
   }
 };
 
-template <typename Primitive>
-class IsDirectIndexableHelper {
+template <typename Primitive> class IsDirectIndexableHelper {
 private:
-  template <typename T, typename = typename std::enable_if<
-                            std::is_same<
-                                typename boost::geometry::traits::tag<T>::type,
-                                boost::geometry::point_tag>::value,
-                            std::nullptr_t>::type>
+  template <typename T, typename = typename std::enable_if<std::is_same<typename boost::geometry::traits::tag<T>::type,
+                                                                        boost::geometry::point_tag>::value,
+                                                           std::nullptr_t>::type>
   static std::true_type test(char *);
-  template <typename T, typename = typename std::enable_if<
-                            std::is_same<
-                                typename boost::geometry::traits::tag<T>::type,
-                                boost::geometry::segment_tag>::value,
-                            std::nullptr_t>::type>
+  template <typename T, typename = typename std::enable_if<std::is_same<typename boost::geometry::traits::tag<T>::type,
+                                                                        boost::geometry::segment_tag>::value,
+                                                           std::nullptr_t>::type>
   static std::true_type test(int *);
-  template <typename T, typename = typename std::enable_if<
-                            std::is_same<
-                                typename boost::geometry::traits::tag<T>::type,
-                                boost::geometry::box_tag>::value,
-                            std::nullptr_t>::type>
+  template <typename T, typename = typename std::enable_if<std::is_same<typename boost::geometry::traits::tag<T>::type,
+                                                                        boost::geometry::box_tag>::value,
+                                                           std::nullptr_t>::type>
   static std::true_type test(void *);
 
-  template <typename T>
-  static std::false_type test(...);
+  template <typename T> static std::false_type test(...);
 
 public:
   using type = decltype(test<Primitive>(nullptr));
 };
 
-template <class Primitive>
-struct IsDirectIndexable : impl::IsDirectIndexableHelper<Primitive>::type {
+template <class Primitive> struct IsDirectIndexable : impl::IsDirectIndexableHelper<Primitive>::type {
 };
 
 /// The type traits of a rtree based on a Primitive
-template <class Primitive>
-struct RTreeTraits {
+template <class Primitive> struct RTreeTraits {
   using MeshContainer      = typename PrimitiveTraits<Primitive>::MeshContainer;
   using MeshContainerIndex = typename MeshContainer::size_type;
 
-  using IndexType = typename std::conditional<
-      IsDirectIndexable<Primitive>::value,
-      MeshContainerIndex,
-      std::pair<RTreeBox, MeshContainerIndex>>::type;
+  using IndexType = typename std::conditional<IsDirectIndexable<Primitive>::value, MeshContainerIndex,
+                                              std::pair<RTreeBox, MeshContainerIndex>>::type;
 
-  using IndexGetter = typename std::conditional<
-      IsDirectIndexable<Primitive>::value,
-      impl::VectorIndexable<MeshContainer>,
-      boost::geometry::index::indexable<IndexType>>::type;
+  using IndexGetter =
+      typename std::conditional<IsDirectIndexable<Primitive>::value, impl::VectorIndexable<MeshContainer>,
+                                boost::geometry::index::indexable<IndexType>>::type;
 
   using RTree = boost::geometry::index::rtree<IndexType, RTreeParameters, IndexGetter>;
   using Ptr   = std::shared_ptr<RTree>;

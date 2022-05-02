@@ -41,7 +41,8 @@ inline int MPI_Allreduce(const T *sendbuf, T *recvbuf, int count, MPI_Datatype d
 }
 
 template <class T>
-inline int MPI_Reduce(const T *sendbuf, T *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
+inline int MPI_Reduce(const T *sendbuf, T *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root,
+                      MPI_Comm comm)
 {
   std::copy(sendbuf, sendbuf + count, recvbuf);
   return 0;

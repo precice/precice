@@ -10,8 +10,7 @@ using namespace precice::com;
 
 BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
-BOOST_AUTO_TEST_SUITE(MPISinglePorts,
-                      *boost::unit_test::label("MPI_Ports"))
+BOOST_AUTO_TEST_SUITE(MPISinglePorts, *boost::unit_test::label("MPI_Ports"))
 
 BOOST_AUTO_TEST_CASE(SendAndReceiveMM)
 {

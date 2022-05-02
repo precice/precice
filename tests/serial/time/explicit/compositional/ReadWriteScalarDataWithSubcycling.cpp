@@ -30,12 +30,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 
   typedef double (*DataFunction)(double);
 
-  DataFunction dataOneFunction = [](double t) -> double {
-    return (double) (2 + t);
-  };
-  DataFunction dataTwoFunction = [](double t) -> double {
-    return (double) (10 + t);
-  };
+  DataFunction dataOneFunction = [](double t) -> double { return (double) (2 + t); };
+  DataFunction dataTwoFunction = [](double t) -> double { return (double) (10 + t); };
   DataFunction writeFunction;
   DataFunction readFunction;
 
@@ -65,10 +61,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   double windowDt      = maxDt;
   int    timestep      = 0;
   int    timewindow    = 0;
-  double dt            = windowDt / (nSubsteps - 0.5);                 // Solver tries to do a timestep of size 4/7
-  double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
-  double currentDt     = dt > maxDt ? maxDt : dt;                      // determine actual timestep length; must fit into remaining time in window
-  double time          = timestep * dt;
+  double dt            = windowDt / (nSubsteps - 0.5); // Solver tries to do a timestep of size 4/7
+  double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0,
+                          2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via
+                                      // preCICE steering to fit into the window.
+  double currentDt =
+      dt > maxDt ? maxDt : dt; // determine actual timestep length; must fit into remaining time in window
+  double time = timestep * dt;
 
   if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
     writeData = writeFunction(time);

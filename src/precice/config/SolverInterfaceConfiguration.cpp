@@ -30,27 +30,20 @@ SolverInterfaceConfiguration::SolverInterfaceConfiguration(xml::XMLTag &parent)
                             .setDocumentation("Determines the spatial dimensionality of the configuration")
                             .setOptions({2, 3});
   tag.addAttribute(attrDimensions);
-  auto attrExperimental = makeXMLAttribute("experimental", false)
-                              .setDocumentation("Enable experimental features.");
+  auto attrExperimental = makeXMLAttribute("experimental", false).setDocumentation("Enable experimental features.");
   tag.addAttribute(attrExperimental);
 
-  _dataConfiguration = std::make_shared<mesh::DataConfiguration>(
-      tag);
-  _meshConfiguration = std::make_shared<mesh::MeshConfiguration>(
-      tag, _dataConfiguration);
-  _m2nConfiguration = std::make_shared<m2n::M2NConfiguration>(
-      tag);
-  _participantConfiguration = std::make_shared<ParticipantConfiguration>(
-      tag, _meshConfiguration);
+  _dataConfiguration           = std::make_shared<mesh::DataConfiguration>(tag);
+  _meshConfiguration           = std::make_shared<mesh::MeshConfiguration>(tag, _dataConfiguration);
+  _m2nConfiguration            = std::make_shared<m2n::M2NConfiguration>(tag);
+  _participantConfiguration    = std::make_shared<ParticipantConfiguration>(tag, _meshConfiguration);
   _couplingSchemeConfiguration = std::make_shared<cplscheme::CouplingSchemeConfiguration>(
       tag, _meshConfiguration, _m2nConfiguration, _participantConfiguration);
 
   parent.addSubtag(tag);
 }
 
-void SolverInterfaceConfiguration::xmlTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+void SolverInterfaceConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   PRECICE_TRACE();
   if (tag.getName() == "solver-interface") {
@@ -66,23 +59,23 @@ void SolverInterfaceConfiguration::xmlTagCallback(
   }
 }
 
-void SolverInterfaceConfiguration::xmlEndTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+void SolverInterfaceConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   PRECICE_TRACE();
   if (tag.getName() == "solver-interface") {
-    //test if both participants do have the exchange meshes
+    // test if both participants do have the exchange meshes
     typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
     for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
       bool participantFound = false;
       for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
         if (participant->getName() == neededMeshes.first) {
           for (const std::string &neededMesh : neededMeshes.second) {
-            PRECICE_CHECK(participant->isMeshUsed(neededMesh),
-                          "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
-                          "Please either add a use-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.",
-                          neededMeshes.first, neededMesh);
+            PRECICE_CHECK(
+                participant->isMeshUsed(neededMesh),
+                "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
+                "Please either add a use-mesh tag in this participant's configuration, or use a different mesh in the "
+                "coupling scheme.",
+                neededMeshes.first, neededMesh);
           }
           participantFound = true;
           break;
@@ -98,8 +91,7 @@ int SolverInterfaceConfiguration::getDimensions() const
   return _dimensions;
 }
 
-const PtrParticipantConfiguration &
-SolverInterfaceConfiguration::getParticipantConfiguration() const
+const PtrParticipantConfiguration &SolverInterfaceConfiguration::getParticipantConfiguration() const
 {
   return _participantConfiguration;
 }

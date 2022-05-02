@@ -11,23 +11,18 @@
 
 namespace precice {
 namespace com {
-CommunicateBoundingBox::CommunicateBoundingBox(
-    com::PtrCommunication communication)
+CommunicateBoundingBox::CommunicateBoundingBox(com::PtrCommunication communication)
     : _communication(std::move(communication))
 {
 }
 
-void CommunicateBoundingBox::sendBoundingBox(
-    const mesh::BoundingBox &bb,
-    int                      rankReceiver)
+void CommunicateBoundingBox::sendBoundingBox(const mesh::BoundingBox &bb, int rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
   _communication->send(bb.dataVector(), rankReceiver);
 }
 
-void CommunicateBoundingBox::receiveBoundingBox(
-    mesh::BoundingBox &bb,
-    int                rankSender)
+void CommunicateBoundingBox::receiveBoundingBox(mesh::BoundingBox &bb, int rankSender)
 {
   PRECICE_TRACE(rankSender);
   std::vector<double> receivedData;
@@ -36,9 +31,7 @@ void CommunicateBoundingBox::receiveBoundingBox(
   bb = std::move(tempBB);
 }
 
-void CommunicateBoundingBox::sendBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm,
-    int                         rankReceiver)
+void CommunicateBoundingBox::sendBoundingBoxMap(mesh::Mesh::BoundingBoxMap &bbm, int rankReceiver)
 {
 
   PRECICE_TRACE(rankReceiver);
@@ -49,9 +42,7 @@ void CommunicateBoundingBox::sendBoundingBoxMap(
   }
 }
 
-void CommunicateBoundingBox::receiveBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm,
-    int                         rankSender)
+void CommunicateBoundingBox::receiveBoundingBoxMap(mesh::Mesh::BoundingBoxMap &bbm, int rankSender)
 {
   PRECICE_TRACE(rankSender);
   int sizeOfReceivingMap;
@@ -64,9 +55,7 @@ void CommunicateBoundingBox::receiveBoundingBoxMap(
   }
 }
 
-void CommunicateBoundingBox::sendConnectionMap(
-    std::map<int, std::vector<int>> const &fbm,
-    int                                    rankReceiver)
+void CommunicateBoundingBox::sendConnectionMap(std::map<int, std::vector<int>> const &fbm, int rankReceiver)
 {
   PRECICE_TRACE(rankReceiver);
   _communication->send(static_cast<int>(fbm.size()), rankReceiver);
@@ -78,9 +67,7 @@ void CommunicateBoundingBox::sendConnectionMap(
 }
 
 ///@todo needs some rewrite eventually. do we assume that the ranks are ordered or not? maybe change to vector
-void CommunicateBoundingBox::receiveConnectionMap(
-    std::map<int, std::vector<int>> &fbm,
-    int                              rankSender)
+void CommunicateBoundingBox::receiveConnectionMap(std::map<int, std::vector<int>> &fbm, int rankSender)
 {
   PRECICE_TRACE(rankSender);
   int sizeOfReceivingMap;
@@ -98,8 +85,7 @@ void CommunicateBoundingBox::receiveConnectionMap(
   }
 }
 
-void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm)
+void CommunicateBoundingBox::broadcastSendBoundingBoxMap(mesh::Mesh::BoundingBoxMap &bbm)
 {
   PRECICE_TRACE();
   _communication->broadcast(static_cast<int>(bbm.size()));
@@ -109,8 +95,7 @@ void CommunicateBoundingBox::broadcastSendBoundingBoxMap(
   }
 }
 
-void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
-    mesh::Mesh::BoundingBoxMap &bbm)
+void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(mesh::Mesh::BoundingBoxMap &bbm)
 {
   PRECICE_TRACE();
   int sizeOfReceivingMap;
@@ -126,8 +111,7 @@ void CommunicateBoundingBox::broadcastReceiveBoundingBoxMap(
   }
 }
 
-void CommunicateBoundingBox::broadcastSendConnectionMap(
-    std::map<int, std::vector<int>> const &fbm)
+void CommunicateBoundingBox::broadcastSendConnectionMap(std::map<int, std::vector<int>> const &fbm)
 {
   PRECICE_TRACE();
   _communication->broadcast(static_cast<int>(fbm.size()));
@@ -137,8 +121,7 @@ void CommunicateBoundingBox::broadcastSendConnectionMap(
   }
 }
 
-void CommunicateBoundingBox::broadcastReceiveConnectionMap(
-    std::map<int, std::vector<int>> &fbm)
+void CommunicateBoundingBox::broadcastReceiveConnectionMap(std::map<int, std::vector<int>> &fbm)
 {
   PRECICE_TRACE();
   int sizeOfReceivingMap;

@@ -13,8 +13,7 @@ class PointToPointComFactory : public DistributedComFactory {
 public:
   explicit PointToPointComFactory(com::PtrCommunicationFactory comFactory);
 
-  DistributedCommunication::SharedPointer newDistributedCommunication(
-      mesh::PtrMesh mesh);
+  DistributedCommunication::SharedPointer newDistributedCommunication(mesh::PtrMesh mesh);
 
 private:
   /// communication factory for 1:M communications

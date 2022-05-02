@@ -52,8 +52,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
     while (couplingInterface.isCouplingOngoing()) {
       // Write data
-      couplingInterface.writeBlockScalarData(dataID, meshSize,
-                                             ids.data(), writeData.data());
+      couplingInterface.writeBlockScalarData(dataID, meshSize, ids.data(), writeData.data());
       dt = couplingInterface.advance(dt);
     }
 
@@ -73,8 +72,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
     while (couplingInterface.isCouplingOngoing()) {
 
       dt = couplingInterface.advance(dt);
-      couplingInterface.readBlockScalarData(dataID, ids.size(),
-                                            ids.data(), readData.data());
+      couplingInterface.readBlockScalarData(dataID, ids.size(), ids.data(), readData.data());
       // Expected data according to the writeData
       std::vector<double> expectedData({1, 2, 3, 4});
       BOOST_TEST(precice::testing::equals(expectedData, readData));

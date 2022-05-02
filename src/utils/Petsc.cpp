@@ -34,31 +34,33 @@ using new_signature = PetscErrorCode(PetscOptions, const char[], const char[]);
 using old_signature = PetscErrorCode(const char[], const char[]);
 
 /**
- * @brief Fix for compatibility with PETSc < 3.7. 
- * 
+ * @brief Fix for compatibility with PETSc < 3.7.
+ *
  * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst 
+ * This instantiates only the template, that specifies correct function signature, whilst
  * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
  */
 template <typename curr_signature = decltype(PetscOptionsSetValue)>
-PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[],
-                                           typename std::enable_if<std::is_same<curr_signature, new_signature>::value, curr_signature>::type PetscOptionsSetValueImpl =
-                                               PetscOptionsSetValue)
+PetscErrorCode PetscOptionsSetValueWrapper(
+    const char name[], const char value[],
+    typename std::enable_if<std::is_same<curr_signature, new_signature>::value, curr_signature>::type
+        PetscOptionsSetValueImpl = PetscOptionsSetValue)
 {
   return PetscOptionsSetValueImpl(nullptr, name, value);
 }
 
 /**
- * @brief Fix for compatibility with PETSc < 3.7. 
- * 
+ * @brief Fix for compatibility with PETSc < 3.7.
+ *
  * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst 
+ * This instantiates only the template, that specifies correct function signature, whilst
  * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
  */
 template <typename curr_signature = decltype(PetscOptionsSetValue)>
-PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[],
-                                           typename std::enable_if<std::is_same<curr_signature, old_signature>::value, curr_signature>::type PetscOptionsSetValueImpl =
-                                               PetscOptionsSetValue)
+PetscErrorCode PetscOptionsSetValueWrapper(
+    const char name[], const char value[],
+    typename std::enable_if<std::is_same<curr_signature, old_signature>::value, curr_signature>::type
+        PetscOptionsSetValueImpl = PetscOptionsSetValue)
 {
   return PetscOptionsSetValueImpl(name, value);
 }
@@ -70,10 +72,7 @@ logging::Logger Petsc::_log("utils::Petsc");
 
 bool Petsc::weInitialized = false;
 
-void Petsc::initialize(
-    int *                  argc,
-    char ***               argv,
-    Parallel::Communicator comm)
+void Petsc::initialize(int *argc, char ***argv, Parallel::Communicator comm)
 {
   PRECICE_TRACE();
 #ifndef PRECICE_NO_PETSC
@@ -157,24 +156,21 @@ struct Viewer {
   PetscViewer viewer{nullptr};
 };
 
-template <class T>
-MPI_Comm getCommunicator(T obj)
+template <class T> MPI_Comm getCommunicator(T obj)
 {
   MPI_Comm comm;
   PetscObjectGetComm(reinterpret_cast<PetscObject>(obj), &comm);
   return comm;
 }
 
-template <class T>
-void setName(T obj, const std::string &name)
+template <class T> void setName(T obj, const std::string &name)
 {
   PetscErrorCode ierr = 0;
   ierr                = PetscObjectSetName(reinterpret_cast<PetscObject>(obj), name.c_str());
   CHKERRV(ierr);
 }
 
-template <class T>
-std::string getName(T obj)
+template <class T> std::string getName(T obj)
 {
   const char *cstr;
   PetscObjectGetName(reinterpret_cast<PetscObject>(obj), &cstr);
@@ -222,8 +218,7 @@ Vector::Vector(const std::string &name)
   setName(vector, name);
 }
 
-Vector::Vector(Vec &v, const std::string &name)
-    : vector(v)
+Vector::Vector(Vec &v, const std::string &name) : vector(v)
 {
   setName(vector, name);
 }
@@ -450,8 +445,8 @@ void Matrix::assemble(MatAssemblyType type)
   CHKERRV(ierr);
 }
 
-void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols,
-                  MatType type, bool doSetup)
+void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type,
+                  bool doSetup)
 {
   PetscErrorCode ierr = 0;
   if (type != nullptr) {
@@ -718,7 +713,8 @@ std::string KSPSolver::summaryFor(Vector &b)
   double dlim  = bnorm * dtol;
   double rlim  = bnorm * rtol;
 
-  oss << ". Last residual norm: " << getResidualNorm() << ", limits: relative " << rlim << " (rtol " << rtol << "), absolute " << atol << ", divergence " << dlim << "(dtol " << dtol << ')';
+  oss << ". Last residual norm: " << getResidualNorm() << ", limits: relative " << rlim << " (rtol " << rtol
+      << "), absolute " << atol << ", divergence " << dlim << "(dtol " << dtol << ')';
 
   return oss.str();
 }

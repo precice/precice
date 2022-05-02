@@ -10,8 +10,7 @@ namespace acceleration {
 namespace impl {
 
 ConstantPreconditioner::ConstantPreconditioner(std::vector<double> factors)
-    : Preconditioner(-1),
-      _factors(std::move(factors))
+    : Preconditioner(-1), _factors(std::move(factors))
 {
 }
 
@@ -36,12 +35,11 @@ void ConstantPreconditioner::initialize(std::vector<size_t> &svs)
   }
 }
 
-void ConstantPreconditioner::_update_(bool                   timeWindowComplete,
-                                      const Eigen::VectorXd &oldValues,
+void ConstantPreconditioner::_update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues,
                                       const Eigen::VectorXd &res)
 {
 
-  //nothing to do here
+  // nothing to do here
 }
 
 } // namespace impl

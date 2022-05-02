@@ -12,20 +12,13 @@ namespace action {
 class ComputeCurvatureAction : public Action {
 public:
   /// Constructor. Curvature values are stored in scalar data with given ID.
-  ComputeCurvatureAction(
-      Timing               timing,
-      int                  dataID,
-      const mesh::PtrMesh &mesh);
+  ComputeCurvatureAction(Timing timing, int dataID, const mesh::PtrMesh &mesh);
 
   /// Destructor, empty.
   virtual ~ComputeCurvatureAction() {}
 
   /// Computes the curvature of the mesh geometry.
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  virtual void performAction(double time, double timeStepSize, double computedTimeWindowPart, double timeWindowSize);
 
 private:
   logging::Logger _log{"action::ComputeCurvatureAction"};

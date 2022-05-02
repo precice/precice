@@ -34,8 +34,8 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  printf("DUMMY: Running solver dummy with preCICE config file \"%s\" and participant name \"%s\".\n",
-         configFileName, participantName);
+  printf("DUMMY: Running solver dummy with preCICE config file \"%s\" and participant name \"%s\".\n", configFileName,
+         participantName);
 
   const char *writeItCheckp = precicec_actionWriteIterationCheckpoint();
   const char *readItCheckp  = precicec_actionReadIterationCheckpoint();

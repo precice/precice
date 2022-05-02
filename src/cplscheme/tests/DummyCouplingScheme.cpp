@@ -6,17 +6,12 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-DummyCouplingScheme::DummyCouplingScheme(
-    int numberIterations,
-    int maxTimesteps)
-    : _numberIterations(numberIterations),
-      _maxTimesteps(maxTimesteps)
+DummyCouplingScheme::DummyCouplingScheme(int numberIterations, int maxTimesteps)
+    : _numberIterations(numberIterations), _maxTimesteps(maxTimesteps)
 {
 }
 
-void DummyCouplingScheme::initialize(
-    double startTime,
-    int    startTimesteps)
+void DummyCouplingScheme::initialize(double startTime, int startTimesteps)
 {
   PRECICE_ASSERT(not _isInitialized);
   _isInitialized = true;
@@ -52,8 +47,7 @@ bool DummyCouplingScheme::isCouplingOngoing() const
   return false;
 }
 
-bool DummyCouplingScheme::isActionRequired(
-    const std::string &actionName) const
+bool DummyCouplingScheme::isActionRequired(const std::string &actionName) const
 {
   if (_numberIterations > 1) {
     if (actionName == constants::actionWriteIterationCheckpoint()) {

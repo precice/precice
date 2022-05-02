@@ -109,24 +109,7 @@ BOOST_AUTO_TEST_CASE(TimeSeries)
   {
     auto result   = readDoublesFromTXTFile(filename0, 6);
     auto expected = std::vector<double>{
-        0.0,
-        0.0,
-        0.0,
-        1.0,
-        1.0,
-        2.0,
-        1.0,
-        0.0,
-        0.0,
-        2.0,
-        2.0,
-        3.0,
-        2.0,
-        0.0,
-        0.0,
-        2.0,
-        2.0,
-        3.0,
+        0.0, 0.0, 0.0, 1.0, 1.0, 2.0, 1.0, 0.0, 0.0, 2.0, 2.0, 3.0, 2.0, 0.0, 0.0, 2.0, 2.0, 3.0,
     };
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
@@ -140,11 +123,9 @@ BOOST_AUTO_TEST_CASE(TimeSeries)
 
   BOOST_TEST_CONTEXT("Validating watchpoint1")
   {
-    auto result   = readDoublesFromTXTFile(filename1, 6);
-    auto expected = std::vector<double>{
-        0.0, 0.0, 0.5, 1.5, 2.0, 3.0,
-        1.0, 0.0, 0.5, 2.5, 3.0, 4.0,
-        2.0, 0.0, 0.5, 2.5, 3.0, 4.0};
+    auto result = readDoublesFromTXTFile(filename1, 6);
+    auto expected =
+        std::vector<double>{0.0, 0.0, 0.5, 1.5, 2.0, 3.0, 1.0, 0.0, 0.5, 2.5, 3.0, 4.0, 2.0, 0.0, 0.5, 2.5, 3.0, 4.0};
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
       BOOST_TEST_CONTEXT("entry index: " << i)
@@ -230,9 +211,7 @@ BOOST_AUTO_TEST_CASE(Reinitalize)
   BOOST_TEST_CONTEXT("Validating watchpoint0")
   {
     auto result   = readDoublesFromTXTFile(filename0, 6);
-    auto expected = std::vector<double>{
-        0.0, 0.0, 0.5, 1.0, 1.0, 1.0,
-        1.0, 0.0, 0.5, 1.0, 1.0, 1.0};
+    auto expected = std::vector<double>{0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.0, 0.5, 1.0, 1.0, 1.0};
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
       BOOST_TEST_CONTEXT("entry index: " << i)
@@ -246,9 +225,7 @@ BOOST_AUTO_TEST_CASE(Reinitalize)
   BOOST_TEST_CONTEXT("Validating watchpoint1")
   {
     auto result   = readDoublesFromTXTFile(filename1, 6);
-    auto expected = std::vector<double>{
-        0.0, 0.0, 0.5, 1.0, 1.0, 1.0,
-        1.0, 1.0, 0.5, 2.0, 2.0, 2.0};
+    auto expected = std::vector<double>{0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 2.0, 2.0};
     BOOST_TEST(result.size() == expected.size());
     for (size_t i = 0; i < result.size(); ++i) {
       BOOST_TEST_CONTEXT("entry index: " << i)

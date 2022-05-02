@@ -37,15 +37,14 @@ inline Vertex *sharedVertex(Edge &a, Edge &b)
  *
  * @param[in] e the edge
  *
- * @returns the distance between both vertices of e 
+ * @returns the distance between both vertices of e
  */
 inline double edgeLength(const Edge &e)
 {
   return (e.vertex(0).getCoords() - e.vertex(1).getCoords()).norm();
 }
 
-template <std::size_t n>
-struct Chain {
+template <std::size_t n> struct Chain {
   /// true if the chain is connected or closed and thus valid
   bool connected;
   /// undefined if not connected
@@ -64,8 +63,7 @@ struct Chain {
  *
  * @returns A \ref Chain of the input
  */
-template <std::size_t n>
-Chain<n> asChain(std::array<mesh::Edge *, n> edges)
+template <std::size_t n> Chain<n> asChain(std::array<mesh::Edge *, n> edges)
 {
   static_assert(n > 1, "You already know the answer.");
   Chain<n> chain;
@@ -87,8 +85,7 @@ Chain<n> asChain(std::array<mesh::Edge *, n> edges)
     }
   }
   // the last edge just needs to be checked
-  if (!edges[n - 1]->connectedTo(*edges[n - 2]) ||
-      !edges[n - 1]->connectedTo(*edges[0])) {
+  if (!edges[n - 1]->connectedTo(*edges[n - 2]) || !edges[n - 1]->connectedTo(*edges[0])) {
     return chain;
   }
   chain.edges = edges;
@@ -103,19 +100,16 @@ Chain<n> asChain(std::array<mesh::Edge *, n> edges)
 }
 
 /// Given a mesh and an array of vertexIDS, this function returns an array of pointers to vertices
-template <std::size_t n>
-std::array<Vertex *, n> vertexPtrsFor(Mesh &mesh, const std::array<int, n> &vertexIDs)
+template <std::size_t n> std::array<Vertex *, n> vertexPtrsFor(Mesh &mesh, const std::array<int, n> &vertexIDs)
 {
   static_assert(n > 0, "Cannot handle nothing.");
   std::array<Vertex *, n> vptrs;
-  std::transform(vertexIDs.begin(), vertexIDs.end(), vptrs.begin(),
-                 [&mesh](int id) { return &(mesh.vertices()[id]); });
+  std::transform(vertexIDs.begin(), vertexIDs.end(), vptrs.begin(), [&mesh](int id) { return &(mesh.vertices()[id]); });
   return vptrs;
 }
 
 /// Given a mesh and an array of vertexIDS, this function returns an array of coordinates of the vertices
-template <std::size_t n>
-std::array<Eigen::VectorXd, n> coordsFor(const Mesh &mesh, const std::array<int, n> &vertexIDs)
+template <std::size_t n> std::array<Eigen::VectorXd, n> coordsFor(const Mesh &mesh, const std::array<int, n> &vertexIDs)
 {
   std::array<Eigen::VectorXd, n> coords;
   std::transform(vertexIDs.begin(), vertexIDs.end(), coords.begin(),
@@ -124,12 +118,10 @@ std::array<Eigen::VectorXd, n> coordsFor(const Mesh &mesh, const std::array<int,
 }
 
 /// Given an array of vertex pointers, this function returns an array of coordinates of the vertices
-template <std::size_t n>
-std::array<Eigen::VectorXd, n> coordsFor(const std::array<Vertex *, n> &vertexPtrs)
+template <std::size_t n> std::array<Eigen::VectorXd, n> coordsFor(const std::array<Vertex *, n> &vertexPtrs)
 {
   std::array<Eigen::VectorXd, n> coords;
-  std::transform(vertexPtrs.begin(), vertexPtrs.end(), coords.begin(),
-                 [](Vertex *v) { return v->getCoords(); });
+  std::transform(vertexPtrs.begin(), vertexPtrs.end(), coords.begin(), [](Vertex *v) { return v->getCoords(); });
   return coords;
 }
 

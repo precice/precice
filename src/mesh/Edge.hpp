@@ -22,10 +22,7 @@ public:
    * @param[in] vertexTwo Second Vertex object defining the edge.
    * @param[in] id Unique (among edges in one mesh) ID.
    */
-  Edge(
-      Vertex &vertexOne,
-      Vertex &vertexTwo,
-      EdgeID  id);
+  Edge(Vertex &vertexOne, Vertex &vertexTwo, EdgeID id);
 
   /// Returns number of spatial dimensions (2 or 3) the edge is embedded to.
   int getDimensions() const;
@@ -72,15 +69,13 @@ private:
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
 
-inline Vertex &Edge::vertex(
-    int i)
+inline Vertex &Edge::vertex(int i)
 {
   PRECICE_ASSERT((i == 0) || (i == 1), i);
   return *_vertices[i];
 }
 
-inline const Vertex &Edge::vertex(
-    int i) const
+inline const Vertex &Edge::vertex(int i) const
 {
   PRECICE_ASSERT((i == 0) || (i == 1), i);
   return *_vertices[i];

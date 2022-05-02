@@ -9,14 +9,8 @@
 namespace precice {
 namespace cplscheme {
 
-CouplingData::CouplingData(
-    mesh::PtrData data,
-    mesh::PtrMesh mesh,
-    bool          requiresInitialization,
-    int           extrapolationOrder)
-    : requiresInitialization(requiresInitialization),
-      _data(std::move(data)),
-      _mesh(std::move(mesh)),
+CouplingData::CouplingData(mesh::PtrData data, mesh::PtrMesh mesh, bool requiresInitialization, int extrapolationOrder)
+    : requiresInitialization(requiresInitialization), _data(std::move(data)), _mesh(std::move(mesh)),
       _extrapolation(extrapolationOrder)
 {
   PRECICE_ASSERT(_data != nullptr);

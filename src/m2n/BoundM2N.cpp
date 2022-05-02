@@ -55,7 +55,8 @@ void BoundM2N::preConnectSecondaryRanks()
   if (not m2n->usesTwoLevelInitialization())
     return;
 
-  PRECICE_WARN("Two-level initialization is still in beta testing. Several edge cases are known to fail. Please report problems nevertheless.");
+  PRECICE_WARN("Two-level initialization is still in beta testing. Several edge cases are known to fail. Please report "
+               "problems nevertheless.");
 
   if (isRequesting) {
     PRECICE_DEBUG("Awaiting preliminary secondary connections from {}", remoteName);

@@ -19,11 +19,9 @@ BOOST_AUTO_TEST_CASE(TXTTableWriterTest)
   for (int t = 0; t < 10; t++) {
     writer.writeData("Timestep", t);
     writer.writeData("Flowrate", 0.0 + (double) t);
-    writer.writeData("Force2D", Eigen::Vector2d(0.0 + 2.0 * (double) t,
-                                                0.0 + 2.0 * (double) t));
-    writer.writeData("Force3D", Eigen::Vector3d(0.0 + 2.0 * (double) t,
-                                                0.0 + 2.0 * (double) t,
-                                                0.0 + 2.0 * (double) t));
+    writer.writeData("Force2D", Eigen::Vector2d(0.0 + 2.0 * (double) t, 0.0 + 2.0 * (double) t));
+    writer.writeData("Force3D",
+                     Eigen::Vector3d(0.0 + 2.0 * (double) t, 0.0 + 2.0 * (double) t, 0.0 + 2.0 * (double) t));
   }
   writer.reset();
 

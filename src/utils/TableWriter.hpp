@@ -35,8 +35,7 @@ public:
   Table(std::ostream &out);
 
   /// Adds a column of given name, width and float precision
-  template <class... T>
-  void addColumn(T &&... arg)
+  template <class... T> void addColumn(T &&...arg)
   {
     cols.emplace_back(std::forward<T>(arg)...);
   }
@@ -45,18 +44,16 @@ public:
   void printHeader();
 
   /// Prints a line, accepting arbitrary arguments
-  template <class... Ts>
-  void printRow(Ts... args)
+  template <class... Ts> void printRow(Ts... args)
   {
     printRow(static_cast<size_t>(0), args...);
   }
 
   /// Prints a ostream convertible type
-  template <class T, class... Ts>
-  void printRow(size_t index, T a, Ts... args)
+  template <class T, class... Ts> void printRow(size_t index, T a, Ts... args)
   {
-    out << padding << std::setw(cols[index].width) << std::setprecision(cols[index].precision)
-        << a << padding << sepChar;
+    out << padding << std::setw(cols[index].width) << std::setprecision(cols[index].precision) << a << padding
+        << sepChar;
     printRow(index + 1, args...);
   }
 
@@ -65,16 +62,15 @@ public:
   void printRow(size_t index, std::chrono::duration<Rep, Period> duration, Ts... args)
   {
     double ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    out << padding << std::setw(cols[index].width) << std::setprecision(cols[index].precision)
-        << ms << padding << sepChar;
+    out << padding << std::setw(cols[index].width) << std::setprecision(cols[index].precision) << ms << padding
+        << sepChar;
     printRow(index + 1, args...);
   }
 
   /// Recursion anchor, prints the last entry and the endl
-  template <class T>
-  void printRow(size_t index, T a)
+  template <class T> void printRow(size_t index, T a)
   {
-    out << padding << std::setw(cols[index].width) << std::setprecision(cols[index].precision)
-        << a << padding << sepChar << '\n';
+    out << padding << std::setw(cols[index].width) << std::setprecision(cols[index].precision) << a << padding
+        << sepChar << '\n';
   }
 };

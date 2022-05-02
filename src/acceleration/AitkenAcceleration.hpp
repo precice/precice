@@ -13,9 +13,7 @@ namespace acceleration {
 
 class AitkenAcceleration : public Acceleration {
 public:
-  AitkenAcceleration(
-      double           initialRelaxationFactor,
-      std::vector<int> dataIDs);
+  AitkenAcceleration(double initialRelaxationFactor, std::vector<int> dataIDs);
 
   virtual ~AitkenAcceleration() {}
 
@@ -24,14 +22,11 @@ public:
     return _dataIDs;
   }
 
-  virtual void initialize(
-      const DataMap &cpldata);
+  virtual void initialize(const DataMap &cpldata);
 
-  virtual void performAcceleration(
-      const DataMap &cpldata);
+  virtual void performAcceleration(const DataMap &cpldata);
 
-  virtual void iterationsConverged(
-      const DataMap &cpldata);
+  virtual void iterationsConverged(const DataMap &cpldata);
 
 private:
   logging::Logger _log{"acceleration::AitkenAcceleration"};

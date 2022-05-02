@@ -25,12 +25,14 @@ struct WhiteboxAccessor;
 /**
  * @brief M2N communication class.
  * This layer is necessary since communication between two participants can be working via several meshes,
- * each possibly with a different decomposition. In principle, this class is only a map from meshes to DistributedCommunications
+ * each possibly with a different decomposition. In principle, this class is only a map from meshes to
+ * DistributedCommunications
  *
  */
 class M2N {
 public:
-  M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom = false, bool useTwoLevelInit = false);
+  M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory,
+      bool useOnlyPrimaryCom = false, bool useTwoLevelInit = false);
 
   /// Destructor, empty.
   ~M2N();
@@ -44,8 +46,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptPrimaryConnection(const std::string &acceptorName,
-                               const std::string &requesterName);
+  void acceptPrimaryConnection(const std::string &acceptorName, const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
@@ -53,8 +54,7 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestPrimaryConnection(const std::string &acceptorName,
-                                const std::string &requesterName);
+  void requestPrimaryConnection(const std::string &acceptorName, const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
@@ -62,8 +62,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    */
-  void acceptSecondaryConnections(const std::string &acceptorName,
-                                  const std::string &requesterName);
+  void acceptSecondaryConnections(const std::string &acceptorName, const std::string &requesterName);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
@@ -71,22 +70,19 @@ public:
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
    */
-  void requestSecondaryConnections(const std::string &acceptorName,
-                                   const std::string &requesterName);
+  void requestSecondaryConnections(const std::string &acceptorName, const std::string &requesterName);
 
   /**
    * Same as acceptSecondaryConnections except this only creates the channels,
    * no vertex list needed!
    */
-  void acceptSecondaryPreConnections(const std::string &acceptorName,
-                                     const std::string &requesterName);
+  void acceptSecondaryPreConnections(const std::string &acceptorName, const std::string &requesterName);
 
   /**
    * Same as requestSecondaryConnections except this only creates the channels,
    * no vertex list needed!
    */
-  void requestSecondaryRanksPreConnection(const std::string &acceptorName,
-                                          const std::string &requesterName);
+  void requestSecondaryRanksPreConnection(const std::string &acceptorName, const std::string &requesterName);
 
   /*
    * @brief After preliminary communication channels were set up and after
@@ -108,8 +104,7 @@ public:
    * @see com::Communication::prepareEstablishment()
    * @see cleanupEstablishment()
    */
-  void prepareEstablishment(const std::string &acceptorName,
-                            const std::string &requesterName);
+  void prepareEstablishment(const std::string &acceptorName, const std::string &requesterName);
 
   /**
    * @brief cleans-up to establish the connections
@@ -123,8 +118,7 @@ public:
    * @see com::Communication::cleanupEstablishment()
    * @see prepareEstablishment()
    */
-  void cleanupEstablishment(const std::string &acceptorName,
-                            const std::string &requesterName);
+  void cleanupEstablishment(const std::string &acceptorName, const std::string &requesterName);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -147,9 +141,7 @@ public:
   void createDistributedCommunication(const mesh::PtrMesh &mesh);
 
   /// Sends an array of double values from all ranks (different for each rank).
-  void send(precice::span<double const> itemsToSend,
-            int                         meshID,
-            int                         valueDimension);
+  void send(precice::span<double const> itemsToSend, int meshID, int valueDimension);
 
   /**
    * @brief The primary rank sends a bool to the other primary rank, for performance reasons, we
@@ -175,9 +167,7 @@ public:
   /// All ranks receive an array of doubles (different for each rank).
   /// The values received can be gradient data
   /// Gradient dimension : 0: dx-values, 1: dy-values, 2:dz-values
-  void receive(precice::span<double> itemsToReceive,
-               int                   meshID,
-               int                   valueDimension);
+  void receive(precice::span<double> itemsToReceive, int meshID, int valueDimension);
 
   /// All ranks receive a bool (the same for each rank).
   void receive(bool &itemToReceive);
@@ -236,7 +226,8 @@ private:
 
 /// struct giving access _useOnlyPrimaryCom
 struct WhiteboxAccessor {
-  static auto useOnlyPrimaryCom(PtrM2N m2n) -> typename std::add_lvalue_reference<decltype(m2n->_useOnlyPrimaryCom)>::type
+  static auto useOnlyPrimaryCom(PtrM2N m2n) ->
+      typename std::add_lvalue_reference<decltype(m2n->_useOnlyPrimaryCom)>::type
   {
     return m2n->_useOnlyPrimaryCom;
   }

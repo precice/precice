@@ -12,16 +12,13 @@
 namespace precice {
 namespace cplscheme {
 
-void CompositionalCouplingScheme::addCouplingScheme(
-    const PtrCouplingScheme &couplingScheme)
+void CompositionalCouplingScheme::addCouplingScheme(const PtrCouplingScheme &couplingScheme)
 {
   PRECICE_TRACE();
   _couplingSchemes.emplace_back(couplingScheme);
 }
 
-void CompositionalCouplingScheme::initialize(
-    double startTime,
-    int    startTimeWindow)
+void CompositionalCouplingScheme::initialize(double startTime, int startTimeWindow)
 {
   PRECICE_TRACE(startTime, startTimeWindow);
   for (const Scheme &scheme : _couplingSchemes) {
@@ -264,8 +261,7 @@ bool CompositionalCouplingScheme::isTimeWindowComplete() const
   return isComplete;
 }
 
-bool CompositionalCouplingScheme::isActionRequired(
-    const std::string &actionName) const
+bool CompositionalCouplingScheme::isActionRequired(const std::string &actionName) const
 {
   PRECICE_TRACE(actionName);
   bool isRequired = false;
@@ -278,8 +274,7 @@ bool CompositionalCouplingScheme::isActionRequired(
   return isRequired;
 }
 
-void CompositionalCouplingScheme::markActionFulfilled(
-    const std::string &actionName)
+void CompositionalCouplingScheme::markActionFulfilled(const std::string &actionName)
 {
   PRECICE_TRACE(actionName);
   for (const Scheme &scheme : _couplingSchemes) {
@@ -289,8 +284,7 @@ void CompositionalCouplingScheme::markActionFulfilled(
   }
 }
 
-void CompositionalCouplingScheme::requireAction(
-    const std::string &actionName)
+void CompositionalCouplingScheme::requireAction(const std::string &actionName)
 {
   PRECICE_TRACE(actionName);
   for (const Scheme &scheme : _couplingSchemes) {

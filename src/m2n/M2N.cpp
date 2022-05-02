@@ -18,10 +18,9 @@ extern bool syncMode;
 
 namespace m2n {
 
-M2N::M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom, bool useTwoLevelInit)
-    : _intraComm(std::move(intraComm)),
-      _distrFactory(std::move(distrFactory)),
-      _useOnlyPrimaryCom(useOnlyPrimaryCom),
+M2N::M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom,
+         bool useTwoLevelInit)
+    : _intraComm(std::move(intraComm)), _distrFactory(std::move(distrFactory)), _useOnlyPrimaryCom(useOnlyPrimaryCom),
       _useTwoLevelInit(useTwoLevelInit)
 {
 }
@@ -38,9 +37,7 @@ bool M2N::isConnected()
   return _isPrimaryRankConnected;
 }
 
-void M2N::acceptPrimaryConnection(
-    const std::string &acceptorName,
-    const std::string &requesterName)
+void M2N::acceptPrimaryConnection(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
 
@@ -56,9 +53,7 @@ void M2N::acceptPrimaryConnection(
   utils::MasterSlave::broadcast(_isPrimaryRankConnected);
 }
 
-void M2N::requestPrimaryConnection(
-    const std::string &acceptorName,
-    const std::string &requesterName)
+void M2N::requestPrimaryConnection(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
 
@@ -74,9 +69,7 @@ void M2N::requestPrimaryConnection(
   utils::MasterSlave::broadcast(_isPrimaryRankConnected);
 }
 
-void M2N::acceptSecondaryConnections(
-    const std::string &acceptorName,
-    const std::string &requesterName)
+void M2N::acceptSecondaryConnections(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
@@ -91,9 +84,7 @@ void M2N::acceptSecondaryConnections(
   PRECICE_ASSERT(_areSecondaryRanksConnected);
 }
 
-void M2N::requestSecondaryConnections(
-    const std::string &acceptorName,
-    const std::string &requesterName)
+void M2N::requestSecondaryConnections(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
@@ -108,23 +99,19 @@ void M2N::requestSecondaryConnections(
   PRECICE_ASSERT(_areSecondaryRanksConnected);
 }
 
-void M2N::prepareEstablishment(const std::string &acceptorName,
-                               const std::string &requesterName)
+void M2N::prepareEstablishment(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE();
   _intraComm->prepareEstablishment(acceptorName, requesterName);
 }
 
-void M2N::cleanupEstablishment(const std::string &acceptorName,
-                               const std::string &requesterName)
+void M2N::cleanupEstablishment(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE();
   _intraComm->cleanupEstablishment(acceptorName, requesterName);
 }
 
-void M2N::acceptSecondaryPreConnections(
-    const std::string &acceptorName,
-    const std::string &requesterName)
+void M2N::acceptSecondaryPreConnections(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
@@ -136,9 +123,7 @@ void M2N::acceptSecondaryPreConnections(
   PRECICE_ASSERT(_areSecondaryRanksConnected);
 }
 
-void M2N::requestSecondaryRanksPreConnection(
-    const std::string &acceptorName,
-    const std::string &requesterName)
+void M2N::requestSecondaryRanksPreConnection(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
@@ -206,10 +191,7 @@ void M2N::createDistributedCommunication(const mesh::PtrMesh &mesh)
   _distComs[mesh->getID()]                        = distCom;
 }
 
-void M2N::send(
-    precice::span<double const> itemsToSend,
-    int                         meshID,
-    int                         valueDimension)
+void M2N::send(precice::span<double const> itemsToSend, int meshID, int valueDimension)
 {
   if (not _useOnlyPrimaryCom) {
     PRECICE_ASSERT(_areSecondaryRanksConnected);
@@ -251,19 +233,16 @@ void M2N::send(double itemToSend)
 void M2N::broadcastSendMesh(mesh::Mesh &mesh)
 {
   MeshID meshID = mesh.getID();
-  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
-                 "This method can only be used for parallel participants");
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(), "This method can only be used for parallel participants");
   PRECICE_ASSERT(_areSecondaryRanksConnected);
   PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
   PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
   _distComs[meshID]->broadcastSendMesh();
 }
 
-void M2N::scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap,
-                                     mesh::Mesh &                     mesh)
+void M2N::scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh)
 {
-  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
-                 "This method can only be used for parallel participants");
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(), "This method can only be used for parallel participants");
   MeshID meshID = mesh.getID();
   PRECICE_ASSERT(_areSecondaryRanksConnected);
   _distComs[meshID]->scatterAllCommunicationMap(localCommunicationMap);
@@ -271,16 +250,13 @@ void M2N::scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommu
 
 void M2N::broadcastSend(int &itemToSend, mesh::Mesh &mesh)
 {
-  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
-                 "This method can only be used for parallel participants");
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(), "This method can only be used for parallel participants");
   MeshID meshID = mesh.getID();
   PRECICE_ASSERT(_areSecondaryRanksConnected);
   _distComs[meshID]->broadcastSend(itemToSend);
 }
 
-void M2N::receive(precice::span<double> itemsToReceive,
-                  int                   meshID,
-                  int                   valueDimension)
+void M2N::receive(precice::span<double> itemsToReceive, int meshID, int valueDimension)
 {
   if (not _useOnlyPrimaryCom) {
     PRECICE_ASSERT(_areSecondaryRanksConnected);
@@ -321,7 +297,7 @@ void M2N::receive(bool &itemToReceive)
 void M2N::receive(double &itemToReceive)
 {
   PRECICE_TRACE(utils::MasterSlave::getRank());
-  if (not utils::MasterSlave::isSecondary()) { //coupling mode
+  if (not utils::MasterSlave::isSecondary()) { // coupling mode
     _intraComm->receive(itemToReceive, 0);
   }
 
@@ -332,8 +308,7 @@ void M2N::receive(double &itemToReceive)
 
 void M2N::broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh)
 {
-  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
-                 "This method can only be used for parallel participants");
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(), "This method can only be used for parallel participants");
   MeshID meshID = mesh.getID();
   PRECICE_ASSERT(_areSecondaryRanksConnected);
   _distComs[meshID]->broadcastReceiveAll(itemToReceive);
@@ -341,8 +316,7 @@ void M2N::broadcastReceiveAll(std::vector<int> &itemToReceive, mesh::Mesh &mesh)
 
 void M2N::broadcastReceiveAllMesh(mesh::Mesh &mesh)
 {
-  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
-                 "This method can only be used for parallel participants");
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(), "This method can only be used for parallel participants");
   MeshID meshID = mesh.getID();
   PRECICE_ASSERT(_areSecondaryRanksConnected);
   PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
@@ -352,8 +326,7 @@ void M2N::broadcastReceiveAllMesh(mesh::Mesh &mesh)
 
 void M2N::gatherAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh)
 {
-  PRECICE_ASSERT(utils::MasterSlave::isParallel(),
-                 "This method can only be used for parallel participants");
+  PRECICE_ASSERT(utils::MasterSlave::isParallel(), "This method can only be used for parallel participants");
   MeshID meshID = mesh.getID();
   PRECICE_ASSERT(_areSecondaryRanksConnected);
   _distComs[meshID]->gatherAllCommunicationMap(localCommunicationMap);

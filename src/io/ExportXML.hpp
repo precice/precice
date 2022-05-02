@@ -21,22 +21,13 @@ namespace io {
 /// Common class to generate the VTK XML-based formats.
 class ExportXML : public Export {
 public:
-  void doExport(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh) override;
+  void doExport(const std::string &name, const std::string &location, const mesh::Mesh &mesh) override;
 
-  static void writeVertex(
-      const Eigen::VectorXd &position,
-      std::ostream &         outFile);
+  static void writeVertex(const Eigen::VectorXd &position, std::ostream &outFile);
 
-  static void writeLine(
-      const mesh::Edge &edge,
-      std::ostream &    outFile);
+  static void writeLine(const mesh::Edge &edge, std::ostream &outFile);
 
-  static void writeTriangle(
-      const mesh::Triangle &triangle,
-      std::ostream &        outFile);
+  static void writeTriangle(const mesh::Triangle &triangle, std::ostream &outFile);
 
 private:
   mutable logging::Logger _log{"io::ExportXML"};
@@ -53,42 +44,30 @@ private:
   virtual std::string getPieceAttributes(const mesh::Mesh &mesh) const = 0;
 
   /**
-    * @brief Stores scalar and vector data names in string vectors
-    * Needed for writing primary file and sub files
-    */
+   * @brief Stores scalar and vector data names in string vectors
+   * Needed for writing primary file and sub files
+   */
   void processDataNamesAndDimensions(const mesh::Mesh &mesh);
 
   /**
-    * @brief Writes the primary file (called only by the primary rank)
-    */
-  void writeParallelFile(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh) const;
+   * @brief Writes the primary file (called only by the primary rank)
+   */
+  void writeParallelFile(const std::string &name, const std::string &location, const mesh::Mesh &mesh) const;
 
   virtual void writeParallelCells(std::ostream &out) const = 0;
 
   void writeParallelData(std::ostream &out) const;
 
   /**
-    * @brief Writes the sub file for each rank
-    */
-  void writeSubFile(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh) const;
+   * @brief Writes the sub file for each rank
+   */
+  void writeSubFile(const std::string &name, const std::string &location, const mesh::Mesh &mesh) const;
 
-  void exportPoints(
-      std::ostream &    outFile,
-      const mesh::Mesh &mesh) const;
+  void exportPoints(std::ostream &outFile, const mesh::Mesh &mesh) const;
 
-  virtual void exportConnectivity(
-      std::ostream &    outFile,
-      const mesh::Mesh &mesh) const = 0;
+  virtual void exportConnectivity(std::ostream &outFile, const mesh::Mesh &mesh) const = 0;
 
-  void exportData(
-      std::ostream &    outFile,
-      const mesh::Mesh &mesh) const;
+  void exportData(std::ostream &outFile, const mesh::Mesh &mesh) const;
 };
 
 } // namespace io

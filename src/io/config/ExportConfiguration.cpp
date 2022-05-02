@@ -14,7 +14,8 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   {
     XMLTag tag(*this, VALUE_VTK, occ, TAG);
-    tag.setDocumentation("Exports meshes to VTK legacy format files. Parallel participants will use the VTU exporter instead.");
+    tag.setDocumentation(
+        "Exports meshes to VTK legacy format files. Parallel participants will use the VTU exporter instead.");
     tags.push_back(tag);
   }
   {
@@ -33,14 +34,14 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
 
-  auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, "")
-                          .setDocumentation("Directory to export the files to.");
+  auto attrLocation =
+      XMLAttribute<std::string>(ATTR_LOCATION, "").setDocumentation("Directory to export the files to.");
 
-  auto attrEveryNTimeWindows = makeXMLAttribute(ATTR_EVERY_N_TIME_WINDOWS, 1)
-                                   .setDocumentation("preCICE does an export every X time windows. Choose -1 for no exports.");
+  auto attrEveryNTimeWindows =
+      makeXMLAttribute(ATTR_EVERY_N_TIME_WINDOWS, 1)
+          .setDocumentation("preCICE does an export every X time windows. Choose -1 for no exports.");
 
-  auto attrNormals = makeXMLAttribute(ATTR_NORMALS, false)
-                         .setDocumentation("Deprecated");
+  auto attrNormals = makeXMLAttribute(ATTR_NORMALS, false).setDocumentation("Deprecated");
 
   auto attrEveryIteration = makeXMLAttribute(ATTR_EVERY_ITERATION, false)
                                 .setDocumentation("Exports in every coupling (sub)iteration. For debug purposes.");
@@ -54,9 +55,7 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   }
 }
 
-void ExportConfiguration::xmlTagCallback(
-    const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+void ExportConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   if (tag.getBooleanAttributeValue(ATTR_NORMALS)) {
     PRECICE_WARN("You explicitly requested to export the vertex normals. "

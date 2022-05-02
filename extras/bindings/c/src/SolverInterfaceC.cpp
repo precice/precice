@@ -22,38 +22,29 @@ static std::unique_ptr<precice::SolverInterface> impl = nullptr;
 
 static precice::logging::Logger _log("SolverInterfaceC");
 
-static std::string errormsg       = "preCICE has not been created properly. Be sure to call \"precicec_createSolverInterface\" or \"precicec_createSolverInterface_withCommunicator\" before any other call to preCICE.";
-static std::string errormsgCreate = "preCICE has been created already! Be sure to call either \"precicec_createSolverInterface\" or \"precicec_createSolverInterface_withCommunicator\" exactly once.";
+static std::string errormsg =
+    "preCICE has not been created properly. Be sure to call \"precicec_createSolverInterface\" or "
+    "\"precicec_createSolverInterface_withCommunicator\" before any other call to preCICE.";
+static std::string errormsgCreate =
+    "preCICE has been created already! Be sure to call either \"precicec_createSolverInterface\" or "
+    "\"precicec_createSolverInterface_withCommunicator\" exactly once.";
 
-void precicec_createSolverInterface_withCommunicator(
-    const char *participantName,
-    const char *configFileName,
-    int         solverProcessIndex,
-    int         solverProcessSize,
-    void *      communicator)
+void precicec_createSolverInterface_withCommunicator(const char *participantName, const char *configFileName,
+                                                     int solverProcessIndex, int solverProcessSize, void *communicator)
 {
   std::string stringAccessorName(participantName);
   std::string stringConfigFileName(configFileName);
 
   PRECICE_CHECK(impl == nullptr, errormsgCreate);
-  impl.reset(new precice::SolverInterface(stringAccessorName,
-                                          stringConfigFileName,
-                                          solverProcessIndex,
-                                          solverProcessSize,
-                                          communicator));
+  impl.reset(new precice::SolverInterface(stringAccessorName, stringConfigFileName, solverProcessIndex,
+                                          solverProcessSize, communicator));
 }
 
-void precicec_createSolverInterface(
-    const char *participantName,
-    const char *configFileName,
-    int         solverProcessIndex,
-    int         solverProcessSize)
+void precicec_createSolverInterface(const char *participantName, const char *configFileName, int solverProcessIndex,
+                                    int solverProcessSize)
 {
-  precicec_createSolverInterface_withCommunicator(participantName,
-                                                  configFileName,
-                                                  solverProcessIndex,
-                                                  solverProcessSize,
-                                                  nullptr);
+  precicec_createSolverInterface_withCommunicator(participantName, configFileName, solverProcessIndex,
+                                                  solverProcessSize, nullptr);
 }
 
 double precicec_initialize()
@@ -198,173 +189,110 @@ int precicec_isMeshConnectivityRequired(int meshID)
   return 0;
 }
 
-int precicec_setMeshVertex(
-    int           meshID,
-    const double *position)
+int precicec_setMeshVertex(int meshID, const double *position)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   return impl->setMeshVertex(meshID, position);
 }
 
-void precicec_getMeshVertices(
-    int        meshID,
-    int        size,
-    const int *ids,
-    double *   positions)
+void precicec_getMeshVertices(int meshID, int size, const int *ids, double *positions)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->getMeshVertices(meshID, size, ids, positions);
 }
 
-void precicec_setMeshVertices(
-    int           meshID,
-    int           size,
-    const double *positions,
-    int *         ids)
+void precicec_setMeshVertices(int meshID, int size, const double *positions, int *ids)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshVertices(meshID, size, positions, ids);
 }
 
-int precicec_getMeshVertexSize(
-    int meshID)
+int precicec_getMeshVertexSize(int meshID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   return impl->getMeshVertexSize(meshID);
 }
 
-void precicec_getMeshVertexIDsFromPositions(
-    int           meshID,
-    int           size,
-    const double *positions,
-    int *         ids)
+void precicec_getMeshVertexIDsFromPositions(int meshID, int size, const double *positions, int *ids)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
 }
 
-int precicec_setMeshEdge(
-    int meshID,
-    int firstVertexID,
-    int secondVertexID)
+int precicec_setMeshEdge(int meshID, int firstVertexID, int secondVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   return impl->setMeshEdge(meshID, firstVertexID, secondVertexID);
 }
 
-void precicec_setMeshTriangle(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID)
+void precicec_setMeshTriangle(int meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshTriangle(meshID, firstEdgeID, secondEdgeID, thirdEdgeID);
 }
 
-void precicec_setMeshTriangleWithEdges(
-    int meshID,
-    int firstVertexID,
-    int secondVertexID,
-    int thirdVertexID)
+void precicec_setMeshTriangleWithEdges(int meshID, int firstVertexID, int secondVertexID, int thirdVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshTriangleWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID);
 }
 
-void precicec_setMeshQuad(
-    int meshID,
-    int firstEdgeID,
-    int secondEdgeID,
-    int thirdEdgeID,
-    int fourthEdgeID)
+void precicec_setMeshQuad(int meshID, int firstEdgeID, int secondEdgeID, int thirdEdgeID, int fourthEdgeID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshQuad(meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID);
 }
 
-void precicec_setMeshQuadWithEdges(
-    int meshID,
-    int firstVertexID,
-    int secondVertexID,
-    int thirdVertexID,
-    int fourthVertexID)
+void precicec_setMeshQuadWithEdges(int meshID, int firstVertexID, int secondVertexID, int thirdVertexID,
+                                   int fourthVertexID)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshQuadWithEdges(meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
 }
 
-void precicec_writeBlockVectorData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *values)
+void precicec_writeBlockVectorData(int dataID, int size, const int *valueIndices, const double *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->writeBlockVectorData(dataID, size, valueIndices, values);
 }
 
-void precicec_writeVectorData(
-    int           dataID,
-    int           valueIndex,
-    const double *dataValue)
+void precicec_writeVectorData(int dataID, int valueIndex, const double *dataValue)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->writeVectorData(dataID, valueIndex, dataValue);
 }
 
-void precicec_writeBlockScalarData(
-    int           dataID,
-    int           size,
-    const int *   valueIndices,
-    const double *values)
+void precicec_writeBlockScalarData(int dataID, int size, const int *valueIndices, const double *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->writeBlockScalarData(dataID, size, valueIndices, values);
 }
 
-void precicec_writeScalarData(
-    int    dataID,
-    int    valueIndex,
-    double dataValue)
+void precicec_writeScalarData(int dataID, int valueIndex, double dataValue)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->writeScalarData(dataID, valueIndex, dataValue);
 }
 
-void precicec_readBlockVectorData(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double *   values)
+void precicec_readBlockVectorData(int dataID, int size, const int *valueIndices, double *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readBlockVectorData(dataID, size, valueIndices, values);
 }
 
-void precicec_readVectorData(
-    int     dataID,
-    int     valueIndex,
-    double *dataValue)
+void precicec_readVectorData(int dataID, int valueIndex, double *dataValue)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readVectorData(dataID, valueIndex, dataValue);
 }
 
-void precicec_readBlockScalarData(
-    int        dataID,
-    int        size,
-    const int *valueIndices,
-    double *   values)
+void precicec_readBlockScalarData(int dataID, int size, const int *valueIndices, double *values)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readBlockScalarData(dataID, size, valueIndices, values);
 }
 
-void precicec_readScalarData(
-    int     dataID,
-    int     valueIndex,
-    double *dataValue)
+void precicec_readScalarData(int dataID, int valueIndex, double *dataValue)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   impl->readScalarData(dataID, valueIndex, *dataValue);
@@ -402,18 +330,12 @@ const char *precicec_actionReadIterationCheckpoint()
   return precice::constants::actionReadIterationCheckpoint().c_str();
 }
 
-void precicec_setMeshAccessRegion(
-    const int     meshID,
-    const double *boundingBox)
+void precicec_setMeshAccessRegion(const int meshID, const double *boundingBox)
 {
   impl->setMeshAccessRegion(meshID, boundingBox);
 }
 
-void precicec_getMeshVerticesAndIDs(
-    const int meshID,
-    const int size,
-    int *     ids,
-    double *  coordinates)
+void precicec_getMeshVerticesAndIDs(const int meshID, const int size, int *ids, double *coordinates)
 {
   impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }

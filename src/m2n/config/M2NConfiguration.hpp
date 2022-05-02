@@ -25,14 +25,12 @@ public:
   virtual ~M2NConfiguration() {}
 
   /**
-    * @brief Returns the communication object for the given user names.
-    *
-    * Exits with an error message, when no object is configured for the given
-    * user names.
-    */
-  m2n::PtrM2N getM2N(
-      const std::string &from,
-      const std::string &to);
+   * @brief Returns the communication object for the given user names.
+   *
+   * Exits with an error message, when no object is configured for the given
+   * user names.
+   */
+  m2n::PtrM2N getM2N(const std::string &from, const std::string &to);
 
   /// Returns all configured communication objects.
   std::vector<M2NTuple> &m2ns()
@@ -56,9 +54,7 @@ private:
 
   std::vector<M2NTuple> _m2ns;
 
-  void checkDuplicates(
-      const std::string &from,
-      const std::string &to);
+  void checkDuplicates(const std::string &from, const std::string &to);
 };
 
 } // namespace m2n
