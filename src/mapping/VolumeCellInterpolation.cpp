@@ -87,7 +87,7 @@ void VolumeCellInterpolation::computeMapping()
   // @TODO Add a configuration option for this factor
   constexpr int nnearest = 4;
 
-  query::Index                           indexTree(searchSpace);
+  auto &index = searchSpace->index();
   utils::statistics::DistanceAccumulator distanceStatistics;
 
   _interpolations.clear();
@@ -95,7 +95,7 @@ void VolumeCellInterpolation::computeMapping()
 
   for (const auto &fVertex : fVertices) {
     // Find tetrahedra (3D) or triangle (2D) or fall-back on a vertex
-    auto match = indexTree.findNearestVolume(fVertex.getCoords(), nnearest);
+    auto match = index.findNearestVolume(fVertex.getCoords(), nnearest);
     _interpolations.push_back(std::move(match.polation));
     distanceStatistics(match.distance);
   }
