@@ -41,7 +41,7 @@ public:
   ///@{
 
   /**
-   * @brief Constructor
+   * @brief Constructs a SolverInterface for the given participant
    *
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
@@ -58,7 +58,7 @@ public:
       int                solverProcessSize);
 
   /**
-   * @brief Constructor with support for custom MPI communicator.
+   * @brief Constructs a SolverInterface for the given participant and a custom MPI communicator.
    *
    * @param[in] participantName Name of the participant using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
