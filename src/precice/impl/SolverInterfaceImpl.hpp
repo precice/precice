@@ -45,205 +45,115 @@ class Mesh;
 
 namespace impl {
 
-/// Implementation of solver interface.
+/// Implementation of SolverInterface. See also pimpl ideom (https://en.cppreference.com/w/cpp/language/pimpl).
 class SolverInterfaceImpl {
 public:
+  ///@name Construction and Configuration
+  ///@{
+
   /**
-   * @brief Constructor.
-   *
-   * A solver that wants to use the SolverInterfaceImpl must instantiate an object
-   * of this class. The object has to be configured by one of the configure
-   * methods before it has a reasonable state and can be used.
-   *
-   * @param[in] configurationFileName Name (with path) of the xml config file.
-   * @param[in] participantName Name of the participant using the interface. Has to
-   *                            match the name given for a participant in the
-   *                            xml configuration file.
+   * @copydoc SolverInterface::SolverInterface(const std::string&, const std::string&, int, int)
    */
   SolverInterfaceImpl(
       std::string        participantName,
       const std::string &configurationFileName,
-      int                accessorProcessRank,
-      int                accessorCommunicatorSize);
-
-  /// Deleted copy constructor
-  SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
-
-  /// Deleted copy assignment
-  SolverInterfaceImpl &operator=(SolverInterfaceImpl const &) = delete;
-
-  /// Deleted move constructor
-  SolverInterfaceImpl(SolverInterfaceImpl &&) = delete;
-
-  /// Deleted move assignment
-  SolverInterfaceImpl &operator=(SolverInterfaceImpl &&) = delete;
+      int                solverProcessIndex,
+      int                solverProcessSize);
 
   /**
-   * @brief Constructor with support for custom MPI_COMM_WORLD.
-   *
-   * A solver that wants to use the SolverInterfaceImpl must instantiate an object
-   * of this class. The object has to be configured by one of the configure
-   * methods before it has a reasonable state and can be used.
+   * @copybrief SolverInterface::SolverInterface(const std::string&, const std::string&, int, int, void*)
    *
    * Use the parameter communicator to specify a custom global MPI communicator.
    * Pass a null pointer to signal preCICE to use MPI_COMM_WORLD.
    *
-   * @param[in] participantName Name of the participant using the interface. Has to
-   *                            match the name given for a participant in the
-   *                            xml configuration file.
-   * @param[in] configurationFileName Name (with path) of the xml config file.
-   * @param[in] communicator    A pointer to the MPI_Comm to use.
+   * @copydetails SolverInterface::SolverInterface(const std::string&, const std::string&, int, int, void*)
    */
   SolverInterfaceImpl(
       std::string        participantName,
       const std::string &configurationFileName,
-      int                accessorProcessRank,
-      int                accessorCommunicatorSize,
+      int                solverProcessIndex,
+      int                solverProcessSize,
       void *             communicator);
 
-  /** Ensures that finalize() has been called.
+  /**
+   * @brief Destructor
    *
-   * @see finalize()
+   * Ensures that finalize() has been called.
+   *
+   * @see finalize
    */
   ~SolverInterfaceImpl();
 
-  /**
-   * @brief Initializes all coupling data and starts (coupled) simulation.
-   *
-   * - Initiates MPI communication, if not done yet.
-   * - Sets up a connection to the other participants of the coupled simulation.
-   * - Creates all meshes, solver meshes need to be submitted before.
-   * - Receives first coupling data, when the solver is not starting the
-   *   coupled simulation.
-   * - Determines length of the first timestep to be computed.
-   *
-   * @return Maximum length of first timestep to be computed by the solver.
-   */
+  ///@}
+
+  /// @name Steering Methods
+  ///@{
+
+  /// @copydoc SolverInterface::initialize
   double initialize();
 
-  /**
-   * @brief Sets the sofar written data as initial value for the coupling scheme.
-   *
-   * Erases the written data afterwards.
-   */
+  /// @copydoc SolverInterface::initializeData
   void initializeData();
 
-  /**
-   * @brief Exchanges coupling data and advances coupling state.
-   *
-   * - Sends and resets coupling data written by solver to coupling partners.
-   * - Receives coupling data read by solver.
-   * - Computes and applied data mappings.
-   * - Computes acceleration of coupling data.
-   * - Exchanges and computes information regarding the state of the coupled
-   *   simulation.
-   *
-   * @param[in] computedTimestepLength Length of timestep computed by solver.
-   * @return Maximum length of next timestep to be computed by solver.
-   */
+  /// @copydoc SolverInterface::advance
   double advance(double computedTimestepLength);
 
-  /**
-   * @brief Finalizes the coupled simulation.
-   *
-   * If initialize() has been called:
-   *
-   * - Synchronizes with remote participants
-   * - handles final exports
-   * - cleans up general state
-   *
-   * Always:
-   *
-   * - flushes and finalizes Events
-   * - finalizes managed PETSc
-   * - finalizes managed MPI
-   *
-   * @post Closes MasterSlave communication
-   * @post Finalized managed PETSc
-   * @post Finalized managed MPI
-   *
-   * @warning
-   * Finalize is not the inverse of initialize().
-   * Finalize has to be called after construction.
-   */
+  /// @copydoc SolverInterface::finalize
   void finalize();
 
-  /**
-   * @brief Returns the number of spatial dimensions for the coupling.
-   *
-   * The number of dimensions is fixed on configuration.
-   */
+  ///@}
+
+  ///@name Status Queries
+  ///@{
+
+  /// @copydoc SolverInterface::getDimensions
   int getDimensions() const;
 
-  /**
-   * @brief Returns true, if the coupled simulation is still ongoing.
-   *
-   * The information to decide about the continuation of the coupled simulation
-   * is retrieved in the function initializeCoupling and updated in the
-   * function exchangeData.
-   */
+  /// @copydoc SolverInterface::isCouplingOngoing
   bool isCouplingOngoing() const;
 
-  /**
-   * @brief Returns true, if new data to be read is available.
-   */
+  /// @copydoc SolverInterface::isReadDataAvailable
   bool isReadDataAvailable() const;
 
-  /**
-   * @brief Returns true, if new data has to be written.
-   */
+  /// @copydoc SolverInterface::isWriteDataRequired
   bool isWriteDataRequired(double computedTimestepLength) const;
 
-  /**
-   * @brief Returns true, if a time window is completed.
-   */
+  /// @copydoc SolverInterface::isTimeWindowComplete
   bool isTimeWindowComplete() const;
 
-  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
-  /**
-   * @brief Returns whether the solver has to evaluate the surrogate model representation
-   *        It does not automatically imply, that the solver does not have to evaluate the
-   *        fine model representation
-   */
+  /// @copydoc SolverInterface::hasToEvaluateSurrogateModel
   bool hasToEvaluateSurrogateModel() const;
 
-  // Will be removed in v3.0.0. See https://github.com/precice/precice/issues/704
-  /**
-   * @brief Returns whether the solver has to evaluate the fine model representation
-   *        It does not automatically imply, that the solver does not have to evaluate the
-   *        surrogate model representation
-   */
+  /// @copydoc SolverInterface::hasToEvaluateFineModel
   bool hasToEvaluateFineModel() const;
 
-  /**
-   * @brief Returns true, if provided name of action is required.
-   *
-   * Some features of preCICE require a solver to perform specific actions, in
-   * order to be in valid state for a coupled simulation. A solver is made
-   * eligible to use those features, by querying for the required actions,
-   * performing them on demand, and calling markActionFulfilled() to signalize
-   * preCICE the correct behavior of the solver.
-   */
+  ///@}
+
+  ///@name Action Methods
+  ///@{
+
+  /// @copydoc SolverInterface::isActionRequired
   bool isActionRequired(const std::string &action) const;
 
-  /**
-   * @brief Tells preCICE that a required action has been fulfilled by a solver.
-   *
-   * For more details see method requireAction().
-   */
+  /// @copydoc SolverInterface::markActionFulfilled
   void markActionFulfilled(const std::string &action);
 
-  /// Returns true, if the mesh with given name is used.
+  ///@}
+
+  ///@name Mesh Access
+  ///@anchor precice-mesh-access
+  ///@{
+
+  /// @copydoc SolverInterface::resetMesh
+  void resetMesh(MeshID meshID);
+
+  /// @copydoc SolverInterface::hasMesh
   bool hasMesh(const std::string &meshName) const;
 
-  /**
-   * @brief Returns the ID belonging to the mesh with given name.
-   *
-   * The existing names are determined from the configuration.
-   */
+  /// @copydoc SolverInterface::hasMesh
   int getMeshID(const std::string &meshName) const;
 
-  /// Returns all mesh IDs (besides sub-ids).
+  /// @copydoc SolverInterface::getMeshIDs
   std::set<int> getMeshIDs() const;
 
   /// @copydoc SolverInterface::isMeshConnectivityRequired
@@ -252,94 +162,56 @@ public:
   /// @copydoc SolverInterface::isGradientDataRequired
   bool isGradientDataRequired(int dataID) const;
 
-  /// Returns true, if the data with given name is used in the given mesh.
-  bool hasData(const std::string &dataName, MeshID meshID) const;
-
-  /// Returns data id corresponding to the given name (from configuration) and mesh.
-  int getDataID(const std::string &dataName, MeshID meshID) const;
-
-  /// Returns the number of nodes of a mesh.
-  int getMeshVertexSize(MeshID meshID) const;
-
-  /**
-   * @brief Resets mesh with given ID.
-   *
-   * Has to be called, everytime the positions for data to be mapped
-   * changes. Only has an effect, if the mapping used is non-stationary and
-   * non-incremental.
-   */
-  void resetMesh(MeshID meshID);
-
-  /**
-   * @brief Set the position of a solver mesh vertex.
-   *
-   * @return Vertex ID to be used when setting an edge.
-   */
+  /// @copydoc SolverInterface::setMeshVertex
   int setMeshVertex(
       int           meshID,
       const double *position);
 
-  /**
-   * @brief Sets several spatial positions for a mesh.
-   *
-   * @param[out] ids IDs for data from given positions.
-   */
+  /// @copydoc SolverInterface::getMeshVertexSize
+  int getMeshVertexSize(MeshID meshID) const;
+
+  /// @copydoc SolverInterface::setMeshVertices
   void setMeshVertices(
       int           meshID,
       int           size,
       const double *positions,
       int *         ids);
 
-  /**
-   * @brief Gets spatial positions of vertices for given IDs.
-   *
-   * @param[in] ids IDs obtained when setting write positions.
-   * @param[out] positions Positions corresponding to IDs.
-   */
+  /// @copydoc SolverInterface::getMeshVertices
   void getMeshVertices(
       int        meshID,
       size_t     size,
       const int *ids,
       double *   positions) const;
 
-  /**
-   * @brief Gets vertex data ids from positions.
-   *
-   * @param[in] size Number of positions, ids.
-   * @param[in] positions Positions (x,y,z,x,y,z,...) to find ids for.
-   * @param[out] ids IDs corresponding to positions.
-   */
+  /// @copydoc SolverInterface::getMeshVertexIDsFromPositions
   void getMeshVertexIDsFromPositions(
       int           meshID,
       size_t        size,
       const double *positions,
       int *         ids) const;
 
-  /**
-   * @brief Set an edge of a solver mesh.
-   *
-   * @return Index of the edge to be used when setting a triangle.
-   */
+  /// @copydoc SolverInterface::setMeshEdge
   int setMeshEdge(
       MeshID meshID,
       int    firstVertexID,
       int    secondVertexID);
 
-  /// Set a triangle of a solver mesh.
+  /// @copydoc SolverInterface::setMeshTriangle
   void setMeshTriangle(
       MeshID meshID,
       int    firstEdgeID,
       int    secondEdgeID,
       int    thirdEdgeID);
 
-  /// Sets a triangle and creates/sets edges automatically of a solver mesh.
+  /// @copydoc SolverInterface::setMeshTriangleWithEdges
   void setMeshTriangleWithEdges(
       MeshID meshID,
       int    firstVertexID,
       int    secondVertexID,
       int    thirdVertexID);
 
-  /// Set a quadrangle of a solver mesh.
+  /// @copydoc SolverInterface::setMeshQuad
   void setMeshQuad(
       MeshID meshID,
       int    firstEdgeID,
@@ -347,7 +219,7 @@ public:
       int    thirdEdgeID,
       int    fourthEdgeID);
 
-  /// Sets a quadrangle and creates/sets edges automatically of a solver mesh.
+  /// @copydoc SolverInterface::setMeshQuadWithEdges
   void setMeshQuadWithEdges(
       MeshID meshID,
       int    firstVertexID,
@@ -355,27 +227,24 @@ public:
       int    thirdVertexID,
       int    fourthVertexID);
 
-  /**
-   * @brief Computes and maps all write data mapped from mesh with given ID.
-   *
-   * Is automatically called in advance, if not called manually before.
-   */
+  ///@}
+
+  ///@name Data Access
+  ///@{
+
+  /// @copydoc SolverInterface::hasData
+  bool hasData(const std::string &dataName, MeshID meshID) const;
+
+  /// @copydoc SolverInterface::getDataID
+  int getDataID(const std::string &dataName, MeshID meshID) const;
+
+  /// @copydoc SolverInterface::mapWriteDataFrom
   void mapWriteDataFrom(int fromMeshID);
 
-  /// Computes and maps all read data mapped to mesh with given ID.
+  /// @copydoc SolverInterface::mapReadDataTo
   void mapReadDataTo(int toMeshID);
 
-  /**
-   * @brief Writes vector data values given as block.
-   *
-   * The block must contain the vector values in the following form:
-   * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
-   * the number of vector values. In 2D, the z-components are removed.
-   *
-   * @param[in] fromDataID ID of the data to be written.
-   * @param[in] size Number of valueIndices, and number of values * dimensions.
-   * @param[in] values Values of the data to be written.
-   */
+  /// @copydoc SolverInterface::writeBlockVectorData
   void writeBlockVectorData(
       int           fromDataID,
       int           size,
@@ -390,15 +259,7 @@ public:
       const double *gradientValues,
       bool          rowsFirst = false);
 
-  /**
-   * @brief Write vectorial data to the interface mesh
-   *
-   * The exact mapping and communication must be specified in XYZ.
-   *
-   * @param[in] fromDataID ID of the data to be written, e.g. 1 = forces
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
-   * @param[in] dataValue Value of the data to be written
-   */
+  /// @copydoc SolverInterface::writeVectorData
   void writeVectorData(
       int           fromDataID,
       int           valueIndex,
@@ -411,13 +272,7 @@ public:
       const double *gradientValues,
       bool          rowsFirst = false);
 
-  /**
-   * @brief Writes scalar data values given as block.
-   *
-   * @param[in] fromDataID ID of the data to be written.
-   * @param[in] size Number of valueIndices, and number of values.
-   * @param[in] values Values of the data to be written.
-   */
+  /// @copydoc SolverInterface::writeBlockScalarData
   void writeBlockScalarData(
       int           fromDataID,
       int           size,
@@ -431,15 +286,7 @@ public:
       const int *   valueIndices,
       const double *gradientValues);
 
-  /**
-   * @brief Write scalar data to the interface mesh
-   *
-   * The exact mapping and communication must be specified in XYZ.
-   *
-   * @param[in] fromDataID ID of the data to be written (2 = temperature, e.g.)
-   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
-   * @param[in] dataValue Value of the data to be written
-   */
+  /// @copydoc SolverInterface::writeScalarData
   void writeScalarData(
       int    fromDataID,
       int    valueIndex,
@@ -451,48 +298,14 @@ public:
       int           valueIndex,
       const double *gradientValues);
 
-  /**
-   * @brief Reads vector data values given as block from a mesh. Values correspond to the end of the current time window.
-   *
-   * This function reads values of specified vertices from a dataID.
-   * Values are read into a block of continuous memory.
-   * valueIndices contains the indices of the vertices.
-   *
-   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
-   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[out] values Pointer to read destination.
-   */
+  /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double*) const
   void readBlockVectorData(
       int        toDataID,
       int        size,
       const int *valueIndices,
       double *   values) const;
 
-  /**
-   * @brief Reads vector data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads values of specified vertices from a dataID.
-   * Values are read into a block of continuous memory.
-   * valueIndices contains the indices of the vertices.
-   *
-   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
-   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] values Pointer to read destination.
-   */
+  /// @copydoc SolverInterface::readBlockVectorData(int, int, const int*, double, double*) const
   void readBlockVectorData(
       int        toDataID,
       int        size,
@@ -500,85 +313,27 @@ public:
       double     relativeReadTime,
       double *   values) const;
 
-  /**
-   * @brief Reads vector data at a vertex on a mesh. Values correspond to the end of the current time window.
-   *
-   * This function reads a value of a specified vertex from a dataID.
-   * Values are provided as a block of continuous memory.
-   *
-   * The 2D-format of value is (x, y)
-   * The 3D-format of value is (x, y, z)
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[out] value Pointer to the vector value.
-   */
+  /// @copydoc SolverInterface::readVectorData(int, int, double*) const
   void readVectorData(
       int     toDataID,
       int     valueIndex,
       double *value) const;
 
-  /**
-   * @brief Reads vector data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads a value of a specified vertex from a dataID.
-   * Values are provided as a block of continuous memory.
-   *
-   * The 2D-format of value is (x, y)
-   * The 3D-format of value is (x, y, z)
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] value Pointer to the vector value.
-   */
+  /// @copydoc SolverInterface::readVectorData(int, int, double, double*) const
   void readVectorData(
       int     toDataID,
       int     valueIndex,
       double  relativeReadTime,
       double *value) const;
 
-  /**
-   * @brief Reads scalar data values given as block from a mesh. Values correspond to the end of the current time window.
-   *
-   * This function reads values of specified vertices from a dataID.
-   * Values are provided as a block of continuous memory.
-   * valueIndices contains the indices of the vertices.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[out] values Pointer to the read destination.
-   */
+  /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double*) const
   void readBlockScalarData(
       int        toDataID,
       int        size,
       const int *valueIndices,
       double *   values) const;
 
-  /**
-   * @brief Reads scalar data values given as block from a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads values of specified vertices from a dataID.
-   * Values are provided as a block of continuous memory.
-   * valueIndices contains the indices of the vertices.
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] size Number n of vertices.
-   * @param[in] valueIndices Indices of the vertices.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] values Pointer to the read destination.
-   */
+  /// @copydoc SolverInterface::readBlockScalarData(int, int, const int*, double, double*) const
   void readBlockScalarData(
       int        toDataID,
       int        size,
@@ -586,51 +341,38 @@ public:
       double     relativeReadTime,
       double *   values) const;
 
-  /**
-   * @brief Reads scalar data at a vertex on a mesh. Values correspond to the end of the current time window.
-   *
-   * This function reads a value of a specified vertex from a dataID.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[out] value Read destination of the value.
-   */
+  /// @copydoc SolverInterface::readScalarData(int, int, double&) const
   void readScalarData(
       int     toDataID,
       int     valueIndex,
       double &value) const;
 
-  /**
-   * @brief Reads scalar data at a vertex on a mesh. Values correspond to a given point in time relative to the beginning of the current timestep.
-   *
-   * This function reads a value of a specified vertex from a dataID.
-   *
-   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
-   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
-   * end of the time step, dt indicates the length of the current time step. Then relativeReadTime = dt corresponds to the data at
-   * the end of the time step.
-   *
-   * @param[in] dataID ID to read from.
-   * @param[in] valueIndex Index of the vertex.
-   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step
-   * @param[out] value Read destination of the value.
-   */
+  /// @copydoc SolverInterface::readScalarData(int, int, double, double&) const
   void readScalarData(
       int     toDataID,
       int     valueIndex,
       double  relativeReadTime,
       double &value) const;
 
-  /// @copydoc precice::SolverInterface::setMeshAccessRegion
+  ///@}
+
+  /** @name Experimental Data Access
+   * These API functions are \b experimental and may change in future versions.
+   */
+  ///@{
+
+  /// @copydoc SolverInterface::setMeshAccessRegion
   void setMeshAccessRegion(const int     meshID,
                            const double *boundingBox) const;
 
-  /// @copydoc precice::SolverInterface::getMeshVerticesAndIDs
+  /// @copydoc SolverInterface::getMeshVerticesAndIDs
   void getMeshVerticesAndIDs(
       const int meshID,
       const int size,
       int *     ids,
       double *  coordinates) const;
+
+  ///@}
 
   /**
    * @brief Writes a mesh to vtk file.
@@ -640,10 +382,26 @@ public:
    *
    * @param[in] filenameSuffix Suffix of all plotted files
    */
+  /// @todo make private. See https://github.com/precice/precice/pull/1270
   void exportMesh(const std::string &filenameSuffix) const;
 
-  /// Allows to access a registered mesh
+  /**
+   * @brief Allows to access a registered mesh
+   */
+  /// @todo try to remove or make private. See https://github.com/precice/precice/issues/1269
   const mesh::Mesh &mesh(const std::string &meshName) const;
+
+  /// Disable copy construction
+  SolverInterfaceImpl(SolverInterfaceImpl const &) = delete;
+
+  /// Disable assignment construction
+  SolverInterfaceImpl &operator=(SolverInterfaceImpl const &) = delete;
+
+  /// Disable move construction
+  SolverInterfaceImpl(SolverInterfaceImpl &&) = delete;
+
+  /// Disable move assignment
+  SolverInterfaceImpl &operator=(SolverInterfaceImpl &&) = delete;
 
 private:
   mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
