@@ -37,14 +37,16 @@ public:
   int getInterpolationOrder() const;
 
   /**
-   * @brief Links a MappingContext and the MeshContext required by the read mapping requires to this ReadDataContext.
+   * @brief Adds a MappingContext and the MeshContext required by the read mapping to the correspnding ReadDataContext data structures.
    *
    * A read mapping maps _fromData to _providedData. A ReadDataContext already has _providedData, but additionally requires _fromData.
    *
    * @param[in] mappingContext Context of read mapping
    * @param[in] meshContext Context of mesh this read mapping is mapping from (_fromData)
+   *
+   * @note Note that read mapping contexts have to be unique and and this function may only be called once for a given ReadDataContext
    */
-  void configureMapping(const MappingContext &mappingContext, const MeshContext &meshContext) override;
+  void appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext) override;
 
   /**
    * @brief Samples data at a given point in time within the current time window
