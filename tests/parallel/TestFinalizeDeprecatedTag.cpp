@@ -8,6 +8,7 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
+BOOST_AUTO_TEST_SUITE(Deprecated)
 BOOST_AUTO_TEST_CASE(TestFinalizeDeprecatedTag)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
@@ -35,5 +36,6 @@ BOOST_AUTO_TEST_CASE(TestFinalizeDeprecatedTag)
 
 BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Parallel
+BOOST_AUTO_TEST_SUITE_END() // Deprecated
 
 #endif // PRECICE_NO_MPI
