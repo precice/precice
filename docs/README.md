@@ -46,6 +46,4 @@ If you are new to preCICE, please have a look at our [documentation](https://www
 <img src="https://github.com/precice/precice.github.io/blob/master/material/overview/precice-overview.png" alt="preCICE overview" style="max-height: 100%; max-width: 100%">
 </div>
 
-preCICE is an academic project, developed at the [Technical University of Munich](https://www.in.tum.de/i05/startseite/) and at the [University of Stuttgart](https://www.ipvs.uni-stuttgart.de). If you use preCICE, please [cite us](https://www.precice.org/publications/):
-
-To cite preCICE, please check the [list of publications](https://precice.org/publications).
+preCICE is an academic project, developed at the [Technical University of Munich](https://www.in.tum.de/i05/startseite/) and at the [University of Stuttgart](https://www.ipvs.uni-stuttgart.de). If you use preCICE, please [cite us](https://www.precice.org/publications/).
