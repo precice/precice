@@ -89,7 +89,6 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     expected << 111.0 / 3;
 
     interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
-    // Current problem: "No triangle found", despite correct triangle set!
     BOOST_CHECK(equals(expected, readData));
 
     interface.finalize();
