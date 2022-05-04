@@ -6,7 +6,7 @@
 #include "m2n/BoundM2N.hpp"
 #include "m2n/M2N.hpp"
 #include "precice/types.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -26,9 +26,9 @@ void BoundM2N::connectPrimaryRanks()
   std::string fullLocalName = localName;
 
   if (isRequesting) {
-    m2n->requestPrimaryConnection(remoteName, fullLocalName);
+    m2n->requestPrimaryRankConnection(remoteName, fullLocalName);
   } else {
-    m2n->acceptPrimaryConnection(fullLocalName, remoteName);
+    m2n->acceptPrimaryRankConnection(fullLocalName, remoteName);
   }
 }
 
@@ -40,11 +40,11 @@ void BoundM2N::connectSecondaryRanks()
   } else {
     if (isRequesting) {
       PRECICE_DEBUG("Awaiting secondary connections from {}", remoteName);
-      m2n->requestSecondaryConnections(remoteName, localName);
+      m2n->requestSecondaryRanksConnection(remoteName, localName);
       PRECICE_DEBUG("Established secondary connections from {}", remoteName);
     } else {
       PRECICE_DEBUG("Establishing secondary connections to {}", remoteName);
-      m2n->acceptSecondaryConnections(localName, remoteName);
+      m2n->acceptSecondaryRanksConnection(localName, remoteName);
       PRECICE_DEBUG("Established  secondary connections to {}", remoteName);
     }
   }
@@ -63,7 +63,7 @@ void BoundM2N::preConnectSecondaryRanks()
     PRECICE_DEBUG("Established preliminary secondary connections from {}", remoteName);
   } else {
     PRECICE_DEBUG("Establishing preliminary secondary connections to {}", remoteName);
-    m2n->acceptSecondaryPreConnections(localName, remoteName);
+    m2n->acceptSecondaryRanksPreConnection(localName, remoteName);
     PRECICE_DEBUG("Established preliminary secondary connections to {}", remoteName);
   }
 }
@@ -74,23 +74,23 @@ void BoundM2N::cleanupEstablishment()
     return;
   }
   waitForSecondaryRanks();
-  if (!utils::MasterSlave::isSecondary()) {
+  if (!utils::IntraComm::isSecondary()) {
     m2n->cleanupEstablishment(localName, remoteName);
   }
 }
 
 void BoundM2N::waitForSecondaryRanks()
 {
-  if (utils::MasterSlave::isPrimary()) {
-    for (Rank rank : utils::MasterSlave::allSecondaryRanks()) {
+  if (utils::IntraComm::isPrimary()) {
+    for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
       int item = 0;
-      utils::MasterSlave::getCommunication()->receive(item, rank);
+      utils::IntraComm::getCommunication()->receive(item, rank);
       PRECICE_ASSERT(item > 0);
     }
   }
-  if (utils::MasterSlave::isSecondary()) {
-    int item = utils::MasterSlave::getRank();
-    utils::MasterSlave::getCommunication()->send(item, 0);
+  if (utils::IntraComm::isSecondary()) {
+    int item = utils::IntraComm::getRank();
+    utils::IntraComm::getCommunication()->send(item, 0);
   }
 }
 

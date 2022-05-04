@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="2" experimental="on">
-    <data:scalar name="Data1" />
-    <data:vector name="Data2" gradient="on" />
+  <solver-interface dimensions="3">
+    <data:vector name="Data1" />
+    <data:vector name="Data2" />
 
     <mesh name="MeshOne">
       <use-data name="Data1" />
@@ -15,7 +15,7 @@
     </mesh>
 
     <participant name="SolverOne">
-      <intra-comm:mpi-single />
+      <master:mpi-single />
       <use-mesh name="MeshTwo" from="SolverTwo" />
       <use-mesh name="MeshOne" provide="yes" />
       <mapping:nearest-neighbor
@@ -23,7 +23,7 @@
         from="MeshOne"
         to="MeshTwo"
         constraint="conservative" />
-      <mapping:nearest-neighbor-gradient
+      <mapping:nearest-neighbor
         direction="read"
         from="MeshTwo"
         to="MeshOne"
@@ -33,9 +33,10 @@
     </participant>
 
     <participant name="SolverTwo">
+      <master:mpi-single />
       <use-mesh name="MeshTwo" provide="yes" />
-      <write-data name="Data2" mesh="MeshTwo" />
-      <read-data name="Data1" mesh="MeshTwo" />
+      <write-data name="Data1" mesh="MeshTwo" />
+      <read-data name="Data2" mesh="MeshTwo" />
     </participant>
 
     <m2n:sockets from="SolverOne" to="SolverTwo" />

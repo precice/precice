@@ -6,7 +6,7 @@
 #include <string>
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -45,7 +45,7 @@ public:
       const Eigen::VectorXd &oldValues,
       const Eigen::VectorXd &newValues)
   {
-    _normDiff      = utils::MasterSlave::l2norm(newValues - oldValues);
+    _normDiff      = utils::IntraComm::l2norm(newValues - oldValues);
     _isConvergence = _normDiff <= _convergenceLimit;
   }
 

@@ -16,7 +16,7 @@ class Logger;
 namespace utils {
 
 /// Utility class for managing intra-participant communication operations.
-class MasterSlave {
+class IntraComm {
 public:
   /// Configures the intra-participant communication.
   static void configure(Rank rank, int size);

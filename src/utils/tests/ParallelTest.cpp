@@ -5,7 +5,7 @@
 #include "com/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 
 using namespace precice;
@@ -62,12 +62,12 @@ BOOST_AUTO_TEST_CASE(SplitCommTest)
   BOOST_TEST(groups.at(1).size == 1);
 }
 
-BOOST_AUTO_TEST_CASE(Master1SlaveTest)
+BOOST_AUTO_TEST_CASE(Primary1SecondaryTest)
 {
   PRECICE_TEST(""_on(2_ranks).setupIntraComm());
 
   BOOST_TEST(context.hasSize(2));
-  auto &com = precice::utils::MasterSlave::getCommunication();
+  auto &com = precice::utils::IntraComm::getCommunication();
   BOOST_TEST((com != nullptr));
 
   if (context.isPrimary()) {
@@ -88,12 +88,12 @@ BOOST_AUTO_TEST_CASE(Master1SlaveTest)
   }
 }
 
-BOOST_AUTO_TEST_CASE(Master2SlaveTest)
+BOOST_AUTO_TEST_CASE(Primary2SecondaryTest)
 {
   PRECICE_TEST(""_on(3_ranks).setupIntraComm());
 
   BOOST_TEST(context.hasSize(3));
-  auto &com = precice::utils::MasterSlave::getCommunication();
+  auto &com = precice::utils::IntraComm::getCommunication();
   BOOST_TEST((com != nullptr));
 
   if (context.isPrimary()) {
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(Master2SlaveTest)
   }
 }
 
-BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
+BOOST_AUTO_TEST_CASE(OffsetPrimary1SecondaryTest)
 {
   PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupIntraComm());
 
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
     return;
 
   BOOST_TEST(context.hasSize(2));
-  auto &com = precice::utils::MasterSlave::getCommunication();
+  auto &com = precice::utils::IntraComm::getCommunication();
   BOOST_TEST((com != nullptr));
 
   if (context.isPrimary()) {
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(OffsetMaster1SlaveTest)
   }
 }
 
-BOOST_AUTO_TEST_CASE(OffsetMaster2SlaveTest)
+BOOST_AUTO_TEST_CASE(OffsetPrimary2SecondaryTest)
 {
   PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupIntraComm());
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(OffsetMaster2SlaveTest)
     return;
 
   BOOST_TEST(context.hasSize(3));
-  auto &com = precice::utils::MasterSlave::getCommunication();
+  auto &com = precice::utils::IntraComm::getCommunication();
   BOOST_TEST((com != nullptr));
 
   if (context.isPrimary()) {

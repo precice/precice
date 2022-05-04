@@ -6,7 +6,7 @@
 #include <ostream>
 #include <string>
 
-#include "MasterSlave.hpp"
+#include "IntraComm.hpp"
 #include "com/Communication.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
@@ -17,15 +17,15 @@
 namespace precice {
 namespace utils {
 
-Rank                  MasterSlave::_rank            = -1;
-int                   MasterSlave::_size            = -1;
-bool                  MasterSlave::_isPrimaryRank   = false;
-bool                  MasterSlave::_isSecondaryRank = false;
-com::PtrCommunication MasterSlave::_communication;
+Rank                  IntraComm::_rank            = -1;
+int                   IntraComm::_size            = -1;
+bool                  IntraComm::_isPrimaryRank   = false;
+bool                  IntraComm::_isSecondaryRank = false;
+com::PtrCommunication IntraComm::_communication;
 
-logging::Logger MasterSlave::_log("utils::MasterSlave");
+logging::Logger IntraComm::_log("utils::IntraComm");
 
-void MasterSlave::configure(Rank rank, int size)
+void IntraComm::configure(Rank rank, int size)
 {
   PRECICE_TRACE(rank, size);
   _rank = rank;
@@ -36,32 +36,32 @@ void MasterSlave::configure(Rank rank, int size)
   PRECICE_DEBUG("isSecondaryRank: {}, isPrimaryRank: {}", _isSecondaryRank, _isPrimaryRank);
 }
 
-Rank MasterSlave::getRank()
+Rank IntraComm::getRank()
 {
   return _rank;
 }
 
-int MasterSlave::getSize()
+int IntraComm::getSize()
 {
   return _size;
 }
 
-bool MasterSlave::isPrimary()
+bool IntraComm::isPrimary()
 {
   return _isPrimaryRank;
 }
 
-bool MasterSlave::isSecondary()
+bool IntraComm::isSecondary()
 {
   return _isSecondaryRank;
 }
 
-bool MasterSlave::isParallel()
+bool IntraComm::isParallel()
 {
   return _isPrimaryRank || _isSecondaryRank;
 }
 
-double MasterSlave::l2norm(const Eigen::VectorXd &vec)
+double IntraComm::l2norm(const Eigen::VectorXd &vec)
 {
   PRECICE_TRACE();
 
@@ -99,7 +99,7 @@ double MasterSlave::l2norm(const Eigen::VectorXd &vec)
   return sqrt(globalSum2);
 }
 
-double MasterSlave::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2)
+double IntraComm::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2)
 {
   PRECICE_TRACE();
 
@@ -140,7 +140,7 @@ double MasterSlave::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2
   return globalSum;
 }
 
-void MasterSlave::reset()
+void IntraComm::reset()
 {
   PRECICE_TRACE();
   _isPrimaryRank   = false;
@@ -149,7 +149,7 @@ void MasterSlave::reset()
   _size            = -1;
 }
 
-void MasterSlave::reduceSum(precice::span<const double> sendData, precice::span<double> rcvData)
+void IntraComm::reduceSum(precice::span<const double> sendData, precice::span<double> rcvData)
 {
   PRECICE_TRACE();
 
@@ -172,14 +172,14 @@ void MasterSlave::reduceSum(precice::span<const double> sendData, precice::span<
   }
 }
 
-void MasterSlave::reduceSum(const double &sendData, double &rcvData)
+void IntraComm::reduceSum(const double &sendData, double &rcvData)
 {
   PRECICE_TRACE();
   reduceSum(precice::refToSpan<const double>(sendData),
             precice::refToSpan<double>(rcvData));
 }
 
-void MasterSlave::reduceSum(const int &sendData, int &rcvData)
+void IntraComm::reduceSum(const int &sendData, int &rcvData)
 {
   PRECICE_TRACE();
 
@@ -202,7 +202,7 @@ void MasterSlave::reduceSum(const int &sendData, int &rcvData)
   }
 }
 
-void MasterSlave::allreduceSum(precice::span<const double> sendData, precice::span<double> rcvData)
+void IntraComm::allreduceSum(precice::span<const double> sendData, precice::span<double> rcvData)
 {
   PRECICE_TRACE();
 
@@ -225,7 +225,7 @@ void MasterSlave::allreduceSum(precice::span<const double> sendData, precice::sp
   }
 }
 
-void MasterSlave::allreduceSum(double &sendData, double &rcvData)
+void IntraComm::allreduceSum(double &sendData, double &rcvData)
 {
   PRECICE_TRACE();
 
@@ -248,7 +248,7 @@ void MasterSlave::allreduceSum(double &sendData, double &rcvData)
   }
 }
 
-void MasterSlave::allreduceSum(int &sendData, int &rcvData)
+void IntraComm::allreduceSum(int &sendData, int &rcvData)
 {
   PRECICE_TRACE();
 
@@ -271,7 +271,7 @@ void MasterSlave::allreduceSum(int &sendData, int &rcvData)
   }
 }
 
-void MasterSlave::broadcast(precice::span<double> values)
+void IntraComm::broadcast(precice::span<double> values)
 {
   PRECICE_TRACE();
 
@@ -293,7 +293,7 @@ void MasterSlave::broadcast(precice::span<double> values)
   }
 }
 
-void MasterSlave::broadcast(bool &value)
+void IntraComm::broadcast(bool &value)
 {
   PRECICE_TRACE();
 
@@ -315,7 +315,7 @@ void MasterSlave::broadcast(bool &value)
   }
 }
 
-void MasterSlave::broadcast(double &value)
+void IntraComm::broadcast(double &value)
 {
   PRECICE_TRACE();
 

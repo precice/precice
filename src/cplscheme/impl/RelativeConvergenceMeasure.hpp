@@ -11,7 +11,7 @@
 #include "logging/Logger.hpp"
 #include "math/differences.hpp"
 #include "math/math.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -67,8 +67,8 @@ public:
      std::cout<<"-------\n\n";
 */
 
-    _normDiff      = utils::MasterSlave::l2norm(newValues - oldValues);
-    _norm          = utils::MasterSlave::l2norm(newValues);
+    _normDiff      = utils::IntraComm::l2norm(newValues - oldValues);
+    _norm          = utils::IntraComm::l2norm(newValues);
     _isConvergence = _normDiff <= _norm * _convergenceLimitPercent;
   }
 

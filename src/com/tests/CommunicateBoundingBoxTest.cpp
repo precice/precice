@@ -11,7 +11,7 @@
 #include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 using namespace precice;
 using namespace precice::com;
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
     bbm.emplace(rank, mesh::BoundingBox(bounds));
   }
 
-  CommunicateBoundingBox comBB(utils::MasterSlave::getCommunication());
+  CommunicateBoundingBox comBB(utils::IntraComm::getCommunication());
 
   if (context.isPrimary()) {
     comBB.broadcastSendBoundingBoxMap(bbm);
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
     fb.clear();
   }
 
-  CommunicateBoundingBox comBB(utils::MasterSlave::getCommunication());
+  CommunicateBoundingBox comBB(utils::IntraComm::getCommunication());
 
   if (context.isPrimary()) {
     comBB.broadcastSendConnectionMap(fbm);
