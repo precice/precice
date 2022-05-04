@@ -50,7 +50,7 @@ public:
   virtual bool hasComputedMapping() const final;
 
   /// Removes a computed mapping.
-  virtual void clear() override;
+  virtual void clear() = 0;
 
   /// Maps input data to output data from input mesh to output mesh.
   virtual void map(int inputDataID, int outputDataID) final;
@@ -67,12 +67,12 @@ protected:
   std::vector<bool> _deadAxis;
 
   bool _hasComputedMapping = false;
+
   virtual void mapConservative(int inputDataID, int outputDataID, int polyparams) = 0;
   virtual void mapConsistent(int inputDataID, int outputDataID, int polyparams)   = 0;
 
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctBaseMapping"};
-
 
   void setDeadAxis(bool xDead, bool yDead, bool zDead);
 };
@@ -123,12 +123,6 @@ bool RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::hasComputedMapping() co
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::clear()
-{
-  _hasComputedMapping = false;
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::map(
     int inputDataID,
     int outputDataID)
@@ -147,12 +141,10 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::map(
     PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
                    valueDim, output()->data(outputDataID)->getDimensions());
   }
-  int deadDimensions = 0;
-  for (int d = 0; d < getDimensions(); d++) {
-    if (_deadAxis[d])
-      deadDimensions += 1;
-  }
-  int polyparams = 1 + getDimensions() - deadDimensions;
+
+  // Count the dead axis
+  int deadDimensions = std::count(_deadAxis.begin(), _deadAxis.end(), true);
+  int polyparams     = 1 + getDimensions() - deadDimensions;
 
   if (hasConstraint(CONSERVATIVE)) {
     mapConservative(inputDataID, outputDataID, polyparams);
