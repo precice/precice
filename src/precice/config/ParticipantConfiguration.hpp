@@ -102,7 +102,7 @@ private:
   const std::string VALUE_FILTER_ON_SLAVES          = "on-slaves";
   const std::string VALUE_FILTER_ON_SECONDARY_RANKS = "on-secondary-ranks";
   const std::string VALUE_FILTER_ON_MASTER          = "on-master";
-  const std::string VALUE_FILTER_ON_PRIMARY_RANK    = "on-intra-comm";
+  const std::string VALUE_FILTER_ON_PRIMARY_RANK    = "on-primary-rank";
   const std::string VALUE_NO_FILTER                 = "no-filter";
 
   const std::string VALUE_VTK = "vtk";
