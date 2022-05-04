@@ -190,6 +190,7 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint1)
       2.0, 0.0, 1.0, 3.0, 4.0, 5.0};
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
+
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint1)
 {
   PRECICE_TEST(1_rank);
