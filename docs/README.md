@@ -48,4 +48,4 @@ If you are new to preCICE, please have a look at our [documentation](https://www
 
 preCICE is an academic project, developed at the [Technical University of Munich](https://www.in.tum.de/i05/startseite/) and at the [University of Stuttgart](https://www.ipvs.uni-stuttgart.de). If you use preCICE, please [cite us](https://www.precice.org/publications/):
 
-*Chourdakis G, Davis K, Rodenberg B et al. preCICE v2: A sustainable and user-friendly coupling library [version 1; peer review: awaiting peer review]. Open Res Europe 2022, 2:51 (https://doi.org/10.12688/openreseurope.14445.1)*
+To cite preCICE, please check the [list of publications](https://precice.org/publications).
