@@ -14,7 +14,6 @@
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
 
-
 namespace precice {
 namespace mesh {
 class Vertex;
@@ -51,8 +50,8 @@ void testWatchPoint(const TestContext & context,
   std::string name("rectangle");
   PtrMesh     mesh(new Mesh(name, 2, testing::nextMeshID()));
 
-  if (context.size > 1){
-    if (context.isPrimary()){
+  if (context.size > 1) {
+    if (context.isPrimary()) {
       mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
       mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
       if (withEdge) {
@@ -74,16 +73,16 @@ void testWatchPoint(const TestContext & context,
       mesh->createEdge(v2, v3);
     }
   }
-  
+
   using precice::testing::operator""_dataID;
-  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
-  PtrData vectorData   = mesh->createData("VectorData", 2, 1_dataID);
-  auto &  doubleValues = doubleData->values();
-  auto &  vectorValues = vectorData->values();
+  PtrData                 doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
+  PtrData                 vectorData   = mesh->createData("VectorData", 2, 1_dataID);
+  auto &                  doubleValues = doubleData->values();
+  auto &                  vectorValues = vectorData->values();
   mesh->allocateDataValues();
 
-  if (context.size > 1){
-    if(context.isPrimary()){
+  if (context.size > 1) {
+    if (context.isPrimary()) {
       doubleValues(0) = 1.0;
       doubleValues(1) = 2.0;
       vectorValues(0) = 1.0;
@@ -109,7 +108,6 @@ void testWatchPoint(const TestContext & context,
     vectorValues(4) = 5.0;
     vectorValues(5) = 6.0;
   }
-  
 
   std::string filename0("precice-WatchPointTest-timeseries-0.log");
 
@@ -127,8 +125,8 @@ void testWatchPoint(const TestContext & context,
     watchpoint0.exportPointData(0.0);
 
     // Change data (next timestep)
-    if (context.size > 1){
-      if(context.isPrimary()){
+    if (context.size > 1) {
+      if (context.isPrimary()) {
         doubleValues(0) = 2.0;
         doubleValues(1) = 3.0;
         vectorValues(0) = 2.0;
@@ -163,7 +161,7 @@ void testWatchPoint(const TestContext & context,
   }
 
   // File Format: Time  Coordinate0  Coordinate1  DoubleData  VectorData0  VectorData1
-  if ( isWatchpointClosest ){
+  if (isWatchpointClosest) {
     BOOST_TEST_CONTEXT("Validating watchpoint0")
     {
       auto result = readDoublesFromTXTFile(filename0, 6);
@@ -184,9 +182,9 @@ BOOST_AUTO_TEST_SUITE(WatchPoint)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint1)
 {
   PRECICE_TEST(1_rank);
-  bool withEdge   = false;
-  auto watchPointPosition  = std::vector<double>{-0.5, 0.6};
-  auto expected  = std::vector<double>{
+  bool withEdge           = false;
+  auto watchPointPosition = std::vector<double>{-0.5, 0.6};
+  auto expected           = std::vector<double>{
       0.0, 0.0, 1.0, 2.0, 3.0, 4.0,
       1.0, 0.0, 1.0, 3.0, 4.0, 5.0,
       2.0, 0.0, 1.0, 3.0, 4.0, 5.0};
@@ -195,9 +193,9 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint1)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint1)
 {
   PRECICE_TEST(1_rank);
-  bool withEdge   = true;
-  auto watchPointPosition  = std::vector<double>{-0.5, 0.6};
-  auto expected  = std::vector<double>{
+  bool withEdge           = true;
+  auto watchPointPosition = std::vector<double>{-0.5, 0.6};
+  auto expected           = std::vector<double>{
       0.0, 0.0, 0.6, 1.6, 2.2, 3.2,
       1.0, 0.0, 0.6, 2.6, 3.2, 4.2,
       2.0, 0.0, 0.6, 2.6, 3.2, 4.2};
@@ -207,9 +205,9 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint1)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint2)
 {
   PRECICE_TEST(1_rank);
-  bool withEdge   = false;
-  auto watchPointPosition  = std::vector<double>{0.0, 1.6};
-  auto expected  = std::vector<double>{
+  bool withEdge           = false;
+  auto watchPointPosition = std::vector<double>{0.0, 1.6};
+  auto expected           = std::vector<double>{
       0.0, 0.0, 2.0, 3.0, 5.0, 6.0,
       1.0, 0.0, 2.0, 4.0, 6.0, 7.0,
       2.0, 0.0, 2.0, 4.0, 6.0, 7.0};
@@ -218,9 +216,9 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint2)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint2)
 {
   PRECICE_TEST(1_rank);
-  bool withEdge   = true;
-  auto watchPointPosition  = std::vector<double>{0.0, 1.6};
-  auto expected  = std::vector<double>{
+  bool withEdge           = true;
+  auto watchPointPosition = std::vector<double>{0.0, 1.6};
+  auto expected           = std::vector<double>{
       0.0, 0.0, 1.6, 2.6, 4.2, 5.2,
       1.0, 0.0, 1.6, 3.6, 5.2, 6.2,
       2.0, 0.0, 1.6, 3.6, 5.2, 6.2};
@@ -230,9 +228,9 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint2)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint1)
 {
   PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
-  bool withEdge   = false;
-  auto watchPointPosition  = std::vector<double>{-0.5, 0.6};
-  auto expected  = std::vector<double>{
+  bool withEdge           = false;
+  auto watchPointPosition = std::vector<double>{-0.5, 0.6};
+  auto expected           = std::vector<double>{
       0.0, 0.0, 1.0, 2.0, 3.0, 4.0,
       1.0, 0.0, 1.0, 3.0, 4.0, 5.0,
       2.0, 0.0, 1.0, 3.0, 4.0, 5.0};
@@ -242,9 +240,9 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint1)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint1)
 {
   PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
-  bool withEdge   = true;
-  auto watchPointPosition  = std::vector<double>{-0.5, 0.6};
-  auto expected  = std::vector<double>{
+  bool withEdge           = true;
+  auto watchPointPosition = std::vector<double>{-0.5, 0.6};
+  auto expected           = std::vector<double>{
       0.0, 0.0, 0.6, 1.6, 2.2, 3.2,
       1.0, 0.0, 0.6, 2.6, 3.2, 4.2,
       2.0, 0.0, 0.6, 2.6, 3.2, 4.2};
@@ -254,9 +252,9 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint1)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint2)
 {
   PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
-  bool withEdge   = false;
-  auto watchPointPosition  = std::vector<double>{0.0, 1.6};
-  auto expected  = std::vector<double>{
+  bool withEdge           = false;
+  auto watchPointPosition = std::vector<double>{0.0, 1.6};
+  auto expected           = std::vector<double>{
       0.0, 0.0, 2.0, 3.0, 5.0, 6.0,
       1.0, 0.0, 2.0, 4.0, 6.0, 7.0,
       2.0, 0.0, 2.0, 4.0, 6.0, 7.0};
@@ -266,16 +264,14 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint2)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint2)
 {
   PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
-  bool withEdge   = true;
-  auto watchPointPosition  = std::vector<double>{0.0, 1.6};
-  auto expected  = std::vector<double>{
+  bool withEdge           = true;
+  auto watchPointPosition = std::vector<double>{0.0, 1.6};
+  auto expected           = std::vector<double>{
       0.0, 0.0, 1.6, 2.6, 4.2, 5.2,
       1.0, 0.0, 1.6, 3.6, 5.2, 6.2,
       2.0, 0.0, 1.6, 3.6, 5.2, 6.2};
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(Reinitalize)
 {
