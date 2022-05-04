@@ -211,7 +211,7 @@ ProjectionMatch Index::findNearestProjection(const Eigen::VectorXd &location, in
   }
 }
 
-ProjectionMatch Index::findNearestVolume(const Eigen::VectorXd &location, int n)
+ProjectionMatch Index::findCellInterpolation(const Eigen::VectorXd &location, int n)
 {
   if (_mesh->getDimensions() == 2) {
     auto matchedTriangles = getClosestTriangles(location, n);
