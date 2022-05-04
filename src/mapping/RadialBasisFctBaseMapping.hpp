@@ -43,14 +43,18 @@ public:
 
   virtual ~RadialBasisFctBaseMapping() = default;
 
+  // Methods, which need to be implemented in a derived class
+
   /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping() = 0;
 
-  /// Returns true, if computeMapping() has been called.
-  virtual bool hasComputedMapping() const final;
-
   /// Removes a computed mapping.
   virtual void clear() = 0;
+
+  // Methods sharing common functions
+
+  /// Returns true, if computeMapping() has been called.
+  virtual bool hasComputedMapping() const final;
 
   /// Maps input data to output data from input mesh to output mesh.
   virtual void map(int inputDataID, int outputDataID) final;
@@ -110,10 +114,10 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::setDeadAxis(bool xDead,
   } else {
     PRECICE_ASSERT(getDimensions() == 2, "Unknown dimension.");
     if (zDead) {
-      PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect.");
+      PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
     }
   }
-  PRECICE_CHECK(std::any_of(_deadAxis.begin(), _deadAxis.end(), [](const auto &ax) { return ax == false; }), "You cannot choose all axes to be dead for a RBF mapping");
+  PRECICE_CHECK(std::any_of(_deadAxis.begin(), _deadAxis.end(), [](const auto &ax) { return ax == false; }), "You cannot set all axes to dead for an RBF mapping. Please remove one of the respective mapping's \"x-dead\", \"y-dead\", or \"z-dead\" attributes.");
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
