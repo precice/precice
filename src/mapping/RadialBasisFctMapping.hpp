@@ -160,9 +160,9 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 {
   PRECICE_TRACE();
-  _matrixA            = Eigen::MatrixXd();
-  _qr                 = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>();
-  _hasComputedMapping = false;
+  _matrixA                  = Eigen::MatrixXd();
+  _qr                       = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>();
+  this->_hasComputedMapping = false;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
