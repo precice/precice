@@ -12,7 +12,7 @@
     </mesh>
 
     <participant name="FluidSolver">
-      <master:mpi-single />
+      <intra-comm:mpi-single />
       <use-mesh name="CellCenters" provide="yes" />
       <use-mesh name="Nodes" from="SolidSolver" safety-factor="0.5" />
       <mapping:nearest-projection

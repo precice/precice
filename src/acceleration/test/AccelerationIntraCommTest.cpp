@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(AccelerationTests)
 
 using DataMap = std::map<int, PtrCouplingData>;
 
-BOOST_AUTO_TEST_SUITE(AccelerationMasterSlaveTests)
+BOOST_AUTO_TEST_SUITE(AccelerationIntraCommTests)
 
 /// Test that runs on 4 processors.
 BOOST_AUTO_TEST_CASE(testVIQNILSpp)
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
     /**
      * processor with 4 vertices
      */
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
   pp.performAcceleration(data);
 
   Eigen::VectorXd newdvalues;
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
 
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01), data.at(0)->values()(1));
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSpp)
 
   pp.performAcceleration(data);
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
     BOOST_TEST(testing::equals(data.at(0)->values()(0), -1.51483105223442748866e+00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), -2.35405379763935940218e-01), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.04402029270655560822e+00), data.at(0)->values()(2));
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
 
   DataMap data;
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
 
     /**
      * processor with 4 vertices
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
   pp.performAcceleration(data);
 
   Eigen::VectorXd newdvalues;
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
     BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00000000000000000000e+00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01000000000000000888e+00), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02000000000000001776e+00), data.at(0)->values()(2));
@@ -504,7 +504,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJpp)
   data.begin()->second->values() = newdvalues;
   pp.performAcceleration(data);
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
     BOOST_TEST(testing::equals(data.at(0)->values()(0), -1.51483105223442748866e+00), data.at(0)->values()(0));
     BOOST_TEST(testing::equals(data.at(0)->values()(1), -2.35405379763935940218e-01), data.at(0)->values()(1));
     BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.04402029270655738458e+00), data.at(0)->values()(2));
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   PtrCouplingData dpcd;
   PtrCouplingData fpcd;
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
     /**
      * processor with no vertices
      */
@@ -663,7 +663,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   // underrelaxation, first iteration
   pp.performAcceleration(data);
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
 
   } else if (context.isRank(1)) { //SecondaryRank1
 
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   // QN- Update, 2. iteration
   pp.performAcceleration(data);
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
 
   } else if (context.isRank(1)) { //SecondaryRank1
 
@@ -783,7 +783,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   // QN- Update, 3. iteration
   pp.performAcceleration(data);
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
 
   } else if (context.isRank(1)) { //SecondaryRank1
 
@@ -844,7 +844,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   // QN- Update, 4. iteration
   pp.performAcceleration(data);
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
 
   } else if (context.isRank(1)) { //SecondaryRank1
 
@@ -905,7 +905,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_pp)
   // QN- Update, 5. iteration
   pp.performAcceleration(data);
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
 
   } else if (context.isRank(1)) { //SecondaryRank1
 

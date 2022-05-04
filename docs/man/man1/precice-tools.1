@@ -34,7 +34,7 @@ Prints the preCICE version string ( \fIprecice::getVersionInformation()\fR ) to 
 
 .TP
 .B check \fIfile\fR [\fIparticipant\fR [\fIsize\fR]]
-Checks given preCICE configuration \fIfile\fR and prints any errors. Pass the name of a \fIparticipant\fR to fully check its configuration. The optional \fIsize\fR indicates how many ranks run in parallel, which checks custom \fI<master: ... />\fR tags.
+Checks given preCICE configuration \fIfile\fR and prints any errors. Pass the name of a \fIparticipant\fR to fully check its configuration. The optional \fIsize\fR indicates how many ranks run in parallel, which checks custom \fI<on-primary-rank: ... />\fR tags.
 
 .SH EXIT STATUS
 precice-tools returns a zero exit status if it succeeds to run the provided command.

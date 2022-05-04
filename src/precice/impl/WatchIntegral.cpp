@@ -8,7 +8,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice {
 namespace impl {
@@ -23,14 +23,14 @@ WatchIntegral::WatchIntegral(
 {
   PRECICE_ASSERT(_mesh);
 
-  if (not utils::MasterSlave::isSecondary()) {
+  if (not utils::IntraComm::isSecondary()) {
     _txtWriter.addData("Time", io::TXTTableWriter::DOUBLE);
   }
 
   for (size_t i = 0; i < _mesh->data().size(); i++) {
     _dataToExport.push_back(_mesh->data()[i]);
 
-    if (not utils::MasterSlave::isSecondary()) {
+    if (not utils::IntraComm::isSecondary()) {
       if (_dataToExport[i]->getDimensions() > 1) {
 
         io::TXTTableWriter::DataType vectorType = _dataToExport[i]->getDimensions() == 2
@@ -47,7 +47,7 @@ WatchIntegral::WatchIntegral(
 void WatchIntegral::initialize()
 {
   // Do not add surface area column if there is no connectivity
-  if ((not utils::MasterSlave::isSecondary()) and (not _mesh->edges().empty())) {
+  if ((not utils::IntraComm::isSecondary()) and (not _mesh->edges().empty())) {
     _txtWriter.addData("SurfaceArea", io::TXTTableWriter::DOUBLE);
   }
   if (_isScalingOn and (_mesh->edges().empty())) {
@@ -62,7 +62,7 @@ void WatchIntegral::exportIntegralData(
     double time)
 {
 
-  if (not utils::MasterSlave::isSecondary()) {
+  if (not utils::IntraComm::isSecondary()) {
     _txtWriter.writeData("Time", time);
   }
 
@@ -70,12 +70,12 @@ void WatchIntegral::exportIntegralData(
     const int dataDimensions = elem->getDimensions();
     auto      integral       = calculateIntegral(elem);
 
-    if (utils::MasterSlave::getSize() > 1) {
+    if (utils::IntraComm::getSize() > 1) {
       Eigen::VectorXd valueRecv = Eigen::VectorXd::Zero(dataDimensions);
-      utils::MasterSlave::reduceSum(integral, valueRecv);
+      utils::IntraComm::reduceSum(integral, valueRecv);
       integral = std::move(valueRecv);
     }
-    if (not utils::MasterSlave::isSecondary()) {
+    if (not utils::IntraComm::isSecondary()) {
       if (dataDimensions == 1) {
         _txtWriter.writeData(elem->getName(), integral[0]);
       } else if (dataDimensions == 2) {
@@ -89,20 +89,20 @@ void WatchIntegral::exportIntegralData(
   // Calculate surface area only if there is connectivity information
   if (not _mesh->edges().empty()) {
     double surfaceArea = calculateSurfaceArea();
-    if (utils::MasterSlave::getSize() > 1) {
+    if (utils::IntraComm::getSize() > 1) {
       double surfaceAreaSum = 0.0;
-      utils::MasterSlave::reduceSum(surfaceArea, surfaceAreaSum);
+      utils::IntraComm::reduceSum(surfaceArea, surfaceAreaSum);
       surfaceArea = surfaceAreaSum;
     }
-    if (not utils::MasterSlave::isSecondary()) {
+    if (not utils::IntraComm::isSecondary()) {
       _txtWriter.writeData("SurfaceArea", surfaceArea);
     }
   } else {
     // Empty partitions should also call reduceSum to prevent deadlock
-    if (utils::MasterSlave::getSize() > 1) {
+    if (utils::IntraComm::getSize() > 1) {
       double surfaceArea    = 0.0;
       double surfaceAreaSum = 0.0;
-      utils::MasterSlave::reduceSum(surfaceArea, surfaceAreaSum);
+      utils::IntraComm::reduceSum(surfaceArea, surfaceAreaSum);
     }
   }
 }

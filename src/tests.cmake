@@ -3,7 +3,7 @@
 #
 target_sources(testprecice
     PRIVATE
-    src/acceleration/test/AccelerationMasterSlaveTest.cpp
+    src/acceleration/test/AccelerationIntraCommTest.cpp
     src/acceleration/test/AccelerationSerialTest.cpp
     src/acceleration/test/ParallelMatrixOperationsTest.cpp
     src/acceleration/test/PreconditionerTest.cpp
@@ -87,7 +87,7 @@ target_sources(testprecice
     src/utils/tests/DimensionsTest.cpp
     src/utils/tests/EigenHelperFunctionsTest.cpp
     src/utils/tests/ManageUniqueIDsTest.cpp
-    src/utils/tests/MasterSlaveTest.cpp
+    src/utils/tests/IntraCommTest.cpp
     src/utils/tests/MultiLockTest.cpp
     src/utils/tests/ParallelTest.cpp
     src/utils/tests/PointerVectorTest.cpp

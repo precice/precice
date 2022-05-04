@@ -18,11 +18,11 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshNoOverlap)
   // overlap.
 
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
-  const std::vector<double> boundingBoxSlave      = std::vector<double>{0.0, 1.0, 4.0, 7};
-  const std::vector<double> expectedPositionSlave = std::vector<double>{0.0, 4.0, 0.0, 5.0};
-  const std::vector<double> writeDataSlave        = std::vector<double>({4, 5});
-  const std::vector<double> expectedReadDataSlave = std::vector<double>({3, 4, 5});
-  runTestAccessReceivedMesh(context, boundingBoxSlave, writeDataSlave, expectedPositionSlave, expectedReadDataSlave, 0);
+  const std::vector<double> boundingBoxSecondaryRank      = std::vector<double>{0.0, 1.0, 4.0, 7};
+  const std::vector<double> expectedPositionSecondaryRank = std::vector<double>{0.0, 4.0, 0.0, 5.0};
+  const std::vector<double> writeDataSecondaryRank        = std::vector<double>({4, 5});
+  const std::vector<double> expectedReadDataSecondaryRank = std::vector<double>({3, 4, 5});
+  runTestAccessReceivedMesh(context, boundingBoxSecondaryRank, writeDataSecondaryRank, expectedPositionSecondaryRank, expectedReadDataSecondaryRank, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration

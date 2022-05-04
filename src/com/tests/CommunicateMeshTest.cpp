@@ -9,7 +9,7 @@
 #include "mesh/Mesh.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice {
 namespace mesh {
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh)
   mesh::Triangle &t0 = sendMesh.createTriangle(e0, e1, e2);
 
   // Create mesh communicator
-  CommunicateMesh comMesh(precice::utils::MasterSlave::getCommunication());
+  CommunicateMesh comMesh(precice::utils::IntraComm::getCommunication());
 
   if (context.isPrimary()) {
     comMesh.broadcastSendMesh(sendMesh);

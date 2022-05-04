@@ -15,7 +15,7 @@
     </mesh>
 
     <participant name="ParallelSolver">
-      <master:sockets />
+      <intra-comm:sockets />
       <use-mesh name="ParallelMesh" provide="yes" />
       <use-mesh name="SerialMesh" from="SerialSolver" />
       <write-data name="MyData1" mesh="ParallelMesh" />

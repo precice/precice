@@ -3,7 +3,7 @@
 #include <com/SocketCommunicationFactory.hpp>
 #include <m2n/PointToPointCommunication.hpp>
 #include <mesh/Mesh.hpp>
-#include <utils/MasterSlave.hpp>
+#include <utils/IntraComm.hpp>
 
 #include <mpi.h>
 
@@ -18,7 +18,7 @@ using std::vector;
 vector<double>
 getData()
 {
-  int rank = utils::MasterSlave::getRank();
+  int rank = utils::IntraComm::getRank();
 
   static double data_0[] = {10.0, 20.0, 40.0, 80.0};
   static double data_1[] = {30.0, 50.0, 60.0, 90.0};
@@ -35,7 +35,7 @@ getData()
 vector<double>
 getExpectedData()
 {
-  int rank = utils::MasterSlave::getRank();
+  int rank = utils::IntraComm::getRank();
 
   static double data_0[] = {10.0 + 2, 20.0 + 1, 40.0 + 2, 80.0 + 5};
   static double data_1[] = {30.0 + 2, 50.0 + 1, 60.0 + 3, 90.0 + 5};
@@ -73,52 +73,52 @@ int main(int argc, char **argv)
 
   MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
-  MPI_Comm_size(MPI_COMM_WORLD, &utils::MasterSlave::getSize());
-  MPI_Comm_rank(MPI_COMM_WORLD, &utils::MasterSlave::getRank());
+  MPI_Comm_size(MPI_COMM_WORLD, &utils::IntraComm::getSize());
+  MPI_Comm_rank(MPI_COMM_WORLD, &utils::IntraComm::getRank());
 
-  if (utils::MasterSlave::getSize() != 3) {
+  if (utils::IntraComm::getSize() != 3) {
     std::cout << "Please run with 3 mpi processes\n";
     return 1;
   }
 
-  if (utils::MasterSlave::getRank() == 0) {
-    utils::MasterSlave::isPrimary()   = true;
-    utils::MasterSlave::isSecondary() = false;
+  if (utils::IntraComm::getRank() == 0) {
+    utils::IntraComm::isPrimary()   = true;
+    utils::IntraComm::isSecondary() = false;
   } else {
-    utils::MasterSlave::isPrimary()   = false;
-    utils::MasterSlave::isSecondary() = true;
+    utils::IntraComm::isPrimary()   = false;
+    utils::IntraComm::isSecondary() = true;
   }
 
-  if (utils::MasterSlave::isPrimary()) {
+  if (utils::IntraComm::isPrimary()) {
     utils::Parallel::initializeMPI(NULL, NULL);
-    utils::Parallel::splitCommunicator("Master");
+    utils::Parallel::splitCommunicator("Primary");
   } else {
-    assertion(utils::MasterSlave::isSecondary());
+    assertion(utils::IntraComm::isSecondary());
     utils::Parallel::initializeMPI(NULL, NULL);
-    utils::Parallel::splitCommunicator("Slave");
+    utils::Parallel::splitCommunicator("Secondary");
   }
 
-  utils::MasterSlave::getCommunication() =
+  utils::IntraComm::getCommunication() =
       com::PtrCommunication(new com::MPIDirectCommunication);
 
   int rankOffset = 1;
 
-  if (utils::MasterSlave::isPrimary()) {
-    utils::MasterSlave::getCommunication()->acceptConnection(
-        "Master", "Slave", utils::MasterSlave::getRank(), 1);
-    utils::MasterSlave::getCommunication()->setRankOffset(rankOffset);
+  if (utils::IntraComm::isPrimary()) {
+    utils::IntraComm::getCommunication()->acceptConnection(
+        "Primary", "Secondary", utils::IntraComm::getRank(), 1);
+    utils::IntraComm::getCommunication()->setRankOffset(rankOffset);
   } else {
-    assertion(utils::MasterSlave::isSecondary());
-    utils::MasterSlave::getCommunication()->requestConnection(
-        "Master",
-        "Slave",
-        utils::MasterSlave::getRank() - rankOffset,
-        utils::MasterSlave::getSize() - rankOffset);
+    assertion(utils::IntraComm::isSecondary());
+    utils::IntraComm::getCommunication()->requestConnection(
+        "Primary",
+        "Secondary",
+        utils::IntraComm::getRank() - rankOffset,
+        utils::IntraComm::getSize() - rankOffset);
   }
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 
-  if (utils::MasterSlave::isPrimary()) {
+  if (utils::IntraComm::isPrimary()) {
     mesh->setGlobalNumberOfVertices(10);
 
     mesh->getVertexDistribution()[0].push_back(0);
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 
     c.requestConnection("B", "A");
 
-    cout << utils::MasterSlave::getRank() << ": "
+    cout << utils::IntraComm::getRank() << ": "
          << "Connected!\n";
 
     std::vector<double> data = getData();
@@ -157,16 +157,16 @@ int main(int argc, char **argv)
     c.receive(data.data(), data.size());
 
     if (validate(data))
-      cout << utils::MasterSlave::getRank() << ": "
+      cout << utils::IntraComm::getRank() << ": "
            << "Success!\n";
     else
-      cout << utils::MasterSlave::getRank() << ": "
+      cout << utils::IntraComm::getRank() << ": "
            << "Failure!\n";
 
     cout << "----------\n";
   }
 
-  utils::MasterSlave::getCommunication().reset();
+  utils::IntraComm::getCommunication().reset();
 
   MPI_Finalize();
 

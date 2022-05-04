@@ -10,7 +10,7 @@
 #include "MPISinglePortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
@@ -205,7 +205,7 @@ void MPISinglePortsCommunication::closeConnection()
 
   PRECICE_DEBUG("Disconnected");
 
-  if (_isAcceptor and utils::MasterSlave::getRank() == 0) {
+  if (_isAcceptor and utils::IntraComm::getRank() == 0) {
     MPI_Close_port(const_cast<char *>(_portName.c_str()));
     _portName.clear();
     PRECICE_DEBUG("Port closed");

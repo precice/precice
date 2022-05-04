@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
   } else { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
-    if (context.isPrimary()) { //Master
+    if (context.isPrimary()) { //Primary
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0;
       mesh::Vertex &v1 = pSolidzMesh->createVertex(position);
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
   } else { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
-    if (context.isPrimary()) { //Master
+    if (context.isPrimary()) { //Primary
       Eigen::VectorXd position(dimensions);
       position << 0.0, 0.0, 0.0;
       mesh::Vertex &v1 = pSolidzMesh->createVertex(position);
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
   int           dim = 2;
   mesh::PtrMesh pMesh(new mesh::Mesh(meshName, dim, testing::nextMeshID()));
 
-  if (context.isPrimary()) { //Master
+  if (context.isPrimary()) { //Primary
     Eigen::VectorXd position(dim);
     position << 0.0, 0.0;
     pMesh->createVertex(position);
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
 
   BOOST_TEST_CONTEXT(*pMesh)
   {
-    if (context.isPrimary()) { //Master
+    if (context.isPrimary()) { //Primary
       BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
       BOOST_TEST_REQUIRE(pMesh->getVertexOffsets().size() == 4);
       BOOST_TEST(pMesh->getVertexOffsets().at(0) == 2);
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
-    if (context.isPrimary()) { //Master
+    if (context.isPrimary()) { //Primary
       Eigen::VectorXd position(dimensions);
       position << -1.0, 0.0;
       mesh::Vertex &v0 = pSolidzMesh->createVertex(position);
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     part.addM2N(m2n);
     part.compareBoundingBoxes();
 
-    if (context.isPrimary()) { //Master
+    if (context.isPrimary()) { //Primary
       BOOST_TEST(pSolidzMesh->getConnectedRanks().size() == 2);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(0) == 1);
       BOOST_TEST(pSolidzMesh->getConnectedRanks().at(1) == 2);
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
 
-    if (context.isPrimary()) { //Master
+    if (context.isPrimary()) { //Primary
       Eigen::VectorXd position(dimensions);
       position << -1.0, 0.0, -1.0;
       mesh::Vertex &v0 = pSolidzMesh->createVertex(position);
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
   if (context.isNamed("Solid")) {
     m2n->createDistributedCommunication(mesh);
     ProvidedPartition part(mesh);
-    m2n->acceptSecondaryPreConnections("SolidSecondaryRanks", "FluidSecondaryRanks");
+    m2n->acceptSecondaryRanksPreConnection("SolidSecondaryRanks", "FluidSecondaryRanks");
     part.addM2N(m2n);
     part.communicate();
   } else {
@@ -685,7 +685,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
       BOOST_TEST(mesh->getConnectedRanks().at(1) == 1);
     }
 
-    m2n->acceptSecondaryPreConnections("FluidSecondaryRanks", "SolidSecondaryRanks");
+    m2n->acceptSecondaryRanksPreConnection("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();
@@ -814,7 +814,7 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
       BOOST_TEST(mesh->getConnectedRanks().at(1) == 1);
     }
 
-    m2n->acceptSecondaryPreConnections("FluidSecondaryRanks", "SolidSecondaryRanks");
+    m2n->acceptSecondaryRanksPreConnection("FluidSecondaryRanks", "SolidSecondaryRanks");
 
     part.communicate();
     part.compute();

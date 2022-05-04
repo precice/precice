@@ -14,7 +14,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -29,7 +29,7 @@ void ExportXML::doExport(
   processDataNamesAndDimensions(mesh);
   if (not location.empty())
     boost::filesystem::create_directories(location);
-  if (utils::MasterSlave::isPrimary()) {
+  if (utils::IntraComm::isPrimary()) {
     writeParallelFile(name, location, mesh);
   }
   if (mesh.vertices().size() > 0) { //only procs at the coupling interface should write output (for performance reasons)
@@ -84,7 +84,7 @@ void ExportXML::writeParallelFile(
   if (offsets[0] > 0) {
     outParallelFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
   }
-  for (auto rank : utils::MasterSlave::allSecondaryRanks()) {
+  for (auto rank : utils::IntraComm::allSecondaryRanks()) {
     PRECICE_ASSERT(rank < offsets.size());
     if (offsets[rank] - offsets[rank - 1] > 0) {
       //only non-empty subfiles
@@ -101,10 +101,10 @@ void ExportXML::writeParallelFile(
 namespace {
 std::string getPieceSuffix()
 {
-  if (!utils::MasterSlave::isParallel()) {
+  if (!utils::IntraComm::isParallel()) {
     return "";
   }
-  return "_" + std::to_string(utils::MasterSlave::getRank());
+  return "_" + std::to_string(utils::IntraComm::getRank());
 }
 } // namespace
 
@@ -159,7 +159,7 @@ void ExportXML::exportData(
   // Export the current rank
   outFile << "            <DataArray type=\"UInt32\" Name=\"Rank\" NumberOfComponents=\"1\" format=\"ascii\">\n";
   outFile << "               ";
-  const auto rank = utils::MasterSlave::getRank();
+  const auto rank = utils::IntraComm::getRank();
   for (size_t count = 0; count < mesh.vertices().size(); ++count) {
     outFile << rank << ' ';
   }
