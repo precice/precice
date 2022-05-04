@@ -1,7 +1,7 @@
 #pragma once
 #ifndef PRECICE_NO_PETSC
 
-#include "mapping/Mapping.hpp"
+#include "mapping/RadialBasisFctBaseMapping.hpp"
 
 #include <map>
 #include <numeric>
@@ -45,7 +45,7 @@ class PetRadialBasisFctMappingTest; // Forward declaration to friend the class
  * The radial basis function type has to be given as template parameter.
  */
 template <typename RADIAL_BASIS_FUNCTION_T>
-class PetRadialBasisFctMapping : public Mapping {
+class PetRadialBasisFctMapping : public RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T> {
 public:
   /**
    * @brief Constructor.
@@ -61,7 +61,7 @@ public:
    * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
   PetRadialBasisFctMapping(
-      Constraint                     constraint,
+      Mapping::Constraint            constraint,
       int                            dimensions,
       const RADIAL_BASIS_FUNCTION_T &function,
       bool                           xDead,
@@ -77,31 +77,19 @@ public:
   /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping() override;
 
-  /// Returns true, if computeMapping() has been called.
-  virtual bool hasComputedMapping() const override;
-
   /// Removes a computed mapping.
   virtual void clear() override;
 
-  /// Maps input data to output data from input mesh to output mesh.
-  virtual void map(int inputDataID, int outputDataID) override;
-
   friend struct MappingTests::PetRadialBasisFunctionMapping::Serial::SolutionCaching;
 
-  virtual void tagMeshFirstRound() override;
-
-  virtual void tagMeshSecondRound() override;
-
 private:
+  virtual void mapConservative(int inputDataID, int outputDataID, int polyparams) override;
+  virtual void mapConsistent(int inputDataID, int outputDataID, int polyparams) override;
+
   /// Stores col -> value for each row. Used to return the already computed values from the preconditioning
   using VertexData = std::vector<std::vector<std::pair<int, double>>>;
 
   mutable logging::Logger _log{"mapping::PetRadialBasisFctMapping"};
-
-  bool _hasComputedMapping = false;
-
-  /// Radial basis function type used in interpolation.
-  RADIAL_BASIS_FUNCTION_T _basisFunction;
 
   /// Interpolation system matrix. Evaluated basis function on the input mesh
   petsc::Matrix _matrixC;
@@ -128,9 +116,6 @@ private:
   AO _AOmapping;
 
   const double _solverRtol;
-
-  /// true if the mapping along some axis should be ignored
-  std::vector<bool> _deadAxis;
 
   /// Toggles the use of the additional polynomial
   Polynomial _polynomial;
@@ -186,7 +171,7 @@ private:
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
-    Constraint                     constraint,
+    Mapping::Constraint            constraint,
     int                            dimensions,
     const RADIAL_BASIS_FUNCTION_T &function,
     bool                           xDead,
@@ -195,8 +180,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
     double                         solverRtol,
     Polynomial                     polynomial,
     Preallocation                  preallocation)
-    : Mapping(constraint, dimensions),
-      _basisFunction(function),
+    : RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>(constraint, dimensions, function, xDead, yDead, zDead),
       _matrixC("C"),
       _matrixQ("Q"),
       _matrixA("A"),
@@ -209,37 +193,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
       _preallocation(preallocation),
       _commState(utils::Parallel::current())
 {
-  if (constraint == SCALEDCONSISTENT) {
-    setInputRequirement(Mapping::MeshRequirement::FULL);
-    setOutputRequirement(Mapping::MeshRequirement::FULL);
-  } else {
-    setInputRequirement(Mapping::MeshRequirement::VERTEX);
-    setOutputRequirement(Mapping::MeshRequirement::VERTEX);
-  }
-
-  if (getDimensions() == 2) {
-    _deadAxis = {xDead, yDead};
-    PRECICE_CHECK(not(xDead and yDead),
-                  "You cannot set all axes to dead for an RBF mapping. "
-                  "Please remove one of the respective mapping's \"x-dead\" or \"y-dead\" attributes.");
-    if (zDead)
-      PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. "
-                   "Please remove the respective mapping's \"z-dead\" attribute.");
-  } else if (getDimensions() == 3) {
-    _deadAxis = {xDead, yDead, zDead};
-    PRECICE_CHECK(not(xDead and yDead and zDead),
-                  "You cannot set all axes to dead for an RBF mapping. "
-                  "Please remove one of the respective mapping's \"x-dead\", \"y-dead\", or \"z-dead\" attributes.");
-  } else {
-    PRECICE_ASSERT(false);
-  }
 
   // Count number of dead dimensions
-  int deadDimensions = 0;
-  for (int d = 0; d < dimensions; d++) {
-    if (_deadAxis[d])
-      deadDimensions += 1;
-  }
+  int deadDimensions = std::count(this->_deadAxis.begin(), this->_deadAxis.end(), true);
+
+  // TODO: Move this to the base class and rename them to have an underscore
   polyparams      = (_polynomial == Polynomial::ON) ? 1 + dimensions - deadDimensions : 0;
   sepPolyparams   = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
   localPolyparams = (_commState->rank() > 0) ? 0 : polyparams;
@@ -255,8 +213,8 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   PRECICE_TRACE();
-  precice::utils::Event e("map.pet.computeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-  precice::utils::Event ePreCompute("map.pet.preComputeMapping.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event e("map.pet.computeMapping.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
+  precice::utils::Event ePreCompute("map.pet.preComputeMapping.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   clear();
 
@@ -270,17 +228,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PRECICE_DEBUG("Using separated polynomial.");
   }
 
-  PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
-                 input()->getDimensions(), output()->getDimensions());
-  int const     dimensions = input()->getDimensions();
+  PRECICE_ASSERT(this->input()->getDimensions() == this->output()->getDimensions(),
+                 this->input()->getDimensions(), this->output()->getDimensions());
+  int const     dimensions = this->input()->getDimensions();
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
-  if (hasConstraint(CONSERVATIVE)) {
-    inMesh  = output();
-    outMesh = input();
+  if (this->hasConstraint(Mapping::CONSERVATIVE)) {
+    inMesh  = this->output();
+    outMesh = this->input();
   } else {
-    inMesh  = input();
-    outMesh = output();
+    inMesh  = this->input();
+    outMesh = this->output();
   }
 
   // Indizes that are used to build the Petsc AO mapping
@@ -305,7 +263,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PRECICE_DEBUG("outMesh->vertices().size() = {}", outMesh->vertices().size());
   ePreCompute.stop();
 
-  precice::utils::Event eCreateMatrices("map.pet.createMatrices.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event eCreateMatrices("map.pet.createMatrices.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   // Matrix C: Symmetric, sparse matrix with n x n local size.
   _matrixC.init(n, n, PETSC_DETERMINE, PETSC_DETERMINE, MATSBAIJ);
@@ -328,7 +286,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PRECICE_DEBUG("Set matrix A to local size {} x {}", outputSize, n);
 
   eCreateMatrices.stop();
-  precice::utils::Event eAO("map.pet.AO.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event eAO("map.pet.AO.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   auto const ownerRangeABegin = _matrixA.ownerRange().first;
   auto const ownerRangeAEnd   = _matrixA.ownerRange().second;
@@ -363,7 +321,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // -- BEGIN FILL LOOP FOR MATRIX C --
   PRECICE_DEBUG("Begin filling matrix C");
-  precice::utils::Event eFillC("map.pet.fillC.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event eFillC("map.pet.fillC.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   // We collect entries for each row and set them blockwise using MatSetValues.
   PetscInt const           idxSize = std::max(_matrixC.getSize().second, _matrixQ.getSize().second);
@@ -384,7 +342,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       rowVals[colNum++] = 1;
 
       for (int dim = 0; dim < dimensions; dim++) {
-        if (not _deadAxis[dim]) {
+        if (not this->_deadAxis[dim]) {
           colIdx[colNum]    = colNum;
           rowVals[colNum++] = inVertex.getCoords()[dim];
         }
@@ -405,7 +363,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
       auto const &rowVertices = vertexData[preallocRow];
       for (const auto &vertex : rowVertices) {
-        rowVals[colNum]  = _basisFunction.evaluate(vertex.second);
+        rowVals[colNum]  = this->_basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
       }
       ++preallocRow;
@@ -416,13 +374,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           continue; // matrix is symmetric
         distance = inVertex.getCoords() - vj.getCoords();
         for (int d = 0; d < dimensions; d++) {
-          if (_deadAxis[d]) {
+          if (this->_deadAxis[d]) {
             distance[d] = 0;
           }
         }
         double const norm = distance.norm();
-        if (_basisFunction.getSupportRadius() > norm) {
-          rowVals[colNum]  = _basisFunction.evaluate(norm);
+        if (this->_basisFunction.getSupportRadius() > norm) {
+          rowVals[colNum]  = this->_basisFunction.evaluate(norm);
           colIdx[colNum++] = col; // column of entry is the globalIndex
         }
       }
@@ -471,7 +429,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // -- BEGIN FILL LOOP FOR MATRIX A --
   PRECICE_DEBUG("Begin filling matrix A.");
-  precice::utils::Event eFillA("map.pet.fillA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event eFillA("map.pet.fillA.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   for (PetscInt row = ownerRangeABegin; row < ownerRangeAEnd; ++row) {
     mesh::Vertex const &oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
@@ -485,7 +443,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       rowVals[colNum++] = 1;
 
       for (int dim = 0; dim < dimensions; dim++) {
-        if (not _deadAxis[dim]) {
+        if (not this->_deadAxis[dim]) {
           colIdx[colNum]    = colNum;
           rowVals[colNum++] = oVertex.getCoords()[dim];
         }
@@ -500,19 +458,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (_preallocation == Preallocation::SAVE or _preallocation == Preallocation::TREE) {
       auto const &rowVertices = vertexData[row - ownerRangeABegin];
       for (const auto &vertex : rowVertices) {
-        rowVals[colNum]  = _basisFunction.evaluate(vertex.second);
+        rowVals[colNum]  = this->_basisFunction.evaluate(vertex.second);
         colIdx[colNum++] = vertex.first;
       }
     } else {
       for (const mesh::Vertex &inVertex : inMesh->vertices()) {
         distance = oVertex.getCoords() - inVertex.getCoords();
         for (int d = 0; d < dimensions; d++) {
-          if (_deadAxis[d])
+          if (this->_deadAxis[d])
             distance[d] = 0;
         }
         double const norm = distance.norm();
-        if (_basisFunction.getSupportRadius() > norm) {
-          rowVals[colNum]  = _basisFunction.evaluate(norm);
+        if (this->_basisFunction.getSupportRadius() > norm) {
+          rowVals[colNum]  = this->_basisFunction.evaluate(norm);
           colIdx[colNum++] = inVertex.getGlobalIndex() + polyparams;
         }
       }
@@ -526,7 +484,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   eFillA.stop();
   // -- END FILL LOOP FOR MATRIX A --
 
-  precice::utils::Event ePostFill("map.pet.postFill.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event ePostFill("map.pet.postFill.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   ierr = MatAssemblyBegin(_matrixA, MAT_FINAL_ASSEMBLY);
   CHKERRV(ierr);
@@ -541,7 +499,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   ePostFill.stop();
 
-  precice::utils::Event eSolverInit("map.pet.solverInit.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event eSolverInit("map.pet.solverInit.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   // -- CONFIGURE SOLVER FOR POLYNOMIAL --
   if (_polynomial == Polynomial::SEPARATE) {
@@ -583,7 +541,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX C SOLVER --
   if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
-    precice::utils::Event eRescaling("map.pet.computeRescaling.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+    precice::utils::Event eRescaling("map.pet.computeRescaling.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
     auto                  rhs             = petsc::Vector::allocate(_matrixC);
     auto                  rescalingCoeffs = petsc::Vector::allocate(_matrixC);
     VecSet(rhs, 1);
@@ -605,7 +563,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     CHKERRV(ierr);
   }
 
-  _hasComputedMapping = true;
+  this->_hasComputedMapping = true;
 
   PRECICE_DEBUG("Number of mallocs for matrix C = {}", _matrixC.getInfo(MAT_LOCAL).mallocs);
   PRECICE_DEBUG("Non-zeros allocated / used / unused for matrix C = {} / {} / {}",
@@ -613,12 +571,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PRECICE_DEBUG("Number of mallocs for matrix A = {}", _matrixA.getInfo(MAT_LOCAL).mallocs);
   PRECICE_DEBUG("Non-zeros allocated / used / unused for matrix A = {} / {} / {}",
                 _matrixA.getInfo(MAT_LOCAL).nz_allocated, _matrixA.getInfo(MAT_LOCAL).nz_used, _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::hasComputedMapping() const
-{
-  return _hasComputedMapping;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -635,332 +587,275 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
   petsc::destroy(&_AOmapping);
 
   previousSolution.clear();
-  _hasComputedMapping = false;
+  this->_hasComputedMapping = false;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int outputDataID)
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputDataID, int outputDataID, int polyparams_)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
-  precice::utils::Event e("map.pet.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-
-  PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
-                 input()->getDimensions(), output()->getDimensions());
+  precice::utils::Event e("map.pet.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   PetscErrorCode ierr      = 0;
-  auto const &   inValues  = input()->data(inputDataID)->values();
-  auto &         outValues = output()->data(outputDataID)->values();
+  auto const &   inValues  = this->input()->data(inputDataID)->values();
+  auto &         outValues = this->output()->data(outputDataID)->values();
 
-  int const valueDim = input()->data(inputDataID)->getDimensions();
-  PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
-                 valueDim, output()->data(outputDataID)->getDimensions());
+  int const valueDim = this->input()->data(inputDataID)->getDimensions();
+  PRECICE_ASSERT(valueDim == this->output()->data(outputDataID)->getDimensions(),
+                 valueDim, this->output()->data(outputDataID)->getDimensions());
+  PRECICE_ASSERT(this->hasConstraint(Mapping::CONSISTENT) || this->hasConstraint(Mapping::SCALEDCONSISTENT));
 
-  if (hasConstraint(CONSERVATIVE)) {
-    auto au = petsc::Vector::allocate(_matrixA, "au", petsc::Vector::RIGHT);
-    auto in = petsc::Vector::allocate(_matrixA, "in");
-    int  inRangeStart, inRangeEnd;
-    std::tie(inRangeStart, inRangeEnd) = in.ownerRange();
-    for (int dim = 0; dim < valueDim; dim++) {
-      printMappingInfo(inputDataID, dim);
+  auto out = petsc::Vector::allocate(_matrixA, "out");
+  auto in  = petsc::Vector::allocate(_matrixC, "in");
+  auto a   = petsc::Vector::allocate(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
 
-      // Fill input from input data values
-      for (size_t i = 0; i < input()->vertices().size(); i++) {
-        auto const globalIndex = input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
-        if (globalIndex >= inRangeStart and globalIndex < inRangeEnd)     // only fill local rows
-          ierr = VecSetValue(in, globalIndex, inValues[i * valueDim + dim], INSERT_VALUES);
-        CHKERRV(ierr);
-      }
-      in.assemble();
+  PetscScalar const *vecArray;
 
-      // Gets the petsc::vector for the given combination of outputData, inputData and dimension
-      // If none created yet, create one, based on _matrixC
-      petsc::Vector &out = std::get<0>(
-                               previousSolution.emplace(std::piecewise_construct,
-                                                        std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-                                                        std::forward_as_tuple(petsc::Vector::allocate(_matrixC, "out"))))
-                               ->second;
+  // For every data dimension, perform mapping
+  for (int dim = 0; dim < valueDim; dim++) {
+    printMappingInfo(inputDataID, dim);
 
-      if (_polynomial == Polynomial::SEPARATE) {
-        auto epsilon = petsc::Vector::allocate(_matrixV, "epsilon", petsc::Vector::RIGHT);
-        ierr         = MatMultTranspose(_matrixV, in, epsilon);
-        CHKERRV(ierr);
-        auto eta = petsc::Vector::allocate(_matrixA, "eta", petsc::Vector::RIGHT);
-        ierr     = MatMultTranspose(_matrixA, in, eta);
-        CHKERRV(ierr);
-        auto mu = petsc::Vector::allocate(_matrixC, "mu", petsc::Vector::LEFT);
-        _solver.solve(eta, mu);
-        VecScale(epsilon, -1);
-        auto tau = petsc::Vector::allocate(_matrixQ, "tau", petsc::Vector::RIGHT);
-        ierr     = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau);
-        CHKERRV(ierr);
-        auto sigma = petsc::Vector::allocate(_matrixQ, "sigma", petsc::Vector::LEFT);
-
-        switch (_QRsolver.solveTranspose(tau, sigma)) {
-        case (petsc::KSPSolver::SolverResult::Converged):
-          PRECICE_DEBUG("The polynomial linear system of the RBF mapping from mesh {} to mesh {} converged. {}",
-                        input()->getName(), output()->getName(), _QRsolver.summaryFor(tau));
-          break;
-        case (petsc::KSPSolver::SolverResult::Stopped):
-          PRECICE_WARN("The polynomial linear system of the RBF mapping from mesh {} to mesh {} has not converged. "
-                       "This means most probably that the mapping problem is not well-posed or your relative tolerance is too conservative. "
-                       "Please check if your coupling meshes are correct. "
-                       "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                       input()->getName(), output()->getName(), _QRsolver.summaryFor(tau));
-          break;
-        case (petsc::KSPSolver::SolverResult::Diverged):
-          KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
-          PRECICE_ERROR("The polynomial linear system of the RBF mapping from mesh {} to mesh {} "
-                        "has diverged. This means most probably that the mapping problem is not well-posed. "
-                        "Please check if your coupling meshes are correct. "
-                        "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                        input()->getName(), output()->getName(), _QRsolver.summaryFor(tau));
-          break;
-        }
-
-        VecWAXPY(out, -1, sigma, mu);
-      } else {
-        ierr = MatMultTranspose(_matrixA, in, au);
-        CHKERRV(ierr);
-        utils::Event eSolve("map.pet.solveConservative.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-        const auto   solverResult = _solver.solve(au, out);
-        eSolve.addData("Iterations", _solver.getIterationNumber());
-        eSolve.stop();
-
-        switch (solverResult) {
-        case (petsc::KSPSolver::SolverResult::Converged):
-          PRECICE_DEBUG("The linear system of the RBF mapping from mesh {} to mesh {} converged. {}",
-                        input()->getName(), output()->getName(), _solver.summaryFor(au));
-          break;
-        case (petsc::KSPSolver::SolverResult::Stopped):
-          PRECICE_WARN("The linear system of the RBF mapping from mesh {} to mesh {} has not converged. "
-                       "This means most probably that the mapping problem is not well-posed or your relative tolerance is too conservative. "
-                       "Please check if your coupling meshes are correct. "
-                       "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                       input()->getName(), output()->getName(), _solver.summaryFor(au));
-          break;
-        case (petsc::KSPSolver::SolverResult::Diverged):
-          KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
-          PRECICE_ERROR("The linear system of the RBF mapping from mesh {} to mesh {} "
-                        "has diverged. This means most probably that the mapping problem is not well-posed. "
-                        "Please check if your coupling meshes are correct. "
-                        "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                        input()->getName(), output()->getName(), _solver.summaryFor(au));
-          break;
-        }
-      }
-
-      VecChop(out, 1e-9);
-
-      // Copy mapped data to output data values
-      const PetscScalar *outArray;
-      VecGetArrayRead(out, &outArray);
-
-      int count = 0, ownerCount = 0;
-      for (const mesh::Vertex &vertex : output()->vertices()) {
-        if (vertex.isOwner()) {
-          outValues[count * valueDim + dim] = outArray[ownerCount + localPolyparams];
-          ownerCount++;
-        } else {
-          PRECICE_ASSERT(outValues[count * valueDim + dim] == 0.0);
-        }
-        count++;
-      }
-      VecRestoreArrayRead(out, &outArray);
+    // Fill input from input data values
+    std::vector<PetscScalar> inVals;
+    inVals.reserve(this->input()->vertices().size());
+    std::vector<PetscInt> inIdx;
+    inIdx.reserve(this->input()->vertices().size());
+    for (size_t i = 0; i < this->input()->vertices().size(); ++i) {
+      if (not this->input()->vertices()[i].isOwner())
+        continue;
+      inVals.emplace_back(inValues[i * valueDim + dim]);
+      inIdx.emplace_back(inIdx.size() + in.ownerRange().first + localPolyparams);
     }
-  } else { // Map CONSISTENT or SCALEDCONSISTENT
-    auto out = petsc::Vector::allocate(_matrixA, "out");
-    auto in  = petsc::Vector::allocate(_matrixC, "in");
-    auto a   = petsc::Vector::allocate(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynomial
+    ierr = VecSetValues(in, inIdx.size(), inIdx.data(), inVals.data(), INSERT_VALUES);
+    CHKERRV(ierr);
+    in.assemble();
 
-    PetscScalar const *vecArray;
-
-    // For every data dimension, perform mapping
-    for (int dim = 0; dim < valueDim; dim++) {
-      printMappingInfo(inputDataID, dim);
-
-      // Fill input from input data values
-      std::vector<PetscScalar> inVals;
-      inVals.reserve(input()->vertices().size());
-      std::vector<PetscInt> inIdx;
-      inIdx.reserve(input()->vertices().size());
-      for (size_t i = 0; i < input()->vertices().size(); ++i) {
-        if (not input()->vertices()[i].isOwner())
-          continue;
-        inVals.emplace_back(inValues[i * valueDim + dim]);
-        inIdx.emplace_back(inIdx.size() + in.ownerRange().first + localPolyparams);
+    if (_polynomial == Polynomial::SEPARATE) {
+      switch (_QRsolver.solve(in, a)) {
+      case (petsc::KSPSolver::SolverResult::Converged):
+        PRECICE_DEBUG("The polynomial QR system of the RBF mapping from mesh {} to mesh {} converged. {}",
+                      this->input()->getName(), this->output()->getName(), _QRsolver.summaryFor(in));
+        break;
+      case (petsc::KSPSolver::SolverResult::Stopped):
+        PRECICE_WARN("The polynomial QR system of the RBF mapping from mesh {} to mesh {} has not converged. "
+                     "This means most probably that the mapping problem is not well-posed or your relative tolerance is too conservative. "
+                     "Please check if your coupling meshes are correct. "
+                     "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
+                     this->input()->getName(), this->output()->getName(), _QRsolver.summaryFor(in));
+        break;
+      case (petsc::KSPSolver::SolverResult::Diverged):
+        KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
+        PRECICE_ERROR("The polynomial QR system of the RBF mapping from mesh {} to mesh {} has diverged. "
+                      "This means most probably that the mapping problem is not well-posed. "
+                      "Please check if your coupling meshes are correct. "
+                      "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
+                      this->input()->getName(), this->output()->getName(), _QRsolver.summaryFor(in));
+        break;
       }
-      ierr = VecSetValues(in, inIdx.size(), inIdx.data(), inVals.data(), INSERT_VALUES);
+
+      VecScale(a, -1);
+      MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
+    }
+
+    petsc::Vector &p = std::get<0>( // Save and reuse the solution from the previous iteration
+                           previousSolution.emplace(std::piecewise_construct,
+                                                    std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
+                                                    std::forward_as_tuple(petsc::Vector::allocate(_matrixC, "p"))))
+                           ->second;
+
+    utils::Event eSolve("map.pet.solveConsistent.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
+    const auto   solverResult = _solver.solve(in, p);
+    eSolve.addData("Iterations", _solver.getIterationNumber());
+    eSolve.stop();
+
+    switch (solverResult) {
+    case (petsc::KSPSolver::SolverResult::Converged):
+      PRECICE_DEBUG("The linear system of the RBF mapping from mesh {} to mesh {} converged. {}",
+                    this->input()->getName(), this->output()->getName(), _solver.summaryFor(in));
+      break;
+    case (petsc::KSPSolver::SolverResult::Stopped):
+      PRECICE_WARN("The linear system of the RBF mapping from mesh {} to mesh {} has not converged. "
+                   "This means most probably that the mapping problem is not well-posed or your relative tolerance is too conservative. "
+                   "Please check if your coupling meshes are correct. "
+                   "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
+                   this->input()->getName(), this->output()->getName(), _solver.summaryFor(in));
+      break;
+    case (petsc::KSPSolver::SolverResult::Diverged):
+      KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
+      PRECICE_ERROR("The linear system of the RBF mapping from mesh {} to mesh {} has diverged. "
+                    "This means most probably that the mapping problem is not well-posed. "
+                    "Please check if your coupling meshes are correct. "
+                    "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
+                    this->input()->getName(), this->output()->getName(), _solver.summaryFor(in));
+      break;
+    }
+
+    ierr = MatMult(_matrixA, p, out);
+    CHKERRV(ierr);
+
+    if (useRescaling and _polynomial == Polynomial::SEPARATE) {
+      ierr = VecPointwiseDivide(out, out, oneInterpolant);
       CHKERRV(ierr);
-      in.assemble();
+    }
 
-      if (_polynomial == Polynomial::SEPARATE) {
-        switch (_QRsolver.solve(in, a)) {
-        case (petsc::KSPSolver::SolverResult::Converged):
-          PRECICE_DEBUG("The polynomial QR system of the RBF mapping from mesh {} to mesh {} converged. {}",
-                        input()->getName(), output()->getName(), _QRsolver.summaryFor(in));
-          break;
-        case (petsc::KSPSolver::SolverResult::Stopped):
-          PRECICE_WARN("The polynomial QR system of the RBF mapping from mesh {} to mesh {} has not converged. "
-                       "This means most probably that the mapping problem is not well-posed or your relative tolerance is too conservative. "
-                       "Please check if your coupling meshes are correct. "
-                       "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                       input()->getName(), output()->getName(), _QRsolver.summaryFor(in));
-          break;
-        case (petsc::KSPSolver::SolverResult::Diverged):
-          KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
-          PRECICE_ERROR("The polynomial QR system of the RBF mapping from mesh {} to mesh {} has diverged. "
-                        "This means most probably that the mapping problem is not well-posed. "
-                        "Please check if your coupling meshes are correct. "
-                        "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                        input()->getName(), output()->getName(), _QRsolver.summaryFor(in));
-          break;
-        }
+    if (_polynomial == Polynomial::SEPARATE) {
+      ierr = VecScale(a, -1); // scale it back to add the polynomial
+      ierr = MatMultAdd(_matrixV, a, out, out);
+      CHKERRV(ierr);
+    }
+    VecChop(out, 1e-9);
 
-        VecScale(a, -1);
-        MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
-      }
+    // Copy mapped data to output data values
+    ierr = VecGetArrayRead(out, &vecArray);
+    CHKERRV(ierr);
+    int size = out.getLocalSize();
+    for (int i = 0; i < size; i++) {
+      outValues[i * valueDim + dim] = vecArray[i];
+    }
 
-      petsc::Vector &p = std::get<0>( // Save and reuse the solution from the previous iteration
+    if (this->hasConstraint(Mapping::SCALEDCONSISTENT)) {
+      this->scaleConsistentMapping(inputDataID, outputDataID);
+    }
+
+    VecRestoreArrayRead(out, &vecArray);
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDataID, int outputDataID, int polyparams_)
+{
+  PRECICE_TRACE(inputDataID, outputDataID);
+  precice::utils::Event e("map.pet.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
+
+  PetscErrorCode ierr      = 0;
+  auto const &   inValues  = this->input()->data(inputDataID)->values();
+  auto &         outValues = this->output()->data(outputDataID)->values();
+
+  int const valueDim = this->input()->data(inputDataID)->getDimensions();
+  PRECICE_ASSERT(valueDim == this->output()->data(outputDataID)->getDimensions(),
+                 valueDim, this->output()->data(outputDataID)->getDimensions());
+  PRECICE_ASSERT(this->hasConstraint(Mapping::CONSERVATIVE));
+
+  auto au = petsc::Vector::allocate(_matrixA, "au", petsc::Vector::RIGHT);
+  auto in = petsc::Vector::allocate(_matrixA, "in");
+  int  inRangeStart, inRangeEnd;
+  std::tie(inRangeStart, inRangeEnd) = in.ownerRange();
+  for (int dim = 0; dim < valueDim; dim++) {
+    printMappingInfo(inputDataID, dim);
+
+    // Fill input from input data values
+    for (size_t i = 0; i < this->input()->vertices().size(); i++) {
+      auto const globalIndex = this->input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
+      if (globalIndex >= inRangeStart and globalIndex < inRangeEnd)           // only fill local rows
+        ierr = VecSetValue(in, globalIndex, inValues[i * valueDim + dim], INSERT_VALUES);
+      CHKERRV(ierr);
+    }
+    in.assemble();
+
+    // Gets the petsc::vector for the given combination of outputData, inputData and dimension
+    // If none created yet, create one, based on _matrixC
+    petsc::Vector &out = std::get<0>(
                              previousSolution.emplace(std::piecewise_construct,
                                                       std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-                                                      std::forward_as_tuple(petsc::Vector::allocate(_matrixC, "p"))))
+                                                      std::forward_as_tuple(petsc::Vector::allocate(_matrixC, "out"))))
                              ->second;
 
-      utils::Event eSolve("map.pet.solveConsistent.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
-      const auto   solverResult = _solver.solve(in, p);
+    if (_polynomial == Polynomial::SEPARATE) {
+      auto epsilon = petsc::Vector::allocate(_matrixV, "epsilon", petsc::Vector::RIGHT);
+      ierr         = MatMultTranspose(_matrixV, in, epsilon);
+      CHKERRV(ierr);
+      auto eta = petsc::Vector::allocate(_matrixA, "eta", petsc::Vector::RIGHT);
+      ierr     = MatMultTranspose(_matrixA, in, eta);
+      CHKERRV(ierr);
+      auto mu = petsc::Vector::allocate(_matrixC, "mu", petsc::Vector::LEFT);
+      _solver.solve(eta, mu);
+      VecScale(epsilon, -1);
+      auto tau = petsc::Vector::allocate(_matrixQ, "tau", petsc::Vector::RIGHT);
+      ierr     = MatMultTransposeAdd(_matrixQ, mu, epsilon, tau);
+      CHKERRV(ierr);
+      auto sigma = petsc::Vector::allocate(_matrixQ, "sigma", petsc::Vector::LEFT);
+
+      switch (_QRsolver.solveTranspose(tau, sigma)) {
+      case (petsc::KSPSolver::SolverResult::Converged):
+        PRECICE_DEBUG("The polynomial linear system of the RBF mapping from mesh {} to mesh {} converged. {}",
+                      this->input()->getName(), this->output()->getName(), _QRsolver.summaryFor(tau));
+        break;
+      case (petsc::KSPSolver::SolverResult::Stopped):
+        PRECICE_WARN("The polynomial linear system of the RBF mapping from mesh {} to mesh {} has not converged. "
+                     "This means most probably that the mapping problem is not well-posed or your relative tolerance is too conservative. "
+                     "Please check if your coupling meshes are correct. "
+                     "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
+                     this->input()->getName(), this->output()->getName(), _QRsolver.summaryFor(tau));
+        break;
+      case (petsc::KSPSolver::SolverResult::Diverged):
+        KSPView(_QRsolver, PETSC_VIEWER_STDOUT_WORLD);
+        PRECICE_ERROR("The polynomial linear system of the RBF mapping from mesh {} to mesh {} "
+                      "has diverged. This means most probably that the mapping problem is not well-posed. "
+                      "Please check if your coupling meshes are correct. "
+                      "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
+                      this->input()->getName(), this->output()->getName(), _QRsolver.summaryFor(tau));
+        break;
+      }
+
+      VecWAXPY(out, -1, sigma, mu);
+    } else {
+      ierr = MatMultTranspose(_matrixA, in, au);
+      CHKERRV(ierr);
+      utils::Event eSolve("map.pet.solveConservative.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
+      const auto   solverResult = _solver.solve(au, out);
       eSolve.addData("Iterations", _solver.getIterationNumber());
       eSolve.stop();
 
       switch (solverResult) {
       case (petsc::KSPSolver::SolverResult::Converged):
         PRECICE_DEBUG("The linear system of the RBF mapping from mesh {} to mesh {} converged. {}",
-                      input()->getName(), output()->getName(), _solver.summaryFor(in));
+                      this->input()->getName(), this->output()->getName(), _solver.summaryFor(au));
         break;
       case (petsc::KSPSolver::SolverResult::Stopped):
         PRECICE_WARN("The linear system of the RBF mapping from mesh {} to mesh {} has not converged. "
                      "This means most probably that the mapping problem is not well-posed or your relative tolerance is too conservative. "
                      "Please check if your coupling meshes are correct. "
                      "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                     input()->getName(), output()->getName(), _solver.summaryFor(in));
+                     this->input()->getName(), this->output()->getName(), _solver.summaryFor(au));
         break;
       case (petsc::KSPSolver::SolverResult::Diverged):
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
-        PRECICE_ERROR("The linear system of the RBF mapping from mesh {} to mesh {} has diverged. "
-                      "This means most probably that the mapping problem is not well-posed. "
+        PRECICE_ERROR("The linear system of the RBF mapping from mesh {} to mesh {} "
+                      "has diverged. This means most probably that the mapping problem is not well-posed. "
                       "Please check if your coupling meshes are correct. "
                       "Maybe you need to fix axis-aligned mapping setups by marking perpendicular axes as dead? {}",
-                      input()->getName(), output()->getName(), _solver.summaryFor(in));
+                      this->input()->getName(), this->output()->getName(), _solver.summaryFor(au));
         break;
       }
-
-      ierr = MatMult(_matrixA, p, out);
-      CHKERRV(ierr);
-
-      if (useRescaling and _polynomial == Polynomial::SEPARATE) {
-        ierr = VecPointwiseDivide(out, out, oneInterpolant);
-        CHKERRV(ierr);
-      }
-
-      if (_polynomial == Polynomial::SEPARATE) {
-        ierr = VecScale(a, -1); // scale it back to add the polynomial
-        ierr = MatMultAdd(_matrixV, a, out, out);
-        CHKERRV(ierr);
-      }
-      VecChop(out, 1e-9);
-
-      // Copy mapped data to output data values
-      ierr = VecGetArrayRead(out, &vecArray);
-      CHKERRV(ierr);
-      int size = out.getLocalSize();
-      for (int i = 0; i < size; i++) {
-        outValues[i * valueDim + dim] = vecArray[i];
-      }
-
-      if (hasConstraint(SCALEDCONSISTENT)) {
-        scaleConsistentMapping(inputDataID, outputDataID);
-      }
-
-      VecRestoreArrayRead(out, &vecArray);
     }
-  }
-}
 
-/*
- * For the re-partitioning process with RBF mappings, also compare Figure 69 in Benjamin U's thesis (page 89).
- * https://mediatum.ub.tum.de/doc/1320661/document.pdf
- */
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
-{
-  PRECICE_TRACE();
-  mesh::PtrMesh filterMesh, otherMesh;
-  if (hasConstraint(CONSERVATIVE)) {
-    filterMesh = output(); // remote
-    otherMesh  = input();  // local
-  } else {
-    filterMesh = input();  // remote
-    otherMesh  = output(); // local
-  }
+    VecChop(out, 1e-9);
 
-  if (otherMesh->vertices().empty())
-    return; // Ranks not at the interface should never hold interface vertices
+    // Copy mapped data to output data values
+    const PetscScalar *outArray;
+    VecGetArrayRead(out, &outArray);
 
-  // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
-  if (_basisFunction.hasCompactSupport()) {
-    auto bb = otherMesh->getBoundingBox();
-    bb.expandBy(_basisFunction.getSupportRadius());
-
-    const auto vertices = filterMesh->index().getVerticesInsideBox(bb);
-    std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertices()[v].tag(); });
-  } else {
-    filterMesh->tagAll();
-  }
-}
-
-/*
- * For the re-partitioning process with RBF mappings, also compare Figure 69 in Benjamin U's thesis (page 89).
- * https://mediatum.ub.tum.de/doc/1320661/document.pdf
- */
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
-{
-  PRECICE_TRACE();
-
-  if (not _basisFunction.hasCompactSupport())
-    return; // Tags should not be changed
-
-  mesh::PtrMesh mesh; // The mesh we want to filter
-
-  if (hasConstraint(CONSERVATIVE)) {
-    mesh = output();
-  } else {
-    mesh = input();
-  }
-
-  mesh::BoundingBox bb(mesh->getDimensions());
-
-  // Construct bounding box around all owned vertices
-  for (mesh::Vertex &v : mesh->vertices()) {
-    if (v.isOwner()) {
-      PRECICE_ASSERT(v.isTagged()); // Should be tagged from the first round
-      bb.expandBy(v);
+    int count = 0, ownerCount = 0;
+    for (const mesh::Vertex &vertex : this->output()->vertices()) {
+      if (vertex.isOwner()) {
+        outValues[count * valueDim + dim] = outArray[ownerCount + localPolyparams];
+        ownerCount++;
+      } else {
+        PRECICE_ASSERT(outValues[count * valueDim + dim] == 0.0);
+      }
+      count++;
     }
+    VecRestoreArrayRead(out, &outArray);
   }
-  // Enlarge bb by support radius
-  bb.expandBy(_basisFunction.getSupportRadius());
-
-  auto vertices = mesh->index().getVerticesInsideBox(bb);
-  std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertices()[v].tag(); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
 {
   std::string constraintName;
-  if (hasConstraint(CONSISTENT)) {
+  if (this->hasConstraint(Mapping::CONSISTENT)) {
     constraintName = "consistent";
-  } else if (hasConstraint(SCALEDCONSISTENT)) {
+  } else if (this->hasConstraint(Mapping::SCALEDCONSISTENT)) {
     constraintName = "scaled-consistent";
   } else {
     constraintName = "conservative";
@@ -969,9 +864,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
   const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
 
   PRECICE_INFO("Mapping \"{}\" {} from \"{}\" (ID {}) to \"{}\" (ID {}) for dimension {} with polynomial set to {}",
-               input()->data(inputDataID)->getName(), constraintName,
-               input()->getName(), input()->getID(),
-               output()->getName(), output()->getID(),
+               this->input()->data(inputDataID)->getName(), constraintName,
+               this->input()->getName(), this->input()->getID(),
+               this->output()->getName(), this->output()->getID(),
                dim, polynomialName);
 }
 
@@ -984,19 +879,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
 
   // auto rank = _commState->rank();
   auto size          = _commState->size();
-  auto supportRadius = _basisFunction.getSupportRadius();
+  auto supportRadius = this->_basisFunction.getSupportRadius();
 
   auto bbox     = mesh->getBoundingBox();
   auto meshSize = mesh->vertices().size();
 
-  double meshArea = bbox.getArea(_deadAxis);
+  double meshArea = bbox.getArea(this->_deadAxis);
   // PRECICE_WARN(bbox);
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;
-  if (getDimensions() == 2)
+  if (this->getDimensions() == 2)
     supportVolume = 2 * supportRadius;
-  else if (getDimensions() == 3)
+  else if (this->getDimensions() == 3)
     supportVolume = math::PI * std::pow(supportRadius, 2);
 
   PRECICE_WARN("supportVolume = {}", supportVolume);
@@ -1025,19 +920,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
 
   // auto rank = _commState->rank();
   auto size          = _commState->size();
-  auto supportRadius = _basisFunction.getSupportRadius();
+  auto supportRadius = this->_basisFunction.getSupportRadius();
 
   auto bbox     = mesh->getBoundingBox();
   auto meshSize = mesh->vertices().size();
 
-  double meshArea = bbox.getArea(_deadAxis);
+  double meshArea = bbox.getArea(this->_deadAxis);
   // PRECICE_WARN(bbox);
 
   // supportVolume = math::PI * 4.0/3.0 * std::pow(supportRadius, 3);
   double supportVolume = 0;
-  if (getDimensions() == 2)
+  if (this->getDimensions() == 2)
     supportVolume = 2 * supportRadius;
-  else if (getDimensions() == 3)
+  else if (this->getDimensions() == 3)
     supportVolume = math::PI * std::pow(supportRadius, 2);
 
   PRECICE_WARN("supportVolume = {}", supportVolume);
@@ -1060,11 +955,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::estimatePreallocationMat
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatrixC(const mesh::PtrMesh inMesh)
 {
-  precice::utils::Event ePreallocC("map.pet.preallocC.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event ePreallocC("map.pet.preallocC.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   PetscInt n, ierr;
 
-  int             dimensions = input()->getDimensions();
+  const int       dimensions = this->input()->getDimensions();
   Eigen::VectorXd distance(dimensions);
 
   std::tie(n, std::ignore) = _matrixC.getLocalSize();
@@ -1104,12 +999,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
 
       distance = inVertex.getCoords() - vj.getCoords();
       for (int d = 0; d < dimensions; d++) {
-        if (_deadAxis[d]) {
+        if (this->_deadAxis[d]) {
           distance[d] = 0;
         }
       }
 
-      if (_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
+      if (this->_basisFunction.getSupportRadius() > distance.norm() or col == global_row) {
         if (mappedCol >= colOwnerRangeCBegin and mappedCol < colOwnerRangeCEnd)
           d_nnz[local_row]++;
         else
@@ -1138,7 +1033,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatrixA(
     const mesh::PtrMesh inMesh, const mesh::PtrMesh outMesh)
 {
-  precice::utils::Event ePreallocA("map.pet.preallocA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event ePreallocA("map.pet.preallocA.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt outputSize, ierr;
@@ -1150,7 +1045,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
   std::tie(ownerRangeABegin, ownerRangeAEnd)       = _matrixA.ownerRange();
   std::tie(colOwnerRangeABegin, colOwnerRangeAEnd) = _matrixA.ownerRangeColumn();
 
-  int             dimensions = input()->getDimensions();
+  const int       dimensions = this->input()->getDimensions();
   Eigen::VectorXd distance(dimensions);
 
   for (int localRow = 0; localRow < ownerRangeAEnd - ownerRangeABegin; localRow++) {
@@ -1169,7 +1064,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
       col++;
 
       for (int dim = 0; dim < dimensions; dim++) {
-        if (not _deadAxis[dim]) {
+        if (not this->_deadAxis[dim]) {
           if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
             d_nnz[localRow]++;
           else
@@ -1183,11 +1078,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computePreallocationMatr
     for (const mesh::Vertex &inVertex : inMesh->vertices()) {
       distance = oVertex.getCoords() - inVertex.getCoords();
       for (int d = 0; d < dimensions; d++) {
-        if (_deadAxis[d])
+        if (this->_deadAxis[d])
           distance[d] = 0;
       }
 
-      if (_basisFunction.getSupportRadius() > distance.norm()) {
+      if (this->_basisFunction.getSupportRadius() > distance.norm()) {
         col = inVertex.getGlobalIndex() + polyparams;
         AOApplicationToPetsc(_AOmapping, 1, &col);
         if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
@@ -1216,11 +1111,11 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(mesh::PtrMesh const inMesh)
 {
-  precice::utils::Event ePreallocC("map.pet.preallocC.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event ePreallocC("map.pet.preallocC.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   PetscInt n;
 
-  int             dimensions = input()->getDimensions();
+  const int       dimensions = this->input()->getDimensions();
   Eigen::VectorXd distance(dimensions);
 
   std::tie(n, std::ignore) = _matrixC.getLocalSize();
@@ -1260,11 +1155,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixC(mes
 
       distance = inVertex.getCoords() - vj.getCoords();
       for (int d = 0; d < dimensions; d++)
-        if (_deadAxis[d])
+        if (this->_deadAxis[d])
           distance[d] = 0;
 
       double const norm = distance.norm();
-      if (_basisFunction.getSupportRadius() > norm or col == global_row) {
+      if (this->_basisFunction.getSupportRadius() > norm or col == global_row) {
         vertexData[local_row - localPolyparams].emplace_back(vj.getGlobalIndex() + polyparams, norm);
         if (mappedCol >= colOwnerRangeCBegin and mappedCol < colOwnerRangeCEnd)
           d_nnz[local_row]++;
@@ -1295,7 +1190,7 @@ typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mesh::PtrMesh const inMesh, mesh::PtrMesh const outMesh)
 {
   PRECICE_INFO("Using saved preallocation");
-  precice::utils::Event ePreallocA("map.pet.preallocA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event ePreallocA("map.pet.preallocA.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   PetscInt ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt outputSize;
@@ -1303,7 +1198,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mes
   std::tie(outputSize, std::ignore)                = _matrixA.getLocalSize(); // n hier nehmen
   std::tie(ownerRangeABegin, ownerRangeAEnd)       = _matrixA.ownerRange();
   std::tie(colOwnerRangeABegin, colOwnerRangeAEnd) = _matrixA.ownerRangeColumn();
-  int dimensions                                   = input()->getDimensions();
+  const int dimensions                             = this->input()->getDimensions();
 
   std::vector<PetscInt> d_nnz(outputSize), o_nnz(outputSize);
   Eigen::VectorXd       distance(dimensions);
@@ -1327,7 +1222,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mes
       col++;
 
       for (int dim = 0; dim < dimensions; dim++) {
-        if (not _deadAxis[dim]) {
+        if (not this->_deadAxis[dim]) {
           if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
             d_nnz[localRow]++;
           else
@@ -1341,11 +1236,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::savedPreallocationMatrixA(mes
     for (const mesh::Vertex &inVertex : inMesh->vertices()) {
       distance = oVertex.getCoords() - inVertex.getCoords();
       for (int d = 0; d < dimensions; d++)
-        if (_deadAxis[d])
+        if (this->_deadAxis[d])
           distance[d] = 0;
 
       double const norm = distance.norm();
-      if (_basisFunction.getSupportRadius() > norm) {
+      if (this->_basisFunction.getSupportRadius() > norm) {
         col = inVertex.getGlobalIndex() + polyparams;
         vertexData[localRow].emplace_back(col, norm);
 
@@ -1376,15 +1271,15 @@ typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::PtrMesh const inMesh)
 {
   PRECICE_INFO("Using tree-based preallocation for matrix C");
-  precice::utils::Event ePreallocC("map.pet.preallocC.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event ePreallocC("map.pet.preallocC.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   PetscInt n;
   std::tie(n, std::ignore) = _matrixC.getLocalSize();
   std::vector<PetscInt> d_nnz(n), o_nnz(n);
 
-  double const supportRadius = _basisFunction.getSupportRadius();
+  const double supportRadius = this->_basisFunction.getSupportRadius();
 
-  int             dimensions = input()->getDimensions();
+  const int       dimensions = this->input()->getDimensions();
   Eigen::VectorXd distance(dimensions);
 
   PetscInt colOwnerRangeCBegin, colOwnerRangeCEnd;
@@ -1423,7 +1318,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
 
       distance = inVertex.getCoords() - vj.getCoords();
       for (int d = 0; d < dimensions; d++)
-        if (_deadAxis[d])
+        if (this->_deadAxis[d])
           distance[d] = 0;
 
       double const norm = distance.norm();
@@ -1456,15 +1351,15 @@ typename PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::VertexData
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::PtrMesh const inMesh, mesh::PtrMesh const outMesh)
 {
   PRECICE_INFO("Using tree-based preallocation for matrix A");
-  precice::utils::Event ePreallocA("map.pet.preallocA.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event ePreallocA("map.pet.preallocA.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
 
   PetscInt       ownerRangeABegin, ownerRangeAEnd, colOwnerRangeABegin, colOwnerRangeAEnd;
   PetscInt const outputSize    = _matrixA.getLocalSize().first;
-  double const   supportRadius = _basisFunction.getSupportRadius();
+  double const   supportRadius = this->_basisFunction.getSupportRadius();
 
   std::tie(ownerRangeABegin, ownerRangeAEnd)       = _matrixA.ownerRange();
   std::tie(colOwnerRangeABegin, colOwnerRangeAEnd) = _matrixA.ownerRangeColumn();
-  int dimensions                                   = input()->getDimensions();
+  const int dimensions                             = this->input()->getDimensions();
 
   std::vector<PetscInt> d_nnz(outputSize), o_nnz(outputSize);
   Eigen::VectorXd       distance(dimensions);
@@ -1488,7 +1383,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
       col++;
 
       for (int dim = 0; dim < dimensions; dim++) {
-        if (not _deadAxis[dim]) {
+        if (not this->_deadAxis[dim]) {
           if (col >= colOwnerRangeABegin and col < colOwnerRangeAEnd)
             d_nnz[localRow]++;
           else
@@ -1504,7 +1399,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
       distance                     = oVertex.getCoords() - inVertex.getCoords();
 
       for (int d = 0; d < dimensions; d++)
-        if (_deadAxis[d])
+        if (this->_deadAxis[d])
           distance[d] = 0;
 
       double const norm = distance.norm();
