@@ -1,0 +1,22 @@
+name: auto-author-assign
+# In most cases, pull request author should be assigned an assignee of the pull request.
+#
+# This action automatically assigns PR author as an assignee.
+# https://github.com/marketplace/actions/auto-author-assign
+
+name: 'Auto Author Assign'
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  assign-author:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: toshimaru/auto-author-assign@v1.4.0
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
