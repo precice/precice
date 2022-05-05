@@ -697,9 +697,9 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
                 "Please check the <relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
-  if (math::smallerEquals(limit / 10, 0.0)) {
-    PRECICE_WARN("Relative convergence limit is too small. This may cause a conflict with "
-                 "the quasi-Newton acceleration scheme if selected. ");
+  if (limit > 10*math::NUMERICAL_ZERO_DIFFERENCE){ 
+    PRECICE_WARN("The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. " 
+                 "This may lead to instabilities. The minimum relative convergence limit allowed is \"{}\"  ", limit, math::NUMERICAL_ZERO_DIFFERENCE, 10*math::NUMERICAL_ZERO_DIFFERENCE); 
   }
 
   impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
@@ -726,9 +726,9 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
                 "Please check the <residul-relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
-  if (math::smallerEquals(limit / 10, 0.0)) {
-    PRECICE_WARN("Residual Relative convergence limit is too small. This may cause a conflict with "
-                 "the quasi-Newton acceleration scheme if selected. ");
+ if (limit > 10*math::NUMERICAL_ZERO_DIFFERENCE){ 
+    PRECICE_WARN("The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. " 
+                 "This may lead to instabilities. The minimum relative convergence limit allowed is \"{}\"  ", limit, math::NUMERICAL_ZERO_DIFFERENCE, 10*math::NUMERICAL_ZERO_DIFFERENCE); 
   }
 
   impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
