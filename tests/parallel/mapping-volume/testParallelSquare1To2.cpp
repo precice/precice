@@ -30,9 +30,9 @@ BOOST_AUTO_TEST_CASE(testParallelSquare1To2)
 
     // Create a square with top left corner (rank 0) or bottom right. Diagonal "y = x" is shared.
     coords = {0.0, 0.0,
+              1.0, 0.0,
               1.0, 1.0,
-              0.0, 1.0,
-              1.0, 0.0};
+              0.0, 1.0};
     vertexIDs.resize(coords.size() / 2);
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
 
@@ -53,9 +53,9 @@ BOOST_AUTO_TEST_CASE(testParallelSquare1To2)
 
     std::vector<double> values;
     values = {0.0,
+              1.0,
               3.0,
-              2.0,
-              1.0};
+              2.0};
 
     interface.writeBlockScalarData(dataID, 4, vertexIDs.data(), values.data());
 
