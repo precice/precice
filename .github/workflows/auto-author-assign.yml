@@ -4,8 +4,6 @@ name: auto-author-assign
 # This action automatically assigns PR author as an assignee.
 # https://github.com/marketplace/actions/auto-author-assign
 
-name: 'Auto Author Assign'
-
 on:
   pull_request_target:
     types: [opened, reopened]
@@ -17,6 +15,6 @@ jobs:
   assign-author:
     runs-on: ubuntu-latest
     steps:
-      - uses: toshimaru/auto-author-assign@v1.4.0
+      - uses: toshimaru/auto-author-assign@v1.5.0
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
