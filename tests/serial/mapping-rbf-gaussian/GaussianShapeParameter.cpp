@@ -8,7 +8,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MappingRbfGaussian)
-BOOST_AUTO_TEST_CASE(GaussianShapeParameter, *boost::unit_test::disabled())
+BOOST_AUTO_TEST_CASE(GaussianShapeParameter)
 {
   /**
  * @brief Tests the Gaussian rbf mapping using the shape parameter option
