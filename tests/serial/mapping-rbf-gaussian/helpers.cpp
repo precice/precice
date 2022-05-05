@@ -94,7 +94,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     interface.readScalarData(dataAID, idB, valueB);
     interface.readScalarData(dataAID, idC, valueC);
 
-    BOOST_TEST(valueA == expectedValTwoA);
+    BOOST_TEST(valueA == expectedValTwoA, boost::test_tools::tolerance(1e-8)); // Due to Eigen 3.3.7
     BOOST_TEST(valueB == expectedValTwoB);
     BOOST_TEST(valueC == expectedValTwoC);
 
