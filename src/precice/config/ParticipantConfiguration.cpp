@@ -169,7 +169,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "\"on-master\" is not supported if you use two-level initialization. "
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
                            .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
-                           .setDefaultValue(VALUE_FILTER_ON_SLAVES);
+                           .setDefaultValue(VALUE_FILTER_ON_SECONDARY_RANKS);
   tagUseMesh.addAttribute(attrGeoFilter);
 
   auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
