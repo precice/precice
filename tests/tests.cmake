@@ -104,6 +104,8 @@ target_sources(testprecice
     tests/serial/mapping-scaled-consistent/helpers.hpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnA.cpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnB.cpp
+    tests/serial/mapping-volume/TestOneTriangleConservativeRead.cpp
+    tests/serial/mapping-volume/TestOneTriangleConservativeWrite.cpp
     tests/serial/mapping-volume/TestOneTriangleRead.cpp
     tests/serial/mapping-volume/TestOneTriangleWrite.cpp
     tests/serial/mapping-volume/helpers.cpp

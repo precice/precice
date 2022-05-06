@@ -95,4 +95,75 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
   }
 }
 
+void testMappingVolumeOneTriangleConservative(const std::string configFile, const TestContext &context)
+{
+  using precice::testing::equals;
+
+  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  // SolverOne defines a vertex and a conserved quantity (e.g. a force) on it.
+  // SolverTwo defines a triangle and read the mapped quantity. We check it is spread correctly.
+
+  std::vector<precice::VertexID> vertexIDs;
+
+  if (context.isNamed("SolverOne")) {
+    auto meshID = interface.getMeshID("MeshOne");
+    auto dataID = interface.getDataID("DataOne", meshID);
+
+    std::vector<double> coords{0.3, 0.2};
+    vertexIDs.resize(coords.size() / 2);
+
+    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+
+    BOOST_TEST(vertexIDs[0] != -1, "Vertex A is invalid");
+    BOOST_CHECK(interface.getMeshVertexSize(meshID) == 1);
+
+    // Initialize, write data, advance and finalize
+    double dt = interface.initialize();
+    BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
+
+    std::vector<double> values{1.0};
+    interface.writeBlockScalarData(dataID, 1, vertexIDs.data(), values.data());
+
+    interface.advance(dt);
+    BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
+    interface.finalize();
+
+  } else {
+    auto meshID = interface.getMeshID("MeshTwo");
+    auto dataID = interface.getDataID("DataOne", meshID);
+
+    std::vector<double> coords{0.0, 0.0, 1.0, 0.0, 0.0, 1.0};
+    vertexIDs.resize(coords.size() / 2);
+
+    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+
+    int edgeAB = interface.setMeshEdge(meshID, vertexIDs[0], vertexIDs[1]);
+    int edgeBC = interface.setMeshEdge(meshID, vertexIDs[1], vertexIDs[2]);
+    int edgeCA = interface.setMeshEdge(meshID, vertexIDs[2], vertexIDs[0]);
+
+    BOOST_TEST(edgeAB != -1, "Edge AB is invalid");
+    BOOST_TEST(edgeBC != -1, "Edge BC is invalid");
+    BOOST_TEST(edgeCA != -1, "Edge CA is invalid");
+
+    interface.setMeshTriangle(meshID, edgeAB, edgeBC, edgeCA);
+
+    // Initialize, read data, advance and finalize. Check expected mapping
+    double dt = interface.initialize();
+    BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
+
+    interface.advance(dt);
+    BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
+
+    //Check expected VS read
+    Eigen::VectorXd expected(3);
+    Eigen::VectorXd readData(3);
+    expected << 0.5, 0.3, 0.2;
+
+    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    BOOST_CHECK(equals(expected, readData));
+
+    interface.finalize();
+  }
+}
+
 #endif
