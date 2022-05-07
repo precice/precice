@@ -46,7 +46,7 @@ public:
   virtual void tagMeshSecondRound() = 0;
 
 protected:
-  logging::Logger _log{"mapping::NearestProjectionMapping"};
+  logging::Logger _log{"mapping::BarycentricBaseMapping"};
 
   std::vector<Polation> _interpolations;
 

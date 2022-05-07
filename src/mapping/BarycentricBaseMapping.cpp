@@ -1,4 +1,3 @@
-#include "NearestProjectionMapping.hpp"
 
 #include <Eigen/Core>
 #include <algorithm>

@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(testParallelTriangleConservative2To1)
     if (context.rank == 0) {
       coords = {0.3, 0.5};
     } else {
-      coords = {0.7, 0.3};
+      coords = {0.7, 0.2};
     }
     vertexIDs.resize(coords.size() / 2);
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
