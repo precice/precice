@@ -70,8 +70,7 @@ BOOST_AUTO_TEST_CASE(testParallelTriangleConservative2To1)
     // Check expected VS read
     Eigen::VectorXd expected(3);
     Eigen::VectorXd readData(3);
-    expected << 0.5, 0.3, 0.2;
-    //expected << 0.3, 1.0, 0.8;
+    expected << 0.3, 1.0, 0.8;
 
     interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
