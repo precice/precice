@@ -8,12 +8,12 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
-BOOST_AUTO_TEST_CASE(testParallelSquareConservative1To2)
+BOOST_AUTO_TEST_CASE(testParallelTriangleConservative2To1)
 {
   using precice::VertexID;
   using precice::testing::equals;
 
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(2_ranks));
+  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(1_rank));
 
   // Implement your test here.
   BOOST_TEST(true);
@@ -28,9 +28,12 @@ BOOST_AUTO_TEST_CASE(testParallelSquareConservative1To2)
 
     std::vector<double> coords;
 
-    // Create a square with top left corner (rank 0) or bottom right. Diagonal "y = x" is shared.
-    coords = {0.3, 0.5,
-              0.9, 0.2};
+    // Each rank sends one "force" on one point
+    if (context.rank == 0) {
+      coords = {0.3, 0.5};
+    } else {
+      coords = {0.7, 0.3};
+    }
     vertexIDs.resize(coords.size() / 2);
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
 
@@ -40,10 +43,9 @@ BOOST_AUTO_TEST_CASE(testParallelSquareConservative1To2)
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
 
     std::vector<double> values;
-    values = {1.0,
-              1.0};
+    values = {1.0};
 
-    interface.writeBlockScalarData(dataID, 2, vertexIDs.data(), values.data());
+    interface.writeBlockScalarData(dataID, 1, vertexIDs.data(), values.data());
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
@@ -52,16 +54,7 @@ BOOST_AUTO_TEST_CASE(testParallelSquareConservative1To2)
     auto meshID = interface.getMeshID("MeshTwo");
     auto dataID = interface.getDataID("DataOne", meshID);
 
-    std::vector<double> coords;
-    if (context.rank == 0) {
-      coords = {0.0, 0.0,
-                1.0, 1.0,
-                0.0, 1.0};
-    } else {
-      coords = {0.0, 0.0,
-                1.0, 1.0,
-                1.0, 0.0};
-    }
+    std::vector<double> coords = {0.0, 0.0, 1.0, 0.0, 0.0, 1.0}; // Lower-left triangle making half the unit square
 
     vertexIDs.resize(coords.size() / 2);
     interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
@@ -77,11 +70,8 @@ BOOST_AUTO_TEST_CASE(testParallelSquareConservative1To2)
     // Check expected VS read
     Eigen::VectorXd expected(3);
     Eigen::VectorXd readData(3);
-    if (context.rank == 0) {
-      expected << 0.5, 0.3, 0.2;
-    } else {
-      expected << 0.1, 0.2, 0.7;
-    }
+    expected << 0.5, 0.3, 0.2;
+    //expected << 0.3, 1.0, 0.8;
 
     interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
     BOOST_CHECK(equals(expected, readData));
