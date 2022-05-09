@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicatorPetRBF)
   if (context.isNamed("SolverOne")) {
 
     MPI_Comm                 myComm = precice::utils::Parallel::current()->comm;
-    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+    precice::SolverInterface interface(context.name, context.config(), context.rank, context.size, &myComm);
 
     int    meshID = interface.getMeshID("MeshOne");
     int    vertexIDs[2];
