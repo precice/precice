@@ -94,7 +94,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
       BOOST_TEST(!precice.isReadDataAvailable());
     }
 
-    double oldReadData = readData;
     if (precice.isReadDataAvailable()) {
       precice.readScalarData(readDataID, vertexID, readData);
     }

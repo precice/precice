@@ -1058,7 +1058,6 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 
 void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
 {
-  bool   flipNormals  = true;
   double safetyFactor = 0;
 
   testing::ConnectionOptions options;
