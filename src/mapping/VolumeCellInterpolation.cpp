@@ -75,7 +75,7 @@ void VolumeCellInterpolation::computeMapping()
     }
   } else {
     if (!fVertices.empty() && searchSpace->triangles().empty()) {
-      PRECICE_WARN("3D Mesh \"{}\" does not contain tetrahedrons. "
+      PRECICE_WARN("3D Mesh \"{}\" does not contain tetrahedra. "
                    "Volume cell interpolation will map to primitives of lower dimension.",
                    searchSpace->getName());
     }
