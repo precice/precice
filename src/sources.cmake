@@ -277,11 +277,11 @@ target_sources(precice
     src/utils/EventUtils.hpp
     src/utils/Helpers.cpp
     src/utils/Helpers.hpp
+    src/utils/IntraComm.cpp
+    src/utils/IntraComm.hpp
     src/utils/MPI_Mock.hpp
     src/utils/ManageUniqueIDs.cpp
     src/utils/ManageUniqueIDs.hpp
-    src/utils/IntraComm.cpp
-    src/utils/IntraComm.hpp
     src/utils/MultiLock.hpp
     src/utils/Parallel.cpp
     src/utils/Parallel.hpp
