@@ -7,8 +7,8 @@ target_sources(testprecice
     tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/LocalRBFPartitioning.cpp
-    tests/parallel/PrimaryRankSockets.cpp
     tests/parallel/NearestProjectionRePartitioning.cpp
+    tests/parallel/PrimaryRankSockets.cpp
     tests/parallel/TestBoundingBoxInitialization.cpp
     tests/parallel/TestBoundingBoxInitializationTwoWay.cpp
     tests/parallel/TestFinalize.cpp

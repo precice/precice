@@ -665,7 +665,6 @@ public:
       const int *   valueIndices,
       const double *values);
 
-
   /**
    * @brief Writes vector data to a vertex
    *
@@ -1089,7 +1088,6 @@ public:
    */
   bool isGradientDataRequired(int dataID) const;
 
-
   /**
    * @brief Writes vector gradient data given as block.
    *
@@ -1249,7 +1247,6 @@ public:
       int           size,
       const int *   valueIndices,
       const double *gradientValues);
-
 
   ///@}
 
