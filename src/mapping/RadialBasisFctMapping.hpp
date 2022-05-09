@@ -61,8 +61,8 @@ private:
 
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qr;
 
-  virtual void mapConservative(int inputDataID, int outputDataID, int polyparams) override;
-  virtual void mapConsistent(int inputDataID, int outputDataID, int polyparams) override;
+  virtual void mapConservative(int inputDataID, int outputDataID) override;
+  virtual void mapConsistent(int inputDataID, int outputDataID) override;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -166,9 +166,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDataID, int outputDataID, int polyparams)
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDataID, int outputDataID)
 {
-  PRECICE_TRACE(inputDataID, outputDataID, polyparams);
+  PRECICE_TRACE(inputDataID, outputDataID);
 
   // Gather input data
   if (utils::IntraComm::isSecondary()) {
@@ -223,7 +223,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
     // Construct Eigen vectors
     Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
-    Eigen::VectorXd             outputValues((_matrixA.cols() - polyparams) * valueDim);
+    Eigen::VectorXd             outputValues((_matrixA.cols() - this->getPolynomialParameters()) * valueDim);
     outputValues.setZero();
 
     Eigen::VectorXd Au(_matrixA.cols());  // rows == n
@@ -239,7 +239,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       out = _qr.solve(Au);
 
       // Copy mapped data to output data values
-      for (int i = 0; i < out.size() - polyparams; i++) {
+      for (int i = 0; i < out.size() - this->getPolynomialParameters(); i++) {
         outputValues[i * valueDim + dim] = out[i];
       }
     }
@@ -288,10 +288,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputDataID, int outputDataID, int polyparams)
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputDataID, int outputDataID)
 {
 
-  PRECICE_TRACE(inputDataID, outputDataID, polyparams);
+  PRECICE_TRACE(inputDataID, outputDataID);
 
   // Gather input data
   if (utils::IntraComm::isSecondary()) {
@@ -307,7 +307,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 
     int valueDim = this->output()->data(outputDataID)->getDimensions();
 
-    std::vector<double> globalInValues((_matrixA.cols() - polyparams) * valueDim, 0.0);
+    std::vector<double> globalInValues((_matrixA.cols() - this->getPolynomialParameters()) * valueDim, 0.0);
     std::vector<int>    outValuesSize;
 
     if (utils::IntraComm::isPrimary()) { // Parallel case
@@ -351,7 +351,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     // For every data dimension, perform mapping
     for (int dim = 0; dim < valueDim; dim++) {
       // Fill input from input data values (last polyparams entries remain zero)
-      for (int i = 0; i < in.size() - polyparams; i++) {
+      for (int i = 0; i < in.size() - this->getPolynomialParameters(); i++) {
         in[i] = inputValues[i * valueDim + dim];
       }
 

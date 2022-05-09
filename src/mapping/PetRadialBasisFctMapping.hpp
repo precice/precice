@@ -83,8 +83,8 @@ public:
   friend struct MappingTests::PetRadialBasisFunctionMapping::Serial::SolutionCaching;
 
 private:
-  virtual void mapConservative(int inputDataID, int outputDataID, int polyparams) override;
-  virtual void mapConsistent(int inputDataID, int outputDataID, int polyparams) override;
+  virtual void mapConservative(int inputDataID, int outputDataID) override;
+  virtual void mapConsistent(int inputDataID, int outputDataID) override;
 
   /// Stores col -> value for each row. Used to return the already computed values from the preconditioning
   using VertexData = std::vector<std::vector<std::pair<int, double>>>;
@@ -193,13 +193,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
       _preallocation(preallocation),
       _commState(utils::Parallel::current())
 {
-
-  // Count number of dead dimensions
-  int deadDimensions = std::count(this->_deadAxis.begin(), this->_deadAxis.end(), true);
-
-  // TODO: Move this to the base class and rename them to have an underscore
-  polyparams      = (_polynomial == Polynomial::ON) ? 1 + dimensions - deadDimensions : 0;
-  sepPolyparams   = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
+  polyparams      = (_polynomial == Polynomial::ON) ? this->getPolynomialParameters() : 0;
+  sepPolyparams   = (_polynomial == Polynomial::SEPARATE) ? this->getPolynomialParameters() : 0;
   localPolyparams = (_commState->rank() > 0) ? 0 : polyparams;
 }
 
@@ -591,7 +586,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputDataID, int outputDataID, int polyparams_)
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputDataID, int outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
   precice::utils::Event e("map.pet.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);
@@ -722,7 +717,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputD
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDataID, int outputDataID, int polyparams_)
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDataID, int outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
   precice::utils::Event e("map.pet.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), precice::syncMode);

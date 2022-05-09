@@ -72,8 +72,17 @@ protected:
 
   bool _hasComputedMapping = false;
 
-  virtual void mapConservative(int inputDataID, int outputDataID, int polyparams) = 0;
-  virtual void mapConsistent(int inputDataID, int outputDataID, int polyparams)   = 0;
+  virtual void mapConservative(int inputDataID, int outputDataID) = 0;
+  virtual void mapConsistent(int inputDataID, int outputDataID)   = 0;
+
+  /**
+ * @brief Computes the number of polynomial degrees of freedom based on the problem dimension and the dead axis
+ *
+ * @note This function does not take the handling of the polynomial (ON, OFF, SEPARETE) into account.
+ *
+ * @return int the polynomial degrees of freedom of the RBF system
+ */
+  int getPolynomialParameters() const;
 
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctBaseMapping"};
@@ -121,6 +130,16 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::setDeadAxis(bool xDead,
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
+int RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::getPolynomialParameters() const
+{
+  PRECICE_ASSERT(_deadAxis.size() > 0);
+  // Count the dead axis
+  const int deadDimensions = std::count(_deadAxis.begin(), _deadAxis.end(), true);
+  //Formula for the polynomial parameters
+  return 1 + getDimensions() - deadDimensions;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
 bool RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::hasComputedMapping() const
 {
   return _hasComputedMapping;
@@ -146,14 +165,10 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::map(
                    valueDim, output()->data(outputDataID)->getDimensions());
   }
 
-  // Count the dead axis
-  int deadDimensions = std::count(_deadAxis.begin(), _deadAxis.end(), true);
-  int polyparams     = 1 + getDimensions() - deadDimensions;
-
   if (hasConstraint(CONSERVATIVE)) {
-    mapConservative(inputDataID, outputDataID, polyparams);
+    mapConservative(inputDataID, outputDataID);
   } else {
-    mapConsistent(inputDataID, outputDataID, polyparams);
+    mapConsistent(inputDataID, outputDataID);
   }
 }
 
