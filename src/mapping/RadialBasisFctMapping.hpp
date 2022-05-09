@@ -61,8 +61,11 @@ private:
 
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qr;
 
-  virtual void mapConservative(int inputDataID, int outputDataID) override;
-  virtual void mapConsistent(int inputDataID, int outputDataID) override;
+  /// @copydoc RadialBasisFctBaseMapping::mapConservative
+  virtual void mapConservative(DataID inputDataID, DataID outputDataID) override;
+
+  /// @copydoc RadialBasisFctBaseMapping::mapConsistent
+  virtual void mapConsistent(DataID inputDataID, DataID outputDataID) override;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -166,7 +169,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::clear()
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDataID, int outputDataID)
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(DataID inputDataID, DataID outputDataID)
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
@@ -288,7 +291,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputDataID, int outputDataID)
+void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(DataID inputDataID, DataID outputDataID)
 {
 
   PRECICE_TRACE(inputDataID, outputDataID);

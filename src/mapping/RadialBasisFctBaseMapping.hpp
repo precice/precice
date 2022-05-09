@@ -70,10 +70,24 @@ protected:
   /// true if the mapping along some axis should be ignored
   std::vector<bool> _deadAxis;
 
+  /// boolean switch indicating whether the mapping was computed
   bool _hasComputedMapping = false;
 
-  virtual void mapConservative(int inputDataID, int outputDataID) = 0;
-  virtual void mapConsistent(int inputDataID, int outputDataID)   = 0;
+  /**
+   * @brief Maps data using a conservative constraint
+   *
+   * @param[in] inputDataID Data ID of the input data set
+   * @param[in] outputDataID Data ID of the output data set
+   */
+  virtual void mapConservative(DataID inputDataID, DataID outputDataID) = 0;
+
+  /**
+   * @brief Maps data using a consistent constraint
+   *
+   * @param[in] inputDataID Data ID of the input data set
+   * @param[in] outputDataID Data ID of the output data set
+   */
+  virtual void mapConsistent(DataID inputDataID, DataID outputDataID) = 0;
 
   /**
  * @brief Computes the number of polynomial degrees of freedom based on the problem dimension and the dead axis
@@ -87,6 +101,7 @@ protected:
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctBaseMapping"};
 
+  /// converts the boolean switches to a boolean vector
   void setDeadAxis(bool xDead, bool yDead, bool zDead);
 };
 
@@ -159,11 +174,10 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::map(
                  input()->getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
-  {
-    int valueDim = input()->data(inputDataID)->getDimensions();
-    PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
-                   valueDim, output()->data(outputDataID)->getDimensions());
-  }
+
+  const int valueDim = input()->data(inputDataID)->getDimensions();
+  PRECICE_ASSERT(valueDim == output()->data(outputDataID)->getDimensions(),
+                 valueDim, output()->data(outputDataID)->getDimensions());
 
   if (hasConstraint(CONSERVATIVE)) {
     mapConservative(inputDataID, outputDataID);
