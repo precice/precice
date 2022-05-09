@@ -926,7 +926,7 @@ public:
 
   ///@}
 
-  /** @name Experimental: Waveform Interpolation
+  /** @name Experimental: Time Interpolation
    * These API functions are \b experimental and may change in future versions.
    */
   ///@{
