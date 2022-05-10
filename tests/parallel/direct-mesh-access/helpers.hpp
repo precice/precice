@@ -12,6 +12,6 @@ void runTestAccessReceivedMesh(const TestContext &       context,
                                const std::vector<double> writeDataSecondaryRank,
                                const std::vector<double> expectedPositionSecondaryRank,
                                const std::vector<double> expectedReadDataSecondaryRank,
-                               const int                 startIndex);
+                               const size_t              startIndex);
 
 #endif

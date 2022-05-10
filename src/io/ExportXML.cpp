@@ -84,7 +84,7 @@ void ExportXML::writeParallelFile(
   if (offsets[0] > 0) {
     outParallelFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
   }
-  for (auto rank : utils::IntraComm::allSecondaryRanks()) {
+  for (size_t rank : utils::IntraComm::allSecondaryRanks()) {
     PRECICE_ASSERT(rank < offsets.size());
     if (offsets[rank] - offsets[rank - 1] > 0) {
       //only non-empty subfiles

@@ -608,7 +608,6 @@ void ReceivedPartition::createOwnerInformation()
     PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
     std::vector<int> tags(numberOfVertices, -1);
     std::vector<int> globalIDs(numberOfVertices, -1);
-    bool             atInterface        = false;
     int              ownedVerticesCount = 0; // number of vertices owned by this rank
     for (int i = 0; i < numberOfVertices; i++) {
       globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
@@ -624,8 +623,7 @@ void ReceivedPartition::createOwnerInformation()
         }
 
         if (not vertexIsShared) {
-          tags[i]     = 1;
-          atInterface = true;
+          tags[i] = 1;
           ownedVerticesCount++;
         }
       }
@@ -698,7 +696,7 @@ void ReceivedPartition::createOwnerInformation()
        If both ranks have same vertex count, the lower rank will own the vertex.
     */
 
-    for (int i = 0; i < sharedVerticesGlobalIDs.size(); i++) {
+    for (size_t i = 0; i < sharedVerticesGlobalIDs.size(); i++) {
       bool owned = true;
 
       for (auto &sharingRank : sharedVerticesReceiveMap) {
