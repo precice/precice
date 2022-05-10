@@ -87,11 +87,11 @@ private:
   /// Data associated with this CouplingData
   mesh::PtrData _data;
 
-  /// Extrapolation associated with this CouplingData
-  cplscheme::impl::Extrapolation _extrapolation;
-
   /// Mesh associated with this CouplingData
   mesh::PtrMesh _mesh;
+
+  /// Extrapolation associated with this CouplingData
+  cplscheme::impl::Extrapolation _extrapolation;
 };
 
 } // namespace cplscheme
