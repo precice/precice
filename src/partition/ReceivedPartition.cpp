@@ -696,7 +696,7 @@ void ReceivedPartition::createOwnerInformation()
        If both ranks have same vertex count, the lower rank will own the vertex.
     */
 
-    for (int i = 0; i < sharedVerticesGlobalIDs.size(); i++) {
+    for (size_t i = 0; i < sharedVerticesGlobalIDs.size(); i++) {
       bool owned = true;
 
       for (auto &sharingRank : sharedVerticesReceiveMap) {
