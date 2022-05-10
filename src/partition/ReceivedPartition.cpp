@@ -623,7 +623,7 @@ void ReceivedPartition::createOwnerInformation()
         }
 
         if (not vertexIsShared) {
-          tags[i]     = 1;
+          tags[i] = 1;
           ownedVerticesCount++;
         }
       }
