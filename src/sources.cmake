@@ -171,6 +171,8 @@ target_sources(precice
     src/m2n/SharedPointer.hpp
     src/m2n/config/M2NConfiguration.cpp
     src/m2n/config/M2NConfiguration.hpp
+    src/mapping/BarycentricBaseMapping.cpp
+    src/mapping/BarycentricBaseMapping.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
     src/mapping/NearestNeighborBaseMapping.cpp

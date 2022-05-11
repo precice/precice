@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "logging/Logger.hpp"
-#include "mapping/Mapping.hpp"
+#include "mapping/BarycentricBaseMapping.hpp"
 #include "mapping/Polation.hpp"
 
 namespace precice {
@@ -14,7 +14,7 @@ namespace mapping {
  * @brief Mapping using orthogonal projection to nearest triangle/edge/vertex and
  *        linear interpolation from projected point.
  */
-class NearestProjectionMapping : public Mapping {
+class NearestProjectionMapping : public BarycentricBaseMapping {
 public:
   /// Constructor, taking mapping constraint.
   NearestProjectionMapping(Constraint constraint, int dimensions);
@@ -25,33 +25,8 @@ public:
   /// Computes the projections and interpolation relations.
   virtual void computeMapping() override;
 
-  virtual bool hasComputedMapping() const override;
-
-  /// Removes a computed mapping.
-  virtual void clear() override;
-
-  /**
-   * @brief Uses projection and interpolation relations to map data values.
-   *
-   * Preconditions:
-   * - computeMapping() has been called
-   *
-   * @param[in] inputDataID Data ID of input data values to be mapped from.
-   * @param[in] outputDataID Data ID of output data values to be mapped to.
-   */
-  virtual void map(
-      int inputDataID,
-      int outputDataID) override;
-
   virtual void tagMeshFirstRound() override;
   virtual void tagMeshSecondRound() override;
-
-private:
-  logging::Logger _log{"mapping::NearestProjectionMapping"};
-
-  std::vector<Polation> _interpolations;
-
-  bool _hasComputedMapping = false;
 };
 
 } // namespace mapping
