@@ -24,10 +24,10 @@ public:
   /// Computes the projections and interpolation relations. Must be done by inherited subclass
   virtual void computeMapping() = 0;
 
-  virtual bool hasComputedMapping() const override;
+  virtual bool hasComputedMapping() const final;
 
   /// Removes a computed mapping.
-  virtual void clear() override;
+  virtual void clear() final;
 
   /**
    * @brief Uses projection and interpolation relations to map data values.
@@ -40,14 +40,15 @@ public:
    */
   virtual void map(
       int inputDataID,
-      int outputDataID) override;
+      int outputDataID) final;
 
   virtual void tagMeshFirstRound()  = 0;
   virtual void tagMeshSecondRound() = 0;
 
-protected:
+private:
   logging::Logger _log{"mapping::BarycentricBaseMapping"};
 
+protected:
   std::vector<Polation> _interpolations;
 
   bool _hasComputedMapping = false;

@@ -27,6 +27,10 @@ public:
 
   virtual void tagMeshFirstRound() override;
   virtual void tagMeshSecondRound() override;
+
+  private:
+    logging::Logger _log{"mapping::NearestNeighborProjectionMapping"};
+
 };
 
 } // namespace mapping
