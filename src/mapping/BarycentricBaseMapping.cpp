@@ -48,7 +48,7 @@ void BarycentricBaseMapping::map(
 {
   PRECICE_TRACE(inputDataID, outputDataID);
 
-  precice::utils::Event e("map.np.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::utils::Event e("map.bm.mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
 
   mesh::PtrData          inData    = input()->data(inputDataID);
   mesh::PtrData          outData   = output()->data(outputDataID);
