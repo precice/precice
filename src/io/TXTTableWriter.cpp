@@ -43,7 +43,7 @@ void TXTTableWriter::addData(
       _outputStream << name << i << "  ";
     }
   }
-  // Print out everyting apart from INT consistently in scientific
+  // Print out everything apart from INT consistently in scientific
   // notation using a fixed precision
   if (type == DOUBLE || type == VECTOR2D || type == VECTOR3D) {
     _outputStream << std::scientific << std::setprecision(8);

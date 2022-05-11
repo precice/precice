@@ -19,9 +19,10 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
-    int                           maxIterations)
+    int                           maxIterations,
+    int                           extrapolationOrder)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod) {}
+                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
 
 void ParallelCouplingScheme::initializeImplementation()
 {
@@ -38,12 +39,12 @@ void ParallelCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+      checkInitialDataHasBeenReceived();
     }
   } else { // second participant
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+      checkInitialDataHasBeenReceived();
     }
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());

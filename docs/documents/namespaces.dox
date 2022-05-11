@@ -59,7 +59,7 @@
  */
 
 /** @namespace precice::utils
- *  @brief contains precice-related utilites.
+ *  @brief contains precice-related utilities.
  */
 
 /** @namespace precice::xml

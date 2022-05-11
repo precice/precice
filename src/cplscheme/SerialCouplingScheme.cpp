@@ -29,9 +29,10 @@ SerialCouplingScheme::SerialCouplingScheme(
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
-    int                           maxIterations)
+    int                           maxIterations,
+    int                           extrapolationOrder)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod)
+                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
@@ -78,7 +79,7 @@ void SerialCouplingScheme::exchangeInitialData()
     PRECICE_ASSERT(not sendsInitializedData(), "First participant cannot send data during initialization.");
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      checkDataHasBeenReceived();
+      checkInitialDataHasBeenReceived();
     }
   } else { // second participant
     PRECICE_ASSERT(not receivesInitializedData(), "Only first participant can receive data during initialization.");

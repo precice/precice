@@ -121,13 +121,13 @@ void testDistributed(const TestContext &    context,
   int valueDimension = inMeshSpec.at(0).value.size();
 
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", valueDimension);
+  mesh::PtrData inData   = inMesh->createData("InData", valueDimension, 0_dataID);
   int           inDataID = inData->getID();
 
   getDistributedMesh(context, inMeshSpec, inMesh, inData, inGlobalIndexOffset);
 
   mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", valueDimension);
+  mesh::PtrData outData   = outMesh->createData("OutData", valueDimension, 1_dataID);
   int           outDataID = outData->getID();
 
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
@@ -152,10 +152,10 @@ void testDistributed(const TestContext &    context,
   BOOST_TEST(outData->values().size() == index * valueDimension);
 }
 
-/// Test with a homogenous distribution of mesh amoung ranks
+/// Test with a homogeneous distribution of mesh among ranks
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
                    {-1, 2, {2, 1}, {6}},
                    {-1, 3, {3, 0}, {7}},
                    {-1, 3, {3, 1}, {8}}},
-                  {// The outMesh is local, distributed amoung all ranks
+                  {// The outMesh is local, distributed among all ranks
                    {0, -1, {0, 0}, {0}},
                    {0, -1, {0, 1}, {0}},
                    {1, -1, {1, 0}, {0}},
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
                    {-1, 2, {2, 1}, {6, 9}},
                    {-1, 3, {3, 0}, {7, 10}},
                    {-1, 3, {3, 1}, {8, 11}}},
-                  {// The outMesh is local, distributed amoung all ranks
+                  {// The outMesh is local, distributed among all ranks
                    {0, -1, {0, 0}, {0, 0}},
                    {0, -1, {0, 1}, {0, 0}},
                    {1, -1, {1, 0}, {0, 0}},
@@ -225,10 +225,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
                    {3, {8, 11}}});
 }
 
-/// Using a more heterogenous distributon of vertices and owner
+/// Using a more heterogeneous distributon of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -263,10 +263,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                    {3, {8}}});
 }
 
-/// Test with a very heterogenous distributed and non-continues ownership
+/// Test with a very heterogeneous distributed and non-continuous ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -319,10 +319,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
                   globalIndexOffsets.at(context.rank));
 }
 
-/// Test with a very heterogenous distributed and non-continues ownership
+/// Test with a very heterogeneous distributed and non-continuous ownership
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 /// Some ranks are empty, does not converge
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   ThinPlateSplines                        fct;
   RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 // same as 2DV4, but all ranks have vertices
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   ThinPlateSplines                        fct;
   RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -502,7 +502,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                      *boost::unit_test::tolerance(1e-7))
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   ThinPlateSplines                        fct;
   RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
 
@@ -554,10 +554,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                   globalIndexOffsets.at(context.rank));
 }
 
-/// Test with a homogenous distribution of mesh amoung ranks
+/// Test with a homogeneous distribution of mesh among ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -617,10 +617,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
                   context.rank * 2);
 }
 
-/// Test with a homogenous distribution of mesh amoung ranks
+/// Test with a homogeneous distribution of mesh among ranks
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -680,10 +680,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                   context.rank * 2);
 }
 
-/// Using a more heterogenous distribution of vertices and owner
+/// Using a more heterogeneous distribution of vertices and owner
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm())
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -748,7 +748,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 /// Using meshes of different sizes, inMesh is smaller then outMesh
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(2.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -813,7 +813,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                      *boost::unit_test::tolerance(1e-6))
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(4.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -873,7 +873,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -936,7 +936,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 /// Tests a non-contigous owner distributed at the outMesh
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves());
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   Gaussian                        fct(5.0);
   RadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
 
@@ -1007,11 +1007,11 @@ void testTagging(const TestContext &context,
   int valueDimension = inMeshSpec.at(0).value.size();
 
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", meshDimension, testing::nextMeshID()));
-  mesh::PtrData inData = inMesh->createData("InData", valueDimension);
+  mesh::PtrData inData = inMesh->createData("InData", valueDimension, 0_dataID);
   getDistributedMesh(context, inMeshSpec, inMesh, inData);
 
   mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
-  mesh::PtrData outData = outMesh->createData("OutData", valueDimension);
+  mesh::PtrData outData = outMesh->createData("OutData", valueDimension, 1_dataID);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
 
   Gaussian                        fct(4.5); //Support radius approx. 1
@@ -1059,7 +1059,7 @@ void testTagging(const TestContext &context,
 
 BOOST_AUTO_TEST_CASE(testTagFirstRound)
 {
-  PRECICE_TEST(""_on(4_ranks).setupMasterSlaves())
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm())
   //    *
   //    + <-- owned
   //* * x * *
@@ -1100,7 +1100,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
   int           inDataID = inData->getID();
   inMesh->createVertex(Vector2d(0.0, 0.0));
   inMesh->createVertex(Vector2d(1.0, 0.0));
@@ -1114,7 +1114,7 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
   outMesh->allocateDataValues();
@@ -1195,7 +1195,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 2);
+  mesh::PtrData inData   = inMesh->createData("InData", 2, 0_dataID);
   int           inDataID = inData->getID();
   inMesh->createVertex(Vector2d(0.0, 0.0));
   inMesh->createVertex(Vector2d(1.0, 0.0));
@@ -1209,7 +1209,7 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 2);
+  mesh::PtrData outData   = outMesh->createData("OutData", 2, 1_dataID);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
   outMesh->allocateDataValues();
@@ -1307,7 +1307,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
   int           inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
@@ -1325,7 +1325,7 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Eigen::Vector3d::Zero());
   outMesh->allocateDataValues();
@@ -1441,7 +1441,7 @@ void perform2DTestScaledConsistentMapping(Mapping &mapping)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
   int           inDataID = inData->getID();
   auto &        inV1     = inMesh->createVertex(Vector2d(0.0, 0.0));
   auto &        inV2     = inMesh->createVertex(Vector2d(1.0, 0.0));
@@ -1461,7 +1461,7 @@ void perform2DTestScaledConsistentMapping(Mapping &mapping)
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   auto &        outV1     = outMesh->createVertex(Vector2d(0.0, 0.0));
   auto &        outV2     = outMesh->createVertex(Vector2d(0.0, 1.0));
@@ -1490,7 +1490,7 @@ void perform3DTestScaledConsistentMapping(Mapping &mapping)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
   int           inDataID = inData->getID();
   auto &        inV1     = inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   auto &        inV2     = inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
@@ -1515,7 +1515,7 @@ void perform3DTestScaledConsistentMapping(Mapping &mapping)
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   auto &        outV1     = outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   auto &        outV2     = outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
@@ -1546,7 +1546,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
   int           inDataID = inData->getID();
   mesh::Vertex &vertex0  = inMesh->createVertex(Vector2d(0, 0));
   mesh::Vertex &vertex1  = inMesh->createVertex(Vector2d(0, 0));
@@ -1556,7 +1556,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   outMesh->createVertex(Vector2d(0.0, 0.0));
   outMesh->createVertex(Vector2d(1.0, 0.0));
@@ -1614,7 +1614,7 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 2);
+  mesh::PtrData inData   = inMesh->createData("InData", 2, 0_dataID);
   int           inDataID = inData->getID();
   mesh::Vertex &vertex0  = inMesh->createVertex(Vector2d(0, 0));
   mesh::Vertex &vertex1  = inMesh->createVertex(Vector2d(0, 0));
@@ -1624,7 +1624,7 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 2);
+  mesh::PtrData outData   = outMesh->createData("OutData", 2, 1_dataID);
   int           outDataID = outData->getID();
   outMesh->createVertex(Vector2d(0.0, 0.0));
   outMesh->createVertex(Vector2d(1.0, 0.0));
@@ -1686,7 +1686,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
   int           inDataID = inData->getID();
   mesh::Vertex &vertex0  = inMesh->createVertex(Vector3d(0, 0, 0));
   mesh::Vertex &vertex1  = inMesh->createVertex(Vector3d(0, 0, 0));
@@ -1696,7 +1696,7 @@ void perform3DTestConservativeMapping(Mapping &mapping)
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   outMesh->createVertex(Vector3d(0.0, 0.0, 0.0));
   outMesh->createVertex(Vector3d(1.0, 0.0, 0.0));
@@ -1917,7 +1917,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
   int           inDataID = inData->getID();
   inMesh->createVertex(Vector2d(0.0, 1.0));
   inMesh->createVertex(Vector2d(1.0, 1.0));
@@ -1931,7 +1931,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
   outMesh->allocateDataValues();
@@ -1965,7 +1965,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1);
+  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
   int           inDataID = inData->getID();
   inMesh->createVertex(Vector3d(0.0, 3.0, 0.0));
   inMesh->createVertex(Vector3d(1.0, 3.0, 0.0));
@@ -1979,7 +1979,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1);
+  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   outMesh->createVertex(Vector3d(0.0, 2.9, 0.0));
   outMesh->createVertex(Vector3d(0.8, 2.9, 0.1));

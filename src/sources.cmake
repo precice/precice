@@ -115,6 +115,8 @@ target_sources(precice
     src/cplscheme/impl/AbsoluteConvergenceMeasure.cpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.hpp
     src/cplscheme/impl/ConvergenceMeasure.hpp
+    src/cplscheme/impl/Extrapolation.cpp
+    src/cplscheme/impl/Extrapolation.hpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.cpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.hpp
     src/cplscheme/impl/RelativeConvergenceMeasure.cpp
@@ -122,14 +124,18 @@ target_sources(precice
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.cpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/SharedPointer.hpp
-    src/io/Constants.cpp
-    src/io/Constants.hpp
     src/io/Export.hpp
+    src/io/ExportCSV.cpp
+    src/io/ExportCSV.hpp
     src/io/ExportContext.hpp
     src/io/ExportVTK.cpp
     src/io/ExportVTK.hpp
-    src/io/ExportVTKXML.cpp
-    src/io/ExportVTKXML.hpp
+    src/io/ExportVTP.cpp
+    src/io/ExportVTP.hpp
+    src/io/ExportVTU.cpp
+    src/io/ExportVTU.hpp
+    src/io/ExportXML.cpp
+    src/io/ExportXML.hpp
     src/io/SharedPointer.hpp
     src/io/TXTReader.cpp
     src/io/TXTReader.hpp
@@ -167,6 +173,10 @@ target_sources(precice
     src/m2n/config/M2NConfiguration.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
+    src/mapping/NearestNeighborBaseMapping.cpp
+    src/mapping/NearestNeighborBaseMapping.hpp
+    src/mapping/NearestNeighborGradientMapping.cpp
+    src/mapping/NearestNeighborGradientMapping.hpp
     src/mapping/NearestNeighborMapping.cpp
     src/mapping/NearestNeighborMapping.hpp
     src/mapping/NearestProjectionMapping.cpp
@@ -217,6 +227,8 @@ target_sources(precice
     src/partition/SharedPointer.hpp
     src/precice/SolverInterface.cpp
     src/precice/SolverInterface.hpp
+    src/precice/Tooling.cpp
+    src/precice/Tooling.hpp
     src/precice/config/Configuration.cpp
     src/precice/config/Configuration.hpp
     src/precice/config/ParticipantConfiguration.cpp
@@ -231,6 +243,8 @@ target_sources(precice
     src/precice/impl/MeshContext.hpp
     src/precice/impl/Participant.cpp
     src/precice/impl/Participant.hpp
+    src/precice/impl/ReadDataContext.cpp
+    src/precice/impl/ReadDataContext.hpp
     src/precice/impl/SharedPointer.hpp
     src/precice/impl/SolverInterfaceImpl.cpp
     src/precice/impl/SolverInterfaceImpl.hpp
@@ -239,13 +253,15 @@ target_sources(precice
     src/precice/impl/WatchIntegral.hpp
     src/precice/impl/WatchPoint.cpp
     src/precice/impl/WatchPoint.hpp
+    src/precice/impl/WriteDataContext.cpp
+    src/precice/impl/WriteDataContext.hpp
     src/precice/types.hpp
     src/query/Index.cpp
     src/query/Index.hpp
-    src/query/impl/Indexer.cpp
-    src/query/impl/Indexer.hpp
     src/query/impl/RTreeAdapter.hpp
     src/time/SharedPointer.hpp
+    src/time/Time.cpp
+    src/time/Time.hpp
     src/time/Waveform.cpp
     src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
@@ -260,11 +276,11 @@ target_sources(precice
     src/utils/EventUtils.hpp
     src/utils/Helpers.cpp
     src/utils/Helpers.hpp
+    src/utils/IntraComm.cpp
+    src/utils/IntraComm.hpp
     src/utils/MPI_Mock.hpp
     src/utils/ManageUniqueIDs.cpp
     src/utils/ManageUniqueIDs.hpp
-    src/utils/MasterSlave.cpp
-    src/utils/MasterSlave.hpp
     src/utils/MultiLock.hpp
     src/utils/Parallel.cpp
     src/utils/Parallel.hpp
@@ -306,5 +322,6 @@ target_sources(precice
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     src/precice/SolverInterface.hpp
+    src/precice/Tooling.hpp
     src/precice/types.hpp
     )

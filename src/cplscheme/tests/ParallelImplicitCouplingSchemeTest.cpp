@@ -21,6 +21,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/ParticipantConfiguration.hpp"
 #include "testing/ParallelCouplingSchemeFixture.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -50,16 +51,20 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   PRECICE_TEST(1_rank);
   using namespace mesh;
 
+  int dimensions = 3;
+
   std::string path(_pathToTests + "parallel-implicit-cplscheme-relax-const-config.xml");
 
   xml::XMLTag          root = xml::getRootTag();
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(3);
+  meshConfig->setDimensions(dimensions);
   m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
+  precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
+  participantConfig->setDimensions(dimensions);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get());
@@ -69,22 +74,24 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag root = xml::getRootTag();
 
+  int dimensions = 3;
+
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->setDimensions(3);
+  dataConfig->setDimensions(dimensions);
   dataConfig->addData("Data0", 1);
   dataConfig->addData("Data1", 3);
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
+  meshConfig.setDimensions(dimensions);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", 1)->getID();
-  const auto    dataID1 = mesh->createData("Data1", 3)->getID();
+  const auto    dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
+  const auto    dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
@@ -98,6 +105,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   int         sendDataIndex              = -1;
   int         receiveDataIndex           = -1;
   bool        dataRequiresInitialization = false;
+  int         extrapolationOrder         = 0;
   if (context.isNamed(nameParticipant0)) {
     sendDataIndex              = dataID0;
     receiveDataIndex           = dataID1;
@@ -111,12 +119,13 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   // Create the coupling scheme object
   ParallelCouplingScheme cplScheme(
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100);
-  testing::ParallelCouplingSchemeFixture fixture;
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100, extrapolationOrder);
+
+  using Fixture = testing::ParallelCouplingSchemeFixture;
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
-  CouplingData *sendCouplingData = fixture.getSendData(cplScheme, sendDataIndex);
+  CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization);
-  CouplingData *receiveCouplingData = fixture.getReceiveData(cplScheme, receiveDataIndex);
+  CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
 
   // Add convergence measures
   int                                    minIterations = 3;
@@ -139,7 +148,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
     BOOST_TEST(sendCouplingData->values().size() == 1);
     BOOST_TEST(sendCouplingData->previousIteration().size() == 1);
-    BOOST_TEST(fixture.isImplicitCouplingScheme(cplScheme));
+    BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     sendCouplingData->values() = Eigen::VectorXd::Constant(1, 4.0);
     cplScheme.markActionFulfilled(constants::actionWriteInitialData());

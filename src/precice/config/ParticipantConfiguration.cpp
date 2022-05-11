@@ -10,9 +10,11 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
+#include "io/ExportCSV.hpp"
 #include "io/ExportContext.hpp"
 #include "io/ExportVTK.hpp"
-#include "io/ExportVTKXML.hpp"
+#include "io/ExportVTP.hpp"
+#include "io/ExportVTU.hpp"
 #include "io/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "logging/LogMacros.hpp"
@@ -21,13 +23,12 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "partition/ReceivedPartition.hpp"
-#include "precice/impl/DataContext.hpp"
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
@@ -74,6 +75,10 @@ ParticipantConfiguration::ParticipantConfiguration(
                           "meshes, this has to be specified separately for each mesh.");
   tagWriteData.addAttribute(attrMesh);
   tagReadData.addAttribute(attrMesh);
+
+  XMLAttribute<int> attrOrder = makeXMLAttribute(ATTR_ORDER, time::Time::DEFAULT_INTERPOLATION_ORDER)
+                                    .setDocumentation("Interpolation order used by waveform iteration when reading data.");
+  tagReadData.addAttribute(attrOrder);
   tag.addSubtag(tagWriteData);
   tag.addSubtag(tagReadData);
 
@@ -163,8 +168,8 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
                                "\"on-master\" is not supported if you use two-level initialization. "
                                "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
-                           .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER})
-                           .setDefaultValue(VALUE_FILTER_ON_SLAVES);
+                           .setOptions({VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_SLAVES, VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
+                           .setDefaultValue(VALUE_FILTER_ON_SECONDARY_RANKS);
   tagUseMesh.addAttribute(attrGeoFilter);
 
   auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
@@ -187,67 +192,68 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagUseMesh.addAttribute(attrProvide);
   tag.addSubtag(tagUseMesh);
 
-  std::list<XMLTag>  masterTags;
-  XMLTag::Occurrence masterOcc = XMLTag::OCCUR_NOT_OR_ONCE;
-  {
-    XMLTag tagMaster(*this, "sockets", masterOcc, TAG_MASTER);
-    doc = "A solver in parallel needs a communication between its ranks. ";
-    doc += "By default, the participant's MPI_COM_WORLD is reused.";
-    doc += "Use this tag to use TCP/IP sockets instead.";
-    tagMaster.setDocumentation(doc);
+  std::list<XMLTag>  intraCommTags;
+  XMLTag::Occurrence intraCommOcc = XMLTag::OCCUR_NOT_OR_ONCE;
+  for (std::string tag_name : {TAG_MASTER, TAG_INTRA_COMM}) {
+    {
+      XMLTag tagIntraComm(*this, "sockets", intraCommOcc, tag_name);
+      doc = "A solver in parallel needs a communication between its ranks. ";
+      doc += "By default, the participant's MPI_COM_WORLD is reused.";
+      doc += "Use this tag to use TCP/IP sockets instead.";
+      tagIntraComm.setDocumentation(doc);
 
-    auto attrPort = makeXMLAttribute("port", 0)
-                        .setDocumentation(
-                            "Port number (16-bit unsigned integer) to be used for socket "
-                            "communiation. The default is \"0\", what means that OS will "
-                            "dynamically search for a free port (if at least one exists) and "
-                            "bind it automatically.");
-    tagMaster.addAttribute(attrPort);
+      auto attrPort = makeXMLAttribute("port", 0)
+                          .setDocumentation(
+                              "Port number (16-bit unsigned integer) to be used for socket "
+                              "communication. The default is \"0\", what means that OS will "
+                              "dynamically search for a free port (if at least one exists) and "
+                              "bind it automatically.");
+      tagIntraComm.addAttribute(attrPort);
 
-    auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
-                           .setDocumentation(
-                               "Interface name to be used for socket communiation. "
-                               "Default is the cannonical name of the loopback interface of your platform. "
-                               "Might be different on supercomputing systems, e.g. \"ib0\" "
-                               "for the InfiniBand on SuperMUC. ");
-    tagMaster.addAttribute(attrNetwork);
+      auto attrNetwork = makeXMLAttribute(ATTR_NETWORK, utils::networking::loopbackInterfaceName())
+                             .setDocumentation(
+                                 "Interface name to be used for socket communication. "
+                                 "Default is the canonical name of the loopback interface of your platform. "
+                                 "Might be different on supercomputing systems, e.g. \"ib0\" "
+                                 "for the InfiniBand on SuperMUC. ");
+      tagIntraComm.addAttribute(attrNetwork);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-                                     .setDocumentation(
-                                         "Directory where connection information is exchanged. By default, the "
-                                         "directory of startup is chosen.");
-    tagMaster.addAttribute(attrExchangeDirectory);
+      auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+                                       .setDocumentation(
+                                           "Directory where connection information is exchanged. By default, the "
+                                           "directory of startup is chosen.");
+      tagIntraComm.addAttribute(attrExchangeDirectory);
 
-    masterTags.push_back(tagMaster);
+      intraCommTags.push_back(tagIntraComm);
+    }
+    {
+      XMLTag tagIntraComm(*this, "mpi", intraCommOcc, tag_name);
+      doc = "A solver in parallel needs a communication between its ranks. ";
+      doc += "By default, the participant's MPI_COM_WORLD is reused.";
+      doc += "Use this tag to use MPI with separated communication spaces instead instead.";
+      tagIntraComm.setDocumentation(doc);
+
+      auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+                                       .setDocumentation(
+                                           "Directory where connection information is exchanged. By default, the "
+                                           "directory of startup is chosen.");
+      tagIntraComm.addAttribute(attrExchangeDirectory);
+
+      intraCommTags.push_back(tagIntraComm);
+    }
+    {
+      XMLTag tagIntraComm(*this, "mpi-single", intraCommOcc, tag_name);
+      doc = "A solver in parallel needs a communication between its ranks. ";
+      doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
+      doc += "This tag is only used to ensure backwards compatibility.";
+      tagIntraComm.setDocumentation(doc);
+
+      intraCommTags.push_back(tagIntraComm);
+    }
+    for (XMLTag &tagIntraComm : intraCommTags) {
+      tag.addSubtag(tagIntraComm);
+    }
   }
-  {
-    XMLTag tagMaster(*this, "mpi", masterOcc, TAG_MASTER);
-    doc = "A solver in parallel needs a communication between its ranks. ";
-    doc += "By default, the participant's MPI_COM_WORLD is reused.";
-    doc += "Use this tag to use MPI with separated communication spaces instead instead.";
-    tagMaster.setDocumentation(doc);
-
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-                                     .setDocumentation(
-                                         "Directory where connection information is exchanged. By default, the "
-                                         "directory of startup is chosen.");
-    tagMaster.addAttribute(attrExchangeDirectory);
-
-    masterTags.push_back(tagMaster);
-  }
-  {
-    XMLTag tagMaster(*this, "mpi-single", masterOcc, TAG_MASTER);
-    doc = "A solver in parallel needs a communication between its ranks. ";
-    doc += "By default (which is this option), the participant's MPI_COM_WORLD is reused.";
-    doc += "This tag is only used to ensure backwards compatibility.";
-    tagMaster.setDocumentation(doc);
-
-    masterTags.push_back(tagMaster);
-  }
-  for (XMLTag &tagMaster : masterTags) {
-    tag.addSubtag(tagMaster);
-  }
-
   parent.addSubtag(tag);
 }
 
@@ -257,6 +263,12 @@ void ParticipantConfiguration::setDimensions(
   PRECICE_TRACE(dimensions);
   PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
+}
+
+void ParticipantConfiguration::setExperimental(
+    bool experimental)
+{
+  _experimental = experimental;
 }
 
 void ParticipantConfiguration::xmlTagCallback(
@@ -280,6 +292,9 @@ void ParticipantConfiguration::xmlTagCallback(
     const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
 
     if (allowDirectAccess) {
+      if (!_experimental) {
+        PRECICE_ERROR("You tried to configure the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", name);
+      }
       PRECICE_WARN("You configured the received mesh \"{}\" to use the option access-direct=\"true\", which is currently still experimental. Use with care.", name);
     }
 
@@ -300,7 +315,7 @@ void ParticipantConfiguration::xmlTagCallback(
                   "Participant \"{}\" uses mesh \"{}\" which is not defined. "
                   "Please check the use-mesh node with name=\"{}\" or define the mesh.",
                   _participants.back()->getName(), name, name);
-    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SLAVES || safetyFactor != 0.5) && from == "") {
+    if ((geoFilter != partition::ReceivedPartition::GeometricFilter::ON_SECONDARY_RANKS || safetyFactor != 0.5) && from == "") {
       PRECICE_ERROR(
           "Participant \"{}\" uses mesh \"{}\", which is not received (no \"from\"), but has a geometric-filter and/or a safety factor defined. "
           "Please extend the use-mesh tag as follows: <use-mesh name=\"{}\" from=\"(other participant)\" />",
@@ -331,8 +346,18 @@ void ParticipantConfiguration::xmlTagCallback(
     PRECICE_CHECK(mesh,
                   "Participant \"{}\" has to use mesh \"{}\" in order to read data from it. Please add a use-mesh node with name=\"{}\".",
                   _participants.back()->getName(), meshName, meshName);
-    mesh::PtrData data = getData(mesh, dataName);
-    _participants.back()->addReadData(data, mesh);
+    mesh::PtrData data          = getData(mesh, dataName);
+    int           waveformOrder = tag.getIntAttributeValue(ATTR_ORDER);
+    if (waveformOrder != time::Time::DEFAULT_INTERPOLATION_ORDER) {
+      if (!_experimental) {
+        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Please set experimental=\"true\", if you want to use this feature.", dataName, waveformOrder);
+      }
+      if (waveformOrder < time::Time::MIN_INTERPOLATION_ORDER || waveformOrder > time::Time::MAX_INTERPOLATION_ORDER) {
+        PRECICE_ERROR("You tried to configure the read data with name \"{}\" to use the waveform-order=\"{}\", but the order must be between \"{}\" and \"{}\". Please use an order in the allowed range.", dataName, waveformOrder, time::Time::MIN_INTERPOLATION_ORDER, time::Time::MAX_INTERPOLATION_ORDER);
+      }
+      PRECICE_WARN("You configured the read data with name \"{}\" to use the waveform-order=\"{}\", which is currently still experimental. Use with care.", dataName, waveformOrder);
+    }
+    _participants.back()->addReadData(data, mesh, waveformOrder);
   } else if (tag.getName() == TAG_WATCH_POINT) {
     PRECICE_ASSERT(_dimensions != 0); // setDimensions() has been called
     WatchPointConfig config;
@@ -347,12 +372,15 @@ void ParticipantConfiguration::xmlTagCallback(
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
     config.isScalingOn = tag.getBooleanAttributeValue(ATTR_SCALE_WITH_CONN);
     _watchIntegralConfigs.push_back(config);
-  } else if (tag.getNamespace() == TAG_MASTER) {
+  } else if (tag.getNamespace() == TAG_MASTER || tag.getNamespace() == TAG_INTRA_COMM) {
+    if (tag.getNamespace() == TAG_MASTER) {
+      PRECICE_WARN("Tag \"{}\" is deprecated and will be removed in v3.0.0. Please use \"{}\".", TAG_MASTER, TAG_INTRA_COMM);
+    }
     com::CommunicationConfiguration comConfig;
-    com::PtrCommunication           com = comConfig.createCommunication(tag);
-    utils::MasterSlave::_communication  = com;
-    _isMasterDefined                    = true;
-    _participants.back()->setUseMaster(true);
+    com::PtrCommunication           com  = comConfig.createCommunication(tag);
+    utils::IntraComm::getCommunication() = com;
+    _isIntraCommDefined                  = true;
+    _participants.back()->setUsePrimaryRank(true);
   }
 }
 
@@ -373,10 +401,16 @@ ParticipantConfiguration::getParticipants() const
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
 {
-  if (geoFilter == VALUE_FILTER_ON_MASTER) {
-    return partition::ReceivedPartition::GeometricFilter::ON_MASTER;
-  } else if (geoFilter == VALUE_FILTER_ON_SLAVES) {
-    return partition::ReceivedPartition::GeometricFilter::ON_SLAVES;
+  if (geoFilter == VALUE_FILTER_ON_MASTER || geoFilter == VALUE_FILTER_ON_PRIMARY_RANK) {
+    if (geoFilter == VALUE_FILTER_ON_MASTER) {
+      PRECICE_WARN("Value \"{}\" is deprecated and will be removed in v3.0.0. Please use \"{}\"", VALUE_FILTER_ON_MASTER, VALUE_FILTER_ON_PRIMARY_RANK);
+    }
+    return partition::ReceivedPartition::GeometricFilter::ON_PRIMARY_RANK;
+  } else if (geoFilter == VALUE_FILTER_ON_SLAVES || geoFilter == VALUE_FILTER_ON_SECONDARY_RANKS) {
+    if (geoFilter == VALUE_FILTER_ON_SLAVES) {
+      PRECICE_WARN("Value \"{}\" is deprecated and will be removed in v3.0.0. Please use \"{}\".", VALUE_FILTER_ON_SLAVES, VALUE_FILTER_ON_SECONDARY_RANKS);
+    }
+    return partition::ReceivedPartition::GeometricFilter::ON_SECONDARY_RANKS;
   } else {
     PRECICE_ASSERT(geoFilter == VALUE_NO_FILTER);
     return partition::ReceivedPartition::GeometricFilter::NO_FILTER;
@@ -493,43 +527,64 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
   _mappingConfig->resetMappings();
 
-  // Set participant data for data contexts
-  for (impl::DataContext &dataContext : participant->writeDataContexts()) {
-    int fromMeshID = dataContext.getMeshID();
-    PRECICE_CHECK(participant->isMeshProvided(fromMeshID) || participant->isDirectAccessAllowed(fromMeshID),
-                  "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
-                  "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
-                  participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
-
-    for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
+  // Iterate over all write mappings
+  for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
+    // Check, whether we can find a corresponding write data context
+    bool dataFound = false;
+    for (auto &dataContext : participant->writeDataContexts()) {
+      // First we look for the "from" mesh ID
+      const int fromMeshID = dataContext.getMeshID();
       if (mappingContext.fromMeshID == fromMeshID) {
+        // Second we look for the "to" mesh ID
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.toMeshID);
-        PRECICE_CHECK(meshContext.mesh->hasDataName(dataContext.getDataName()),
-                      "Mesh \"{}\" needs to use data \"{}\" to allow a write mapping to it. "
-                      "Please add a use-data node with name=\"{}\" to this mesh.",
-                      meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
-        dataContext.configureForWriteMapping(mappingContext, meshContext);
+        // If this is true, we actually found a proper configuration
+        // If it is false, we look for another "from" mesh ID, because we might have multiple read and write mappings
+        if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
+          // Check, if the fromMesh is a provided mesh
+          PRECICE_CHECK(participant->isMeshProvided(fromMeshID),
+                        "Participant \"{}\" has to use and provide mesh \"{}\" to be able to write data to it. "
+                        "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
+                        participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
+          dataContext.appendMappingConfiguration(mappingContext, meshContext);
+          dataFound = true;
+        }
       }
     }
+    PRECICE_CHECK(dataFound,
+                  "Participant \"{}\" defines a write mapping from mesh \"{}\" to mesh \"{}\", "
+                  "but there is either no corresponding write-data tag or the meshes used "
+                  "by this participant lack the necessary use-data tags.",
+                  participant->getName(), mappingContext.mapping->getInputMesh()->getName(), mappingContext.mapping->getOutputMesh()->getName());
   }
 
-  for (impl::DataContext &dataContext : participant->readDataContexts()) {
-    int toMeshID = dataContext.getMeshID();
-    PRECICE_CHECK(participant->isMeshProvided(toMeshID) || participant->isDirectAccessAllowed(toMeshID),
-                  "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
-                  "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
-                  participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
-
-    for (impl::MappingContext &mappingContext : participant->readMappingContexts()) {
+  // Iterate over all read mappings
+  for (impl::MappingContext &mappingContext : participant->readMappingContexts()) {
+    // Check, weather we can find a corresponding read data context
+    bool dataFound = false;
+    for (auto &dataContext : participant->readDataContexts()) {
+      // First we look for the "to" mesh ID
+      const int toMeshID = dataContext.getMeshID();
       if (mappingContext.toMeshID == toMeshID) {
+        // Second we look for the "from" mesh ID
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.fromMeshID);
-        PRECICE_CHECK(meshContext.mesh->hasDataName(dataContext.getDataName()),
-                      "Mesh \"{}\" needs to use data \"{}\" to allow a read mapping to it. "
-                      "Please add a use-data node with name=\"{}\" to this mesh.",
-                      meshContext.mesh->getName(), dataContext.getDataName(), dataContext.getDataName());
-        dataContext.configureForReadMapping(mappingContext, meshContext);
+        // If this is true, we actually found a proper configuraiton
+        // If it is false, we look for another "from" mesh ID, because we might have multiple read and write mappings
+        if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
+          // Check, if the toMesh is a provided mesh
+          PRECICE_CHECK(participant->isMeshProvided(toMeshID),
+                        "Participant \"{}\" has to use and provide mesh \"{}\" in order to read data from it. "
+                        "Please add a use-mesh node with name=\"{}\" and provide=\"true\".",
+                        participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
+          dataContext.appendMappingConfiguration(mappingContext, meshContext);
+          dataFound = true;
+        }
       }
     }
+    PRECICE_CHECK(dataFound,
+                  "Participant \"{}\" defines a read mapping from mesh \"{}\" to mesh \"{}\", "
+                  "but there is either no corresponding read-data tag or the meshes used "
+                  "by this participant lack the necessary use-data tags.",
+                  participant->getName(), mappingContext.mapping->getInputMesh()->getName(), mappingContext.mapping->getOutputMesh()->getName());
   }
 
   // Add actions
@@ -548,11 +603,25 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
     io::PtrExport exporter;
     if (exportContext.type == VALUE_VTK) {
+      // This is handled with respect to the current configuration context.
+      // Hence, this is potentially wrong for every participant other than context.name.
       if (context.size > 1) {
-        exporter = io::PtrExport(new io::ExportVTKXML());
+        // Only display the warning message if this participant configuration is the current one.
+        if (context.name == participant->getName()) {
+          PRECICE_WARN("You are using the VTK exporter in the parallel participant {}. "
+                       "Note that this will export as PVTU instead. For consistency, prefer \"<export:vtu ... />\" instead.",
+                       participant->getName());
+        }
+        exporter = io::PtrExport(new io::ExportVTU());
       } else {
         exporter = io::PtrExport(new io::ExportVTK());
       }
+    } else if (exportContext.type == VALUE_VTU) {
+      exporter = io::PtrExport(new io::ExportVTU());
+    } else if (exportContext.type == VALUE_VTP) {
+      exporter = io::PtrExport(new io::ExportVTP());
+    } else if (exportContext.type == VALUE_CSV) {
+      exporter = io::PtrExport(new io::ExportCSV());
     } else {
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
                     _participants.back()->getName(), exportContext.type);
@@ -599,18 +668,18 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
   _watchIntegralConfigs.clear();
 
-  // create default master communication if needed
-  if (context.size > 1 && not _isMasterDefined && participant->getName() == context.name) {
+  // create default primary communication if needed
+  if (context.size > 1 && not _isIntraCommDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
-    PRECICE_ERROR("Implicit master communications for parallel participants are only available if preCICE was built with MPI. "
-                  "Either explicitly define a master communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
+    PRECICE_ERROR("Implicit intra-participant communications for parallel participants are only available if preCICE was built with MPI. "
+                  "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
-    com::PtrCommunication com          = std::make_shared<com::MPIDirectCommunication>();
-    utils::MasterSlave::_communication = com;
-    participant->setUseMaster(true);
+    com::PtrCommunication com            = std::make_shared<com::MPIDirectCommunication>();
+    utils::IntraComm::getCommunication() = com;
+    participant->setUsePrimaryRank(true);
 #endif
   }
-  _isMasterDefined = false; // to not mess up with previous participant
+  _isIntraCommDefined = false; // to not mess up with previous participant
 }
 
 void ParticipantConfiguration::checkIllDefinedMappings(
@@ -640,12 +709,12 @@ void ParticipantConfiguration::checkIllDefinedMappings(
           bool sameDirection = false;
 
           if (mapping.direction == mapping::MappingConfiguration::WRITE) {
-            for (const impl::DataContext &dataContext : participant->writeDataContexts()) {
+            for (const auto &dataContext : participant->writeDataContexts()) {
               sameDirection |= data->getName() == dataContext.getDataName();
             }
           }
           if (mapping.direction == mapping::MappingConfiguration::READ) {
-            for (const impl::DataContext &dataContext : participant->readDataContexts()) {
+            for (const auto &dataContext : participant->readDataContexts()) {
               sameDirection |= data->getName() == dataContext.getDataName();
             }
           }

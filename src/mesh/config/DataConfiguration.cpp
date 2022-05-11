@@ -15,9 +15,14 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)
                       .setDocumentation("Unique name for the data set.");
 
+  auto attrHasGradient = makeXMLAttribute(ATTR_HAS_GRADIENT, false)
+                             .setDocumentation(
+                                 "If this attribute is set to \"on\", the data must have gradient values");
+
   XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
   tagScalar.addAttribute(attrName);
+  tagScalar.addAttribute(attrHasGradient);
   parent.addSubtag(tagScalar);
 
   XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
@@ -25,6 +30,7 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
                              "components of each data entry depends on the spatial dimensions set "
                              "in tag <solver-interface>.");
   tagVector.addAttribute(attrName);
+  tagVector.addAttribute(attrHasGradient);
   parent.addSubtag(tagVector);
 }
 
@@ -57,9 +63,10 @@ void DataConfiguration::xmlTagCallback(
   if (tag.getNamespace() == TAG) {
     PRECICE_ASSERT(_dimensions != 0);
     const std::string &name           = tag.getStringAttributeValue(ATTR_NAME);
+    bool               hasGradient    = tag.getBooleanAttributeValue(ATTR_HAS_GRADIENT);
     const std::string &typeName       = tag.getName();
     int                dataDimensions = getDataDimensions(typeName);
-    addData(name, dataDimensions);
+    addData(name, dataDimensions, hasGradient);
   } else {
     PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
   }
@@ -73,17 +80,30 @@ void DataConfiguration::xmlEndTagCallback(
 
 void DataConfiguration::addData(
     const std::string &name,
-    int                dataDimensions)
+    int                dataDimensions,
+    bool               hasGradient)
 {
-  ConfiguredData data(name, dataDimensions);
+  if (hasGradient) {
 
-  // Check if data with same name has been added already
-  for (auto &elem : _data) {
-    PRECICE_CHECK(elem.name != data.name,
-                  "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
-                  data.name);
+    ConfiguredData data(name, dataDimensions, hasGradient);
+    // Check if data with same name has been added already
+    for (auto &elem : _data) {
+      PRECICE_CHECK(elem.name != data.name,
+                    "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
+                    data.name);
+    }
+    _data.push_back(data);
+  } else {
+
+    // Check if data with same name has been added already
+    for (auto &elem : _data) {
+      PRECICE_CHECK(elem.name != name,
+                    "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
+                    name);
+    }
+
+    _data.push_back({name, dataDimensions});
   }
-  _data.push_back(data);
 }
 
 int DataConfiguration::getDataDimensions(

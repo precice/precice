@@ -1,10 +1,11 @@
 #include "precice/impl/DataContext.hpp"
 #include <memory>
-#include "mesh/Data.hpp"
-#include "mesh/Mesh.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
 namespace impl {
+
+logging::Logger DataContext::_log{"impl::DataContext"};
 
 DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
 {
@@ -14,52 +15,42 @@ DataContext::DataContext(mesh::PtrData data, mesh::PtrMesh mesh)
   _mesh = mesh;
 }
 
-mesh::PtrData DataContext::providedData()
-{
-  PRECICE_ASSERT(_providedData);
-  return _providedData;
-}
-
-mesh::PtrData DataContext::toData()
-{
-  PRECICE_ASSERT(_toData);
-  return _toData;
-}
-
 std::string DataContext::getDataName() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData->getName();
 }
 
-int DataContext::getProvidedDataID() const
+DataID DataContext::getFromDataID(size_t dataVectorIndex) const
+{
+  PRECICE_ASSERT(hasMapping());
+  PRECICE_ASSERT(dataVectorIndex < _fromData.size())
+  PRECICE_ASSERT(_fromData[dataVectorIndex]);
+  return _fromData[dataVectorIndex]->getID();
+}
+
+void DataContext::resetData()
+{
+  // See also https://github.com/precice/precice/issues/1156.
+  _providedData->toZero();
+  if (hasMapping()) {
+    PRECICE_ASSERT(hasWriteMapping());
+    std::for_each(_toData.begin(), _toData.end(), [](auto &data) { data->toZero(); });
+  }
+}
+
+DataID DataContext::getToDataID(size_t dataVectorIndex) const
+{
+  PRECICE_ASSERT(hasMapping());
+  PRECICE_ASSERT(dataVectorIndex < _toData.size())
+  PRECICE_ASSERT(_toData[dataVectorIndex]);
+  return _toData[dataVectorIndex]->getID();
+}
+
+DataID DataContext::getDataDimensions() const
 {
   PRECICE_ASSERT(_providedData);
-  return _providedData->getID();
-}
-
-int DataContext::getFromDataID() const
-{
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_ASSERT(_fromData);
-  return _fromData->getID();
-}
-
-void DataContext::resetProvidedData()
-{
-  _providedData->toZero();
-}
-
-void DataContext::resetToData()
-{
-  _toData->toZero();
-}
-
-int DataContext::getToDataID() const
-{
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_ASSERT(_toData);
-  return _toData->getID();
+  return _providedData->getDimensions();
 }
 
 std::string DataContext::getMeshName() const
@@ -68,42 +59,29 @@ std::string DataContext::getMeshName() const
   return _mesh->getName();
 }
 
-int DataContext::getMeshID() const
+MeshID DataContext::getMeshID() const
 {
   PRECICE_ASSERT(_mesh);
   return _mesh->getID();
 }
 
-void DataContext::setMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData)
+void DataContext::appendMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData)
 {
-  PRECICE_ASSERT(!hasMapping());
   PRECICE_ASSERT(fromData);
   PRECICE_ASSERT(toData);
-  _mappingContext = mappingContext;
-  PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal provided data.");
+  // Make sure we don't append a mapping twice
+#ifndef NDEBUG
+  for (unsigned int i = 0; i < _mappingContexts.size(); ++i) {
+    PRECICE_ASSERT(!((_mappingContexts[i].mapping == mappingContext.mapping) && (_fromData[i] == fromData) && (_toData[i] == toData)), "The appended mapping already exists.");
+  }
+#endif
+  _mappingContexts.emplace_back(mappingContext);
+  PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal _providedData.");
   PRECICE_ASSERT(fromData->getName() == getDataName());
-  _fromData = fromData;
+  _fromData.emplace_back(fromData);
   PRECICE_ASSERT(toData->getName() == getDataName());
-  _toData = toData;
+  _toData.emplace_back(toData);
   PRECICE_ASSERT(_toData != _fromData);
-}
-
-void DataContext::configureForReadMapping(MappingContext mappingContext, MeshContext fromMeshContext)
-{
-  PRECICE_ASSERT(fromMeshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData fromData = fromMeshContext.mesh->data(getDataName());
-  PRECICE_ASSERT(fromData != _providedData);
-  this->setMapping(mappingContext, fromData, _providedData);
-  PRECICE_ASSERT(hasReadMapping());
-}
-
-void DataContext::configureForWriteMapping(MappingContext mappingContext, MeshContext toMeshContext)
-{
-  PRECICE_ASSERT(toMeshContext.mesh->hasDataName(getDataName()));
-  mesh::PtrData toData = toMeshContext.mesh->data(getDataName());
-  PRECICE_ASSERT(toData != _providedData);
-  this->setMapping(mappingContext, _providedData, toData);
-  PRECICE_ASSERT(hasWriteMapping());
 }
 
 bool DataContext::hasMapping() const
@@ -111,20 +89,42 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
+bool DataContext::isMappingRequired()
+{
+  if (not hasMapping()) {
+    return false;
+  }
+
+  PRECICE_ASSERT(std::all_of(_mappingContexts.begin(), _mappingContexts.end(), [this](const auto &context) { return context.timing == _mappingContexts[0].timing; }), "Different mapping timings for the same data context are not supported");
+
+  return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [](const auto &context) {
+    const auto timing = context.timing;
+    const bool mapNow = (timing == mapping::MappingConfiguration::ON_ADVANCE) || (timing == mapping::MappingConfiguration::INITIAL);
+    return (mapNow && !context.hasMappedData); });
+}
+
+void DataContext::mapData()
+{
+  PRECICE_ASSERT(hasMapping());
+  // Execute the mapping
+  for (unsigned int i = 0; i < _mappingContexts.size(); ++i) {
+    const DataID fromDataID = getFromDataID(i);
+    const DataID toDataID   = getToDataID(i);
+    // Reset the toData before executing the mapping
+    _toData[i]->toZero();
+    _mappingContexts[i].mapping->map(fromDataID, toDataID);
+    PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, _toData[i]->values()));
+  }
+}
+
 bool DataContext::hasReadMapping() const
 {
-  return _toData == _providedData;
+  return std::any_of(_toData.begin(), _toData.end(), [this](auto &data) { return data == _providedData; });
 }
 
 bool DataContext::hasWriteMapping() const
 {
-  return _fromData == _providedData;
-}
-
-const MappingContext DataContext::mappingContext() const
-{
-  PRECICE_ASSERT(hasMapping());
-  return _mappingContext;
+  return std::any_of(_fromData.begin(), _fromData.end(), [this](auto &data) { return data == _providedData; });
 }
 
 } // namespace impl

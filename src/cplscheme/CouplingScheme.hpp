@@ -47,6 +47,12 @@ public:
   /// To be used, when the time window size is determined dynamically during the coupling.
   static const double UNDEFINED_TIME_WINDOW_SIZE;
 
+  /// To be used, when the extrapolation order is not defined (for explicit coupling).
+  static const int UNDEFINED_EXTRAPOLATION_ORDER;
+
+  /// To be used, when the number of max iterations is not defined (for explicit coupling).
+  static const int UNDEFINED_MAX_ITERATIONS;
+
   CouplingScheme &operator=(CouplingScheme &&) = delete;
 
   virtual ~CouplingScheme() {}
@@ -121,8 +127,10 @@ public:
    */
   virtual bool willDataBeExchanged(double lastSolverTimestepLength) const = 0;
 
+  /// @brief Returns true, if data has been received in initializeData().
+  virtual bool hasInitialDataBeenReceived() const = 0;
+
   /// @brief Returns true, if data has been exchanged in last call of advance().
-  /// actually, this only means that data has been received, data is always sent
   virtual bool hasDataBeenReceived() const = 0;
 
   /// Returns the currently computed time of the coupling scheme.

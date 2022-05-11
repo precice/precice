@@ -2,7 +2,7 @@
 #include <boost/config.hpp>
 #include <ostream>
 #include "mesh/Utils.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -10,8 +10,10 @@ namespace mapping {
 
 Mapping::Mapping(
     Constraint constraint,
-    int        dimensions)
-    : _constraint(constraint),
+    int        dimensions,
+    bool       requireGradient)
+    : _requireGradient(requireGradient),
+      _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
       _input(),
@@ -80,10 +82,15 @@ int Mapping::getDimensions() const
   return _dimensions;
 }
 
+bool Mapping::requireGradient() const
+{
+  return _requireGradient;
+}
+
 void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID) const
 {
   // Only serial participant is supported for scale-consistent mapping
-  PRECICE_ASSERT((not utils::MasterSlave::isMaster()) and (not utils::MasterSlave::isSlave()));
+  PRECICE_ASSERT((not utils::IntraComm::isPrimary()) and (not utils::IntraComm::isSecondary()));
 
   // If rank is not empty and do not contain connectivity information, raise error
   if ((input()->edges().empty() and (not input()->vertices().empty())) or

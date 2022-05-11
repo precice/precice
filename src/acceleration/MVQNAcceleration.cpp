@@ -20,7 +20,7 @@
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 using precice::cplscheme::PtrCouplingData;
@@ -72,7 +72,7 @@ MVQNAcceleration::~MVQNAcceleration() = default;
 
 // ==================================================================================
 void MVQNAcceleration::initialize(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 
@@ -90,7 +90,7 @@ void MVQNAcceleration::initialize(
   int entries  = _residuals.size();
   int global_n = 0;
 
-  if (!utils::MasterSlave::isParallel()) {
+  if (!utils::IntraComm::isParallel()) {
     global_n = entries;
   } else {
     global_n = _dimOffsets.back();
@@ -109,7 +109,7 @@ void MVQNAcceleration::initialize(
   }
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
 
-  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+  if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
                       << '\n';
   }
@@ -117,11 +117,11 @@ void MVQNAcceleration::initialize(
 
 // ==================================================================================
 void MVQNAcceleration::computeUnderrelaxationSecondaryData(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   // Perform underrelaxation with initial relaxation factor for secondary data
   for (int id : _secondaryDataIDs) {
-    PtrCouplingData  data   = cplData[id];
+    PtrCouplingData  data   = cplData.at(id);
     Eigen::VectorXd &values = data->values();
     values *= _initialRelaxation; // new * omg
     Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
@@ -133,7 +133,7 @@ void MVQNAcceleration::computeUnderrelaxationSecondaryData(
 
 // ==================================================================================
 void MVQNAcceleration::updateDifferenceMatrices(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   /**
    *  Matrices and vectors used in this method as well as the result Wtil are
@@ -210,8 +210,8 @@ void MVQNAcceleration::updateDifferenceMatrices(
 
 // ==================================================================================
 void MVQNAcceleration::computeQNUpdate(
-    Acceleration::DataMap &cplData,
-    Eigen::VectorXd &      xUpdate)
+    const DataMap &  cplData,
+    Eigen::VectorXd &xUpdate)
 {
   /**
    * The inverse Jacobian
@@ -357,8 +357,8 @@ void MVQNAcceleration::buildJacobian()
 
 // ==================================================================================
 void MVQNAcceleration::computeNewtonUpdateEfficient(
-    Acceleration::DataMap &cplData,
-    Eigen::VectorXd &      xUpdate)
+    const DataMap &  cplData,
+    Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
 
@@ -456,7 +456,7 @@ void MVQNAcceleration::computeNewtonUpdateEfficient(
 }
 
 // ==================================================================================
-void MVQNAcceleration::computeNewtonUpdate(Acceleration::DataMap &cplData, Eigen::VectorXd &xUpdate)
+void MVQNAcceleration::computeNewtonUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
 
@@ -559,7 +559,7 @@ void MVQNAcceleration::restartIMVJ()
     PRECICE_DEBUG("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian {}, new modes: {}, truncated modes: {} avg rank: {}", rankAfter, rankAfter - rankBefore, waste, _avgRank / _nbRestarts);
 
     //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
-    if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+    if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
       _infostringstream << " - MVJ-RESTART " << _nbRestarts << ", mode= SVD -\n  new modes: " << rankAfter - rankBefore << "\n  rank svd: " << rankAfter << "\n  avg rank: " << _avgRank / _nbRestarts << "\n  truncated modes: " << waste << "\n"
                         << '\n';
     }
@@ -571,7 +571,7 @@ void MVQNAcceleration::restartIMVJ()
     _pseudoInverseChunk.clear();
 
     if (_matrixV_RSLS.cols() > 0) {
-      // avoid that the syste mis getting too squared
+      // avoid that the system is getting too squared
       while (_matrixV_RSLS.cols() * 2 >= getLSSystemRows()) {
         removeMatrixColumnRSLS(_matrixV_RSLS.cols() - 1);
       }
@@ -637,7 +637,7 @@ void MVQNAcceleration::restartIMVJ()
     }
 
     PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with {} columns from {} time windows.", _matrixV_RSLS.cols(), _RSLSreusedTimeWindows);
-    if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+    if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
       _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimeWindows << "\n"
                         << '\n';
     }
@@ -652,7 +652,7 @@ void MVQNAcceleration::restartIMVJ()
 
   } else if (_imvjRestartType == MVQNAcceleration::RS_SLIDE) {
 
-    // re-compute Wtil -- compensate for dropping of Wtil_0 ond Z_0:
+    // re-compute Wtil -- compensate for dropping of Wtil_0 and Z_0:
     //                    Wtil_q <-- Wtil_q +  Wtil^0 * (Z^0*V_q)
     for (int i = static_cast<int>(_WtilChunk.size()) - 1; i >= 1; i--) {
 
@@ -682,7 +682,7 @@ void MVQNAcceleration::restartIMVJ()
 
 // ==================================================================================
 void MVQNAcceleration::specializedIterationsConverged(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 

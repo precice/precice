@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
@@ -10,10 +12,12 @@ namespace cplscheme {
 CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
-    bool          requiresInitialization)
+    bool          requiresInitialization,
+    int           extrapolationOrder)
     : requiresInitialization(requiresInitialization),
       _data(std::move(data)),
-      _mesh(std::move(mesh))
+      _mesh(std::move(mesh)),
+      _extrapolation(extrapolationOrder)
 {
   PRECICE_ASSERT(_data != nullptr);
   _previousIteration = Eigen::VectorXd::Zero(_data->values().size());
@@ -37,6 +41,29 @@ const Eigen::VectorXd &CouplingData::values() const
 {
   PRECICE_ASSERT(_data != nullptr);
   return _data->values();
+}
+
+Eigen::MatrixXd &CouplingData::gradientValues()
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->gradientValues();
+}
+
+const Eigen::MatrixXd &CouplingData::gradientValues() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->gradientValues();
+}
+
+bool CouplingData::hasGradient() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->hasGradient();
+}
+
+int CouplingData::meshDimensions() const
+{
+  return _mesh->getDimensions();
 }
 
 void CouplingData::storeIteration()
@@ -67,6 +94,23 @@ std::string CouplingData::getDataName()
 std::vector<int> CouplingData::getVertexOffsets()
 {
   return _mesh->getVertexOffsets();
+}
+
+void CouplingData::initializeExtrapolation()
+{
+  _extrapolation.initialize(values().size());
+  storeIteration();
+}
+
+void CouplingData::moveToNextWindow()
+{
+  _extrapolation.moveToNextWindow();
+  values() = _extrapolation.getInitialGuess();
+}
+
+void CouplingData::storeExtrapolationData()
+{
+  _extrapolation.store(values());
 }
 
 } // namespace cplscheme

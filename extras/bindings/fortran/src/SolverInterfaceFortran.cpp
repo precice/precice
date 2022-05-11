@@ -530,19 +530,21 @@ void precicef_get_version_information_(
   }
 }
 
-void precicef_setMeshAccessRegion(
+void precicef_set_mesh_access_region_(
     const int     meshID,
     const double *boundingBox)
 {
+  PRECICE_CHECK(impl != nullptr, errormsg);
   impl->setMeshAccessRegion(meshID, boundingBox);
 }
 
-void precicef_getMeshVerticesAndIDs(
+void precicef_get_mesh_vertices_and_IDs_(
     const int meshID,
     const int size,
     int *     ids,
     double *  coordinates)
 {
+  PRECICE_CHECK(impl != nullptr, errormsg);
   impl->getMeshVerticesAndIDs(meshID, size, ids, coordinates);
 }
 

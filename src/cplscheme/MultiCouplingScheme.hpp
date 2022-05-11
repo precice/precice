@@ -8,6 +8,7 @@
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -35,6 +36,7 @@ public:
  * @param[in] m2ns M2N communications to all other participants of coupling scheme.
  * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
  * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
+ * @param[in] extrapolationOrder order used for extrapolation
  */
   MultiCouplingScheme(
       double                             maxTime,
@@ -45,7 +47,8 @@ public:
       std::map<std::string, m2n::PtrM2N> m2ns,
       constants::TimesteppingMethod      dtMethod,
       const std::string &                controller,
-      int                                maxIterations = -1);
+      int                                maxIterations,
+      int                                extrapolationOrder);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
@@ -91,18 +94,35 @@ private:
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   /**
+   * @brief BiCouplingScheme has _sendData and _receiveData
+   * @returns DataMap with all data
+   */
+  const DataMap getAllData() override
+  {
+    DataMap allData;
+    // @todo user C++17 std::map::merge
+    for (auto &sendData : _sendDataVector) {
+      allData.insert(sendData.second.begin(), sendData.second.end());
+    }
+    for (auto &receiveData : _receiveDataVector) {
+      allData.insert(receiveData.second.begin(), receiveData.second.end());
+    }
+    return allData;
+  }
+
+  /**
    * @brief Exchanges all data between the participants of the MultiCouplingScheme and applies acceleration.
    * @returns true, if iteration converged
    */
   bool exchangeDataAndAccelerate() override;
 
   /**
-   * @brief MultiCouplingScheme applies acceleration to _allData
-   * @returns DataMap bein accelerated
+   * @brief MultiCouplingScheme applies acceleration to all CouplingData
+   * @returns DataMap being accelerated
    */
-  DataMap &getAccelerationData() override
+  const DataMap getAccelerationData() override
   {
-    return _allData;
+    return getAllData();
   }
 
   /**

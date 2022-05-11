@@ -4,7 +4,6 @@
 #include <fstream>
 #include <iomanip>
 #include <memory>
-#include "Constants.hpp"
 #include "io/Export.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Data.hpp"
@@ -13,23 +12,20 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
 namespace io {
 
-int ExportVTK::getType() const
-{
-  return constants::exportVTK();
-}
-
 void ExportVTK::doExport(
     const std::string &name,
     const std::string &location,
-    mesh::Mesh &       mesh)
+    const mesh::Mesh & mesh)
 {
   PRECICE_TRACE(name, location, mesh.getName());
   PRECICE_ASSERT(name != std::string(""));
+  PRECICE_ASSERT(!utils::IntraComm::isParallel(), "ExportVTK only supports serial participants.");
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
@@ -46,7 +42,9 @@ void ExportVTK::doExport(
   outstream.close();
 }
 
-void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
+void ExportVTK::exportMesh(
+    std::ofstream &   outFile,
+    const mesh::Mesh &mesh)
 {
   PRECICE_TRACE(mesh.getName());
 
@@ -75,8 +73,11 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
   // Plot triangles
   if (mesh.getDimensions() == 3) {
     size_t sizeTriangles = mesh.triangles().size();
-    outFile << "CELLS " << sizeTriangles << ' '
-            << sizeTriangles * 4 << "\n\n";
+    size_t sizeEdges     = mesh.edges().size();
+    size_t sizeElements  = sizeTriangles + sizeEdges;
+
+    outFile << "CELLS " << sizeElements << ' '
+            << sizeTriangles * 4 + sizeEdges * 3 << "\n\n";
     for (auto const &triangle : mesh.triangles()) {
       int internalIndices[3];
       internalIndices[0] = triangle.vertex(0).getID();
@@ -84,16 +85,27 @@ void ExportVTK::exportMesh(std::ofstream &outFile, mesh::Mesh const &mesh)
       internalIndices[2] = triangle.vertex(2).getID();
       writeTriangle(internalIndices, outFile);
     }
+    for (auto const &edge : mesh.edges()) {
+      int internalIndices[2];
+      internalIndices[0] = edge.vertex(0).getID();
+      internalIndices[1] = edge.vertex(1).getID();
+      writeLine(internalIndices, outFile);
+    }
 
-    outFile << "\nCELL_TYPES " << sizeTriangles << "\n\n";
+    outFile << "\nCELL_TYPES " << sizeElements << "\n\n";
     for (size_t i = 0; i < sizeTriangles; i++) {
       outFile << "5\n";
+    }
+    for (size_t i = 0; i < sizeEdges; ++i) {
+      outFile << "3\n";
     }
   }
   outFile << '\n';
 }
 
-void ExportVTK::exportData(std::ofstream &outFile, mesh::Mesh const &mesh)
+void ExportVTK::exportData(
+    std::ofstream &   outFile,
+    const mesh::Mesh &mesh)
 {
   outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
 

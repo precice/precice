@@ -8,15 +8,9 @@
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
-
-// Forward declaration to friend the boost test struct
-namespace CplSchemeTests {
-namespace SerialImplicitCouplingSchemeTests {
-struct testExtrapolateData;
-}
-} // namespace CplSchemeTests
 
 namespace precice {
 namespace cplscheme {
@@ -44,9 +38,8 @@ public:
       m2n::PtrM2N                   m2n,
       int                           maxIterations,
       CouplingMode                  cplMode,
-      constants::TimesteppingMethod dtMethod);
-
-  friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testExtrapolateData; // For whitebox tests
+      constants::TimesteppingMethod dtMethod,
+      int                           extrapolationOrder);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
@@ -90,6 +83,17 @@ protected:
   DataMap &getReceiveData()
   {
     return _receiveData;
+  }
+
+  /**
+   * @brief BiCouplingScheme has _sendData and _receiveData
+   * @returns DataMap with all data
+   */
+  const DataMap getAllData() override
+  {
+    DataMap allData{_sendData};
+    allData.insert(_receiveData.begin(), _receiveData.end());
+    return allData;
   }
 
   /// Sets the values

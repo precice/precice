@@ -18,7 +18,7 @@ namespace cplscheme {
 /**
  * @brief Coupling scheme for serial coupling, i.e. staggered execution of two coupled participants
  *
- * For more information, look into Benjamin's thesis, Section 3.5. 
+ * For more information, look into Benjamin's thesis, Section 3.5.
  * https://mediatum.ub.tum.de/doc/1320661/document.pdf
  */
 class SerialCouplingScheme : public BiCouplingScheme {
@@ -38,6 +38,7 @@ public:
  * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
  * @param[in] cplMode Set implicit or explicit coupling
  * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
+ * @param[in] extrapolationOrder order used for extrapolation
  */
   SerialCouplingScheme(
       double                        maxTime,
@@ -50,7 +51,8 @@ public:
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
-      int                           maxIterations = -1);
+      int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
+      int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
 
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
@@ -74,7 +76,7 @@ private:
    * @brief SerialCouplingSchemes applies acceleration to send data
    * @returns DataMap being accelerated
    */
-  DataMap &getAccelerationData() override
+  const DataMap getAccelerationData() override
   {
     return getSendData();
   }

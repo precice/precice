@@ -15,7 +15,7 @@
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -75,41 +75,21 @@ BaseQNAcceleration::BaseQNAcceleration(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::initialize(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE(cplData.size());
-  for (DataMap::value_type &pair : cplData) {
+  for (const DataMap::value_type &pair : cplData) {
     PRECICE_ASSERT(pair.second->values().size() == pair.second->previousIteration().size(), "current and previousIteration have to be initialized and of identical size.",
                    pair.second->values().size(), pair.second->previousIteration().size());
   }
 
   checkDataIDs(cplData);
-
-  /*
-  std::stringstream sss;
-  sss<<"debugOutput-rank-"<<utils::MasterSlave::getRank();
-  _debugOut.open(sss.str(), std::ios_base::out);
-  _debugOut << std::setprecision(16);
-
-  Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-
-  _debugOut<<"initialization:\n";
-  for (int id : _dataIDs) {
-      const auto& values = *cplData[id]->values;
-      const auto& oldValues = cplData[id]->oldValues.col(0);
-
-      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<"     values: "<<values.format(CommaInitFmt)<<'\n';
-      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<" old values: "<<oldValues.format(CommaInitFmt)<<'\n';
-    }
-  _debugOut<<"\n";
-  */
-
   size_t              entries = 0;
   std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   for (auto &elem : _dataIDs) {
-    entries += cplData[elem]->values().size();
-    subVectorSizes.push_back(cplData[elem]->values().size());
+    entries += cplData.at(elem)->values().size();
+    subVectorSizes.push_back(cplData.at(elem)->values().size());
   }
 
   _matrixCols.push_front(0);
@@ -126,12 +106,12 @@ void BaseQNAcceleration::initialize(
 
   /**
    *  make dimensions public to all procs,
-   *  last entry _dimOffsets[MasterSlave::getSize()] holds the global dimension, global,n
+   *  last entry _dimOffsets[IntraComm::getSize()] holds the global dimension, global,n
    */
   std::stringstream ss;
-  if (utils::MasterSlave::isParallel()) {
-    PRECICE_ASSERT(utils::MasterSlave::_communication.get() != nullptr);
-    PRECICE_ASSERT(utils::MasterSlave::_communication->isConnected());
+  if (utils::IntraComm::isParallel()) {
+    PRECICE_ASSERT(utils::IntraComm::getCommunication() != nullptr);
+    PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
 
     if (entries <= 0) {
       _hasNodesOnInterface = false;
@@ -142,36 +122,33 @@ void BaseQNAcceleration::initialize(
      *  This information needs to be gathered for all meshes. To get the number of respective unknowns of a specific processor
      *  we need to multiply the number of vertices with the dimensionality of the vector-valued data for each coupling data.
      */
-    _dimOffsets.resize(utils::MasterSlave::getSize() + 1);
+    _dimOffsets.resize(utils::IntraComm::getSize() + 1);
     _dimOffsets[0] = 0;
-    //for (auto & elem : _dataIDs) {
-    //	std::cout<<" Offsets:(vertex) \n"<<cplData[elem]->mesh->getVertexOffsets()<<'\n';
-    //}
     for (size_t i = 0; i < _dimOffsets.size() - 1; i++) {
       int accumulatedNumberOfUnknowns = 0;
       for (auto &elem : _dataIDs) {
-        const auto &offsets = cplData[elem]->getVertexOffsets();
-        accumulatedNumberOfUnknowns += offsets[i] * cplData[elem]->getDimensions();
+        const auto &offsets = cplData.at(elem)->getVertexOffsets();
+        accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions();
       }
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
     PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
-    if (utils::MasterSlave::isMaster()) {
+    if (utils::IntraComm::isPrimary()) {
       _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
     }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
-    size_t unknowns = _dimOffsets[utils::MasterSlave::getRank() + 1] - _dimOffsets[utils::MasterSlave::getRank()];
+    size_t unknowns = _dimOffsets[utils::IntraComm::getRank() + 1] - _dimOffsets[utils::IntraComm::getRank()];
     PRECICE_ASSERT(entries == unknowns, entries, unknowns);
   } else {
     _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n", entries);
   }
 
-  // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+  // set the number of global rows in the QRFactorization.
   _qrV.setGlobalRows(getLSSystemRows());
 
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
-  for (DataMap::value_type &pair : cplData) {
+  for (const DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _dataIDs)) {
       _secondaryDataIDs.push_back(pair.first);
       int secondaryEntries            = pair.second->values().size();
@@ -190,7 +167,7 @@ void BaseQNAcceleration::initialize(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::updateDifferenceMatrices(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 
@@ -198,7 +175,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   _residuals = _values;
   _residuals -= _oldValues;
 
-  if (math::equals(utils::MasterSlave::l2norm(_residuals), 0.0)) {
+  if (math::equals(utils::IntraComm::l2norm(_residuals), 0.0)) {
     PRECICE_WARN("The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
                  "Maybe you always write the same data or you call advance without "
                  "providing new data first or you do not use available read data. "
@@ -228,17 +205,16 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
-      double residualMagnitude = utils::MasterSlave::l2norm(deltaR);
+      double residualMagnitude = utils::IntraComm::l2norm(deltaR);
 
-      if (not math::equals(utils::MasterSlave::l2norm(_values), 0.0)) {
-        residualMagnitude /= utils::MasterSlave::l2norm(_values);
+      if (not math::equals(utils::IntraComm::l2norm(_values), 0.0)) {
+        residualMagnitude /= utils::IntraComm::l2norm(_values);
       }
 
       PRECICE_CHECK(not math::equals(residualMagnitude, 0.0),
-                    "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residual "
-                    "in two consecutive iterations is identical. There is probably something wrong in your adapter. "
-                    "Maybe you always write the same (or only incremented) data or you call advance without "
-                    "providing  new data first.");
+                    "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residuals "
+                    "in two consecutive iterations are identical. If a relative convergence limit was selected, "
+                    "consider increasing the convergence threshold.");
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
@@ -285,7 +261,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::performAcceleration(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE(_dataIDs.size(), cplData.size());
 
@@ -404,13 +380,13 @@ void BaseQNAcceleration::performAcceleration(
         _matrixCols.clear();
         _matrixCols.push_front(0); // vital after clear()
         _qrV.reset();
-        // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+        // set the number of global rows in the QRFactorization.
         _qrV.setGlobalRows(getLSSystemRows());
         _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
       }
     }
 
-    if (std::isnan(utils::MasterSlave::l2norm(xUpdate))) {
+    if (std::isnan(utils::IntraComm::l2norm(xUpdate))) {
       PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
                     "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
                     "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
@@ -420,19 +396,6 @@ void BaseQNAcceleration::performAcceleration(
   }
 
   splitCouplingData(cplData);
-
-  /*
-  _debugOut<<"finished update: \n";
-  for (int id : _dataIDs) {
-      const auto& values = *cplData[id]->values;
-      const auto& oldValues = cplData[id]->oldValues.col(0);
-
-      _debugOut<<"id: "<<id<<"norm: "<<values.norm()<<"     values: "<<values.format(CommaInitFmt)<<'\n';
-      _debugOut<<"id: "<<id<<"norm: "<<oldValues.norm()<<" old values: "<<oldValues.format(CommaInitFmt)<<'\n';
-    }
-  _debugOut<<"\n";
-  */
-
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
@@ -461,15 +424,15 @@ void BaseQNAcceleration::applyFilter()
 }
 
 void BaseQNAcceleration::concatenateCouplingData(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 
   int offset = 0;
   for (int id : _dataIDs) {
-    int         size      = cplData[id]->values().size();
-    auto &      values    = cplData[id]->values();
-    const auto &oldValues = cplData[id]->previousIteration();
+    int         size      = cplData.at(id)->values().size();
+    auto &      values    = cplData.at(id)->values();
+    const auto &oldValues = cplData.at(id)->previousIteration();
     for (int i = 0; i < size; i++) {
       _values(i + offset)    = values(i);
       _oldValues(i + offset) = oldValues(i);
@@ -479,14 +442,14 @@ void BaseQNAcceleration::concatenateCouplingData(
 }
 
 void BaseQNAcceleration::splitCouplingData(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 
   int offset = 0;
   for (int id : _dataIDs) {
-    int   size       = cplData[id]->values().size();
-    auto &valuesPart = cplData[id]->values();
+    int   size       = cplData.at(id)->values().size();
+    auto &valuesPart = cplData.at(id)->values();
     for (int i = 0; i < size; i++) {
       valuesPart(i) = _values(i + offset);
     }
@@ -497,17 +460,17 @@ void BaseQNAcceleration::splitCouplingData(
 /** ---------------------------------------------------------------------------------------------
  *         iterationsConverged()
  *
- * @brief: Is called when the convergence criterion for the coupling is fullfilled and finalizes
+ * @brief: Is called when the convergence criterion for the coupling is fulfilled and finalizes
  *         the quasi Newton acceleration. Stores new differences in F and C, clears or
  *         updates F and C according to the number of reused time windows
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::iterationsConverged(
-    DataMap &cplData)
+    const DataMap &cplData)
 {
   PRECICE_TRACE();
 
-  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel())
+  if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel())
     _infostringstream << "# time window " << tWindows << " converged #\n iterations: " << its
                       << "\n used cols: " << getLSSystemCols() << "\n del cols: " << _nbDelCols << '\n';
 
@@ -554,7 +517,7 @@ void BaseQNAcceleration::iterationsConverged(
       _matrixV.resize(0, 0);
       _matrixW.resize(0, 0);
       _qrV.reset();
-      // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+      // set the number of global rows in the QRFactorization.
       _qrV.setGlobalRows(getLSSystemRows());
       _matrixCols.clear(); // _matrixCols.push_front() at the end of the method.
     } else {
@@ -656,7 +619,7 @@ int BaseQNAcceleration::getLSSystemCols() const
 
 int BaseQNAcceleration::getLSSystemRows()
 {
-  if (utils::MasterSlave::isParallel()) {
+  if (utils::IntraComm::isParallel()) {
     return _dimOffsets.back();
   }
   return _residuals.size();
@@ -665,14 +628,14 @@ int BaseQNAcceleration::getLSSystemRows()
 void BaseQNAcceleration::writeInfo(
     const std::string &s, bool allProcs)
 {
-  if (not utils::MasterSlave::isParallel()) {
+  if (not utils::IntraComm::isParallel()) {
     // serial acceleration mode
     _infostringstream << s;
 
-    // parallel acceleration, master-slave mode
+    // parallel acceleration
   } else {
     if (not allProcs) {
-      if (utils::MasterSlave::isMaster())
+      if (utils::IntraComm::isPrimary())
         _infostringstream << s;
     } else {
       _infostringstream << s;

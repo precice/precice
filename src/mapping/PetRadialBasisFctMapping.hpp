@@ -10,7 +10,6 @@
 #include "impl/BasisFunctions.hpp"
 #include "math/math.hpp"
 #include "precice/impl/versions.hpp"
-#include "query/Index.hpp"
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
 #include "utils/Event.hpp"
@@ -133,7 +132,7 @@ private:
   /// true if the mapping along some axis should be ignored
   std::vector<bool> _deadAxis;
 
-  /// Toggles the use of the additonal polynomial
+  /// Toggles the use of the additional polynomial
   Polynomial _polynomial;
 
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
@@ -241,8 +240,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping(
     if (_deadAxis[d])
       deadDimensions += 1;
   }
-  polyparams    = (_polynomial == Polynomial::ON) ? 1 + dimensions - deadDimensions : 0;
-  sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
+  polyparams      = (_polynomial == Polynomial::ON) ? 1 + dimensions - deadDimensions : 0;
+  sepPolyparams   = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
+  localPolyparams = (_commState->rank() > 0) ? 0 : polyparams;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -267,7 +267,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PRECICE_DEBUG("Using no polynomial.");
   }
   if (_polynomial == Polynomial::SEPARATE) {
-    PRECICE_DEBUG("Using seperated polynomial.");
+    PRECICE_DEBUG("Using separated polynomial.");
   }
 
   PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
@@ -283,14 +283,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = output();
   }
 
-  // do not put that in the c'tor, getProcessRank always returns 0 there
-  localPolyparams = _commState->rank() > 0 ? 0 : polyparams;
-
   // Indizes that are used to build the Petsc AO mapping
   std::vector<PetscInt> myIndizes;
 
   // Indizes for Q^T, holding the polynomial
-  if (_commState->rank() <= 0) // Rank 0 or not in MasterSlave mode
+  if (_commState->rank() <= 0) // Rank 0 or not in IntraComm mode
     for (size_t i = 0; i < polyparams; i++)
       myIndizes.push_back(i); // polyparams reside in the first rows (which are always on rank 0)
 
@@ -603,7 +600,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     CHKERRV(ierr);
     ierr = MatMult(_matrixA, rescalingCoeffs, oneInterpolant);
     CHKERRV(ierr); // get the output of g(x) = 1
-    // set values close to zero to exactly 0.0, s.t. PointwiseDevide does not to devision on these entries
+    // set values close to zero to exactly 0.0, s.t. PointwiseDevide doesn't do division on these entries
     ierr = VecChop(oneInterpolant, 1e-6);
     CHKERRV(ierr);
   }
@@ -873,7 +870,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       VecChop(out, 1e-9);
 
       // Copy mapped data to output data values
-      ierr     = VecGetArrayRead(out, &vecArray);
+      ierr = VecGetArrayRead(out, &vecArray);
+      CHKERRV(ierr);
       int size = out.getLocalSize();
       for (int i = 0; i < size; i++) {
         outValues[i * valueDim + dim] = vecArray[i];
@@ -913,7 +911,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     auto bb = otherMesh->getBoundingBox();
     bb.expandBy(_basisFunction.getSupportRadius());
 
-    const auto vertices = query::Index{filterMesh}.getVerticesInsideBox(bb);
+    const auto vertices = filterMesh->index().getVerticesInsideBox(bb);
     std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertices()[v].tag(); });
   } else {
     filterMesh->tagAll();
@@ -952,7 +950,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
 
-  auto vertices = query::Index{mesh}.getVerticesInsideBox(bb);
+  auto vertices = mesh->index().getVerticesInsideBox(bb);
   std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertices()[v].tag(); });
 }
 
@@ -1414,7 +1412,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
 
     // -- PREALLOCATES THE COEFFICIENTS --
 
-    for (auto const i : query::Index{inMesh}.getVerticesInsideBox(inVertex, supportRadius)) {
+    for (auto const i : inMesh->index().getVerticesInsideBox(inVertex, supportRadius)) {
       const mesh::Vertex &vj = inMesh->vertices()[i];
 
       PetscInt mappedCol = vj.getGlobalIndex() + polyparams;
@@ -1501,7 +1499,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
     }
 
     // -- PREALLOCATE THE COEFFICIENTS --
-    for (auto i : query::Index{inMesh}.getVerticesInsideBox(oVertex, supportRadius)) {
+    for (auto i : inMesh->index().getVerticesInsideBox(oVertex, supportRadius)) {
       const mesh::Vertex &inVertex = inMesh->vertices()[i];
       distance                     = oVertex.getCoords() - inVertex.getCoords();
 

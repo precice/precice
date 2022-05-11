@@ -29,10 +29,10 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
   using namespace mesh;
   PtrMesh          mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
   int              dimension   = 1;
-  PtrData          sourceData1 = mesh->createData("SourceData1", dimension);
-  PtrData          sourceData2 = mesh->createData("SourceData2", dimension);
-  PtrData          sourceData3 = mesh->createData("SourceData3", dimension);
-  PtrData          targetData  = mesh->createData("TargetData", dimension);
+  PtrData          sourceData1 = mesh->createData("SourceData1", dimension, 0_dataID);
+  PtrData          sourceData2 = mesh->createData("SourceData2", dimension, 1_dataID);
+  PtrData          sourceData3 = mesh->createData("SourceData3", dimension, 2_dataID);
+  PtrData          targetData  = mesh->createData("TargetData", dimension, 3_dataID);
   std::vector<int> sourceDataIDs{sourceData1->getID(), sourceData2->getID(), sourceData3->getID()};
   int              targetDataID = targetData->getID();
   mesh->createVertex(Eigen::Vector3d::Constant(0.0));
@@ -87,9 +87,9 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
   using namespace mesh;
   int              dimension = 3;
   PtrMesh          mesh(new Mesh("Mesh", dimension, testing::nextMeshID()));
-  PtrData          sourceData1 = mesh->createData("SourceData1", dimension);
-  PtrData          sourceData2 = mesh->createData("SourceData2", dimension);
-  PtrData          targetData  = mesh->createData("TargetData", dimension);
+  PtrData          sourceData1 = mesh->createData("SourceData1", dimension, 0_dataID);
+  PtrData          sourceData2 = mesh->createData("SourceData2", dimension, 1_dataID);
+  PtrData          targetData  = mesh->createData("TargetData", dimension, 2_dataID);
   std::vector<int> sourceDataIDs{sourceData1->getID(), sourceData2->getID()};
   int              targetDataID = targetData->getID();
   mesh->createVertex(Eigen::Vector3d::Constant(0.0));

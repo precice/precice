@@ -96,8 +96,8 @@ BOOST_CONCEPT_ASSERT((bg::concepts::Point<pm::Vertex::RawCoords>) );
 
 /// Provides the necessary template specialisations to adapt precice's Vertex to boost.geometry
 /*
-* This adapts every Vertex to a 3d point. For non-existing dimensions, zero is returned.
-*/
+ * This adapts every Vertex to a 3d point. For non-existing dimensions, zero is returned.
+ */
 template <>
 struct tag<pm::Vertex> {
   using type = point_tag;
@@ -130,10 +130,10 @@ struct access<pm::Vertex, Dimension> {
 BOOST_CONCEPT_ASSERT((concepts::Point<pm::Vertex>) );
 
 /** @brief Provides the necessary template specialisations to adapt precice's Edge to boost.geometry
-*
-* This adapts every Edge to the segment concept of boost.geometry.
-* Include impl/RangeAdapter.hpp for full support.
-*/
+ *
+ * This adapts every Edge to the segment concept of boost.geometry.
+ * Include impl/RangeAdapter.hpp for full support.
+ */
 template <>
 struct tag<pm::Edge> {
   using type = segment_tag;
@@ -160,10 +160,10 @@ struct indexed_access<pm::Edge, Index, Dimension> {
 };
 
 /** @brief Provides the necessary template specialisations to adapt precice's Triangle to boost.geometry
-*
-* This adapts every Triangle to the ring concept (filled planar polygone) of boost.geometry.
-* Include impl/RangeAdapter.hpp for full support.
-*/
+ *
+ * This adapts every Triangle to the ring concept (filled planar polygon) of boost.geometry.
+ * Include impl/RangeAdapter.hpp for full support.
+ */
 template <>
 struct tag<pm::Triangle> {
   using type = ring_tag;
@@ -198,11 +198,8 @@ inline pm::Vertex::RawCoords eigenToRaw(const Eigen::VectorXd &v)
 {
   const auto size = v.size();
   PRECICE_ASSERT(size == 2 || size == 3, size);
-  pm::Vertex::RawCoords r;
+  pm::Vertex::RawCoords r{0.0, 0.0, 0.0};
   std::copy_n(v.data(), size, r.data());
-  if (size == 2) {
-    r[2] = 0.0;
-  }
   return r;
 }
 

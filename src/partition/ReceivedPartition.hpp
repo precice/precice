@@ -19,10 +19,13 @@ namespace partition {
 /**
  * @brief A partition that is computed from a mesh received from another participant.
  *
- * A mesh is received by the master rank and re-partitioned among all slave ranks.
+ * A mesh is received by the primary rank and re-partitioned among all secondary ranks.
  * Afterwards necessary distribution data structures are set up.
  */
 class ReceivedPartition : public Partition {
+  /// Make the fixture friend of this class
+  friend struct ReceivedPartitionFixture;
+
 public:
   /// Defines the typ of geometric filter used
   enum GeometricFilter {
@@ -30,10 +33,10 @@ public:
     UNDEFINED,
     /// No geometric filter used (e.g. for RBF mappings)
     NO_FILTER,
-    /// Filter at master and communicate only filtered mesh.
-    ON_MASTER,
-    /// Filter after communication on all slave ranks
-    ON_SLAVES
+    /// Filter at primary rank and communicate only filtered mesh.
+    ON_PRIMARY_RANK,
+    /// Filter after communication on all secondary ranks
+    ON_SECONDARY_RANKS
   };
 
   /// Constructor
@@ -66,10 +69,10 @@ private:
   /// Returns whether any mapping is defined
   bool hasAnyMapping() const;
 
-  /// Tag mesh in first round accoring to all mappings
+  /// Tag mesh in first round according to all mappings
   void tagMeshFirstRound();
 
-  /// Tag mesh in second round accoring to all mappings
+  /// Tag mesh in second round according to all mappings
   void tagMeshSecondRound();
 
   void createOwnerInformation();

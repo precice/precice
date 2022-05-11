@@ -20,18 +20,18 @@ enum ResultConstants {
 };
 
 /**
- * @brief Determines, if to line segments intersect properly or inproperly
+ * @brief Determines, if to line segments intersect properly or improperly
  *
  * Works only for Dim2.
  * The method first checks, if one of the segment end points lies on the
- * other segment. If yes, this is inproper intersection, and considered
+ * other segment. If yes, this is improper intersection, and considered
  * to be valid.
  * Then, it checks, if it is true for both segments, that one point of
  * the other segment lies right of the segment and the other point left
  * of it. Then, the segments do intersect each other properly.
  *
  * @param[in] a First point of line segment 1
- * @param[in] b Second point of line segement 1
+ * @param[in] b Second point of line segment 1
  * @param[in] c First point of line segment 2
  * @param[in] d Second point of line segment 2
  *

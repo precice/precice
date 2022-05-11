@@ -29,18 +29,11 @@ Mesh::Mesh(
     : _name(std::move(name)),
       _dimensions(dimensions),
       _id(id),
-      _boundingBox(dimensions)
+      _boundingBox(dimensions),
+      _index(*this)
 {
   PRECICE_ASSERT((_dimensions == 2) || (_dimensions == 3), _dimensions);
   PRECICE_ASSERT(_name != std::string(""));
-
-  meshChanged.connect([](Mesh &m) { query::clearCache(m); });
-  meshDestroyed.connect([](Mesh &m) { query::clearCache(m); });
-}
-
-Mesh::~Mesh()
-{
-  meshDestroyed(*this); // emit signal
 }
 
 Mesh::VertexContainer &Mesh::vertices()
@@ -129,7 +122,9 @@ Triangle &Mesh::createTriangle(
 
 PtrData &Mesh::createData(
     const std::string &name,
-    int                dimension)
+    int                dimension,
+    DataID             id,
+    bool               withGradient)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -138,8 +133,8 @@ PtrData &Mesh::createData(
                   "Please rename or remove one of the use-data tags with name \"{}\".",
                   name, _name, name);
   }
-  int     id = Data::getDataCount();
-  PtrData data(new Data(name, id, dimension));
+  //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
+  PtrData data(new Data(name, id, dimension, _dimensions, true));
   _data.push_back(data);
   return _data.back();
 }
@@ -209,6 +204,8 @@ void Mesh::allocateDataValues()
   const auto expectedCount = _vertices.size();
   using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
   for (PtrData &data : _data) {
+
+    // Allocate data values
     const SizeType expectedSize = expectedCount * data->getDimensions();
     const auto     actualSize   = static_cast<SizeType>(data->values().size());
     // Shrink Buffer
@@ -221,6 +218,26 @@ void Mesh::allocateDataValues()
       utils::append(data->values(), Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
     }
     PRECICE_DEBUG("Data {} now has {} values", data->getName(), data->values().size());
+
+    // Allocate gradient data values
+    if (data->hasGradient()) {
+      const SizeType spaceDimensions = data->getSpatialDimensions();
+
+      const SizeType expectedColumnSize = expectedCount * data->getDimensions();
+      const auto     actualColumnSize   = static_cast<SizeType>(data->gradientValues().cols());
+
+      // Shrink Buffer
+      if (expectedColumnSize < actualColumnSize) {
+        data->gradientValues().resize(spaceDimensions, expectedColumnSize);
+      }
+
+      // Enlarge Buffer
+      if (expectedColumnSize > actualColumnSize) {
+        const auto columnLeftToAllocate = expectedColumnSize - actualColumnSize;
+        utils::append(data->gradientValues(), Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
+      }
+      PRECICE_DEBUG("Gradient Data {} now has {} x {} values", data->getName(), data->gradientValues().rows(), data->gradientValues().cols());
+    }
   }
 }
 
@@ -243,15 +260,14 @@ void Mesh::clear()
   _triangles.clear();
   _edges.clear();
   _vertices.clear();
-
-  meshChanged(*this);
+  _index.clear();
 
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
   }
 }
 
-/// @todo this should be handled by the Parition
+/// @todo this should be handled by the Partition
 void Mesh::clearPartitioning()
 {
   _connectedRanks.clear();
@@ -368,7 +384,7 @@ void Mesh::addMesh(
       createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
     }
   }
-  meshChanged(*this);
+  _index.clear();
 }
 
 const BoundingBox &Mesh::getBoundingBox() const

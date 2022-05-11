@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <exception>
 #include <memory>
 #include <numeric>
@@ -18,8 +20,9 @@
 #include "precice/types.hpp"
 #include "query/Index.hpp"
 #include "testing/TestContext.hpp"
+#include "testing/Testing.hpp"
 #include "utils/EventUtils.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 
@@ -36,20 +39,27 @@ TestContext::~TestContext() noexcept
   if (!invalid && _events) {
     precice::utils::EventRegistry::instance().finalize();
   }
-  if (!invalid && _initMS) {
-    utils::MasterSlave::_communication = nullptr;
-    utils::MasterSlave::reset();
+  if (!invalid && _initIntraComm) {
+    utils::IntraComm::getCommunication() = nullptr;
+    utils::IntraComm::reset();
   }
-
-  // Clear caches
-  query::clearCache();
-
-  // Reset static ids and counters
-  mesh::Data::resetDataCount();
 
   // Reset communicators
   Par::resetCommState();
   Par::resetManagedMPI();
+}
+
+std::string TestContext::prefix(const std::string &filename) const
+{
+  boost::filesystem::path location{testing::getTestPath()};
+  auto                    dir = location.parent_path();
+  dir /= filename;
+  return boost::filesystem::weakly_canonical(dir).string();
+}
+
+std::string TestContext::config() const
+{
+  return prefix(testing::getTestName() + ".xml");
 }
 
 bool TestContext::hasSize(int size) const
@@ -73,7 +83,7 @@ bool TestContext::isRank(Rank rank) const
   return this->rank == rank;
 }
 
-bool TestContext::isMaster() const
+bool TestContext::isPrimary() const
 {
   return isRank(0);
 }
@@ -106,11 +116,11 @@ void TestContext::handleOption(Participants &participants, Participant participa
 
 void TestContext::setContextFrom(const Participant &p, Rank rank)
 {
-  this->name         = p.name;
-  this->size         = p.size;
-  this->rank         = rank;
-  this->_initMS      = p.initMS;
-  this->_contextComm = utils::Parallel::current();
+  this->name           = p.name;
+  this->size           = p.size;
+  this->rank           = rank;
+  this->_initIntraComm = p.initIntraComm;
+  this->_contextComm   = utils::Parallel::current();
 }
 
 void TestContext::initialize(const Participants &participants)
@@ -118,7 +128,7 @@ void TestContext::initialize(const Participants &participants)
   Par::Parallel::CommState::world()->synchronize();
   initializeMPI(participants);
   Par::Parallel::CommState::world()->synchronize();
-  initializeMasterSlave();
+  initializeIntraComm();
   initializeEvents();
   initializePetsc();
 }
@@ -167,27 +177,27 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   }
 }
 
-void TestContext::initializeMasterSlave()
+void TestContext::initializeIntraComm()
 {
   if (invalid)
     return;
 
   // Establish a consistent state for all tests
-  utils::MasterSlave::configure(rank, size);
-  utils::MasterSlave::_communication.reset();
+  utils::IntraComm::configure(rank, size);
+  utils::IntraComm::getCommunication().reset();
 
-  if (!_initMS || hasSize(1))
+  if (!_initIntraComm || hasSize(1))
     return;
 
 #ifndef PRECICE_NO_MPI
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
 #else
-  precice::com::PtrCommunication masterSlaveCom = precice::com::PtrCommunication(new precice::com::SocketCommunication());
+  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::SocketCommunication());
 #endif
 
-  masterSlaveCom->connectMasterSlaves(name, "", rank, size);
+  intraComm->connectIntraComm(name, "", rank, size);
 
-  utils::MasterSlave::_communication = std::move(masterSlaveCom);
+  utils::IntraComm::getCommunication() = std::move(intraComm);
 }
 
 void TestContext::initializeEvents()
@@ -204,7 +214,7 @@ void TestContext::initializePetsc()
   }
 }
 
-m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
+m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());
 
@@ -219,7 +229,7 @@ m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::
   default:
     throw std::runtime_error{"ConnectionType unknown"};
   };
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyMasterCom, options.useTwoLevelInit));
+  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
 
   if (std::find(_names.begin(), _names.end(), acceptor) == _names.end()) {
     throw std::runtime_error{
@@ -231,9 +241,9 @@ m2n::PtrM2N TestContext::connectMasters(const std::string &acceptor, const std::
   }
 
   if (isNamed(acceptor)) {
-    m2n->acceptMasterConnection(acceptor, requestor);
+    m2n->acceptPrimaryRankConnection(acceptor, requestor);
   } else if (isNamed(requestor)) {
-    m2n->requestMasterConnection(acceptor, requestor);
+    m2n->requestPrimaryRankConnection(acceptor, requestor);
   } else {
     throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
   }
@@ -254,10 +264,10 @@ std::string TestContext::describe() const
   }
   os << " and runs on rank " << rank << " out of " << size << '.';
 
-  if (_initMS || _events || _petsc) {
+  if (_initIntraComm || _events || _petsc) {
     os << " Initialized: {";
-    if (_initMS)
-      os << " MasterSlave Communication ";
+    if (_initIntraComm)
+      os << " IntraComm Communication ";
     if (_events)
       os << " Events";
     if (_petsc)

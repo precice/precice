@@ -14,7 +14,22 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   {
     XMLTag tag(*this, VALUE_VTK, occ, TAG);
-    tag.setDocumentation("Exports meshes to VTK text files.");
+    tag.setDocumentation("Exports meshes to VTK legacy format files. Parallel participants will use the VTU exporter instead.");
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_VTU, occ, TAG);
+    tag.setDocumentation("Exports meshes to VTU files in serial or PVTU files with VTU piece files in parallel.");
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_VTP, occ, TAG);
+    tag.setDocumentation("Exports meshes to VTP files in serial or PVTP files with VTP piece files in parallel.");
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_CSV, occ, TAG);
+    tag.setDocumentation("Exports vertex coordinates and data to CSV files.");
     tags.push_back(tag);
   }
 
@@ -44,7 +59,7 @@ void ExportConfiguration::xmlTagCallback(
     xml::XMLTag &                    tag)
 {
   if (tag.getBooleanAttributeValue(ATTR_NORMALS)) {
-    PRECICE_WARN("You explicitly requrested to export the vertex normals. "
+    PRECICE_WARN("You explicitly requested to export the vertex normals. "
                  "This is deprecated, no longer functional, and the attribute will be removed in a future release.");
   }
   if (tag.getNamespace() == TAG) {

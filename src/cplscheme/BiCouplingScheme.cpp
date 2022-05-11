@@ -30,8 +30,9 @@ BiCouplingScheme::BiCouplingScheme(
     m2n::PtrM2N                   m2n,
     int                           maxIterations,
     CouplingMode                  cplMode,
-    constants::TimesteppingMethod dtMethod)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod),
+    constants::TimesteppingMethod dtMethod,
+    int                           extrapolationOrder)
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod, extrapolationOrder),
       _m2n(std::move(m2n)),
       _firstParticipant(std::move(firstParticipant)),
       _secondParticipant(std::move(secondParticipant))
@@ -56,12 +57,12 @@ void BiCouplingScheme::addDataToSend(
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _sendData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), requiresInitialization));
-    DataMap::value_type pair = std::make_pair(id, ptrCplData);
-    PRECICE_ASSERT(_sendData.count(pair.first) == 0, "Key already exists!");
-    _sendData.insert(pair);
-    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
-    _allData.insert(pair);
+    PRECICE_ASSERT(_sendData.count(id) == 0, "Key already exists!");
+    if (isExplicitCouplingScheme()) {
+      _sendData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization)));
+    } else {
+      _sendData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization, getExtrapolationOrder())));
+    }
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for sending. Please remove any duplicate <exchange data=\"{0}\" .../> tags", data->getName());
   }
@@ -75,12 +76,12 @@ void BiCouplingScheme::addDataToReceive(
   PRECICE_TRACE();
   int id = data->getID();
   if (!utils::contained(id, _receiveData)) {
-    PtrCouplingData     ptrCplData(new CouplingData(data, std::move(mesh), requiresInitialization));
-    DataMap::value_type pair = std::make_pair(id, ptrCplData);
-    PRECICE_ASSERT(_receiveData.count(pair.first) == 0, "Key already exists!");
-    _receiveData.insert(pair);
-    PRECICE_ASSERT(_allData.count(pair.first) == 0, "Key already exists!");
-    _allData.insert(pair);
+    PRECICE_ASSERT(_receiveData.count(id) == 0, "Key already exists!");
+    if (isExplicitCouplingScheme()) {
+      _receiveData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization)));
+    } else {
+      _receiveData.emplace(id, PtrCouplingData(new CouplingData(data, std::move(mesh), requiresInitialization, getExtrapolationOrder())));
+    }
   } else {
     PRECICE_ERROR("Data \"{0}\" cannot be added twice for receiving. Please remove any duplicate <exchange data=\"{0}\" ... /> tags", data->getName());
   }

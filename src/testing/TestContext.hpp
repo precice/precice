@@ -43,7 +43,7 @@ inline constexpr Ranks operator""_rank(unsigned long long value)
   return (value == 1) ? Ranks{1} : throw std::runtime_error{"Cannot create multiple ranks with _rank()! Use _ranks() instead!"};
 }
 
-/// Represents a Partiticipant in a test
+/// Represents a Participant in a test
 struct Participant {
   /// the name of the participant
   std::string name;
@@ -51,8 +51,8 @@ struct Participant {
   /// the amount of ranks this participant runs on
   int size = 1;
 
-  /// wheather to initialize a master-slave communication for this participant
-  bool initMS = false;
+  /// whether to initialize an intra-participant communication for this participant
+  bool initIntraComm = false;
 
   /// Constructs a serial participant with a given name
   explicit Participant(std::string n)
@@ -72,13 +72,13 @@ struct Participant {
     return *this;
   }
 
-  /** Marks that this Partiticipant should initialize a master-slave connection.
+  /** Marks that this Participant should initialize an intra-participant connection.
    *
    * @returns A reference to the Participant allowing for chaining.
    */
-  Participant &setupMasterSlaves()
+  Participant &setupIntraComm()
   {
-    initMS = true;
+    initIntraComm = true;
     return *this;
   }
 };
@@ -115,18 +115,18 @@ enum struct ConnectionType {
 
 /** Type representing options for an inter-participant connection.
  *
- * @see TestContext::connectMasters()
+ * @see TestContext::connectPrimaryRanks()
  * @see M2N::M2N()
  */
 struct ConnectionOptions {
   ConnectionOptions() = default;
 
-  /** Wheather to use only the Master-Master connection
+  /** Whether to use only the primary connection
    * @see M2N::M2N()
    */
-  bool useOnlyMasterCom = false;
+  bool useOnlyPrimaryCom = false;
 
-  /** Wheather to enable the two-level initialization
+  /** Whether to enable the two-level initialization
    * @see M2N::M2N()
    */
   bool useTwoLevelInit = false;
@@ -145,9 +145,9 @@ struct ConnectionOptions {
  * 1. making sure that there are enough ranks to run the test on.
  * 2. restricting and splitting the MPI Communicator.
  * 3. handling invalid contexts (such as unneeded ranks)
- * 4. initializing the master-slave communication if requested. initializeMasterSlave()
+ * 4. initializing the intra-participant communication if requested. initializeIntraComm()
  * 5. handling further requirements @see Require
- * 6. providing a usable context during the test isNamed(), isMaster(), isRank()
+ * 6. providing a usable context during the test isNamed(), isPrimary(), isRank()
  * 7. cleaning up after the test case
  */
 class TestContext {
@@ -163,7 +163,7 @@ public:
   /// the size of the Communicator of the current participant
   int size = 1;
 
-  /// wheather this context is valid or not
+  /// whether this context is valid or not
   bool invalid = false;
 
   /// @{
@@ -175,9 +175,9 @@ public:
   /** Create a context representing an unnamed Participant running on a given count of Ranks
    *
    * @note You need to construct a Participant if you require initializing
-   * a master-slave connection `"Serial"_on(3_ranks).setupMasterSlaves()`
+   * an intra-participant connection `"Serial"_on(3_ranks).setupIntraComm()`
    *
-   * @attention This call synchonizes all ranks
+   * @attention This call synchronizes all ranks
    *
    */
   template <class... T>
@@ -191,9 +191,9 @@ public:
   /** Create a context representing an unnamed Participant running on a given count of Ranks and some requirements
    *
    * @note You need to construct a Participant if you require initializing
-   * a master-slave connection `"Serial"_on(3_ranks).setupMasterSlaves()`
+   * an intra-participant connection `"Serial"_on(3_ranks).setupIntraComm()`
    *
-   * @attention This call synchonizes all ranks
+   * @attention This call synchronizes all ranks
    *
    * @see Require
    */
@@ -208,7 +208,7 @@ public:
 
   /** Create a context representing one or more participants
    *
-   * @attention This call synchonizes all ranks
+   * @attention This call synchronizes all ranks
    *
    * @see Require
    */
@@ -222,26 +222,44 @@ public:
 
   /// @}
 
-  /** Cleans-up all initialized parts and synchonizes all ranks
-   * @attention This call synchonizes all ranks
+  /** Cleans-up all initialized parts and synchronizes all ranks
+   * @attention This call synchronizes all ranks
    */
   ~TestContext() noexcept;
 
-  /// Check wheater this context has a given size
+  /** Returns the canonical config name of this test.
+   *
+   * The location of integration tests are tied the test name and test suites.
+   * This computes the canonical filename of this test's configuration file
+   * based on the repository root, the current test suites and name.
+   *
+   * @return the full filepath of this test's configuration file
+   */
+  std::string config() const;
+
+  /** Prefixes the given filename with the test directory.
+   *
+   * The filename will be located in the same directory as the current test file.
+   *
+   * @return the full filepath to the filename relative
+   */
+  std::string prefix(const std::string &filename) const;
+
+  /// Check whether this context has a given size
   bool hasSize(int size) const;
 
-  /// Check wheater this context has a given name
+  /// Check whether this context has a given name
   bool isNamed(const std::string &name) const;
 
-  /// Check wheater this context has a given rank inside the Partiticipant
+  /// Check whether this context has a given rank inside the Participant
   bool isRank(Rank rank) const;
 
-  /** Check wheater this context is the master of a Participants
+  /** Check whether this context is the primary rank of a participant
    * @note This is equivalent to `isRank(0)`
    */
-  bool isMaster() const;
+  bool isPrimary() const;
 
-  /** Creates a M2N and establishes a master-master connection between participants
+  /** Creates a M2N and establishes a primary connection between participants
    * @param[in] acceptor the accepting participant
    * @param[in] requestor the requesting participant
    * @param[in] options a set of options concerning the created connection
@@ -250,23 +268,23 @@ public:
    *
    * @see ConnectionOptions
    */
-  m2n::PtrM2N connectMasters(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
+  m2n::PtrM2N connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
 
   /// Provides a user- and log-friendly description of the current context
   std::string describe() const;
 
 private:
-  /// wheater to initialize PETSc
+  /// whether to initialize PETSc
   bool _petsc = false;
 
-  /// wheater to initialize events
+  /// whether to initialize events
   bool _events = false;
 
-  /// wheater this Context was created with a Ranks constructor
+  /// whether this Context was created with a Ranks constructor
   bool _simple = false;
 
-  /// wheater to initialize a master-slave connection
-  bool _initMS = false;
+  /// whether to initialize an intra-participant connection
+  bool _initIntraComm = false;
 
   /// the MPI communicator of the context
   utils::Parallel::CommStatePtr _contextComm;
@@ -309,8 +327,8 @@ private:
    */
   void initializeMPI(const Participants &participants);
 
-  /// Initialize the Master-Slave connection if requested
-  void initializeMasterSlave();
+  /// Initialize the intra-participant communication connection if requested
+  void initializeIntraComm();
 
   /// Initialize PETSc if required
   void initializePetsc();

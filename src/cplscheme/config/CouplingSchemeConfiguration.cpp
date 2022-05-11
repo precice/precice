@@ -27,6 +27,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "precice/config/ParticipantConfiguration.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/types.hpp"
 #include "utils/Helpers.hpp"
@@ -38,12 +39,11 @@
 namespace precice {
 namespace cplscheme {
 
-using precice::impl::PtrParticipant;
-
 CouplingSchemeConfiguration::CouplingSchemeConfiguration(
     xml::XMLTag &                        parent,
     mesh::PtrMeshConfiguration           meshConfig,
-    m2n::M2NConfiguration::SharedPointer m2nConfig)
+    m2n::M2NConfiguration::SharedPointer m2nConfig,
+    config::PtrParticipantConfiguration  participantConfig)
     : TAG("coupling-scheme"),
       TAG_PARTICIPANTS("participants"),
       TAG_PARTICIPANT("participant"),
@@ -85,6 +85,7 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       _config(),
       _meshConfig(std::move(meshConfig)),
       _m2nConfig(std::move(m2nConfig)),
+      _participantConfig(participantConfig),
       _couplingSchemes(),
       _couplingSchemeCompositions()
 {
@@ -129,6 +130,12 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
   for (XMLTag &tag : tags) {
     parent.addSubtag(tag);
   }
+}
+
+void CouplingSchemeConfiguration::setExperimental(
+    bool experimental)
+{
+  _experimental = experimental;
 }
 
 bool CouplingSchemeConfiguration::hasCouplingScheme(
@@ -295,6 +302,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
+      if (_experimental) {
+        int maxAllowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
+        checkWaveformOrderReadData(maxAllowedOrder);
+      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -305,6 +316,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_PARALLEL_EXPLICIT) {
+      if (_experimental) {
+        int maxAllowedOrder = 0; // explicit coupling schemes do not allow waveform iteration
+        checkWaveformOrderReadData(maxAllowedOrder);
+      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createParallelExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -315,6 +330,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_SERIAL_IMPLICIT) {
+      if (_experimental) {
+        int maxAllowedOrder = 0; // serial implicit coupling does not allow waveform iteration yet (see https://github.com/precice/precice/issues/1174#issuecomment-1042823430)
+        checkWaveformOrderReadData(maxAllowedOrder);
+      }
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialImplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -333,6 +352,10 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       addCouplingScheme(scheme, accessor);
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
+      if (_experimental) {
+        int maxAllowedOrder = 0; // multi coupling scheme does not allow waveform iteration
+        checkWaveformOrderReadData(maxAllowedOrder);
+      }
       PRECICE_CHECK(_config.setController,
                     "One controller per MultiCoupling needs to be defined. "
                     "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
@@ -674,6 +697,11 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
                 "Please check the <relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
+  if (limit < 10 * math::NUMERICAL_ZERO_DIFFERENCE) {
+    PRECICE_WARN("The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. "
+                 "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
+                 limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
+  }
 
   impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
@@ -699,6 +727,12 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
                 "Please check the <residul-relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
+  if (limit < 10 * math::NUMERICAL_ZERO_DIFFERENCE) {
+    PRECICE_WARN("The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. "
+                 "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
+                 limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
+  }
+
   impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
   convMeasureDef.data        = getData(dataName, meshName);
@@ -795,8 +829,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, first, second,
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
-  scheme->setExtrapolationOrder(_config.extrapolationOrder);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -834,8 +867,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
-  scheme->setExtrapolationOrder(_config.extrapolationOrder);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations, _config.extrapolationOrder);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -873,8 +905,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   scheme = new MultiCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, accessor, m2ns, _config.dtMethod,
-      _config.controller, _config.maxIterations);
-  scheme->setExtrapolationOrder(_config.extrapolationOrder);
+      _config.controller, _config.maxIterations, _config.extrapolationOrder);
 
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
   PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
@@ -1025,6 +1056,22 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
                 "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration acceleration. "
                 "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
                 dataName);
+}
+
+void CouplingSchemeConfiguration::checkWaveformOrderReadData(
+    int maxAllowedOrder) const
+{
+  for (const precice::impl::PtrParticipant &participant : _participantConfig->getParticipants()) {
+    for (auto &dataContext : participant->readDataContexts()) {
+      int usedOrder = dataContext.getInterpolationOrder();
+      PRECICE_ASSERT(usedOrder >= 0); // ensure that usedOrder was set
+      if (usedOrder > maxAllowedOrder) {
+        PRECICE_ERROR(
+            "You configured <read-data name=\"{}\" mesh=\"{}\" waveform-order=\"{}\" />, but for the coupling scheme you are using only a maximum waveform-order of \"{}\" is allowed.",
+            dataContext.getDataName(), dataContext.getMeshName(), usedOrder, maxAllowedOrder);
+      }
+    }
+  }
 }
 
 void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <boost/range/adaptor/map.hpp>
 #include <memory>
 #include <stddef.h>
 #include <string>
@@ -16,27 +17,29 @@
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
-#include "precice/impl/DataContext.hpp"
+#include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/WriteDataContext.hpp"
 #include "precice/types.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/MasterSlave.hpp"
 #include "utils/PointerVector.hpp"
 
 namespace precice {
 namespace impl {
-class DataContext;
 struct MeshContext;
 struct MappingContext;
 } // namespace impl
 } // namespace precice
 
 // Forward declaration to friend the boost test struct
-namespace PreciceTests {
+namespace Integration {
 namespace Serial {
+namespace Whitebox {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
+} // namespace Whitebox
 } // namespace Serial
-} // namespace PreciceTests
+} // namespace Integration
 
 namespace precice {
 namespace utils {
@@ -75,7 +78,8 @@ public:
   /// Adds a configured read \ref Data to the Participant
   void addReadData(
       const mesh::PtrData &data,
-      const mesh::PtrMesh &mesh);
+      const mesh::PtrMesh &mesh,
+      int                  interpolationOrder);
 
   /// Adds a configured read \ref Mapping to the Participant
   void addReadMappingContext(MappingContext *mappingContext);
@@ -90,7 +94,7 @@ public:
   void addWatchIntegral(const PtrWatchIntegral &watchIntegral);
 
   /// Sets weather the participant was configured with a master tag
-  void setUseMaster(bool useMaster);
+  void setUsePrimaryRank(bool useIntraComm);
 
   /// Sets the manager responsible for providing unique IDs to meshes.
   void setMeshIdManager(std::unique_ptr<utils::ManageUniqueIDs> &&idm)
@@ -117,41 +121,55 @@ public:
 
   /// @name Data queries
   /// @{
-  /** Provides access to both write and read \ref DataContext
-   * @pre there exists a \ref DataContext for \ref dataID
+  /** Provides access to \ref ReadDataContext
+   * @pre there exists a \ref ReadDataContext for \ref dataID
    */
-  const DataContext &dataContext(DataID dataID) const;
+  const ReadDataContext &readDataContext(DataID dataID) const;
 
-  /** Provides access to both write and read \ref DataContext
-   * @pre there exists a \ref DataContext for \ref dataID
+  /** Provides access to \ref ReadDataContext
+   * @pre there exists a \ref ReadDataContext for \ref dataID
    */
-  DataContext &dataContext(DataID dataID);
+  ReadDataContext &readDataContext(DataID dataID);
 
-  /** Provides access to write \ref DataContext
+  /** Provides access to \ref WriteDataContext
+   * @pre there exists a \ref WriteDataContext for \ref dataID
+   */
+  const WriteDataContext &writeDataContext(DataID dataID) const;
+
+  /** Provides access to \ref WriteDataContext
+   * @pre there exists a \ref WriteDataContext for \ref dataID
+   */
+  WriteDataContext &writeDataContext(DataID dataID);
+
+  /** Provides access to all \ref WriteDataContext objects
    * @remarks does not contain nullptr.
    */
-  const utils::ptr_vector<DataContext> &writeDataContexts() const;
+  auto writeDataContexts()
+  {
+    return _writeDataContexts | boost::adaptors::map_values;
+  }
 
-  /** Provides access to write \ref DataContext
+  /** Provides access to all \ref ReadDataContext objects
    * @remarks does not contain nullptr.
    */
-  utils::ptr_vector<DataContext> &writeDataContexts();
+  auto readDataContexts()
+  {
+    return _readDataContexts | boost::adaptors::map_values;
+  }
 
-  /** Provides access to read \ref DataContext
-   * @remarks does not contain nullptr.
+  /** @brief Determines and returns the maximum order of all read waveforms of this participant
    */
-  const utils::ptr_vector<DataContext> &readDataContexts() const;
-
-  /** Provides access to read \ref DataContext
-   * @remarks does not contain nullptr.
-   */
-  utils::ptr_vector<DataContext> &readDataContexts();
+  int maxReadWaveformOrder() const
+  {
+    int maxOrder = -1;
+    for (auto &context : _readDataContexts | boost::adaptors::map_values) {
+      maxOrder = std::max(maxOrder, context.getInterpolationOrder());
+    }
+    return maxOrder;
+  }
 
   /// Is the dataID know to preCICE?
   bool hasData(DataID dataID) const;
-
-  /// Is the data used by this participant?
-  bool isDataUsed(DataID dataID) const;
 
   /// Is the data used by this participant?
   bool isDataUsed(const std::string &dataName, MeshID meshId) const;
@@ -258,7 +276,7 @@ public:
   const std::string &getName() const;
 
   /// Returns true, if the participant uses a master tag.
-  bool useMaster() const;
+  bool useIntraComm() const;
 
   /// Provided access to all read \ref MappingContext
   const utils::ptr_vector<MappingContext> &readMappingContexts() const;
@@ -297,7 +315,7 @@ private:
   std::vector<action::PtrAction> _actions;
 
   /// All mesh contexts involved in a simulation, mesh ID == index.
-  std::vector<MeshContext *> _meshContexts;
+  std::vector<MeshContext *> _meshContexts; // @todo use map here!
 
   /// Read mapping contexts used by the participant.
   utils::ptr_vector<MappingContext> _readMappingContexts;
@@ -308,13 +326,11 @@ private:
   /// Mesh contexts used by the participant.
   std::vector<MeshContext *> _usedMeshContexts;
 
-  std::vector<DataContext *> _dataContexts;
+  std::map<DataID, WriteDataContext> _writeDataContexts;
 
-  utils::ptr_vector<DataContext> _writeDataContexts;
+  std::map<DataID, ReadDataContext> _readDataContexts;
 
-  utils::ptr_vector<DataContext> _readDataContexts;
-
-  bool _useMaster = false;
+  bool _useIntraComm = false;
 
   std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
 
@@ -325,11 +341,11 @@ private:
 
   void checkDuplicatedUse(const mesh::PtrMesh &mesh);
 
-  void checkDuplicatedData(const mesh::PtrData &data);
+  void checkDuplicatedData(const mesh::PtrData &data, const std::string &meshName);
 
   /// To allow white box tests.
-  friend struct PreciceTests::Serial::TestConfigurationPeano;
-  friend struct PreciceTests::Serial::TestConfigurationComsol;
+  friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
+  friend struct Integration::Serial::Whitebox::TestConfigurationComsol;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS

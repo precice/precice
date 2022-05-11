@@ -63,8 +63,7 @@ macro(precice_validate_libpython)
   precice_validate_lib(
     "#include <Python.h>\nint main() { return 0; } "
     NAME LibPython
-    LINK_LIBRARIES ${PYTHON_LIBRARIES}
-    COMPILE_DEFINITIONS -I ${PYTHON_INCLUDE_DIRS}
+    LINK_LIBRARIES Python3::Python
     )
 endmacro()
 
@@ -73,8 +72,7 @@ macro(precice_validate_numpy)
   precice_validate_lib(
     "#include <Python.h>\n#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n#include <numpy/arrayobject.h>\n int main() { import_array1(0); return 0; } "
     NAME NumPy
-    COMPILE_DEFINITIONS "-I ${PYTHON_INCLUDE_DIRS}"
-    LINK_LIBRARIES NumPy::NumPy ${PYTHON_LIBRARIES}
+    LINK_LIBRARIES Python3::NumPy Python3::Python
     )
 endmacro()
 
@@ -84,8 +82,7 @@ macro(precice_validate_libxml2)
   precice_validate_lib(
     "#include <libxml/SAX.h>\nint main() { return 0; } "
   NAME LibXml2
-  COMPILE_DEFINITIONS "-I ${LIBXML2_INCLUDE_DIR}"
-  LINK_LIBRARIES ${LIBXML2_LIBRARIES}
+  LINK_LIBRARIES LibXml2::LibXml2
   )
 endmacro()
 

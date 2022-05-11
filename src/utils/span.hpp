@@ -264,12 +264,14 @@ template <typename T, typename E>
 struct is_container_element_type_compatible<
     T, E,
     typename std::enable_if<
-        !std::is_same<typename std::remove_cv<decltype(
-                          detail::data(std::declval<T>()))>::type,
-                      void>::value>::type>
-    : std::is_convertible<
-          remove_pointer_t<decltype(detail::data(std::declval<T>()))> (*)[],
-          E (*)[]> {};
+        !std::is_same<
+            typename std::remove_cv<decltype(detail::data(std::declval<T>()))>::type,
+            void>::value &&
+        std::is_convertible<
+            remove_pointer_t<decltype(detail::data(std::declval<T>()))> (*)[],
+            E (*)[]>::value
+        >::type>
+    : std::true_type {};
 
 template <typename, typename = size_t>
 struct is_complete : std::false_type {};
@@ -337,23 +339,23 @@ public:
     constexpr span(element_type (&arr)[N]) noexcept : storage_(arr, N)
     {}
 
-    template <std::size_t N, std::size_t E = Extent,
+    template <typename T, std::size_t N, std::size_t E = Extent,
               typename std::enable_if<
                   (E == dynamic_extent || N == E) &&
                       detail::is_container_element_type_compatible<
-                          std::array<value_type, N>&, ElementType>::value,
+                          std::array<T, N>&, ElementType>::value,
                   int>::type = 0>
-    TCB_SPAN_ARRAY_CONSTEXPR span(std::array<value_type, N>& arr) noexcept
+    TCB_SPAN_ARRAY_CONSTEXPR span(std::array<T, N>& arr) noexcept
         : storage_(arr.data(), N)
     {}
 
-    template <std::size_t N, std::size_t E = Extent,
+    template <typename T, std::size_t N, std::size_t E = Extent,
               typename std::enable_if<
                   (E == dynamic_extent || N == E) &&
                       detail::is_container_element_type_compatible<
-                          const std::array<value_type, N>&, ElementType>::value,
+                          const std::array<T, N>&, ElementType>::value,
                   int>::type = 0>
-    TCB_SPAN_ARRAY_CONSTEXPR span(const std::array<value_type, N>& arr) noexcept
+    TCB_SPAN_ARRAY_CONSTEXPR span(const std::array<T, N>& arr) noexcept
         : storage_(arr.data(), N)
     {}
 
@@ -516,7 +518,8 @@ template <class T, size_t N>
 span(const std::array<T, N>&)->span<const T, N>;
 
 template <class Container>
-span(Container&)->span<typename Container::value_type>;
+span(Container&)->span<typename std::remove_reference<
+    decltype(*detail::data(std::declval<Container&>()))>::type>;
 
 template <class Container>
 span(const Container&)->span<const typename Container::value_type>;
@@ -550,7 +553,9 @@ make_span(const std::array<T, N>& arr) noexcept
 }
 
 template <typename Container>
-constexpr span<typename Container::value_type> make_span(Container& cont)
+constexpr span<typename std::remove_reference<
+    decltype(*detail::data(std::declval<Container&>()))>::type>
+make_span(Container& cont)
 {
     return {cont};
 }

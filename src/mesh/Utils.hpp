@@ -33,7 +33,7 @@ inline Vertex *sharedVertex(Edge &a, Edge &b)
   return nullptr;
 }
 
-/** Calulates the length of an Edge
+/** Calculates the length of an Edge
  *
  * @param[in] e the edge
  *
@@ -106,6 +106,7 @@ Chain<n> asChain(std::array<mesh::Edge *, n> edges)
 template <std::size_t n>
 std::array<Vertex *, n> vertexPtrsFor(Mesh &mesh, const std::array<int, n> &vertexIDs)
 {
+  static_assert(n > 0, "Cannot handle nothing.");
   std::array<Vertex *, n> vptrs;
   std::transform(vertexIDs.begin(), vertexIDs.end(), vptrs.begin(),
                  [&mesh](int id) { return &(mesh.vertices()[id]); });

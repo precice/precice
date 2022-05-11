@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <boost/signals2.hpp>
 #include <deque>
 #include <iosfwd>
 #include <list>
@@ -17,6 +16,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
+#include "query/Index.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
@@ -31,7 +31,7 @@ namespace mesh {
  * It provides functionality to conveniently create those objects.
  *
  * In addition to creating the topological information of a mesh, the Mesh class
- * can also be used to add data to the vertices of a mesh.
+ * can also be used to add data to the vertices of a mesh, such as function values or also gradient values.
  *
  * Usage example: precice::mesh::tests::MeshTest::testDemonstration()
  */
@@ -49,12 +49,6 @@ public:
   /// A mapping from remote local ranks to the IDs that must be communicated
   using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
 
-  /// Signal is emitted when the mesh is changed
-  boost::signals2::signal<void(Mesh &)> meshChanged;
-
-  /// Signal is emitted when the mesh is destroyed
-  boost::signals2::signal<void(Mesh &)> meshDestroyed;
-
   /// Use if the id of the mesh is not necessary
   static constexpr MeshID MESH_ID_UNDEFINED{-1};
 
@@ -69,9 +63,6 @@ public:
       std::string name,
       int         dimensions,
       MeshID      id);
-
-  /// Destructor, deletes created objects.
-  ~Mesh();
 
   /// Returns modifieable container holding all vertices.
   VertexContainer &vertices();
@@ -128,8 +119,11 @@ public:
       Edge &edgeTwo,
       Edge &edgeThree);
 
+  /// Create only data for vertex
   PtrData &createData(const std::string &name,
-                      int                dimension);
+                      int                dimension,
+                      DataID             id,
+                      bool               withGradient = false);
 
   /// Allows access to all data
   const DataContainer &data() const;
@@ -158,7 +152,7 @@ public:
   /// Returns true if the given edgeID is valid
   bool isValidEdgeID(EdgeID edgeID) const;
 
-  /// Allocates memory for the vertex data values.
+  /// Allocates memory for the vertex data values and corresponding gradient values.
   void allocateDataValues();
 
   /// Computes the boundingBox for the vertices.
@@ -226,6 +220,16 @@ public:
 
   bool operator!=(const Mesh &other) const;
 
+  const query::Index &index() const
+  {
+    return _index;
+  }
+
+  query::Index &index()
+  {
+    return _index;
+  }
+
 private:
   mutable logging::Logger _log{"mesh::Mesh"};
 
@@ -247,13 +251,13 @@ private:
   DataContainer _data;
 
   /**
-   * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
+   * @brief Vertex distribution for the primary rank, holding for each secondary rank all vertex IDs it owns.
    *
-   * For slaves, this data structure is empty and should not be used.
+   * For secondary ranks, this data structure is empty and should not be used.
    */
   VertexDistribution _vertexDistribution;
 
-  /// Holds the index of the last vertex for each slave.
+  /// Holds the index of the last vertex for each rank.
   /**
    * The last entry holds the total number of vertices.
    * Needed for the matrix-matrix multiplication of the IMVJ acceleration.
@@ -280,6 +284,8 @@ private:
   CommunicationMap _communicationMap;
 
   BoundingBox _boundingBox;
+
+  query::Index _index;
 };
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);
