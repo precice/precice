@@ -49,16 +49,14 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
   }
 
   // Add all triangles formed by the contributing edges
-  if (source.getDimensions() == 3) {
-    for (const Triangle &triangle : source.triangles()) {
-      EdgeID edgeIndex1 = triangle.edge(0).getID();
-      EdgeID edgeIndex2 = triangle.edge(1).getID();
-      EdgeID edgeIndex3 = triangle.edge(2).getID();
-      if (edgeMap.count(edgeIndex1) == 1 &&
-          edgeMap.count(edgeIndex2) == 1 &&
-          edgeMap.count(edgeIndex3) == 1) {
-        destination.createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
-      }
+  for (const Triangle &triangle : source.triangles()) {
+    EdgeID edgeIndex1 = triangle.edge(0).getID();
+    EdgeID edgeIndex2 = triangle.edge(1).getID();
+    EdgeID edgeIndex3 = triangle.edge(2).getID();
+    if (edgeMap.count(edgeIndex1) == 1 &&
+        edgeMap.count(edgeIndex2) == 1 &&
+        edgeMap.count(edgeIndex3) == 1) {
+      destination.createTriangle(*edgeMap[edgeIndex1], *edgeMap[edgeIndex2], *edgeMap[edgeIndex3]);
     }
   }
 }
