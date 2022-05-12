@@ -30,8 +30,7 @@ public:
   /**
    * @brief Uses projection and interpolation relations to map data values.
    *
-   * Preconditions:
-   * - computeMapping() has been called
+   * @pre computeMapping() has been called
    *
    * @param[in] inputDataID Data ID of input data values to be mapped from.
    * @param[in] outputDataID Data ID of output data values to be mapped to.
