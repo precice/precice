@@ -256,6 +256,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
   PRECICE_TRACE(inputDataID, outputDataID, polyparams);
 
+  using precice::com::AsVectorTag;
+
   // Gather input data
   if (utils::IntraComm::isSecondary()) {
 
@@ -270,7 +272,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
 
     localOutputSize *= output()->data(outputDataID)->getDimensions();
 
-    utils::IntraComm::getCommunication()->send(localInData, 0);
+    utils::IntraComm::getCommunication()->sendRange(localInData, 0);
     utils::IntraComm::getCommunication()->send(localOutputSize, 0);
 
   } else { // Parallel Primary rank or Serial case
@@ -294,10 +296,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     }
 
     {
-      std::vector<double> secondaryBuffer;
-      int                 secondaryOutputValueSize;
+      int secondaryOutputValueSize;
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
-        utils::IntraComm::getCommunication()->receive(secondaryBuffer, rank);
+        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, AsVectorTag<double>{});
         globalInValues.insert(globalInValues.end(), secondaryBuffer.begin(), secondaryBuffer.end());
 
         utils::IntraComm::getCommunication()->receive(secondaryOutputValueSize, rank);
@@ -348,7 +349,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
       int beginPoint = outputValueSizes.at(0);
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
         precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outputValueSizes.at(rank))};
-        utils::IntraComm::getCommunication()->send(toSend, rank);
+        utils::IntraComm::getCommunication()->sendRange(toSend, rank);
         beginPoint += outputValueSizes.at(rank);
       }
     } else { // Serial
@@ -356,8 +357,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(int inputDa
     }
   }
   if (utils::IntraComm::isSecondary()) {
-    std::vector<double> receivedValues;
-    utils::IntraComm::getCommunication()->receive(receivedValues, 0);
+    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
 
     int valueDim = output()->data(outputDataID)->getDimensions();
 
@@ -378,6 +378,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
 {
 
   PRECICE_TRACE(inputDataID, outputDataID, polyparams);
+  using precice::com::AsVectorTag;
 
   // Gather input data
   if (utils::IntraComm::isSecondary()) {
@@ -386,7 +387,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     int  localOutputSize     = output()->data(outputDataID)->values().size();
 
     // Send data and output size
-    utils::IntraComm::getCommunication()->send(localInDataFiltered, 0);
+    utils::IntraComm::getCommunication()->sendRange(localInDataFiltered, 0);
     utils::IntraComm::getCommunication()->send(localOutputSize, 0);
 
   } else { // Primary rank or Serial case
@@ -403,13 +404,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
       std::copy(localInData.data(), localInData.data() + localInData.size(), globalInValues.begin());
       outValuesSize.push_back(output()->data(outputDataID)->values().size());
 
-      int inputSizeCounter = localInData.size();
-      int secondaryOutDataSize{0};
+      int                 inputSizeCounter = localInData.size();
+      int                 secondaryOutDataSize{0};
 
-      std::vector<double> secondaryBuffer;
 
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
-        utils::IntraComm::getCommunication()->receive(secondaryBuffer, rank);
+        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, AsVectorTag<double>{});
         std::copy(secondaryBuffer.begin(), secondaryBuffer.end(), globalInValues.begin() + inputSizeCounter);
         inputSizeCounter += secondaryBuffer.size();
 
@@ -458,14 +458,13 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(int inputData
     if (utils::IntraComm::isPrimary()) {
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
         precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outValuesSize.at(rank))};
-        utils::IntraComm::getCommunication()->send(toSend, rank);
+        utils::IntraComm::getCommunication()->sendRange(toSend, rank);
         beginPoint += outValuesSize.at(rank);
       }
     }
   }
   if (utils::IntraComm::isSecondary()) {
-    std::vector<double> receivedValues;
-    utils::IntraComm::getCommunication()->receive(receivedValues, 0);
+    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
     output()->data(outputDataID)->values() = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
   if (hasConstraint(SCALEDCONSISTENT)) {
