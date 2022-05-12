@@ -54,7 +54,6 @@ void BarycentricBaseMapping::map(
   mesh::PtrData          outData   = output()->data(outputDataID);
   const Eigen::VectorXd &inValues  = inData->values();
   Eigen::VectorXd &      outValues = outData->values();
-  //assign(outValues) = 0.0;
   int dimensions = inData->getDimensions();
   PRECICE_ASSERT(dimensions == outData->getDimensions());
 
