@@ -401,17 +401,6 @@ void TestReduceVectors(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestSendAndReceive(TestContext const &context)
-{
-  TestSendAndReceivePrimitiveTypes<T>(context);
-  TestSendAndReceiveVectors<T>(context);
-  TestBroadcastPrimitiveTypes<T>(context);
-  TestBroadcastVectors<T>(context);
-  TestReducePrimitiveTypes<T>(context);
-  TestReduceVectors<T>(context);
-}
-
 } // namespace primaryprimary
 
 namespace intracomm {
@@ -756,17 +745,6 @@ void TestReduceVectors(TestContext const &context)
     }
     com.closeConnection();
   }
-}
-
-template <typename T>
-void TestSendAndReceive(TestContext const &context)
-{
-  TestSendAndReceivePrimitiveTypes<T>(context);
-  TestSendAndReceiveVectors<T>(context);
-  TestBroadcastPrimitiveTypes<T>(context);
-  TestBroadcastVectors<T>(context);
-  TestReducePrimitiveTypes<T>(context);
-  TestReduceVectors<T>(context);
 }
 
 } // namespace intracomm
