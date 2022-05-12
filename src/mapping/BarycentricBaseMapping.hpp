@@ -19,7 +19,7 @@ public:
   BarycentricBaseMapping(Constraint constraint, int dimensions);
 
   /// Destructor, empty.
-  virtual ~BarycentricBaseMapping() {}
+  virtual ~BarycentricBaseMapping() = default;
 
   /// Computes the projections and interpolation relations. Must be done by inherited subclass
   virtual void computeMapping() = 0;
