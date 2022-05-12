@@ -63,7 +63,7 @@ const  int dimensions = inData->getDimensions();
     PRECICE_ASSERT(_interpolations.size() == input()->vertices().size(),
                    _interpolations.size(), input()->vertices().size());
     for (size_t i = 0; i < input()->vertices().size(); i++) {
-      size_t      inOffset = i * dimensions;
+    const  size_t      inOffset = i * dimensions;
       const auto &elems    = _interpolations[i].getWeightedElements();
       for (const auto &elem : elems) {
         size_t outOffset = static_cast<size_t>(elem.vertexID) * dimensions;
