@@ -1,7 +1,6 @@
 
 #include <Eigen/Core>
 #include <algorithm>
-#include <deque>
 #include <memory>
 #include <ostream>
 #include <unordered_set>
