@@ -122,6 +122,5 @@ void NearestProjectionMapping::computeMapping()
   _hasComputedMapping = true;
 }
 
-
 } // namespace mapping
 } // namespace precice

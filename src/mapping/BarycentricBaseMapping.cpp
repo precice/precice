@@ -97,7 +97,6 @@ void BarycentricBaseMapping::map(
   }
 }
 
-
 void BarycentricBaseMapping::tagMeshFirstRound()
 {
   PRECICE_TRACE();
