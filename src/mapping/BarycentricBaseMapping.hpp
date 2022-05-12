@@ -42,8 +42,8 @@ public:
       int inputDataID,
       int outputDataID) final;
 
-  virtual void tagMeshFirstRound()  = 0;
-  virtual void tagMeshSecondRound() = 0;
+  virtual void tagMeshFirstRound() final;
+  virtual void tagMeshSecondRound() final;
 
 private:
   logging::Logger _log{"mapping::BarycentricBaseMapping"};

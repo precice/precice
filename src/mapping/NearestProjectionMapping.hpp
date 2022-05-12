@@ -25,8 +25,6 @@ public:
   /// Computes the projections and interpolation relations.
   virtual void computeMapping() override;
 
-  virtual void tagMeshFirstRound() override;
-  virtual void tagMeshSecondRound() override;
 
 private:
   logging::Logger _log{"mapping::NearestNeighborProjectionMapping"};

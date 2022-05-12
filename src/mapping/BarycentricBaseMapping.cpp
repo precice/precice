@@ -97,5 +97,57 @@ void BarycentricBaseMapping::map(
   }
 }
 
+
+void BarycentricBaseMapping::tagMeshFirstRound()
+{
+  PRECICE_TRACE();
+  precice::utils::Event e("map.bbm.tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  PRECICE_DEBUG("Compute Mapping for Tagging");
+
+  computeMapping();
+  PRECICE_DEBUG("Tagging First Round");
+
+  // Determine the Mesh to Tag
+  mesh::PtrMesh origins;
+  if (hasConstraint(CONSERVATIVE)) {
+    origins = output();
+  } else {
+    origins = input();
+  }
+
+  // Gather all vertices to be tagged in a first phase.
+  // max_count is used to shortcut if all vertices have been tagged.
+  std::unordered_set<int> tagged;
+  const std::size_t       max_count = origins->vertices().size();
+
+  for (const Polation &interpolation : _interpolations) {
+    for (const auto &elem : interpolation.getWeightedElements()) {
+      if (!math::equals(elem.weight, 0.0)) {
+        tagged.insert(elem.vertexID);
+      }
+    }
+    // Shortcut if all vertices are tagged
+    if (tagged.size() == max_count) {
+      break;
+    }
+  }
+
+  // Now tag all vertices to be tagged in the second phase.
+  for (auto &v : origins->vertices()) {
+    if (tagged.count(v.getID()) == 1) {
+      v.tag();
+    }
+  }
+  PRECICE_DEBUG("First Round Tagged {}/{} Vertices", tagged.size(), max_count);
+
+  clear();
+}
+
+void BarycentricBaseMapping::tagMeshSecondRound()
+{
+  PRECICE_TRACE();
+  // for NP mapping no operation needed here
+}
+
 } // namespace mapping
 } // namespace precice
