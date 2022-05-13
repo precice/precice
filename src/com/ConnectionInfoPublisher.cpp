@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/name_generator.hpp>
 #include <boost/uuid/string_generator.hpp>
@@ -10,6 +11,7 @@
 #include "com/ConnectionInfoPublisher.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
+#include "utils/assertion.hpp"
 
 namespace bfs = boost::filesystem;
 
@@ -57,17 +59,22 @@ std::string ConnectionInfoPublisher::getFilename() const
 
 std::string ConnectionInfoReader::read() const
 {
-  std::ifstream ifs;
-  auto          path = getFilename();
+  auto path = getFilename();
+
   PRECICE_DEBUG("Waiting for connection file {}", path);
-  do {
-    ifs.open(path, std::ifstream::in);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  } while (not ifs);
+  const auto waitdelay = std::chrono::milliseconds(1);
+  while (!bfs::exists(path)) {
+    std::this_thread::sleep_for(waitdelay);
+  }
+  PRECICE_ASSERT(bfs::exists(path));
   PRECICE_DEBUG("Found connection file {}", path);
 
+  std::ifstream ifs(path);
+  PRECICE_CHECK(ifs, "Unable to open connection file {}", path);
   std::string addressData;
-  ifs >> addressData;
+  std::getline(ifs, addressData);
+  PRECICE_CHECK(!addressData.empty(), "The connection file {} is empty. Please report this bug to the preCICE developers.", path);
+  boost::algorithm::trim_right(addressData);
   return addressData;
 }
 
@@ -84,16 +91,43 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
 
 void ConnectionInfoWriter::write(std::string const &info) const
 {
-  auto path    = getFilename();
-  auto tmp     = bfs::path(path + "~");
-  PRECICE_DEBUG("Writing connection file {}", path);
+  auto path = getFilename();
+  auto tmp  = bfs::path(path + "~");
+
+  {
+    auto message = "A {}connection file already exists at {}. "
+                   "This is likely a leftover of a previous crash during communication build-up. "
+                   "Please remove the \"precice-run\" directory and restart the simulation.";
+    PRECICE_CHECK(!bfs::exists(path), message, "", path);
+    PRECICE_CHECK(!bfs::exists(tmp), message, "temporary ")
+  }
+
+  PRECICE_DEBUG("Writing temporary connection file {}", tmp);
   bfs::create_directories(tmp.parent_path());
   {
-    std::ofstream ofs(tmp.string(), std::ofstream::out);
-    ofs << info << "\n";
-    ofs << "Acceptor: " << acceptorName << ", Requester: " << requesterName << ", Tag: " << tag << ", Rank: " << rank << "\n";
+    std::ofstream ofs(tmp.string());
+    PRECICE_CHECK(ofs, "Unable to open temporary connection file {}", tmp);
+    fmt::print(ofs,
+               "{}\nAcceptor: {}, Requester: {}, Tag: {}, Rank: {}",
+               info, acceptorName, requesterName, tag, rank);
   }
+  PRECICE_CHECK(bfs::exists(tmp),
+                "The temporary connection file {} doesn't exists. "
+                "Please report this bug to the preCICE developers.",
+                tmp);
+
+  PRECICE_DEBUG("Publishing connection file {}", path);
   bfs::rename(tmp, path);
+  /// @TODO Check if we need to sleep to let the underlying filesystem synchronize
+  if (bfs::exists(tmp)) {
+    PRECICE_WARN("The temporary connection file {} wasn't properly removed. "
+                 "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
+                 tmp);
+  }
+  PRECICE_CHECK(bfs::exists(path),
+                "The connection file {} was written, but doesn't exist on disk. "
+                "Please report this bug to the preCICE developers.",
+                path);
 }
 
 } // namespace com
