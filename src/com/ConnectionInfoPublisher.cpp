@@ -80,10 +80,22 @@ std::string ConnectionInfoReader::read() const
 
 ConnectionInfoWriter::~ConnectionInfoWriter()
 {
+  bfs::path path(getFilename());
+  if (!bfs::exists(path)) {
+    PRECICE_WARN("Cannot remove the connection file {} as it doesn't exist. "
+                 "In case of connection problems, please report this to the preCICE developers.",
+                 path);
+    return;
+  }
+  PRECICE_DEBUG("Deleting connection file {}", path);
   try {
-    bfs::path p(getFilename());
-    PRECICE_DEBUG("Deleting connection file {}", p.string());
-    bfs::remove(p);
+    bfs::remove(path);
+    /// @TODO Check if we need to sleep to let the underlying filesystem synchronize
+    if (bfs::exists(path)) {
+      PRECICE_WARN("The connection file {} wasn't properly removed. "
+                   "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
+                   path);
+    }
   } catch (const bfs::filesystem_error &e) {
     PRECICE_WARN("Unable to delete connection file due to error: {}", e.what());
   }
