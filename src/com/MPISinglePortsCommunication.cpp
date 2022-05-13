@@ -11,9 +11,12 @@
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/MPIResult.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
+
+using precice::utils::MPIResult;
 
 namespace precice {
 namespace com {
@@ -57,8 +60,12 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 
   _isAcceptor = true;
 
+  MPIResult res;
+
   utils::StringMaker<MPI_MAX_PORT_NAME> sm;
-  MPI_Open_port(MPI_INFO_NULL, sm.data());
+  res = MPI_Open_port(MPI_INFO_NULL, sm.data());
+  PRECICE_CHECK(res, "MPI_Open_port failed with message: {}", res.message());
+
   _portName = sm.str();
 
   ConnectionInfoWriter conPub(acceptorName, requesterName, tag, _addressDirectory);
@@ -69,7 +76,8 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
   do {
     // Connection
     MPI_Comm communicator;
-    MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+    res = MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+    PRECICE_CHECK(res, "MPI_Comm_accept failed with message: {}", res.message());
     PRECICE_DEBUG("Accepted connection at {} for peer {}", _portName, peerCurrent);
 
     // Exchange information to which rank I am connected and which communicator size on the other side
@@ -113,24 +121,28 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
   _isAcceptor = true;
 
   const Rank rank = utils::Parallel::current()->rank();
+  MPIResult  res;
 
   if (rank == 0) { // only primary rank opens a port
     ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
 
     utils::StringMaker<MPI_MAX_PORT_NAME> sm;
-    MPI_Open_port(MPI_INFO_NULL, sm.data());
+    res = MPI_Open_port(MPI_INFO_NULL, sm.data());
+    PRECICE_CHECK(res, "MPI_Open_port failed with message: {}", res.message());
     _portName = sm.str();
 
     conInfo.write(_portName);
     PRECICE_DEBUG("Accept connection at {}", _portName);
 
-    MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);
+    res = MPI_Comm_accept(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);
+    PRECICE_CHECK(res, "MPI_Comm_accept failed with message: {}", res.message());
     PRECICE_DEBUG("Accepted connection at {}", _portName);
 
   } else { // Secondary ranks call simply call accept
 
     // The port is only used on the root rank
-    MPI_Comm_accept(nullptr, MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);
+    res = MPI_Comm_accept(nullptr, MPI_INFO_NULL, 0, utils::Parallel::current()->comm, &_global);
+    PRECICE_CHECK(res, "MPI_Comm_accept failed with message: {}", res.message());
     PRECICE_DEBUG("Accepted connection");
   }
 
@@ -151,8 +163,9 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   _portName = conInfo.read();
   PRECICE_DEBUG("Request connection to {}", _portName);
 
-  MPI_Comm communicator;
-  MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+  MPI_Comm  communicator;
+  MPIResult res = MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+  PRECICE_CHECK(res, "MPI_Open_port failed with message: {}", res.message());
   PRECICE_DEBUG("Requested connection to {}", _portName);
 
   // Send the rank of this requester
@@ -170,9 +183,9 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   _isConnected     = true;
 }
 
-void MPISinglePortsCommunication::requestConnectionAsClient(std::string const   &acceptorName,
-                                                            std::string const   &requesterName,
-                                                            std::string const   &tag,
+void MPISinglePortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
+                                                            std::string const &  requesterName,
+                                                            std::string const &  tag,
                                                             std::set<int> const &acceptorRanks,
                                                             int                  requesterRank)
 {
@@ -185,8 +198,9 @@ void MPISinglePortsCommunication::requestConnectionAsClient(std::string const   
   _portName = conInfo.read();
   PRECICE_DEBUG("Request connection to {}", _portName);
 
-  MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
-                   utils::Parallel::current()->comm, &_global);
+  MPIResult res = MPI_Comm_connect(const_cast<char *>(_portName.c_str()), MPI_INFO_NULL, 0,
+                                   utils::Parallel::current()->comm, &_global);
+  PRECICE_CHECK(res, "MPI_Open_port failed with message: {}", res.message());
   PRECICE_DEBUG("Requested connection to {}", _portName);
 
   _isConnected = true;
@@ -198,19 +212,29 @@ void MPISinglePortsCommunication::closeConnection()
 
   if (not isConnected())
     return;
+  MPIResult res;
 
   for (auto &kv : _direct) {
-    MPI_Comm_disconnect(&kv.second);
+    res = MPI_Comm_disconnect(&kv.second);
+    if (!res) {
+      PRECICE_WARN("MPI_Open_port failed with message: {}", res.message());
+    }
   }
   _direct.clear();
   if (_global != MPI_COMM_NULL) {
-    MPI_Comm_disconnect(&_global);
+    res = MPI_Comm_disconnect(&_global);
+    if (!res) {
+      PRECICE_WARN("MPI_Open_port failed with message: {}", res.message());
+    }
   }
 
   PRECICE_DEBUG("Disconnected");
 
   if (_isAcceptor and utils::IntraComm::getRank() == 0) {
-    MPI_Close_port(const_cast<char *>(_portName.c_str()));
+    res = MPI_Close_port(const_cast<char *>(_portName.c_str()));
+    if (!res) {
+      PRECICE_WARN("MPI_Open_port failed with message: {}", res.message());
+    }
     _portName.clear();
     PRECICE_DEBUG("Port closed");
   }

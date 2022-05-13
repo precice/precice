@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(StringMaker)
   BOOST_TEST(sm.str().empty());
 
   auto cstr = "1234";
-  std::copy(cstr, cstr+4, sm.data());
+  std::copy(cstr, cstr + 4, sm.data());
   BOOST_TEST(*sm.data() == '1');
 
   auto str = sm.str();
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(StringMaker)
   BOOST_TEST(str == cstr);
 
   sm.data()[2] = '\0';
-  auto str2 = sm.str();
+  auto str2    = sm.str();
   BOOST_TEST(str2.size() == 2);
   BOOST_TEST(str2 == "12");
 }
