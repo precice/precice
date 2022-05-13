@@ -7,17 +7,17 @@
 #include <fstream>
 #include <thread>
 
-#include "ConnectionInfoPublisher.hpp"
+#include "com/ConnectionInfoPublisher.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
+
+namespace bfs = boost::filesystem;
 
 namespace precice {
 namespace com {
 
 std::string impl::hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &tag, Rank rank)
 {
-  using namespace boost::filesystem;
-
   constexpr int                  firstLevelLen = 2;
   boost::uuids::string_generator ns_gen;
   auto                           ns = ns_gen("af7ce8f2-a9ee-46cb-38ee-71c318aa3580"); // md5 hash of precice.org as namespace
@@ -27,17 +27,16 @@ std::string impl::hashedFilePath(const std::string &acceptorName, const std::str
   std::string                  hash = boost::uuids::to_string(gen(s));
   hash.erase(std::remove(hash.begin(), hash.end(), '-'), hash.end());
 
-  path p = path(hash.substr(0, firstLevelLen)) / hash.substr(firstLevelLen);
+  auto p = bfs::path(hash.substr(0, firstLevelLen)) / hash.substr(firstLevelLen);
 
   return p.string();
 }
 
 std::string impl::localDirectory(const std::string &acceptorName, const std::string &requesterName, const std::string &addressDirectory)
 {
-  using namespace boost::filesystem;
   std::string directional = acceptorName + "-" + requesterName;
 
-  path p = path(addressDirectory) / path("precice-run") / path(directional);
+  auto p = bfs::path(addressDirectory) / "precice-run" / directional;
 
   return p.string();
 }
@@ -49,11 +48,9 @@ std::string ConnectionInfoPublisher::getLocalDirectory() const
 
 std::string ConnectionInfoPublisher::getFilename() const
 {
-  using namespace boost::filesystem;
-
   auto local  = getLocalDirectory();
   auto hashed = impl::hashedFilePath(acceptorName, requesterName, tag, rank);
-  path p      = path(getLocalDirectory()) / path(hashed);
+  auto p      = bfs::path(getLocalDirectory()) / hashed;
 
   return p.string();
 }
@@ -76,29 +73,27 @@ std::string ConnectionInfoReader::read() const
 
 ConnectionInfoWriter::~ConnectionInfoWriter()
 {
-  namespace fs = boost::filesystem;
   try {
-    fs::path p(getFilename());
+    bfs::path p(getFilename());
     PRECICE_DEBUG("Deleting connection file {}", p.string());
-    fs::remove(p);
-  } catch (const fs::filesystem_error &e) {
+    bfs::remove(p);
+  } catch (const bfs::filesystem_error &e) {
     PRECICE_WARN("Unable to delete connection file due to error: {}", e.what());
   }
 }
 
 void ConnectionInfoWriter::write(std::string const &info) const
 {
-  namespace fs = boost::filesystem;
   auto path    = getFilename();
-  auto tmp     = fs::path(path + "~");
+  auto tmp     = bfs::path(path + "~");
   PRECICE_DEBUG("Writing connection file {}", path);
-  fs::create_directories(tmp.parent_path());
+  bfs::create_directories(tmp.parent_path());
   {
     std::ofstream ofs(tmp.string(), std::ofstream::out);
     ofs << info << "\n";
     ofs << "Acceptor: " << acceptorName << ", Requester: " << requesterName << ", Tag: " << tag << ", Rank: " << rank << "\n";
   }
-  fs::rename(tmp, path);
+  bfs::rename(tmp, path);
 }
 
 } // namespace com
