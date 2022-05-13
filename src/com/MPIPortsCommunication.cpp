@@ -9,6 +9,7 @@
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
+#include "utils/String.hpp"
 
 namespace precice {
 namespace com {
@@ -45,8 +46,10 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
   setRankOffset(rankOffset);
 
   _isAcceptor = true;
-  _portName.reserve(MPI_MAX_PORT_NAME);
-  MPI_Open_port(MPI_INFO_NULL, &_portName[0]);
+
+  utils::StringMaker<MPI_MAX_PORT_NAME> sm;
+  MPI_Open_port(MPI_INFO_NULL, sm.data());
+  _portName = sm.str();
 
   ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
   conInfo.write(_portName);
@@ -104,8 +107,9 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
 
   _isAcceptor = true;
 
-  _portName.reserve(MPI_MAX_PORT_NAME);
-  MPI_Open_port(MPI_INFO_NULL, &_portName[0]);
+  utils::StringMaker<MPI_MAX_PORT_NAME> sm;
+  MPI_Open_port(MPI_INFO_NULL, sm.data());
+  _portName = sm.str();
 
   ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
   conInfo.write(_portName);

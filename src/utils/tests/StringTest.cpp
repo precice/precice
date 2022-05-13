@@ -1,3 +1,4 @@
+#include <boost/test/tools/old/interface.hpp>
 #include <string>
 #include "math/constants.hpp"
 #include "testing/TestContext.hpp"
@@ -68,6 +69,28 @@ BOOST_AUTO_TEST_CASE(ConvertStringToBool)
   BOOST_TEST(convertStringToBool("0") == false);
   BOOST_TEST(convertStringToBool("yes") == true);
   BOOST_TEST(convertStringToBool("no") == false);
+}
+
+BOOST_AUTO_TEST_CASE(StringMaker)
+{
+  PRECICE_TEST(1_rank);
+  utils::StringMaker<10> sm;
+  BOOST_REQUIRE(sm.data() != nullptr);
+  BOOST_TEST(*sm.data() == '\0');
+  BOOST_TEST(sm.str().empty());
+
+  auto cstr = "1234";
+  std::copy(cstr, cstr+4, sm.data());
+  BOOST_TEST(*sm.data() == '1');
+
+  auto str = sm.str();
+  BOOST_TEST(str.size() == 4);
+  BOOST_TEST(str == cstr);
+
+  sm.data()[2] = '\0';
+  auto str2 = sm.str();
+  BOOST_TEST(str2.size() == 2);
+  BOOST_TEST(str2 == "12");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

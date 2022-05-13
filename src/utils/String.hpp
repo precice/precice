@@ -1,10 +1,43 @@
 #pragma once
 
+#include <array>
 #include <sstream>
 #include <string>
 
 namespace precice {
 namespace utils {
+
+/// Utility class to build a string from C functions with output pointers and static maximum length
+template <int MAX>
+class StringMaker {
+public:
+  StringMaker()
+  {
+    clear();
+  }
+
+  void clear()
+  {
+    _data.fill('\0');
+  }
+
+  char *data()
+  {
+    return _data.data();
+  }
+
+  /** constructs a string from the buffer
+   *
+   *  The returned string ends at the fill NULL char.
+   */
+  std::string str() const
+  {
+    return std::string(_data.data());
+  }
+
+private:
+  std::array<char, MAX + 1> _data;
+};
 
 std::string wrapText(
     const std::string &text,

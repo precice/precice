@@ -6,12 +6,13 @@
 #include <ostream>
 #include <utility>
 
-#include "ConnectionInfoPublisher.hpp"
-#include "MPISinglePortsCommunication.hpp"
+#include "com/ConnectionInfoPublisher.hpp"
+#include "com/MPISinglePortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -56,7 +57,9 @@ void MPISinglePortsCommunication::acceptConnection(std::string const &acceptorNa
 
   _isAcceptor = true;
 
-  MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
+  utils::StringMaker<MPI_MAX_PORT_NAME> sm;
+  MPI_Open_port(MPI_INFO_NULL, sm.data());
+  _portName = sm.str();
 
   ConnectionInfoWriter conPub(acceptorName, requesterName, tag, _addressDirectory);
   conPub.write(_portName);
@@ -114,8 +117,9 @@ void MPISinglePortsCommunication::acceptConnectionAsServer(std::string const &ac
   if (rank == 0) { // only primary rank opens a port
     ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
 
-    _portName.reserve(MPI_MAX_PORT_NAME);
-    MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(_portName.data()));
+    utils::StringMaker<MPI_MAX_PORT_NAME> sm;
+    MPI_Open_port(MPI_INFO_NULL, sm.data());
+    _portName = sm.str();
 
     conInfo.write(_portName);
     PRECICE_DEBUG("Accept connection at {}", _portName);
@@ -166,9 +170,9 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   _isConnected     = true;
 }
 
-void MPISinglePortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
-                                                            std::string const &  requesterName,
-                                                            std::string const &  tag,
+void MPISinglePortsCommunication::requestConnectionAsClient(std::string const   &acceptorName,
+                                                            std::string const   &requesterName,
+                                                            std::string const   &tag,
                                                             std::set<int> const &acceptorRanks,
                                                             int                  requesterRank)
 {
