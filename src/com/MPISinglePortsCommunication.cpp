@@ -6,8 +6,8 @@
 #include <ostream>
 #include <utility>
 
-#include "ConnectionInfoPublisher.hpp"
-#include "MPISinglePortsCommunication.hpp"
+#include "com/ConnectionInfoPublisher.hpp"
+#include "com/MPISinglePortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/IntraComm.hpp"

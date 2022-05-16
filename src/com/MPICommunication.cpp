@@ -3,8 +3,8 @@
 #include <cstddef>
 #include <ostream>
 
-#include "MPICommunication.hpp"
-#include "MPIRequest.hpp"
+#include "com/MPICommunication.hpp"
+#include "com/MPIRequest.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/span_tools.hpp"

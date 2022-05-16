@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "Request.hpp"
 #include "boost/range/irange.hpp"
+#include "com/Request.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "precice/types.hpp"
@@ -186,7 +186,7 @@ public:
    *
    * @param[in] participantName Name of the calling participant.
    * @param[in] tag Tag for establishing this connection
-   * @param[in] rank The current rank in the participant 
+   * @param[in] rank The current rank in the participant
    * @param[in] size Total size of the participant
    *
    */

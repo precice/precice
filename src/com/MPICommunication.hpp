@@ -18,7 +18,7 @@ namespace com {
  * The methods for establishing a connection between two coupling participants
  * are not implemented and left to subclasses.
  */
-class MPICommunication : public Communication {
+class MPICommunication : public ::precice::com::Communication {
 public:
   MPICommunication();
 
