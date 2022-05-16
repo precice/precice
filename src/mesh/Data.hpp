@@ -95,11 +95,11 @@ private:
   /// ID of the data set (supposed to be unique).
   DataID _id;
 
-  /// Spacial Dimension of one element -> number of rows (only 2, 3 allowed for 2D, 3D).
-  int _spatialDimensions;
-
   /// Dimensionality of one data value.
   int _dimensions;
+
+  /// Spacial Dimension of one element -> number of rows (only 2, 3 allowed for 2D, 3D).
+  int _spatialDimensions;
 
   /// Flag if the gradient data is available
   bool _hasGradient;

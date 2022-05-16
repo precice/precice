@@ -20,7 +20,7 @@
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -517,7 +517,7 @@ bool BaseCouplingScheme::measureConvergence()
   bool oneSuffices  = false; //at least one convergence measure suffices and did converge
   bool oneStrict    = false; //at least one convergence measure is strict and did not converge
   PRECICE_ASSERT(_convergenceMeasures.size() > 0);
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::IntraComm::isSecondary()) {
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
@@ -527,7 +527,7 @@ bool BaseCouplingScheme::measureConvergence()
 
     convMeasure.measure->measure(convMeasure.couplingData->previousIteration(), convMeasure.couplingData->values());
 
-    if (not utils::MasterSlave::isSlave() && convMeasure.doesLogging) {
+    if (not utils::IntraComm::isSecondary() && convMeasure.doesLogging) {
       _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());
     }
 
@@ -558,7 +558,7 @@ bool BaseCouplingScheme::measureConvergence()
 
 void BaseCouplingScheme::initializeTXTWriters()
 {
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::IntraComm::isSecondary()) {
 
     _iterationsWriter = std::make_shared<io::TXTTableWriter>("precice-" + _localParticipant + "-iterations.log");
     if (not doesFirstStep()) {
@@ -593,7 +593,7 @@ void BaseCouplingScheme::initializeTXTWriters()
 
 void BaseCouplingScheme::advanceTXTWriters()
 {
-  if (not utils::MasterSlave::isSlave()) {
+  if (not utils::IntraComm::isSecondary()) {
 
     _iterationsWriter->writeData("TimeWindow", _timeWindows - 1);
     _iterationsWriter->writeData("TotalIterations", _totalIterations);

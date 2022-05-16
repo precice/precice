@@ -14,10 +14,10 @@ namespace precice {
 namespace testing {
 namespace com {
 
-namespace mastermaster {
+namespace primaryprimary {
 
 ///
-/// Tests for Master-Master Connections
+/// Tests for primary connections
 /// Acceptor and Requestor are different participants
 ///
 
@@ -159,7 +159,7 @@ void TestSendReceiveFourProcesses(TestContext const &context)
   int message = -1;
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       communication.acceptConnection("A", "B", "", 0);
 
       communication.send(10, 0);
@@ -173,7 +173,7 @@ void TestSendReceiveFourProcesses(TestContext const &context)
       communication.closeConnection();
     }
   } else {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       communication.requestConnection("A", "B", "", 0, 2);
 
       communication.receive(message, 0);
@@ -401,23 +401,12 @@ void TestReduceVectors(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestSendAndReceive(TestContext const &context)
-{
-  TestSendAndReceivePrimitiveTypes<T>(context);
-  TestSendAndReceiveVectors<T>(context);
-  TestBroadcastPrimitiveTypes<T>(context);
-  TestBroadcastVectors<T>(context);
-  TestReducePrimitiveTypes<T>(context);
-  TestReduceVectors<T>(context);
-}
+} // namespace primaryprimary
 
-} // namespace mastermaster
-
-namespace masterslave {
+namespace intracomm {
 
 ///
-/// Tests for Master-Slave Connections
+/// Tests for intra-participant communication Connections
 /// Acceptor and Requestor are the same participant
 ///
 
@@ -426,8 +415,8 @@ void TestSendAndReceivePrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
-    com.acceptConnection("Master", "Slave", "", 0, 1);
+  if (context.isPrimary()) {
+    com.acceptConnection("Primary", "Secondary", "", 0, 1);
     {
       std::string msg("testOne");
       com.send(msg, 1);
@@ -454,7 +443,7 @@ void TestSendAndReceivePrimitiveTypes(TestContext const &context)
     }
     com.closeConnection();
   } else {
-    com.requestConnection("Master", "Slave", "", 0, 1);
+    com.requestConnection("Primary", "Secondary", "", 0, 1);
     {
       std::string msg;
       com.receive(msg, 0);
@@ -492,8 +481,8 @@ void TestSendAndReceiveVectors(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
-    com.acceptConnection("Master", "Slave", "", 0, 1);
+  if (context.isPrimary()) {
+    com.acceptConnection("Primary", "Secondary", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
       com.receive(msg, 1);
@@ -523,7 +512,7 @@ void TestSendAndReceiveVectors(TestContext const &context)
     }
     com.closeConnection();
   } else {
-    com.requestConnection("Master", "Slave", "", 0, 1);
+    com.requestConnection("Primary", "Secondary", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(1);
       com.send(msg, 0);
@@ -557,8 +546,8 @@ void TestBroadcastPrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
-    com.acceptConnection("Master", "Slave", "", 0, 1);
+  if (context.isPrimary()) {
+    com.acceptConnection("Primary", "Secondary", "", 0, 1);
     {
       double msg = 0.0;
       com.broadcast(msg);
@@ -573,7 +562,7 @@ void TestBroadcastPrimitiveTypes(TestContext const &context)
     }
     com.closeConnection();
   } else {
-    com.requestConnection("Master", "Slave", "", 0, 1);
+    com.requestConnection("Primary", "Secondary", "", 0, 1);
     {
       double msg = 1.0;
       com.broadcast(msg, 0);
@@ -598,8 +587,8 @@ void TestBroadcastVectors(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
-    com.acceptConnection("Master", "Slave", "", 0, 1);
+  if (context.isPrimary()) {
+    com.acceptConnection("Primary", "Secondary", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(3.1415);
       com.broadcast(msg);
@@ -618,7 +607,7 @@ void TestBroadcastVectors(TestContext const &context)
     }
     com.closeConnection();
   } else {
-    com.requestConnection("Master", "Slave", "", 0, 1);
+    com.requestConnection("Primary", "Secondary", "", 0, 1);
     {
       Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
       com.broadcast(msg, 0);
@@ -648,8 +637,8 @@ void TestReducePrimitiveTypes(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
-    com.acceptConnection("Master", "Slave", "", 0, 1);
+  if (context.isPrimary()) {
+    com.acceptConnection("Primary", "Secondary", "", 0, 1);
     {
       int msg = 1;
       int rcv = 0;
@@ -674,7 +663,7 @@ void TestReducePrimitiveTypes(TestContext const &context)
 
     com.closeConnection();
   } else {
-    com.requestConnection("Master", "Slave", "", 0, 1);
+    com.requestConnection("Primary", "Secondary", "", 0, 1);
     {
       int msg = 3;
       int rcv = 0;
@@ -705,8 +694,8 @@ void TestReduceVectors(TestContext const &context)
 {
   T com;
 
-  if (context.isMaster()) {
-    com.acceptConnection("Master", "Slave", "", 0, 1);
+  if (context.isPrimary()) {
+    com.acceptConnection("Primary", "Secondary", "", 0, 1);
     {
       std::vector<double> msg{0.1, 0.2, 0.3};
       std::vector<double> rcv{0, 0, 0};
@@ -731,7 +720,7 @@ void TestReduceVectors(TestContext const &context)
     }
     com.closeConnection();
   } else {
-    com.requestConnection("Master", "Slave", "", 0, 1);
+    com.requestConnection("Primary", "Secondary", "", 0, 1);
     {
       std::vector<double> msg{1, 2, 3};
       std::vector<double> rcv{0, 0, 0};
@@ -758,18 +747,7 @@ void TestReduceVectors(TestContext const &context)
   }
 }
 
-template <typename T>
-void TestSendAndReceive(TestContext const &context)
-{
-  TestSendAndReceivePrimitiveTypes<T>(context);
-  TestSendAndReceiveVectors<T>(context);
-  TestBroadcastPrimitiveTypes<T>(context);
-  TestBroadcastVectors<T>(context);
-  TestReducePrimitiveTypes<T>(context);
-  TestReduceVectors<T>(context);
-}
-
-} // namespace masterslave
+} // namespace intracomm
 
 namespace serverclient {
 
@@ -813,7 +791,7 @@ void TestSendReceiveFourProcessesServerClient(TestContext const &context)
   BOOST_REQUIRE(context.hasSize(2));
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       communication.acceptConnectionAsServer("A", "B", "", context.rank, 2);
 
       communication.send(10, 0);
@@ -831,7 +809,7 @@ void TestSendReceiveFourProcessesServerClient(TestContext const &context)
     }
   } else {
     BOOST_REQUIRE(context.isNamed("B"));
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       communication.requestConnectionAsClient("A", "B", "", {0}, context.rank);
 
       communication.receive(message, 0);
@@ -862,7 +840,7 @@ void TestSendReceiveFourProcessesServerClientV2(TestContext const &context)
   BOOST_REQUIRE(context.hasSize(2));
 
   if (context.isNamed("A")) {
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
 
       communication.acceptConnectionAsServer("A", "B", "", 0, 2);
 
@@ -892,7 +870,7 @@ void TestSendReceiveFourProcessesServerClientV2(TestContext const &context)
   } else {
     BOOST_REQUIRE(context.isNamed("B"));
 
-    if (context.isMaster()) {
+    if (context.isPrimary()) {
       communication.requestConnectionAsClient("A", "B", "", {0, 1}, 0);
 
       communication.receive(message, 0);

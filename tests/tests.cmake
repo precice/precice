@@ -7,11 +7,12 @@ target_sources(testprecice
     tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/LocalRBFPartitioning.cpp
-    tests/parallel/MasterSockets.cpp
     tests/parallel/NearestProjectionRePartitioning.cpp
+    tests/parallel/PrimaryRankSockets.cpp
     tests/parallel/TestBoundingBoxInitialization.cpp
     tests/parallel/TestBoundingBoxInitializationTwoWay.cpp
     tests/parallel/TestFinalize.cpp
+    tests/parallel/TestFinalizeDeprecatedTag.cpp
     tests/parallel/UserDefinedMPICommunicator.cpp
     tests/parallel/UserDefinedMPICommunicatorPetRBF.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshAndMapping.cpp
@@ -30,8 +31,8 @@ target_sources(testprecice
     tests/parallel/distributed-communication/TestDistributedCommunicationP2PSockets.cpp
     tests/parallel/distributed-communication/helpers.cpp
     tests/parallel/distributed-communication/helpers.hpp
-    tests/parallel/gather-scatter/EnforceGatherScatterEmptyMaster.cpp
-    tests/parallel/gather-scatter/EnforceGatherScatterEmptyReceivedMaster.cpp
+    tests/parallel/gather-scatter/EnforceGatherScatterEmptyPrimaryRank.cpp
+    tests/parallel/gather-scatter/EnforceGatherScatterEmptyReceivedPrimaryRank.cpp
     tests/parallel/gather-scatter/helpers.cpp
     tests/parallel/gather-scatter/helpers.hpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
@@ -98,6 +99,10 @@ target_sources(testprecice
     tests/serial/mapping-nearest-projection/testQuadMappingDiagonalNearestProjectionImplicitEdgesWideKite.cpp
     tests/serial/mapping-nearest-projection/testQuadMappingNearestProjectionExplicitEdges.cpp
     tests/serial/mapping-nearest-projection/testQuadMappingNearestProjectionImplicitEdges.cpp
+    tests/serial/mapping-rbf-gaussian/GaussianShapeParameter.cpp
+    tests/serial/mapping-rbf-gaussian/GaussianSupportRadius.cpp
+    tests/serial/mapping-rbf-gaussian/helpers.cpp
+    tests/serial/mapping-rbf-gaussian/helpers.hpp
     tests/serial/mapping-scaled-consistent/helpers.cpp
     tests/serial/mapping-scaled-consistent/helpers.hpp
     tests/serial/mapping-scaled-consistent/testQuadMappingScaledConsistentOnA.cpp
@@ -114,8 +119,11 @@ target_sources(testprecice
     tests/serial/multi-coupling/MultiCouplingThreeSolvers3.cpp
     tests/serial/multi-coupling/helpers.cpp
     tests/serial/multi-coupling/helpers.hpp
-    tests/serial/multiple-mappings/MultipleFromMappings.cpp
-    tests/serial/multiple-mappings/MultipleToMappings.cpp
+    tests/serial/multiple-mappings/MultipleReadFromMappings.cpp
+    tests/serial/multiple-mappings/MultipleReadToMappings.cpp
+    tests/serial/multiple-mappings/MultipleWriteFromMappings.cpp
+    tests/serial/multiple-mappings/MultipleWriteFromMappingsAndData.cpp
+    tests/serial/multiple-mappings/MultipleWriteToMappings.cpp
     tests/serial/stationary-mapping-with-solver-mesh/StationaryMappingWithSolverMesh2D.cpp
     tests/serial/stationary-mapping-with-solver-mesh/StationaryMappingWithSolverMesh3D.cpp
     tests/serial/stationary-mapping-with-solver-mesh/helpers.cpp

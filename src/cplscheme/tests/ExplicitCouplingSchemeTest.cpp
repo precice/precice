@@ -262,12 +262,12 @@ struct ExplicitCouplingSchemeFixture : m2n::WhiteboxAccessor {
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
-    useOnlyMasterCom(communication) = true;
+    useOnlyPrimaryCom(communication) = true;
     if (participant0 == localParticipant) {
-      communication->requestMasterConnection(participant1, participant0);
+      communication->requestPrimaryRankConnection(participant1, participant0);
     } else {
       BOOST_TEST(participant1 == localParticipant);
-      communication->acceptMasterConnection(participant1, participant0);
+      communication->acceptPrimaryRankConnection(participant1, participant0);
     }
   }
 };
@@ -280,8 +280,8 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag                root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
@@ -594,8 +594,8 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
 {
   PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
   testing::ConnectionOptions options;
-  options.useOnlyMasterCom = true;
-  auto m2n                 = context.connectMasters("Participant0", "Participant1", options);
+  options.useOnlyPrimaryCom = true;
+  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   xml::XMLTag                root = xml::getRootTag();
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));

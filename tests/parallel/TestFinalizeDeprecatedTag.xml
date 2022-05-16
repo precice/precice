@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <solver-interface dimensions="3">
+    <data:vector name="Data1" />
+    <data:vector name="Data2" />
+
+    <mesh name="MeshOne">
+      <use-data name="Data1" />
+      <use-data name="Data2" />
+    </mesh>
+
+    <mesh name="MeshTwo">
+      <use-data name="Data1" />
+      <use-data name="Data2" />
+    </mesh>
+
+    <participant name="SolverOne">
+      <master:mpi-single />
+      <use-mesh name="MeshTwo" from="SolverTwo" />
+      <use-mesh name="MeshOne" provide="yes" />
+      <mapping:nearest-neighbor
+        direction="write"
+        from="MeshOne"
+        to="MeshTwo"
+        constraint="conservative" />
+      <mapping:nearest-neighbor
+        direction="read"
+        from="MeshTwo"
+        to="MeshOne"
+        constraint="consistent" />
+      <write-data name="Data1" mesh="MeshOne" />
+      <read-data name="Data2" mesh="MeshOne" />
+    </participant>
+
+    <participant name="SolverTwo">
+      <master:mpi-single />
+      <use-mesh name="MeshTwo" provide="yes" />
+      <write-data name="Data1" mesh="MeshTwo" />
+      <read-data name="Data2" mesh="MeshTwo" />
+    </participant>
+
+    <m2n:sockets from="SolverOne" to="SolverTwo" />
+
+    <coupling-scheme:parallel-explicit>
+      <participants first="SolverOne" second="SolverTwo" />
+      <max-time-windows value="10" />
+      <time-window-size value="1.0" />
+      <exchange data="Data1" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+      <exchange data="Data2" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
+    </coupling-scheme:parallel-explicit>
+  </solver-interface>
+</precice-configuration>

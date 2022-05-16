@@ -77,6 +77,7 @@ private:
   const std::string TAG_WATCH_INTEGRAL = "watch-integral";
   const std::string TAG_WATCH_POINT    = "watch-point";
   const std::string TAG_MASTER         = "master";
+  const std::string TAG_INTRA_COMM     = "intra-comm";
 
   const std::string ATTR_NAME               = "name";
   const std::string ATTR_SOURCE_DATA        = "source-data";
@@ -98,9 +99,11 @@ private:
   const std::string ATTR_SCALE_WITH_CONN    = "scale-with-connectivity";
   const std::string ATTR_ORDER              = "waveform-order";
 
-  const std::string VALUE_FILTER_ON_SLAVES = "on-slaves";
-  const std::string VALUE_FILTER_ON_MASTER = "on-master";
-  const std::string VALUE_NO_FILTER        = "no-filter";
+  const std::string VALUE_FILTER_ON_SLAVES          = "on-slaves";
+  const std::string VALUE_FILTER_ON_SECONDARY_RANKS = "on-secondary-ranks";
+  const std::string VALUE_FILTER_ON_MASTER          = "on-master";
+  const std::string VALUE_FILTER_ON_PRIMARY_RANK    = "on-primary-rank";
+  const std::string VALUE_NO_FILTER                 = "no-filter";
 
   const std::string VALUE_VTK = "vtk";
   const std::string VALUE_VTU = "vtu";
@@ -135,10 +138,10 @@ private:
 
   mapping::PtrMapping getMapping(const std::string &mappingName);
 
-  // Does this participant already define a master tag?
+  // Does this participant already define a primary tag?
   // This context information is needed in xmlEndTagCallback to create a default
-  // master com if required (i.e. no solution yet defined and parallel).
-  bool _isMasterDefined = false;
+  // primary com if required (i.e. no solution yet defined and parallel).
+  bool _isIntraCommDefined = false;
 
   void finishParticipantConfiguration(
       const xml::ConfigurationContext &context,

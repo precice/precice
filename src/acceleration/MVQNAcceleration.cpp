@@ -20,7 +20,7 @@
 #include "precice/types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Event.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 using precice::cplscheme::PtrCouplingData;
@@ -90,7 +90,7 @@ void MVQNAcceleration::initialize(
   int entries  = _residuals.size();
   int global_n = 0;
 
-  if (!utils::MasterSlave::isParallel()) {
+  if (!utils::IntraComm::isParallel()) {
     global_n = entries;
   } else {
     global_n = _dimOffsets.back();
@@ -109,7 +109,7 @@ void MVQNAcceleration::initialize(
   }
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
 
-  if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+  if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
                       << '\n';
   }
@@ -559,7 +559,7 @@ void MVQNAcceleration::restartIMVJ()
     PRECICE_DEBUG("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian {}, new modes: {}, truncated modes: {} avg rank: {}", rankAfter, rankAfter - rankBefore, waste, _avgRank / _nbRestarts);
 
     //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
-    if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+    if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
       _infostringstream << " - MVJ-RESTART " << _nbRestarts << ", mode= SVD -\n  new modes: " << rankAfter - rankBefore << "\n  rank svd: " << rankAfter << "\n  avg rank: " << _avgRank / _nbRestarts << "\n  truncated modes: " << waste << "\n"
                         << '\n';
     }
@@ -637,7 +637,7 @@ void MVQNAcceleration::restartIMVJ()
     }
 
     PRECICE_DEBUG("MVJ-RESTART, mode=LS. Restart with {} columns from {} time windows.", _matrixV_RSLS.cols(), _RSLSreusedTimeWindows);
-    if (utils::MasterSlave::isMaster() || !utils::MasterSlave::isParallel()) {
+    if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
       _infostringstream << " - MVJ-RESTART" << _nbRestarts << ", mode= LS -\n  used cols: " << _matrixV_RSLS.cols() << "\n  R_RS: " << _RSLSreusedTimeWindows << "\n"
                         << '\n';
     }

@@ -14,7 +14,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -25,7 +25,7 @@ std::string ExportVTU::getVTKFormat() const
   return "UnstructuredGrid";
 }
 
-std::string ExportVTU::getMasterExtension() const
+std::string ExportVTU::getParallelExtension() const
 {
   return ".pvtu";
 }
@@ -43,7 +43,7 @@ std::string ExportVTU::getPieceAttributes(const mesh::Mesh &mesh) const
   return oss.str();
 }
 
-void ExportVTU::writeMasterCells(std::ostream &out) const
+void ExportVTU::writeParallelCells(std::ostream &out) const
 {
   out << "      <PCells>\n";
   out << "         <PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>\n";

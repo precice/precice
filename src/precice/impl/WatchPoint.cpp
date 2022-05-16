@@ -16,7 +16,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -64,29 +64,29 @@ void WatchPoint::initialize()
     _shortestDistance = match.distance;
   }
 
-  if (utils::MasterSlave::isSlave()) {
-    utils::MasterSlave::getCommunication()->send(_shortestDistance, 0);
-    utils::MasterSlave::getCommunication()->receive(_isClosest, 0);
+  if (utils::IntraComm::isSecondary()) {
+    utils::IntraComm::getCommunication()->send(_shortestDistance, 0);
+    utils::IntraComm::getCommunication()->receive(_isClosest, 0);
   }
 
-  if (utils::MasterSlave::isMaster()) {
+  if (utils::IntraComm::isPrimary()) {
     int    closestRank           = 0;
     double closestDistanceGlobal = _shortestDistance;
     double closestDistanceLocal  = std::numeric_limits<double>::max();
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::getCommunication()->receive(closestDistanceLocal, rankSlave);
+    for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+      utils::IntraComm::getCommunication()->receive(closestDistanceLocal, secondaryRank);
       if (closestDistanceLocal < closestDistanceGlobal) {
         closestDistanceGlobal = closestDistanceLocal;
-        closestRank           = rankSlave;
+        closestRank           = secondaryRank;
       }
     }
     _isClosest = closestRank == 0;
-    for (Rank rankSlave : utils::MasterSlave::allSlaves()) {
-      utils::MasterSlave::getCommunication()->send(closestRank == rankSlave, rankSlave);
+    for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+      utils::IntraComm::getCommunication()->send(closestRank == secondaryRank, secondaryRank);
     }
   }
 
-  PRECICE_DEBUG("Rank: {}, isClosest: {}", utils::MasterSlave::getRank(), _isClosest);
+  PRECICE_DEBUG("Rank: {}, isClosest: {}", utils::IntraComm::getRank(), _isClosest);
 }
 
 void WatchPoint::exportPointData(

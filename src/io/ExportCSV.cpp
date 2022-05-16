@@ -13,7 +13,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/MasterSlave.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -52,8 +52,8 @@ void ExportCSV::doExport(
   // Construct full filename
   std::string filename{name};
   int         rank{0};
-  if (utils::MasterSlave::isParallel()) {
-    rank = utils::MasterSlave::getRank();
+  if (utils::IntraComm::isParallel()) {
+    rank = utils::IntraComm::getRank();
     filename.append("_").append(std::to_string(rank));
   }
   filename.append(".csv");

@@ -60,7 +60,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingZero)
 
   int    nWindows   = 5; // perform 5 windows.
   double maxDt      = precice.initialize();
-  double windowDt   = maxDt;
   int    timewindow = 0;
   int    timewindowCheckpoint;
   double dt        = maxDt; // Timestep length desired by solver

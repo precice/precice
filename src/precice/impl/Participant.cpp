@@ -48,9 +48,9 @@ void Participant::addAction(action::PtrAction &&action)
   _actions.push_back(std::move(action));
 }
 
-void Participant::setUseMaster(bool useMaster)
+void Participant::setUsePrimaryRank(bool useIntraComm)
 {
-  _useMaster = useMaster;
+  _useIntraComm = useIntraComm;
 }
 
 void Participant::addWatchPoint(
@@ -389,9 +389,9 @@ std::vector<PtrWatchIntegral> &Participant::watchIntegrals()
   return _watchIntegrals;
 }
 
-bool Participant::useMaster() const
+bool Participant::useIntraComm() const
 {
-  return _useMaster;
+  return _useIntraComm;
 }
 
 const std::string &Participant::getName() const

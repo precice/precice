@@ -1,7 +1,7 @@
 #include <Eigen/Core>
 #include <mesh/Edge.hpp>
 #include <mesh/Mesh.hpp>
-#include <utils/MasterSlave.hpp>
+#include <utils/IntraComm.hpp>
 
 namespace precice {
 namespace mesh {
