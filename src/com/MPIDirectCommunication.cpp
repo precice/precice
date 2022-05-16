@@ -1,6 +1,6 @@
-#include <cstddef>
 #ifndef PRECICE_NO_MPI
 
+#include <cstddef>
 #include <memory>
 
 #include "MPIDirectCommunication.hpp"

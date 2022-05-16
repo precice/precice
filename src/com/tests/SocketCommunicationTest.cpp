@@ -24,11 +24,18 @@ BOOST_AUTO_TEST_CASE(SendReceivePrimitives)
   TestSendAndReceivePrimitiveTypes<SocketCommunication>(context);
 }
 
-BOOST_AUTO_TEST_CASE(SendReceiveVectors)
+BOOST_AUTO_TEST_CASE(SendReceiveRanges)
 {
   PRECICE_TEST(2_ranks, Require::Events);
   using namespace precice::testing::com::intracomm;
-  TestSendAndReceiveVectors<SocketCommunication>(context);
+  TestSendAndReceiveRanges<SocketCommunication>(context);
+}
+
+BOOST_AUTO_TEST_CASE(SendReceiveEigen)
+{
+  PRECICE_TEST(2_ranks, Require::Events);
+  using namespace precice::testing::com::intracomm;
+  TestSendAndReceiveEigen<SocketCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(BroadcastPrimitives)
@@ -70,11 +77,18 @@ BOOST_AUTO_TEST_CASE(SendReceivePrimitives)
   TestSendAndReceivePrimitiveTypes<SocketCommunication>(context);
 }
 
-BOOST_AUTO_TEST_CASE(SendReceiveVectors)
+BOOST_AUTO_TEST_CASE(SendReceiveEigen)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
   using namespace precice::testing::com::primaryprimary;
-  TestSendAndReceiveVectors<SocketCommunication>(context);
+  TestSendAndReceiveEigen<SocketCommunication>(context);
+}
+
+BOOST_AUTO_TEST_CASE(SendReceiveRanges)
+{
+  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  using namespace precice::testing::com::primaryprimary;
+  TestSendAndReceiveRanges<SocketCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(BroadcastPrimitives)

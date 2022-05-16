@@ -23,11 +23,11 @@ BOOST_AUTO_TEST_CASE(SendReceivePrimitives)
   TestSendAndReceivePrimitiveTypes<MPISinglePortsCommunication>(context);
 }
 
-BOOST_AUTO_TEST_CASE(SendReceiveVectors)
+BOOST_AUTO_TEST_CASE(SendReceiveEigen)
 {
   PRECICE_TEST(2_ranks, Require::Events);
   using namespace precice::testing::com::intracomm;
-  TestSendAndReceiveVectors<MPISinglePortsCommunication>(context);
+  TestSendAndReceiveEigen<MPISinglePortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(BroadcastPrimitives)
@@ -69,11 +69,18 @@ BOOST_AUTO_TEST_CASE(SendReceivePrimitives)
   TestSendAndReceivePrimitiveTypes<MPISinglePortsCommunication>(context);
 }
 
-BOOST_AUTO_TEST_CASE(SendReceiveVectors)
+BOOST_AUTO_TEST_CASE(SendReceiveRanges)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
   using namespace precice::testing::com::primaryprimary;
-  TestSendAndReceiveVectors<MPISinglePortsCommunication>(context);
+  TestSendAndReceiveRanges<MPISinglePortsCommunication>(context);
+}
+
+BOOST_AUTO_TEST_CASE(SendReceiveEigen)
+{
+  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  using namespace precice::testing::com::primaryprimary;
+  TestSendAndReceiveEigen<MPISinglePortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(BroadcastPrimitives)
@@ -83,11 +90,11 @@ BOOST_AUTO_TEST_CASE(BroadcastPrimitives)
   TestBroadcastPrimitiveTypes<MPISinglePortsCommunication>(context);
 }
 
-BOOST_AUTO_TEST_CASE(BroadcastVectors)
+BOOST_AUTO_TEST_CASE(BroadcastEigen)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
   using namespace precice::testing::com::primaryprimary;
-  TestBroadcastVectors<MPISinglePortsCommunication>(context);
+  TestBroadcastEigen<MPISinglePortsCommunication>(context);
 }
 
 BOOST_AUTO_TEST_CASE(ReducePrimitives)

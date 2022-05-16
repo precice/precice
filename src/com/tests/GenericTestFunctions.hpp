@@ -251,7 +251,7 @@ void TestBroadcastPrimitiveTypes(TestContext const &context)
 }
 
 template <typename T>
-void TestBroadcastVectors(TestContext const &context)
+void TestBroadcastEigen(TestContext const &context)
 {
   T com;
 
@@ -263,14 +263,6 @@ void TestBroadcastVectors(TestContext const &context)
     }
     {
       Eigen::Vector4i msg = Eigen::Vector4i::Constant(21);
-      com.broadcast(msg);
-    }
-    {
-      std::vector<int> msg{2, 3, 5, 8};
-      com.broadcast(msg);
-    }
-    {
-      std::vector<double> msg{1.2, 2.3, 3.5, 4.8};
       com.broadcast(msg);
     }
     com.closeConnection();
@@ -286,6 +278,27 @@ void TestBroadcastVectors(TestContext const &context)
       com.broadcast(msg, 0);
       BOOST_CHECK(testing::equals(msg, Eigen::Vector4i::Constant(21)));
     }
+    com.closeConnection();
+  }
+}
+
+template <typename T>
+void TestBroadcastVectors(TestContext const &context)
+{
+  T com;
+  if (context.isNamed("A")) {
+    com.acceptConnection("process0", "process1", "", 0);
+    {
+      std::vector<int> msg{2, 3, 5, 8};
+      com.broadcast(msg);
+    }
+    {
+      std::vector<double> msg{1.2, 2.3, 3.5, 4.8};
+      com.broadcast(msg);
+    }
+    com.closeConnection();
+  } else {
+    com.requestConnection("process0", "process1", "", 0, 1);
     {
       std::vector<int> msg(4);
       com.broadcast(msg, 0);
@@ -414,6 +427,8 @@ void TestReduceVectors(TestContext const &context)
     com.closeConnection();
   }
 }
+
+} // namespace primaryprimary
 
 namespace intracomm {
 
