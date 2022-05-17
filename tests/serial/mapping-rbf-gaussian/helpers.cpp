@@ -63,9 +63,10 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     // Initialize, thus sending the mesh.
     double maxDt = interface.initialize();
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant should have to advance once!");
-
     // Write the data to be send.
     int dataAID = interface.getDataID("DataOne", meshOneID);
+    BOOST_TEST(!interface.isGradientDataRequired(dataAID));
+
     interface.writeBlockScalarData(dataAID, nCoords, ids.data(), values.data());
 
     // Advance, thus send the data to the receiving partner.

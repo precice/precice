@@ -66,6 +66,8 @@ void testMappingNearestProjection(bool defineEdgesExplicitly, const std::string 
 
     // Write the data to be send.
     int dataAID = interface.getDataID("DataOne", meshOneID);
+    BOOST_TEST(!interface.isGradientDataRequired(dataAID));
+
     interface.writeScalarData(dataAID, idA, valOneA);
     interface.writeScalarData(dataAID, idB, valOneB);
     interface.writeScalarData(dataAID, idC, valOneC);

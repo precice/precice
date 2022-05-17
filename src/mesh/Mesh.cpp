@@ -134,7 +134,7 @@ PtrData &Mesh::createData(
                   name, _name, name);
   }
   //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
-  PtrData data(new Data(name, id, dimension, _dimensions, true));
+  PtrData data(new Data(name, id, dimension, _dimensions, withGradient));
   _data.push_back(data);
   return _data.back();
 }
