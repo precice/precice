@@ -145,14 +145,14 @@ ReadDataContext &Participant::readDataContext(DataID dataID)
 const WriteDataContext &Participant::writeDataContext(DataID dataID) const
 {
   auto it = _writeDataContexts.find(dataID);
-  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID does not exist.")
+  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID \"{}\" does not exist in write direction.", dataID)
   return it->second;
 }
 
 WriteDataContext &Participant::writeDataContext(DataID dataID)
 {
   auto it = _writeDataContexts.find(dataID);
-  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID does not exist.")
+  PRECICE_CHECK(it != _writeDataContexts.end(), "DataID \"{}\" does not exist in write direction.", dataID)
   return it->second;
 }
 
