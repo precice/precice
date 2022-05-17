@@ -12,13 +12,13 @@ Mapping::Mapping(
     Constraint constraint,
     int        dimensions,
     bool       requireGradient)
-    : _constraint(constraint),
+    : _requireGradient(requireGradient),
+      _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
       _input(),
       _output(),
-      _dimensions(dimensions),
-      _requireGradient(requireGradient)
+      _dimensions(dimensions)
 {
 }
 

@@ -1,9 +1,9 @@
-#include <cstddef>
 #ifndef PRECICE_NO_MPI
 
+#include <cstddef>
 #include <memory>
 
-#include "MPIDirectCommunication.hpp"
+#include "com/MPIDirectCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/Parallel.hpp"

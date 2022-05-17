@@ -266,18 +266,16 @@ void ProvidedPartition::compareBoundingBoxes()
   }
 
   // size of the feedbackmap
-  int              remoteConnectionMapSize = 0;
-  std::vector<int> connectedRanksList;
-
-  std::map<int, std::vector<int>> remoteConnectionMap;
+  int remoteConnectionMapSize = 0;
 
   if (utils::IntraComm::isPrimary()) {
 
     // primary rank receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants primary rank
-    _m2ns[0]->getPrimaryRankCommunication()->receive(connectedRanksList, 0);
-    remoteConnectionMapSize = connectedRanksList.size();
+    std::vector<int> connectedRanksList = _m2ns[0]->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+    remoteConnectionMapSize             = connectedRanksList.size();
 
+    std::map<int, std::vector<int>> remoteConnectionMap;
     for (auto &rank : connectedRanksList) {
       remoteConnectionMap[rank] = {-1};
     }
@@ -302,9 +300,10 @@ void ProvidedPartition::compareBoundingBoxes()
     }
 
   } else { // Secondary rank
-
+    std::vector<int> connectedRanksList;
     utils::IntraComm::getCommunication()->broadcast(connectedRanksList, 0);
 
+    std::map<int, std::vector<int>> remoteConnectionMap;
     if (!connectedRanksList.empty()) {
       for (Rank rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};

@@ -941,14 +941,13 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   }
 
   if (context.isNamed("SOLIDZ")) {
-    std::vector<int>                connectedRanksList;
     int                             connectionMapSize = 0;
     std::map<int, std::vector<int>> receivedConnectionMap;
     mesh::PtrMesh                   pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     m2n->getPrimaryRankCommunication()->send(3, 0);
     com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
-    m2n->getPrimaryRankCommunication()->receive(connectedRanksList, 0);
-    connectionMapSize = connectedRanksList.size();
+    std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+    connectionMapSize                   = connectedRanksList.size();
     BOOST_TEST_REQUIRE(connectionMapSize == 2);
 
     std::vector<int> connectedRanks;
@@ -1010,14 +1009,13 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
   }
 
   if (context.isNamed("SOLIDZ")) {
-    std::vector<int>                connectedRanksList;
     int                             connectionMapSize = 0;
     std::map<int, std::vector<int>> receivedConnectionMap;
     mesh::PtrMesh                   pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     m2n->getPrimaryRankCommunication()->send(3, 0);
     com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendBoundingBoxMap(sendGlobalBB, 0);
-    m2n->getPrimaryRankCommunication()->receive(connectedRanksList, 0);
-    connectionMapSize = connectedRanksList.size();
+    std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+    connectionMapSize                   = connectedRanksList.size();
     BOOST_TEST(connectionMapSize == 2);
 
     std::vector<int> connectedRanks;
@@ -1058,7 +1056,6 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 
 void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
 {
-  bool   flipNormals  = true;
   double safetyFactor = 0;
 
   testing::ConnectionOptions options;

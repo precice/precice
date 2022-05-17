@@ -141,7 +141,7 @@ private:
    *
    * @return DataID ID of _fromDatas.
    */
-  DataID getFromDataID(int dataVectorIndex) const;
+  DataID getFromDataID(size_t dataVectorIndex) const;
 
   /**
    * @brief Get the ID of the data in the _toDatas container. Used for performing the mapping outside of this class.
@@ -150,7 +150,7 @@ private:
    *
    * @return DataID ID of _toDatas.
    */
-  DataID getToDataID(int dataVectorIndex) const;
+  DataID getToDataID(size_t dataVectorIndex) const;
 
   /**
    * @brief Informs the user whether this DataContext has any _mappingContext.

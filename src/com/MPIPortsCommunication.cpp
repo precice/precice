@@ -4,8 +4,8 @@
 #include <ostream>
 #include <utility>
 
-#include "ConnectionInfoPublisher.hpp"
-#include "MPIPortsCommunication.hpp"
+#include "com/ConnectionInfoPublisher.hpp"
+#include "com/MPIPortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"

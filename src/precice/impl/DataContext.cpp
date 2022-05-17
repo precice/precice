@@ -21,7 +21,7 @@ std::string DataContext::getDataName() const
   return _providedData->getName();
 }
 
-DataID DataContext::getFromDataID(int dataVectorIndex) const
+DataID DataContext::getFromDataID(size_t dataVectorIndex) const
 {
   PRECICE_ASSERT(hasMapping());
   PRECICE_ASSERT(dataVectorIndex < _fromData.size())
@@ -39,7 +39,7 @@ void DataContext::resetData()
   }
 }
 
-DataID DataContext::getToDataID(int dataVectorIndex) const
+DataID DataContext::getToDataID(size_t dataVectorIndex) const
 {
   PRECICE_ASSERT(hasMapping());
   PRECICE_ASSERT(dataVectorIndex < _toData.size())
